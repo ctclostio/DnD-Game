@@ -12,6 +12,23 @@
       "description": "Humans are the most adaptable and ambitious people among the common races."
     }
   ],
+  "variantTraits": {
+    "name": "Variant Human Traits",
+    "description": "If your campaign uses the optional feat rules, your Dungeon Master might allow these variant traits.",
+    "abilityScoreIncrease": {
+      "anyTwo": 1
+    },
+    "traits": [
+      {
+        "name": "Skills",
+        "description": "You gain proficiency in one skill of your choice."
+      },
+      {
+        "name": "Feat",
+        "description": "You gain one feat of your choice."
+      }
+    ]
+  },
   "subraces": [],
   "age": {
     "maturity": 18,

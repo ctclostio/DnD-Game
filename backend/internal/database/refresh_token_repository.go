@@ -1,0 +1,134 @@
+package database
+
+import (
+	"crypto/sha256"
+	"database/sql"
+	"encoding/hex"
+	"fmt"
+	"time"
+
+	"github.com/jmoiron/sqlx"
+)
+
+// RefreshToken represents a refresh token in the database
+type RefreshToken struct {
+	ID         string         `db:"id"`
+	UserID     string         `db:"user_id"`
+	TokenHash  string         `db:"token_hash"`
+	TokenID    string         `db:"token_id"`
+	ExpiresAt  time.Time      `db:"expires_at"`
+	CreatedAt  time.Time      `db:"created_at"`
+	RevokedAt  sql.NullTime  `db:"revoked_at"`
+}
+
+// RefreshTokenRepository handles refresh token database operations
+type RefreshTokenRepository struct {
+	db *sqlx.DB
+}
+
+// NewRefreshTokenRepository creates a new refresh token repository
+func NewRefreshTokenRepository(db *sqlx.DB) *RefreshTokenRepository {
+	return &RefreshTokenRepository{db: db}
+}
+
+// Create stores a new refresh token
+func (r *RefreshTokenRepository) Create(userID, tokenID string, token string, expiresAt time.Time) error {
+	query := `
+		INSERT INTO refresh_tokens (user_id, token_hash, token_id, expires_at)
+		VALUES ($1, $2, $3, $4)
+	`
+
+	tokenHash := hashToken(token)
+	_, err := r.db.Exec(query, userID, tokenHash, tokenID, expiresAt)
+	if err != nil {
+		return fmt.Errorf("failed to create refresh token: %w", err)
+	}
+
+	return nil
+}
+
+// ValidateAndGet validates a refresh token and returns the associated user ID
+func (r *RefreshTokenRepository) ValidateAndGet(token string) (*RefreshToken, error) {
+	query := `
+		SELECT id, user_id, token_hash, token_id, expires_at, created_at, revoked_at
+		FROM refresh_tokens
+		WHERE token_hash = $1 
+		  AND expires_at > CURRENT_TIMESTAMP
+		  AND revoked_at IS NULL
+	`
+
+	tokenHash := hashToken(token)
+	var refreshToken RefreshToken
+	err := r.db.Get(&refreshToken, query, tokenHash)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("invalid or expired refresh token")
+		}
+		return nil, fmt.Errorf("failed to validate refresh token: %w", err)
+	}
+
+	return &refreshToken, nil
+}
+
+// Revoke marks a refresh token as revoked
+func (r *RefreshTokenRepository) Revoke(tokenID string) error {
+	query := `
+		UPDATE refresh_tokens 
+		SET revoked_at = CURRENT_TIMESTAMP
+		WHERE token_id = $1 AND revoked_at IS NULL
+	`
+
+	result, err := r.db.Exec(query, tokenID)
+	if err != nil {
+		return fmt.Errorf("failed to revoke refresh token: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("refresh token not found or already revoked")
+	}
+
+	return nil
+}
+
+// RevokeAllForUser revokes all refresh tokens for a user
+func (r *RefreshTokenRepository) RevokeAllForUser(userID string) error {
+	query := `
+		UPDATE refresh_tokens 
+		SET revoked_at = CURRENT_TIMESTAMP
+		WHERE user_id = $1 AND revoked_at IS NULL
+	`
+
+	_, err := r.db.Exec(query, userID)
+	if err != nil {
+		return fmt.Errorf("failed to revoke user's refresh tokens: %w", err)
+	}
+
+	return nil
+}
+
+// CleanupExpired removes expired refresh tokens
+func (r *RefreshTokenRepository) CleanupExpired() error {
+	query := `
+		DELETE FROM refresh_tokens
+		WHERE expires_at < CURRENT_TIMESTAMP
+		   OR revoked_at < CURRENT_TIMESTAMP - INTERVAL '30 days'
+	`
+
+	_, err := r.db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to cleanup expired tokens: %w", err)
+	}
+
+	return nil
+}
+
+// hashToken creates a SHA256 hash of the token
+func hashToken(token string) string {
+	hash := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(hash[:])
+}

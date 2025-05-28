@@ -3,57 +3,118 @@ package models
 import "time"
 
 type Character struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	Race         string    `json:"race"`
-	Class        string    `json:"class"`
-	Level        int       `json:"level"`
-	ExperiencePoints int   `json:"experiencePoints"`
-	HitPoints    int       `json:"hitPoints"`
-	MaxHitPoints int       `json:"maxHitPoints"`
-	ArmorClass   int       `json:"armorClass"`
-	Speed        int       `json:"speed"`
-	Attributes   Attributes `json:"attributes"`
-	Skills       []Skill    `json:"skills"`
-	Equipment    []Item     `json:"equipment"`
-	Spells       []Spell    `json:"spells"`
-	CreatedAt    time.Time  `json:"createdAt"`
-	UpdatedAt    time.Time  `json:"updatedAt"`
+	ID                  string                 `json:"id" db:"id"`
+	UserID              string                 `json:"userId" db:"user_id"`
+	Name                string                 `json:"name" db:"name"`
+	Race                string                 `json:"race" db:"race"`
+	Subrace             string                 `json:"subrace,omitempty" db:"subrace"`
+	Class               string                 `json:"class" db:"class"`
+	Subclass            string                 `json:"subclass,omitempty" db:"subclass"`
+	Background          string                 `json:"background" db:"background"`
+	Alignment           string                 `json:"alignment" db:"alignment"`
+	Level               int                    `json:"level" db:"level"`
+	ExperiencePoints    int                    `json:"experiencePoints" db:"experience_points"`
+	HitPoints           int                    `json:"hitPoints" db:"hit_points"`
+	MaxHitPoints        int                    `json:"maxHitPoints" db:"max_hit_points"`
+	TempHitPoints       int                    `json:"tempHitPoints" db:"temp_hit_points"`
+	HitDice             string                 `json:"hitDice" db:"hit_dice"`
+	ArmorClass          int                    `json:"armorClass" db:"armor_class"`
+	Initiative          int                    `json:"initiative" db:"initiative"`
+	Speed               int                    `json:"speed" db:"speed"`
+	ProficiencyBonus    int                    `json:"proficiencyBonus" db:"proficiency_bonus"`
+	Attributes          Attributes             `json:"attributes" db:"attributes"`
+	SavingThrows        SavingThrows           `json:"savingThrows" db:"saving_throws"`
+	Skills              []Skill                `json:"skills" db:"skills"`
+	Proficiencies       Proficiencies          `json:"proficiencies" db:"proficiencies"`
+	Features            []Feature              `json:"features" db:"features"`
+	Equipment           []Item                 `json:"equipment" db:"equipment"`
+	Spells              SpellData              `json:"spells" db:"spells"`
+	Resources           map[string]interface{} `json:"resources" db:"resources"`
+	CarryCapacity       float64                `json:"carryCapacity" db:"carry_capacity"`
+	CurrentWeight       float64                `json:"currentWeight" db:"current_weight"`
+	AttunementSlotsUsed int                    `json:"attunementSlotsUsed" db:"attunement_slots_used"`
+	AttunementSlotsMax  int                    `json:"attunementSlotsMax" db:"attunement_slots_max"`
+	CreatedAt           time.Time              `json:"createdAt" db:"created_at"`
+	UpdatedAt           time.Time              `json:"updatedAt" db:"updated_at"`
 }
 
 type Attributes struct {
-	Strength     int `json:"strength"`
-	Dexterity    int `json:"dexterity"`
-	Constitution int `json:"constitution"`
-	Intelligence int `json:"intelligence"`
-	Wisdom       int `json:"wisdom"`
-	Charisma     int `json:"charisma"`
+	Strength     int `json:"strength" db:"strength"`
+	Dexterity    int `json:"dexterity" db:"dexterity"`
+	Constitution int `json:"constitution" db:"constitution"`
+	Intelligence int `json:"intelligence" db:"intelligence"`
+	Wisdom       int `json:"wisdom" db:"wisdom"`
+	Charisma     int `json:"charisma" db:"charisma"`
 }
 
 type Skill struct {
-	Name        string `json:"name"`
-	Modifier    int    `json:"modifier"`
-	Proficiency bool   `json:"proficiency"`
+	Name        string `json:"name" db:"name"`
+	Modifier    int    `json:"modifier" db:"modifier"`
+	Proficiency bool   `json:"proficiency" db:"proficiency"`
 }
 
 type Item struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Description string `json:"description"`
-	Weight      float64 `json:"weight"`
-	Value       int    `json:"value"`
-	Properties  map[string]interface{} `json:"properties"`
+	ID          string                 `json:"id" db:"id"`
+	Name        string                 `json:"name" db:"name"`
+	Type        string                 `json:"type" db:"type"`
+	Description string                 `json:"description" db:"description"`
+	Weight      float64                `json:"weight" db:"weight"`
+	Value       int                    `json:"value" db:"value"`
+	Properties  map[string]interface{} `json:"properties" db:"properties"`
 }
 
 type Spell struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Level       int    `json:"level"`
-	School      string `json:"school"`
-	CastingTime string `json:"castingTime"`
-	Range       string `json:"range"`
-	Components  string `json:"components"`
-	Duration    string `json:"duration"`
-	Description string `json:"description"`
+	ID          string `json:"id" db:"id"`
+	Name        string `json:"name" db:"name"`
+	Level       int    `json:"level" db:"level"`
+	School      string `json:"school" db:"school"`
+	CastingTime string `json:"castingTime" db:"casting_time"`
+	Range       string `json:"range" db:"range"`
+	Components  string `json:"components" db:"components"`
+	Duration    string `json:"duration" db:"duration"`
+	Description string `json:"description" db:"description"`
+	Prepared    bool   `json:"prepared,omitempty" db:"prepared"`
+}
+
+type SavingThrows struct {
+	Strength     SavingThrow `json:"strength" db:"strength"`
+	Dexterity    SavingThrow `json:"dexterity" db:"dexterity"`
+	Constitution SavingThrow `json:"constitution" db:"constitution"`
+	Intelligence SavingThrow `json:"intelligence" db:"intelligence"`
+	Wisdom       SavingThrow `json:"wisdom" db:"wisdom"`
+	Charisma     SavingThrow `json:"charisma" db:"charisma"`
+}
+
+type SavingThrow struct {
+	Modifier    int  `json:"modifier" db:"modifier"`
+	Proficiency bool `json:"proficiency" db:"proficiency"`
+}
+
+type Proficiencies struct {
+	Armor     []string `json:"armor" db:"armor"`
+	Weapons   []string `json:"weapons" db:"weapons"`
+	Tools     []string `json:"tools" db:"tools"`
+	Languages []string `json:"languages" db:"languages"`
+}
+
+type Feature struct {
+	Name        string `json:"name" db:"name"`
+	Description string `json:"description" db:"description"`
+	Level       int    `json:"level" db:"level"`
+	Source      string `json:"source" db:"source"`
+}
+
+type SpellData struct {
+	SpellcastingAbility string      `json:"spellcastingAbility,omitempty" db:"spellcasting_ability"`
+	SpellSaveDC         int         `json:"spellSaveDC,omitempty" db:"spell_save_dc"`
+	SpellAttackBonus    int         `json:"spellAttackBonus,omitempty" db:"spell_attack_bonus"`
+	SpellSlots          []SpellSlot `json:"spellSlots,omitempty" db:"spell_slots"`
+	SpellsKnown         []Spell     `json:"spellsKnown,omitempty" db:"spells_known"`
+	CantripsKnown       int         `json:"cantripsKnown,omitempty" db:"cantrips_known"`
+}
+
+type SpellSlot struct {
+	Level     int `json:"level" db:"level"`
+	Total     int `json:"total" db:"total"`
+	Remaining int `json:"remaining" db:"remaining"`
 }

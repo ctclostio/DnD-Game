@@ -1,0 +1,154 @@
+{
+  "name": "Monk",
+  "hitDice": "1d8",
+  "primaryAbility": "Dexterity and Wisdom",
+  "savingThrowProficiencies": ["Strength", "Dexterity"],
+  "armorProficiencies": [],
+  "weaponProficiencies": ["Simple weapons", "Shortswords"],
+  "toolProficiencies": ["Choose one type of artisan's tools or one musical instrument"],
+  "skillChoices": {
+    "count": 2,
+    "from": [
+      "Acrobatics",
+      "Athletics",
+      "History",
+      "Insight",
+      "Religion",
+      "Stealth"
+    ]
+  },
+  "startingEquipment": [
+    {
+      "choice": [
+        "A shortsword",
+        "Any simple weapon"
+      ]
+    },
+    {
+      "choice": [
+        "A dungeoneer's pack",
+        "An explorer's pack"
+      ]
+    },
+    "10 darts"
+  ],
+  "features": {
+    "1": [
+      {
+        "name": "Unarmored Defense",
+        "description": "Beginning at 1st level, while you are wearing no armor and not wielding a shield, your AC equals 10 + your Dexterity modifier + your Wisdom modifier."
+      },
+      {
+        "name": "Martial Arts",
+        "description": "At 1st level, your practice of martial arts gives you mastery of combat styles that use unarmed strikes and monk weapons, which are shortswords and any simple melee weapons that don't have the two-handed or heavy property. You gain the following benefits while you are unarmed or wielding only monk weapons and you aren't wearing armor or wielding a shield: You can use Dexterity instead of Strength for the attack and damage rolls of your unarmed strikes and monk weapons. You can roll a d4 in place of the normal damage of your unarmed strike or monk weapon. When you use the Attack action with an unarmed strike or a monk weapon on your turn, you can make one unarmed strike as a bonus action.",
+        "martialArtsDie": {
+          "1": "d4",
+          "5": "d6",
+          "11": "d8",
+          "17": "d10"
+        }
+      }
+    ],
+    "2": [
+      {
+        "name": "Ki",
+        "description": "Starting at 2nd level, your training allows you to harness the mystic energy of ki. Your access to this energy is represented by a number of ki points. Your monk level determines the number of points you have, as shown in the Ki Points column of the Monk table. You can spend these points to fuel various ki features. You start knowing three such features: Flurry of Blows, Patient Defense, and Step of the Wind. You regain all expended ki points when you finish a short or long rest.",
+        "kiPoints": "Equal to your monk level",
+        "kiSaveDC": "8 + your proficiency bonus + your Wisdom modifier"
+      },
+      {
+        "name": "Flurry of Blows",
+        "description": "Immediately after you take the Attack action on your turn, you can spend 1 ki point to make two unarmed strikes as a bonus action."
+      },
+      {
+        "name": "Patient Defense",
+        "description": "You can spend 1 ki point to take the Dodge action as a bonus action on your turn."
+      },
+      {
+        "name": "Step of the Wind",
+        "description": "You can spend 1 ki point to take the Disengage or Dash action as a bonus action on your turn, and your jump distance is doubled for the turn."
+      },
+      {
+        "name": "Unarmored Movement",
+        "description": "Starting at 2nd level, your speed increases by 10 feet while you are not wearing armor or wielding a shield. This bonus increases when you reach certain monk levels.",
+        "speedBonus": {
+          "2": 10,
+          "6": 15,
+          "10": 20,
+          "14": 25,
+          "18": 30
+        }
+      }
+    ],
+    "3": [
+      {
+        "name": "Monastic Tradition",
+        "description": "When you reach 3rd level, you commit yourself to a monastic tradition. Your tradition grants you features at 3rd level and again at 6th, 11th, and 17th level."
+      },
+      {
+        "name": "Deflect Missiles",
+        "description": "Starting at 3rd level, you can use your reaction to deflect or catch the missile when you are hit by a ranged weapon attack. When you do so, the damage you take from the attack is reduced by 1d10 + your Dexterity modifier + your monk level. If you reduce the damage to 0, you can catch the missile if it is small enough for you to hold in one hand and you have at least one hand free. If you catch a missile in this way, you can spend 1 ki point to make a ranged attack with the weapon or piece of ammunition you just caught, as part of the same reaction."
+      }
+    ],
+    "4": [
+      {
+        "name": "Ability Score Improvement",
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+      },
+      {
+        "name": "Slow Fall",
+        "description": "Beginning at 4th level, you can use your reaction when you fall to reduce any falling damage you take by an amount equal to five times your monk level."
+      }
+    ],
+    "5": [
+      {
+        "name": "Extra Attack",
+        "description": "Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn."
+      },
+      {
+        "name": "Stunning Strike",
+        "description": "Starting at 5th level, you can interfere with the flow of ki in an opponent's body. When you hit another creature with a melee weapon attack, you can spend 1 ki point to attempt a stunning strike. The target must succeed on a Constitution saving throw or be stunned until the end of your next turn."
+      }
+    ]
+  },
+  "subclasses": {
+    "3": [
+      {
+        "name": "Way of the Open Hand",
+        "description": "Monks of the Way of the Open Hand are the ultimate masters of martial arts combat, whether armed or unarmed.",
+        "features": {
+          "3": [
+            {
+              "name": "Open Hand Technique",
+              "description": "Starting when you choose this tradition at 3rd level, you can manipulate your enemy's ki when you harness your own. Whenever you hit a creature with one of the attacks granted by your Flurry of Blows, you can impose one of the following effects on that target: It must succeed on a Dexterity saving throw or be knocked prone. It must make a Strength saving throw. If it fails, you can push it up to 15 feet away from you. It can't take reactions until the end of your next turn."
+            }
+          ]
+        }
+      },
+      {
+        "name": "Way of Shadow",
+        "description": "Monks of the Way of Shadow follow a tradition that values stealth and subterfuge. These monks might be called ninjas or shadowdancers.",
+        "features": {
+          "3": [
+            {
+              "name": "Shadow Arts",
+              "description": "Starting when you choose this tradition at 3rd level, you can use your ki to duplicate the effects of certain spells. As an action, you can spend 2 ki points to cast darkness, darkvision, pass without trace, or silence, without providing material components. Additionally, you gain the minor illusion cantrip if you don't already know it."
+            }
+          ]
+        }
+      },
+      {
+        "name": "Way of the Four Elements",
+        "description": "You follow a monastic tradition that teaches you to harness the elements. When you focus your ki, you can align yourself with the forces of creation and bend the four elements to your will.",
+        "features": {
+          "3": [
+            {
+              "name": "Disciple of the Elements",
+              "description": "When you choose this tradition at 3rd level, you learn magical disciplines that harness the power of the four elements. A discipline requires you to spend ki points each time you use it. You know the Elemental Attunement discipline and one other elemental discipline of your choice. You learn additional elemental disciplines of your choice at 6th, 11th, and 17th level."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

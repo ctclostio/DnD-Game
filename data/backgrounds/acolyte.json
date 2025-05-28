@@ -1,0 +1,36 @@
+{
+  "name": "Acolyte",
+  "description": "You have spent your life in the service of a temple to a specific god or pantheon of gods.",
+  "skillProficiencies": ["Insight", "Religion"],
+  "languages": 2,
+  "equipment": [
+    "A holy symbol",
+    "A prayer book or prayer wheel",
+    "5 sticks of incense",
+    "Vestments",
+    "A set of common clothes",
+    "A pouch containing 15 gp"
+  ],
+  "feature": {
+    "name": "Shelter of the Faithful",
+    "description": "As an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity."
+  },
+  "suggestedCharacteristics": {
+    "personalityTraits": [
+      "I idolize a particular hero of my faith, and constantly refer to that person's deeds and example.",
+      "I can find common ground between the fiercest enemies, empathizing with them and always working toward peace."
+    ],
+    "ideals": [
+      "Tradition. The ancient traditions of worship and sacrifice must be preserved and upheld.",
+      "Charity. I always try to help those in need, no matter what the personal cost."
+    ],
+    "bonds": [
+      "I would die to recover an ancient relic of my faith that was lost long ago.",
+      "I owe my life to the priest who took me in when my parents died."
+    ],
+    "flaws": [
+      "I judge others harshly, and myself even more severely.",
+      "I put too much trust in those who wield power within my temple's hierarchy."
+    ]
+  }
+}

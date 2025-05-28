@@ -1,0 +1,35 @@
+{
+  "name": "Half-Orc",
+  "size": "Medium",
+  "speed": 30,
+  "abilityScoreIncrease": {
+    "strength": 2,
+    "constitution": 1
+  },
+  "languages": ["Common", "Orc"],
+  "traits": [
+    {
+      "name": "Darkvision",
+      "description": "You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light."
+    },
+    {
+      "name": "Menacing",
+      "description": "You gain proficiency in the Intimidation skill."
+    },
+    {
+      "name": "Relentless Endurance",
+      "description": "When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. You can't use this feature again until you finish a long rest."
+    },
+    {
+      "name": "Savage Attacks",
+      "description": "When you score a critical hit with a melee weapon attack, you can roll one of the weapon's damage dice one additional time and add it to the extra damage of the critical hit."
+    }
+  ],
+  "subraces": [],
+  "age": {
+    "maturity": 14,
+    "lifespan": "75 years"
+  },
+  "alignment": "Half-orcs inherit a tendency toward chaos from their orc parents and are not strongly inclined toward good.",
+  "sizeDescription": "Half-orcs are somewhat larger and bulkier than humans, ranging from 5 to well over 6 feet tall."
+}

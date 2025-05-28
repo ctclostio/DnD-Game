@@ -1,0 +1,495 @@
+package database
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+	"github.com/your-username/dnd-game/backend/internal/models"
+)
+
+// NPCRepository handles NPC database operations
+type NPCRepository interface {
+	Create(ctx context.Context, npc *models.NPC) error
+	GetByID(ctx context.Context, id string) (*models.NPC, error)
+	GetByGameSession(ctx context.Context, gameSessionID string) ([]*models.NPC, error)
+	Update(ctx context.Context, npc *models.NPC) error
+	Delete(ctx context.Context, id string) error
+	Search(ctx context.Context, filter models.NPCSearchFilter) ([]*models.NPC, error)
+	
+	// Template operations
+	GetTemplates(ctx context.Context) ([]*models.NPCTemplate, error)
+	GetTemplateByID(ctx context.Context, id string) (*models.NPCTemplate, error)
+	CreateFromTemplate(ctx context.Context, templateID, gameSessionID, createdBy string) (*models.NPC, error)
+}
+
+type npcRepository struct {
+	db *sqlx.DB
+}
+
+// NewNPCRepository creates a new NPC repository
+func NewNPCRepository(db *sqlx.DB) NPCRepository {
+	return &npcRepository{db: db}
+}
+
+func (r *npcRepository) Create(ctx context.Context, npc *models.NPC) error {
+	if npc.ID == "" {
+		npc.ID = uuid.New().String()
+	}
+
+	// Convert complex fields to JSON
+	speedJSON, _ := json.Marshal(npc.Speed)
+	attributesJSON, _ := json.Marshal(npc.Attributes)
+	savingThrowsJSON, _ := json.Marshal(npc.SavingThrows)
+	skillsJSON, _ := json.Marshal(npc.Skills)
+	sensesJSON, _ := json.Marshal(npc.Senses)
+	abilitiesJSON, _ := json.Marshal(npc.Abilities)
+	actionsJSON, _ := json.Marshal(npc.Actions)
+
+	query := `
+		INSERT INTO npcs (
+			id, game_session_id, name, type, size, alignment,
+			armor_class, hit_points, max_hit_points, speed,
+			attributes, saving_throws, skills,
+			damage_resistances, damage_immunities, condition_immunities,
+			senses, languages, challenge_rating, experience_points,
+			abilities, actions, legendary_actions, is_template, created_by
+		) VALUES (
+			$1, $2, $3, $4, $5, $6,
+			$7, $8, $9, $10,
+			$11, $12, $13,
+			$14, $15, $16,
+			$17, $18, $19, $20,
+			$21, $22, $23, $24, $25
+		)`
+
+	_, err := r.db.ExecContext(ctx, query,
+		npc.ID, npc.GameSessionID, npc.Name, npc.Type, npc.Size, npc.Alignment,
+		npc.ArmorClass, npc.HitPoints, npc.MaxHitPoints, speedJSON,
+		attributesJSON, savingThrowsJSON, skillsJSON,
+		npc.DamageResistances, npc.DamageImmunities, npc.ConditionImmunities,
+		sensesJSON, npc.Languages, npc.ChallengeRating, npc.ExperiencePoints,
+		abilitiesJSON, actionsJSON, npc.LegendaryActions, npc.IsTemplate, npc.CreatedBy,
+	)
+
+	return err
+}
+
+func (r *npcRepository) GetByID(ctx context.Context, id string) (*models.NPC, error) {
+	query := `
+		SELECT 
+			id, game_session_id, name, type, size, alignment,
+			armor_class, hit_points, max_hit_points, speed,
+			attributes, saving_throws, skills,
+			damage_resistances, damage_immunities, condition_immunities,
+			senses, languages, challenge_rating, experience_points,
+			abilities, actions, legendary_actions, is_template, created_by,
+			created_at, updated_at
+		FROM npcs
+		WHERE id = $1`
+
+	var npc models.NPC
+	var speedJSON, attributesJSON, savingThrowsJSON, skillsJSON []byte
+	var sensesJSON, abilitiesJSON, actionsJSON []byte
+
+	err := r.db.GetContext(ctx, &struct {
+		*models.NPC
+		Speed        []byte `db:"speed"`
+		Attributes   []byte `db:"attributes"`
+		SavingThrows []byte `db:"saving_throws"`
+		Skills       []byte `db:"skills"`
+		Senses       []byte `db:"senses"`
+		Abilities    []byte `db:"abilities"`
+		Actions      []byte `db:"actions"`
+	}{
+		NPC:          &npc,
+		Speed:        speedJSON,
+		Attributes:   attributesJSON,
+		SavingThrows: savingThrowsJSON,
+		Skills:       skillsJSON,
+		Senses:       sensesJSON,
+		Abilities:    abilitiesJSON,
+		Actions:      actionsJSON,
+	}, query, id)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("NPC not found")
+		}
+		return nil, err
+	}
+
+	// Unmarshal JSON fields
+	json.Unmarshal(speedJSON, &npc.Speed)
+	json.Unmarshal(attributesJSON, &npc.Attributes)
+	json.Unmarshal(savingThrowsJSON, &npc.SavingThrows)
+	json.Unmarshal(skillsJSON, &npc.Skills)
+	json.Unmarshal(sensesJSON, &npc.Senses)
+	json.Unmarshal(abilitiesJSON, &npc.Abilities)
+	json.Unmarshal(actionsJSON, &npc.Actions)
+
+	return &npc, nil
+}
+
+func (r *npcRepository) GetByGameSession(ctx context.Context, gameSessionID string) ([]*models.NPC, error) {
+	query := `
+		SELECT 
+			id, game_session_id, name, type, size, alignment,
+			armor_class, hit_points, max_hit_points, speed,
+			attributes, saving_throws, skills,
+			damage_resistances, damage_immunities, condition_immunities,
+			senses, languages, challenge_rating, experience_points,
+			abilities, actions, legendary_actions, is_template, created_by,
+			created_at, updated_at
+		FROM npcs
+		WHERE game_session_id = $1 AND is_template = false
+		ORDER BY name`
+
+	rows, err := r.db.QueryContext(ctx, query, gameSessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var npcs []*models.NPC
+	for rows.Next() {
+		npc, err := r.scanNPC(rows)
+		if err != nil {
+			return nil, err
+		}
+		npcs = append(npcs, npc)
+	}
+
+	return npcs, rows.Err()
+}
+
+func (r *npcRepository) Update(ctx context.Context, npc *models.NPC) error {
+	// Convert complex fields to JSON
+	speedJSON, _ := json.Marshal(npc.Speed)
+	attributesJSON, _ := json.Marshal(npc.Attributes)
+	savingThrowsJSON, _ := json.Marshal(npc.SavingThrows)
+	skillsJSON, _ := json.Marshal(npc.Skills)
+	sensesJSON, _ := json.Marshal(npc.Senses)
+	abilitiesJSON, _ := json.Marshal(npc.Abilities)
+	actionsJSON, _ := json.Marshal(npc.Actions)
+
+	query := `
+		UPDATE npcs SET
+			name = $2, type = $3, size = $4, alignment = $5,
+			armor_class = $6, hit_points = $7, max_hit_points = $8, speed = $9,
+			attributes = $10, saving_throws = $11, skills = $12,
+			damage_resistances = $13, damage_immunities = $14, condition_immunities = $15,
+			senses = $16, languages = $17, challenge_rating = $18, experience_points = $19,
+			abilities = $20, actions = $21, legendary_actions = $22,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = $1`
+
+	_, err := r.db.ExecContext(ctx, query,
+		npc.ID, npc.Name, npc.Type, npc.Size, npc.Alignment,
+		npc.ArmorClass, npc.HitPoints, npc.MaxHitPoints, speedJSON,
+		attributesJSON, savingThrowsJSON, skillsJSON,
+		npc.DamageResistances, npc.DamageImmunities, npc.ConditionImmunities,
+		sensesJSON, npc.Languages, npc.ChallengeRating, npc.ExperiencePoints,
+		abilitiesJSON, actionsJSON, npc.LegendaryActions,
+	)
+
+	return err
+}
+
+func (r *npcRepository) Delete(ctx context.Context, id string) error {
+	query := `DELETE FROM npcs WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
+}
+
+func (r *npcRepository) Search(ctx context.Context, filter models.NPCSearchFilter) ([]*models.NPC, error) {
+	query := `
+		SELECT 
+			id, game_session_id, name, type, size, alignment,
+			armor_class, hit_points, max_hit_points, speed,
+			attributes, saving_throws, skills,
+			damage_resistances, damage_immunities, condition_immunities,
+			senses, languages, challenge_rating, experience_points,
+			abilities, actions, legendary_actions, is_template, created_by,
+			created_at, updated_at
+		FROM npcs
+		WHERE 1=1`
+
+	args := []interface{}{}
+	argCount := 0
+
+	if filter.GameSessionID != "" {
+		argCount++
+		query += fmt.Sprintf(" AND game_session_id = $%d", argCount)
+		args = append(args, filter.GameSessionID)
+	}
+
+	if filter.Name != "" {
+		argCount++
+		query += fmt.Sprintf(" AND name ILIKE $%d", argCount)
+		args = append(args, "%"+filter.Name+"%")
+	}
+
+	if filter.Type != "" {
+		argCount++
+		query += fmt.Sprintf(" AND type = $%d", argCount)
+		args = append(args, filter.Type)
+	}
+
+	if filter.Size != "" {
+		argCount++
+		query += fmt.Sprintf(" AND size = $%d", argCount)
+		args = append(args, filter.Size)
+	}
+
+	if filter.MinCR > 0 {
+		argCount++
+		query += fmt.Sprintf(" AND challenge_rating >= $%d", argCount)
+		args = append(args, filter.MinCR)
+	}
+
+	if filter.MaxCR > 0 {
+		argCount++
+		query += fmt.Sprintf(" AND challenge_rating <= $%d", argCount)
+		args = append(args, filter.MaxCR)
+	}
+
+	if !filter.IncludeTemplates {
+		query += " AND is_template = false"
+	}
+
+	query += " ORDER BY name"
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var npcs []*models.NPC
+	for rows.Next() {
+		npc, err := r.scanNPC(rows)
+		if err != nil {
+			return nil, err
+		}
+		npcs = append(npcs, npc)
+	}
+
+	return npcs, rows.Err()
+}
+
+func (r *npcRepository) GetTemplates(ctx context.Context) ([]*models.NPCTemplate, error) {
+	query := `
+		SELECT 
+			id, name, source, type, size, alignment,
+			armor_class, hit_dice, speed,
+			attributes, saving_throws, skills,
+			damage_resistances, damage_immunities, condition_immunities,
+			senses, languages, challenge_rating,
+			abilities, actions, legendary_actions,
+			created_at
+		FROM npc_templates
+		ORDER BY challenge_rating, name`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var templates []*models.NPCTemplate
+	for rows.Next() {
+		template, err := r.scanNPCTemplate(rows)
+		if err != nil {
+			return nil, err
+		}
+		templates = append(templates, template)
+	}
+
+	return templates, rows.Err()
+}
+
+func (r *npcRepository) GetTemplateByID(ctx context.Context, id string) (*models.NPCTemplate, error) {
+	query := `
+		SELECT 
+			id, name, source, type, size, alignment,
+			armor_class, hit_dice, speed,
+			attributes, saving_throws, skills,
+			damage_resistances, damage_immunities, condition_immunities,
+			senses, languages, challenge_rating,
+			abilities, actions, legendary_actions,
+			created_at
+		FROM npc_templates
+		WHERE id = $1`
+
+	var template models.NPCTemplate
+	err := r.db.GetContext(ctx, &template, query, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("template not found")
+		}
+		return nil, err
+	}
+
+	return &template, nil
+}
+
+func (r *npcRepository) CreateFromTemplate(ctx context.Context, templateID, gameSessionID, createdBy string) (*models.NPC, error) {
+	template, err := r.GetTemplateByID(ctx, templateID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate hit points from hit dice
+	// This is simplified - in reality we'd parse the dice notation
+	hitPoints := 10 // Default
+
+	npc := &models.NPC{
+		ID:                  uuid.New().String(),
+		GameSessionID:       gameSessionID,
+		Name:                template.Name,
+		Type:                template.Type,
+		Size:                template.Size,
+		Alignment:           template.Alignment,
+		ArmorClass:          template.ArmorClass,
+		HitPoints:           hitPoints,
+		MaxHitPoints:        hitPoints,
+		Speed:               template.Speed,
+		Attributes:          template.Attributes,
+		SavingThrows:        template.SavingThrows,
+		Skills:              template.Skills,
+		DamageResistances:   template.DamageResistances,
+		DamageImmunities:    template.DamageImmunities,
+		ConditionImmunities: template.ConditionImmunities,
+		Senses:              template.Senses,
+		Languages:           template.Languages,
+		ChallengeRating:     template.ChallengeRating,
+		Abilities:           template.Abilities,
+		Actions:             template.Actions,
+		LegendaryActions:    template.LegendaryActions,
+		IsTemplate:          false,
+		CreatedBy:           createdBy,
+	}
+
+	// Calculate experience points based on CR
+	npc.ExperiencePoints = r.calculateXPFromCR(template.ChallengeRating)
+
+	err = r.Create(ctx, npc)
+	if err != nil {
+		return nil, err
+	}
+
+	return npc, nil
+}
+
+// Helper functions
+
+func (r *npcRepository) scanNPC(scanner interface{ Scan(...interface{}) error }) (*models.NPC, error) {
+	var npc models.NPC
+	var speedJSON, attributesJSON, savingThrowsJSON, skillsJSON []byte
+	var sensesJSON, abilitiesJSON, actionsJSON []byte
+
+	err := scanner.Scan(
+		&npc.ID, &npc.GameSessionID, &npc.Name, &npc.Type, &npc.Size, &npc.Alignment,
+		&npc.ArmorClass, &npc.HitPoints, &npc.MaxHitPoints, &speedJSON,
+		&attributesJSON, &savingThrowsJSON, &skillsJSON,
+		&npc.DamageResistances, &npc.DamageImmunities, &npc.ConditionImmunities,
+		&sensesJSON, &npc.Languages, &npc.ChallengeRating, &npc.ExperiencePoints,
+		&abilitiesJSON, &actionsJSON, &npc.LegendaryActions, &npc.IsTemplate, &npc.CreatedBy,
+		&npc.CreatedAt, &npc.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal JSON fields
+	json.Unmarshal(speedJSON, &npc.Speed)
+	json.Unmarshal(attributesJSON, &npc.Attributes)
+	json.Unmarshal(savingThrowsJSON, &npc.SavingThrows)
+	json.Unmarshal(skillsJSON, &npc.Skills)
+	json.Unmarshal(sensesJSON, &npc.Senses)
+	json.Unmarshal(abilitiesJSON, &npc.Abilities)
+	json.Unmarshal(actionsJSON, &npc.Actions)
+
+	return &npc, nil
+}
+
+func (r *npcRepository) scanNPCTemplate(scanner interface{ Scan(...interface{}) error }) (*models.NPCTemplate, error) {
+	var template models.NPCTemplate
+	var speedJSON, attributesJSON, savingThrowsJSON, skillsJSON []byte
+	var sensesJSON, abilitiesJSON, actionsJSON []byte
+
+	err := scanner.Scan(
+		&template.ID, &template.Name, &template.Source, &template.Type, &template.Size, &template.Alignment,
+		&template.ArmorClass, &template.HitDice, &speedJSON,
+		&attributesJSON, &savingThrowsJSON, &skillsJSON,
+		&template.DamageResistances, &template.DamageImmunities, &template.ConditionImmunities,
+		&sensesJSON, &template.Languages, &template.ChallengeRating,
+		&abilitiesJSON, &actionsJSON, &template.LegendaryActions,
+		&template.CreatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal JSON fields
+	json.Unmarshal(speedJSON, &template.Speed)
+	json.Unmarshal(attributesJSON, &template.Attributes)
+	json.Unmarshal(savingThrowsJSON, &template.SavingThrows)
+	json.Unmarshal(skillsJSON, &template.Skills)
+	json.Unmarshal(sensesJSON, &template.Senses)
+	json.Unmarshal(abilitiesJSON, &template.Abilities)
+	json.Unmarshal(actionsJSON, &template.Actions)
+
+	return &template, nil
+}
+
+func (r *npcRepository) calculateXPFromCR(cr float64) int {
+	// D&D 5e XP by Challenge Rating
+	xpByCR := map[float64]int{
+		0:    10,
+		0.125: 25,
+		0.25: 50,
+		0.5:  100,
+		1:    200,
+		2:    450,
+		3:    700,
+		4:    1100,
+		5:    1800,
+		6:    2300,
+		7:    2900,
+		8:    3900,
+		9:    5000,
+		10:   5900,
+		11:   7200,
+		12:   8400,
+		13:   10000,
+		14:   11500,
+		15:   13000,
+		16:   15000,
+		17:   18000,
+		18:   20000,
+		19:   22000,
+		20:   25000,
+		21:   33000,
+		22:   41000,
+		23:   50000,
+		24:   62000,
+		25:   75000,
+		26:   90000,
+		27:   105000,
+		28:   120000,
+		29:   135000,
+		30:   155000,
+	}
+
+	if xp, ok := xpByCR[cr]; ok {
+		return xp
+	}
+	return 0
+}

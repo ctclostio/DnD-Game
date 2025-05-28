@@ -195,6 +195,7 @@ export class CharacterView {
                     </div>
                     <div>
                         <button id="edit-character-btn">Edit</button>
+                        <button id="skill-check-btn">Skill Checks</button>
                     </div>
                 </div>
 
@@ -214,13 +215,36 @@ export class CharacterView {
                 </div>
 
                 <div class="attributes">
-                    ${Object.entries(character.attributes).map(([attr, value]) => `
-                        <div class="attribute-box">
-                            <h4>${attr.toUpperCase().slice(0, 3)}</h4>
-                            <div class="attribute-value">${value}</div>
-                            <div class="attribute-modifier">${this.getModifier(value) >= 0 ? '+' : ''}${this.getModifier(value)}</div>
-                        </div>
-                    `).join('')}
+                    <div class="attribute-box">
+                        <h4>STR</h4>
+                        <div class="attribute-value">${character.strength || 10}</div>
+                        <div class="attribute-modifier">${this.getModifier(character.strength || 10) >= 0 ? '+' : ''}${this.getModifier(character.strength || 10)}</div>
+                    </div>
+                    <div class="attribute-box">
+                        <h4>DEX</h4>
+                        <div class="attribute-value">${character.dexterity || 10}</div>
+                        <div class="attribute-modifier">${this.getModifier(character.dexterity || 10) >= 0 ? '+' : ''}${this.getModifier(character.dexterity || 10)}</div>
+                    </div>
+                    <div class="attribute-box">
+                        <h4>CON</h4>
+                        <div class="attribute-value">${character.constitution || 10}</div>
+                        <div class="attribute-modifier">${this.getModifier(character.constitution || 10) >= 0 ? '+' : ''}${this.getModifier(character.constitution || 10)}</div>
+                    </div>
+                    <div class="attribute-box">
+                        <h4>INT</h4>
+                        <div class="attribute-value">${character.intelligence || 10}</div>
+                        <div class="attribute-modifier">${this.getModifier(character.intelligence || 10) >= 0 ? '+' : ''}${this.getModifier(character.intelligence || 10)}</div>
+                    </div>
+                    <div class="attribute-box">
+                        <h4>WIS</h4>
+                        <div class="attribute-value">${character.wisdom || 10}</div>
+                        <div class="attribute-modifier">${this.getModifier(character.wisdom || 10) >= 0 ? '+' : ''}${this.getModifier(character.wisdom || 10)}</div>
+                    </div>
+                    <div class="attribute-box">
+                        <h4>CHA</h4>
+                        <div class="attribute-value">${character.charisma || 10}</div>
+                        <div class="attribute-modifier">${this.getModifier(character.charisma || 10) >= 0 ? '+' : ''}${this.getModifier(character.charisma || 10)}</div>
+                    </div>
                 </div>
 
                 <div class="skills-section">
@@ -234,12 +258,47 @@ export class CharacterView {
                         `).join('') || '<p>No skills recorded</p>'}
                     </div>
                 </div>
+
+                <div id="experience-container"></div>
+                
+                <div id="spell-slot-container"></div>
+                
+                <div id="skill-check-view" style="display: none;"></div>
             </div>
         `;
 
         document.getElementById('edit-character-btn').addEventListener('click', () => {
             this.showCharacterForm(character);
         });
+        
+        document.getElementById('skill-check-btn').addEventListener('click', () => {
+            // Toggle skill check view
+            const skillCheckView = document.getElementById('skill-check-view');
+            if (skillCheckView.style.display === 'none') {
+                skillCheckView.style.display = 'block';
+                // Initialize skill check view if available
+                if (window.skillCheckView) {
+                    window.skillCheckView.init(character);
+                }
+            } else {
+                skillCheckView.style.display = 'none';
+            }
+        });
+
+        // Initialize experience tracker
+        if (window.experienceTracker) {
+            window.experienceTracker.setCharacter(character);
+        }
+
+        // Initialize spell slot manager if character has spell data
+        if (window.spellSlotManager && character.spells) {
+            window.spellSlotManager.setCharacter(character);
+        }
+    }
+
+    updateCharacter(character) {
+        this.currentCharacter = character;
+        this.showCharacterSheet(character);
     }
 
     getModifier(abilityScore) {

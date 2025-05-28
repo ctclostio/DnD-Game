@@ -5,6 +5,7 @@
   "savingThrowProficiencies": ["Strength", "Constitution"],
   "armorProficiencies": ["All armor", "Shields"],
   "weaponProficiencies": ["Simple weapons", "Martial weapons"],
+  "toolProficiencies": [],
   "skillChoices": {
     "count": 2,
     "from": [
@@ -37,29 +38,110 @@
         "Two handaxes"
       ]
     },
-    "A dungeoneer's pack or an explorer's pack"
+    {
+      "choice": [
+        "A dungeoneer's pack",
+        "An explorer's pack"
+      ]
+    }
   ],
   "features": {
     "1": [
       {
         "name": "Fighting Style",
-        "description": "You adopt a particular style of fighting as your specialty."
+        "description": "You adopt a particular style of fighting as your specialty. Choose one of the following options. You can't take a Fighting Style option more than once, even if you later get to choose again.",
+        "options": [
+          "Archery: You gain a +2 bonus to attack rolls you make with ranged weapons.",
+          "Defense: While you are wearing armor, you gain a +1 bonus to AC.",
+          "Dueling: When you are wielding a melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon.",
+          "Great Weapon Fighting: When you roll a 1 or 2 on a damage die for an attack you make with a melee weapon that you are wielding with two hands, you can reroll the die and must use the new roll.",
+          "Protection: When a creature you can see attacks a target other than you that is within 5 feet of you, you can use your reaction to impose disadvantage on the attack roll. You must be wielding a shield.",
+          "Two-Weapon Fighting: When you engage in two-weapon fighting, you can add your ability modifier to the damage of the second attack."
+        ]
       },
       {
         "name": "Second Wind",
-        "description": "You have a limited well of stamina that you can draw on to protect yourself from harm."
+        "description": "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level. Once you use this feature, you must finish a short or long rest before you can use it again."
       }
     ],
     "2": [
       {
         "name": "Action Surge",
-        "description": "You can push yourself beyond your normal limits for a moment."
+        "description": "Starting at 2nd level, you can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action. Once you use this feature, you must finish a short or long rest before you can use it again. Starting at 17th level, you can use it twice before a rest, but only once on the same turn."
       }
     ],
     "3": [
       {
         "name": "Martial Archetype",
-        "description": "You choose an archetype that you strive to emulate in your combat styles and techniques."
+        "description": "At 3rd level, you choose an archetype that you strive to emulate in your combat styles and techniques. The archetype you choose grants you features at 3rd level and again at 7th, 10th, 15th, and 18th level."
+      }
+    ],
+    "4": [
+      {
+        "name": "Ability Score Improvement",
+        "description": "When you reach 4th level, and again at 6th, 8th, 12th, 14th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+      }
+    ],
+    "5": [
+      {
+        "name": "Extra Attack",
+        "description": "Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn. The number of attacks increases to three when you reach 11th level in this class and to four when you reach 20th level in this class."
+      }
+    ]
+  },
+  "subclasses": {
+    "3": [
+      {
+        "name": "Champion",
+        "description": "The archetypal Champion focuses on the development of raw physical power honed to deadly perfection. Those who model themselves on this archetype combine rigorous training with physical excellence to deal devastating blows.",
+        "features": {
+          "3": [
+            {
+              "name": "Improved Critical",
+              "description": "Beginning when you choose this archetype at 3rd level, your weapon attacks score a critical hit on a roll of 19 or 20."
+            }
+          ]
+        }
+      },
+      {
+        "name": "Battle Master",
+        "description": "Those who emulate the archetypal Battle Master employ martial techniques passed down through generations. To a Battle Master, combat is an academic field, sometimes including subjects beyond battle such as weaponsmithing and calligraphy.",
+        "features": {
+          "3": [
+            {
+              "name": "Combat Superiority",
+              "description": "When you choose this archetype at 3rd level, you learn maneuvers that are fueled by special dice called superiority dice."
+            },
+            {
+              "name": "Maneuvers",
+              "description": "You learn three maneuvers of your choice. Many maneuvers enhance an attack in some way. You can use only one maneuver per attack."
+            },
+            {
+              "name": "Superiority Dice",
+              "description": "You have four superiority dice, which are d8s. A superiority die is expended when you use it. You regain all of your expended superiority dice when you finish a short or long rest."
+            },
+            {
+              "name": "Student of War",
+              "description": "At 3rd level, you gain proficiency with one type of artisan's tools of your choice."
+            }
+          ]
+        }
+      },
+      {
+        "name": "Eldritch Knight",
+        "description": "The archetypal Eldritch Knight combines the martial mastery common to all fighters with a careful study of magic. Eldritch Knights use magical techniques similar to those practiced by wizards.",
+        "features": {
+          "3": [
+            {
+              "name": "Spellcasting",
+              "description": "When you reach 3rd level, you augment your martial prowess with the ability to cast spells."
+            },
+            {
+              "name": "Weapon Bond",
+              "description": "At 3rd level, you learn a ritual that creates a magical bond between yourself and one weapon. You perform the ritual over the course of 1 hour, which can be done during a short rest."
+            }
+          ]
+        }
       }
     ]
   }

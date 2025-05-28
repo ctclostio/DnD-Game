@@ -7,12 +7,21 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="app">
+    <!-- Authentication Container -->
+    <div id="auth-container" style="display: none;">
+        <!-- Login/Register forms will be rendered here -->
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-container" style="display: none;">
         <header>
             <h1>D&D Online Game</h1>
+            <div id="user-info"></div>
             <nav id="main-nav">
-                <button data-view="character">Character</button>
+                <button data-view="character">Characters</button>
+                <button data-view="character-builder">Create Character</button>
                 <button data-view="game">Game Session</button>
+                <button data-view="combat">Combat</button>
                 <button data-view="dice">Dice Roller</button>
             </nav>
         </header>
@@ -30,5 +39,10 @@
             </div>
         </aside>
     </div>
+
+    <script>
+        // Make app instance globally available for logout button
+        let app;
+    </script>
 </body>
 </html>

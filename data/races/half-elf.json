@@ -1,0 +1,31 @@
+{
+  "name": "Half-Elf",
+  "size": "Medium",
+  "speed": 30,
+  "abilityScoreIncrease": {
+    "charisma": 2,
+    "anyTwo": 1
+  },
+  "languages": ["Common", "Elvish", "One extra language of your choice"],
+  "traits": [
+    {
+      "name": "Darkvision",
+      "description": "You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light."
+    },
+    {
+      "name": "Fey Ancestry",
+      "description": "You have advantage on saving throws against being charmed, and magic can't put you to sleep."
+    },
+    {
+      "name": "Skill Versatility",
+      "description": "You gain proficiency in two skills of your choice."
+    }
+  ],
+  "subraces": [],
+  "age": {
+    "maturity": 20,
+    "lifespan": "180 years"
+  },
+  "alignment": "Half-elves share the chaotic bent of their elven heritage. They value both personal freedom and creative expression.",
+  "sizeDescription": "Half-elves are about the same size as humans, ranging from 5 to 6 feet tall."
+}

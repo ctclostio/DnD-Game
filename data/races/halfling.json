@@ -1,0 +1,55 @@
+{
+  "name": "Halfling",
+  "size": "Small",
+  "speed": 25,
+  "abilityScoreIncrease": {
+    "dexterity": 2
+  },
+  "languages": ["Common", "Halfling"],
+  "traits": [
+    {
+      "name": "Lucky",
+      "description": "When you roll a 1 on the d20 for an attack roll, ability check, or saving throw, you can reroll the die and must use the new roll."
+    },
+    {
+      "name": "Brave",
+      "description": "You have advantage on saving throws against being frightened."
+    },
+    {
+      "name": "Halfling Nimbleness",
+      "description": "You can move through the space of any creature that is of a size larger than yours."
+    }
+  ],
+  "subraces": [
+    {
+      "name": "Lightfoot",
+      "abilityScoreIncrease": {
+        "charisma": 1
+      },
+      "traits": [
+        {
+          "name": "Naturally Stealthy",
+          "description": "You can attempt to hide even when you are obscured only by a creature that is at least one size larger than you."
+        }
+      ]
+    },
+    {
+      "name": "Stout",
+      "abilityScoreIncrease": {
+        "constitution": 1
+      },
+      "traits": [
+        {
+          "name": "Stout Resilience",
+          "description": "You have advantage on saving throws against poison, and you have resistance against poison damage."
+        }
+      ]
+    }
+  ],
+  "age": {
+    "maturity": 20,
+    "lifespan": "150 years"
+  },
+  "alignment": "Most halflings are lawful good. As a rule, they are good-hearted and kind, hate to see others in pain, and have no tolerance for oppression.",
+  "sizeDescription": "Halflings average about 3 feet tall and weigh about 40 pounds."
+}

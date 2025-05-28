@@ -1,0 +1,292 @@
+[
+  {
+    "name": "Fighter",
+    "hit_dice": 10,
+    "primary_ability": "strength",
+    "saving_throws": ["strength", "constitution"],
+    "skills_num": 2,
+    "skill_choices": ["acrobatics", "animal_handling", "athletics", "history", "insight", "intimidation", "perception", "survival"],
+    "starting_hp": 10,
+    "hp_per_level": 6,
+    "proficiencies": {
+      "armor": ["Light armor", "Medium armor", "Heavy armor", "Shields"],
+      "weapons": ["Simple weapons", "Martial weapons"],
+      "tools": []
+    },
+    "features": [
+      {"level": 1, "name": "Fighting Style", "description": "Choose a fighting style specialization"},
+      {"level": 1, "name": "Second Wind", "description": "Recover HP as a bonus action"},
+      {"level": 2, "name": "Action Surge", "description": "Take an additional action"},
+      {"level": 3, "name": "Martial Archetype", "description": "Choose a martial archetype"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 5, "name": "Extra Attack", "description": "Attack twice when taking Attack action"}
+    ]
+  },
+  {
+    "name": "Wizard",
+    "hit_dice": 6,
+    "primary_ability": "intelligence",
+    "saving_throws": ["intelligence", "wisdom"],
+    "skills_num": 2,
+    "skill_choices": ["arcana", "history", "insight", "investigation", "medicine", "religion"],
+    "starting_hp": 6,
+    "hp_per_level": 4,
+    "proficiencies": {
+      "armor": [],
+      "weapons": ["Daggers", "Darts", "Slings", "Quarterstaffs", "Light crossbows"],
+      "tools": []
+    },
+    "features": [
+      {"level": 1, "name": "Spellcasting", "description": "Cast wizard spells using Intelligence"},
+      {"level": 1, "name": "Arcane Recovery", "description": "Recover spell slots on short rest"},
+      {"level": 2, "name": "Arcane Tradition", "description": "Choose a school of magic"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 5, "name": "3rd Level Spells", "description": "Learn and cast 3rd level spells"}
+    ]
+  },
+  {
+    "name": "Rogue",
+    "hit_dice": 8,
+    "primary_ability": "dexterity",
+    "saving_throws": ["dexterity", "intelligence"],
+    "skills_num": 4,
+    "skill_choices": ["acrobatics", "athletics", "deception", "insight", "intimidation", "investigation", "perception", "performance", "persuasion", "sleight_of_hand", "stealth"],
+    "starting_hp": 8,
+    "hp_per_level": 5,
+    "proficiencies": {
+      "armor": ["Light armor"],
+      "weapons": ["Simple weapons", "Hand crossbows", "Longswords", "Rapiers", "Shortswords"],
+      "tools": ["Thieves' tools"]
+    },
+    "features": [
+      {"level": 1, "name": "Expertise", "description": "Double proficiency bonus on two skills"},
+      {"level": 1, "name": "Sneak Attack", "description": "Deal extra damage when you have advantage"},
+      {"level": 1, "name": "Thieves' Cant", "description": "Secret language of thieves"},
+      {"level": 2, "name": "Cunning Action", "description": "Dash, Disengage, or Hide as bonus action"},
+      {"level": 3, "name": "Roguish Archetype", "description": "Choose a roguish archetype"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 5, "name": "Uncanny Dodge", "description": "Halve damage from one attack per round"}
+    ]
+  },
+  {
+    "name": "Cleric",
+    "hit_dice": 8,
+    "primary_ability": "wisdom",
+    "saving_throws": ["wisdom", "charisma"],
+    "skills_num": 2,
+    "skill_choices": ["history", "insight", "medicine", "persuasion", "religion"],
+    "starting_hp": 8,
+    "hp_per_level": 5,
+    "proficiencies": {
+      "armor": ["Light armor", "Medium armor", "Shields"],
+      "weapons": ["Simple weapons"],
+      "tools": []
+    },
+    "features": [
+      {"level": 1, "name": "Spellcasting", "description": "Cast cleric spells using Wisdom"},
+      {"level": 1, "name": "Divine Domain", "description": "Choose a divine domain"},
+      {"level": 2, "name": "Channel Divinity", "description": "Channel divine energy for special effects"},
+      {"level": 2, "name": "Turn Undead", "description": "Make undead flee"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 5, "name": "Destroy Undead", "description": "Instantly destroy weak undead"}
+    ]
+  },
+  {
+    "name": "Ranger",
+    "hit_dice": 10,
+    "primary_ability": "dexterity",
+    "saving_throws": ["strength", "dexterity"],
+    "skills_num": 3,
+    "skill_choices": ["animal_handling", "athletics", "insight", "investigation", "nature", "perception", "stealth", "survival"],
+    "starting_hp": 10,
+    "hp_per_level": 6,
+    "proficiencies": {
+      "armor": ["Light armor", "Medium armor", "Shields"],
+      "weapons": ["Simple weapons", "Martial weapons"],
+      "tools": []
+    },
+    "features": [
+      {"level": 1, "name": "Favored Enemy", "description": "Advantage on tracking favored enemies"},
+      {"level": 1, "name": "Natural Explorer", "description": "Expert in navigating certain terrain"},
+      {"level": 2, "name": "Fighting Style", "description": "Choose a fighting style"},
+      {"level": 2, "name": "Spellcasting", "description": "Cast ranger spells using Wisdom"},
+      {"level": 3, "name": "Ranger Archetype", "description": "Choose a ranger archetype"},
+      {"level": 3, "name": "Primeval Awareness", "description": "Sense nearby creatures"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 5, "name": "Extra Attack", "description": "Attack twice when taking Attack action"}
+    ]
+  },
+  {
+    "name": "Warlock",
+    "hit_dice": 8,
+    "primary_ability": "charisma",
+    "saving_throws": ["wisdom", "charisma"],
+    "skills_num": 2,
+    "skill_choices": ["arcana", "deception", "history", "intimidation", "investigation", "nature", "religion"],
+    "starting_hp": 8,
+    "hp_per_level": 5,
+    "proficiencies": {
+      "armor": ["Light armor"],
+      "weapons": ["Simple weapons"],
+      "tools": []
+    },
+    "features": [
+      {"level": 1, "name": "Otherworldly Patron", "description": "Make a pact with an otherworldly being"},
+      {"level": 1, "name": "Pact Magic", "description": "Cast warlock spells using Charisma"},
+      {"level": 2, "name": "Eldritch Invocations", "description": "Learn eldritch invocations"},
+      {"level": 3, "name": "Pact Boon", "description": "Receive a gift from your patron"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 5, "name": "3rd Level Spells", "description": "Learn and cast 3rd level spells"}
+    ]
+  },
+  {
+    "name": "Barbarian",
+    "hit_dice": 12,
+    "primary_ability": "strength",
+    "saving_throws": ["strength", "constitution"],
+    "skills_num": 2,
+    "skill_choices": ["animal_handling", "athletics", "intimidation", "nature", "perception", "survival"],
+    "starting_hp": 12,
+    "hp_per_level": 7,
+    "proficiencies": {
+      "armor": ["Light armor", "Medium armor", "Shields"],
+      "weapons": ["Simple weapons", "Martial weapons"],
+      "tools": []
+    },
+    "features": [
+      {"level": 1, "name": "Rage", "description": "Enter a battle rage for damage bonus and resistance"},
+      {"level": 1, "name": "Unarmored Defense", "description": "AC equals 10 + Dex + Con when not wearing armor"},
+      {"level": 2, "name": "Reckless Attack", "description": "Gain advantage on attacks at cost of defense"},
+      {"level": 2, "name": "Danger Sense", "description": "Advantage on Dexterity saves you can see"},
+      {"level": 3, "name": "Primal Path", "description": "Choose a primal path"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 5, "name": "Extra Attack", "description": "Attack twice when taking Attack action"},
+      {"level": 5, "name": "Fast Movement", "description": "Speed increases by 10 feet"}
+    ]
+  },
+  {
+    "name": "Bard",
+    "hit_dice": 8,
+    "primary_ability": "charisma",
+    "saving_throws": ["dexterity", "charisma"],
+    "skills_num": 3,
+    "skill_choices": ["acrobatics", "animal_handling", "arcana", "athletics", "deception", "history", "insight", "intimidation", "investigation", "medicine", "nature", "perception", "performance", "persuasion", "religion", "sleight_of_hand", "stealth", "survival"],
+    "starting_hp": 8,
+    "hp_per_level": 5,
+    "proficiencies": {
+      "armor": ["Light armor"],
+      "weapons": ["Simple weapons", "Hand crossbows", "Longswords", "Rapiers", "Shortswords"],
+      "tools": ["Three musical instruments"]
+    },
+    "features": [
+      {"level": 1, "name": "Bardic Inspiration", "description": "Inspire others with stirring words or music"},
+      {"level": 1, "name": "Spellcasting", "description": "Cast bard spells using Charisma"},
+      {"level": 2, "name": "Jack of All Trades", "description": "Half proficiency to non-proficient checks"},
+      {"level": 2, "name": "Song of Rest", "description": "Help allies recover during short rest"},
+      {"level": 3, "name": "Bard College", "description": "Choose a bard college"},
+      {"level": 3, "name": "Expertise", "description": "Double proficiency on two skills"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 5, "name": "Font of Inspiration", "description": "Regain bardic inspiration on short rest"}
+    ]
+  },
+  {
+    "name": "Paladin",
+    "hit_dice": 10,
+    "primary_ability": "strength",
+    "saving_throws": ["wisdom", "charisma"],
+    "skills_num": 2,
+    "skill_choices": ["athletics", "insight", "intimidation", "medicine", "persuasion", "religion"],
+    "starting_hp": 10,
+    "hp_per_level": 6,
+    "proficiencies": {
+      "armor": ["Light armor", "Medium armor", "Heavy armor", "Shields"],
+      "weapons": ["Simple weapons", "Martial weapons"],
+      "tools": []
+    },
+    "features": [
+      {"level": 1, "name": "Divine Sense", "description": "Sense celestials, fiends, and undead"},
+      {"level": 1, "name": "Lay on Hands", "description": "Heal wounds with divine touch"},
+      {"level": 2, "name": "Fighting Style", "description": "Choose a fighting style"},
+      {"level": 2, "name": "Spellcasting", "description": "Cast paladin spells using Charisma"},
+      {"level": 2, "name": "Divine Smite", "description": "Expend spell slots for extra damage"},
+      {"level": 3, "name": "Divine Health", "description": "Immune to disease"},
+      {"level": 3, "name": "Sacred Oath", "description": "Swear a sacred oath"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 5, "name": "Extra Attack", "description": "Attack twice when taking Attack action"}
+    ]
+  },
+  {
+    "name": "Sorcerer",
+    "hit_dice": 6,
+    "primary_ability": "charisma",
+    "saving_throws": ["constitution", "charisma"],
+    "skills_num": 2,
+    "skill_choices": ["arcana", "deception", "insight", "intimidation", "persuasion", "religion"],
+    "starting_hp": 6,
+    "hp_per_level": 4,
+    "proficiencies": {
+      "armor": [],
+      "weapons": ["Daggers", "Darts", "Slings", "Quarterstaffs", "Light crossbows"],
+      "tools": []
+    },
+    "features": [
+      {"level": 1, "name": "Spellcasting", "description": "Cast sorcerer spells using Charisma"},
+      {"level": 1, "name": "Sorcerous Origin", "description": "Choose source of magical power"},
+      {"level": 2, "name": "Font of Magic", "description": "Create spell slots using sorcery points"},
+      {"level": 3, "name": "Metamagic", "description": "Twist spells to suit your needs"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 5, "name": "3rd Level Spells", "description": "Learn and cast 3rd level spells"}
+    ]
+  },
+  {
+    "name": "Druid",
+    "hit_dice": 8,
+    "primary_ability": "wisdom",
+    "saving_throws": ["intelligence", "wisdom"],
+    "skills_num": 2,
+    "skill_choices": ["arcana", "animal_handling", "insight", "medicine", "nature", "perception", "religion", "survival"],
+    "starting_hp": 8,
+    "hp_per_level": 5,
+    "proficiencies": {
+      "armor": ["Light armor", "Medium armor", "Shields (non-metal)"],
+      "weapons": ["Clubs", "Daggers", "Darts", "Javelins", "Maces", "Quarterstaffs", "Scimitars", "Sickles", "Slings", "Spears"],
+      "tools": ["Herbalism kit"]
+    },
+    "features": [
+      {"level": 1, "name": "Druidic", "description": "Know the secret language of druids"},
+      {"level": 1, "name": "Spellcasting", "description": "Cast druid spells using Wisdom"},
+      {"level": 2, "name": "Wild Shape", "description": "Transform into beasts"},
+      {"level": 2, "name": "Druid Circle", "description": "Choose a druid circle"},
+      {"level": 4, "name": "Wild Shape Improvement", "description": "Transform into stronger beasts"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 5, "name": "3rd Level Spells", "description": "Learn and cast 3rd level spells"}
+    ]
+  },
+  {
+    "name": "Monk",
+    "hit_dice": 8,
+    "primary_ability": "dexterity",
+    "saving_throws": ["strength", "dexterity"],
+    "skills_num": 2,
+    "skill_choices": ["acrobatics", "athletics", "history", "insight", "religion", "stealth"],
+    "starting_hp": 8,
+    "hp_per_level": 5,
+    "proficiencies": {
+      "armor": [],
+      "weapons": ["Simple weapons", "Shortswords"],
+      "tools": ["One type of artisan's tools or one musical instrument"]
+    },
+    "features": [
+      {"level": 1, "name": "Unarmored Defense", "description": "AC equals 10 + Dex + Wis when not wearing armor"},
+      {"level": 1, "name": "Martial Arts", "description": "Use Dexterity for unarmed strikes"},
+      {"level": 2, "name": "Ki", "description": "Harness mystical energy for special abilities"},
+      {"level": 2, "name": "Unarmored Movement", "description": "Speed increases when not wearing armor"},
+      {"level": 3, "name": "Monastic Tradition", "description": "Choose a monastic tradition"},
+      {"level": 3, "name": "Deflect Missiles", "description": "Catch or deflect ranged attacks"},
+      {"level": 4, "name": "Ability Score Improvement", "description": "Increase ability scores or take a feat"},
+      {"level": 4, "name": "Slow Fall", "description": "Reduce falling damage"},
+      {"level": 5, "name": "Extra Attack", "description": "Attack twice when taking Attack action"},
+      {"level": 5, "name": "Stunning Strike", "description": "Stun enemies with ki-powered strikes"}
+    ]
+  }
+]

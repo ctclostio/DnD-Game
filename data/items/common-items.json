@@ -1,0 +1,91 @@
+{
+  "items": [
+    {
+      "name": "Longsword",
+      "type": "weapon",
+      "rarity": "common",
+      "weight": 3,
+      "value": 1500,
+      "properties": {
+        "damage": "1d8",
+        "damage_type": "slashing",
+        "versatile": "1d10",
+        "weapon_type": "martial",
+        "melee": true
+      },
+      "requires_attunement": false,
+      "description": "A common longsword with a double-edged blade."
+    },
+    {
+      "name": "Leather Armor",
+      "type": "armor",
+      "rarity": "common",
+      "weight": 10,
+      "value": 1000,
+      "properties": {
+        "ac": 11,
+        "ac_type": "11 + Dex modifier",
+        "armor_type": "light",
+        "stealth_disadvantage": false
+      },
+      "requires_attunement": false,
+      "description": "Made from stiff leather, this armor offers modest protection."
+    },
+    {
+      "name": "Healing Potion",
+      "type": "consumable",
+      "rarity": "common",
+      "weight": 0.5,
+      "value": 5000,
+      "properties": {
+        "healing": "2d4+2",
+        "consumable": true,
+        "action_type": "action"
+      },
+      "requires_attunement": false,
+      "description": "A red liquid that glimmers when agitated. Regain 2d4+2 hit points when you drink this potion."
+    },
+    {
+      "name": "Backpack",
+      "type": "other",
+      "rarity": "common",
+      "weight": 5,
+      "value": 200,
+      "properties": {
+        "capacity": 30,
+        "container": true
+      },
+      "requires_attunement": false,
+      "description": "A standard adventurer's backpack with many pockets."
+    },
+    {
+      "name": "Rope (50 ft)",
+      "type": "tool",
+      "rarity": "common",
+      "weight": 10,
+      "value": 100,
+      "properties": {
+        "length": 50,
+        "units": "feet"
+      },
+      "requires_attunement": false,
+      "description": "50 feet of hempen rope."
+    },
+    {
+      "name": "Torch",
+      "type": "other",
+      "rarity": "common",
+      "weight": 1,
+      "value": 1,
+      "properties": {
+        "light_radius": 20,
+        "bright_light": 20,
+        "dim_light": 20,
+        "duration": 60,
+        "consumable": true
+      },
+      "requires_attunement": false,
+      "description": "A torch burns for 1 hour, providing bright light in a 20-foot radius."
+    }
+  ]
+}

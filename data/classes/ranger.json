@@ -1,0 +1,160 @@
+{
+  "name": "Ranger",
+  "hitDice": "1d10",
+  "primaryAbility": "Dexterity and Wisdom",
+  "savingThrowProficiencies": ["Strength", "Dexterity"],
+  "armorProficiencies": ["Light armor", "Medium armor", "Shields"],
+  "weaponProficiencies": ["Simple weapons", "Martial weapons"],
+  "toolProficiencies": [],
+  "skillChoices": {
+    "count": 3,
+    "from": [
+      "Animal Handling",
+      "Athletics",
+      "Insight",
+      "Investigation",
+      "Nature",
+      "Perception",
+      "Stealth",
+      "Survival"
+    ]
+  },
+  "startingEquipment": [
+    {
+      "choice": [
+        "Scale mail",
+        "Leather armor"
+      ]
+    },
+    {
+      "choice": [
+        "Two shortswords",
+        "Two simple melee weapons"
+      ]
+    },
+    {
+      "choice": [
+        "A dungeoneer's pack",
+        "An explorer's pack"
+      ]
+    },
+    "A longbow and a quiver of 20 arrows"
+  ],
+  "features": {
+    "1": [
+      {
+        "name": "Favored Enemy",
+        "description": "Beginning at 1st level, you have significant experience studying, tracking, hunting, and even talking to a certain type of enemy. Choose a type of favored enemy: aberrations, beasts, celestials, constructs, dragons, elementals, fey, fiends, giants, monstrosities, oozes, plants, or undead. Alternatively, you can select two races of humanoid (such as gnolls and orcs) as favored enemies. You have advantage on Wisdom (Survival) checks to track your favored enemies, as well as on Intelligence checks to recall information about them.",
+        "additionalChoices": {
+          "6": "Choose one additional favored enemy",
+          "14": "Choose one additional favored enemy"
+        }
+      },
+      {
+        "name": "Natural Explorer",
+        "description": "You are particularly familiar with one type of natural environment and are adept at traveling and surviving in such regions. Choose one type of favored terrain: arctic, coast, desert, forest, grassland, mountain, swamp, or the Underdark. When you make an Intelligence or Wisdom check related to your favored terrain, your proficiency bonus is doubled if you are using a skill that you're proficient in. While traveling for an hour or more in your favored terrain, you gain several benefits.",
+        "additionalChoices": {
+          "6": "Choose one additional favored terrain",
+          "10": "Choose one additional favored terrain"
+        }
+      }
+    ],
+    "2": [
+      {
+        "name": "Fighting Style",
+        "description": "At 2nd level, you adopt a particular style of fighting as your specialty. Choose one of the following options. You can't take a Fighting Style option more than once, even if you later get to choose again.",
+        "options": [
+          "Archery: You gain a +2 bonus to attack rolls you make with ranged weapons.",
+          "Defense: While you are wearing armor, you gain a +1 bonus to AC.",
+          "Dueling: When you are wielding a melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon.",
+          "Two-Weapon Fighting: When you engage in two-weapon fighting, you can add your ability modifier to the damage of the second attack."
+        ]
+      },
+      {
+        "name": "Spellcasting",
+        "description": "By the time you reach 2nd level, you have learned to use the magical essence of nature to cast spells, much as a druid does. See chapter 10 for the general rules of spellcasting and chapter 11 for the ranger spell list."
+      }
+    ],
+    "3": [
+      {
+        "name": "Ranger Archetype",
+        "description": "At 3rd level, you choose an archetype that you strive to emulate. Your choice grants you features at 3rd level and again at 7th, 11th, and 15th level."
+      },
+      {
+        "name": "Primeval Awareness",
+        "description": "Beginning at 3rd level, you can use your action and expend one ranger spell slot to focus your awareness on the region around you. For 1 minute per level of the spell slot you expend, you can sense whether the following types of creatures are present within 1 mile of you (or within up to 6 miles if you are in your favored terrain): aberrations, celestials, dragons, elementals, fey, fiends, and undead. This feature doesn't reveal the creatures' location or number."
+      }
+    ],
+    "4": [
+      {
+        "name": "Ability Score Improvement",
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+      }
+    ],
+    "5": [
+      {
+        "name": "Extra Attack",
+        "description": "Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn."
+      }
+    ]
+  },
+  "spellcasting": {
+    "ability": "Wisdom",
+    "spellAttackModifier": "proficiency bonus + Wisdom modifier",
+    "spellSaveDC": "8 + proficiency bonus + Wisdom modifier",
+    "ritualCasting": false,
+    "spellcastingFocus": "You can use a druidic focus as a spellcasting focus for your ranger spells.",
+    "spellsKnownDescription": "You know two 1st-level spells of your choice from the ranger spell list. You learn additional ranger spells of your choice at higher levels.",
+    "spellsKnown": {
+      "2": 2,
+      "3": 3,
+      "5": 4,
+      "7": 5,
+      "9": 6,
+      "11": 7,
+      "13": 8,
+      "15": 9,
+      "17": 10,
+      "19": 11
+    },
+    "spellSlots": {
+      "2": {"1st": 2},
+      "3": {"1st": 3},
+      "4": {"1st": 3},
+      "5": {"1st": 4, "2nd": 2}
+    }
+  },
+  "subclasses": {
+    "3": [
+      {
+        "name": "Hunter",
+        "description": "Emulating the Hunter archetype means accepting your place as a bulwark between civilization and the terrors of the wilderness.",
+        "features": {
+          "3": [
+            {
+              "name": "Hunter's Prey",
+              "description": "At 3rd level, you gain one of the following features of your choice.",
+              "options": [
+                "Colossus Slayer: Your tenacity can wear down the most potent foes. When you hit a creature with a weapon attack, the creature takes an extra 1d8 damage if it's below its hit point maximum. You can deal this extra damage only once per turn.",
+                "Giant Killer: When a Large or larger creature within 5 feet of you hits or misses you with an attack, you can use your reaction to attack that creature immediately after its attack, provided that you can see the creature.",
+                "Horde Breaker: Once on each of your turns when you make a weapon attack, you can make another attack with the same weapon against a different creature that is within 5 feet of the original target and within range of your weapon."
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "Beast Master",
+        "description": "The Beast Master archetype embodies a friendship between the civilized races and the beasts of the world.",
+        "features": {
+          "3": [
+            {
+              "name": "Ranger's Companion",
+              "description": "At 3rd level, you gain a beast companion that accompanies you on your adventures and is trained to fight alongside you. Choose a beast that is no larger than Medium and that has a challenge rating of 1/4 or lower. Add your proficiency bonus to the beast's AC, attack rolls, and damage rolls, as well as to any saving throws and skills it is proficient in. Its hit point maximum equals its normal maximum or four times your ranger level, whichever is higher."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

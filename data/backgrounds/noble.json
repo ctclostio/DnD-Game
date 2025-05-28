@@ -1,0 +1,35 @@
+{
+  "name": "Noble",
+  "description": "You understand wealth, power, and privilege. You carry a noble title, and your family owns land.",
+  "skillProficiencies": ["History", "Persuasion"],
+  "toolProficiencies": ["One type of gaming set"],
+  "languages": 1,
+  "equipment": [
+    "A set of fine clothes",
+    "A signet ring",
+    "A scroll of pedigree",
+    "A purse containing 25 gp"
+  ],
+  "feature": {
+    "name": "Position of Privilege",
+    "description": "Thanks to your noble birth, people are inclined to think the best of you."
+  },
+  "suggestedCharacteristics": {
+    "personalityTraits": [
+      "My eloquent flattery makes everyone I talk to feel like the most wonderful and important person in the world.",
+      "I take great pains to always look my best and follow the latest fashions."
+    ],
+    "ideals": [
+      "Responsibility. It is my duty to protect and care for the people beneath me.",
+      "Independence. I must prove that I can handle myself without the coddling of my family."
+    ],
+    "bonds": [
+      "I will face any challenge to win the approval of my family.",
+      "The common folk must see me as a hero of the people."
+    ],
+    "flaws": [
+      "I secretly believe that everyone is beneath me.",
+      "I hide a truly scandalous secret that could ruin my family forever."
+    ]
+  }
+}

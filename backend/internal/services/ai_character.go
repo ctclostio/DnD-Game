@@ -1,0 +1,478 @@
+package services
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/your-username/dnd-game/backend/internal/models"
+)
+
+type AICharacterService struct {
+	apiKey     string
+	apiURL     string
+	httpClient *http.Client
+}
+
+type AIRequest struct {
+	Model    string        `json:"model"`
+	Messages []AIMessage   `json:"messages"`
+	MaxTokens int          `json:"max_tokens"`
+}
+
+type AIMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type AIResponse struct {
+	Choices []struct {
+		Message AIMessage `json:"message"`
+	} `json:"choices"`
+}
+
+type CustomCharacterRequest struct {
+	Name        string `json:"name"`
+	Concept     string `json:"concept"`
+	Race        string `json:"race,omitempty"`
+	Class       string `json:"class,omitempty"`
+	Background  string `json:"background,omitempty"`
+	Ruleset     string `json:"ruleset,omitempty"`
+	Level       int    `json:"level,omitempty"`
+}
+
+func NewAICharacterService() *AICharacterService {
+	apiKey := os.Getenv("AI_API_KEY")
+	apiURL := os.Getenv("AI_API_URL")
+	
+	if apiURL == "" {
+		apiURL = "https://api.openai.com/v1/chat/completions"
+	}
+
+	return &AICharacterService{
+		apiKey: apiKey,
+		apiURL: apiURL,
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+func (s *AICharacterService) IsEnabled() bool {
+	return s.apiKey != ""
+}
+
+func (s *AICharacterService) GenerateCustomCharacter(req CustomCharacterRequest) (*models.Character, error) {
+	if !s.IsEnabled() {
+		return nil, fmt.Errorf("AI character generation is not enabled")
+	}
+
+	// Build the prompt
+	prompt := s.buildCharacterPrompt(req)
+
+	// Call AI API
+	response, err := s.callAI(prompt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate character: %w", err)
+	}
+
+	// Parse AI response into character
+	character, err := s.parseAIResponse(response, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse AI response: %w", err)
+	}
+
+	return character, nil
+}
+
+func (s *AICharacterService) ValidateCustomContent(character *models.Character) error {
+	if !s.IsEnabled() {
+		// Skip validation if AI is not enabled
+		return nil
+	}
+
+	prompt := fmt.Sprintf(`Validate this D&D character for game balance:
+Name: %s
+Race: %s
+Class: %s
+Level: %d
+Stats: STR %d, DEX %d, CON %d, INT %d, WIS %d, CHA %d
+
+Is this character balanced for play? If not, suggest adjustments. Respond with JSON:
+{
+  "balanced": true/false,
+  "issues": ["list of issues"],
+  "suggestions": ["list of suggestions"]
+}`, character.Name, character.Race, character.Class, character.Level,
+		character.Attributes.Strength, character.Attributes.Dexterity,
+		character.Attributes.Constitution, character.Attributes.Intelligence,
+		character.Attributes.Wisdom, character.Attributes.Charisma)
+
+	response, err := s.callAI(prompt)
+	if err != nil {
+		return fmt.Errorf("validation failed: %w", err)
+	}
+
+	// Parse validation response
+	var validation struct {
+		Balanced    bool     `json:"balanced"`
+		Issues      []string `json:"issues"`
+		Suggestions []string `json:"suggestions"`
+	}
+
+	if err := json.Unmarshal([]byte(response), &validation); err != nil {
+		// If parsing fails, assume it's balanced
+		return nil
+	}
+
+	if !validation.Balanced && len(validation.Issues) > 0 {
+		return fmt.Errorf("character balance issues: %s", strings.Join(validation.Issues, "; "))
+	}
+
+	return nil
+}
+
+func (s *AICharacterService) buildCharacterPrompt(req CustomCharacterRequest) string {
+	ruleset := req.Ruleset
+	if ruleset == "" {
+		ruleset = "D&D 5e"
+	}
+
+	level := req.Level
+	if level == 0 {
+		level = 1
+	}
+
+	prompt := fmt.Sprintf(`Create a %s character with the following details:
+Name: %s
+Concept: %s`, ruleset, req.Name, req.Concept)
+
+	if req.Race != "" {
+		prompt += fmt.Sprintf("\nRace: %s (or similar if custom)", req.Race)
+	}
+	if req.Class != "" {
+		prompt += fmt.Sprintf("\nClass: %s (or similar if custom)", req.Class)
+	}
+	if req.Background != "" {
+		prompt += fmt.Sprintf("\nBackground: %s", req.Background)
+	}
+
+	prompt += fmt.Sprintf("\nLevel: %d", level)
+
+	prompt += `
+
+Generate a complete character with:
+1. Ability scores (using standard array or point buy)
+2. Racial traits and abilities
+3. Class features appropriate for the level
+4. Background skills and proficiencies
+5. Equipment and starting gear
+6. Personality traits, ideals, bonds, and flaws
+7. Any unique abilities that fit the concept
+
+Respond with a JSON object in this format:
+{
+  "race": "race name",
+  "subrace": "subrace if applicable",
+  "class": "class name",
+  "subclass": "subclass if applicable",
+  "background": "background name",
+  "alignment": "alignment",
+  "attributes": {
+    "strength": 10,
+    "dexterity": 10,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 10,
+    "charisma": 10
+  },
+  "hitDice": "1d8",
+  "speed": 30,
+  "features": [
+    {
+      "name": "Feature Name",
+      "description": "Feature description",
+      "level": 1,
+      "source": "Race/Class/Background"
+    }
+  ],
+  "proficiencies": {
+    "armor": ["list of armor"],
+    "weapons": ["list of weapons"],
+    "tools": ["list of tools"],
+    "languages": ["list of languages"]
+  },
+  "skills": ["list of skill proficiencies"],
+  "equipment": [
+    {
+      "name": "Item name",
+      "type": "weapon/armor/gear",
+      "description": "Item description"
+    }
+  ],
+  "personality": {
+    "traits": ["trait 1", "trait 2"],
+    "ideals": ["ideal"],
+    "bonds": ["bond"],
+    "flaws": ["flaw"]
+  },
+  "backstory": "Brief character backstory"
+}`
+
+	return prompt
+}
+
+func (s *AICharacterService) callAI(prompt string) (string, error) {
+	reqBody := AIRequest{
+		Model: "gpt-3.5-turbo",
+		Messages: []AIMessage{
+			{
+				Role:    "system",
+				Content: "You are a D&D character creation assistant. Create balanced, interesting characters that follow game rules.",
+			},
+			{
+				Role:    "user",
+				Content: prompt,
+			},
+		},
+		MaxTokens: 2000,
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequest("POST", s.apiURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+s.apiKey)
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("AI API error: %s", string(body))
+	}
+
+	var aiResp AIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&aiResp); err != nil {
+		return "", err
+	}
+
+	if len(aiResp.Choices) == 0 {
+		return "", fmt.Errorf("no response from AI")
+	}
+
+	return aiResp.Choices[0].Message.Content, nil
+}
+
+func (s *AICharacterService) parseAIResponse(aiResponse string, req CustomCharacterRequest) (*models.Character, error) {
+	// Try to extract JSON from the response
+	startIdx := strings.Index(aiResponse, "{")
+	endIdx := strings.LastIndex(aiResponse, "}")
+	
+	if startIdx == -1 || endIdx == -1 {
+		return nil, fmt.Errorf("no valid JSON found in AI response")
+	}
+
+	jsonStr := aiResponse[startIdx : endIdx+1]
+
+	var aiChar struct {
+		Race       string `json:"race"`
+		Subrace    string `json:"subrace"`
+		Class      string `json:"class"`
+		Subclass   string `json:"subclass"`
+		Background string `json:"background"`
+		Alignment  string `json:"alignment"`
+		Attributes struct {
+			Strength     int `json:"strength"`
+			Dexterity    int `json:"dexterity"`
+			Constitution int `json:"constitution"`
+			Intelligence int `json:"intelligence"`
+			Wisdom       int `json:"wisdom"`
+			Charisma     int `json:"charisma"`
+		} `json:"attributes"`
+		HitDice       string                   `json:"hitDice"`
+		Speed         int                      `json:"speed"`
+		Features      []models.Feature         `json:"features"`
+		Proficiencies models.Proficiencies     `json:"proficiencies"`
+		Skills        []string                 `json:"skills"`
+		Equipment     []models.Item            `json:"equipment"`
+		Personality   map[string][]string      `json:"personality"`
+		Backstory     string                   `json:"backstory"`
+	}
+
+	if err := json.Unmarshal([]byte(jsonStr), &aiChar); err != nil {
+		return nil, err
+	}
+
+	// Build the character model
+	character := &models.Character{
+		Name:       req.Name,
+		Race:       aiChar.Race,
+		Subrace:    aiChar.Subrace,
+		Class:      aiChar.Class,
+		Subclass:   aiChar.Subclass,
+		Background: aiChar.Background,
+		Alignment:  aiChar.Alignment,
+		Level:      req.Level,
+		HitDice:    aiChar.HitDice,
+		Speed:      aiChar.Speed,
+		Attributes: models.Attributes(aiChar.Attributes),
+		Features:   aiChar.Features,
+		Proficiencies: aiChar.Proficiencies,
+		Equipment:  aiChar.Equipment,
+	}
+
+	if character.Level == 0 {
+		character.Level = 1
+	}
+
+	// Calculate derived stats
+	character.ProficiencyBonus = ((character.Level - 1) / 4) + 2
+	character.Initiative = s.calculateModifier(character.Attributes.Dexterity)
+	
+	// Calculate HP
+	hitDiceValue := s.getHitDiceValue(aiChar.HitDice)
+	character.MaxHitPoints = hitDiceValue + s.calculateModifier(character.Attributes.Constitution)
+	character.HitPoints = character.MaxHitPoints
+
+	// Calculate saving throws
+	character.SavingThrows = s.calculateSavingThrows(character)
+
+	// Store personality and backstory in resources
+	character.Resources = map[string]interface{}{
+		"personality": aiChar.Personality,
+		"backstory":   aiChar.Backstory,
+	}
+
+	return character, nil
+}
+
+func (s *AICharacterService) calculateModifier(score int) int {
+	return (score - 10) / 2
+}
+
+func (s *AICharacterService) getHitDiceValue(hitDice string) int {
+	switch hitDice {
+	case "1d6":
+		return 6
+	case "1d8":
+		return 8
+	case "1d10":
+		return 10
+	case "1d12":
+		return 12
+	default:
+		return 8
+	}
+}
+
+func (s *AICharacterService) calculateSavingThrows(character *models.Character) models.SavingThrows {
+	// Basic saving throws without class proficiencies
+	// In a full implementation, this would check class data
+	return models.SavingThrows{
+		Strength: models.SavingThrow{
+			Modifier:    s.calculateModifier(character.Attributes.Strength),
+			Proficiency: false,
+		},
+		Dexterity: models.SavingThrow{
+			Modifier:    s.calculateModifier(character.Attributes.Dexterity),
+			Proficiency: false,
+		},
+		Constitution: models.SavingThrow{
+			Modifier:    s.calculateModifier(character.Attributes.Constitution),
+			Proficiency: false,
+		},
+		Intelligence: models.SavingThrow{
+			Modifier:    s.calculateModifier(character.Attributes.Intelligence),
+			Proficiency: false,
+		},
+		Wisdom: models.SavingThrow{
+			Modifier:    s.calculateModifier(character.Attributes.Wisdom),
+			Proficiency: false,
+		},
+		Charisma: models.SavingThrow{
+			Modifier:    s.calculateModifier(character.Attributes.Charisma),
+			Proficiency: false,
+		},
+	}
+}
+
+// GenerateFallbackCharacter creates a character without AI when the service is disabled
+func (s *AICharacterService) GenerateFallbackCharacter(req CustomCharacterRequest) (*models.Character, error) {
+	// Create a basic character based on the concept
+	character := &models.Character{
+		Name:       req.Name,
+		Race:       "Custom",
+		Class:      "Adventurer",
+		Background: "Wanderer",
+		Alignment:  "True Neutral",
+		Level:      1,
+		HitDice:    "1d8",
+		Speed:      30,
+		Attributes: models.Attributes{
+			Strength:     12,
+			Dexterity:    14,
+			Constitution: 13,
+			Intelligence: 10,
+			Wisdom:       12,
+			Charisma:     10,
+		},
+		Proficiencies: models.Proficiencies{
+			Armor:     []string{"Light armor"},
+			Weapons:   []string{"Simple weapons"},
+			Tools:     []string{},
+			Languages: []string{"Common"},
+		},
+		Features: []models.Feature{
+			{
+				Name:        "Adaptable",
+				Description: "Your custom heritage grants you versatility in your abilities.",
+				Level:       1,
+				Source:      "Custom Race",
+			},
+		},
+	}
+
+	// Override with provided values
+	if req.Race != "" {
+		character.Race = req.Race
+	}
+	if req.Class != "" {
+		character.Class = req.Class
+	}
+	if req.Background != "" {
+		character.Background = req.Background
+	}
+	if req.Level > 0 {
+		character.Level = req.Level
+	}
+
+	// Calculate derived stats
+	character.ProficiencyBonus = ((character.Level - 1) / 4) + 2
+	character.Initiative = s.calculateModifier(character.Attributes.Dexterity)
+	character.MaxHitPoints = 8 + s.calculateModifier(character.Attributes.Constitution)
+	character.HitPoints = character.MaxHitPoints
+	character.SavingThrows = s.calculateSavingThrows(character)
+
+	character.Resources = map[string]interface{}{
+		"concept": req.Concept,
+		"custom":  true,
+	}
+
+	return character, nil
+}

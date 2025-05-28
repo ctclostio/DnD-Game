@@ -1,0 +1,155 @@
+{
+  "name": "Bard",
+  "hitDice": "1d8",
+  "primaryAbility": "Charisma",
+  "savingThrowProficiencies": ["Dexterity", "Charisma"],
+  "armorProficiencies": ["Light armor"],
+  "weaponProficiencies": ["Simple weapons", "Hand crossbows", "Longswords", "Rapiers", "Shortswords"],
+  "toolProficiencies": ["Three musical instruments of your choice"],
+  "skillChoices": {
+    "count": 3,
+    "from": "Any"
+  },
+  "startingEquipment": [
+    {
+      "choice": [
+        "A rapier",
+        "A longsword",
+        "Any simple weapon"
+      ]
+    },
+    {
+      "choice": [
+        "A diplomat's pack",
+        "An entertainer's pack"
+      ]
+    },
+    {
+      "choice": [
+        "A lute",
+        "Any other musical instrument"
+      ]
+    },
+    "Leather armor and a dagger"
+  ],
+  "features": {
+    "1": [
+      {
+        "name": "Spellcasting",
+        "description": "You have learned to untangle and reshape the fabric of reality in harmony with your wishes and music. Your spells are part of your vast repertoire, magic that you can tune to different situations."
+      },
+      {
+        "name": "Bardic Inspiration",
+        "description": "You can inspire others through stirring words or music. To do so, you use a bonus action on your turn to choose one creature other than yourself within 60 feet of you who can hear you. That creature gains one Bardic Inspiration die, a d6. Once within the next 10 minutes, the creature can roll the die and add the number rolled to one ability check, attack roll, or saving throw it makes.",
+        "uses": "Charisma modifier (minimum of once) per short or long rest",
+        "dieSizes": {
+          "1": "d6",
+          "5": "d8",
+          "10": "d10",
+          "15": "d12"
+        }
+      }
+    ],
+    "2": [
+      {
+        "name": "Jack of All Trades",
+        "description": "Starting at 2nd level, you can add half your proficiency bonus, rounded down, to any ability check you make that doesn't already include your proficiency bonus."
+      },
+      {
+        "name": "Song of Rest",
+        "description": "Beginning at 2nd level, you can use soothing music or oration to help revitalize your wounded allies during a short rest. If you or any friendly creatures who can hear your performance regain hit points at the end of the short rest by spending one or more Hit Dice, each of those creatures regains an extra 1d6 hit points.",
+        "dieSizes": {
+          "2": "d6",
+          "9": "d8",
+          "13": "d10",
+          "17": "d12"
+        }
+      }
+    ],
+    "3": [
+      {
+        "name": "Bard College",
+        "description": "At 3rd level, you delve into the advanced techniques of a bard college of your choice. Your choice grants you features at 3rd level and again at 6th and 14th level."
+      },
+      {
+        "name": "Expertise",
+        "description": "At 3rd level, choose two of your skill proficiencies. Your proficiency bonus is doubled for any ability check you make that uses either of the chosen proficiencies. At 10th level, you can choose another two skill proficiencies to gain this benefit."
+      }
+    ],
+    "4": [
+      {
+        "name": "Ability Score Improvement",
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+      }
+    ],
+    "5": [
+      {
+        "name": "Font of Inspiration",
+        "description": "Beginning when you reach 5th level, you regain all of your expended uses of Bardic Inspiration when you finish a short or long rest."
+      }
+    ]
+  },
+  "spellcasting": {
+    "ability": "Charisma",
+    "spellAttackModifier": "proficiency bonus + Charisma modifier",
+    "spellSaveDC": "8 + proficiency bonus + Charisma modifier",
+    "ritualCasting": true,
+    "spellcastingFocus": "You can use a musical instrument as a spellcasting focus for your bard spells.",
+    "spellsKnownDescription": "You know four 1st-level spells of your choice from the bard spell list. You learn additional bard spells of your choice at higher levels.",
+    "cantripsKnown": {
+      "1": 2,
+      "4": 3,
+      "10": 4
+    },
+    "spellsKnown": {
+      "1": 4,
+      "2": 5,
+      "3": 6,
+      "4": 7,
+      "5": 8
+    },
+    "spellSlots": {
+      "1": {"1st": 2},
+      "2": {"1st": 3},
+      "3": {"1st": 4, "2nd": 2},
+      "4": {"1st": 4, "2nd": 3},
+      "5": {"1st": 4, "2nd": 3, "3rd": 2}
+    }
+  },
+  "subclasses": {
+    "3": [
+      {
+        "name": "College of Lore",
+        "description": "Bards of the College of Lore know something about most things, collecting bits of knowledge from sources as diverse as scholarly tomes and peasant tales.",
+        "features": {
+          "3": [
+            {
+              "name": "Bonus Proficiencies",
+              "description": "When you join the College of Lore at 3rd level, you gain proficiency with three skills of your choice."
+            },
+            {
+              "name": "Cutting Words",
+              "description": "Also at 3rd level, you learn how to use your wit to distract, confuse, and otherwise sap the confidence and competence of others. When a creature that you can see within 60 feet of you makes an attack roll, an ability check, or a damage roll, you can use your reaction to expend one of your uses of Bardic Inspiration, rolling a Bardic Inspiration die and subtracting the number rolled from the creature's roll."
+            }
+          ]
+        }
+      },
+      {
+        "name": "College of Valor",
+        "description": "Bards of the College of Valor are daring skalds whose tales keep alive the memory of the great heroes of the past, and thereby inspire a new generation of heroes.",
+        "features": {
+          "3": [
+            {
+              "name": "Bonus Proficiencies",
+              "description": "When you join the College of Valor at 3rd level, you gain proficiency with medium armor, shields, and martial weapons."
+            },
+            {
+              "name": "Combat Inspiration",
+              "description": "Also at 3rd level, you learn to inspire others in battle. A creature that has a Bardic Inspiration die from you can roll that die and add the number rolled to a weapon damage roll it just made. Alternatively, when an attack roll is made against the creature, it can use its reaction to roll the Bardic Inspiration die and add the number rolled to its AC against that attack, after seeing the roll but before knowing whether it hits or misses."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

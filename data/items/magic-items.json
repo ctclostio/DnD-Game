@@ -1,0 +1,96 @@
+{
+  "items": [
+    {
+      "name": "Flame Tongue",
+      "type": "weapon",
+      "rarity": "rare",
+      "weight": 3,
+      "value": 500000,
+      "properties": {
+        "damage": "1d8",
+        "damage_type": "slashing",
+        "versatile": "1d10",
+        "weapon_type": "martial",
+        "melee": true,
+        "magic_bonus": 0,
+        "fire_damage": "2d6",
+        "light": "40 feet bright, 40 feet dim"
+      },
+      "requires_attunement": true,
+      "description": "While the sword is ablaze, it deals an extra 2d6 fire damage to any target it hits."
+    },
+    {
+      "name": "Cloak of Elvenkind",
+      "type": "magic",
+      "rarity": "uncommon",
+      "weight": 1,
+      "value": 50000,
+      "properties": {
+        "stealth_advantage": true,
+        "perception_disadvantage": true
+      },
+      "requires_attunement": true,
+      "attunement_requirements": "by a humanoid",
+      "description": "While you wear this cloak with its hood up, Wisdom (Perception) checks made to see you have disadvantage, and you have advantage on Dexterity (Stealth) checks."
+    },
+    {
+      "name": "Bag of Holding",
+      "type": "magic",
+      "rarity": "uncommon",
+      "weight": 15,
+      "value": 100000,
+      "properties": {
+        "capacity": 500,
+        "weight_limit": 500,
+        "volume": "64 cubic feet",
+        "extradimensional": true
+      },
+      "requires_attunement": false,
+      "description": "This bag has an interior space considerably larger than its outside dimensions. Can hold up to 500 pounds."
+    },
+    {
+      "name": "Ring of Protection",
+      "type": "magic",
+      "rarity": "rare",
+      "weight": 0,
+      "value": 350000,
+      "properties": {
+        "ac_bonus": 1,
+        "saving_throw_bonus": 1
+      },
+      "requires_attunement": true,
+      "description": "You gain a +1 bonus to AC and saving throws while wearing this ring."
+    },
+    {
+      "name": "Boots of Speed",
+      "type": "magic",
+      "rarity": "rare",
+      "weight": 1,
+      "value": 400000,
+      "properties": {
+        "speed_bonus": "double",
+        "duration": "10 minutes",
+        "recharge": "long rest",
+        "action_type": "bonus"
+      },
+      "requires_attunement": true,
+      "description": "While you wear these boots, you can use a bonus action to click the boots' heels together. Your walking speed doubles for 10 minutes."
+    },
+    {
+      "name": "Wand of Magic Missiles",
+      "type": "magic",
+      "rarity": "uncommon",
+      "weight": 1,
+      "value": 80000,
+      "properties": {
+        "charges": 7,
+        "recharge": "1d6+1 at dawn",
+        "spell": "magic missile",
+        "spell_level": "1st",
+        "charges_per_cast": 1
+      },
+      "requires_attunement": false,
+      "description": "This wand has 7 charges. You can use an action to expend 1 or more charges to cast magic missile."
+    }
+  ]
+}

@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"time"
+	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
@@ -69,4 +70,8 @@ func (s *GameService) GetSessionEvents(sessionID string) ([]*models.GameEvent, e
 		return nil, errors.New("session not found")
 	}
 	return events, nil
+}
+
+func generateID() string {
+	return uuid.New().String()
 }

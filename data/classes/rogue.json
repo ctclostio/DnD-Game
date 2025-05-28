@@ -1,0 +1,151 @@
+{
+  "name": "Rogue",
+  "hitDice": "1d8",
+  "primaryAbility": "Dexterity",
+  "savingThrowProficiencies": ["Dexterity", "Intelligence"],
+  "armorProficiencies": ["Light armor"],
+  "weaponProficiencies": ["Simple weapons", "Hand crossbows", "Longswords", "Rapiers", "Shortswords"],
+  "toolProficiencies": ["Thieves' tools"],
+  "skillChoices": {
+    "count": 4,
+    "from": [
+      "Acrobatics",
+      "Athletics",
+      "Deception",
+      "Insight",
+      "Intimidation",
+      "Investigation",
+      "Perception",
+      "Performance",
+      "Persuasion",
+      "Sleight of Hand",
+      "Stealth"
+    ]
+  },
+  "startingEquipment": [
+    {
+      "choice": [
+        "A rapier",
+        "A shortsword"
+      ]
+    },
+    {
+      "choice": [
+        "A shortbow and quiver of 20 arrows",
+        "A shortsword"
+      ]
+    },
+    {
+      "choice": [
+        "A burglar's pack",
+        "A dungeoneer's pack",
+        "An explorer's pack"
+      ]
+    },
+    "Leather armor, two daggers, and thieves' tools"
+  ],
+  "features": {
+    "1": [
+      {
+        "name": "Expertise",
+        "description": "At 1st level, choose two of your skill proficiencies, or one of your skill proficiencies and your proficiency with thieves' tools. Your proficiency bonus is doubled for any ability check you make that uses either of the chosen proficiencies. At 6th level, you can choose two more of your proficiencies (in skills or with thieves' tools) to gain this benefit."
+      },
+      {
+        "name": "Sneak Attack",
+        "description": "Beginning at 1st level, you know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack if you have advantage on the attack roll. The attack must use a finesse or a ranged weapon. You don't need advantage on the attack roll if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll.",
+        "damage": {
+          "1": "1d6",
+          "3": "2d6",
+          "5": "3d6",
+          "7": "4d6",
+          "9": "5d6",
+          "11": "6d6",
+          "13": "7d6",
+          "15": "8d6",
+          "17": "9d6",
+          "19": "10d6"
+        }
+      },
+      {
+        "name": "Thieves' Cant",
+        "description": "During your rogue training you learned thieves' cant, a secret mix of dialect, jargon, and code that allows you to hide messages in seemingly normal conversation. Only another creature that knows thieves' cant understands such messages. It takes four times longer to convey such a message than it does to speak the same idea plainly."
+      }
+    ],
+    "2": [
+      {
+        "name": "Cunning Action",
+        "description": "Starting at 2nd level, your quick thinking and agility allow you to move and act quickly. You can take a bonus action on each of your turns in combat. This action can be used only to take the Dash, Disengage, or Hide action."
+      }
+    ],
+    "3": [
+      {
+        "name": "Roguish Archetype",
+        "description": "At 3rd level, you choose an archetype that you emulate in the exercise of your rogue abilities. Your archetype choice grants you features at 3rd level and then again at 9th, 13th, and 17th level."
+      }
+    ],
+    "4": [
+      {
+        "name": "Ability Score Improvement",
+        "description": "When you reach 4th level, and again at 8th, 10th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+      }
+    ],
+    "5": [
+      {
+        "name": "Uncanny Dodge",
+        "description": "Starting at 5th level, when an attacker that you can see hits you with an attack, you can use your reaction to halve the attack's damage against you."
+      }
+    ]
+  },
+  "subclasses": {
+    "3": [
+      {
+        "name": "Thief",
+        "description": "You hone your skills in the larcenous arts. Burglars, bandits, cutpurses, and other criminals typically follow this archetype.",
+        "features": {
+          "3": [
+            {
+              "name": "Fast Hands",
+              "description": "Starting at 3rd level, you can use the bonus action granted by your Cunning Action to make a Dexterity (Sleight of Hand) check, use your thieves' tools to disarm a trap or open a lock, or take the Use an Object action."
+            },
+            {
+              "name": "Second-Story Work",
+              "description": "When you choose this archetype at 3rd level, you gain the ability to climb faster than normal; climbing no longer costs you extra movement. In addition, when you make a running jump, the distance you cover increases by a number of feet equal to your Dexterity modifier."
+            }
+          ]
+        }
+      },
+      {
+        "name": "Assassin",
+        "description": "You focus your training on the grim art of death. Those who adhere to this archetype are diverse: hired killers, spies, bounty hunters.",
+        "features": {
+          "3": [
+            {
+              "name": "Bonus Proficiencies",
+              "description": "When you choose this archetype at 3rd level, you gain proficiency with the disguise kit and the poisoner's kit."
+            },
+            {
+              "name": "Assassinate",
+              "description": "Starting at 3rd level, you are at your deadliest when you get the drop on your enemies. You have advantage on attack rolls against any creature that hasn't taken a turn in the combat yet. In addition, any hit you score against a creature that is surprised is a critical hit."
+            }
+          ]
+        }
+      },
+      {
+        "name": "Arcane Trickster",
+        "description": "Some rogues enhance their fine-honed skills of stealth and agility with magic, learning tricks of enchantment and illusion.",
+        "features": {
+          "3": [
+            {
+              "name": "Spellcasting",
+              "description": "When you reach 3rd level, you gain the ability to cast spells. See chapter 10 for the general rules of spellcasting and chapter 11 for the wizard spell list."
+            },
+            {
+              "name": "Mage Hand Legerdemain",
+              "description": "Starting at 3rd level, when you cast mage hand, you can make the spectral hand invisible, and you can perform the following additional tasks with it: You can stow one object the hand is holding in a container worn or carried by another creature. You can retrieve an object in a container worn or carried by another creature. You can use thieves' tools to pick locks and disarm traps at range."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

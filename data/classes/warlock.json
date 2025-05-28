@@ -1,0 +1,249 @@
+{
+  "name": "Warlock",
+  "hitDice": "1d8",
+  "primaryAbility": "Charisma",
+  "savingThrowProficiencies": ["Wisdom", "Charisma"],
+  "armorProficiencies": ["Light armor"],
+  "weaponProficiencies": ["Simple weapons"],
+  "toolProficiencies": [],
+  "skillChoices": {
+    "count": 2,
+    "from": [
+      "Arcana",
+      "Deception",
+      "History",
+      "Intimidation",
+      "Investigation",
+      "Nature",
+      "Religion"
+    ]
+  },
+  "startingEquipment": [
+    {
+      "choice": [
+        "A light crossbow and 20 bolts",
+        "Any simple weapon"
+      ]
+    },
+    {
+      "choice": [
+        "A component pouch",
+        "An arcane focus"
+      ]
+    },
+    {
+      "choice": [
+        "A scholar's pack",
+        "A dungeoneer's pack"
+      ]
+    },
+    "Leather armor, any simple weapon, and two daggers"
+  ],
+  "features": {
+    "1": [
+      {
+        "name": "Otherworldly Patron",
+        "description": "At 1st level, you have struck a bargain with an otherworldly being of your choice. Your choice grants you features at 1st level and again at 6th, 10th, and 14th level."
+      },
+      {
+        "name": "Pact Magic",
+        "description": "Your arcane research and the magic bestowed on you by your patron have given you facility with spells. See chapter 10 for the general rules of spellcasting and chapter 11 for the warlock spell list."
+      }
+    ],
+    "2": [
+      {
+        "name": "Eldritch Invocations",
+        "description": "In your study of occult lore, you have unearthed eldritch invocations, fragments of forbidden knowledge that imbue you with an abiding magical ability. At 2nd level, you gain two eldritch invocations of your choice. When you gain certain warlock levels, you gain additional invocations of your choice.",
+        "invocationsKnown": {
+          "2": 2,
+          "5": 3,
+          "7": 4,
+          "9": 5,
+          "12": 6,
+          "15": 7,
+          "18": 8
+        }
+      }
+    ],
+    "3": [
+      {
+        "name": "Pact Boon",
+        "description": "At 3rd level, your otherworldly patron bestows a gift upon you for your loyal service. You gain one of the following features of your choice.",
+        "options": [
+          "Pact of the Chain: You learn the find familiar spell and can cast it as a ritual. The spell doesn't count against your number of spells known. When you cast the spell, you can choose one of the normal forms for your familiar or one of the following special forms: imp, pseudodragon, quasit, or sprite.",
+          "Pact of the Blade: You can use your action to create a pact weapon in your empty hand. You can choose the form that this melee weapon takes each time you create it. You are proficient with it while you wield it. This weapon counts as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage.",
+          "Pact of the Tome: Your patron gives you a grimoire called a Book of Shadows. When you gain this feature, choose three cantrips from any class's spell list (the three needn't be from the same list). While the book is on your person, you can cast those cantrips at will. They don't count against your number of cantrips known."
+        ]
+      }
+    ],
+    "4": [
+      {
+        "name": "Ability Score Improvement",
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+      }
+    ],
+    "5": []
+  },
+  "pactMagic": {
+    "ability": "Charisma",
+    "spellAttackModifier": "proficiency bonus + Charisma modifier",
+    "spellSaveDC": "8 + proficiency bonus + Charisma modifier",
+    "ritualCasting": false,
+    "spellcastingFocus": "You can use an arcane focus as a spellcasting focus for your warlock spells.",
+    "spellsKnownDescription": "You know two cantrips of your choice from the warlock spell list. You learn additional warlock cantrips of your choice at higher levels.",
+    "cantripsKnown": {
+      "1": 2,
+      "4": 3,
+      "10": 4
+    },
+    "spellsKnown": {
+      "1": 2,
+      "2": 3,
+      "3": 4,
+      "4": 5,
+      "5": 6,
+      "6": 7,
+      "7": 8,
+      "8": 9,
+      "9": 10,
+      "10": 10,
+      "11": 11,
+      "13": 12,
+      "15": 13,
+      "17": 14,
+      "19": 15
+    },
+    "spellSlots": {
+      "1": {"count": 1, "level": "1st"},
+      "2": {"count": 2, "level": "1st"},
+      "3": {"count": 2, "level": "2nd"},
+      "4": {"count": 2, "level": "2nd"},
+      "5": {"count": 2, "level": "3rd"}
+    },
+    "slotRestoration": "You regain all expended spell slots when you finish a short or long rest."
+  },
+  "subclasses": {
+    "1": [
+      {
+        "name": "The Archfey",
+        "description": "Your patron is a lord or lady of the fey, a creature of legend who holds secrets that were forgotten before the mortal races were born.",
+        "expandedSpellList": {
+          "1": ["faerie fire", "sleep"],
+          "2": ["calm emotions", "phantasmal force"],
+          "3": ["blink", "plant growth"],
+          "4": ["dominate beast", "greater invisibility"],
+          "5": ["dominate person", "seeming"]
+        },
+        "features": {
+          "1": [
+            {
+              "name": "Fey Presence",
+              "description": "Starting at 1st level, your patron bestows upon you the ability to project the beguiling and fearsome presence of the fey. As an action, you can cause each creature in a 10-foot cube originating from you to make a Wisdom saving throw against your warlock spell save DC. The creatures that fail their saving throws are all charmed or frightened by you (your choice) until the end of your next turn. Once you use this feature, you can't use it again until you finish a short or long rest."
+            }
+          ]
+        }
+      },
+      {
+        "name": "The Fiend",
+        "description": "You have made a pact with a fiend from the lower planes of existence, a being whose aims are evil, even if you strive against those aims.",
+        "expandedSpellList": {
+          "1": ["burning hands", "command"],
+          "2": ["blindness/deafness", "scorching ray"],
+          "3": ["fireball", "stinking cloud"],
+          "4": ["fire shield", "wall of fire"],
+          "5": ["flame strike", "hallow"]
+        },
+        "features": {
+          "1": [
+            {
+              "name": "Dark One's Blessing",
+              "description": "Starting at 1st level, when you reduce a hostile creature to 0 hit points, you gain temporary hit points equal to your Charisma modifier + your warlock level (minimum of 1)."
+            }
+          ]
+        }
+      },
+      {
+        "name": "The Great Old One",
+        "description": "Your patron is a mysterious entity whose nature is utterly foreign to the fabric of reality.",
+        "expandedSpellList": {
+          "1": ["dissonant whispers", "Tasha's hideous laughter"],
+          "2": ["detect thoughts", "phantasmal force"],
+          "3": ["clairvoyance", "sending"],
+          "4": ["dominate beast", "Evard's black tentacles"],
+          "5": ["dominate person", "telekinesis"]
+        },
+        "features": {
+          "1": [
+            {
+              "name": "Awakened Mind",
+              "description": "Starting at 1st level, your alien knowledge gives you the ability to touch the minds of other creatures. You can telepathically speak to any creature you can see within 30 feet of you. You don't need to share a language with the creature for it to understand your telepathic utterances, but the creature must be able to understand at least one language."
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "invocations": [
+    {
+      "name": "Agonizing Blast",
+      "prerequisite": "eldritch blast cantrip",
+      "description": "When you cast eldritch blast, add your Charisma modifier to the damage it deals on a hit."
+    },
+    {
+      "name": "Armor of Shadows",
+      "description": "You can cast mage armor on yourself at will, without expending a spell slot or material components."
+    },
+    {
+      "name": "Beast Speech",
+      "description": "You can cast speak with animals at will, without expending a spell slot."
+    },
+    {
+      "name": "Beguiling Influence",
+      "description": "You gain proficiency in the Deception and Persuasion skills."
+    },
+    {
+      "name": "Book of Ancient Secrets",
+      "prerequisite": "Pact of the Tome feature",
+      "description": "You can now inscribe magical rituals in your Book of Shadows. Choose two 1st-level spells that have the ritual tag from any class's spell list. The spells appear in the book and don't count against the number of spells you know."
+    },
+    {
+      "name": "Devil's Sight",
+      "description": "You can see normally in darkness, both magical and nonmagical, to a distance of 120 feet."
+    },
+    {
+      "name": "Eldritch Sight",
+      "description": "You can cast detect magic at will, without expending a spell slot."
+    },
+    {
+      "name": "Eldritch Spear",
+      "prerequisite": "eldritch blast cantrip",
+      "description": "When you cast eldritch blast, its range is 300 feet."
+    },
+    {
+      "name": "Eyes of the Rune Keeper",
+      "description": "You can read all writing."
+    },
+    {
+      "name": "Fiendish Vigor",
+      "description": "You can cast false life on yourself at will as a 1st-level spell, without expending a spell slot or material components."
+    },
+    {
+      "name": "Mask of Many Faces",
+      "description": "You can cast disguise self at will, without expending a spell slot."
+    },
+    {
+      "name": "Repelling Blast",
+      "prerequisite": "eldritch blast cantrip",
+      "description": "When you hit a creature with eldritch blast, you can push the creature up to 10 feet away from you in a straight line."
+    },
+    {
+      "name": "Thief of Five Fates",
+      "description": "You can cast bane once using a warlock spell slot. You can't do so again until you finish a long rest."
+    },
+    {
+      "name": "Voice of the Chain Master",
+      "prerequisite": "Pact of the Chain feature",
+      "description": "You can communicate telepathically with your familiar and perceive through your familiar's senses as long as you are on the same plane of existence."
+    }
+  ]
+}

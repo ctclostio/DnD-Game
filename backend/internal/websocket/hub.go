@@ -19,14 +19,18 @@ type Client struct {
 	conn     *websocket.Conn
 	send     chan []byte
 	id       string
+	username string
 	roomID   string
+	role     string // "player" or "dm"
 }
 
 type Message struct {
-	Type    string          `json:"type"`
-	RoomID  string          `json:"roomId"`
-	PlayerID string         `json:"playerId"`
-	Data    json.RawMessage `json:"data"`
+	Type     string          `json:"type"`
+	RoomID   string          `json:"roomId"`
+	PlayerID string          `json:"playerId"`
+	Username string          `json:"username"`
+	Role     string          `json:"role"`
+	Data     json.RawMessage `json:"data"`
 }
 
 func NewHub() *Hub {
@@ -117,4 +121,9 @@ func (c *Client) WritePump() {
 			c.conn.WriteMessage(websocket.TextMessage, message)
 		}
 	}
+}
+
+// Broadcast sends a message to the hub's broadcast channel
+func (h *Hub) Broadcast(message []byte) {
+	h.broadcast <- message
 }

@@ -1,17 +1,26 @@
+import authService from './auth';
+
 export class WebSocketService {
     constructor() {
         this.ws = null;
         this.reconnectInterval = 5000;
         this.messageHandlers = new Map();
         this.roomId = null;
-        this.playerId = null;
+        this.user = null;
     }
 
-    connect(roomId, playerId) {
+    connect(roomId) {
+        if (!authService.isAuthenticated()) {
+            console.error('User must be authenticated to connect to WebSocket');
+            return;
+        }
+
         this.roomId = roomId;
-        this.playerId = playerId;
+        this.user = authService.getCurrentUser();
         
-        const wsUrl = `ws://localhost:8080/ws?room=${roomId}&player=${playerId}`;
+        // Include token in WebSocket URL for authentication
+        const token = localStorage.getItem('access_token');
+        const wsUrl = `ws://localhost:8080/ws?room=${roomId}&token=${token}`;
         
         try {
             this.ws = new WebSocket(wsUrl);
@@ -25,7 +34,12 @@ export class WebSocketService {
     setupEventHandlers() {
         this.ws.onopen = () => {
             console.log('WebSocket connected');
-            this.sendMessage('join', { roomId: this.roomId, playerId: this.playerId });
+            this.sendMessage('join', { 
+                roomId: this.roomId, 
+                userId: this.user.id,
+                username: this.user.username,
+                role: this.user.role 
+            });
         };
 
         this.ws.onmessage = (event) => {
@@ -91,7 +105,9 @@ export class WebSocketService {
             const message = {
                 type,
                 roomId: this.roomId,
-                playerId: this.playerId,
+                playerId: this.user.id,
+                username: this.user.username,
+                role: this.user.role,
                 data,
             };
             this.ws.send(JSON.stringify(message));
@@ -149,9 +165,9 @@ export class WebSocketService {
 
     scheduleReconnect() {
         setTimeout(() => {
-            if (this.roomId && this.playerId) {
+            if (this.roomId && authService.isAuthenticated()) {
                 console.log('Attempting to reconnect...');
-                this.connect(this.roomId, this.playerId);
+                this.connect(this.roomId);
             }
         }, this.reconnectInterval);
     }
