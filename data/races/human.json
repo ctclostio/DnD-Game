@@ -1,0 +1,22 @@
+{
+  "name": "Human",
+  "size": "Medium",
+  "speed": 30,
+  "abilityScoreIncrease": {
+    "all": 1
+  },
+  "languages": ["Common", "One extra language of your choice"],
+  "traits": [
+    {
+      "name": "Versatile",
+      "description": "Humans are the most adaptable and ambitious people among the common races."
+    }
+  ],
+  "subraces": [],
+  "age": {
+    "maturity": 18,
+    "lifespan": "Less than a century"
+  },
+  "alignment": "Humans tend toward no particular alignment. The best and the worst are found among them.",
+  "sizeDescription": "Humans vary widely in height and build, from barely 5 feet to well over 6 feet tall."
+}

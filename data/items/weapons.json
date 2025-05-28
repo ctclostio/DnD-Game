@@ -1,0 +1,50 @@
+[
+  {
+    "id": "longsword",
+    "name": "Longsword",
+    "type": "weapon",
+    "weaponType": "martial",
+    "damage": "1d8",
+    "damageType": "slashing",
+    "properties": ["versatile (1d10)"],
+    "weight": 3,
+    "value": 15,
+    "description": "A versatile weapon with a long, sharp blade."
+  },
+  {
+    "id": "shortbow",
+    "name": "Shortbow",
+    "type": "weapon",
+    "weaponType": "simple",
+    "damage": "1d6",
+    "damageType": "piercing",
+    "properties": ["ammunition (range 80/320)", "two-handed"],
+    "weight": 2,
+    "value": 25,
+    "description": "A simple ranged weapon made of wood."
+  },
+  {
+    "id": "dagger",
+    "name": "Dagger",
+    "type": "weapon",
+    "weaponType": "simple",
+    "damage": "1d4",
+    "damageType": "piercing",
+    "properties": ["finesse", "light", "thrown (range 20/60)"],
+    "weight": 1,
+    "value": 2,
+    "description": "A simple, small blade suitable for close combat or throwing."
+  },
+  {
+    "id": "greataxe",
+    "name": "Greataxe",
+    "type": "weapon",
+    "weaponType": "martial",
+    "damage": "1d12",
+    "damageType": "slashing",
+    "properties": ["heavy", "two-handed"],
+    "weight": 7,
+    "value": 30,
+    "description": "A massive axe that requires two hands to wield effectively."
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "id": "leather_armor",
+    "name": "Leather Armor",
+    "type": "armor",
+    "armorType": "light",
+    "armorClass": 11,
+    "dexModifier": true,
+    "maxDexBonus": null,
+    "weight": 10,
+    "value": 10,
+    "stealthDisadvantage": false,
+    "description": "Light armor made of leather, providing basic protection."
+  },
+  {
+    "id": "chain_mail",
+    "name": "Chain Mail",
+    "type": "armor",
+    "armorType": "heavy",
+    "armorClass": 16,
+    "dexModifier": false,
+    "strengthRequirement": 13,
+    "weight": 55,
+    "value": 75,
+    "stealthDisadvantage": true,
+    "description": "Heavy armor made of interlocking metal rings."
+  },
+  {
+    "id": "shield",
+    "name": "Shield",
+    "type": "armor",
+    "armorType": "shield",
+    "armorClass": 2,
+    "weight": 6,
+    "value": 10,
+    "description": "A wooden or metal shield that provides additional protection."
+  },
+  {
+    "id": "scale_mail",
+    "name": "Scale Mail",
+    "type": "armor",
+    "armorType": "medium",
+    "armorClass": 14,
+    "dexModifier": true,
+    "maxDexBonus": 2,
+    "weight": 45,
+    "value": 50,
+    "stealthDisadvantage": true,
+    "description": "Medium armor consisting of overlapping metal scales."
+  }
+]

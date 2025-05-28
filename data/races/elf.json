@@ -1,0 +1,75 @@
+{
+  "name": "Elf",
+  "size": "Medium",
+  "speed": 30,
+  "abilityScoreIncrease": {
+    "dexterity": 2
+  },
+  "languages": ["Common", "Elvish"],
+  "traits": [
+    {
+      "name": "Darkvision",
+      "description": "You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light."
+    },
+    {
+      "name": "Keen Senses",
+      "description": "You have proficiency in the Perception skill."
+    },
+    {
+      "name": "Fey Ancestry",
+      "description": "You have advantage on saving throws against being charmed, and magic can't put you to sleep."
+    },
+    {
+      "name": "Trance",
+      "description": "Elves don't need to sleep. Instead, they meditate deeply for 4 hours a day."
+    }
+  ],
+  "subraces": [
+    {
+      "name": "High Elf",
+      "abilityScoreIncrease": {
+        "intelligence": 1
+      },
+      "traits": [
+        {
+          "name": "Elf Weapon Training",
+          "description": "You have proficiency with the longsword, shortsword, shortbow, and longbow."
+        },
+        {
+          "name": "Cantrip",
+          "description": "You know one cantrip of your choice from the wizard spell list."
+        },
+        {
+          "name": "Extra Language",
+          "description": "You can speak, read, and write one extra language of your choice."
+        }
+      ]
+    },
+    {
+      "name": "Wood Elf",
+      "abilityScoreIncrease": {
+        "wisdom": 1
+      },
+      "traits": [
+        {
+          "name": "Elf Weapon Training",
+          "description": "You have proficiency with the longsword, shortsword, shortbow, and longbow."
+        },
+        {
+          "name": "Fleet of Foot",
+          "description": "Your base walking speed increases to 35 feet."
+        },
+        {
+          "name": "Mask of the Wild",
+          "description": "You can attempt to hide even when you are only lightly obscured by natural phenomena."
+        }
+      ]
+    }
+  ],
+  "age": {
+    "maturity": 100,
+    "lifespan": "750 years"
+  },
+  "alignment": "Elves love freedom, variety, and self-expression, so they lean strongly toward the gentler aspects of chaos.",
+  "sizeDescription": "Elves range from under 5 to over 6 feet tall and have slender builds."
+}

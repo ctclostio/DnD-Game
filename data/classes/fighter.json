@@ -1,0 +1,66 @@
+{
+  "name": "Fighter",
+  "hitDice": "1d10",
+  "primaryAbility": "Strength or Dexterity",
+  "savingThrowProficiencies": ["Strength", "Constitution"],
+  "armorProficiencies": ["All armor", "Shields"],
+  "weaponProficiencies": ["Simple weapons", "Martial weapons"],
+  "skillChoices": {
+    "count": 2,
+    "from": [
+      "Acrobatics",
+      "Animal Handling",
+      "Athletics",
+      "History",
+      "Insight",
+      "Intimidation",
+      "Perception",
+      "Survival"
+    ]
+  },
+  "startingEquipment": [
+    {
+      "choice": [
+        "Chain mail",
+        "Leather armor, longbow, and 20 arrows"
+      ]
+    },
+    {
+      "choice": [
+        "A martial weapon and a shield",
+        "Two martial weapons"
+      ]
+    },
+    {
+      "choice": [
+        "A light crossbow and 20 bolts",
+        "Two handaxes"
+      ]
+    },
+    "A dungeoneer's pack or an explorer's pack"
+  ],
+  "features": {
+    "1": [
+      {
+        "name": "Fighting Style",
+        "description": "You adopt a particular style of fighting as your specialty."
+      },
+      {
+        "name": "Second Wind",
+        "description": "You have a limited well of stamina that you can draw on to protect yourself from harm."
+      }
+    ],
+    "2": [
+      {
+        "name": "Action Surge",
+        "description": "You can push yourself beyond your normal limits for a moment."
+      }
+    ],
+    "3": [
+      {
+        "name": "Martial Archetype",
+        "description": "You choose an archetype that you strive to emulate in your combat styles and techniques."
+      }
+    ]
+  }
+}
