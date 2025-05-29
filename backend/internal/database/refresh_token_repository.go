@@ -21,18 +21,18 @@ type RefreshToken struct {
 	RevokedAt  sql.NullTime  `db:"revoked_at"`
 }
 
-// RefreshTokenRepository handles refresh token database operations
-type RefreshTokenRepository struct {
+// refreshTokenRepository handles refresh token database operations
+type refreshTokenRepository struct {
 	db *sqlx.DB
 }
 
 // NewRefreshTokenRepository creates a new refresh token repository
-func NewRefreshTokenRepository(db *sqlx.DB) *RefreshTokenRepository {
-	return &RefreshTokenRepository{db: db}
+func NewRefreshTokenRepository(db *sqlx.DB) RefreshTokenRepository {
+	return &refreshTokenRepository{db: db}
 }
 
 // Create stores a new refresh token
-func (r *RefreshTokenRepository) Create(userID, tokenID string, token string, expiresAt time.Time) error {
+func (r *refreshTokenRepository) Create(userID, tokenID string, token string, expiresAt time.Time) error {
 	query := `
 		INSERT INTO refresh_tokens (user_id, token_hash, token_id, expires_at)
 		VALUES ($1, $2, $3, $4)
@@ -48,7 +48,7 @@ func (r *RefreshTokenRepository) Create(userID, tokenID string, token string, ex
 }
 
 // ValidateAndGet validates a refresh token and returns the associated user ID
-func (r *RefreshTokenRepository) ValidateAndGet(token string) (*RefreshToken, error) {
+func (r *refreshTokenRepository) ValidateAndGet(token string) (*RefreshToken, error) {
 	query := `
 		SELECT id, user_id, token_hash, token_id, expires_at, created_at, revoked_at
 		FROM refresh_tokens
@@ -71,7 +71,7 @@ func (r *RefreshTokenRepository) ValidateAndGet(token string) (*RefreshToken, er
 }
 
 // Revoke marks a refresh token as revoked
-func (r *RefreshTokenRepository) Revoke(tokenID string) error {
+func (r *refreshTokenRepository) Revoke(tokenID string) error {
 	query := `
 		UPDATE refresh_tokens 
 		SET revoked_at = CURRENT_TIMESTAMP
@@ -96,7 +96,7 @@ func (r *RefreshTokenRepository) Revoke(tokenID string) error {
 }
 
 // RevokeAllForUser revokes all refresh tokens for a user
-func (r *RefreshTokenRepository) RevokeAllForUser(userID string) error {
+func (r *refreshTokenRepository) RevokeAllForUser(userID string) error {
 	query := `
 		UPDATE refresh_tokens 
 		SET revoked_at = CURRENT_TIMESTAMP
@@ -112,7 +112,7 @@ func (r *RefreshTokenRepository) RevokeAllForUser(userID string) error {
 }
 
 // CleanupExpired removes expired refresh tokens
-func (r *RefreshTokenRepository) CleanupExpired() error {
+func (r *refreshTokenRepository) CleanupExpired() error {
 	query := `
 		DELETE FROM refresh_tokens
 		WHERE expires_at < CURRENT_TIMESTAMP

@@ -56,12 +56,13 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 
 	// Create repositories
 	repos := &Repositories{
-		Users:        NewUserRepository(db.DB),
-		Characters:   NewCharacterRepository(db.DB),
-		GameSessions: NewGameSessionRepository(db.DB),
-		DiceRolls:    NewDiceRollRepository(db.DB),
-		NPCs:         NewNPCRepository(db.DB),
-		Inventory:    NewInventoryRepository(db.DB),
+		Users:         NewUserRepository(db),
+		Characters:    NewCharacterRepository(db),
+		GameSessions:  NewGameSessionRepository(db),
+		DiceRolls:     NewDiceRollRepository(db),
+		NPCs:          NewNPCRepository(db.DB),
+		Inventory:     NewInventoryRepository(db.DB),
+		RefreshTokens: NewRefreshTokenRepository(db.DB),
 	}
 
 	return db, repos, nil

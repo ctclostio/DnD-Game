@@ -62,41 +62,30 @@ export class WebSocketService {
     }
 
     handleMessage(message) {
-        const { type, data } = message;
-        
-        // Handle system messages
-        switch (type) {
+        // Notify all registered handlers
+        this.messageHandlers.forEach(handler => {
+            handler(message);
+        });
+
+        // Handle specific message types if needed
+        switch (message.type) {
             case 'chat':
-                this.displayChatMessage(data);
+                this.displayChatMessage(message.data);
                 break;
             case 'dice_roll':
-                this.displayDiceRoll(data);
+                this.displayDiceRoll(message.data);
                 break;
-            case 'player_joined':
-                this.displaySystemMessage(`${data.playerName} joined the game`);
+            case 'user_joined':
+                this.displaySystemMessage(`${message.data.username} joined the session`);
                 break;
-            case 'player_left':
-                this.displaySystemMessage(`${data.playerName} left the game`);
+            case 'user_left':
+                this.displaySystemMessage(`${message.data.username} left the session`);
                 break;
-        }
-
-        // Call custom handlers
-        const handlers = this.messageHandlers.get(type) || [];
-        handlers.forEach(handler => handler(data));
-    }
-
-    on(messageType, handler) {
-        if (!this.messageHandlers.has(messageType)) {
-            this.messageHandlers.set(messageType, []);
-        }
-        this.messageHandlers.get(messageType).push(handler);
-    }
-
-    off(messageType, handler) {
-        const handlers = this.messageHandlers.get(messageType) || [];
-        const index = handlers.indexOf(handler);
-        if (index > -1) {
-            handlers.splice(index, 1);
+            case 'combat':
+                // Combat updates are handled by registered handlers
+                break;
+            default:
+                console.log('Unknown message type:', message.type);
         }
     }
 
@@ -105,37 +94,44 @@ export class WebSocketService {
             const message = {
                 type,
                 roomId: this.roomId,
-                playerId: this.user.id,
-                username: this.user.username,
-                role: this.user.role,
-                data,
+                data
             };
             this.ws.send(JSON.stringify(message));
+        } else {
+            console.error('WebSocket is not connected');
         }
     }
 
     sendChatMessage(text) {
-        this.sendMessage('chat', {
-            text,
-            timestamp: new Date().toISOString(),
+        this.sendMessage('chat', { 
+            message: text,
+            username: this.user.username 
         });
     }
 
-    sendDiceRoll(diceType, result, purpose) {
+    sendDiceRoll(diceType, purpose) {
         this.sendMessage('dice_roll', {
             diceType,
-            result,
             purpose,
-            timestamp: new Date().toISOString(),
+            playerName: this.user.username
         });
+    }
+
+    onMessage(handler) {
+        const id = Date.now();
+        this.messageHandlers.set(id, handler);
+        return () => this.messageHandlers.delete(id);
     }
 
     displayChatMessage(data) {
         const chatMessages = document.getElementById('chat-messages');
+        if (!chatMessages) return;
+        
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message';
         messageDiv.innerHTML = `
-            <span class="username">${data.playerName}:</span> ${data.text}
+            <span class="username">${data.username}:</span>
+            <span class="message-text">${data.message}</span>
         `;
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -143,6 +139,8 @@ export class WebSocketService {
 
     displayDiceRoll(data) {
         const chatMessages = document.getElementById('chat-messages');
+        if (!chatMessages) return;
+        
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message dice-roll-message';
         messageDiv.innerHTML = `
@@ -156,6 +154,8 @@ export class WebSocketService {
 
     displaySystemMessage(text) {
         const chatMessages = document.getElementById('chat-messages');
+        if (!chatMessages) return;
+        
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message system-message';
         messageDiv.innerHTML = `<em>${text}</em>`;
@@ -179,3 +179,16 @@ export class WebSocketService {
         }
     }
 }
+
+// Create singleton instance
+const wsService = new WebSocketService();
+
+// Export convenience functions
+export const connectWebSocket = (roomId) => wsService.connect(roomId);
+export const disconnectWebSocket = () => wsService.disconnect();
+export const sendMessage = (type, data) => wsService.sendMessage(type, data);
+export const sendChatMessage = (text) => wsService.sendChatMessage(text);
+export const sendDiceRoll = (diceType, purpose) => wsService.sendDiceRoll(diceType, purpose);
+export const onMessage = (handler) => wsService.onMessage(handler);
+
+export default wsService;

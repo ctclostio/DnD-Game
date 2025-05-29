@@ -44,7 +44,7 @@ func (h *Handlers) StartCombat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if user is DM
-	if session.DMUserID != claims.UserID {
+	if session.DMID != claims.UserID {
 		respondWithError(w, http.StatusForbidden, "Only the DM can start combat")
 		return
 	}
@@ -109,7 +109,7 @@ func (h *Handlers) NextTurn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
+	if session.DMID != claims.UserID {
 		respondWithError(w, http.StatusForbidden, "Only the DM can advance turns")
 		return
 	}
@@ -120,14 +120,20 @@ func (h *Handlers) NextTurn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get updated combat state
+	updatedCombat, _ := h.combatService.GetCombat(r.Context(), combatID)
+
 	// Broadcast turn change
 	h.broadcastCombatUpdate(combat.GameSessionID, models.CombatUpdate{
 		Type:    models.UpdateTypeTurnStart,
-		Combat:  combat,
+		Combat:  updatedCombat,
 		Message: combatant.Name + "'s turn",
 	})
 
-	respondWithJSON(w, http.StatusOK, combatant)
+	respondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"currentCombatant": combatant,
+		"combat":           updatedCombat,
+	})
 }
 
 func (h *Handlers) ProcessCombatAction(w http.ResponseWriter, r *http.Request) {
@@ -191,7 +197,7 @@ func (h *Handlers) EndCombat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
+	if session.DMID != claims.UserID {
 		respondWithError(w, http.StatusForbidden, "Only the DM can end combat")
 		return
 	}
@@ -277,7 +283,7 @@ func (h *Handlers) ApplyDamage(w http.ResponseWriter, r *http.Request) {
 
 	// Verify user is DM or damage is self-inflicted
 	session, _ := h.gameService.GetGameSession(r.Context(), combat.GameSessionID)
-	if session.DMUserID != claims.UserID && !h.canControlCombatant(r.Context(), claims.UserID, combat, combatantID) {
+	if session.DMID != claims.UserID && !h.canControlCombatant(r.Context(), claims.UserID, combat, combatantID) {
 		respondWithError(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -333,7 +339,7 @@ func (h *Handlers) HealCombatant(w http.ResponseWriter, r *http.Request) {
 
 	// Verify user is DM or healing is self-inflicted
 	session, _ := h.gameService.GetGameSession(r.Context(), combat.GameSessionID)
-	if session.DMUserID != claims.UserID && !h.canControlCombatant(r.Context(), claims.UserID, combat, combatantID) {
+	if session.DMID != claims.UserID && !h.canControlCombatant(r.Context(), claims.UserID, combat, combatantID) {
 		respondWithError(w, http.StatusForbidden, "Insufficient permissions")
 		return
 	}
@@ -382,7 +388,7 @@ func (h *Handlers) canControlCombatant(ctx context.Context, userID string, comba
 
 	// DM can control all combatants
 	session, err := h.gameService.GetGameSession(ctx, combat.GameSessionID)
-	if err == nil && session.DMUserID == userID {
+	if err == nil && session.DMID == userID {
 		return true
 	}
 

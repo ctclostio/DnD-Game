@@ -10,15 +10,15 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
-type InventoryRepository struct {
+type inventoryRepository struct {
 	db *sqlx.DB
 }
 
-func NewInventoryRepository(db *sqlx.DB) *InventoryRepository {
-	return &InventoryRepository{db: db}
+func NewInventoryRepository(db *sqlx.DB) InventoryRepository {
+	return &inventoryRepository{db: db}
 }
 
-func (r *InventoryRepository) CreateItem(item *models.Item) error {
+func (r *inventoryRepository) CreateItem(item *models.Item) error {
 	if item.ID == "" {
 		item.ID = uuid.New().String()
 	}
@@ -36,7 +36,7 @@ func (r *InventoryRepository) CreateItem(item *models.Item) error {
 	return err
 }
 
-func (r *InventoryRepository) GetItem(itemID string) (*models.Item, error) {
+func (r *inventoryRepository) GetItem(itemID string) (*models.Item, error) {
 	var item models.Item
 	query := `SELECT * FROM items WHERE id = $1`
 	err := r.db.Get(&item, query, itemID)
@@ -46,14 +46,14 @@ func (r *InventoryRepository) GetItem(itemID string) (*models.Item, error) {
 	return &item, err
 }
 
-func (r *InventoryRepository) GetItemsByType(itemType models.ItemType) ([]*models.Item, error) {
+func (r *inventoryRepository) GetItemsByType(itemType models.ItemType) ([]*models.Item, error) {
 	var items []*models.Item
 	query := `SELECT * FROM items WHERE type = $1 ORDER BY name`
 	err := r.db.Select(&items, query, itemType)
 	return items, err
 }
 
-func (r *InventoryRepository) AddItemToInventory(characterID, itemID string, quantity int) error {
+func (r *inventoryRepository) AddItemToInventory(characterID, itemID string, quantity int) error {
 	id := uuid.New().String()
 	now := time.Now()
 	
@@ -72,7 +72,7 @@ func (r *InventoryRepository) AddItemToInventory(characterID, itemID string, qua
 	return r.updateCharacterWeight(characterID)
 }
 
-func (r *InventoryRepository) RemoveItemFromInventory(characterID, itemID string, quantity int) error {
+func (r *inventoryRepository) RemoveItemFromInventory(characterID, itemID string, quantity int) error {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (r *InventoryRepository) RemoveItemFromInventory(characterID, itemID string
 	return r.updateCharacterWeight(characterID)
 }
 
-func (r *InventoryRepository) GetCharacterInventory(characterID string) ([]*models.InventoryItem, error) {
+func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*models.InventoryItem, error) {
 	query := `
 		SELECT ci.*, i.* 
 		FROM character_inventory ci
@@ -142,13 +142,13 @@ func (r *InventoryRepository) GetCharacterInventory(characterID string) ([]*mode
 	return items, nil
 }
 
-func (r *InventoryRepository) EquipItem(characterID, itemID string, equip bool) error {
+func (r *inventoryRepository) EquipItem(characterID, itemID string, equip bool) error {
 	query := `UPDATE character_inventory SET equipped = $3, updated_at = $4 WHERE character_id = $1 AND item_id = $2`
 	_, err := r.db.Exec(query, characterID, itemID, equip, time.Now())
 	return err
 }
 
-func (r *InventoryRepository) AttuneItem(characterID, itemID string) error {
+func (r *inventoryRepository) AttuneItem(characterID, itemID string) error {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return err
@@ -194,7 +194,7 @@ func (r *InventoryRepository) AttuneItem(characterID, itemID string) error {
 	return tx.Commit()
 }
 
-func (r *InventoryRepository) UnattuneItem(characterID, itemID string) error {
+func (r *inventoryRepository) UnattuneItem(characterID, itemID string) error {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return err
@@ -215,7 +215,7 @@ func (r *InventoryRepository) UnattuneItem(characterID, itemID string) error {
 	return tx.Commit()
 }
 
-func (r *InventoryRepository) GetCharacterCurrency(characterID string) (*models.Currency, error) {
+func (r *inventoryRepository) GetCharacterCurrency(characterID string) (*models.Currency, error) {
 	var currency models.Currency
 	query := `SELECT * FROM character_currency WHERE character_id = $1`
 	err := r.db.Get(&currency, query, characterID)
@@ -233,7 +233,7 @@ func (r *InventoryRepository) GetCharacterCurrency(characterID string) (*models.
 	return &currency, err
 }
 
-func (r *InventoryRepository) CreateCharacterCurrency(currency *models.Currency) error {
+func (r *inventoryRepository) CreateCharacterCurrency(currency *models.Currency) error {
 	query := `
 		INSERT INTO character_currency (character_id, copper, silver, electrum, gold, platinum, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -243,7 +243,7 @@ func (r *InventoryRepository) CreateCharacterCurrency(currency *models.Currency)
 	return err
 }
 
-func (r *InventoryRepository) UpdateCharacterCurrency(currency *models.Currency) error {
+func (r *inventoryRepository) UpdateCharacterCurrency(currency *models.Currency) error {
 	currency.UpdatedAt = time.Now()
 	query := `
 		UPDATE character_currency 
@@ -255,7 +255,7 @@ func (r *InventoryRepository) UpdateCharacterCurrency(currency *models.Currency)
 	return err
 }
 
-func (r *InventoryRepository) updateCharacterWeight(characterID string) error {
+func (r *inventoryRepository) updateCharacterWeight(characterID string) error {
 	query := `
 		UPDATE characters 
 		SET current_weight = (
@@ -270,7 +270,7 @@ func (r *InventoryRepository) updateCharacterWeight(characterID string) error {
 	return err
 }
 
-func (r *InventoryRepository) GetCharacterWeight(characterID string) (*models.InventoryWeight, error) {
+func (r *inventoryRepository) GetCharacterWeight(characterID string) (*models.InventoryWeight, error) {
 	var weight models.InventoryWeight
 	query := `
 		SELECT current_weight, carry_capacity 

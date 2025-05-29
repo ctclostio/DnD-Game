@@ -45,11 +45,8 @@ func main() {
 		cfg.Auth.RefreshTokenDuration,
 	)
 
-	// Create refresh token repository
-	refreshTokenRepo := database.NewRefreshTokenRepository(db.DB)
-
 	// Create services
-	refreshTokenService := services.NewRefreshTokenService(refreshTokenRepo, jwtManager)
+	refreshTokenService := services.NewRefreshTokenService(repos.RefreshTokens, jwtManager)
 	
 	// Start refresh token cleanup task
 	refreshTokenService.StartCleanupTask(1 * time.Hour)

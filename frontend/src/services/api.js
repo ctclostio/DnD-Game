@@ -90,12 +90,47 @@ export class ApiService {
     }
 
     async getGameSession(id) {
-        return this.request(`/game/session/${id}`);
+        return this.request(`/game/sessions/${id}`);
     }
 
     // Health check
     async healthCheck() {
         return this.request('/health');
+    }
+
+    // Combat endpoints
+    async startCombat(gameSessionId, combatants) {
+        return this.request('/combat/start', {
+            method: 'POST',
+            body: JSON.stringify({ gameSessionId, combatants })
+        });
+    }
+
+    async getCombat(combatId) {
+        return this.request(`/combat/${combatId}`);
+    }
+
+    async getCombatBySession(sessionId) {
+        return this.request(`/combat/session/${sessionId}`);
+    }
+
+    async nextTurn(combatId) {
+        return this.request(`/combat/${combatId}/next-turn`, {
+            method: 'POST'
+        });
+    }
+
+    async processCombatAction(combatId, action) {
+        return this.request(`/combat/${combatId}/action`, {
+            method: 'POST',
+            body: JSON.stringify(action)
+        });
+    }
+
+    async endCombat(combatId) {
+        return this.request(`/combat/${combatId}/end`, {
+            method: 'POST'
+        });
     }
 
     // Inventory endpoints
@@ -180,12 +215,43 @@ export class ApiService {
     async getItemsByType(type) {
         return this.request(`/items?type=${type}`);
     }
+
+    // NPC endpoints
+    async getNPCsBySession(sessionId) {
+        return this.request(`/npcs/session/${sessionId}`);
+    }
+
+    async createNPC(npcData) {
+        return this.request('/npcs', {
+            method: 'POST',
+            body: JSON.stringify(npcData)
+        });
+    }
+
+    async updateNPC(npcId, npcData) {
+        return this.request(`/npcs/${npcId}`, {
+            method: 'PUT',
+            body: JSON.stringify(npcData)
+        });
+    }
+
+    async deleteNPC(npcId) {
+        return this.request(`/npcs/${npcId}`, {
+            method: 'DELETE'
+        });
+    }
 }
 
 // Create and export singleton instance
 const apiService = new ApiService();
 
 // Export individual methods for convenience
+export const startCombat = (gameSessionId, combatants) => apiService.startCombat(gameSessionId, combatants);
+export const getCombat = (combatId) => apiService.getCombat(combatId);
+export const getCombatBySession = (sessionId) => apiService.getCombatBySession(sessionId);
+export const nextTurn = (combatId) => apiService.nextTurn(combatId);
+export const processCombatAction = (combatId, action) => apiService.processCombatAction(combatId, action);
+export const endCombat = (combatId) => apiService.endCombat(combatId);
 export const getCharacterInventory = (characterId) => apiService.getCharacterInventory(characterId);
 export const addItemToInventory = (characterId, itemId, quantity) => apiService.addItemToInventory(characterId, itemId, quantity);
 export const removeItemFromInventory = (characterId, itemId, quantity) => apiService.removeItemFromInventory(characterId, itemId, quantity);
@@ -200,5 +266,11 @@ export const sellItem = (characterId, itemId, quantity) => apiService.sellItem(c
 export const getCharacterWeight = (characterId) => apiService.getCharacterWeight(characterId);
 export const createItem = (item) => apiService.createItem(item);
 export const getItemsByType = (type) => apiService.getItemsByType(type);
+export const getNPCsBySession = (sessionId) => apiService.getNPCsBySession(sessionId);
+export const createNPC = (npcData) => apiService.createNPC(npcData);
+export const updateNPC = (npcId, npcData) => apiService.updateNPC(npcId, npcData);
+export const deleteNPC = (npcId) => apiService.deleteNPC(npcId);
+export const getCharacters = () => apiService.getCharacters();
+export const getGameSession = (id) => apiService.getGameSession(id);
 
 export default apiService;

@@ -1,0 +1,143 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/backend-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/backend-tests.yml'
+
+jobs:
+  test:
+    name: Run Backend Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: dnd_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+        cache: true
+
+    - name: Install dependencies
+      run: |
+        go mod download
+        go install gotest.tools/gotestsum@latest
+        go install github.com/jstemmer/go-junit-report@latest
+
+    - name: Run unit tests
+      run: |
+        cd backend
+        make test-unit
+      env:
+        CGO_ENABLED: 1
+
+    - name: Run integration tests
+      run: |
+        cd backend
+        make test-integration
+      env:
+        DATABASE_HOST: localhost
+        DATABASE_PORT: 5432
+        DATABASE_USER: testuser
+        DATABASE_PASSWORD: testpass
+        DATABASE_NAME: dnd_test
+        DATABASE_SSLMODE: disable
+        JWT_SECRET: test-secret-key
+        CGO_ENABLED: 1
+
+    - name: Generate coverage report
+      run: |
+        cd backend
+        make test-coverage
+      env:
+        DATABASE_HOST: localhost
+        DATABASE_PORT: 5432
+        DATABASE_USER: testuser
+        DATABASE_PASSWORD: testpass
+        DATABASE_NAME: dnd_test
+        DATABASE_SSLMODE: disable
+        JWT_SECRET: test-secret-key
+        CGO_ENABLED: 1
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage/coverage.out
+        flags: backend
+        name: backend-coverage
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          backend/coverage/
+          backend/**/*_test.log
+
+  lint:
+    name: Lint Backend Code
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+        cache: true
+
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+        working-directory: backend
+        args: --timeout=5m
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run gosec Security Scanner
+      uses: securego/gosec@master
+      with:
+        args: '-no-fail -fmt sarif -out results.sarif ./backend/...'
+
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: results.sarif

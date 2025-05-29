@@ -33,7 +33,7 @@ type SkillCheckResponse struct {
 }
 
 // PerformSkillCheck handles skill checks and saving throws
-func (h *Handler) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 	
 	var req SkillCheckRequest
@@ -50,17 +50,9 @@ func (h *Handler) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if character.UserID != userID {
-		// Check if user is DM of the game session
-		if character.GameSessionID != "" {
-			session, err := h.gameService.GetGameSession(r.Context(), character.GameSessionID)
-			if err != nil || session.DmID != userID {
-				http.Error(w, "Unauthorized", http.StatusForbidden)
-				return
-			}
-		} else {
-			http.Error(w, "Unauthorized", http.StatusForbidden)
-			return
-		}
+		// Only the character owner can perform skill checks on their character
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
 	}
 
 	// Calculate the ability modifier if not provided
@@ -85,8 +77,16 @@ func (h *Handler) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
 	
 	if req.Advantage || req.Disadvantage {
 		// Roll twice
-		roll1 := roller.Roll("1d20")
-		roll2 := roller.Roll("1d20")
+		roll1, err := roller.Roll("1d20")
+		if err != nil {
+			http.Error(w, "Failed to roll dice", http.StatusInternalServerError)
+			return
+		}
+		roll2, err := roller.Roll("1d20")
+		if err != nil {
+			http.Error(w, "Failed to roll dice", http.StatusInternalServerError)
+			return
+		}
 		allRolls = []int{roll1.Total, roll2.Total}
 		
 		if req.Advantage {
@@ -104,7 +104,11 @@ func (h *Handler) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// Normal roll
-		result := roller.Roll("1d20")
+		result, err := roller.Roll("1d20")
+		if err != nil {
+			http.Error(w, "Failed to roll dice", http.StatusInternalServerError)
+			return
+		}
 		roll = result.Total
 	}
 	
@@ -127,36 +131,17 @@ func (h *Handler) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Log the roll in the game session if applicable
-	if character.GameSessionID != "" {
-		checkName := req.Skill
-		if checkName == "" {
-			checkName = req.Ability
-		}
-		if req.CheckType == "save" {
-			checkName += " save"
-		}
-		
-		h.websocketHub.Broadcast(character.GameSessionID, map[string]interface{}{
-			"type": "skillCheck",
-			"characterName": character.Name,
-			"checkType": req.CheckType,
-			"checkName": checkName,
-			"roll": roll,
-			"modifier": req.Modifier,
-			"total": total,
-			"success": response.Success,
-			"dc": req.DC,
-			"criticalSuccess": response.CriticalSuccess,
-			"criticalFailure": response.CriticalFailure,
-		})
-	}
+	// Note: Since characters don't have a direct GameSessionID field,
+	// we would need to query the game_participants table to find active sessions
+	// For now, we'll skip the websocket broadcast
+	// TODO: Implement session lookup if needed
 	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
 // GetCharacterChecks returns available checks for a character
-func (h *Handler) GetCharacterChecks(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) GetCharacterChecks(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 	characterID := mux.Vars(r)["id"]
 	
@@ -167,17 +152,10 @@ func (h *Handler) GetCharacterChecks(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	if character.UserID != userID {
-		// Check if user is DM
-		if character.GameSessionID != "" {
-			session, err := h.gameService.GetGameSession(r.Context(), character.GameSessionID)
-			if err != nil || session.DmID != userID {
-				http.Error(w, "Unauthorized", http.StatusForbidden)
-				return
-			}
-		} else {
-			http.Error(w, "Unauthorized", http.StatusForbidden)
-			return
-		}
+		// For now, only the owner can view character checks
+		// TODO: Implement DM permission check through game_participants table
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
 	}
 	
 	// Build response with all available checks
@@ -191,26 +169,26 @@ func (h *Handler) GetCharacterChecks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (h *Handler) getAbilityModifier(character *models.Character, ability string) int {
+func (h *Handlers) getAbilityModifier(character *models.Character, ability string) int {
 	switch ability {
 	case "strength":
-		return (character.Strength - 10) / 2
+		return (character.Attributes.Strength - 10) / 2
 	case "dexterity":
-		return (character.Dexterity - 10) / 2
+		return (character.Attributes.Dexterity - 10) / 2
 	case "constitution":
-		return (character.Constitution - 10) / 2
+		return (character.Attributes.Constitution - 10) / 2
 	case "intelligence":
-		return (character.Intelligence - 10) / 2
+		return (character.Attributes.Intelligence - 10) / 2
 	case "wisdom":
-		return (character.Wisdom - 10) / 2
+		return (character.Attributes.Wisdom - 10) / 2
 	case "charisma":
-		return (character.Charisma - 10) / 2
+		return (character.Attributes.Charisma - 10) / 2
 	default:
 		return 0
 	}
 }
 
-func (h *Handler) hasSavingThrowProficiency(character *models.Character, ability string) bool {
+func (h *Handlers) hasSavingThrowProficiency(character *models.Character, ability string) bool {
 	// This would check character's class saving throw proficiencies
 	// For now, returning based on common class proficiencies
 	switch character.Class {
@@ -231,14 +209,14 @@ func (h *Handler) hasSavingThrowProficiency(character *models.Character, ability
 	}
 }
 
-func (h *Handler) hasSkillProficiency(character *models.Character, skill string) bool {
+func (h *Handlers) hasSkillProficiency(character *models.Character, skill string) bool {
 	// This would check character's skill proficiencies from background/class
 	// For now, returning true for some common proficiencies
 	// In a real implementation, this would check character.Skills array
 	return false // Would need to implement skill proficiency tracking
 }
 
-func (h *Handler) getSavingThrows(character *models.Character) []map[string]interface{} {
+func (h *Handlers) getSavingThrows(character *models.Character) []map[string]interface{} {
 	abilities := []string{"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"}
 	saves := make([]map[string]interface{}, 0)
 	
@@ -259,7 +237,7 @@ func (h *Handler) getSavingThrows(character *models.Character) []map[string]inte
 	return saves
 }
 
-func (h *Handler) getSkills(character *models.Character) []map[string]interface{} {
+func (h *Handlers) getSkills(character *models.Character) []map[string]interface{} {
 	// D&D 5e skills mapped to their abilities
 	skills := []struct {
 		name    string
@@ -301,7 +279,7 @@ func (h *Handler) getSkills(character *models.Character) []map[string]interface{
 	return skillList
 }
 
-func (h *Handler) getAbilityChecks(character *models.Character) []map[string]interface{} {
+func (h *Handlers) getAbilityChecks(character *models.Character) []map[string]interface{} {
 	abilities := []string{"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"}
 	checks := make([]map[string]interface{}, 0)
 	

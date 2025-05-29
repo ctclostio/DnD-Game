@@ -11,21 +11,6 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
-// NPCRepository handles NPC database operations
-type NPCRepository interface {
-	Create(ctx context.Context, npc *models.NPC) error
-	GetByID(ctx context.Context, id string) (*models.NPC, error)
-	GetByGameSession(ctx context.Context, gameSessionID string) ([]*models.NPC, error)
-	Update(ctx context.Context, npc *models.NPC) error
-	Delete(ctx context.Context, id string) error
-	Search(ctx context.Context, filter models.NPCSearchFilter) ([]*models.NPC, error)
-	
-	// Template operations
-	GetTemplates(ctx context.Context) ([]*models.NPCTemplate, error)
-	GetTemplateByID(ctx context.Context, id string) (*models.NPCTemplate, error)
-	CreateFromTemplate(ctx context.Context, templateID, gameSessionID, createdBy string) (*models.NPC, error)
-}
-
 type npcRepository struct {
 	db *sqlx.DB
 }

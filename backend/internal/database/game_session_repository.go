@@ -23,10 +23,10 @@ func (r *gameSessionRepository) Create(ctx context.Context, session *models.Game
 	query := `
 		INSERT INTO game_sessions (name, dm_user_id, status)
 		VALUES ($1, $2, $3)
-		RETURNING id, created_at, updated_at`
+		RETURNING id, created_at`
 
-	err := r.db.QueryRowContext(ctx, query, session.Name, session.DMUserID, session.Status).
-		Scan(&session.ID, &session.CreatedAt, &session.UpdatedAt)
+	err := r.db.QueryRowContext(ctx, query, session.Name, session.DMID, session.Status).
+		Scan(&session.ID, &session.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create game session: %w", err)
 	}
@@ -50,28 +50,12 @@ func (r *gameSessionRepository) GetByID(ctx context.Context, id string) (*models
 		return nil, fmt.Errorf("failed to get game session by id: %w", err)
 	}
 
+	// TODO: Load participants if needed
 	// Get participants
-	participants, err := r.GetParticipants(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get participants: %w", err)
-	}
-
-	// Convert participants to players
-	session.Players = make([]models.Player, len(participants))
-	for i, p := range participants {
-		session.Players[i] = models.Player{
-			ID:          p.UserID,
-			Name:        p.User.Username,
-			CharacterID: func() string { 
-				if p.CharacterID != nil { 
-					return *p.CharacterID 
-				} 
-				return "" 
-			}(),
-			IsOnline: p.IsOnline,
-			JoinedAt: p.JoinedAt,
-		}
-	}
+	// participants, err := r.GetParticipants(ctx, id)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to get participants: %w", err)
+	// }
 
 	return &session, nil
 }
@@ -90,29 +74,14 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 		return nil, fmt.Errorf("failed to get game sessions by dm user id: %w", err)
 	}
 
+	// TODO: Load participants if needed
 	// Get participants for each session
-	for _, session := range sessions {
-		participants, err := r.GetParticipants(ctx, session.ID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get participants for session %s: %w", session.ID, err)
-		}
-
-		session.Players = make([]models.Player, len(participants))
-		for i, p := range participants {
-			session.Players[i] = models.Player{
-				ID:          p.UserID,
-				Name:        p.User.Username,
-				CharacterID: func() string { 
-					if p.CharacterID != nil { 
-						return *p.CharacterID 
-					} 
-					return "" 
-				}(),
-				IsOnline: p.IsOnline,
-				JoinedAt: p.JoinedAt,
-			}
-		}
-	}
+	// for _, session := range sessions {
+	// 	participants, err := r.GetParticipants(ctx, session.ID)
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("failed to get participants for session %s: %w", session.ID, err)
+	// 	}
+	// }
 
 	return sessions, nil
 }
@@ -132,29 +101,14 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 		return nil, fmt.Errorf("failed to get game sessions by participant user id: %w", err)
 	}
 
+	// TODO: Load participants if needed
 	// Get participants for each session
-	for _, session := range sessions {
-		participants, err := r.GetParticipants(ctx, session.ID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get participants for session %s: %w", session.ID, err)
-		}
-
-		session.Players = make([]models.Player, len(participants))
-		for i, p := range participants {
-			session.Players[i] = models.Player{
-				ID:          p.UserID,
-				Name:        p.User.Username,
-				CharacterID: func() string { 
-					if p.CharacterID != nil { 
-						return *p.CharacterID 
-					} 
-					return "" 
-				}(),
-				IsOnline: p.IsOnline,
-				JoinedAt: p.JoinedAt,
-			}
-		}
-	}
+	// for _, session := range sessions {
+	// 	participants, err := r.GetParticipants(ctx, session.ID)
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("failed to get participants for session %s: %w", session.ID, err)
+	// 	}
+	// }
 
 	return sessions, nil
 }
@@ -164,11 +118,9 @@ func (r *gameSessionRepository) Update(ctx context.Context, session *models.Game
 	query := `
 		UPDATE game_sessions
 		SET name = $2, status = $3, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $1
-		RETURNING updated_at`
+		WHERE id = $1`
 
-	err := r.db.QueryRowContext(ctx, query, session.ID, session.Name, session.Status).
-		Scan(&session.UpdatedAt)
+	_, err := r.db.ExecContext(ctx, query, session.ID, session.Name, session.Status)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("game session not found")
@@ -279,7 +231,7 @@ func (r *gameSessionRepository) GetParticipants(ctx context.Context, sessionID s
 		var u models.User
 		
 		err := rows.Scan(
-			&p.GameSessionID, &p.UserID, &p.CharacterID, &p.IsOnline, &p.JoinedAt,
+			&p.SessionID, &p.UserID, &p.CharacterID, &p.IsOnline, &p.JoinedAt,
 			&u.ID, &u.Username, &u.Email, &u.CreatedAt, &u.UpdatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan participant: %w", err)

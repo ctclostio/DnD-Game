@@ -2,14 +2,26 @@ package models
 
 import "time"
 
+// GameStatus represents the status of a game session
+type GameStatus string
+
+const (
+	GameStatusPending   GameStatus = "pending"
+	GameStatusActive    GameStatus = "active"
+	GameStatusPaused    GameStatus = "paused"
+	GameStatusCompleted GameStatus = "completed"
+)
+
 type GameSession struct {
-	ID          string      `json:"id" db:"id"`
-	Name        string      `json:"name" db:"name"`
-	DMUserID    string      `json:"dmUserId" db:"dm_user_id"`
-	Players     []Player    `json:"players" db:"-"` // Not stored directly in game_sessions table
-	Status      string      `json:"status" db:"status"` // active, paused, completed
-	CreatedAt   time.Time   `json:"createdAt" db:"created_at"`
-	UpdatedAt   time.Time   `json:"updatedAt" db:"updated_at"`
+	ID          string                 `json:"id" db:"id"`
+	DMID        string                 `json:"dmId" db:"dm_user_id"`
+	Name        string                 `json:"name" db:"name"`
+	Description string                 `json:"description" db:"description"`
+	Status      GameStatus             `json:"status" db:"status"`
+	State       map[string]interface{} `json:"state" db:"session_state"`
+	CreatedAt   time.Time              `json:"createdAt" db:"created_at"`
+	StartedAt   *time.Time             `json:"startedAt,omitempty" db:"started_at"`
+	EndedAt     *time.Time             `json:"endedAt,omitempty" db:"ended_at"`
 }
 
 type Player struct {

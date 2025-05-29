@@ -18,10 +18,18 @@ type Combat struct {
 	UpdatedAt        time.Time           `json:"updatedAt"`
 }
 
+type CombatantType string
+
+const (
+	CombatantTypeCharacter CombatantType = "character"
+	CombatantTypeNPC       CombatantType = "npc"
+)
+
 type Combatant struct {
 	ID                string              `json:"id"`
 	CharacterID       string              `json:"characterId,omitempty"`
 	Name              string              `json:"name"`
+	Type              CombatantType       `json:"type"`
 	Initiative        int                 `json:"initiative"`
 	InitiativeRoll    int                 `json:"initiativeRoll"`
 	HP                int                 `json:"hp"`
@@ -29,6 +37,7 @@ type Combatant struct {
 	TempHP            int                 `json:"tempHp"`
 	AC                int                 `json:"ac"`
 	Speed             int                 `json:"speed"`
+	Condition         string              `json:"condition,omitempty"` // Simple status field
 	
 	// Action Economy
 	Actions           int                 `json:"actions"`
@@ -236,3 +245,10 @@ const (
 	UpdateTypeDeathSave      UpdateType = "deathSave"
 	UpdateTypeConcentration  UpdateType = "concentration"
 )
+
+// CombatantUpdate represents an update to a combatant's state
+type CombatantUpdate struct {
+	HP        int    `json:"hp,omitempty"`
+	TempHP    int    `json:"tempHp,omitempty"`
+	Condition string `json:"condition,omitempty"`
+}

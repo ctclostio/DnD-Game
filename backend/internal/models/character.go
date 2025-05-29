@@ -53,15 +53,6 @@ type Skill struct {
 	Proficiency bool   `json:"proficiency" db:"proficiency"`
 }
 
-type Item struct {
-	ID          string                 `json:"id" db:"id"`
-	Name        string                 `json:"name" db:"name"`
-	Type        string                 `json:"type" db:"type"`
-	Description string                 `json:"description" db:"description"`
-	Weight      float64                `json:"weight" db:"weight"`
-	Value       int                    `json:"value" db:"value"`
-	Properties  map[string]interface{} `json:"properties" db:"properties"`
-}
 
 type Spell struct {
 	ID          string `json:"id" db:"id"`

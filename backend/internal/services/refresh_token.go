@@ -10,12 +10,12 @@ import (
 
 // RefreshTokenService handles refresh token operations
 type RefreshTokenService struct {
-	repo       *database.RefreshTokenRepository
+	repo       database.RefreshTokenRepository
 	jwtManager *auth.JWTManager
 }
 
 // NewRefreshTokenService creates a new refresh token service
-func NewRefreshTokenService(repo *database.RefreshTokenRepository, jwtManager *auth.JWTManager) *RefreshTokenService {
+func NewRefreshTokenService(repo database.RefreshTokenRepository, jwtManager *auth.JWTManager) *RefreshTokenService {
 	return &RefreshTokenService{
 		repo:       repo,
 		jwtManager: jwtManager,

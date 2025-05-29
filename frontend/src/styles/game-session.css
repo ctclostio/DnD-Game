@@ -1,0 +1,281 @@
+.game-session {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #f5f5f5;
+}
+
+.session-header {
+    background: #8B4513;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.session-header h2 {
+    margin: 0;
+}
+
+.session-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.session-code {
+    background: rgba(255,255,255,0.2);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.participant-count {
+    opacity: 0.9;
+}
+
+.dm-badge {
+    background: #4CAF50;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.session-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.main-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    margin: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.tab-navigation {
+    display: flex;
+    background: #f5f5f5;
+    border-bottom: 2px solid #ddd;
+}
+
+.tab-navigation button {
+    flex: 1;
+    padding: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.tab-navigation button:hover:not(:disabled) {
+    background: #e0e0e0;
+}
+
+.tab-navigation button.active {
+    background: white;
+    font-weight: bold;
+    color: #8B4513;
+}
+
+.tab-navigation button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #8B4513;
+}
+
+.tab-navigation button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.tab-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.side-panel {
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 20px 20px 0;
+}
+
+.chat-container {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-container h3 {
+    margin: 0;
+    padding: 15px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chat-message {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.chat-message.dice-roll {
+    background: #e3f2fd;
+    border-left: 3px solid #2196F3;
+}
+
+.chat-user {
+    font-weight: bold;
+    color: #8B4513;
+    margin-bottom: 2px;
+}
+
+.chat-text {
+    word-wrap: break-word;
+}
+
+.chat-time {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+}
+
+.chat-input-container {
+    display: flex;
+    padding: 15px;
+    border-top: 1px solid #ddd;
+    gap: 10px;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.chat-send {
+    padding: 8px 20px;
+    background: #8B4513;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.chat-send:hover {
+    background: #6d3710;
+}
+
+.dm-controls {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+}
+
+.dm-controls h3 {
+    margin: 0 0 15px 0;
+}
+
+.dm-button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #8B4513;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.dm-button:last-child {
+    margin-bottom: 0;
+    background: #f44336;
+}
+
+.dm-button:hover {
+    opacity: 0.9;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .session-content {
+        flex-direction: column;
+    }
+    
+    .side-panel {
+        width: 100%;
+        flex-direction: row;
+        padding: 0 20px 20px;
+    }
+    
+    .chat-container {
+        flex: 1;
+    }
+    
+    .dm-controls {
+        width: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .session-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .session-info {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .side-panel {
+        flex-direction: column;
+    }
+    
+    .dm-controls {
+        width: 100%;
+    }
+    
+    .tab-navigation button {
+        font-size: 14px;
+        padding: 12px 8px;
+    }
+}

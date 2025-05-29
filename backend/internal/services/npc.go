@@ -45,7 +45,7 @@ func (s *NPCService) CreateNPC(ctx context.Context, npc *models.NPC) error {
 	npc.Attributes = s.ensureValidAttributes(npc.Attributes)
 	
 	// Calculate saving throws if not provided
-	if len(npc.SavingThrows.Strength.Modifier) == 0 {
+	if !s.hasSavingThrows(npc.SavingThrows) {
 		npc.SavingThrows = s.calculateSavingThrows(npc)
 	}
 
@@ -111,7 +111,7 @@ func (s *NPCService) RollInitiative(ctx context.Context, npcID string) (int, err
 
 	// Roll 1d20 + Dexterity modifier
 	dexMod := s.getAbilityModifier(npc.Attributes.Dexterity)
-	roll, _, err := s.roller.Roll("1d20")
+	roll, err := s.roller.Roll("1d20")
 	if err != nil {
 		return 0, err
 	}
@@ -192,8 +192,19 @@ func (s *NPCService) ensureValidAttributes(attrs models.Attributes) models.Attri
 	return attrs
 }
 
+func (s *NPCService) hasSavingThrows(st models.SavingThrows) bool {
+	// Check if any saving throw has been set (modifier != 0 or has proficiency)
+	return st.Strength.Modifier != 0 || st.Strength.Proficiency ||
+		st.Dexterity.Modifier != 0 || st.Dexterity.Proficiency ||
+		st.Constitution.Modifier != 0 || st.Constitution.Proficiency ||
+		st.Intelligence.Modifier != 0 || st.Intelligence.Proficiency ||
+		st.Wisdom.Modifier != 0 || st.Wisdom.Proficiency ||
+		st.Charisma.Modifier != 0 || st.Charisma.Proficiency
+}
+
 func (s *NPCService) calculateSavingThrows(npc *models.NPC) models.SavingThrows {
-	profBonus := s.getProficiencyBonusFromCR(npc.ChallengeRating)
+	// TODO: Add proficiency bonus when implementing proficient saves
+	// profBonus := s.getProficiencyBonusFromCR(npc.ChallengeRating)
 	
 	return models.SavingThrows{
 		Strength: models.SavingThrow{

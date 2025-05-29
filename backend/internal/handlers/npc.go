@@ -32,7 +32,7 @@ func (h *Handlers) CreateNPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
+	if session.DMID != claims.UserID {
 		sendErrorResponse(w, http.StatusForbidden, "Only the DM can create NPCs")
 		return
 	}
@@ -128,7 +128,7 @@ func (h *Handlers) UpdateNPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
+	if session.DMID != claims.UserID {
 		sendErrorResponse(w, http.StatusForbidden, "Only the DM can update NPCs")
 		return
 	}
@@ -178,7 +178,7 @@ func (h *Handlers) DeleteNPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
+	if session.DMID != claims.UserID {
 		sendErrorResponse(w, http.StatusForbidden, "Only the DM can delete NPCs")
 		return
 	}
@@ -276,7 +276,7 @@ func (h *Handlers) CreateNPCFromTemplate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
+	if session.DMID != claims.UserID {
 		sendErrorResponse(w, http.StatusForbidden, "Only the DM can create NPCs")
 		return
 	}
@@ -317,7 +317,7 @@ func (h *Handlers) NPCQuickActions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
+	if session.DMID != claims.UserID {
 		sendErrorResponse(w, http.StatusForbidden, "Only the DM can perform quick actions on NPCs")
 		return
 	}

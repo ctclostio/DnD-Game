@@ -24,13 +24,13 @@ func (s *GameSessionService) CreateSession(ctx context.Context, session *models.
 	if session.Name == "" {
 		return fmt.Errorf("session name is required")
 	}
-	if session.DMUserID == "" {
+	if session.DMID == "" {
 		return fmt.Errorf("dungeon master user ID is required")
 	}
 	
 	// Set default status
 	if session.Status == "" {
-		session.Status = "active"
+		session.Status = models.GameStatusActive
 	}
 	
 	// Create session
@@ -39,7 +39,7 @@ func (s *GameSessionService) CreateSession(ctx context.Context, session *models.
 	}
 	
 	// Add DM as a participant
-	if err := s.repo.AddParticipant(ctx, session.ID, session.DMUserID, nil); err != nil {
+	if err := s.repo.AddParticipant(ctx, session.ID, session.DMID, nil); err != nil {
 		return fmt.Errorf("failed to add DM as participant: %w", err)
 	}
 	
@@ -75,7 +75,7 @@ func (s *GameSessionService) UpdateSession(ctx context.Context, session *models.
 	}
 	
 	// Preserve DM user ID and created at
-	session.DMUserID = existing.DMUserID
+	session.DMID = existing.DMID
 	session.CreatedAt = existing.CreatedAt
 	
 	return s.repo.Update(ctx, session)
@@ -123,7 +123,7 @@ func (s *GameSessionService) LeaveSession(ctx context.Context, sessionID, userID
 	}
 	
 	// Don't allow DM to leave
-	if session.DMUserID == userID {
+	if session.DMID == userID {
 		return fmt.Errorf("dungeon master cannot leave the session")
 	}
 	
@@ -160,7 +160,7 @@ func (s *GameSessionService) ValidateUserInSession(ctx context.Context, sessionI
 		return fmt.Errorf("session not found: %w", err)
 	}
 	
-	if session.DMUserID == userID {
+	if session.DMID == userID {
 		return nil
 	}
 	

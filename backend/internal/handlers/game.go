@@ -24,7 +24,7 @@ func (h *Handlers) CreateGameSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set the DM user ID
-	session.DMUserID = claims.UserID
+	session.DMID = claims.UserID
 
 	if err := h.gameService.CreateSession(r.Context(), &session); err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -52,7 +52,7 @@ func (h *Handlers) GetGameSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify user is either DM or a participant
-	isAuthorized := session.DMUserID == userID
+	isAuthorized := session.DMID == userID
 	if !isAuthorized {
 		// Check if user is a participant
 		if err := h.gameService.ValidateUserInSession(r.Context(), id, userID); err == nil {
@@ -86,7 +86,7 @@ func (h *Handlers) UpdateGameSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if existing.DMUserID != claims.UserID {
+	if existing.DMID != claims.UserID {
 		sendErrorResponse(w, http.StatusForbidden, "Only the DM can update the game session")
 		return
 	}
@@ -98,7 +98,7 @@ func (h *Handlers) UpdateGameSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session.ID = id
-	session.DMUserID = claims.UserID // Ensure DM can't be changed
+	session.DMID = claims.UserID // Ensure DM can't be changed
 	
 	if err := h.gameService.UpdateSession(r.Context(), &session); err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, err.Error())

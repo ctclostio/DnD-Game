@@ -1,17 +1,18 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type InventoryService struct {
-	inventoryRepo *database.InventoryRepository
-	characterRepo *database.CharacterRepository
+	inventoryRepo database.InventoryRepository
+	characterRepo database.CharacterRepository
 }
 
-func NewInventoryService(inventoryRepo *database.InventoryRepository, characterRepo *database.CharacterRepository) *InventoryService {
+func NewInventoryService(inventoryRepo database.InventoryRepository, characterRepo database.CharacterRepository) *InventoryService {
 	return &InventoryService{
 		inventoryRepo: inventoryRepo,
 		characterRepo: characterRepo,
@@ -19,7 +20,7 @@ func NewInventoryService(inventoryRepo *database.InventoryRepository, characterR
 }
 
 func (s *InventoryService) AddItemToCharacter(characterID, itemID string, quantity int) error {
-	character, err := s.characterRepo.GetCharacterByID(characterID)
+	character, err := s.characterRepo.GetByID(context.Background(), characterID)
 	if err != nil {
 		return err
 	}

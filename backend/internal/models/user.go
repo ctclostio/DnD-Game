@@ -22,15 +22,24 @@ type UserWithCharacters struct {
 	Characters []Character `json:"characters"`
 }
 
+// ParticipantRole represents the role of a game participant
+type ParticipantRole string
+
+const (
+	ParticipantRoleDM     ParticipantRole = "dm"
+	ParticipantRolePlayer ParticipantRole = "player"
+)
+
 // GameParticipant represents a user participating in a game session
 type GameParticipant struct {
-	GameSessionID string     `json:"gameSessionId" db:"game_session_id"`
-	UserID        string     `json:"userId" db:"user_id"`
-	CharacterID   *string    `json:"characterId,omitempty" db:"character_id"`
-	IsOnline      bool       `json:"isOnline" db:"is_online"`
-	JoinedAt      time.Time  `json:"joinedAt" db:"joined_at"`
-	User          *User      `json:"user,omitempty"`
-	Character     *Character `json:"character,omitempty"`
+	SessionID     string          `json:"sessionId" db:"game_session_id"`
+	UserID        string          `json:"userId" db:"user_id"`
+	CharacterID   string          `json:"characterId" db:"character_id"`
+	Role          ParticipantRole `json:"role" db:"role"`
+	IsOnline      bool            `json:"isOnline" db:"is_online"`
+	JoinedAt      time.Time       `json:"joinedAt" db:"joined_at"`
+	User          *User           `json:"user,omitempty"`
+	Character     *Character      `json:"character,omitempty"`
 }
 
 // LoginRequest represents a login request
@@ -69,6 +78,35 @@ type PasswordResetConfirm struct {
 // RefreshTokenRequest represents a token refresh request
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token"`
+}
+
+// RefreshToken represents a stored refresh token
+type RefreshToken struct {
+	ID        string     `json:"id" db:"id"`
+	UserID    string     `json:"userId" db:"user_id"`
+	TokenHash string     `json:"-" db:"token_hash"` // Store hash instead of plain token
+	ExpiresAt time.Time  `json:"expiresAt" db:"expires_at"`
+	CreatedAt time.Time  `json:"createdAt" db:"created_at"`
+	RevokedAt *time.Time `json:"revokedAt,omitempty" db:"revoked_at"`
+}
+
+// RegisterInput represents the input for user registration
+type RegisterInput struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// LoginInput represents the input for user login
+type LoginInput struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// UpdateUserInput represents the input for updating user information
+type UpdateUserInput struct {
+	Email    string `json:"email,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 // Validate performs validation on User
