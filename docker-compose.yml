@@ -16,6 +16,10 @@ services:
       - DB_PASSWORD=dndgamepass
       - DB_NAME=dndgame
       - DB_SSLMODE=disable
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - AI_PROVIDER=openrouter
+      - AI_API_KEY=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
+      - AI_MODEL=openai/gpt-4-turbo
     volumes:
       - ./backend:/app/backend
       - ./data:/app/data

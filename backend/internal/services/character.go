@@ -10,12 +10,18 @@ import (
 )
 
 type CharacterService struct {
-	repo database.CharacterRepository
+	repo              database.CharacterRepository
+	customClassRepo   *database.CustomClassRepository
+	classGenerator    *AIClassGenerator
+	llmProvider       LLMProvider
 }
 
-func NewCharacterService(repo database.CharacterRepository) *CharacterService {
+func NewCharacterService(repo database.CharacterRepository, customClassRepo *database.CustomClassRepository, llmProvider LLMProvider) *CharacterService {
 	return &CharacterService{
-		repo: repo,
+		repo:            repo,
+		customClassRepo: customClassRepo,
+		classGenerator:  NewAIClassGenerator(llmProvider),
+		llmProvider:     llmProvider,
 	}
 }
 
@@ -500,4 +506,46 @@ func (s *CharacterService) updateSavingThrows(char *models.Character) {
 // GetCharacter gets a character by ID (alias for GetCharacterByID)
 func (s *CharacterService) GetCharacter(ctx context.Context, id string) (*models.Character, error) {
 	return s.GetCharacterByID(ctx, id)
+}
+
+// GenerateCustomClass generates a custom class using AI
+func (s *CharacterService) GenerateCustomClass(ctx context.Context, userID, name, description, role, style, features string) (*models.CustomClass, error) {
+	req := CustomClassRequest{
+		Name:        name,
+		Description: description,
+		Role:        role,
+		Style:       style,
+		Features:    features,
+	}
+
+	// Generate the custom class
+	customClass, err := s.classGenerator.GenerateCustomClass(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the user ID
+	customClass.UserID = userID
+
+	// Save to database
+	if err := s.customClassRepo.Create(customClass); err != nil {
+		return nil, fmt.Errorf("failed to save custom class: %w", err)
+	}
+
+	return customClass, nil
+}
+
+// GetUserCustomClasses gets all custom classes for a user
+func (s *CharacterService) GetUserCustomClasses(ctx context.Context, userID string, includeUnapproved bool) ([]*models.CustomClass, error) {
+	return s.customClassRepo.GetByUserID(userID, includeUnapproved)
+}
+
+// GetCustomClass gets a custom class by ID
+func (s *CharacterService) GetCustomClass(ctx context.Context, classID string) (*models.CustomClass, error) {
+	return s.customClassRepo.GetByID(classID)
+}
+
+// GetApprovedCustomClasses gets all approved custom classes
+func (s *CharacterService) GetApprovedCustomClasses(ctx context.Context) ([]*models.CustomClass, error) {
+	return s.customClassRepo.GetApproved()
 }

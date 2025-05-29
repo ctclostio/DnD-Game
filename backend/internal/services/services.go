@@ -14,6 +14,10 @@ type Services struct {
 	Combat        *CombatService
 	NPCs          *NPCService
 	Inventory     *InventoryService
+	CustomRaces   *CustomRaceService
+	DMAssistant   *DMAssistantService
+	Encounters    *EncounterService
+	Campaign      *CampaignService
 	JWTManager    *auth.JWTManager
 	RefreshTokens *RefreshTokenService
 	Config        *config.Config

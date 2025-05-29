@@ -63,6 +63,11 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 		NPCs:          NewNPCRepository(db.DB),
 		Inventory:     NewInventoryRepository(db.DB),
 		RefreshTokens: NewRefreshTokenRepository(db.DB),
+		CustomRaces:   NewCustomRaceRepository(db.DB),
+		CustomClasses: NewCustomClassRepository(db.DB),
+		DMAssistant:   NewDMAssistantRepository(db.DB),
+		Encounters:    NewEncounterRepository(db.DB),
+		Campaign:      NewCampaignRepository(db.DB),
 	}
 
 	return db, repos, nil

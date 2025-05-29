@@ -18,13 +18,5 @@ CREATE INDEX idx_dice_rolls_user_id ON dice_rolls(user_id);
 CREATE INDEX idx_dice_rolls_timestamp ON dice_rolls(timestamp);
 CREATE INDEX idx_dice_rolls_purpose ON dice_rolls(purpose);
 
--- Ensure user is participant in the game session
-ALTER TABLE dice_rolls
-ADD CONSTRAINT check_user_in_session
-CHECK (
-    EXISTS (
-        SELECT 1 FROM game_participants
-        WHERE game_participants.game_session_id = dice_rolls.game_session_id
-        AND game_participants.user_id = dice_rolls.user_id
-    )
-);
+-- Note: User participation validation should be done at the application level
+-- PostgreSQL doesn't support subqueries in CHECK constraints

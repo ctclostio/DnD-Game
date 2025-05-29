@@ -385,6 +385,252 @@ input[type="password"] {
     margin-top: 0.5rem;
 }
 
+/* Custom Race Styles */
+.custom-race-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 2px solid #764ba2;
+    transition: all 0.3s ease;
+}
+
+.custom-race-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3);
+}
+
+.custom-race-form {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.custom-race-form h3 {
+    color: #ff6b6b;
+    margin-bottom: 1rem;
+}
+
+.ai-notice {
+    background: rgba(74, 144, 226, 0.1);
+    border: 1px solid #4a90e2;
+    border-radius: 4px;
+    padding: 0.75rem;
+    margin-bottom: 1.5rem;
+    color: #4a90e2;
+}
+
+.custom-race-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.custom-race-form textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 0.75rem;
+    background-color: #3a3a3a;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+.ai-generation-options {
+    margin: 1.5rem 0;
+}
+
+.ai-generation-options h4 {
+    color: #ccc;
+    margin-bottom: 0.75rem;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #ccc;
+}
+
+.radio-group input[type="radio"] {
+    cursor: pointer;
+}
+
+.generate-race-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.generate-race-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(118, 75, 162, 0.3);
+}
+
+.generate-race-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.race-preview {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid #d4af37;
+    border-radius: 4px;
+}
+
+.race-preview h4 {
+    color: #d4af37;
+    margin-bottom: 1rem;
+}
+
+.race-stats {
+    color: #ccc;
+}
+
+.race-stats p {
+    margin-bottom: 0.75rem;
+}
+
+.race-stats ul {
+    margin-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.race-stats li {
+    margin-bottom: 0.5rem;
+}
+
+.balance-score {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    background: rgba(74, 144, 226, 0.2);
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+    color: #4a90e2;
+}
+
+.dm-notes {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    color: #ffc107;
+    font-style: italic;
+}
+
+/* Custom Class Styles */
+.custom-class-card {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border: 2px solid #c0392b;
+    transition: all 0.3s ease;
+}
+
+.custom-class-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+}
+
+.custom-class-form {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.custom-class-form h3 {
+    color: #ff6b6b;
+    margin-bottom: 1rem;
+}
+
+.custom-class-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.custom-class-form select {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #3a3a3a;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    border-radius: 4px;
+}
+
+.generate-class-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    padding: 1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.generate-class-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+}
+
+.generate-class-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.class-preview {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid #d4af37;
+    border-radius: 4px;
+}
+
+.class-preview h4 {
+    color: #d4af37;
+    margin-bottom: 1rem;
+}
+
+.class-preview h5 {
+    color: #d4af37;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.class-stats {
+    color: #ccc;
+}
+
+.class-stats p {
+    margin-bottom: 0.75rem;
+}
+
+.class-stats ul {
+    margin-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.class-stats li {
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+}
+
 /* Character Builder Styles */
 .character-builder {
     max-width: 800px;

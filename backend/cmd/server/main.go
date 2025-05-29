@@ -45,20 +45,64 @@ func main() {
 		cfg.Auth.RefreshTokenDuration,
 	)
 
+	// Create AI provider
+	var llmProvider services.LLMProvider
+	switch cfg.AI.Provider {
+	case "openai":
+		llmProvider = services.NewOpenAIProvider(cfg.AI.APIKey, cfg.AI.Model)
+	case "anthropic":
+		llmProvider = services.NewAnthropicProvider(cfg.AI.APIKey, cfg.AI.Model)
+	case "openrouter":
+		llmProvider = services.NewOpenRouterProvider(cfg.AI.APIKey, cfg.AI.Model)
+	default:
+		llmProvider = &services.MockLLMProvider{}
+	}
+
+	// Create AI race generator
+	aiRaceGenerator := services.NewAIRaceGeneratorService(llmProvider)
+	
+	// Create AI DM assistant
+	aiDMAssistant := services.NewAIDMAssistantService(llmProvider)
+
 	// Create services
 	refreshTokenService := services.NewRefreshTokenService(repos.RefreshTokens, jwtManager)
 	
 	// Start refresh token cleanup task
 	refreshTokenService.StartCleanupTask(1 * time.Hour)
 
+	// Create custom race service
+	customRaceService := services.NewCustomRaceService(repos.CustomRaces, aiRaceGenerator)
+	
+	// Create DM assistant service
+	dmAssistantService := services.NewDMAssistantService(repos.DMAssistant, aiDMAssistant)
+	
+	// Create AI encounter builder
+	aiEncounterBuilder := services.NewAIEncounterBuilder(llmProvider)
+	
+	// Create combat service first (needed by encounter service)
+	combatService := services.NewCombatService()
+	
+	// Create encounter service
+	encounterService := services.NewEncounterService(repos.Encounters, aiEncounterBuilder, combatService)
+	
+	// Create AI campaign manager
+	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Enabled})
+	
+	// Create campaign service
+	campaignService := services.NewCampaignService(repos.Campaign, repos.GameSessions, aiCampaignManager)
+
 	svc := &services.Services{
 		Users:         services.NewUserService(repos.Users),
-		Characters:    services.NewCharacterService(repos.Characters),
+		Characters:    services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
 		GameSessions:  services.NewGameSessionService(repos.GameSessions),
 		DiceRolls:     services.NewDiceRollService(repos.DiceRolls),
-		Combat:        services.NewCombatService(),
+		Combat:        combatService,
 		NPCs:          services.NewNPCService(repos.NPCs),
 		Inventory:     services.NewInventoryService(repos.Inventory, repos.Characters),
+		CustomRaces:   customRaceService,
+		DMAssistant:   dmAssistantService,
+		Encounters:    encounterService,
+		Campaign:      campaignService,
 		JWTManager:    jwtManager,
 		RefreshTokens: refreshTokenService,
 		Config:        cfg,
@@ -71,10 +115,13 @@ func main() {
 	h := handlers.NewHandlers(svc, wsHub)
 	
 	// Create character creation handler
-	charCreationHandler := handlers.NewCharacterCreationHandler(svc.Characters)
+	charCreationHandler := handlers.NewCharacterCreationHandler(svc.Characters, svc.CustomRaces)
 	
 	// Create inventory handler
 	inventoryHandler := handlers.NewInventoryHandler(svc.Inventory)
+	
+	// Create campaign handler
+	campaignHandler := handlers.NewCampaignHandler(svc.Campaign, svc.GameSessions)
 
 	// Create authentication middleware
 	authMiddleware := auth.NewMiddleware(jwtManager)
@@ -160,6 +207,78 @@ func main() {
 	api.HandleFunc("/characters/{characterId}/weight", authMiddleware.Authenticate(inventoryHandler.GetCharacterWeight)).Methods("GET")
 	api.HandleFunc("/items", authMiddleware.RequireDM()(inventoryHandler.CreateItem)).Methods("POST")
 	api.HandleFunc("/items", authMiddleware.Authenticate(inventoryHandler.GetItemsByType)).Methods("GET")
+
+	// Custom race routes (protected)
+	api.HandleFunc("/custom-races", authMiddleware.Authenticate(h.CreateCustomRace)).Methods("POST")
+	api.HandleFunc("/custom-races", authMiddleware.Authenticate(h.GetUserCustomRaces)).Methods("GET")
+	api.HandleFunc("/custom-races/public", authMiddleware.Authenticate(h.GetPublicCustomRaces)).Methods("GET")
+	api.HandleFunc("/custom-races/pending", authMiddleware.RequireDM()(h.GetPendingCustomRaces)).Methods("GET")
+	api.HandleFunc("/custom-races/{id}", authMiddleware.Authenticate(h.GetCustomRace)).Methods("GET")
+	api.HandleFunc("/custom-races/{id}/stats", authMiddleware.Authenticate(h.GetCustomRaceStats)).Methods("GET")
+	api.HandleFunc("/custom-races/{id}/approve", authMiddleware.RequireDM()(h.ApproveCustomRace)).Methods("POST")
+	api.HandleFunc("/custom-races/{id}/reject", authMiddleware.RequireDM()(h.RejectCustomRace)).Methods("POST")
+	
+	// Custom class routes (protected)
+	api.HandleFunc("/characters/custom-classes/generate", authMiddleware.Authenticate(h.GenerateCustomClass)).Methods("POST")
+	api.HandleFunc("/characters/custom-classes", authMiddleware.Authenticate(h.GetCustomClasses)).Methods("GET")
+	api.HandleFunc("/characters/custom-classes/{id}", authMiddleware.Authenticate(h.GetCustomClass)).Methods("GET")
+	api.HandleFunc("/custom-races/{id}/revision", authMiddleware.RequireDM()(h.RequestRevisionCustomRace)).Methods("POST")
+	api.HandleFunc("/custom-races/{id}/public", authMiddleware.Authenticate(h.MakeCustomRacePublic)).Methods("POST")
+
+	// Encounter Builder routes (protected, DM only)
+	api.HandleFunc("/encounters/generate", authMiddleware.RequireDM()(h.GenerateEncounter)).Methods("POST")
+	api.HandleFunc("/encounters/{id}", authMiddleware.Authenticate(h.GetEncounter)).Methods("GET")
+	api.HandleFunc("/encounters/session/{sessionId}", authMiddleware.Authenticate(h.GetSessionEncounters)).Methods("GET")
+	api.HandleFunc("/encounters/{id}/start", authMiddleware.RequireDM()(h.StartEncounter)).Methods("POST")
+	api.HandleFunc("/encounters/{id}/complete", authMiddleware.RequireDM()(h.CompleteEncounter)).Methods("POST")
+	api.HandleFunc("/encounters/{id}/scale", authMiddleware.RequireDM()(h.ScaleEncounter)).Methods("POST")
+	api.HandleFunc("/encounters/{id}/tactical-suggestion", authMiddleware.RequireDM()(h.GetTacticalSuggestion)).Methods("POST")
+	api.HandleFunc("/encounters/{id}/events", authMiddleware.Authenticate(h.LogEncounterEvent)).Methods("POST")
+	api.HandleFunc("/encounters/{id}/events", authMiddleware.Authenticate(h.GetEncounterEvents)).Methods("GET")
+	api.HandleFunc("/encounters/{id}/enemies/{enemyId}", authMiddleware.RequireDM()(h.UpdateEnemyStatus)).Methods("PATCH")
+	api.HandleFunc("/encounters/{id}/reinforcements", authMiddleware.RequireDM()(h.TriggerReinforcements)).Methods("POST")
+	api.HandleFunc("/encounters/{id}/objectives/check", authMiddleware.RequireDM()(h.CheckObjectives)).Methods("POST")
+
+	// DM Assistant routes (protected, DM only)
+	api.HandleFunc("/dm-assistant", authMiddleware.RequireDM()(h.ProcessDMAssistantRequest)).Methods("POST")
+	api.HandleFunc("/dm-assistant/sessions/{sessionId}/npcs", authMiddleware.RequireDM()(h.GetDMAssistantNPCs)).Methods("GET")
+	api.HandleFunc("/dm-assistant/npcs", authMiddleware.RequireDM()(h.CreateDMAssistantNPC)).Methods("POST")
+	api.HandleFunc("/dm-assistant/npcs/{id}", authMiddleware.RequireDM()(h.GetDMAssistantNPC)).Methods("GET")
+	api.HandleFunc("/dm-assistant/sessions/{sessionId}/locations", authMiddleware.RequireDM()(h.GetDMAssistantLocations)).Methods("GET")
+	api.HandleFunc("/dm-assistant/locations/{id}", authMiddleware.RequireDM()(h.GetDMAssistantLocation)).Methods("GET")
+	api.HandleFunc("/dm-assistant/sessions/{sessionId}/story-elements", authMiddleware.RequireDM()(h.GetDMAssistantStoryElements)).Methods("GET")
+	api.HandleFunc("/dm-assistant/story-elements/{id}/use", authMiddleware.RequireDM()(h.MarkStoryElementUsed)).Methods("POST")
+	api.HandleFunc("/dm-assistant/locations/{locationId}/hazards", authMiddleware.RequireDM()(h.GetDMAssistantHazards)).Methods("GET")
+	api.HandleFunc("/dm-assistant/hazards/{id}/trigger", authMiddleware.RequireDM()(h.TriggerHazard)).Methods("POST")
+	
+	// Campaign Management routes (protected)
+	// Story Arc routes
+	api.HandleFunc("/sessions/{sessionId}/story-arcs", authMiddleware.RequireDM()(campaignHandler.CreateStoryArc)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/story-arcs/generate", authMiddleware.RequireDM()(campaignHandler.GenerateStoryArc)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/story-arcs", authMiddleware.Authenticate(campaignHandler.GetStoryArcs)).Methods("GET")
+	api.HandleFunc("/sessions/{sessionId}/story-arcs/{arcId}", authMiddleware.RequireDM()(campaignHandler.UpdateStoryArc)).Methods("PUT")
+	
+	// Session Memory routes
+	api.HandleFunc("/sessions/{sessionId}/memories", authMiddleware.RequireDM()(campaignHandler.CreateSessionMemory)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/memories", authMiddleware.Authenticate(campaignHandler.GetSessionMemories)).Methods("GET")
+	api.HandleFunc("/sessions/{sessionId}/recap", authMiddleware.Authenticate(campaignHandler.GenerateRecap)).Methods("POST")
+	
+	// Plot Thread routes
+	api.HandleFunc("/sessions/{sessionId}/plot-threads", authMiddleware.RequireDM()(campaignHandler.CreatePlotThread)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/plot-threads", authMiddleware.Authenticate(campaignHandler.GetPlotThreads)).Methods("GET")
+	
+	// Foreshadowing routes
+	api.HandleFunc("/sessions/{sessionId}/foreshadowing", authMiddleware.RequireDM()(campaignHandler.GenerateForeshadowing)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/foreshadowing/unrevealed", authMiddleware.RequireDM()(campaignHandler.GetUnrevealedForeshadowing)).Methods("GET")
+	api.HandleFunc("/foreshadowing/{elementId}/reveal", authMiddleware.RequireDM()(campaignHandler.RevealForeshadowing)).Methods("POST")
+	
+	// Timeline routes
+	api.HandleFunc("/sessions/{sessionId}/timeline", authMiddleware.Authenticate(campaignHandler.AddTimelineEvent)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/timeline", authMiddleware.Authenticate(campaignHandler.GetTimeline)).Methods("GET")
+	
+	// NPC Relationship routes
+	api.HandleFunc("/sessions/{sessionId}/npc-relationships", authMiddleware.RequireDM()(campaignHandler.UpdateNPCRelationship)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/npcs/{npcId}/relationships", authMiddleware.Authenticate(campaignHandler.GetNPCRelationships)).Methods("GET")
 
 	// Initialize WebSocket with JWT manager
 	websocket.SetJWTManager(jwtManager)

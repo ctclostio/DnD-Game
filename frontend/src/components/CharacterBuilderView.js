@@ -1,4 +1,6 @@
-import { apiService } from '../services/api.js';
+import { ApiService } from '../services/api.js';
+
+const apiService = new ApiService();
 
 export class CharacterBuilderView {
     constructor(container) {
@@ -167,9 +169,14 @@ export class CharacterBuilderView {
                             <p class="race-description">Click to select</p>
                         </div>
                     `).join('')}
+                    <div class="selection-card custom-race-card ${this.characterData.race === 'custom' ? 'selected' : ''}" 
+                         data-race="custom">
+                        <h3>🎨 Custom Race</h3>
+                        <p class="race-description">Create your own unique race</p>
+                    </div>
                 </div>
                 
-                ${this.renderSubraceSelection()}
+                ${this.characterData.race === 'custom' ? this.renderCustomRaceForm() : this.renderSubraceSelection()}
             </div>
         `;
     }
@@ -180,6 +187,60 @@ export class CharacterBuilderView {
         
         // For now, just return empty - would load subraces from race data
         return `<div id="subraceSelection"></div>`;
+    }
+
+    renderCustomRaceForm() {
+        return `
+            <div class="custom-race-form">
+                <h3>Create Your Custom Race</h3>
+                <p class="ai-notice">🤖 Our AI will help balance your custom race and generate appropriate traits!</p>
+                
+                <div class="form-group">
+                    <label for="customRaceName">Race Name</label>
+                    <input type="text" id="customRaceName" 
+                           value="${this.characterData.customRaceData?.name || ''}"
+                           placeholder="e.g., Celestial Tiefling, Frostborn Dwarf">
+                </div>
+                
+                <div class="form-group">
+                    <label for="customRaceDescription">Description</label>
+                    <textarea id="customRaceDescription" rows="4"
+                              placeholder="Describe your race's appearance, culture, origins, and any unique features...">${this.characterData.customRaceData?.description || ''}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customRaceTraits">Desired Traits (Optional)</label>
+                    <textarea id="customRaceTraits" rows="3"
+                              placeholder="List any specific abilities or traits you'd like (e.g., darkvision, natural armor, elemental resistance)">${this.characterData.customRaceData?.desiredTraits || ''}</textarea>
+                </div>
+                
+                <div class="ai-generation-options">
+                    <h4>Generation Style</h4>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="generationStyle" value="balanced" checked>
+                            Balanced (Standard D&D power level)
+                        </label>
+                        <label>
+                            <input type="radio" name="generationStyle" value="flavorful">
+                            Flavorful (Focus on unique abilities)
+                        </label>
+                        <label>
+                            <input type="radio" name="generationStyle" value="powerful">
+                            Powerful (Slightly stronger, for experienced players)
+                        </label>
+                    </div>
+                </div>
+                
+                <button class="btn-primary generate-race-btn" id="generateCustomRace">
+                    🎲 Generate Custom Race
+                </button>
+                
+                <div id="generatedRacePreview" class="race-preview" style="display: none;">
+                    <!-- Generated race details will appear here -->
+                </div>
+            </div>
+        `;
     }
 
     renderClassSelection() {
@@ -194,6 +255,72 @@ export class CharacterBuilderView {
                             <p class="class-description">Click to select</p>
                         </div>
                     `).join('')}
+                    <div class="selection-card custom-class-card ${this.characterData.class === 'custom' ? 'selected' : ''}" 
+                         data-class="custom">
+                        <h3>🎯 Custom Class</h3>
+                        <p class="class-description">Create your own unique class</p>
+                    </div>
+                </div>
+                
+                ${this.characterData.class === 'custom' ? this.renderCustomClassForm() : ''}
+            </div>
+        `;
+    }
+
+    renderCustomClassForm() {
+        return `
+            <div class="custom-class-form">
+                <h3>Create Your Custom Class</h3>
+                <p class="ai-notice">🤖 Our AI will design a balanced class with unique features and abilities!</p>
+                
+                <div class="form-group">
+                    <label for="customClassName">Class Name</label>
+                    <input type="text" id="customClassName" 
+                           value="${this.characterData.customClassData?.name || ''}"
+                           placeholder="e.g., Shadow Dancer, Spell Blade, Beast Master">
+                </div>
+                
+                <div class="form-group">
+                    <label for="customClassDescription">Description</label>
+                    <textarea id="customClassDescription" rows="4"
+                              placeholder="Describe your class's role, combat style, source of power, and unique features...">${this.characterData.customClassData?.description || ''}</textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customClassRole">Primary Role</label>
+                        <select id="customClassRole">
+                            <option value="">Select a role...</option>
+                            <option value="tank">Tank (Defender)</option>
+                            <option value="damage">Damage Dealer</option>
+                            <option value="healer">Healer/Support</option>
+                            <option value="controller">Controller/Utility</option>
+                            <option value="hybrid">Hybrid/Versatile</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customClassStyle">Class Style</label>
+                        <select id="customClassStyle">
+                            <option value="balanced">Balanced</option>
+                            <option value="flavorful">Flavorful & Unique</option>
+                            <option value="powerful">Powerful (Advanced)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customClassFeatures">Desired Features (Optional)</label>
+                    <textarea id="customClassFeatures" rows="3"
+                              placeholder="List any specific abilities or mechanics you'd like (e.g., pet companion, spell-sword hybrid, rage mechanics)">${this.characterData.customClassData?.features || ''}</textarea>
+                </div>
+                
+                <button class="btn-primary generate-class-btn" id="generateCustomClass">
+                    🎲 Generate Custom Class
+                </button>
+                
+                <div id="generatedClassPreview" class="class-preview" style="display: none;">
+                    <!-- Generated class details will appear here -->
                 </div>
             </div>
         `;
@@ -374,6 +501,7 @@ export class CharacterBuilderView {
             card.addEventListener('click', () => {
                 this.characterData.race = card.dataset.race;
                 this.updateSelectionCards('[data-race]', card);
+                this.updateContent(); // Re-render to show custom race form if needed
             });
         });
 
@@ -392,6 +520,18 @@ export class CharacterBuilderView {
                 this.updateSelectionCards('[data-background]', card);
             });
         });
+
+        // Generate custom race button
+        const generateRaceBtn = this.container.querySelector('#generateCustomRace');
+        if (generateRaceBtn) {
+            generateRaceBtn.addEventListener('click', () => this.generateCustomRace());
+        }
+
+        // Generate custom class button
+        const generateClassBtn = this.container.querySelector('#generateCustomClass');
+        if (generateClassBtn) {
+            generateClassBtn.addEventListener('click', () => this.generateCustomClass());
+        }
     }
 
     updateSelectionCards(selector, selectedCard) {
@@ -467,13 +607,172 @@ export class CharacterBuilderView {
 
     async createCharacter() {
         try {
-            const response = await apiService.post('/characters/create', this.characterData);
+            // Prepare character data, handling custom race and class
+            const characterData = {...this.characterData};
+            if (this.characterData.race === 'custom' && this.characterData.customRaceId) {
+                characterData.customRaceId = this.characterData.customRaceId;
+                // Don't send regular race when using custom race
+                delete characterData.race;
+            }
+            if (this.characterData.class === 'custom' && this.characterData.customClassId) {
+                characterData.customClassId = this.characterData.customClassId;
+                // Don't send regular class when using custom class
+                delete characterData.class;
+            }
+            
+            const response = await apiService.post('/characters/create', characterData);
             console.log('Character created:', response);
             // Redirect to character sheet or show success message
             window.location.hash = '#/characters/' + response.id;
         } catch (error) {
             console.error('Failed to create character:', error);
             alert('Failed to create character. Please try again.');
+        }
+    }
+
+    async generateCustomClass() {
+        const nameInput = this.container.querySelector('#customClassName');
+        const descriptionInput = this.container.querySelector('#customClassDescription');
+        const roleInput = this.container.querySelector('#customClassRole');
+        const styleInput = this.container.querySelector('#customClassStyle');
+        const featuresInput = this.container.querySelector('#customClassFeatures');
+
+        if (!nameInput.value || !descriptionInput.value) {
+            alert('Please provide a class name and description');
+            return;
+        }
+
+        const generateBtn = this.container.querySelector('#generateCustomClass');
+        const previewDiv = this.container.querySelector('#generatedClassPreview');
+        
+        generateBtn.disabled = true;
+        generateBtn.textContent = '🎲 Generating...';
+
+        try {
+            const response = await apiService.post('/characters/custom-classes/generate', {
+                name: nameInput.value,
+                description: descriptionInput.value,
+                role: roleInput.value,
+                style: styleInput.value || 'balanced',
+                features: featuresInput.value
+            });
+
+            // Store the generated class data
+            this.characterData.customClassData = response;
+            this.characterData.customClassId = response.id;
+
+            // Display the preview
+            previewDiv.innerHTML = `
+                <h4>Generated Class: ${response.name}</h4>
+                <div class="class-stats">
+                    <p><strong>Hit Die:</strong> d${response.hitDie}</p>
+                    <p><strong>Primary Ability:</strong> ${response.primaryAbility}</p>
+                    <p><strong>Saving Throws:</strong> ${response.savingThrowProficiencies.join(', ')}</p>
+                    <p><strong>Skills:</strong> Choose ${response.skillChoices} from ${response.skillProficiencies.join(', ')}</p>
+                    <p><strong>Armor:</strong> ${response.armorProficiencies.join(', ')}</p>
+                    <p><strong>Weapons:</strong> ${response.weaponProficiencies.join(', ')}</p>
+                    ${response.toolProficiencies?.length ? `<p><strong>Tools:</strong> ${response.toolProficiencies.join(', ')}</p>` : ''}
+                    
+                    <h5>Class Features (Level 1-5):</h5>
+                    <ul>
+                        ${response.classFeatures
+                            .filter(f => f.level <= 5)
+                            .map(feature => `
+                                <li>
+                                    <strong>Level ${feature.level} - ${feature.name}:</strong> 
+                                    ${feature.description}
+                                    ${feature.usesPerRest ? ` (${feature.usesPerRest} per ${feature.restType} rest)` : ''}
+                                </li>
+                            `).join('')}
+                    </ul>
+                    
+                    ${response.spellcastingAbility ? `
+                        <h5>Spellcasting:</h5>
+                        <p><strong>Ability:</strong> ${response.spellcastingAbility}</p>
+                        <p><strong>Spell List:</strong> ${response.spellList.join(', ')}</p>
+                        ${response.ritualCasting ? '<p><strong>Ritual Casting:</strong> Yes</p>' : ''}
+                        <p><strong>Focus:</strong> ${response.spellcastingFocus}</p>
+                    ` : ''}
+                    
+                    ${response.subclassName ? `
+                        <p><strong>Subclass:</strong> Choose your ${response.subclassName} at level ${response.subclassLevel}</p>
+                    ` : ''}
+                </div>
+                <p class="balance-score">Balance Score: ${response.balanceScore}/10</p>
+                ${response.dmNotes ? `<p class="dm-notes"><strong>DM Notes:</strong> ${response.dmNotes}</p>` : ''}
+            `;
+            previewDiv.style.display = 'block';
+
+        } catch (error) {
+            console.error('Failed to generate custom class:', error);
+            alert('Failed to generate custom class. Please try again.');
+        } finally {
+            generateBtn.disabled = false;
+            generateBtn.textContent = '🎲 Generate Custom Class';
+        }
+    }
+
+    async generateCustomRace() {
+        const nameInput = this.container.querySelector('#customRaceName');
+        const descriptionInput = this.container.querySelector('#customRaceDescription');
+        const traitsInput = this.container.querySelector('#customRaceTraits');
+        const generationStyle = this.container.querySelector('input[name="generationStyle"]:checked');
+
+        if (!nameInput.value || !descriptionInput.value) {
+            alert('Please provide a race name and description');
+            return;
+        }
+
+        const generateBtn = this.container.querySelector('#generateCustomRace');
+        const previewDiv = this.container.querySelector('#generatedRacePreview');
+        
+        generateBtn.disabled = true;
+        generateBtn.textContent = '🎲 Generating...';
+
+        try {
+            const response = await apiService.post('/characters/custom-races/generate', {
+                name: nameInput.value,
+                description: descriptionInput.value,
+                desiredTraits: traitsInput.value,
+                style: generationStyle?.value || 'balanced'
+            });
+
+            // Store the generated race data
+            this.characterData.customRaceData = response;
+            this.characterData.customRaceId = response.id;
+
+            // Display the preview
+            previewDiv.innerHTML = `
+                <h4>Generated Race: ${response.name}</h4>
+                <div class="race-stats">
+                    <p><strong>Size:</strong> ${response.size}</p>
+                    <p><strong>Speed:</strong> ${response.speed} feet</p>
+                    <p><strong>Ability Score Increases:</strong></p>
+                    <ul>
+                        ${Object.entries(response.abilityScoreIncreases).map(([ability, value]) => 
+                            `<li>${this.formatName(ability)}: +${value}</li>`
+                        ).join('')}
+                    </ul>
+                    <p><strong>Traits:</strong></p>
+                    <ul>
+                        ${response.racialTraits.map(trait => 
+                            `<li><strong>${trait.name}:</strong> ${trait.description}</li>`
+                        ).join('')}
+                    </ul>
+                    ${response.languages ? `<p><strong>Languages:</strong> ${response.languages.join(', ')}</p>` : ''}
+                    ${response.proficiencies ? `<p><strong>Proficiencies:</strong> ${response.proficiencies.join(', ')}</p>` : ''}
+                </div>
+                <p class="balance-score">Balance Score: ${response.balanceScore}/10</p>
+                ${response.dmNotes ? `<p class="dm-notes"><strong>DM Notes:</strong> ${response.dmNotes}</p>` : ''}
+            `;
+            previewDiv.style.display = 'block';
+
+        } catch (error) {
+            console.error('Failed to generate custom race:', error);
+            alert('Failed to generate custom race. Please try again.');
+        } finally {
+            generateBtn.disabled = false;
+            generateBtn.textContent = '🎲 Generate Custom Race';
         }
     }
 

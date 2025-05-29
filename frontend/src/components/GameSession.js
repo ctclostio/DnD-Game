@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import InitiativeTracker from './InitiativeTracker';
 import CombatView from './CombatView';
 import DiceRollerView from './DiceRollerView';
+import CampaignManager from './CampaignManager';
 import { getGameSession, getCharacters, getNPCsBySession } from '../services/api';
 import { connectWebSocket, disconnectWebSocket, onMessage, sendMessage } from '../services/websocket';
 import '../styles/game-session.css';
@@ -148,6 +149,12 @@ const GameSession = ({ sessionId, userId, isDM }) => {
                         >
                             Dice Roller
                         </button>
+                        <button 
+                            className={activeTab === 'campaign' ? 'active' : ''}
+                            onClick={() => setActiveTab('campaign')}
+                        >
+                            Campaign Manager
+                        </button>
                     </div>
 
                     <div className="tab-content">
@@ -172,6 +179,13 @@ const GameSession = ({ sessionId, userId, isDM }) => {
 
                         {activeTab === 'dice' && (
                             <DiceRollerView sessionId={sessionId} />
+                        )}
+                        
+                        {activeTab === 'campaign' && (
+                            <CampaignManager 
+                                gameSessionId={sessionId} 
+                                isDM={isDM}
+                            />
                         )}
                     </div>
                 </div>

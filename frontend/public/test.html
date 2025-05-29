@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>D&D Game API Test</h1>
+    <div id="results"></div>
+    <script>
+        const results = document.getElementById('results');
+        
+        // Test health endpoint
+        fetch('/api/v1/health')
+            .then(res => {
+                results.innerHTML += `<p>Health endpoint status: ${res.status}</p>`;
+                return res.json();
+            })
+            .then(data => {
+                results.innerHTML += `<p>Health response: ${JSON.stringify(data)}</p>`;
+            })
+            .catch(err => {
+                results.innerHTML += `<p>Health error: ${err}</p>`;
+            });
+            
+        // Check if auth is required
+        results.innerHTML += `<p>LocalStorage auth token: ${localStorage.getItem('access_token') || 'none'}</p>`;
+        results.innerHTML += `<p>Current URL: ${window.location.href}</p>`;
+    </script>
+</body>
+</html>

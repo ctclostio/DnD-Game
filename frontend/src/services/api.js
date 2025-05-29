@@ -240,6 +240,207 @@ export class ApiService {
             method: 'DELETE'
         });
     }
+
+    // Game session endpoints (added missing method)
+    gameSession = {
+        getSessions: async () => {
+            return this.request('/game/sessions');
+        },
+        create: async (sessionData) => {
+            return this.request('/game/sessions', {
+                method: 'POST',
+                body: JSON.stringify(sessionData)
+            });
+        },
+        get: async (id) => {
+            return this.request(`/game/sessions/${id}`);
+        }
+    };
+
+    // Campaign Management endpoints
+    campaign = {
+        // Story Arc methods
+        createStoryArc: async (sessionId, arcData) => {
+            return this.request(`/sessions/${sessionId}/story-arcs`, {
+                method: 'POST',
+                body: JSON.stringify(arcData)
+            });
+        },
+        generateStoryArc: async (sessionId, arcData) => {
+            return this.request(`/sessions/${sessionId}/story-arcs/generate`, {
+                method: 'POST',
+                body: JSON.stringify(arcData)
+            });
+        },
+        getStoryArcs: async (sessionId) => {
+            return this.request(`/sessions/${sessionId}/story-arcs`);
+        },
+        updateStoryArc: async (sessionId, arcId, updates) => {
+            return this.request(`/sessions/${sessionId}/story-arcs/${arcId}`, {
+                method: 'PUT',
+                body: JSON.stringify(updates)
+            });
+        },
+        
+        // Session Memory methods
+        createSessionMemory: async (sessionId, memoryData) => {
+            return this.request(`/sessions/${sessionId}/memories`, {
+                method: 'POST',
+                body: JSON.stringify(memoryData)
+            });
+        },
+        getSessionMemories: async (sessionId, limit = 10) => {
+            return this.request(`/sessions/${sessionId}/memories?limit=${limit}`);
+        },
+        generateRecap: async (sessionId, options = {}) => {
+            return this.request(`/sessions/${sessionId}/recap`, {
+                method: 'POST',
+                body: JSON.stringify(options)
+            });
+        },
+        
+        // Plot Thread methods
+        createPlotThread: async (sessionId, threadData) => {
+            return this.request(`/sessions/${sessionId}/plot-threads`, {
+                method: 'POST',
+                body: JSON.stringify(threadData)
+            });
+        },
+        getPlotThreads: async (sessionId, activeOnly = false) => {
+            return this.request(`/sessions/${sessionId}/plot-threads?active=${activeOnly}`);
+        },
+        
+        // Foreshadowing methods
+        generateForeshadowing: async (sessionId, foreshadowingData) => {
+            return this.request(`/sessions/${sessionId}/foreshadowing`, {
+                method: 'POST',
+                body: JSON.stringify(foreshadowingData)
+            });
+        },
+        getUnrevealedForeshadowing: async (sessionId) => {
+            return this.request(`/sessions/${sessionId}/foreshadowing/unrevealed`);
+        },
+        revealForeshadowing: async (elementId, sessionNumber) => {
+            return this.request(`/foreshadowing/${elementId}/reveal`, {
+                method: 'POST',
+                body: JSON.stringify({ session_number: sessionNumber })
+            });
+        },
+        
+        // Timeline methods
+        addTimelineEvent: async (sessionId, eventData) => {
+            return this.request(`/sessions/${sessionId}/timeline`, {
+                method: 'POST',
+                body: JSON.stringify(eventData)
+            });
+        },
+        getTimeline: async (sessionId, startDate, endDate) => {
+            const params = new URLSearchParams();
+            if (startDate) params.append('start', startDate);
+            if (endDate) params.append('end', endDate);
+            return this.request(`/sessions/${sessionId}/timeline?${params}`);
+        },
+        
+        // NPC Relationship methods
+        updateNPCRelationship: async (sessionId, relationshipData) => {
+            return this.request(`/sessions/${sessionId}/npc-relationships`, {
+                method: 'POST',
+                body: JSON.stringify(relationshipData)
+            });
+        },
+        getNPCRelationships: async (sessionId, npcId) => {
+            return this.request(`/sessions/${sessionId}/npcs/${npcId}/relationships`);
+        },
+        
+        // Combined data loader
+        getAllData: async (sessionId) => {
+            try {
+                const [storyArcs, sessionMemories, plotThreads, foreshadowing, timeline] = await Promise.all([
+                    this.getStoryArcs(sessionId),
+                    this.getSessionMemories(sessionId),
+                    this.getPlotThreads(sessionId),
+                    this.getUnrevealedForeshadowing(sessionId).catch(() => []),
+                    this.getTimeline(sessionId).catch(() => [])
+                ]);
+                
+                return {
+                    storyArcs,
+                    sessionMemories,
+                    plotThreads,
+                    foreshadowing,
+                    timeline
+                };
+            } catch (error) {
+                console.error('Failed to load campaign data:', error);
+                throw error;
+            }
+        }
+    };
+
+    // Encounter Builder endpoints
+    encounters = {
+        generate: async (encounterData) => {
+            return this.request('/encounters/generate', {
+                method: 'POST',
+                body: JSON.stringify(encounterData)
+            });
+        },
+        get: async (id) => {
+            return this.request(`/encounters/${id}`);
+        },
+        getBySession: async (sessionId) => {
+            return this.request(`/encounters/session/${sessionId}`);
+        },
+        start: async (id) => {
+            return this.request(`/encounters/${id}/start`, {
+                method: 'POST'
+            });
+        },
+        complete: async (id, data) => {
+            return this.request(`/encounters/${id}/complete`, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+        },
+        scale: async (id, data) => {
+            return this.request(`/encounters/${id}/scale`, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+        },
+        getTacticalSuggestion: async (id, data) => {
+            return this.request(`/encounters/${id}/tactical-suggestion`, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+        },
+        logEvent: async (id, data) => {
+            return this.request(`/encounters/${id}/events`, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+        },
+        getEvents: async (id) => {
+            return this.request(`/encounters/${id}/events`);
+        },
+        updateEnemyStatus: async (encounterId, enemyId, data) => {
+            return this.request(`/encounters/${encounterId}/enemies/${enemyId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(data)
+            });
+        },
+        triggerReinforcements: async (id, data) => {
+            return this.request(`/encounters/${id}/reinforcements`, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+        },
+        checkObjectives: async (id) => {
+            return this.request(`/encounters/${id}/objectives/check`, {
+                method: 'POST'
+            });
+        }
+    };
 }
 
 // Create and export singleton instance
@@ -272,5 +473,12 @@ export const updateNPC = (npcId, npcData) => apiService.updateNPC(npcId, npcData
 export const deleteNPC = (npcId) => apiService.deleteNPC(npcId);
 export const getCharacters = () => apiService.getCharacters();
 export const getGameSession = (id) => apiService.getGameSession(id);
+
+// Campaign Management exports
+export const getCampaignData = (sessionId) => apiService.campaign.getAllData(sessionId);
+export const generateStoryArc = (sessionId, arcData) => apiService.campaign.generateStoryArc(sessionId, arcData);
+export const createSessionMemory = (sessionId, memoryData) => apiService.campaign.createSessionMemory(sessionId, memoryData);
+export const generateRecap = (sessionId, options) => apiService.campaign.generateRecap(sessionId, options);
+export const generateForeshadowing = (sessionId, data) => apiService.campaign.generateForeshadowing(sessionId, data);
 
 export default apiService;

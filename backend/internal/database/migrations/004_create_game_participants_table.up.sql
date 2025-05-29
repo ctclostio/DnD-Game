@@ -12,14 +12,5 @@ CREATE INDEX idx_game_participants_user_id ON game_participants(user_id);
 CREATE INDEX idx_game_participants_character_id ON game_participants(character_id);
 CREATE INDEX idx_game_participants_is_online ON game_participants(is_online);
 
--- Ensure character belongs to the user
-ALTER TABLE game_participants
-ADD CONSTRAINT check_character_owner
-CHECK (
-    character_id IS NULL OR
-    EXISTS (
-        SELECT 1 FROM characters
-        WHERE characters.id = character_id
-        AND characters.user_id = game_participants.user_id
-    )
-);
+-- Note: Character ownership validation should be done at the application level
+-- PostgreSQL doesn't support subqueries in CHECK constraints

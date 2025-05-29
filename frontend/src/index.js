@@ -1,4 +1,5 @@
 import './styles/main.css';
+import './styles/encounter-builder.css';
 import { CharacterView } from './components/CharacterView.js';
 import { CharacterBuilderView } from './components/CharacterBuilderView.js';
 import { DiceRollerView } from './components/DiceRollerView.js';
@@ -9,6 +10,7 @@ import { Register } from './components/Register.js';
 import { SpellSlotManager } from './components/SpellSlotManager.js';
 import { ExperienceTracker } from './components/ExperienceTracker.js';
 import { SkillCheckView } from './components/SkillCheckView.js';
+import { EncounterBuilder } from './components/EncounterBuilder.js';
 import { WebSocketService } from './services/websocket.js';
 import { ApiService } from './services/api.js';
 import authService from './services/auth.js';
@@ -49,6 +51,11 @@ class App {
                 <span>Welcome, ${user.username} (${user.role})</span>
                 <button onclick="app.logout()">Logout</button>
             `;
+        }
+
+        // Show/hide DM-only navigation items
+        if (user.role === 'dm') {
+            document.querySelectorAll('.dm-only').forEach(el => el.style.display = 'inline-block');
         }
     }
 
@@ -121,6 +128,9 @@ class App {
                 break;
             case 'combat':
                 this.currentView = new CombatView(mainContent, this.api);
+                break;
+            case 'encounter-builder':
+                this.currentView = new EncounterBuilder(mainContent);
                 break;
             default:
                 mainContent.innerHTML = '<h2>View not found</h2>';

@@ -112,4 +112,9 @@ type Repositories struct {
 	NPCs          NPCRepository
 	Inventory     InventoryRepository
 	RefreshTokens RefreshTokenRepository
+	CustomRaces   CustomRaceRepository
+	CustomClasses *CustomClassRepository
+	DMAssistant   DMAssistantRepository
+	Encounters    *EncounterRepository
+	Campaign      CampaignRepository
 }

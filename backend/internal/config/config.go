@@ -13,6 +13,7 @@ type Config struct {
 	Database DatabaseConfig
 	Redis    RedisConfig
 	Auth     AuthConfig
+	AI       AIConfig
 }
 
 // ServerConfig holds server-related configuration
@@ -50,6 +51,13 @@ type AuthConfig struct {
 	BcryptCost             int
 }
 
+// AIConfig holds AI/LLM-related configuration
+type AIConfig struct {
+	Provider string // "openai", "anthropic", or "mock"
+	APIKey   string
+	Model    string
+}
+
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
 	cfg := &Config{}
@@ -80,6 +88,11 @@ func Load() (*Config, error) {
 	cfg.Auth.AccessTokenDuration = getEnvAsDuration("ACCESS_TOKEN_DURATION", 15*time.Minute)
 	cfg.Auth.RefreshTokenDuration = getEnvAsDuration("REFRESH_TOKEN_DURATION", 7*24*time.Hour)
 	cfg.Auth.BcryptCost = getEnvAsInt("BCRYPT_COST", 10)
+
+	// AI configuration
+	cfg.AI.Provider = getEnv("AI_PROVIDER", "mock") // Default to mock for development
+	cfg.AI.APIKey = getEnv("AI_API_KEY", "")
+	cfg.AI.Model = getEnv("AI_MODEL", "gpt-4-turbo-preview") // Default model
 
 	return cfg, nil
 }

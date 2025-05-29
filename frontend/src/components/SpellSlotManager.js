@@ -1,4 +1,6 @@
-import { api } from '../services/api.js';
+import { ApiService } from '../services/api.js';
+
+const api = new ApiService();
 
 export class SpellSlotManager {
     constructor(containerId) {

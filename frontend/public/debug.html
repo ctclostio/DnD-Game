@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Game Debug</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>D&D Game Debug Page</h1>
+    <div id="debug-info">
+        <p>Loading JavaScript...</p>
+    </div>
+
+    <script>
+        console.log("Debug page loaded");
+        const debugDiv = document.getElementById('debug-info');
+        
+        try {
+            // Test if we can create the auth service
+            debugDiv.innerHTML += '<p>Testing imports...</p>';
+            
+            // Load the bundle
+            const script = document.createElement('script');
+            script.src = '/bundle.js';
+            script.onload = () => {
+                debugDiv.innerHTML += '<p>Bundle loaded successfully!</p>';
+            };
+            script.onerror = (error) => {
+                debugDiv.innerHTML += '<p>Bundle failed to load: ' + error + '</p>';
+            };
+            document.head.appendChild(script);
+            
+            // Set up error handler
+            window.addEventListener('error', (event) => {
+                debugDiv.innerHTML += '<p style="color: red;">JavaScript Error: ' + event.error + ' at ' + event.filename + ':' + event.lineno + '</p>';
+                console.error('Error caught:', event);
+            });
+            
+        } catch (error) {
+            debugDiv.innerHTML += '<p style="color: red;">Error: ' + error.message + '</p>';
+            console.error(error);
+        }
+    </script>
+</body>
+</html>

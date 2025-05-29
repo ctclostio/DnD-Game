@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS items (
 -- Create character_inventory table
 CREATE TABLE IF NOT EXISTS character_inventory (
     id TEXT PRIMARY KEY,
-    character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+    character_id UUID NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
     item_id TEXT NOT NULL REFERENCES items(id),
     quantity INTEGER DEFAULT 1,
     equipped BOOLEAN DEFAULT FALSE,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS character_inventory (
 
 -- Create character_currency table
 CREATE TABLE IF NOT EXISTS character_currency (
-    character_id TEXT PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
+    character_id UUID PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
     copper INTEGER DEFAULT 0,
     silver INTEGER DEFAULT 0,
     electrum INTEGER DEFAULT 0,

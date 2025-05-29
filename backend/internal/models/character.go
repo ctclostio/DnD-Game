@@ -8,8 +8,10 @@ type Character struct {
 	Name                string                 `json:"name" db:"name"`
 	Race                string                 `json:"race" db:"race"`
 	Subrace             string                 `json:"subrace,omitempty" db:"subrace"`
+	CustomRaceID        *string                `json:"customRaceId,omitempty" db:"custom_race_id"`
 	Class               string                 `json:"class" db:"class"`
 	Subclass            string                 `json:"subclass,omitempty" db:"subclass"`
+	CustomClassID       *string                `json:"customClassId,omitempty" db:"custom_class_id"`
 	Background          string                 `json:"background" db:"background"`
 	Alignment           string                 `json:"alignment" db:"alignment"`
 	Level               int                    `json:"level" db:"level"`
@@ -108,4 +110,55 @@ type SpellSlot struct {
 	Level     int `json:"level" db:"level"`
 	Total     int `json:"total" db:"total"`
 	Remaining int `json:"remaining" db:"remaining"`
+}
+
+// CustomClass represents a player-created custom class
+type CustomClass struct {
+	ID                      string                 `json:"id" db:"id"`
+	UserID                  string                 `json:"userId" db:"user_id"`
+	Name                    string                 `json:"name" db:"name"`
+	Description             string                 `json:"description" db:"description"`
+	HitDie                  int                    `json:"hitDie" db:"hit_die"`
+	PrimaryAbility          string                 `json:"primaryAbility" db:"primary_ability"`
+	SavingThrowProficiencies []string              `json:"savingThrowProficiencies" db:"saving_throw_proficiencies"`
+	SkillProficiencies      []string              `json:"skillProficiencies" db:"skill_proficiencies"`
+	SkillChoices            int                    `json:"skillChoices" db:"skill_choices"`
+	StartingEquipment       string                 `json:"startingEquipment" db:"starting_equipment"`
+	ArmorProficiencies      []string              `json:"armorProficiencies" db:"armor_proficiencies"`
+	WeaponProficiencies     []string              `json:"weaponProficiencies" db:"weapon_proficiencies"`
+	ToolProficiencies       []string              `json:"toolProficiencies,omitempty" db:"tool_proficiencies"`
+	ClassFeatures           []ClassFeature         `json:"classFeatures" db:"class_features"`
+	SubclassName            string                 `json:"subclassName,omitempty" db:"subclass_name"`
+	SubclassLevel           int                    `json:"subclassLevel,omitempty" db:"subclass_level"`
+	Subclasses              []Subclass            `json:"subclasses,omitempty" db:"subclasses"`
+	SpellcastingAbility     string                 `json:"spellcastingAbility,omitempty" db:"spellcasting_ability"`
+	SpellList               []string              `json:"spellList,omitempty" db:"spell_list"`
+	SpellsKnownProgression  []int                 `json:"spellsKnownProgression,omitempty" db:"spells_known_progression"`
+	CantripsKnownProgression []int                `json:"cantripsKnownProgression,omitempty" db:"cantrips_known_progression"`
+	SpellSlotsProgression   map[string]interface{} `json:"spellSlotsProgression,omitempty" db:"spell_slots_progression"`
+	RitualCasting           bool                   `json:"ritualCasting" db:"ritual_casting"`
+	SpellcastingFocus       string                 `json:"spellcastingFocus,omitempty" db:"spellcasting_focus"`
+	BalanceScore            int                    `json:"balanceScore" db:"balance_score"`
+	PowerLevel              string                 `json:"powerLevel" db:"power_level"`
+	IsApproved              bool                   `json:"isApproved" db:"is_approved"`
+	ApprovedBy              *string                `json:"approvedBy,omitempty" db:"approved_by"`
+	ApprovedAt              *time.Time             `json:"approvedAt,omitempty" db:"approved_at"`
+	DMNotes                 string                 `json:"dmNotes,omitempty" db:"dm_notes"`
+	CreatedAt               time.Time              `json:"createdAt" db:"created_at"`
+	UpdatedAt               time.Time              `json:"updatedAt" db:"updated_at"`
+}
+
+type ClassFeature struct {
+	Level        int    `json:"level"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	UsesPerRest  string `json:"usesPerRest,omitempty"`
+	RestType     string `json:"restType,omitempty"`
+	Passive      bool   `json:"passive"`
+}
+
+type Subclass struct {
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Features    []ClassFeature `json:"features"`
 }
