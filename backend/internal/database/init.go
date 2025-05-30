@@ -56,18 +56,19 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 
 	// Create repositories
 	repos := &Repositories{
-		Users:         NewUserRepository(db),
-		Characters:    NewCharacterRepository(db),
-		GameSessions:  NewGameSessionRepository(db),
-		DiceRolls:     NewDiceRollRepository(db),
-		NPCs:          NewNPCRepository(db.DB),
-		Inventory:     NewInventoryRepository(db.DB),
-		RefreshTokens: NewRefreshTokenRepository(db.DB),
-		CustomRaces:   NewCustomRaceRepository(db.DB),
-		CustomClasses: NewCustomClassRepository(db.DB),
-		DMAssistant:   NewDMAssistantRepository(db.DB),
-		Encounters:    NewEncounterRepository(db.DB),
-		Campaign:      NewCampaignRepository(db.DB),
+		Users:           NewUserRepository(db),
+		Characters:      NewCharacterRepository(db),
+		GameSessions:    NewGameSessionRepository(db),
+		DiceRolls:       NewDiceRollRepository(db),
+		NPCs:            NewNPCRepository(db.DB),
+		Inventory:       NewInventoryRepository(db.DB),
+		RefreshTokens:   NewRefreshTokenRepository(db.DB),
+		CustomRaces:     NewCustomRaceRepository(db.DB),
+		CustomClasses:   NewCustomClassRepository(db.StdDB()),
+		DMAssistant:     NewDMAssistantRepository(db.DB),
+		Encounters:      NewEncounterRepository(db.StdDB()),
+		Campaign:        NewCampaignRepository(db.DB),
+		CombatAnalytics: NewCombatAnalyticsRepository(db.DB),
 	}
 
 	return db, repos, nil

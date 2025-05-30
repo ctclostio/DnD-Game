@@ -1,0 +1,307 @@
+/* Battle Map Viewer Styles */
+.battle-map-viewer {
+    background: var(--dark-bg);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.map-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.map-controls label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.grid-size {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.map-container {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    gap: 20px;
+}
+
+.battle-grid {
+    display: grid;
+    gap: 1px;
+    background: var(--border-color);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    max-width: 600px;
+    max-height: 600px;
+}
+
+.grid-cell {
+    background: var(--darker-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    min-height: 20px;
+    min-width: 20px;
+}
+
+.grid-cell:hover {
+    background: var(--dark-bg);
+    z-index: 1;
+    transform: scale(1.1);
+}
+
+.grid-cell.selected {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+    z-index: 2;
+}
+
+.cell-symbol {
+    font-size: 14px;
+    line-height: 1;
+}
+
+/* Terrain Types */
+.grid-cell.terrain {
+    background: var(--dark-bg);
+}
+
+.grid-cell.terrain-wall {
+    background: #333;
+    color: #666;
+}
+
+.grid-cell.terrain-tree {
+    background: rgba(34, 139, 34, 0.2);
+}
+
+.grid-cell.terrain-water {
+    background: rgba(30, 144, 255, 0.2);
+}
+
+.grid-cell.terrain-elevation {
+    background: rgba(139, 69, 19, 0.2);
+}
+
+/* Obstacles */
+.grid-cell.obstacle {
+    background: rgba(128, 128, 128, 0.3);
+}
+
+/* Cover */
+.grid-cell.cover-half {
+    background: rgba(255, 165, 0, 0.2);
+    border: 1px dashed orange;
+}
+
+.grid-cell.cover-three_quarters {
+    background: rgba(255, 140, 0, 0.3);
+    border: 1px solid darkorange;
+}
+
+.grid-cell.cover-full {
+    background: rgba(255, 100, 0, 0.4);
+    border: 2px solid orangered;
+}
+
+/* Hazards */
+.grid-cell.hazard {
+    background: rgba(231, 76, 60, 0.3);
+    animation: hazard-pulse 2s infinite;
+}
+
+@keyframes hazard-pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+/* Spawn Points */
+.grid-cell.spawn-party {
+    background: rgba(59, 130, 246, 0.3);
+    border: 2px solid var(--secondary-color);
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+.grid-cell.spawn-enemy {
+    background: rgba(231, 76, 60, 0.3);
+    border: 2px solid var(--danger-color);
+    font-weight: bold;
+    color: var(--danger-color);
+}
+
+/* Tactical Markers */
+.tactical-marker {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+}
+
+.tactical-marker.importance-high {
+    color: var(--danger-color);
+}
+
+.tactical-marker.importance-medium {
+    color: var(--warning-color);
+}
+
+.tactical-marker.importance-low {
+    color: var(--secondary-color);
+}
+
+/* Map Legend */
+.map-legend {
+    background: var(--darker-bg);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.map-legend h4 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.legend-symbol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.legend-symbol.terrain-wall {
+    background: #333;
+    color: #666;
+}
+
+.legend-symbol.terrain-tree {
+    background: rgba(34, 139, 34, 0.2);
+}
+
+.legend-symbol.hazard {
+    background: rgba(231, 76, 60, 0.3);
+}
+
+.legend-symbol.spawn-party {
+    background: rgba(59, 130, 246, 0.3);
+    color: var(--secondary-color);
+    font-weight: bold;
+}
+
+.legend-symbol.spawn-enemy {
+    background: rgba(231, 76, 60, 0.3);
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
+/* Cell Info Panel */
+.cell-info {
+    margin-top: 20px;
+    background: var(--darker-bg);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+}
+
+.cell-info h4 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.info-content p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.info-content strong {
+    color: var(--text-secondary);
+}
+
+.tactical-note {
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--dark-bg);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.tactical-note.importance-high {
+    border-left: 3px solid var(--danger-color);
+}
+
+.tactical-note.importance-medium {
+    border-left: 3px solid var(--warning-color);
+}
+
+.tactical-note.importance-low {
+    border-left: 3px solid var(--secondary-color);
+}
+
+/* Visual Themes */
+.theme-dungeon_stone {
+    --cell-bg: #2c2416;
+    --cell-border: #1a1410;
+}
+
+.theme-forest_glade {
+    --cell-bg: #1a2f1a;
+    --cell-border: #0f1f0f;
+}
+
+.theme-urban_street {
+    --cell-bg: #2a2a2a;
+    --cell-border: #1a1a1a;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .map-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .battle-grid {
+        max-width: 100%;
+        max-height: 400px;
+    }
+    
+    .grid-cell {
+        min-height: 15px;
+        min-width: 15px;
+    }
+    
+    .cell-symbol {
+        font-size: 12px;
+    }
+}

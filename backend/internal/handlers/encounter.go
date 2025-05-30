@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"dnd-backend/internal/services"
+	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/gorilla/mux"
 )
 

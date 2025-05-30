@@ -17,12 +17,12 @@ type CharacterCreationHandler struct {
 	customRaceService    *services.CustomRaceService
 }
 
-func NewCharacterCreationHandler(cs *services.CharacterService, crs *services.CustomRaceService) *CharacterCreationHandler {
+func NewCharacterCreationHandler(cs *services.CharacterService, crs *services.CustomRaceService, llmProvider services.LLMProvider) *CharacterCreationHandler {
 	dataPath := filepath.Join(".", "data")
 	return &CharacterCreationHandler{
 		characterService:  cs,
 		characterBuilder:  services.NewCharacterBuilder(dataPath),
-		aiCharService:     services.NewAICharacterService(),
+		aiCharService:     services.NewAICharacterService(llmProvider),
 		customRaceService: crs,
 	}
 }

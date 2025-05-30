@@ -10,6 +10,33 @@ import (
 	"time"
 )
 
+// LLMProvider defines the interface for Large Language Model providers
+type LLMProvider interface {
+	GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error)
+}
+
+// AIConfig holds configuration for AI services
+type AIConfig struct {
+	Provider string
+	APIKey   string
+	Model    string
+	Enabled  bool
+}
+
+// LLMRequest represents a request to the LLM
+type LLMRequest struct {
+	Prompt       string
+	SystemPrompt string
+	Temperature  float64
+	MaxTokens    int
+}
+
+// LLMResponse represents a response from the LLM
+type LLMResponse struct {
+	Content string
+	Error   error
+}
+
 // OpenAIProvider implements LLMProvider using OpenAI's API
 type OpenAIProvider struct {
 	apiKey     string

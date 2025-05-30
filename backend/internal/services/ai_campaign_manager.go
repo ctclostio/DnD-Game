@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourusername/dnd-game/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type AICampaignManager struct {
@@ -32,29 +32,16 @@ func (acm *AICampaignManager) GenerateStoryArc(ctx context.Context, req models.G
 
 	prompt := acm.buildStoryArcPrompt(req)
 	
-	response, err := acm.llmProvider.GenerateCompletion(ctx, LLMRequest{
-		Messages: []LLMMessage{
-			{
-				Role:    "system",
-				Content: "You are an expert D&D 5e Dungeon Master specializing in creating engaging, interconnected story arcs that adapt to player choices. Generate compelling narratives that feel organic and responsive to player actions.",
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
-		Temperature:    0.8,
-		MaxTokens:      2000,
-		ResponseFormat: "json_object",
-	})
+	systemPrompt := "You are an expert D&D 5e Dungeon Master specializing in creating engaging, interconnected story arcs that adapt to player choices. Generate compelling narratives that feel organic and responsive to player actions. Your response must be valid JSON."
 
+	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
 		log.Printf("Error generating story arc: %v", err)
 		return acm.generateDefaultStoryArc(req), nil
 	}
 
 	var arc models.GeneratedStoryArc
-	if err := json.Unmarshal([]byte(response.Content), &arc); err != nil {
+	if err := json.Unmarshal([]byte(response), &arc); err != nil {
 		log.Printf("Error parsing story arc response: %v", err)
 		return acm.generateDefaultStoryArc(req), nil
 	}
@@ -70,29 +57,16 @@ func (acm *AICampaignManager) GenerateSessionRecap(ctx context.Context, memories
 
 	prompt := acm.buildRecapPrompt(memories)
 	
-	response, err := acm.llmProvider.GenerateCompletion(ctx, LLMRequest{
-		Messages: []LLMMessage{
-			{
-				Role:    "system",
-				Content: "You are a skilled narrator creating engaging 'Previously on...' recaps for D&D sessions. Create dramatic, concise summaries that remind players of key events while building excitement for the upcoming session.",
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
-		Temperature:    0.7,
-		MaxTokens:      1500,
-		ResponseFormat: "json_object",
-	})
+	systemPrompt := "You are a skilled narrator creating engaging 'Previously on...' recaps for D&D sessions. Create dramatic, concise summaries that remind players of key events while building excitement for the upcoming session. Your response must be valid JSON."
 
+	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
 		log.Printf("Error generating recap: %v", err)
 		return acm.generateDefaultRecap(memories), nil
 	}
 
 	var recap models.GeneratedRecap
-	if err := json.Unmarshal([]byte(response.Content), &recap); err != nil {
+	if err := json.Unmarshal([]byte(response), &recap); err != nil {
 		log.Printf("Error parsing recap response: %v", err)
 		return acm.generateDefaultRecap(memories), nil
 	}
@@ -108,29 +82,16 @@ func (acm *AICampaignManager) GenerateForeshadowing(ctx context.Context, req mod
 
 	prompt := acm.buildForeshadowingPrompt(req, plotThread, storyArc)
 	
-	response, err := acm.llmProvider.GenerateCompletion(ctx, LLMRequest{
-		Messages: []LLMMessage{
-			{
-				Role:    "system",
-				Content: "You are a master of narrative foreshadowing in D&D campaigns. Create subtle hints and clues that will make sense in retrospect without being too obvious. Balance mystery with clarity.",
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
-		Temperature:    0.8,
-		MaxTokens:      1000,
-		ResponseFormat: "json_object",
-	})
+	systemPrompt := "You are a master of narrative foreshadowing in D&D campaigns. Create subtle hints and clues that will make sense in retrospect without being too obvious. Balance mystery with clarity. Your response must be valid JSON."
 
+	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
 		log.Printf("Error generating foreshadowing: %v", err)
 		return acm.generateDefaultForeshadowing(req), nil
 	}
 
 	var foreshadowing models.GeneratedForeshadowing
-	if err := json.Unmarshal([]byte(response.Content), &foreshadowing); err != nil {
+	if err := json.Unmarshal([]byte(response), &foreshadowing); err != nil {
 		log.Printf("Error parsing foreshadowing response: %v", err)
 		return acm.generateDefaultForeshadowing(req), nil
 	}
@@ -146,29 +107,16 @@ func (acm *AICampaignManager) AnalyzeSessionForMemory(ctx context.Context, event
 
 	prompt := acm.buildSessionAnalysisPrompt(events)
 	
-	response, err := acm.llmProvider.GenerateCompletion(ctx, LLMRequest{
-		Messages: []LLMMessage{
-			{
-				Role:    "system",
-				Content: "You are an expert at analyzing D&D game sessions and extracting key information. Identify important events, decisions, NPCs, items, and plot developments to create a comprehensive session memory.",
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
-		Temperature:    0.5,
-		MaxTokens:      2000,
-		ResponseFormat: "json_object",
-	})
+	systemPrompt := "You are an expert at analyzing D&D game sessions and extracting key information. Identify important events, decisions, NPCs, items, and plot developments to create a comprehensive session memory. Your response must be valid JSON."
 
+	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
 		log.Printf("Error analyzing session: %v", err)
 		return acm.createBasicSessionMemory(events), nil
 	}
 
 	var memory models.SessionMemory
-	if err := json.Unmarshal([]byte(response.Content), &memory); err != nil {
+	if err := json.Unmarshal([]byte(response), &memory); err != nil {
 		log.Printf("Error parsing session analysis: %v", err)
 		return acm.createBasicSessionMemory(events), nil
 	}

@@ -86,26 +86,37 @@ func main() {
 	encounterService := services.NewEncounterService(repos.Encounters, aiEncounterBuilder, combatService)
 	
 	// Create AI campaign manager
-	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Enabled})
+	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"})
 	
 	// Create campaign service
 	campaignService := services.NewCampaignService(repos.Campaign, repos.GameSessions, aiCampaignManager)
+	
+	// Create AI battle map generator
+	aiBattleMapGenerator := services.NewAIBattleMapGenerator(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"})
+	
+	// Create combat automation service
+	combatAutomationService := services.NewCombatAutomationService(repos.CombatAnalytics, repos.Characters, repos.NPCs)
+	
+	// Create combat analytics service
+	combatAnalyticsService := services.NewCombatAnalyticsService(repos.CombatAnalytics, combatService)
 
 	svc := &services.Services{
-		Users:         services.NewUserService(repos.Users),
-		Characters:    services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
-		GameSessions:  services.NewGameSessionService(repos.GameSessions),
-		DiceRolls:     services.NewDiceRollService(repos.DiceRolls),
-		Combat:        combatService,
-		NPCs:          services.NewNPCService(repos.NPCs),
-		Inventory:     services.NewInventoryService(repos.Inventory, repos.Characters),
-		CustomRaces:   customRaceService,
-		DMAssistant:   dmAssistantService,
-		Encounters:    encounterService,
-		Campaign:      campaignService,
-		JWTManager:    jwtManager,
-		RefreshTokens: refreshTokenService,
-		Config:        cfg,
+		Users:            services.NewUserService(repos.Users),
+		Characters:       services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
+		GameSessions:     services.NewGameSessionService(repos.GameSessions),
+		DiceRolls:        services.NewDiceRollService(repos.DiceRolls),
+		Combat:           combatService,
+		NPCs:             services.NewNPCService(repos.NPCs),
+		Inventory:        services.NewInventoryService(repos.Inventory, repos.Characters),
+		CustomRaces:      customRaceService,
+		DMAssistant:      dmAssistantService,
+		Encounters:       encounterService,
+		Campaign:         campaignService,
+		CombatAutomation: combatAutomationService,
+		CombatAnalytics:  combatAnalyticsService,
+		JWTManager:       jwtManager,
+		RefreshTokens:    refreshTokenService,
+		Config:           cfg,
 	}
 
 	// Get websocket hub
@@ -115,13 +126,22 @@ func main() {
 	h := handlers.NewHandlers(svc, wsHub)
 	
 	// Create character creation handler
-	charCreationHandler := handlers.NewCharacterCreationHandler(svc.Characters, svc.CustomRaces)
+	charCreationHandler := handlers.NewCharacterCreationHandler(svc.Characters, svc.CustomRaces, llmProvider)
 	
 	// Create inventory handler
 	inventoryHandler := handlers.NewInventoryHandler(svc.Inventory)
 	
 	// Create campaign handler
 	campaignHandler := handlers.NewCampaignHandler(svc.Campaign, svc.GameSessions)
+	
+	// Create combat automation handler
+	combatAutomationHandler := handlers.NewCombatAutomationHandler(
+		svc.CombatAutomation,
+		svc.CombatAnalytics,
+		svc.Characters,
+		svc.GameSessions,
+		aiBattleMapGenerator,
+	)
 
 	// Create authentication middleware
 	authMiddleware := auth.NewMiddleware(jwtManager)
@@ -279,6 +299,23 @@ func main() {
 	// NPC Relationship routes
 	api.HandleFunc("/sessions/{sessionId}/npc-relationships", authMiddleware.RequireDM()(campaignHandler.UpdateNPCRelationship)).Methods("POST")
 	api.HandleFunc("/sessions/{sessionId}/npcs/{npcId}/relationships", authMiddleware.Authenticate(campaignHandler.GetNPCRelationships)).Methods("GET")
+	
+	// Combat Automation routes
+	// Auto-resolution
+	api.HandleFunc("/sessions/{sessionId}/combat/auto-resolve", authMiddleware.RequireDM()(combatAutomationHandler.AutoResolveCombat)).Methods("POST")
+	
+	// Smart Initiative
+	api.HandleFunc("/sessions/{sessionId}/combat/smart-initiative", authMiddleware.Authenticate(combatAutomationHandler.SmartInitiative)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/initiative-rules", authMiddleware.RequireDM()(combatAutomationHandler.SetInitiativeRules)).Methods("POST")
+	
+	// Battle Maps
+	api.HandleFunc("/sessions/{sessionId}/battle-maps", authMiddleware.RequireDM()(combatAutomationHandler.GenerateBattleMap)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/battle-maps", authMiddleware.Authenticate(combatAutomationHandler.GetBattleMaps)).Methods("GET")
+	api.HandleFunc("/battle-maps/{mapId}", authMiddleware.Authenticate(combatAutomationHandler.GetBattleMap)).Methods("GET")
+	
+	// Combat Analytics
+	api.HandleFunc("/combat/{combatId}/analytics", authMiddleware.Authenticate(combatAutomationHandler.GetCombatAnalytics)).Methods("GET")
+	api.HandleFunc("/sessions/{sessionId}/combat-history", authMiddleware.Authenticate(combatAutomationHandler.GetSessionCombatHistory)).Methods("GET")
 
 	// Initialize WebSocket with JWT manager
 	websocket.SetJWTManager(jwtManager)

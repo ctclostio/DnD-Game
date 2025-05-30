@@ -28,6 +28,11 @@ type DB struct {
 	config Config
 }
 
+// StdDB returns the underlying *sql.DB
+func (db *DB) StdDB() *sql.DB {
+	return db.DB.DB
+}
+
 // NewConnection creates a new database connection
 func NewConnection(cfg Config) (*DB, error) {
 	// Construct DSN

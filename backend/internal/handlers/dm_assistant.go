@@ -8,14 +8,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/websocket"
 )
 
 // ProcessDMAssistantRequest handles real-time DM assistant requests
 func (h *Handlers) ProcessDMAssistantRequest(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -43,18 +42,25 @@ func (h *Handlers) ProcessDMAssistantRequest(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
 	// Process the request
-	result, err := h.services.DMAssistant.ProcessRequest(r.Context(), userID, req)
+	result, err := h.dmAssistantService.ProcessRequest(r.Context(), userUUID, req)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// If streaming is requested and this is a WebSocket upgrade request
-	if req.StreamResponse && websocket.IsWebSocketUpgrade(r) {
-		// Handle WebSocket streaming response
-		h.handleStreamingDMAssistant(w, r, userID, req)
-		return
+	// If streaming is requested, handle it separately
+	// TODO: Implement WebSocket streaming when needed
+	if req.StreamResponse {
+		// For now, just return normal response
+		// In future, this would upgrade to WebSocket for streaming
 	}
 
 	respondWithJSON(w, http.StatusOK, result)
@@ -63,8 +69,8 @@ func (h *Handlers) ProcessDMAssistantRequest(w http.ResponseWriter, r *http.Requ
 // GetDMAssistantNPCs retrieves NPCs for a game session
 func (h *Handlers) GetDMAssistantNPCs(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	_, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -78,7 +84,7 @@ func (h *Handlers) GetDMAssistantNPCs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get NPCs
-	npcs, err := h.services.DMAssistant.GetNPCsBySession(r.Context(), sessionID)
+	npcs, err := h.dmAssistantService.GetNPCsBySession(r.Context(), sessionID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -90,8 +96,8 @@ func (h *Handlers) GetDMAssistantNPCs(w http.ResponseWriter, r *http.Request) {
 // GetDMAssistantNPC retrieves a specific NPC
 func (h *Handlers) GetDMAssistantNPC(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	_, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -105,7 +111,7 @@ func (h *Handlers) GetDMAssistantNPC(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get NPC
-	npc, err := h.services.DMAssistant.GetNPCByID(r.Context(), npcID)
+	npc, err := h.dmAssistantService.GetNPCByID(r.Context(), npcID)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "NPC not found")
 		return
@@ -117,8 +123,8 @@ func (h *Handlers) GetDMAssistantNPC(w http.ResponseWriter, r *http.Request) {
 // CreateDMAssistantNPC creates a new AI-generated NPC
 func (h *Handlers) CreateDMAssistantNPC(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -141,8 +147,15 @@ func (h *Handlers) CreateDMAssistantNPC(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
 	// Create NPC
-	npc, err := h.services.DMAssistant.CreateNPC(r.Context(), sessionID, userID, req.Role, req.Context)
+	npc, err := h.dmAssistantService.CreateNPC(r.Context(), sessionID, userUUID, req.Role, req.Context)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -154,8 +167,8 @@ func (h *Handlers) CreateDMAssistantNPC(w http.ResponseWriter, r *http.Request) 
 // GetDMAssistantLocations retrieves locations for a game session
 func (h *Handlers) GetDMAssistantLocations(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	_, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -169,7 +182,7 @@ func (h *Handlers) GetDMAssistantLocations(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Get locations
-	locations, err := h.services.DMAssistant.GetLocationsBySession(r.Context(), sessionID)
+	locations, err := h.dmAssistantService.GetLocationsBySession(r.Context(), sessionID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -181,8 +194,8 @@ func (h *Handlers) GetDMAssistantLocations(w http.ResponseWriter, r *http.Reques
 // GetDMAssistantLocation retrieves a specific location
 func (h *Handlers) GetDMAssistantLocation(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	_, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -196,7 +209,7 @@ func (h *Handlers) GetDMAssistantLocation(w http.ResponseWriter, r *http.Request
 	}
 
 	// Get location
-	location, err := h.services.DMAssistant.GetLocationByID(r.Context(), locationID)
+	location, err := h.dmAssistantService.GetLocationByID(r.Context(), locationID)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "Location not found")
 		return
@@ -208,8 +221,8 @@ func (h *Handlers) GetDMAssistantLocation(w http.ResponseWriter, r *http.Request
 // GetDMAssistantStoryElements retrieves unused story elements for a session
 func (h *Handlers) GetDMAssistantStoryElements(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	_, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -223,7 +236,7 @@ func (h *Handlers) GetDMAssistantStoryElements(w http.ResponseWriter, r *http.Re
 	}
 
 	// Get story elements
-	elements, err := h.services.DMAssistant.GetUnusedStoryElements(r.Context(), sessionID)
+	elements, err := h.dmAssistantService.GetUnusedStoryElements(r.Context(), sessionID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -235,8 +248,8 @@ func (h *Handlers) GetDMAssistantStoryElements(w http.ResponseWriter, r *http.Re
 // MarkStoryElementUsed marks a story element as used
 func (h *Handlers) MarkStoryElementUsed(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	_, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -250,7 +263,7 @@ func (h *Handlers) MarkStoryElementUsed(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Mark as used
-	if err := h.services.DMAssistant.MarkStoryElementUsed(r.Context(), elementID); err != nil {
+	if err := h.dmAssistantService.MarkStoryElementUsed(r.Context(), elementID); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -261,8 +274,8 @@ func (h *Handlers) MarkStoryElementUsed(w http.ResponseWriter, r *http.Request) 
 // GetDMAssistantHazards retrieves environmental hazards for a location
 func (h *Handlers) GetDMAssistantHazards(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	_, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -276,7 +289,7 @@ func (h *Handlers) GetDMAssistantHazards(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Get hazards
-	hazards, err := h.services.DMAssistant.GetActiveHazards(r.Context(), locationID)
+	hazards, err := h.dmAssistantService.GetActiveHazards(r.Context(), locationID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -288,8 +301,8 @@ func (h *Handlers) GetDMAssistantHazards(w http.ResponseWriter, r *http.Request)
 // TriggerHazard marks a hazard as triggered
 func (h *Handlers) TriggerHazard(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	_, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -303,7 +316,7 @@ func (h *Handlers) TriggerHazard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Trigger hazard
-	if err := h.services.DMAssistant.TriggerHazard(r.Context(), hazardID); err != nil {
+	if err := h.dmAssistantService.TriggerHazard(r.Context(), hazardID); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -316,7 +329,7 @@ func (h *Handlers) handleStreamingDMAssistant(w http.ResponseWriter, r *http.Req
 	// This would upgrade to WebSocket and stream responses
 	// Implementation depends on your WebSocket setup
 	// For now, we'll just return the non-streaming response
-	result, err := h.services.DMAssistant.ProcessRequest(r.Context(), userID, req)
+	result, err := h.dmAssistantService.ProcessRequest(r.Context(), userID, req)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return

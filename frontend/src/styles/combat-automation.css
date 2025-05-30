@@ -1,0 +1,440 @@
+/* Combat Automation Styles */
+.combat-automation {
+    background: var(--dark-bg);
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 400px;
+}
+
+/* Tabs */
+.automation-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.tab-button {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tab-button:hover {
+    color: var(--text-primary);
+}
+
+.tab-button.active {
+    color: var(--primary-color);
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+/* Quick Combat */
+.quick-combat {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.form-group select,
+.form-group input {
+    background: var(--darker-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.form-group select:focus,
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.difficulty-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    background: var(--darker-bg);
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.difficulty-stat {
+    text-align: center;
+}
+
+.difficulty-stat span:first-child {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.difficulty-stat span:last-child {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+.resolve-button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    align-self: flex-start;
+}
+
+.resolve-button:hover {
+    background: var(--primary-color-hover);
+    transform: translateY(-2px);
+}
+
+.resolve-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Resolution Result */
+.resolution-result {
+    background: var(--darker-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.resolution-result h4 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.result-outcome {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.result-outcome.VICTORY {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--success-color);
+}
+
+.result-outcome.DEFEAT {
+    background: rgba(231, 76, 60, 0.2);
+    color: var(--danger-color);
+}
+
+.result-outcome.PYRRHIC_VICTORY {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning-color);
+}
+
+.result-outcome.TACTICAL_RETREAT {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--secondary-color);
+}
+
+.result-narrative {
+    color: var(--text-primary);
+    line-height: 1.6;
+    margin: 15px 0;
+    padding: 15px;
+    background: var(--dark-bg);
+    border-radius: 4px;
+    font-style: italic;
+}
+
+.result-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.result-stat {
+    background: var(--dark-bg);
+    padding: 15px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.result-stat label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.result-stat span {
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Smart Initiative */
+.smart-initiative {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.init-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.init-list {
+    background: var(--darker-bg);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.init-header {
+    display: grid;
+    grid-template-columns: 60px 1fr 100px 100px;
+    padding: 15px;
+    background: var(--dark-bg);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: bold;
+    color: var(--text-secondary);
+}
+
+.init-entry {
+    display: grid;
+    grid-template-columns: 60px 1fr 100px 100px;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s ease;
+}
+
+.init-entry:hover {
+    background: var(--dark-bg);
+}
+
+.init-entry:last-child {
+    border-bottom: none;
+}
+
+.init-roll {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.init-name {
+    color: var(--text-primary);
+}
+
+.init-bonus {
+    color: var(--text-secondary);
+}
+
+.init-type {
+    text-align: center;
+}
+
+.type-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.type-badge.PLAYER {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.type-badge.NPC {
+    background: var(--danger-color);
+    color: white;
+}
+
+/* Battle Maps */
+.battle-maps {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.map-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.location-input {
+    grid-column: 1 / -1;
+}
+
+.generate-button {
+    grid-column: 1 / -1;
+    justify-self: start;
+}
+
+/* Analytics */
+.analytics-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.history-item {
+    background: var(--darker-bg);
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.history-item:hover {
+    transform: translateX(5px);
+    border-color: var(--primary-color);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.history-date {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.history-outcome {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 14px;
+}
+
+.history-outcome.VICTORY {
+    color: var(--success-color);
+}
+
+.history-outcome.DEFEAT {
+    color: var(--danger-color);
+}
+
+.history-stats {
+    display: flex;
+    gap: 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* Loading States */
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error States */
+.error-message {
+    background: rgba(231, 76, 60, 0.1);
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+}
+
+.empty-state p {
+    margin-bottom: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .automation-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .tab-button {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .map-form {
+        grid-template-columns: 1fr;
+    }
+    
+    .difficulty-info {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .init-header,
+    .init-entry {
+        grid-template-columns: 50px 1fr 80px;
+    }
+    
+    .init-header > :last-child,
+    .init-entry > :last-child {
+        display: none;
+    }
+}

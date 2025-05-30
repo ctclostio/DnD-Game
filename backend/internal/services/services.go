@@ -7,18 +7,20 @@ import (
 
 // Services aggregates all service interfaces
 type Services struct {
-	Users         *UserService
-	Characters    *CharacterService
-	GameSessions  *GameSessionService
-	DiceRolls     *DiceRollService
-	Combat        *CombatService
-	NPCs          *NPCService
-	Inventory     *InventoryService
-	CustomRaces   *CustomRaceService
-	DMAssistant   *DMAssistantService
-	Encounters    *EncounterService
-	Campaign      *CampaignService
-	JWTManager    *auth.JWTManager
-	RefreshTokens *RefreshTokenService
-	Config        *config.Config
+	Users            *UserService
+	Characters       *CharacterService
+	GameSessions     *GameSessionService
+	DiceRolls        *DiceRollService
+	Combat           *CombatService
+	NPCs             *NPCService
+	Inventory        *InventoryService
+	CustomRaces      *CustomRaceService
+	DMAssistant      *DMAssistantService
+	Encounters       *EncounterService
+	Campaign         *CampaignService
+	CombatAutomation *CombatAutomationService
+	CombatAnalytics  *CombatAnalyticsService
+	JWTManager       *auth.JWTManager
+	RefreshTokens    *RefreshTokenService
+	Config           *config.Config
 }

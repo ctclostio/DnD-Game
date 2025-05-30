@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"dnd-backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/lib/pq"
 )
 
@@ -82,7 +82,7 @@ func (r *EncounterRepository) Create(encounter *models.Encounter) error {
 	// Create encounter enemies
 	for _, enemy := range encounter.Enemies {
 		enemy.EncounterID = encounter.ID
-		if err := r.createEncounterEnemy(&enemy); err != nil {
+		if err := r.CreateEncounterEnemy(&enemy); err != nil {
 			return fmt.Errorf("failed to create encounter enemy: %w", err)
 		}
 	}
@@ -90,7 +90,8 @@ func (r *EncounterRepository) Create(encounter *models.Encounter) error {
 	return nil
 }
 
-func (r *EncounterRepository) createEncounterEnemy(enemy *models.EncounterEnemy) error {
+// CreateEncounterEnemy adds a new enemy to an encounter (exported for reinforcements)
+func (r *EncounterRepository) CreateEncounterEnemy(enemy *models.EncounterEnemy) error {
 	stats, _ := json.Marshal(enemy.Stats)
 	abilities, _ := json.Marshal(enemy.Abilities)
 	actions, _ := json.Marshal(enemy.Actions)

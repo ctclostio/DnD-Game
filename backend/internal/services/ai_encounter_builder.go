@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"strings"
 
-	"dnd-backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type EncounterRequest struct {
@@ -38,8 +37,11 @@ func (b *AIEncounterBuilder) GenerateEncounter(ctx context.Context, req Encounte
 	// Build prompt for AI
 	prompt := b.buildEncounterPrompt(req, xpBudget)
 	
+	systemPrompt := `You are a D&D 5th Edition encounter designer creating balanced, engaging encounters.
+Your responses must be valid JSON matching the specified format exactly. Do not include any additional text or explanation outside the JSON.`
+
 	// Generate encounter
-	response, err := b.llmProvider.GenerateText(ctx, prompt)
+	response, err := b.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate encounter: %w", err)
 	}
@@ -60,7 +62,7 @@ func (b *AIEncounterBuilder) GenerateEncounter(ctx context.Context, req Encounte
 }
 
 func (b *AIEncounterBuilder) buildEncounterPrompt(req EncounterRequest, xpBudget int) string {
-	return fmt.Sprintf(`You are a D&D 5th Edition encounter designer. Create a %s %s encounter for the following party:
+	return fmt.Sprintf(`Create a %s %s encounter for the following party:
 
 Party Details:
 - Level: %d
@@ -745,7 +747,9 @@ func (b *AIEncounterBuilder) addPartySpecificTactics(encounter *models.Encounter
 }
 
 func (b *AIEncounterBuilder) GenerateTacticalSuggestion(ctx context.Context, encounter *models.Encounter, situation string) (string, error) {
-	prompt := fmt.Sprintf(`As a D&D tactical advisor, provide a specific tactical suggestion for the enemies in this situation:
+	systemPrompt := "You are a D&D tactical advisor providing concise, actionable tactical suggestions for combat encounters."
+	
+	prompt := fmt.Sprintf(`Provide a specific tactical suggestion for the enemies in this situation:
 
 Encounter: %s
 Current Situation: %s
@@ -759,7 +763,7 @@ Provide a brief (2-3 sentences) tactical suggestion for what the enemies should 
 		encounter.EnemyTactics.GeneralStrategy,
 	)
 	
-	response, err := b.llmProvider.GenerateText(ctx, prompt)
+	response, err := b.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate tactical suggestion: %w", err)
 	}

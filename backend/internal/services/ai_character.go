@@ -1,39 +1,17 @@
 package services
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
 	"strings"
-	"time"
 
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type AICharacterService struct {
-	apiKey     string
-	apiURL     string
-	httpClient *http.Client
-}
-
-type AIRequest struct {
-	Model    string        `json:"model"`
-	Messages []AIMessage   `json:"messages"`
-	MaxTokens int          `json:"max_tokens"`
-}
-
-type AIMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-type AIResponse struct {
-	Choices []struct {
-		Message AIMessage `json:"message"`
-	} `json:"choices"`
+	llmProvider LLMProvider
+	aiEnabled   bool
 }
 
 type CustomCharacterRequest struct {
@@ -46,25 +24,15 @@ type CustomCharacterRequest struct {
 	Level       int    `json:"level,omitempty"`
 }
 
-func NewAICharacterService() *AICharacterService {
-	apiKey := os.Getenv("AI_API_KEY")
-	apiURL := os.Getenv("AI_API_URL")
-	
-	if apiURL == "" {
-		apiURL = "https://api.openai.com/v1/chat/completions"
-	}
-
+func NewAICharacterService(llmProvider LLMProvider) *AICharacterService {
 	return &AICharacterService{
-		apiKey: apiKey,
-		apiURL: apiURL,
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
+		llmProvider: llmProvider,
+		aiEnabled:   llmProvider != nil,
 	}
 }
 
 func (s *AICharacterService) IsEnabled() bool {
-	return s.apiKey != ""
+	return s.aiEnabled && s.llmProvider != nil
 }
 
 func (s *AICharacterService) GenerateCustomCharacter(req CustomCharacterRequest) (*models.Character, error) {
@@ -74,9 +42,10 @@ func (s *AICharacterService) GenerateCustomCharacter(req CustomCharacterRequest)
 
 	// Build the prompt
 	prompt := s.buildCharacterPrompt(req)
+	systemPrompt := "You are a D&D character creation assistant. Create balanced, interesting characters that follow game rules. Your response must be valid JSON matching the specified format."
 
 	// Call AI API
-	response, err := s.callAI(prompt)
+	response, err := s.llmProvider.GenerateCompletion(context.Background(), prompt, systemPrompt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate character: %w", err)
 	}
@@ -113,7 +82,9 @@ Is this character balanced for play? If not, suggest adjustments. Respond with J
 		character.Attributes.Constitution, character.Attributes.Intelligence,
 		character.Attributes.Wisdom, character.Attributes.Charisma)
 
-	response, err := s.callAI(prompt)
+	systemPrompt := "You are a D&D character validator. Analyze the character for game balance and provide feedback. Your response must be valid JSON."
+	
+	response, err := s.llmProvider.GenerateCompletion(context.Background(), prompt, systemPrompt)
 	if err != nil {
 		return fmt.Errorf("validation failed: %w", err)
 	}
@@ -227,57 +198,6 @@ Respond with a JSON object in this format:
 	return prompt
 }
 
-func (s *AICharacterService) callAI(prompt string) (string, error) {
-	reqBody := AIRequest{
-		Model: "gpt-3.5-turbo",
-		Messages: []AIMessage{
-			{
-				Role:    "system",
-				Content: "You are a D&D character creation assistant. Create balanced, interesting characters that follow game rules.",
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
-		MaxTokens: 2000,
-	}
-
-	jsonData, err := json.Marshal(reqBody)
-	if err != nil {
-		return "", err
-	}
-
-	req, err := http.NewRequest("POST", s.apiURL, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+s.apiKey)
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("AI API error: %s", string(body))
-	}
-
-	var aiResp AIResponse
-	if err := json.NewDecoder(resp.Body).Decode(&aiResp); err != nil {
-		return "", err
-	}
-
-	if len(aiResp.Choices) == 0 {
-		return "", fmt.Errorf("no response from AI")
-	}
-
-	return aiResp.Choices[0].Message.Content, nil
-}
 
 func (s *AICharacterService) parseAIResponse(aiResponse string, req CustomCharacterRequest) (*models.Character, error) {
 	// Try to extract JSON from the response

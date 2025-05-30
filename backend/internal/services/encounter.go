@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"dnd-backend/internal/database"
-	"dnd-backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/database"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type EncounterService struct {
@@ -237,7 +237,7 @@ func (s *EncounterService) TriggerReinforcements(ctx context.Context, encounterI
 	// Add reinforcement enemies to the encounter
 	for _, enemy := range wave.Enemies {
 		enemy.EncounterID = encounterID
-		if err := s.repo.createEncounterEnemy(&enemy); err != nil {
+		if err := s.repo.CreateEncounterEnemy(&enemy); err != nil {
 			return fmt.Errorf("failed to add reinforcement: %w", err)
 		}
 	}

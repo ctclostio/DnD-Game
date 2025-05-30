@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"dnd-backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/lib/pq"
 )
 

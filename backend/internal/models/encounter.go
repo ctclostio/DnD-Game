@@ -152,12 +152,7 @@ type EscapeRoute struct {
 	Consequence string `json:"consequence"`
 }
 
-// Position on a battle map
-type Position struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-	Z int `json:"z,omitempty"`
-}
+// Note: Position type is defined in combat.go
 
 // Ability represents a special ability
 type Ability struct {

@@ -19,6 +19,8 @@ type Handlers struct {
 	npcService          *services.NPCService
 	inventoryService    *services.InventoryService
 	encounterService    *services.EncounterService
+	customRaceService   *services.CustomRaceService
+	dmAssistantService  *services.DMAssistantService
 	jwtManager          *auth.JWTManager
 	refreshTokenService *services.RefreshTokenService
 	websocketHub        *websocket.Hub
@@ -35,6 +37,8 @@ func NewHandlers(svc *services.Services, hub *websocket.Hub) *Handlers {
 		npcService:          svc.NPCs,
 		inventoryService:    svc.Inventory,
 		encounterService:    svc.Encounters,
+		customRaceService:   svc.CustomRaces,
+		dmAssistantService:  svc.DMAssistant,
 		jwtManager:          svc.JWTManager,
 		refreshTokenService: svc.RefreshTokens,
 		websocketHub:        hub,

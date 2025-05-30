@@ -9,11 +9,6 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
-// LLMProvider defines the interface for LLM services
-type LLMProvider interface {
-	GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error)
-}
-
 // AIRaceGeneratorService handles AI-powered custom race generation
 type AIRaceGeneratorService struct {
 	llmProvider LLMProvider

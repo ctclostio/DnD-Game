@@ -13,8 +13,8 @@ import (
 // CreateCustomRace handles creating a new custom race
 func (h *Handlers) CreateCustomRace(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -26,8 +26,15 @@ func (h *Handlers) CreateCustomRace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
 	// Create custom race
-	customRace, err := h.services.CustomRaces.CreateCustomRace(r.Context(), userID, req)
+	customRace, err := h.customRaceService.CreateCustomRace(r.Context(), userUUID, req)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -47,23 +54,26 @@ func (h *Handlers) GetCustomRace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get user ID from context
-	userID, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	// Get custom race
-	customRace, err := h.services.CustomRaces.GetCustomRace(r.Context(), raceID)
+	customRace, err := h.customRaceService.GetCustomRace(r.Context(), raceID)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "Custom race not found")
 		return
 	}
 
+	// Convert userID to UUID for comparison
+	userUUID, _ := uuid.Parse(userID)
+	
 	// Check if user has permission to view this race
-	if customRace.CreatedBy != userID && !customRace.IsPublic && customRace.ApprovalStatus != models.ApprovalStatusApproved {
+	if customRace.CreatedBy != userUUID && !customRace.IsPublic && customRace.ApprovalStatus != models.ApprovalStatusApproved {
 		// Check if user is DM
-		user, err := h.services.Users.GetByID(r.Context(), userID.String())
+		user, err := h.userService.GetByID(r.Context(), userID)
 		if err != nil || user.Role != "dm" {
 			respondWithError(w, http.StatusForbidden, "You don't have permission to view this race")
 			return
@@ -76,14 +86,21 @@ func (h *Handlers) GetCustomRace(w http.ResponseWriter, r *http.Request) {
 // GetUserCustomRaces retrieves all custom races created by a user
 func (h *Handlers) GetUserCustomRaces(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
-	userID, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
 	// Get custom races
-	races, err := h.services.CustomRaces.GetUserCustomRaces(r.Context(), userID)
+	races, err := h.customRaceService.GetUserCustomRaces(r.Context(), userUUID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -95,7 +112,7 @@ func (h *Handlers) GetUserCustomRaces(w http.ResponseWriter, r *http.Request) {
 // GetPublicCustomRaces retrieves all approved public custom races
 func (h *Handlers) GetPublicCustomRaces(w http.ResponseWriter, r *http.Request) {
 	// Get public races
-	races, err := h.services.CustomRaces.GetPublicCustomRaces(r.Context())
+	races, err := h.customRaceService.GetPublicCustomRaces(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -115,8 +132,8 @@ func (h *Handlers) ApproveCustomRace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get user ID from context
-	userID, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -130,8 +147,15 @@ func (h *Handlers) ApproveCustomRace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
 	// Approve race
-	if err := h.services.CustomRaces.ApproveCustomRace(r.Context(), raceID, userID, req.Notes); err != nil {
+	if err := h.customRaceService.ApproveCustomRace(r.Context(), raceID, userUUID, req.Notes); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -150,8 +174,8 @@ func (h *Handlers) RejectCustomRace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get user ID from context
-	userID, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -165,8 +189,15 @@ func (h *Handlers) RejectCustomRace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
 	// Reject race
-	if err := h.services.CustomRaces.RejectCustomRace(r.Context(), raceID, userID, req.Notes); err != nil {
+	if err := h.customRaceService.RejectCustomRace(r.Context(), raceID, userUUID, req.Notes); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -185,8 +216,8 @@ func (h *Handlers) RequestRevisionCustomRace(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Get user ID from context
-	userID, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -200,8 +231,15 @@ func (h *Handlers) RequestRevisionCustomRace(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
 	// Request revision
-	if err := h.services.CustomRaces.RequestRevision(r.Context(), raceID, userID, req.Notes); err != nil {
+	if err := h.customRaceService.RequestRevision(r.Context(), raceID, userUUID, req.Notes); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -220,14 +258,21 @@ func (h *Handlers) MakeCustomRacePublic(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Get user ID from context
-	userID, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
 	// Make race public
-	if err := h.services.CustomRaces.MakePublic(r.Context(), raceID, userID); err != nil {
+	if err := h.customRaceService.MakePublic(r.Context(), raceID, userUUID); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -238,7 +283,7 @@ func (h *Handlers) MakeCustomRacePublic(w http.ResponseWriter, r *http.Request) 
 // GetPendingCustomRaces retrieves all custom races pending approval (DM only)
 func (h *Handlers) GetPendingCustomRaces(w http.ResponseWriter, r *http.Request) {
 	// Get pending races
-	races, err := h.services.CustomRaces.GetPendingApproval(r.Context())
+	races, err := h.customRaceService.GetPendingApproval(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -258,20 +303,27 @@ func (h *Handlers) GetCustomRaceStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get user ID from context
-	userID, err := auth.GetUserIDFromContext(r.Context())
-	if err != nil {
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
 	// Validate user can use this race
-	if err := h.services.CustomRaces.ValidateCustomRaceForCharacter(r.Context(), raceID, userID); err != nil {
+	if err := h.customRaceService.ValidateCustomRaceForCharacter(r.Context(), raceID, userUUID); err != nil {
 		respondWithError(w, http.StatusForbidden, err.Error())
 		return
 	}
 
 	// Get race stats
-	stats, err := h.services.CustomRaces.GetCustomRaceStats(r.Context(), raceID)
+	stats, err := h.customRaceService.GetCustomRaceStats(r.Context(), raceID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return

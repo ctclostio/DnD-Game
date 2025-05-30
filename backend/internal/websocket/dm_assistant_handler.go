@@ -37,8 +37,7 @@ func (c *Client) HandleDMAssistantMessage(message []byte, dmAssistant *services.
 	}
 
 	// Ensure user is DM
-	user, _ := c.hub.getUserByID(c.userID)
-	if user == nil || user.Role != "dm" {
+	if c.role != "dm" {
 		c.sendError(msg.RequestID, "DM privileges required")
 		return
 	}
@@ -66,13 +65,13 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 	requestType, _ := msg.Data["type"].(string)
 	gameSessionID, _ := msg.Data["gameSessionId"].(string)
 	parameters, _ := msg.Data["parameters"].(map[string]interface{})
-	context, _ := msg.Data["context"].(map[string]interface{})
+	contextData, _ := msg.Data["context"].(map[string]interface{})
 
 	req := models.DMAssistantRequest{
 		Type:          requestType,
 		GameSessionID: gameSessionID,
 		Parameters:    parameters,
-		Context:       context,
+		Context:       contextData,
 		StreamResponse: true,
 	}
 
@@ -91,7 +90,7 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	userID, _ := uuid.Parse(c.userID)
+	userID, _ := uuid.Parse(c.id)
 	result, err := dmAssistant.ProcessRequest(ctx, userID, req)
 	if err != nil {
 		c.sendError(msg.RequestID, err.Error())
@@ -109,12 +108,13 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 
 	// Broadcast certain results to the game session
 	if requestType == models.RequestTypeLocationDesc || requestType == models.RequestTypeEnvironmentalHazard {
+		contentData, _ := json.Marshal(map[string]interface{}{
+			"contentType": requestType,
+			"content":     result,
+		})
 		c.broadcastToSession(gameSessionID, Message{
 			Type: "dm_content_update",
-			Data: map[string]interface{}{
-				"contentType": requestType,
-				"content":     result,
-			},
+			Data: json.RawMessage(contentData),
 		})
 	}
 }
@@ -236,14 +236,15 @@ func (c *Client) handleCombatNarration(msg DMAssistantMessage, dmAssistant *serv
 
 	// Broadcast to all players in the session
 	if sessionID, ok := msg.Data["gameSessionId"].(string); ok {
+		combatData, _ := json.Marshal(map[string]interface{}{
+			"narration": narration,
+			"attacker":  attackerName,
+			"target":    targetName,
+			"damage":    int(damage),
+		})
 		c.broadcastToSession(sessionID, Message{
 			Type: "combat_update",
-			Data: map[string]interface{}{
-				"narration": narration,
-				"attacker":  attackerName,
-				"target":    targetName,
-				"damage":    int(damage),
-			},
+			Data: json.RawMessage(combatData),
 		})
 	}
 }
@@ -283,8 +284,9 @@ func (c *Client) handlePlotTwist(msg DMAssistantMessage, dmAssistant *services.D
 }
 
 func (c *Client) handleEnvironmentalHazard(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
-	locationType, _ := msg.Data["locationType"].(string)
-	difficulty, _ := msg.Data["difficulty"].(float64)
+	// Extract parameters (not used in this example implementation)
+	// locationType, _ := msg.Data["locationType"].(string)
+	// difficulty, _ := msg.Data["difficulty"].(float64)
 
 	hazard := map[string]interface{}{
 		"name":        "Unstable Floor",
@@ -320,6 +322,7 @@ func (c *Client) sendError(requestID string, errorMsg string) {
 func (c *Client) broadcastToSession(sessionID string, message Message) {
 	// This would broadcast to all clients in the same game session
 	// Implementation depends on your hub structure
+	message.RoomID = sessionID
 	data, _ := json.Marshal(message)
 	c.hub.broadcast <- data
 }

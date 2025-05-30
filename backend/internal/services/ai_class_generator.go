@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"dnd-backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type CustomClassRequest struct {
@@ -30,7 +30,10 @@ func NewAIClassGenerator(provider LLMProvider) *AIClassGenerator {
 func (g *AIClassGenerator) GenerateCustomClass(ctx context.Context, req CustomClassRequest) (*models.CustomClass, error) {
 	prompt := g.buildClassPrompt(req)
 	
-	response, err := g.llmProvider.GenerateText(ctx, prompt)
+	systemPrompt := `You are a D&D 5th Edition expert game designer creating balanced, interesting custom classes.
+Your responses must be valid JSON matching the specified format exactly. Do not include any additional text or explanation outside the JSON.`
+
+	response, err := g.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate class: %w", err)
 	}
@@ -59,7 +62,7 @@ func (g *AIClassGenerator) buildClassPrompt(req CustomClassRequest) string {
 		"powerful":  "Create a slightly stronger class suitable for experienced players or high-difficulty campaigns.",
 	}
 
-	return fmt.Sprintf(`You are a D&D 5th Edition game designer. Create a custom class based on the following request:
+	return fmt.Sprintf(`Create a custom class based on the following request:
 
 Name: %s
 Description: %s

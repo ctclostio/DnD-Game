@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/yourusername/dnd-game/internal/auth"
-	"github.com/yourusername/dnd-game/internal/models"
-	"github.com/yourusername/dnd-game/internal/services"
+	"github.com/your-username/dnd-game/backend/internal/auth"
+	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/services"
 )
 
 type CampaignHandler struct {
@@ -29,78 +29,86 @@ func NewCampaignHandler(campaignService *services.CampaignService, gameService *
 
 func (h *CampaignHandler) CreateStoryArc(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims := auth.GetClaimsFromContext(ctx)
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 	
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	// Verify user is DM
-	session, err := h.gameService.GetByID(ctx, sessionID.String())
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Session not found")
+		sendErrorResponse(w, http.StatusNotFound, "Session not found")
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can create story arcs")
+	if session.DMID != claims.UserID {
+		sendErrorResponse(w, http.StatusForbidden, "Only the DM can create story arcs")
 		return
 	}
 
 	var req models.CreateStoryArcRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	arc, err := h.campaignService.CreateStoryArc(ctx, sessionID, req)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, arc)
+	sendJSONResponse(w, http.StatusCreated, arc)
 }
 
 func (h *CampaignHandler) GenerateStoryArc(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims := auth.GetClaimsFromContext(ctx)
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 	
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	// Verify user is DM
-	session, err := h.gameService.GetByID(ctx, sessionID.String())
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Session not found")
+		sendErrorResponse(w, http.StatusNotFound, "Session not found")
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can generate story arcs")
+	if session.DMID != claims.UserID {
+		sendErrorResponse(w, http.StatusForbidden, "Only the DM can generate story arcs")
 		return
 	}
 
 	var req models.GenerateStoryArcRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	arc, err := h.campaignService.GenerateStoryArc(ctx, sessionID, req)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, arc)
+	sendJSONResponse(w, http.StatusCreated, arc)
 }
 
 func (h *CampaignHandler) GetStoryArcs(w http.ResponseWriter, r *http.Request) {
@@ -109,100 +117,108 @@ func (h *CampaignHandler) GetStoryArcs(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	arcs, err := h.campaignService.GetStoryArcs(ctx, sessionID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, arcs)
+	sendJSONResponse(w, http.StatusOK, arcs)
 }
 
 func (h *CampaignHandler) UpdateStoryArc(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims := auth.GetClaimsFromContext(ctx)
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 	
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	arcID, err := uuid.Parse(vars["arcId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid arc ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid arc ID")
 		return
 	}
 
 	// Verify user is DM
-	session, err := h.gameService.GetByID(ctx, sessionID.String())
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Session not found")
+		sendErrorResponse(w, http.StatusNotFound, "Session not found")
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can update story arcs")
+	if session.DMID != claims.UserID {
+		sendErrorResponse(w, http.StatusForbidden, "Only the DM can update story arcs")
 		return
 	}
 
 	var req models.UpdateStoryArcRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	if err := h.campaignService.UpdateStoryArc(ctx, arcID, req); err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Story arc updated successfully"})
+	sendJSONResponse(w, http.StatusOK, map[string]string{"message": "Story arc updated successfully"})
 }
 
 // Session Memory Handlers
 
 func (h *CampaignHandler) CreateSessionMemory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims := auth.GetClaimsFromContext(ctx)
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 	
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	// Verify user is DM
-	session, err := h.gameService.GetByID(ctx, sessionID.String())
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Session not found")
+		sendErrorResponse(w, http.StatusNotFound, "Session not found")
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can create session memories")
+	if session.DMID != claims.UserID {
+		sendErrorResponse(w, http.StatusForbidden, "Only the DM can create session memories")
 		return
 	}
 
 	var req models.CreateSessionMemoryRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	memory, err := h.campaignService.CreateSessionMemory(ctx, sessionID, req)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, memory)
+	sendJSONResponse(w, http.StatusCreated, memory)
 }
 
 func (h *CampaignHandler) GetSessionMemories(w http.ResponseWriter, r *http.Request) {
@@ -211,7 +227,7 @@ func (h *CampaignHandler) GetSessionMemories(w http.ResponseWriter, r *http.Requ
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
@@ -224,11 +240,11 @@ func (h *CampaignHandler) GetSessionMemories(w http.ResponseWriter, r *http.Requ
 
 	memories, err := h.campaignService.GetSessionMemories(ctx, sessionID, limit)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, memories)
+	sendJSONResponse(w, http.StatusOK, memories)
 }
 
 func (h *CampaignHandler) GenerateRecap(w http.ResponseWriter, r *http.Request) {
@@ -237,7 +253,7 @@ func (h *CampaignHandler) GenerateRecap(w http.ResponseWriter, r *http.Request) 
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
@@ -249,50 +265,54 @@ func (h *CampaignHandler) GenerateRecap(w http.ResponseWriter, r *http.Request) 
 
 	recap, err := h.campaignService.GenerateRecap(ctx, sessionID, req.SessionCount)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, recap)
+	sendJSONResponse(w, http.StatusOK, recap)
 }
 
 // Plot Thread Handlers
 
 func (h *CampaignHandler) CreatePlotThread(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims := auth.GetClaimsFromContext(ctx)
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 	
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	// Verify user is DM
-	session, err := h.gameService.GetByID(ctx, sessionID.String())
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Session not found")
+		sendErrorResponse(w, http.StatusNotFound, "Session not found")
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can create plot threads")
+	if session.DMID != claims.UserID {
+		sendErrorResponse(w, http.StatusForbidden, "Only the DM can create plot threads")
 		return
 	}
 
 	var thread models.PlotThread
 	if err := json.NewDecoder(r.Body).Decode(&thread); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	if err := h.campaignService.CreatePlotThread(ctx, sessionID, &thread); err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, thread)
+	sendJSONResponse(w, http.StatusCreated, thread)
 }
 
 func (h *CampaignHandler) GetPlotThreads(w http.ResponseWriter, r *http.Request) {
@@ -301,7 +321,7 @@ func (h *CampaignHandler) GetPlotThreads(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
@@ -309,112 +329,124 @@ func (h *CampaignHandler) GetPlotThreads(w http.ResponseWriter, r *http.Request)
 
 	threads, err := h.campaignService.GetPlotThreads(ctx, sessionID, activeOnly)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, threads)
+	sendJSONResponse(w, http.StatusOK, threads)
 }
 
 // Foreshadowing Handlers
 
 func (h *CampaignHandler) GenerateForeshadowing(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims := auth.GetClaimsFromContext(ctx)
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 	
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	// Verify user is DM
-	session, err := h.gameService.GetByID(ctx, sessionID.String())
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Session not found")
+		sendErrorResponse(w, http.StatusNotFound, "Session not found")
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can generate foreshadowing")
+	if session.DMID != claims.UserID {
+		sendErrorResponse(w, http.StatusForbidden, "Only the DM can generate foreshadowing")
 		return
 	}
 
 	var req models.GenerateForeshadowingRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	element, err := h.campaignService.GenerateForeshadowing(ctx, sessionID, req)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, element)
+	sendJSONResponse(w, http.StatusCreated, element)
 }
 
 func (h *CampaignHandler) GetUnrevealedForeshadowing(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims := auth.GetClaimsFromContext(ctx)
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 	
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	// Verify user is DM
-	session, err := h.gameService.GetByID(ctx, sessionID.String())
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Session not found")
+		sendErrorResponse(w, http.StatusNotFound, "Session not found")
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can view foreshadowing")
+	if session.DMID != claims.UserID {
+		sendErrorResponse(w, http.StatusForbidden, "Only the DM can view foreshadowing")
 		return
 	}
 
 	elements, err := h.campaignService.GetUnrevealedForeshadowing(ctx, sessionID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, elements)
+	sendJSONResponse(w, http.StatusOK, elements)
 }
 
 func (h *CampaignHandler) RevealForeshadowing(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims := auth.GetClaimsFromContext(ctx)
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 	
 	vars := mux.Vars(r)
 	elementID, err := uuid.Parse(vars["elementId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid element ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid element ID")
 		return
 	}
 
 	// Get session ID from query params
 	sessionID, err := uuid.Parse(r.URL.Query().Get("sessionId"))
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	// Verify user is DM
-	session, err := h.gameService.GetByID(ctx, sessionID.String())
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Session not found")
+		sendErrorResponse(w, http.StatusNotFound, "Session not found")
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can reveal foreshadowing")
+	if session.DMID != claims.UserID {
+		sendErrorResponse(w, http.StatusForbidden, "Only the DM can reveal foreshadowing")
 		return
 	}
 
@@ -422,44 +454,48 @@ func (h *CampaignHandler) RevealForeshadowing(w http.ResponseWriter, r *http.Req
 		SessionNumber int `json:"session_number"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	if err := h.campaignService.RevealForeshadowing(ctx, elementID, req.SessionNumber); err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Foreshadowing revealed"})
+	sendJSONResponse(w, http.StatusOK, map[string]string{"message": "Foreshadowing revealed"})
 }
 
 // Timeline Handlers
 
 func (h *CampaignHandler) AddTimelineEvent(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims := auth.GetClaimsFromContext(ctx)
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 	
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	// Verify user is in session
-	session, err := h.gameService.GetByID(ctx, sessionID.String())
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Session not found")
+		sendErrorResponse(w, http.StatusNotFound, "Session not found")
 		return
 	}
 
 	// Check if user is participant or DM
 	isParticipant := false
-	if session.DMUserID == claims.UserID {
+	if session.DMID == claims.UserID {
 		isParticipant = true
 	} else {
-		participants, err := h.gameService.GetParticipants(ctx, sessionID.String())
+		participants, err := h.gameService.GetSessionParticipants(ctx, sessionID.String())
 		if err == nil {
 			for _, p := range participants {
 				if p.UserID == claims.UserID {
@@ -471,13 +507,13 @@ func (h *CampaignHandler) AddTimelineEvent(w http.ResponseWriter, r *http.Reques
 	}
 
 	if !isParticipant {
-		respondWithError(w, http.StatusForbidden, "User not in session")
+		sendErrorResponse(w, http.StatusForbidden, "User not in session")
 		return
 	}
 
 	var event models.CampaignTimeline
 	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
@@ -485,11 +521,11 @@ func (h *CampaignHandler) AddTimelineEvent(w http.ResponseWriter, r *http.Reques
 	event.RealSessionDate = time.Now()
 
 	if err := h.campaignService.AddTimelineEvent(ctx, &event); err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, event)
+	sendJSONResponse(w, http.StatusCreated, event)
 }
 
 func (h *CampaignHandler) GetTimeline(w http.ResponseWriter, r *http.Request) {
@@ -498,7 +534,7 @@ func (h *CampaignHandler) GetTimeline(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
@@ -521,52 +557,56 @@ func (h *CampaignHandler) GetTimeline(w http.ResponseWriter, r *http.Request) {
 
 	events, err := h.campaignService.GetTimeline(ctx, sessionID, startDate, endDate)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, events)
+	sendJSONResponse(w, http.StatusOK, events)
 }
 
 // NPC Relationship Handlers
 
 func (h *CampaignHandler) UpdateNPCRelationship(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims := auth.GetClaimsFromContext(ctx)
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 	
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	// Verify user is DM
-	session, err := h.gameService.GetByID(ctx, sessionID.String())
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Session not found")
+		sendErrorResponse(w, http.StatusNotFound, "Session not found")
 		return
 	}
 
-	if session.DMUserID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can update NPC relationships")
+	if session.DMID != claims.UserID {
+		sendErrorResponse(w, http.StatusForbidden, "Only the DM can update NPC relationships")
 		return
 	}
 
 	var relationship models.NPCRelationship
 	if err := json.NewDecoder(r.Body).Decode(&relationship); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	relationship.GameSessionID = sessionID
 
 	if err := h.campaignService.UpdateNPCRelationship(ctx, &relationship); err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, relationship)
+	sendJSONResponse(w, http.StatusOK, relationship)
 }
 
 func (h *CampaignHandler) GetNPCRelationships(w http.ResponseWriter, r *http.Request) {
@@ -575,21 +615,21 @@ func (h *CampaignHandler) GetNPCRelationships(w http.ResponseWriter, r *http.Req
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid session ID")
 		return
 	}
 
 	npcID, err := uuid.Parse(vars["npcId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid NPC ID")
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid NPC ID")
 		return
 	}
 
 	relationships, err := h.campaignService.GetNPCRelationships(ctx, sessionID, npcID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, relationships)
+	sendJSONResponse(w, http.StatusOK, relationships)
 }

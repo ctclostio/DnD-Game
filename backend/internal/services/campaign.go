@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourusername/dnd-game/internal/database"
-	"github.com/yourusername/dnd-game/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/database"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type CampaignService struct {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/yourusername/dnd-game/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type CampaignRepository interface {

@@ -481,4 +481,20 @@ export const createSessionMemory = (sessionId, memoryData) => apiService.campaig
 export const generateRecap = (sessionId, options) => apiService.campaign.generateRecap(sessionId, options);
 export const generateForeshadowing = (sessionId, data) => apiService.campaign.generateForeshadowing(sessionId, data);
 
+// Combat Automation exports
+export const autoResolveCombat = (sessionId, data) => apiService.request(`/sessions/${sessionId}/combat/auto-resolve`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+});
+export const smartInitiative = (sessionId, data) => apiService.request(`/sessions/${sessionId}/combat/smart-initiative`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+});
+export const generateBattleMap = (sessionId, data) => apiService.request(`/sessions/${sessionId}/battle-maps`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+});
+export const getCombatAnalytics = (combatId) => apiService.request(`/combat/${combatId}/analytics`);
+export const getCombatHistory = (sessionId) => apiService.request(`/sessions/${sessionId}/combat-history`);
+
 export default apiService;

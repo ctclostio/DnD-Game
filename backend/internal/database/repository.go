@@ -105,16 +105,17 @@ type NPCRepository interface {
 
 // Repositories aggregates all repository interfaces
 type Repositories struct {
-	Users         UserRepository
-	Characters    CharacterRepository
-	GameSessions  GameSessionRepository
-	DiceRolls     DiceRollRepository
-	NPCs          NPCRepository
-	Inventory     InventoryRepository
-	RefreshTokens RefreshTokenRepository
-	CustomRaces   CustomRaceRepository
-	CustomClasses *CustomClassRepository
-	DMAssistant   DMAssistantRepository
-	Encounters    *EncounterRepository
-	Campaign      CampaignRepository
+	Users            UserRepository
+	Characters       CharacterRepository
+	GameSessions     GameSessionRepository
+	DiceRolls        DiceRollRepository
+	NPCs             NPCRepository
+	Inventory        InventoryRepository
+	RefreshTokens    RefreshTokenRepository
+	CustomRaces      CustomRaceRepository
+	CustomClasses    *CustomClassRepository
+	DMAssistant      DMAssistantRepository
+	Encounters       *EncounterRepository
+	Campaign         CampaignRepository
+	CombatAnalytics  CombatAnalyticsRepository
 }

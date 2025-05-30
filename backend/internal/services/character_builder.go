@@ -326,9 +326,8 @@ func (cb *CharacterBuilder) applyClassFeatures(character *models.Character, clas
 			character.Spells.SpellAttackBonus = character.ProficiencyBonus + abilityMod
 		}
 		
-		// Initialize spell slots using the character service
-		characterService := NewCharacterService(nil) // We don't need the repo for this
-		character.Spells.SpellSlots = characterService.InitializeSpellSlots(character.Class, character.Level)
+		// Initialize spell slots directly
+		character.Spells.SpellSlots = InitializeSpellSlots(character.Class, character.Level)
 		
 		// Set cantrips known if applicable
 		if cantripsKnown, ok := classData.Spellcasting["cantripsKnown"].([]interface{}); ok {
@@ -575,4 +574,107 @@ func (cb *CharacterBuilder) getAbilityModifier(character *models.Character, abil
 	default:
 		return 0
 	}
+}
+
+// InitializeSpellSlots creates spell slots based on class and level
+func InitializeSpellSlots(class string, level int) []models.SpellSlot {
+	// Spell slots by level for full casters (wizard, cleric, druid, bard, sorcerer)
+	fullCasterSlots := map[int][]int{
+		1:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
+		2:  {3, 0, 0, 0, 0, 0, 0, 0, 0},
+		3:  {4, 2, 0, 0, 0, 0, 0, 0, 0},
+		4:  {4, 3, 0, 0, 0, 0, 0, 0, 0},
+		5:  {4, 3, 2, 0, 0, 0, 0, 0, 0},
+		6:  {4, 3, 3, 0, 0, 0, 0, 0, 0},
+		7:  {4, 3, 3, 1, 0, 0, 0, 0, 0},
+		8:  {4, 3, 3, 2, 0, 0, 0, 0, 0},
+		9:  {4, 3, 3, 3, 1, 0, 0, 0, 0},
+		10: {4, 3, 3, 3, 2, 0, 0, 0, 0},
+		11: {4, 3, 3, 3, 2, 1, 0, 0, 0},
+		12: {4, 3, 3, 3, 2, 1, 0, 0, 0},
+		13: {4, 3, 3, 3, 2, 1, 1, 0, 0},
+		14: {4, 3, 3, 3, 2, 1, 1, 0, 0},
+		15: {4, 3, 3, 3, 2, 1, 1, 1, 0},
+		16: {4, 3, 3, 3, 2, 1, 1, 1, 0},
+		17: {4, 3, 3, 3, 2, 1, 1, 1, 1},
+		18: {4, 3, 3, 3, 3, 1, 1, 1, 1},
+		19: {4, 3, 3, 3, 3, 2, 1, 1, 1},
+		20: {4, 3, 3, 3, 3, 2, 2, 1, 1},
+	}
+
+	// Half casters (ranger, paladin) get spells at level 2
+	halfCasterSlots := map[int][]int{
+		1:  {0, 0, 0, 0, 0, 0, 0, 0, 0},
+		2:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
+		3:  {3, 0, 0, 0, 0, 0, 0, 0, 0},
+		4:  {3, 0, 0, 0, 0, 0, 0, 0, 0},
+		5:  {4, 2, 0, 0, 0, 0, 0, 0, 0},
+		6:  {4, 2, 0, 0, 0, 0, 0, 0, 0},
+		7:  {4, 3, 0, 0, 0, 0, 0, 0, 0},
+		8:  {4, 3, 0, 0, 0, 0, 0, 0, 0},
+		9:  {4, 3, 2, 0, 0, 0, 0, 0, 0},
+		10: {4, 3, 2, 0, 0, 0, 0, 0, 0},
+		11: {4, 3, 3, 0, 0, 0, 0, 0, 0},
+		12: {4, 3, 3, 0, 0, 0, 0, 0, 0},
+		13: {4, 3, 3, 1, 0, 0, 0, 0, 0},
+		14: {4, 3, 3, 1, 0, 0, 0, 0, 0},
+		15: {4, 3, 3, 2, 0, 0, 0, 0, 0},
+		16: {4, 3, 3, 2, 0, 0, 0, 0, 0},
+		17: {4, 3, 3, 3, 1, 0, 0, 0, 0},
+		18: {4, 3, 3, 3, 1, 0, 0, 0, 0},
+		19: {4, 3, 3, 3, 2, 0, 0, 0, 0},
+		20: {4, 3, 3, 3, 2, 0, 0, 0, 0},
+	}
+
+	// Warlock has unique spell slot progression (Pact Magic)
+	warlockSlots := map[int][]int{
+		1:  {1, 0, 0, 0, 0, 0, 0, 0, 0},
+		2:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
+		3:  {0, 2, 0, 0, 0, 0, 0, 0, 0},
+		4:  {0, 2, 0, 0, 0, 0, 0, 0, 0},
+		5:  {0, 0, 2, 0, 0, 0, 0, 0, 0},
+		6:  {0, 0, 2, 0, 0, 0, 0, 0, 0},
+		7:  {0, 0, 0, 2, 0, 0, 0, 0, 0},
+		8:  {0, 0, 0, 2, 0, 0, 0, 0, 0},
+		9:  {0, 0, 0, 0, 2, 0, 0, 0, 0},
+		10: {0, 0, 0, 0, 2, 0, 0, 0, 0},
+		11: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		12: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		13: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		14: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		15: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		16: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		17: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+		18: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+		19: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+		20: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+	}
+
+	var slotsTable map[int][]int
+	switch strings.ToLower(class) {
+	case "wizard", "cleric", "druid", "bard", "sorcerer":
+		slotsTable = fullCasterSlots
+	case "ranger", "paladin":
+		slotsTable = halfCasterSlots
+	case "warlock":
+		slotsTable = warlockSlots
+	default:
+		// Non-casters have no spell slots
+		return []models.SpellSlot{}
+	}
+
+	slots := []models.SpellSlot{}
+	if slotCounts, ok := slotsTable[level]; ok {
+		for i, count := range slotCounts {
+			if count > 0 {
+				slots = append(slots, models.SpellSlot{
+					Level:     i + 1,
+					Total:     count,
+					Remaining: count,
+				})
+			}
+		}
+	}
+
+	return slots
 }
