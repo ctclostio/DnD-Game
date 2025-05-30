@@ -1,0 +1,10 @@
+-- Drop all world building tables
+DROP TABLE IF EXISTS ancient_sites CASCADE;
+DROP TABLE IF EXISTS trade_routes CASCADE;
+DROP TABLE IF EXISTS markets CASCADE;
+DROP TABLE IF EXISTS world_events CASCADE;
+DROP TABLE IF EXISTS faction_members CASCADE;
+DROP TABLE IF EXISTS factions CASCADE;
+DROP TABLE IF EXISTS settlement_shops CASCADE;
+DROP TABLE IF EXISTS settlement_npcs CASCADE;
+DROP TABLE IF EXISTS settlements CASCADE;

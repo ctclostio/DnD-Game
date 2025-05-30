@@ -20,6 +20,10 @@ type Services struct {
 	Campaign         *CampaignService
 	CombatAutomation *CombatAutomationService
 	CombatAnalytics  *CombatAnalyticsService
+	SettlementGen    *SettlementGeneratorService
+	FactionSystem    *FactionSystemService
+	WorldEventEngine *WorldEventEngineService
+	EconomicSim      *EconomicSimulatorService
 	JWTManager       *auth.JWTManager
 	RefreshTokens    *RefreshTokenService
 	Config           *config.Config

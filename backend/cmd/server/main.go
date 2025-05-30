@@ -99,6 +99,15 @@ func main() {
 	
 	// Create combat analytics service
 	combatAnalyticsService := services.NewCombatAnalyticsService(repos.CombatAnalytics, combatService)
+	
+	// Create world building repository
+	worldBuildingRepo := database.NewWorldBuildingRepository(db.StdDB())
+	
+	// Create world building services
+	settlementGenerator := services.NewSettlementGeneratorService(llmProvider, worldBuildingRepo)
+	factionSystem := services.NewFactionSystemService(llmProvider, worldBuildingRepo)
+	worldEventEngine := services.NewWorldEventEngineService(llmProvider, worldBuildingRepo, factionSystem)
+	economicSimulator := services.NewEconomicSimulatorService(worldBuildingRepo)
 
 	svc := &services.Services{
 		Users:            services.NewUserService(repos.Users),
@@ -114,6 +123,10 @@ func main() {
 		Campaign:         campaignService,
 		CombatAutomation: combatAutomationService,
 		CombatAnalytics:  combatAnalyticsService,
+		SettlementGen:    settlementGenerator,
+		FactionSystem:    factionSystem,
+		WorldEventEngine: worldEventEngine,
+		EconomicSim:      economicSimulator,
 		JWTManager:       jwtManager,
 		RefreshTokens:    refreshTokenService,
 		Config:           cfg,
@@ -141,6 +154,15 @@ func main() {
 		svc.Characters,
 		svc.GameSessions,
 		aiBattleMapGenerator,
+	)
+	
+	// Create world building handler
+	worldBuildingHandler := handlers.NewWorldBuildingHandlers(
+		svc.SettlementGen,
+		svc.FactionSystem,
+		svc.WorldEventEngine,
+		svc.EconomicSim,
+		worldBuildingRepo,
 	)
 
 	// Create authentication middleware
@@ -316,6 +338,29 @@ func main() {
 	// Combat Analytics
 	api.HandleFunc("/combat/{combatId}/analytics", authMiddleware.Authenticate(combatAutomationHandler.GetCombatAnalytics)).Methods("GET")
 	api.HandleFunc("/sessions/{sessionId}/combat-history", authMiddleware.Authenticate(combatAutomationHandler.GetSessionCombatHistory)).Methods("GET")
+	
+	// World Building routes
+	// Settlement routes
+	api.HandleFunc("/sessions/{sessionId}/settlements/generate", authMiddleware.RequireDM()(worldBuildingHandler.GenerateSettlement)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/settlements", authMiddleware.Authenticate(worldBuildingHandler.GetSettlements)).Methods("GET")
+	api.HandleFunc("/settlements/{settlementId}", authMiddleware.Authenticate(worldBuildingHandler.GetSettlement)).Methods("GET")
+	api.HandleFunc("/settlements/{settlementId}/market", authMiddleware.Authenticate(worldBuildingHandler.GetSettlementMarket)).Methods("GET")
+	api.HandleFunc("/settlements/{settlementId}/calculate-price", authMiddleware.Authenticate(worldBuildingHandler.CalculateItemPrice)).Methods("POST")
+	
+	// Faction routes
+	api.HandleFunc("/sessions/{sessionId}/factions", authMiddleware.RequireDM()(worldBuildingHandler.CreateFaction)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/factions", authMiddleware.Authenticate(worldBuildingHandler.GetFactions)).Methods("GET")
+	api.HandleFunc("/factions/{faction1Id}/relationships/{faction2Id}", authMiddleware.RequireDM()(worldBuildingHandler.UpdateFactionRelationship)).Methods("PUT")
+	api.HandleFunc("/sessions/{sessionId}/factions/simulate-conflicts", authMiddleware.RequireDM()(worldBuildingHandler.SimulateFactionConflicts)).Methods("POST")
+	
+	// World Event routes
+	api.HandleFunc("/sessions/{sessionId}/world-events", authMiddleware.RequireDM()(worldBuildingHandler.CreateWorldEvent)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/world-events/active", authMiddleware.Authenticate(worldBuildingHandler.GetActiveWorldEvents)).Methods("GET")
+	api.HandleFunc("/sessions/{sessionId}/world-events/progress", authMiddleware.RequireDM()(worldBuildingHandler.ProgressWorldEvents)).Methods("POST")
+	
+	// Trade Route and Economic routes
+	api.HandleFunc("/trade-routes", authMiddleware.RequireDM()(worldBuildingHandler.CreateTradeRoute)).Methods("POST")
+	api.HandleFunc("/sessions/{sessionId}/economy/simulate", authMiddleware.RequireDM()(worldBuildingHandler.SimulateEconomics)).Methods("POST")
 
 	// Initialize WebSocket with JWT manager
 	websocket.SetJWTManager(jwtManager)

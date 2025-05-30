@@ -118,4 +118,5 @@ type Repositories struct {
 	Encounters       *EncounterRepository
 	Campaign         CampaignRepository
 	CombatAnalytics  CombatAnalyticsRepository
+	WorldBuilding    *WorldBuildingRepository
 }
