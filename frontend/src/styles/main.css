@@ -1,2 +1,5 @@
 /* Import the main styles from public folder */
 @import '../../public/styles.css';
+
+/* Import loading styles */
+@import './loading.css';
