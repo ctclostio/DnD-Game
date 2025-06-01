@@ -1,5 +1,6 @@
 import './styles/main.css';
 import './styles/encounter-builder.css';
+import './styles/rule-builder.css';
 import { CharacterView } from './components/CharacterView.js';
 import { CharacterBuilderView } from './components/CharacterBuilderView.js';
 import { DiceRollerView } from './components/DiceRollerView.js';

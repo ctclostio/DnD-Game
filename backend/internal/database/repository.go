@@ -120,4 +120,5 @@ type Repositories struct {
 	CombatAnalytics  CombatAnalyticsRepository
 	WorldBuilding    *WorldBuildingRepository
 	Narrative        *NarrativeRepository
+	RuleBuilder      *RuleBuilderRepository
 }

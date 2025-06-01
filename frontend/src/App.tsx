@@ -14,6 +14,7 @@ const GameSession = lazy(() => import('./pages/GameSession'));
 const CombatView = lazy(() => import('./pages/Combat'));
 const WorldBuilder = lazy(() => import('./pages/WorldBuilder'));
 const DMTools = lazy(() => import('./pages/DMTools'));
+const RuleBuilder = lazy(() => import('./components/RuleBuilder'));
 
 const App: React.FC = () => {
   return (
@@ -32,6 +33,7 @@ const App: React.FC = () => {
             <Route path="/combat/:sessionId" element={<CombatView />} />
             <Route path="/world-builder" element={<WorldBuilder />} />
             <Route path="/dm-tools" element={<DMTools />} />
+            <Route path="/dm-tools/rule-builder" element={<RuleBuilder />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Route>

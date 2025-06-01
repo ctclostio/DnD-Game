@@ -71,6 +71,7 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 		CombatAnalytics: NewCombatAnalyticsRepository(db.DB),
 		WorldBuilding:   NewWorldBuildingRepository(db.DB),
 		Narrative:       NewNarrativeRepository(db.DB),
+		RuleBuilder:     NewRuleBuilderRepository(db.StdDB()),
 	}
 
 	return db, repos, nil

@@ -21,6 +21,9 @@ type Handlers struct {
 	encounterService    *services.EncounterService
 	customRaceService   *services.CustomRaceService
 	dmAssistantService  *services.DMAssistantService
+	ruleEngine          *services.RuleEngine
+	balanceAnalyzer     *services.AIBalanceAnalyzer
+	conditionalReality  *services.ConditionalRealitySystem
 	jwtManager          *auth.JWTManager
 	refreshTokenService *services.RefreshTokenService
 	websocketHub        *websocket.Hub
@@ -39,6 +42,9 @@ func NewHandlers(svc *services.Services, hub *websocket.Hub) *Handlers {
 		encounterService:    svc.Encounters,
 		customRaceService:   svc.CustomRaces,
 		dmAssistantService:  svc.DMAssistant,
+		ruleEngine:          svc.RuleEngine,
+		balanceAnalyzer:     svc.BalanceAnalyzer,
+		conditionalReality:  svc.ConditionalReality,
 		jwtManager:          svc.JWTManager,
 		refreshTokenService: svc.RefreshTokens,
 		websocketHub:        hub,

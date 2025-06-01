@@ -115,28 +115,36 @@ func main() {
 		log.Printf("Failed to create narrative engine: %v", err)
 		// Continue without narrative engine rather than failing completely
 	}
+	
+	// Create rule builder services
+	ruleEngine := services.NewRuleEngine(repos.RuleBuilder, services.NewDiceRollService(repos.DiceRolls))
+	balanceAnalyzer := services.NewAIBalanceAnalyzer(cfg, llmProvider, ruleEngine, combatService)
+	conditionalReality := services.NewConditionalRealitySystem(ruleEngine)
 
 	svc := &services.Services{
-		Users:            services.NewUserService(repos.Users),
-		Characters:       services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
-		GameSessions:     services.NewGameSessionService(repos.GameSessions),
-		DiceRolls:        services.NewDiceRollService(repos.DiceRolls),
-		Combat:           combatService,
-		NPCs:             services.NewNPCService(repos.NPCs),
-		Inventory:        services.NewInventoryService(repos.Inventory, repos.Characters),
-		CustomRaces:      customRaceService,
-		DMAssistant:      dmAssistantService,
-		Encounters:       encounterService,
-		Campaign:         campaignService,
-		CombatAutomation: combatAutomationService,
-		CombatAnalytics:  combatAnalyticsService,
-		SettlementGen:    settlementGenerator,
-		FactionSystem:    factionSystem,
-		WorldEventEngine: worldEventEngine,
-		EconomicSim:      economicSimulator,
-		JWTManager:       jwtManager,
-		RefreshTokens:    refreshTokenService,
-		Config:           cfg,
+		Users:              services.NewUserService(repos.Users),
+		Characters:         services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
+		GameSessions:       services.NewGameSessionService(repos.GameSessions),
+		DiceRolls:          services.NewDiceRollService(repos.DiceRolls),
+		Combat:             combatService,
+		NPCs:               services.NewNPCService(repos.NPCs),
+		Inventory:          services.NewInventoryService(repos.Inventory, repos.Characters),
+		CustomRaces:        customRaceService,
+		DMAssistant:        dmAssistantService,
+		Encounters:         encounterService,
+		Campaign:           campaignService,
+		CombatAutomation:   combatAutomationService,
+		CombatAnalytics:    combatAnalyticsService,
+		SettlementGen:      settlementGenerator,
+		FactionSystem:      factionSystem,
+		WorldEventEngine:   worldEventEngine,
+		EconomicSim:        economicSimulator,
+		RuleEngine:         ruleEngine,
+		BalanceAnalyzer:    balanceAnalyzer,
+		ConditionalReality: conditionalReality,
+		JWTManager:         jwtManager,
+		RefreshTokens:      refreshTokenService,
+		Config:             cfg,
 	}
 
 	// Get websocket hub
@@ -379,6 +387,34 @@ func main() {
 	// Trade Route and Economic routes
 	api.HandleFunc("/trade-routes", authMiddleware.RequireDM()(worldBuildingHandler.CreateTradeRoute)).Methods("POST")
 	api.HandleFunc("/sessions/{sessionId}/economy/simulate", authMiddleware.RequireDM()(worldBuildingHandler.SimulateEconomics)).Methods("POST")
+	
+	// Rule Builder routes (protected)
+	// Rule Template routes
+	api.HandleFunc("/rules/templates", authMiddleware.Authenticate(h.GetRuleTemplates)).Methods("GET")
+	api.HandleFunc("/rules/templates", authMiddleware.RequireDM()(h.CreateRuleTemplate)).Methods("POST")
+	api.HandleFunc("/rules/templates/{id}", authMiddleware.Authenticate(h.GetRuleTemplate)).Methods("GET")
+	api.HandleFunc("/rules/templates/{id}", authMiddleware.RequireDM()(h.UpdateRuleTemplate)).Methods("PUT")
+	api.HandleFunc("/rules/templates/{id}", authMiddleware.RequireDM()(h.DeleteRuleTemplate)).Methods("DELETE")
+	api.HandleFunc("/rules/templates/{id}/compile", authMiddleware.Authenticate(h.CompileRuleTemplate)).Methods("POST")
+	api.HandleFunc("/rules/templates/{id}/validate", authMiddleware.Authenticate(h.ValidateRuleTemplate)).Methods("POST")
+	api.HandleFunc("/rules/templates/{id}/analyze", authMiddleware.Authenticate(h.AnalyzeRuleBalance)).Methods("POST")
+	api.HandleFunc("/rules/templates/{id}/export", authMiddleware.Authenticate(h.ExportRuleTemplate)).Methods("GET")
+	api.HandleFunc("/rules/templates/import", authMiddleware.RequireDM()(h.ImportRuleTemplate)).Methods("POST")
+	
+	// Node Template routes
+	api.HandleFunc("/rules/nodes/templates", authMiddleware.Authenticate(h.GetNodeTemplates)).Methods("GET")
+	
+	// Active Rule routes
+	api.HandleFunc("/rules/active", authMiddleware.Authenticate(h.GetActiveRules)).Methods("GET")
+	api.HandleFunc("/rules/activate", authMiddleware.Authenticate(h.ActivateRule)).Methods("POST")
+	api.HandleFunc("/rules/active/{id}", authMiddleware.Authenticate(h.DeactivateRule)).Methods("DELETE")
+	api.HandleFunc("/rules/execute", authMiddleware.Authenticate(h.ExecuteRule)).Methods("POST")
+	
+	// Conditional Reality routes
+	api.HandleFunc("/rules/conditional/{id}", authMiddleware.Authenticate(h.GetConditionalModifiers)).Methods("GET")
+	
+	// Rule History routes
+	api.HandleFunc("/rules/history", authMiddleware.Authenticate(h.GetRuleHistory)).Methods("GET")
 	
 	// Register narrative routes if available
 	if narrativeHandler != nil {
