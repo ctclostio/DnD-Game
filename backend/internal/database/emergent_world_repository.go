@@ -1,0 +1,904 @@
+package database
+
+import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"github.com/your-username/dnd-game/backend/internal/models"
+)
+
+// EmergentWorldRepository handles database operations for the emergent world system
+type EmergentWorldRepository struct {
+	db *sql.DB
+}
+
+// NewEmergentWorldRepository creates a new emergent world repository
+func NewEmergentWorldRepository(db *sql.DB) *EmergentWorldRepository {
+	return &EmergentWorldRepository{db: db}
+}
+
+// World State Methods
+
+// GetWorldState retrieves the current world state for a session
+func (r *EmergentWorldRepository) GetWorldState(sessionID string) (*models.WorldState, error) {
+	query := `
+		SELECT id, session_id, current_time, last_simulated, world_data, 
+		       is_active, created_at, updated_at
+		FROM world_states
+		WHERE session_id = $1 AND is_active = true
+		LIMIT 1
+	`
+
+	var state models.WorldState
+	var worldDataJSON []byte
+
+	err := r.db.QueryRow(query, sessionID).Scan(
+		&state.ID,
+		&state.SessionID,
+		&state.CurrentTime,
+		&state.LastSimulated,
+		&worldDataJSON,
+		&state.IsActive,
+		&state.CreatedAt,
+		&state.UpdatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		// Create new world state if none exists
+		return r.createWorldState(sessionID)
+	} else if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(worldDataJSON, &state.WorldData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal world data: %w", err)
+	}
+
+	return &state, nil
+}
+
+// createWorldState creates a new world state
+func (r *EmergentWorldRepository) createWorldState(sessionID string) (*models.WorldState, error) {
+	state := &models.WorldState{
+		ID:            generateUUID(),
+		SessionID:     sessionID,
+		CurrentTime:   time.Now(),
+		LastSimulated: time.Now(),
+		WorldData:     make(map[string]interface{}),
+		IsActive:      true,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
+	worldDataJSON, _ := json.Marshal(state.WorldData)
+
+	query := `
+		INSERT INTO world_states (
+			id, session_id, current_time, last_simulated, 
+			world_data, is_active, created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	`
+
+	_, err := r.db.Exec(query,
+		state.ID,
+		state.SessionID,
+		state.CurrentTime,
+		state.LastSimulated,
+		worldDataJSON,
+		state.IsActive,
+		state.CreatedAt,
+		state.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return state, nil
+}
+
+// UpdateWorldState updates an existing world state
+func (r *EmergentWorldRepository) UpdateWorldState(state *models.WorldState) error {
+	worldDataJSON, err := json.Marshal(state.WorldData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal world data: %w", err)
+	}
+
+	state.UpdatedAt = time.Now()
+
+	query := `
+		UPDATE world_states
+		SET current_time = $2, last_simulated = $3, world_data = $4, 
+		    updated_at = $5
+		WHERE id = $1
+	`
+
+	_, err = r.db.Exec(query,
+		state.ID,
+		state.CurrentTime,
+		state.LastSimulated,
+		worldDataJSON,
+		state.UpdatedAt,
+	)
+
+	return err
+}
+
+// NPC Goal Methods
+
+// CreateNPCGoal creates a new NPC goal
+func (r *EmergentWorldRepository) CreateNPCGoal(goal *models.NPCGoal) error {
+	parametersJSON, err := json.Marshal(goal.Parameters)
+	if err != nil {
+		return fmt.Errorf("failed to marshal parameters: %w", err)
+	}
+
+	query := `
+		INSERT INTO npc_goals (
+			id, npc_id, goal_type, priority, description,
+			progress, parameters, status, started_at, completed_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	`
+
+	_, err = r.db.Exec(query,
+		goal.ID,
+		goal.NPCID,
+		goal.GoalType,
+		goal.Priority,
+		goal.Description,
+		goal.Progress,
+		parametersJSON,
+		goal.Status,
+		goal.StartedAt,
+		goal.CompletedAt,
+	)
+
+	return err
+}
+
+// GetNPCGoals retrieves all goals for an NPC
+func (r *EmergentWorldRepository) GetNPCGoals(npcID string) ([]models.NPCGoal, error) {
+	query := `
+		SELECT id, npc_id, goal_type, priority, description,
+		       progress, parameters, status, started_at, completed_at
+		FROM npc_goals
+		WHERE npc_id = $1
+		ORDER BY priority DESC, started_at DESC
+	`
+
+	rows, err := r.db.Query(query, npcID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var goals []models.NPCGoal
+	for rows.Next() {
+		var goal models.NPCGoal
+		var parametersJSON []byte
+
+		err := rows.Scan(
+			&goal.ID,
+			&goal.NPCID,
+			&goal.GoalType,
+			&goal.Priority,
+			&goal.Description,
+			&goal.Progress,
+			&parametersJSON,
+			&goal.Status,
+			&goal.StartedAt,
+			&goal.CompletedAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(parametersJSON, &goal.Parameters); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal parameters: %w", err)
+		}
+
+		goals = append(goals, goal)
+	}
+
+	return goals, nil
+}
+
+// UpdateNPCGoal updates an existing NPC goal
+func (r *EmergentWorldRepository) UpdateNPCGoal(goal *models.NPCGoal) error {
+	parametersJSON, err := json.Marshal(goal.Parameters)
+	if err != nil {
+		return fmt.Errorf("failed to marshal parameters: %w", err)
+	}
+
+	query := `
+		UPDATE npc_goals
+		SET goal_type = $2, priority = $3, description = $4,
+		    progress = $5, parameters = $6, status = $7, completed_at = $8
+		WHERE id = $1
+	`
+
+	_, err = r.db.Exec(query,
+		goal.ID,
+		goal.GoalType,
+		goal.Priority,
+		goal.Description,
+		goal.Progress,
+		parametersJSON,
+		goal.Status,
+		goal.CompletedAt,
+	)
+
+	return err
+}
+
+// NPC Schedule Methods
+
+// CreateNPCSchedule creates a new NPC schedule entry
+func (r *EmergentWorldRepository) CreateNPCSchedule(schedule *models.NPCSchedule) error {
+	parametersJSON, err := json.Marshal(schedule.Parameters)
+	if err != nil {
+		return fmt.Errorf("failed to marshal parameters: %w", err)
+	}
+
+	query := `
+		INSERT INTO npc_schedules (
+			id, npc_id, time_of_day, activity, location, parameters
+		) VALUES ($1, $2, $3, $4, $5, $6)
+	`
+
+	_, err = r.db.Exec(query,
+		schedule.ID,
+		schedule.NPCID,
+		schedule.TimeOfDay,
+		schedule.Activity,
+		schedule.Location,
+		parametersJSON,
+	)
+
+	return err
+}
+
+// GetNPCSchedule retrieves the schedule for an NPC
+func (r *EmergentWorldRepository) GetNPCSchedule(npcID string) ([]models.NPCSchedule, error) {
+	query := `
+		SELECT id, npc_id, time_of_day, activity, location, parameters
+		FROM npc_schedules
+		WHERE npc_id = $1
+		ORDER BY 
+			CASE time_of_day
+				WHEN 'morning' THEN 1
+				WHEN 'afternoon' THEN 2
+				WHEN 'evening' THEN 3
+				WHEN 'night' THEN 4
+			END
+	`
+
+	rows, err := r.db.Query(query, npcID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var schedules []models.NPCSchedule
+	for rows.Next() {
+		var schedule models.NPCSchedule
+		var parametersJSON []byte
+
+		err := rows.Scan(
+			&schedule.ID,
+			&schedule.NPCID,
+			&schedule.TimeOfDay,
+			&schedule.Activity,
+			&schedule.Location,
+			&parametersJSON,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(parametersJSON, &schedule.Parameters); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal parameters: %w", err)
+		}
+
+		schedules = append(schedules, schedule)
+	}
+
+	return schedules, nil
+}
+
+// Faction Personality Methods
+
+// CreateFactionPersonality creates a new faction personality
+func (r *EmergentWorldRepository) CreateFactionPersonality(personality *models.FactionPersonality) error {
+	traitsJSON, _ := json.Marshal(personality.Traits)
+	valuesJSON, _ := json.Marshal(personality.Values)
+	memoriesJSON, _ := json.Marshal(personality.Memories)
+	decisionWeightsJSON, _ := json.Marshal(personality.DecisionWeights)
+	learningDataJSON, _ := json.Marshal(personality.LearningData)
+
+	query := `
+		INSERT INTO faction_personalities (
+			id, faction_id, traits, values, memories,
+			current_mood, decision_weights, learning_data, last_learning_time
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	`
+
+	_, err := r.db.Exec(query,
+		personality.ID,
+		personality.FactionID,
+		traitsJSON,
+		valuesJSON,
+		memoriesJSON,
+		personality.CurrentMood,
+		decisionWeightsJSON,
+		learningDataJSON,
+		personality.LastLearningTime,
+	)
+
+	return err
+}
+
+// GetFactionPersonality retrieves a faction's personality
+func (r *EmergentWorldRepository) GetFactionPersonality(factionID string) (*models.FactionPersonality, error) {
+	query := `
+		SELECT id, faction_id, traits, values, memories,
+		       current_mood, decision_weights, learning_data, last_learning_time
+		FROM faction_personalities
+		WHERE faction_id = $1
+		LIMIT 1
+	`
+
+	var personality models.FactionPersonality
+	var traitsJSON, valuesJSON, memoriesJSON, decisionWeightsJSON, learningDataJSON []byte
+
+	err := r.db.QueryRow(query, factionID).Scan(
+		&personality.ID,
+		&personality.FactionID,
+		&traitsJSON,
+		&valuesJSON,
+		&memoriesJSON,
+		&personality.CurrentMood,
+		&decisionWeightsJSON,
+		&learningDataJSON,
+		&personality.LastLearningTime,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal JSON fields
+	json.Unmarshal(traitsJSON, &personality.Traits)
+	json.Unmarshal(valuesJSON, &personality.Values)
+	json.Unmarshal(memoriesJSON, &personality.Memories)
+	json.Unmarshal(decisionWeightsJSON, &personality.DecisionWeights)
+	json.Unmarshal(learningDataJSON, &personality.LearningData)
+
+	return &personality, nil
+}
+
+// UpdateFactionPersonality updates a faction personality
+func (r *EmergentWorldRepository) UpdateFactionPersonality(personality *models.FactionPersonality) error {
+	traitsJSON, _ := json.Marshal(personality.Traits)
+	valuesJSON, _ := json.Marshal(personality.Values)
+	memoriesJSON, _ := json.Marshal(personality.Memories)
+	decisionWeightsJSON, _ := json.Marshal(personality.DecisionWeights)
+	learningDataJSON, _ := json.Marshal(personality.LearningData)
+
+	query := `
+		UPDATE faction_personalities
+		SET traits = $2, values = $3, memories = $4,
+		    current_mood = $5, decision_weights = $6, 
+		    learning_data = $7, last_learning_time = $8
+		WHERE id = $1
+	`
+
+	_, err := r.db.Exec(query,
+		personality.ID,
+		traitsJSON,
+		valuesJSON,
+		memoriesJSON,
+		personality.CurrentMood,
+		decisionWeightsJSON,
+		learningDataJSON,
+		personality.LastLearningTime,
+	)
+
+	return err
+}
+
+// Faction Agenda Methods
+
+// CreateFactionAgenda creates a new faction agenda
+func (r *EmergentWorldRepository) CreateFactionAgenda(agenda *models.FactionAgenda) error {
+	stagesJSON, _ := json.Marshal(agenda.Stages)
+	parametersJSON, _ := json.Marshal(agenda.Parameters)
+
+	query := `
+		INSERT INTO faction_agendas (
+			id, faction_id, agenda_type, title, description,
+			priority, stages, progress, status, parameters, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+	`
+
+	_, err := r.db.Exec(query,
+		agenda.ID,
+		agenda.FactionID,
+		agenda.AgendaType,
+		agenda.Title,
+		agenda.Description,
+		agenda.Priority,
+		stagesJSON,
+		agenda.Progress,
+		agenda.Status,
+		parametersJSON,
+		agenda.CreatedAt,
+	)
+
+	return err
+}
+
+// GetFactionAgendas retrieves all agendas for a faction
+func (r *EmergentWorldRepository) GetFactionAgendas(factionID string) ([]models.FactionAgenda, error) {
+	query := `
+		SELECT id, faction_id, agenda_type, title, description,
+		       priority, stages, progress, status, parameters, created_at
+		FROM faction_agendas
+		WHERE faction_id = $1
+		ORDER BY priority DESC, created_at DESC
+	`
+
+	rows, err := r.db.Query(query, factionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var agendas []models.FactionAgenda
+	for rows.Next() {
+		var agenda models.FactionAgenda
+		var stagesJSON, parametersJSON []byte
+
+		err := rows.Scan(
+			&agenda.ID,
+			&agenda.FactionID,
+			&agenda.AgendaType,
+			&agenda.Title,
+			&agenda.Description,
+			&agenda.Priority,
+			&stagesJSON,
+			&agenda.Progress,
+			&agenda.Status,
+			&parametersJSON,
+			&agenda.CreatedAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		json.Unmarshal(stagesJSON, &agenda.Stages)
+		json.Unmarshal(parametersJSON, &agenda.Parameters)
+
+		agendas = append(agendas, agenda)
+	}
+
+	return agendas, nil
+}
+
+// UpdateFactionAgenda updates a faction agenda
+func (r *EmergentWorldRepository) UpdateFactionAgenda(agenda *models.FactionAgenda) error {
+	stagesJSON, _ := json.Marshal(agenda.Stages)
+	parametersJSON, _ := json.Marshal(agenda.Parameters)
+
+	query := `
+		UPDATE faction_agendas
+		SET agenda_type = $2, title = $3, description = $4,
+		    priority = $5, stages = $6, progress = $7,
+		    status = $8, parameters = $9
+		WHERE id = $1
+	`
+
+	_, err := r.db.Exec(query,
+		agenda.ID,
+		agenda.AgendaType,
+		agenda.Title,
+		agenda.Description,
+		agenda.Priority,
+		stagesJSON,
+		agenda.Progress,
+		agenda.Status,
+		parametersJSON,
+	)
+
+	return err
+}
+
+// Culture Methods
+
+// CreateCulture creates a new procedural culture
+func (r *EmergentWorldRepository) CreateCulture(culture *models.ProceduralCulture) error {
+	languageJSON, _ := json.Marshal(culture.Language)
+	customsJSON, _ := json.Marshal(culture.Customs)
+	artStyleJSON, _ := json.Marshal(culture.ArtStyle)
+	beliefSystemJSON, _ := json.Marshal(culture.BeliefSystem)
+	valuesJSON, _ := json.Marshal(culture.Values)
+	taboosJSON, _ := json.Marshal(culture.Taboos)
+	greetingsJSON, _ := json.Marshal(culture.Greetings)
+	architectureJSON, _ := json.Marshal(culture.Architecture)
+	cuisineJSON, _ := json.Marshal(culture.Cuisine)
+	musicStyleJSON, _ := json.Marshal(culture.MusicStyle)
+	clothingStyleJSON, _ := json.Marshal(culture.ClothingStyle)
+	namingConventionsJSON, _ := json.Marshal(culture.NamingConventions)
+	socialStructureJSON, _ := json.Marshal(culture.SocialStructure)
+	metadataJSON, _ := json.Marshal(culture.Metadata)
+
+	query := `
+		INSERT INTO procedural_cultures (
+			id, name, language, customs, art_style, belief_system,
+			values, taboos, greetings, architecture, cuisine,
+			music_style, clothing_style, naming_conventions,
+			social_structure, metadata, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+	`
+
+	_, err := r.db.Exec(query,
+		culture.ID,
+		culture.Name,
+		languageJSON,
+		customsJSON,
+		artStyleJSON,
+		beliefSystemJSON,
+		valuesJSON,
+		taboosJSON,
+		greetingsJSON,
+		architectureJSON,
+		cuisineJSON,
+		musicStyleJSON,
+		clothingStyleJSON,
+		namingConventionsJSON,
+		socialStructureJSON,
+		metadataJSON,
+		culture.CreatedAt,
+	)
+
+	return err
+}
+
+// GetCulture retrieves a culture by ID
+func (r *EmergentWorldRepository) GetCulture(cultureID string) (*models.ProceduralCulture, error) {
+	query := `
+		SELECT id, name, language, customs, art_style, belief_system,
+		       values, taboos, greetings, architecture, cuisine,
+		       music_style, clothing_style, naming_conventions,
+		       social_structure, metadata, created_at
+		FROM procedural_cultures
+		WHERE id = $1
+	`
+
+	var culture models.ProceduralCulture
+	var languageJSON, customsJSON, artStyleJSON, beliefSystemJSON []byte
+	var valuesJSON, taboosJSON, greetingsJSON, architectureJSON []byte
+	var cuisineJSON, musicStyleJSON, clothingStyleJSON []byte
+	var namingConventionsJSON, socialStructureJSON, metadataJSON []byte
+
+	err := r.db.QueryRow(query, cultureID).Scan(
+		&culture.ID,
+		&culture.Name,
+		&languageJSON,
+		&customsJSON,
+		&artStyleJSON,
+		&beliefSystemJSON,
+		&valuesJSON,
+		&taboosJSON,
+		&greetingsJSON,
+		&architectureJSON,
+		&cuisineJSON,
+		&musicStyleJSON,
+		&clothingStyleJSON,
+		&namingConventionsJSON,
+		&socialStructureJSON,
+		&metadataJSON,
+		&culture.CreatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal all JSON fields
+	json.Unmarshal(languageJSON, &culture.Language)
+	json.Unmarshal(customsJSON, &culture.Customs)
+	json.Unmarshal(artStyleJSON, &culture.ArtStyle)
+	json.Unmarshal(beliefSystemJSON, &culture.BeliefSystem)
+	json.Unmarshal(valuesJSON, &culture.Values)
+	json.Unmarshal(taboosJSON, &culture.Taboos)
+	json.Unmarshal(greetingsJSON, &culture.Greetings)
+	json.Unmarshal(architectureJSON, &culture.Architecture)
+	json.Unmarshal(cuisineJSON, &culture.Cuisine)
+	json.Unmarshal(musicStyleJSON, &culture.MusicStyle)
+	json.Unmarshal(clothingStyleJSON, &culture.ClothingStyle)
+	json.Unmarshal(namingConventionsJSON, &culture.NamingConventions)
+	json.Unmarshal(socialStructureJSON, &culture.SocialStructure)
+	json.Unmarshal(metadataJSON, &culture.Metadata)
+
+	return &culture, nil
+}
+
+// GetCulturesBySession retrieves all cultures for a session
+func (r *EmergentWorldRepository) GetCulturesBySession(sessionID string) ([]*models.ProceduralCulture, error) {
+	query := `
+		SELECT id, name, language, customs, art_style, belief_system,
+		       values, taboos, greetings, architecture, cuisine,
+		       music_style, clothing_style, naming_conventions,
+		       social_structure, metadata, created_at
+		FROM procedural_cultures
+		WHERE metadata->>'session_id' = $1
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.db.Query(query, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var cultures []*models.ProceduralCulture
+	for rows.Next() {
+		culture := &models.ProceduralCulture{}
+		var languageJSON, customsJSON, artStyleJSON, beliefSystemJSON []byte
+		var valuesJSON, taboosJSON, greetingsJSON, architectureJSON []byte
+		var cuisineJSON, musicStyleJSON, clothingStyleJSON []byte
+		var namingConventionsJSON, socialStructureJSON, metadataJSON []byte
+
+		err := rows.Scan(
+			&culture.ID,
+			&culture.Name,
+			&languageJSON,
+			&customsJSON,
+			&artStyleJSON,
+			&beliefSystemJSON,
+			&valuesJSON,
+			&taboosJSON,
+			&greetingsJSON,
+			&architectureJSON,
+			&cuisineJSON,
+			&musicStyleJSON,
+			&clothingStyleJSON,
+			&namingConventionsJSON,
+			&socialStructureJSON,
+			&metadataJSON,
+			&culture.CreatedAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		// Unmarshal JSON fields
+		json.Unmarshal(languageJSON, &culture.Language)
+		json.Unmarshal(customsJSON, &culture.Customs)
+		json.Unmarshal(artStyleJSON, &culture.ArtStyle)
+		json.Unmarshal(beliefSystemJSON, &culture.BeliefSystem)
+		json.Unmarshal(valuesJSON, &culture.Values)
+		json.Unmarshal(taboosJSON, &culture.Taboos)
+		json.Unmarshal(greetingsJSON, &culture.Greetings)
+		json.Unmarshal(architectureJSON, &culture.Architecture)
+		json.Unmarshal(cuisineJSON, &culture.Cuisine)
+		json.Unmarshal(musicStyleJSON, &culture.MusicStyle)
+		json.Unmarshal(clothingStyleJSON, &culture.ClothingStyle)
+		json.Unmarshal(namingConventionsJSON, &culture.NamingConventions)
+		json.Unmarshal(socialStructureJSON, &culture.SocialStructure)
+		json.Unmarshal(metadataJSON, &culture.Metadata)
+
+		cultures = append(cultures, culture)
+	}
+
+	return cultures, nil
+}
+
+// UpdateCulture updates a procedural culture
+func (r *EmergentWorldRepository) UpdateCulture(culture *models.ProceduralCulture) error {
+	// Marshal only the fields that might change
+	valuesJSON, _ := json.Marshal(culture.Values)
+	customsJSON, _ := json.Marshal(culture.Customs)
+	socialStructureJSON, _ := json.Marshal(culture.SocialStructure)
+	metadataJSON, _ := json.Marshal(culture.Metadata)
+
+	query := `
+		UPDATE procedural_cultures
+		SET values = $2, customs = $3, social_structure = $4, metadata = $5
+		WHERE id = $1
+	`
+
+	_, err := r.db.Exec(query,
+		culture.ID,
+		valuesJSON,
+		customsJSON,
+		socialStructureJSON,
+		metadataJSON,
+	)
+
+	return err
+}
+
+// World Event Methods
+
+// CreateWorldEvent creates a new world event
+func (r *EmergentWorldRepository) CreateWorldEvent(event *models.WorldEvent) error {
+	impactJSON, _ := json.Marshal(event.Impact)
+	affectedEntitiesJSON, _ := json.Marshal(event.AffectedEntities)
+	consequencesJSON, _ := json.Marshal(event.Consequences)
+
+	query := `
+		INSERT INTO world_events (
+			id, session_id, event_type, title, description,
+			impact, affected_entities, consequences,
+			is_player_visible, occurred_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	`
+
+	_, err := r.db.Exec(query,
+		event.ID,
+		event.SessionID,
+		event.EventType,
+		event.Title,
+		event.Description,
+		impactJSON,
+		affectedEntitiesJSON,
+		consequencesJSON,
+		event.IsPlayerVisible,
+		event.OccurredAt,
+	)
+
+	return err
+}
+
+// GetWorldEvents retrieves world events for a session
+func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, onlyPlayerVisible bool) ([]models.WorldEvent, error) {
+	query := `
+		SELECT id, session_id, event_type, title, description,
+		       impact, affected_entities, consequences,
+		       is_player_visible, occurred_at
+		FROM world_events
+		WHERE session_id = $1
+	`
+
+	args := []interface{}{sessionID}
+
+	if onlyPlayerVisible {
+		query += " AND is_player_visible = true"
+	}
+
+	query += " ORDER BY occurred_at DESC"
+
+	if limit > 0 {
+		query += " LIMIT $2"
+		args = append(args, limit)
+	}
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []models.WorldEvent
+	for rows.Next() {
+		var event models.WorldEvent
+		var impactJSON, affectedEntitiesJSON, consequencesJSON []byte
+
+		err := rows.Scan(
+			&event.ID,
+			&event.SessionID,
+			&event.EventType,
+			&event.Title,
+			&event.Description,
+			&impactJSON,
+			&affectedEntitiesJSON,
+			&consequencesJSON,
+			&event.IsPlayerVisible,
+			&event.OccurredAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		json.Unmarshal(impactJSON, &event.Impact)
+		json.Unmarshal(affectedEntitiesJSON, &event.AffectedEntities)
+		json.Unmarshal(consequencesJSON, &event.Consequences)
+
+		events = append(events, event)
+	}
+
+	return events, nil
+}
+
+// Simulation Log Methods
+
+// CreateSimulationLog creates a new simulation log entry
+func (r *EmergentWorldRepository) CreateSimulationLog(log *models.SimulationLog) error {
+	detailsJSON, _ := json.Marshal(log.Details)
+
+	query := `
+		INSERT INTO simulation_logs (
+			id, session_id, simulation_type, start_time, end_time,
+			events_created, details, success, error_message
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	`
+
+	_, err := r.db.Exec(query,
+		log.ID,
+		log.SessionID,
+		log.SimulationType,
+		log.StartTime,
+		log.EndTime,
+		log.EventsCreated,
+		detailsJSON,
+		log.Success,
+		log.ErrorMessage,
+	)
+
+	return err
+}
+
+// GetSimulationLogs retrieves simulation logs for a session
+func (r *EmergentWorldRepository) GetSimulationLogs(sessionID string, limit int) ([]models.SimulationLog, error) {
+	query := `
+		SELECT id, session_id, simulation_type, start_time, end_time,
+		       events_created, details, success, error_message
+		FROM simulation_logs
+		WHERE session_id = $1
+		ORDER BY start_time DESC
+	`
+
+	args := []interface{}{sessionID}
+
+	if limit > 0 {
+		query += " LIMIT $2"
+		args = append(args, limit)
+	}
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var logs []models.SimulationLog
+	for rows.Next() {
+		var log models.SimulationLog
+		var detailsJSON []byte
+
+		err := rows.Scan(
+			&log.ID,
+			&log.SessionID,
+			&log.SimulationType,
+			&log.StartTime,
+			&log.EndTime,
+			&log.EventsCreated,
+			&detailsJSON,
+			&log.Success,
+			&log.ErrorMessage,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		json.Unmarshal(detailsJSON, &log.Details)
+		logs = append(logs, log)
+	}
+
+	return logs, nil
+}
+
+// Helper function to generate UUID
+func generateUUID() string {
+	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), rand.Int63())
+}
