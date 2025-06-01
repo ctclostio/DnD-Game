@@ -108,6 +108,13 @@ func main() {
 	factionSystem := services.NewFactionSystemService(llmProvider, worldBuildingRepo)
 	worldEventEngine := services.NewWorldEventEngineService(llmProvider, worldBuildingRepo, factionSystem)
 	economicSimulator := services.NewEconomicSimulatorService(worldBuildingRepo)
+	
+	// Create narrative engine
+	narrativeEngine, err := services.NewNarrativeEngine(cfg)
+	if err != nil {
+		log.Printf("Failed to create narrative engine: %v", err)
+		// Continue without narrative engine rather than failing completely
+	}
 
 	svc := &services.Services{
 		Users:            services.NewUserService(repos.Users),
@@ -164,6 +171,17 @@ func main() {
 		svc.EconomicSim,
 		worldBuildingRepo,
 	)
+	
+	// Create narrative handler
+	var narrativeHandler *handlers.NarrativeHandlers
+	if narrativeEngine != nil {
+		narrativeHandler = handlers.NewNarrativeHandlers(
+			narrativeEngine,
+			repos.Narrative,
+			repos.Characters,
+			repos.GameSessions,
+		)
+	}
 
 	// Create authentication middleware
 	authMiddleware := auth.NewMiddleware(jwtManager)
@@ -361,6 +379,11 @@ func main() {
 	// Trade Route and Economic routes
 	api.HandleFunc("/trade-routes", authMiddleware.RequireDM()(worldBuildingHandler.CreateTradeRoute)).Methods("POST")
 	api.HandleFunc("/sessions/{sessionId}/economy/simulate", authMiddleware.RequireDM()(worldBuildingHandler.SimulateEconomics)).Methods("POST")
+	
+	// Register narrative routes if available
+	if narrativeHandler != nil {
+		narrativeHandler.RegisterRoutes(api, authMiddleware.Authenticate)
+	}
 
 	// Initialize WebSocket with JWT manager
 	websocket.SetJWTManager(jwtManager)
