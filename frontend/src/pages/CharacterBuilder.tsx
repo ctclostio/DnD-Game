@@ -1,12 +1,8 @@
 import React from 'react';
+import { CharacterBuilder } from '../components/CharacterBuilder';
 
-const CharacterBuilder: React.FC = () => {
-  return (
-    <div className="character-builder">
-      <h1>Character Builder</h1>
-      <p>Character creation will be implemented here.</p>
-    </div>
-  );
+const CharacterBuilderPage: React.FC = () => {
+  return <CharacterBuilder />;
 };
 
-export default CharacterBuilder;
+export default CharacterBuilderPage;

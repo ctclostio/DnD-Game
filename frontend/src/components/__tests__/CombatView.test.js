@@ -1,0 +1,684 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Provider } from 'react-redux';
+import configureStore from 'redux-mock-store';
+import CombatView from '../CombatView';
+import * as api from '../../services/api';
+import { WebSocketService } from '../../services/websocket';
+
+// Mock dependencies
+jest.mock('../../services/api');
+jest.mock('../../services/websocket');
+
+const mockStore = configureStore([]);
+
+describe('CombatView', () => {
+  let store;
+  let mockWebSocket;
+
+  const initialState = {
+    auth: {
+      user: {
+        id: 'user-123',
+        username: 'TestDM',
+      },
+    },
+    gameSession: {
+      currentSession: {
+        id: 'session-123',
+        name: 'Test Campaign',
+        dmId: 'user-123',
+        participants: [
+          { userId: 'user-123', characterId: 'char-1', role: 'dm' },
+          { userId: 'user-456', characterId: 'char-2', role: 'player' },
+        ],
+      },
+    },
+    combat: {
+      active: false,
+      combatants: [],
+      currentTurn: 0,
+      round: 1,
+    },
+  };
+
+  const mockCharacters = [
+    {
+      id: 'char-1',
+      name: 'Thorin',
+      class: 'Fighter',
+      level: 5,
+      hitPoints: 44,
+      maxHitPoints: 44,
+      armorClass: 18,
+      initiative: 0,
+      speed: 25,
+      conditions: [],
+    },
+    {
+      id: 'char-2',
+      name: 'Gandalf',
+      class: 'Wizard',
+      level: 5,
+      hitPoints: 22,
+      maxHitPoints: 22,
+      armorClass: 12,
+      initiative: 0,
+      speed: 30,
+      conditions: [],
+    },
+  ];
+
+  const mockNPCs = [
+    {
+      id: 'npc-1',
+      name: 'Goblin',
+      type: 'Monster',
+      hitPoints: 7,
+      maxHitPoints: 7,
+      armorClass: 15,
+      initiative: 0,
+      speed: 30,
+      challengeRating: 0.25,
+      conditions: [],
+    },
+    {
+      id: 'npc-2',
+      name: 'Goblin Boss',
+      type: 'Monster',
+      hitPoints: 21,
+      maxHitPoints: 21,
+      armorClass: 17,
+      initiative: 0,
+      speed: 30,
+      challengeRating: 1,
+      conditions: [],
+    },
+  ];
+
+  beforeEach(() => {
+    store = mockStore(initialState);
+
+    mockWebSocket = {
+      send: jest.fn(),
+      on: jest.fn(),
+      off: jest.fn(),
+      connect: jest.fn(),
+      disconnect: jest.fn(),
+    };
+
+    WebSocketService.mockImplementation(() => mockWebSocket);
+
+    api.getSessionCharacters = jest.fn().mockResolvedValue(mockCharacters);
+    api.getSessionNPCs = jest.fn().mockResolvedValue(mockNPCs);
+    api.rollDice = jest.fn().mockResolvedValue({ result: 15, rolls: [15], modifier: 0 });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const renderComponent = () => {
+    return render(
+      <Provider store={store}>
+        <CombatView />
+      </Provider>
+    );
+  };
+
+  describe('Combat Initialization', () => {
+    it('should display combat controls when not in combat', () => {
+      renderComponent();
+
+      expect(screen.getByText('Start Combat')).toBeInTheDocument();
+      expect(screen.getByText('Add Combatants')).toBeInTheDocument();
+    });
+
+    it('should load characters and NPCs on mount', async () => {
+      renderComponent();
+
+      await waitFor(() => {
+        expect(api.getSessionCharacters).toHaveBeenCalledWith('session-123');
+        expect(api.getSessionNPCs).toHaveBeenCalledWith('session-123');
+      });
+    });
+
+    it('should display available combatants', async () => {
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText('Thorin')).toBeInTheDocument();
+        expect(screen.getByText('Gandalf')).toBeInTheDocument();
+        expect(screen.getByText('Goblin')).toBeInTheDocument();
+        expect(screen.getByText('Goblin Boss')).toBeInTheDocument();
+      });
+    });
+
+    it('should add combatants to combat', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText('Thorin')).toBeInTheDocument();
+      });
+
+      // Select combatants
+      await user.click(screen.getByTestId('select-char-1'));
+      await user.click(screen.getByTestId('select-char-2'));
+      await user.click(screen.getByTestId('select-npc-1'));
+
+      // Add to combat
+      await user.click(screen.getByText('Add Selected'));
+
+      expect(screen.getByText('3 combatants added')).toBeInTheDocument();
+    });
+
+    it('should roll initiative for all combatants', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText('Thorin')).toBeInTheDocument();
+      });
+
+      // Add combatants
+      await user.click(screen.getByTestId('select-all'));
+      await user.click(screen.getByText('Add Selected'));
+
+      // Start combat
+      await user.click(screen.getByText('Start Combat'));
+
+      // Should trigger initiative rolls
+      await waitFor(() => {
+        expect(api.rollDice).toHaveBeenCalledTimes(4); // Once for each combatant
+        expect(mockWebSocket.send).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'combat_start',
+            combatants: expect.any(Array),
+          })
+        );
+      });
+    });
+  });
+
+  describe('Combat Management', () => {
+    beforeEach(async () => {
+      // Set up active combat state
+      store = mockStore({
+        ...initialState,
+        combat: {
+          active: true,
+          combatants: [
+            { ...mockCharacters[0], initiative: 18, id: 'char-1' },
+            { ...mockNPCs[0], initiative: 15, id: 'npc-1' },
+            { ...mockCharacters[1], initiative: 12, id: 'char-2' },
+            { ...mockNPCs[1], initiative: 8, id: 'npc-2' },
+          ],
+          currentTurn: 0,
+          round: 1,
+        },
+      });
+    });
+
+    it('should display combat tracker', () => {
+      renderComponent();
+
+      expect(screen.getByText('Round 1')).toBeInTheDocument();
+      expect(screen.getByText('Initiative Order')).toBeInTheDocument();
+      expect(screen.getByTestId('current-turn-char-1')).toHaveClass('current-turn');
+    });
+
+    it('should show combatant health bars', () => {
+      renderComponent();
+
+      const thorinHealth = screen.getByTestId('health-char-1');
+      expect(thorinHealth).toHaveTextContent('44 / 44');
+      expect(thorinHealth.querySelector('.health-bar')).toHaveStyle({ width: '100%' });
+    });
+
+    it('should advance turn', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(screen.getByText('Next Turn'));
+
+      await waitFor(() => {
+        expect(mockWebSocket.send).toHaveBeenCalledWith({
+          type: 'advance_turn',
+          sessionId: 'session-123',
+        });
+      });
+    });
+
+    it('should handle damage dealing', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      // Click on a combatant to select as target
+      await user.click(screen.getByTestId('combatant-npc-1'));
+
+      // Open damage dialog
+      await user.click(screen.getByText('Deal Damage'));
+
+      // Enter damage amount
+      await user.type(screen.getByLabelText('Damage Amount'), '5');
+      await user.selectOptions(screen.getByLabelText('Damage Type'), 'slashing');
+
+      // Apply damage
+      await user.click(screen.getByText('Apply'));
+
+      await waitFor(() => {
+        expect(mockWebSocket.send).toHaveBeenCalledWith({
+          type: 'apply_damage',
+          targetId: 'npc-1',
+          damage: 5,
+          damageType: 'slashing',
+        });
+      });
+    });
+
+    it('should handle healing', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      // Select injured combatant
+      await user.click(screen.getByTestId('combatant-char-2'));
+
+      // Open heal dialog
+      await user.click(screen.getByText('Heal'));
+
+      // Enter heal amount
+      await user.type(screen.getByLabelText('Healing Amount'), '8');
+
+      // Apply healing
+      await user.click(screen.getByText('Apply'));
+
+      await waitFor(() => {
+        expect(mockWebSocket.send).toHaveBeenCalledWith({
+          type: 'apply_healing',
+          targetId: 'char-2',
+          healing: 8,
+        });
+      });
+    });
+
+    it('should manage conditions', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      // Select combatant
+      await user.click(screen.getByTestId('combatant-char-1'));
+
+      // Open conditions menu
+      await user.click(screen.getByText('Conditions'));
+
+      // Add conditions
+      await user.click(screen.getByLabelText('Poisoned'));
+      await user.click(screen.getByLabelText('Restrained'));
+
+      // Apply conditions
+      await user.click(screen.getByText('Apply Conditions'));
+
+      await waitFor(() => {
+        expect(mockWebSocket.send).toHaveBeenCalledWith({
+          type: 'update_conditions',
+          targetId: 'char-1',
+          conditions: ['poisoned', 'restrained'],
+        });
+      });
+    });
+
+    it('should remove combatant from combat', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const removeButton = screen.getByTestId('remove-npc-2');
+      await user.click(removeButton);
+
+      // Confirm removal
+      await user.click(screen.getByText('Remove'));
+
+      await waitFor(() => {
+        expect(mockWebSocket.send).toHaveBeenCalledWith({
+          type: 'remove_combatant',
+          combatantId: 'npc-2',
+        });
+      });
+    });
+
+    it('should end combat', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(screen.getByText('End Combat'));
+
+      // Confirm ending combat
+      await user.click(screen.getByText('End Combat', { selector: 'button.confirm' }));
+
+      await waitFor(() => {
+        expect(mockWebSocket.send).toHaveBeenCalledWith({
+          type: 'end_combat',
+          sessionId: 'session-123',
+        });
+      });
+    });
+  });
+
+  describe('Dice Rolling', () => {
+    it('should show attack roll dialog', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(screen.getByTestId('combatant-char-1'));
+      await user.click(screen.getByText('Attack'));
+
+      expect(screen.getByText('Attack Roll')).toBeInTheDocument();
+      expect(screen.getByLabelText('Attack Bonus')).toBeInTheDocument();
+      expect(screen.getByLabelText('Advantage')).toBeInTheDocument();
+      expect(screen.getByLabelText('Disadvantage')).toBeInTheDocument();
+    });
+
+    it('should roll attack with advantage', async () => {
+      const user = userEvent.setup();
+      api.rollDice.mockResolvedValueOnce({ result: 18, rolls: [18, 12], modifier: 5 });
+
+      renderComponent();
+
+      await user.click(screen.getByTestId('combatant-char-1'));
+      await user.click(screen.getByText('Attack'));
+
+      await user.type(screen.getByLabelText('Attack Bonus'), '5');
+      await user.click(screen.getByLabelText('Advantage'));
+      await user.click(screen.getByText('Roll'));
+
+      await waitFor(() => {
+        expect(api.rollDice).toHaveBeenCalledWith({
+          notation: '2d20kh1+5',
+          purpose: 'Attack roll',
+          sessionId: 'session-123',
+        });
+      });
+
+      expect(screen.getByText('Attack Roll: 18')).toBeInTheDocument();
+      expect(screen.getByText('(Rolled with advantage)')).toBeInTheDocument();
+    });
+
+    it('should roll saving throw', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(screen.getByTestId('combatant-char-2'));
+      await user.click(screen.getByText('Saving Throw'));
+
+      await user.selectOptions(screen.getByLabelText('Save Type'), 'wisdom');
+      await user.type(screen.getByLabelText('Save DC'), '15');
+      await user.click(screen.getByText('Roll'));
+
+      await waitFor(() => {
+        expect(api.rollDice).toHaveBeenCalledWith({
+          notation: '1d20+2', // Assuming wizard has +2 WIS save
+          purpose: 'Wisdom saving throw',
+          sessionId: 'session-123',
+        });
+      });
+    });
+
+    it('should display roll history', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      // Make a few rolls
+      await user.click(screen.getByTestId('combatant-char-1'));
+      await user.click(screen.getByText('Attack'));
+      await user.click(screen.getByText('Roll'));
+
+      await waitFor(() => {
+        const history = screen.getByTestId('roll-history');
+        expect(within(history).getByText(/Thorin - Attack roll: 15/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Combat Automation', () => {
+    it('should calculate encounter difficulty', () => {
+      renderComponent();
+
+      const difficultyBadge = screen.getByTestId('encounter-difficulty');
+      expect(difficultyBadge).toHaveTextContent('Medium');
+      expect(difficultyBadge).toHaveClass('difficulty-medium');
+    });
+
+    it('should suggest targets based on turn order', () => {
+      store = mockStore({
+        ...initialState,
+        combat: {
+          active: true,
+          combatants: [
+            { ...mockCharacters[0], initiative: 18, id: 'char-1' },
+            { ...mockNPCs[0], initiative: 15, id: 'npc-1' },
+          ],
+          currentTurn: 0,
+          round: 1,
+        },
+      });
+
+      renderComponent();
+
+      // Current turn is Thorin (char-1), should suggest targeting the goblin
+      const suggestion = screen.getByTestId('target-suggestion');
+      expect(suggestion).toHaveTextContent('Suggested target: Goblin');
+    });
+
+    it('should auto-roll NPC initiatives', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText('Goblin')).toBeInTheDocument();
+      });
+
+      // Enable auto-roll
+      await user.click(screen.getByLabelText('Auto-roll NPC initiatives'));
+
+      // Add NPCs and start combat
+      await user.click(screen.getByTestId('select-npc-1'));
+      await user.click(screen.getByTestId('select-npc-2'));
+      await user.click(screen.getByText('Add Selected'));
+      await user.click(screen.getByText('Start Combat'));
+
+      // Should automatically roll for NPCs
+      await waitFor(() => {
+        const npcRolls = api.rollDice.mock.calls.filter(
+          call => call[0].purpose.includes('Goblin') || call[0].purpose.includes('Goblin Boss')
+        );
+        expect(npcRolls).toHaveLength(2);
+      });
+    });
+  });
+
+  describe('Status Effects', () => {
+    beforeEach(() => {
+      store = mockStore({
+        ...initialState,
+        combat: {
+          active: true,
+          combatants: [
+            { 
+              ...mockCharacters[0], 
+              initiative: 18, 
+              id: 'char-1',
+              conditions: ['poisoned', 'exhaustion-1'],
+            },
+          ],
+          currentTurn: 0,
+          round: 1,
+        },
+      });
+    });
+
+    it('should display active conditions', () => {
+      renderComponent();
+
+      const combatant = screen.getByTestId('combatant-char-1');
+      expect(within(combatant).getByText('Poisoned')).toBeInTheDocument();
+      expect(within(combatant).getByText('Exhaustion (1)')).toBeInTheDocument();
+    });
+
+    it('should show condition effects on hover', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const poisonedBadge = screen.getByText('Poisoned');
+      await user.hover(poisonedBadge);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Disadvantage on attack rolls/)).toBeInTheDocument();
+      });
+    });
+
+    it('should track concentration', async () => {
+      const user = userEvent.setup();
+      
+      store = mockStore({
+        ...initialState,
+        combat: {
+          active: true,
+          combatants: [
+            { 
+              ...mockCharacters[1], // Wizard
+              initiative: 12, 
+              id: 'char-2',
+              concentrating: true,
+              concentrationSpell: 'Haste',
+            },
+          ],
+          currentTurn: 0,
+          round: 1,
+        },
+      });
+
+      renderComponent();
+
+      const combatant = screen.getByTestId('combatant-char-2');
+      expect(within(combatant).getByText('Concentrating: Haste')).toBeInTheDocument();
+
+      // Taking damage should prompt concentration save
+      await user.click(combatant);
+      await user.click(screen.getByText('Deal Damage'));
+      await user.type(screen.getByLabelText('Damage Amount'), '10');
+      await user.click(screen.getByText('Apply'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Concentration Save Required')).toBeInTheDocument();
+        expect(screen.getByText('DC 10 Constitution save')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should have proper ARIA labels', () => {
+      renderComponent();
+
+      expect(screen.getByRole('region', { name: /combat tracker/i })).toBeInTheDocument();
+      expect(screen.getByRole('list', { name: /initiative order/i })).toBeInTheDocument();
+    });
+
+    it('should announce turn changes', async () => {
+      const user = userEvent.setup();
+      
+      store = mockStore({
+        ...initialState,
+        combat: {
+          active: true,
+          combatants: [
+            { ...mockCharacters[0], initiative: 18, id: 'char-1' },
+            { ...mockNPCs[0], initiative: 15, id: 'npc-1' },
+          ],
+          currentTurn: 0,
+          round: 1,
+        },
+      });
+
+      renderComponent();
+
+      await user.click(screen.getByText('Next Turn'));
+
+      await waitFor(() => {
+        const announcement = screen.getByRole('status', { hidden: true });
+        expect(announcement).toHaveTextContent("Goblin's turn");
+      });
+    });
+
+    it('should support keyboard navigation', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      // Tab through combatants
+      await user.tab();
+      expect(screen.getByTestId('combatant-char-1')).toHaveFocus();
+
+      // Use arrow keys to navigate
+      await user.keyboard('{ArrowDown}');
+      expect(screen.getByTestId('combatant-npc-1')).toHaveFocus();
+
+      // Space to select
+      await user.keyboard(' ');
+      expect(screen.getByTestId('combatant-npc-1')).toHaveClass('selected');
+    });
+  });
+
+  describe('Real-time Updates', () => {
+    it('should handle WebSocket combat updates', async () => {
+      renderComponent();
+
+      // Simulate WebSocket message
+      const wsHandler = mockWebSocket.on.mock.calls.find(
+        call => call[0] === 'combat_update'
+      )[1];
+
+      wsHandler({
+        type: 'damage_applied',
+        targetId: 'char-1',
+        damage: 10,
+        newHP: 34,
+      });
+
+      await waitFor(() => {
+        const health = screen.getByTestId('health-char-1');
+        expect(health).toHaveTextContent('34 / 44');
+      });
+    });
+
+    it('should sync turn advancement', async () => {
+      store = mockStore({
+        ...initialState,
+        combat: {
+          active: true,
+          combatants: [
+            { ...mockCharacters[0], initiative: 18, id: 'char-1' },
+            { ...mockNPCs[0], initiative: 15, id: 'npc-1' },
+          ],
+          currentTurn: 0,
+          round: 1,
+        },
+      });
+
+      renderComponent();
+
+      const wsHandler = mockWebSocket.on.mock.calls.find(
+        call => call[0] === 'combat_update'
+      )[1];
+
+      wsHandler({
+        type: 'turn_advanced',
+        currentTurn: 1,
+        round: 1,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('current-turn-npc-1')).toHaveClass('current-turn');
+      });
+    });
+  });
+});

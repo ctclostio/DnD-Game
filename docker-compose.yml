@@ -7,19 +7,14 @@ services:
       dockerfile: backend/Dockerfile
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     environment:
       - PORT=8080
       - ENV=development
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USER=dndgame
-      - DB_PASSWORD=dndgamepass
-      - DB_NAME=dndgame
       - DB_SSLMODE=disable
-      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-      - AI_PROVIDER=openrouter
-      - AI_API_KEY=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
-      - AI_MODEL=openai/gpt-4-turbo
     volumes:
       - ./backend:/app/backend
       - ./data:/app/data
@@ -50,10 +45,12 @@ services:
     image: postgres:16-alpine
     ports:
       - "5432:5432"
+    env_file:
+      - .env
     environment:
-      - POSTGRES_USER=dndgame
-      - POSTGRES_PASSWORD=dndgamepass
-      - POSTGRES_DB=dndgame
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:

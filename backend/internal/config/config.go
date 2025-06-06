@@ -70,7 +70,7 @@ func Load() (*Config, error) {
 	cfg.Database.Host = getEnv("DB_HOST", "localhost")
 	cfg.Database.Port = getEnvAsInt("DB_PORT", 5432)
 	cfg.Database.User = getEnv("DB_USER", "dndgame")
-	cfg.Database.Password = getEnv("DB_PASSWORD", "dndgamepass")
+	cfg.Database.Password = os.Getenv("DB_PASSWORD") // No default for password
 	cfg.Database.DatabaseName = getEnv("DB_NAME", "dndgame")
 	cfg.Database.SSLMode = getEnv("DB_SSLMODE", "disable")
 	cfg.Database.MaxOpenConns = getEnvAsInt("DB_MAX_OPEN_CONNS", 25)
@@ -84,7 +84,7 @@ func Load() (*Config, error) {
 	cfg.Redis.DB = getEnvAsInt("REDIS_DB", 0)
 
 	// Auth configuration
-	cfg.Auth.JWTSecret = getEnv("JWT_SECRET", "your-secret-key-change-this-in-production")
+	cfg.Auth.JWTSecret = os.Getenv("JWT_SECRET") // No default for secret
 	cfg.Auth.AccessTokenDuration = getEnvAsDuration("ACCESS_TOKEN_DURATION", 15*time.Minute)
 	cfg.Auth.RefreshTokenDuration = getEnvAsDuration("REFRESH_TOKEN_DURATION", 7*24*time.Hour)
 	cfg.Auth.BcryptCost = getEnvAsInt("BCRYPT_COST", 10)
@@ -142,11 +142,17 @@ func (c *Config) Validate() error {
 	if c.Database.User == "" {
 		return fmt.Errorf("database user is required")
 	}
+	if c.Database.Password == "" {
+		return fmt.Errorf("database password is required (DB_PASSWORD environment variable)")
+	}
 	if c.Database.DatabaseName == "" {
 		return fmt.Errorf("database name is required")
 	}
-	if c.Auth.JWTSecret == "" || c.Auth.JWTSecret == "your-secret-key-change-this-in-production" {
-		return fmt.Errorf("JWT secret must be set to a secure value")
+	if c.Auth.JWTSecret == "" {
+		return fmt.Errorf("JWT secret is required (JWT_SECRET environment variable)")
+	}
+	if len(c.Auth.JWTSecret) < 32 {
+		return fmt.Errorf("JWT secret must be at least 32 characters long for security")
 	}
 	if c.Auth.AccessTokenDuration <= 0 {
 		return fmt.Errorf("access token duration must be positive")
@@ -156,6 +162,10 @@ func (c *Config) Validate() error {
 	}
 	if c.Auth.BcryptCost < 4 || c.Auth.BcryptCost > 31 {
 		return fmt.Errorf("bcrypt cost must be between 4 and 31")
+	}
+	// Validate AI configuration if provider is not mock
+	if c.AI.Provider != "mock" && c.AI.APIKey == "" {
+		return fmt.Errorf("AI API key is required when AI provider is not 'mock' (AI_API_KEY environment variable)")
 	}
 	return nil
 }

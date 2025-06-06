@@ -132,7 +132,7 @@ DnD-Game/
 - `GET /api/v1/game/session/{id}` - Get session details
 
 ### WebSocket
-- `WS /ws?room={roomId}&player={playerId}` - Connect to game session
+- `WS /ws?room={roomId}` - Connect to game session (authentication via message after connection)
 
 ## WebSocket Events
 
@@ -146,6 +146,24 @@ DnD-Game/
 - `dice_roll` - Receive dice roll from another player
 - `player_joined` - Player joined notification
 - `player_left` - Player left notification
+
+## Security
+
+The application implements comprehensive security measures:
+
+### Security Features
+- **Security Headers**: CSP, HSTS, X-Frame-Options, and more
+- **WebSocket Security**: Origin validation and post-connection authentication
+- **Token Security**: JWT tokens never transmitted in URLs
+- **CORS Protection**: Strict origin validation with environment-based configuration
+- **Rate Limiting**: Configurable limits for auth (5/min) and API (100/min) endpoints
+- **CSRF Protection**: Token-based protection for state-changing operations
+
+### Configuration
+See [SECURITY.md](./SECURITY.md) for detailed security configuration and best practices.
+
+### Reporting Security Issues
+Please report security vulnerabilities privately to security@yourdomain.com
 
 ## Contributing
 

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import AuthGuard from './components/AuthGuard';
 import LoadingSpinner from './components/LoadingSpinner';
+import { ErrorBoundary, RouteErrorBoundary } from './components/ErrorBoundary';
 
 // Lazy load all page components
 const Login = lazy(() => import('./pages/Login'));
@@ -18,27 +19,78 @@ const RuleBuilder = lazy(() => import('./components/RuleBuilder'));
 
 const App: React.FC = () => {
   return (
-    <Suspense fallback={<LoadingSpinner fullScreen />}>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        
-        <Route element={<AuthGuard />}>
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/characters" element={<Characters />} />
-            <Route path="/characters/new" element={<CharacterBuilder />} />
-            <Route path="/characters/:id" element={<CharacterBuilder />} />
-            <Route path="/game-session/:id" element={<GameSession />} />
-            <Route path="/combat/:sessionId" element={<CombatView />} />
-            <Route path="/world-builder" element={<WorldBuilder />} />
-            <Route path="/dm-tools" element={<DMTools />} />
-            <Route path="/dm-tools/rule-builder" element={<RuleBuilder />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        // Send to error reporting service in production
+        console.error('App Error:', error, errorInfo);
+      }}
+    >
+      <Suspense fallback={<LoadingSpinner fullScreen />}>
+        <Routes>
+          <Route path="/login" element={
+            <RouteErrorBoundary>
+              <Login />
+            </RouteErrorBoundary>
+          } />
+          <Route path="/register" element={
+            <RouteErrorBoundary>
+              <Register />
+            </RouteErrorBoundary>
+          } />
+          
+          <Route element={<AuthGuard />}>
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={
+                <RouteErrorBoundary>
+                  <Dashboard />
+                </RouteErrorBoundary>
+              } />
+              <Route path="/characters" element={
+                <RouteErrorBoundary>
+                  <Characters />
+                </RouteErrorBoundary>
+              } />
+              <Route path="/characters/new" element={
+                <RouteErrorBoundary>
+                  <CharacterBuilder />
+                </RouteErrorBoundary>
+              } />
+              <Route path="/characters/:id" element={
+                <RouteErrorBoundary>
+                  <CharacterBuilder />
+                </RouteErrorBoundary>
+              } />
+              <Route path="/game-session/:id" element={
+                <RouteErrorBoundary>
+                  <GameSession />
+                </RouteErrorBoundary>
+              } />
+              <Route path="/combat/:sessionId" element={
+                <RouteErrorBoundary>
+                  <CombatView />
+                </RouteErrorBoundary>
+              } />
+              <Route path="/world-builder" element={
+                <RouteErrorBoundary>
+                  <WorldBuilder />
+                </RouteErrorBoundary>
+              } />
+              <Route path="/dm-tools" element={
+                <RouteErrorBoundary>
+                  <DMTools />
+                </RouteErrorBoundary>
+              } />
+              <Route path="/dm-tools/rule-builder" element={
+                <RouteErrorBoundary>
+                  <RuleBuilder />
+                </RouteErrorBoundary>
+              } />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
-    </Suspense>
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 };
 

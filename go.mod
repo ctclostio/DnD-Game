@@ -29,3 +29,5 @@ require (
 	golang.org/x/net v0.38.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+github.com/rs/zerolog v1.31.0
+github.com/go-playground/validator/v10 v10.15.5

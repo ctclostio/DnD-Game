@@ -11,6 +11,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// GetCSRFToken handles CSRF token generation
+func (h *Handlers) GetCSRFToken(w http.ResponseWriter, r *http.Request) {
+	// The CSRF middleware will automatically set the cookie
+	// This endpoint just needs to return success
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "CSRF token set",
+	})
+}
+
 // Register handles user registration
 func (h *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 	var req models.RegisterRequest

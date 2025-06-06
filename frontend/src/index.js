@@ -24,7 +24,14 @@ class App {
         this.init();
     }
 
-    init() {
+    async init() {
+        // Initialize CSRF token
+        try {
+            await fetch('/api/v1/csrf-token', { credentials: 'same-origin' });
+        } catch (error) {
+            console.error('Failed to initialize CSRF token:', error);
+        }
+        
         // Check if user is authenticated
         if (!authService.isAuthenticated()) {
             this.showLogin();

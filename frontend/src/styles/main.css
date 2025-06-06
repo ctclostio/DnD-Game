@@ -4,6 +4,12 @@
 /* Import loading styles */
 @import './loading.css';
 
+/* Import character builder styles */
+@import './character-builder.css';
+
+/* Import accessibility styles */
+@import './accessibility.css';
+
 /* DM Tools Hub Styles */
 .dm-tools-hub {
   padding: 2rem;

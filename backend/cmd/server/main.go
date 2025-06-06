@@ -15,6 +15,8 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/config"
 	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/handlers"
+	"github.com/your-username/dnd-game/backend/internal/middleware"
+	"github.com/your-username/dnd-game/backend/internal/routes"
 	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/your-username/dnd-game/backend/internal/websocket"
 )
@@ -193,251 +195,78 @@ func main() {
 
 	// Create authentication middleware
 	authMiddleware := auth.NewMiddleware(jwtManager)
+	
+	// Create CSRF store
+	csrfStore := auth.NewCSRFStore()
+
+	// Create logger for middleware
+	logger := log.New(os.Stdout, "[DND-GAME] ", log.LstdFlags|log.Lshortfile)
+
+	// Create rate limiters
+	authRateLimiter := middleware.AuthRateLimiter()
+	apiRateLimiter := middleware.APIRateLimiter()
 
 	router := mux.NewRouter()
+	
+	// Apply global middleware
+	router.Use(middleware.Recovery(logger))
+	
+	// Apply security headers
+	isDevelopment := os.Getenv("GO_ENV") == "development"
+	router.Use(middleware.SecurityHeaders(isDevelopment))
 
-	// API routes
-	api := router.PathPrefix("/api/v1").Subrouter()
-	api.HandleFunc("/health", h.HealthCheck).Methods("GET")
-	
-	// Auth routes (public)
-	api.HandleFunc("/auth/register", h.Register).Methods("POST")
-	api.HandleFunc("/auth/login", h.Login).Methods("POST")
-	api.HandleFunc("/auth/refresh", h.RefreshToken).Methods("POST")
-	api.HandleFunc("/auth/logout", authMiddleware.Authenticate(h.Logout)).Methods("POST")
-	api.HandleFunc("/auth/me", authMiddleware.Authenticate(h.GetCurrentUser)).Methods("GET")
-	
-	// Character creation routes (protected)
-	api.HandleFunc("/characters/options", authMiddleware.Authenticate(charCreationHandler.GetCharacterOptions)).Methods("GET")
-	api.HandleFunc("/characters/create", authMiddleware.Authenticate(charCreationHandler.CreateCharacter)).Methods("POST")
-	api.HandleFunc("/characters/create-custom", authMiddleware.Authenticate(charCreationHandler.CreateCustomCharacter)).Methods("POST")
-	api.HandleFunc("/characters/validate", authMiddleware.Authenticate(charCreationHandler.ValidateCharacter)).Methods("POST")
-	api.HandleFunc("/characters/roll-abilities", authMiddleware.Authenticate(charCreationHandler.RollAbilityScores)).Methods("POST")
-	
-	// Character routes (protected)
-	api.HandleFunc("/characters", authMiddleware.Authenticate(h.GetCharacters)).Methods("GET")
-	api.HandleFunc("/characters", authMiddleware.Authenticate(h.CreateCharacter)).Methods("POST")
-	api.HandleFunc("/characters/{id}", authMiddleware.Authenticate(h.GetCharacter)).Methods("GET")
-	api.HandleFunc("/characters/{id}", authMiddleware.Authenticate(h.UpdateCharacter)).Methods("PUT")
-	api.HandleFunc("/characters/{id}", authMiddleware.Authenticate(h.DeleteCharacter)).Methods("DELETE")
-	api.HandleFunc("/characters/{id}/cast-spell", authMiddleware.Authenticate(h.CastSpell)).Methods("POST")
-	api.HandleFunc("/characters/{id}/rest", authMiddleware.Authenticate(h.Rest)).Methods("POST")
-	api.HandleFunc("/characters/{id}/add-experience", authMiddleware.Authenticate(h.AddExperience)).Methods("POST")
-	
-	// Dice roll routes (protected)
-	api.HandleFunc("/dice/roll", authMiddleware.Authenticate(h.RollDice)).Methods("POST")
-	
-	// Game session routes (protected)
-	api.HandleFunc("/game/sessions", authMiddleware.RequireDM()(h.CreateGameSession)).Methods("POST")
-	api.HandleFunc("/game/sessions/{id}", authMiddleware.Authenticate(h.GetGameSession)).Methods("GET")
-	api.HandleFunc("/game/sessions/{id}", authMiddleware.RequireDM()(h.UpdateGameSession)).Methods("PUT")
-	api.HandleFunc("/game/sessions/{id}/join", authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
-	api.HandleFunc("/game/sessions/{id}/leave", authMiddleware.Authenticate(h.LeaveGameSession)).Methods("POST")
-
-	// Combat routes (protected)
-	api.HandleFunc("/combat/start", authMiddleware.Authenticate(h.StartCombat)).Methods("POST")
-	api.HandleFunc("/combat/{id}", authMiddleware.Authenticate(h.GetCombat)).Methods("GET")
-	api.HandleFunc("/combat/session/{sessionId}", authMiddleware.Authenticate(h.GetCombatBySession)).Methods("GET")
-	api.HandleFunc("/combat/{id}/next-turn", authMiddleware.Authenticate(h.NextTurn)).Methods("POST")
-	api.HandleFunc("/combat/{id}/action", authMiddleware.Authenticate(h.ProcessCombatAction)).Methods("POST")
-	api.HandleFunc("/combat/{id}/end", authMiddleware.Authenticate(h.EndCombat)).Methods("POST")
-	api.HandleFunc("/combat/{id}/combatants/{combatantId}/save", authMiddleware.Authenticate(h.MakeSavingThrow)).Methods("POST")
-	api.HandleFunc("/combat/{id}/combatants/{combatantId}/damage", authMiddleware.Authenticate(h.ApplyDamage)).Methods("POST")
-	api.HandleFunc("/combat/{id}/combatants/{combatantId}/heal", authMiddleware.Authenticate(h.HealCombatant)).Methods("POST")
-
-	// NPC routes (protected)
-	api.HandleFunc("/npcs", authMiddleware.RequireDM()(h.CreateNPC)).Methods("POST")
-	api.HandleFunc("/npcs/{id}", authMiddleware.Authenticate(h.GetNPC)).Methods("GET")
-	api.HandleFunc("/npcs/{id}", authMiddleware.RequireDM()(h.UpdateNPC)).Methods("PUT")
-	api.HandleFunc("/npcs/{id}", authMiddleware.RequireDM()(h.DeleteNPC)).Methods("DELETE")
-	api.HandleFunc("/npcs/session/{sessionId}", authMiddleware.Authenticate(h.GetNPCsBySession)).Methods("GET")
-	api.HandleFunc("/npcs/search", authMiddleware.Authenticate(h.SearchNPCs)).Methods("GET")
-	api.HandleFunc("/npcs/templates", authMiddleware.Authenticate(h.GetNPCTemplates)).Methods("GET")
-	api.HandleFunc("/npcs/create-from-template", authMiddleware.RequireDM()(h.CreateNPCFromTemplate)).Methods("POST")
-	api.HandleFunc("/npcs/{id}/action/{action}", authMiddleware.RequireDM()(h.NPCQuickActions)).Methods("POST")
-	
-	// Skill check routes (protected)
-	api.HandleFunc("/skill-check", authMiddleware.Authenticate(h.PerformSkillCheck)).Methods("POST")
-	api.HandleFunc("/characters/{id}/checks", authMiddleware.Authenticate(h.GetCharacterChecks)).Methods("GET")
-	
-	// Inventory routes (protected)
-	api.HandleFunc("/characters/{characterId}/inventory", authMiddleware.Authenticate(inventoryHandler.GetCharacterInventory)).Methods("GET")
-	api.HandleFunc("/characters/{characterId}/inventory", authMiddleware.Authenticate(inventoryHandler.AddItemToInventory)).Methods("POST")
-	api.HandleFunc("/characters/{characterId}/inventory/remove", authMiddleware.Authenticate(inventoryHandler.RemoveItemFromInventory)).Methods("POST")
-	api.HandleFunc("/characters/{characterId}/inventory/{itemId}/equip", authMiddleware.Authenticate(inventoryHandler.EquipItem)).Methods("POST")
-	api.HandleFunc("/characters/{characterId}/inventory/{itemId}/unequip", authMiddleware.Authenticate(inventoryHandler.UnequipItem)).Methods("POST")
-	api.HandleFunc("/characters/{characterId}/inventory/{itemId}/attune", authMiddleware.Authenticate(inventoryHandler.AttuneItem)).Methods("POST")
-	api.HandleFunc("/characters/{characterId}/inventory/{itemId}/unattune", authMiddleware.Authenticate(inventoryHandler.UnattuneItem)).Methods("POST")
-	api.HandleFunc("/characters/{characterId}/currency", authMiddleware.Authenticate(inventoryHandler.GetCharacterCurrency)).Methods("GET")
-	api.HandleFunc("/characters/{characterId}/currency", authMiddleware.Authenticate(inventoryHandler.UpdateCharacterCurrency)).Methods("PUT")
-	api.HandleFunc("/characters/{characterId}/inventory/purchase", authMiddleware.Authenticate(inventoryHandler.PurchaseItem)).Methods("POST")
-	api.HandleFunc("/characters/{characterId}/inventory/sell", authMiddleware.Authenticate(inventoryHandler.SellItem)).Methods("POST")
-	api.HandleFunc("/characters/{characterId}/weight", authMiddleware.Authenticate(inventoryHandler.GetCharacterWeight)).Methods("GET")
-	api.HandleFunc("/items", authMiddleware.RequireDM()(inventoryHandler.CreateItem)).Methods("POST")
-	api.HandleFunc("/items", authMiddleware.Authenticate(inventoryHandler.GetItemsByType)).Methods("GET")
-
-	// Custom race routes (protected)
-	api.HandleFunc("/custom-races", authMiddleware.Authenticate(h.CreateCustomRace)).Methods("POST")
-	api.HandleFunc("/custom-races", authMiddleware.Authenticate(h.GetUserCustomRaces)).Methods("GET")
-	api.HandleFunc("/custom-races/public", authMiddleware.Authenticate(h.GetPublicCustomRaces)).Methods("GET")
-	api.HandleFunc("/custom-races/pending", authMiddleware.RequireDM()(h.GetPendingCustomRaces)).Methods("GET")
-	api.HandleFunc("/custom-races/{id}", authMiddleware.Authenticate(h.GetCustomRace)).Methods("GET")
-	api.HandleFunc("/custom-races/{id}/stats", authMiddleware.Authenticate(h.GetCustomRaceStats)).Methods("GET")
-	api.HandleFunc("/custom-races/{id}/approve", authMiddleware.RequireDM()(h.ApproveCustomRace)).Methods("POST")
-	api.HandleFunc("/custom-races/{id}/reject", authMiddleware.RequireDM()(h.RejectCustomRace)).Methods("POST")
-	
-	// Custom class routes (protected)
-	api.HandleFunc("/characters/custom-classes/generate", authMiddleware.Authenticate(h.GenerateCustomClass)).Methods("POST")
-	api.HandleFunc("/characters/custom-classes", authMiddleware.Authenticate(h.GetCustomClasses)).Methods("GET")
-	api.HandleFunc("/characters/custom-classes/{id}", authMiddleware.Authenticate(h.GetCustomClass)).Methods("GET")
-	api.HandleFunc("/custom-races/{id}/revision", authMiddleware.RequireDM()(h.RequestRevisionCustomRace)).Methods("POST")
-	api.HandleFunc("/custom-races/{id}/public", authMiddleware.Authenticate(h.MakeCustomRacePublic)).Methods("POST")
-
-	// Encounter Builder routes (protected, DM only)
-	api.HandleFunc("/encounters/generate", authMiddleware.RequireDM()(h.GenerateEncounter)).Methods("POST")
-	api.HandleFunc("/encounters/{id}", authMiddleware.Authenticate(h.GetEncounter)).Methods("GET")
-	api.HandleFunc("/encounters/session/{sessionId}", authMiddleware.Authenticate(h.GetSessionEncounters)).Methods("GET")
-	api.HandleFunc("/encounters/{id}/start", authMiddleware.RequireDM()(h.StartEncounter)).Methods("POST")
-	api.HandleFunc("/encounters/{id}/complete", authMiddleware.RequireDM()(h.CompleteEncounter)).Methods("POST")
-	api.HandleFunc("/encounters/{id}/scale", authMiddleware.RequireDM()(h.ScaleEncounter)).Methods("POST")
-	api.HandleFunc("/encounters/{id}/tactical-suggestion", authMiddleware.RequireDM()(h.GetTacticalSuggestion)).Methods("POST")
-	api.HandleFunc("/encounters/{id}/events", authMiddleware.Authenticate(h.LogEncounterEvent)).Methods("POST")
-	api.HandleFunc("/encounters/{id}/events", authMiddleware.Authenticate(h.GetEncounterEvents)).Methods("GET")
-	api.HandleFunc("/encounters/{id}/enemies/{enemyId}", authMiddleware.RequireDM()(h.UpdateEnemyStatus)).Methods("PATCH")
-	api.HandleFunc("/encounters/{id}/reinforcements", authMiddleware.RequireDM()(h.TriggerReinforcements)).Methods("POST")
-	api.HandleFunc("/encounters/{id}/objectives/check", authMiddleware.RequireDM()(h.CheckObjectives)).Methods("POST")
-
-	// DM Assistant routes (protected, DM only)
-	api.HandleFunc("/dm-assistant", authMiddleware.RequireDM()(h.ProcessDMAssistantRequest)).Methods("POST")
-	api.HandleFunc("/dm-assistant/sessions/{sessionId}/npcs", authMiddleware.RequireDM()(h.GetDMAssistantNPCs)).Methods("GET")
-	api.HandleFunc("/dm-assistant/npcs", authMiddleware.RequireDM()(h.CreateDMAssistantNPC)).Methods("POST")
-	api.HandleFunc("/dm-assistant/npcs/{id}", authMiddleware.RequireDM()(h.GetDMAssistantNPC)).Methods("GET")
-	api.HandleFunc("/dm-assistant/sessions/{sessionId}/locations", authMiddleware.RequireDM()(h.GetDMAssistantLocations)).Methods("GET")
-	api.HandleFunc("/dm-assistant/locations/{id}", authMiddleware.RequireDM()(h.GetDMAssistantLocation)).Methods("GET")
-	api.HandleFunc("/dm-assistant/sessions/{sessionId}/story-elements", authMiddleware.RequireDM()(h.GetDMAssistantStoryElements)).Methods("GET")
-	api.HandleFunc("/dm-assistant/story-elements/{id}/use", authMiddleware.RequireDM()(h.MarkStoryElementUsed)).Methods("POST")
-	api.HandleFunc("/dm-assistant/locations/{locationId}/hazards", authMiddleware.RequireDM()(h.GetDMAssistantHazards)).Methods("GET")
-	api.HandleFunc("/dm-assistant/hazards/{id}/trigger", authMiddleware.RequireDM()(h.TriggerHazard)).Methods("POST")
-	
-	// Campaign Management routes (protected)
-	// Story Arc routes
-	api.HandleFunc("/sessions/{sessionId}/story-arcs", authMiddleware.RequireDM()(campaignHandler.CreateStoryArc)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/story-arcs/generate", authMiddleware.RequireDM()(campaignHandler.GenerateStoryArc)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/story-arcs", authMiddleware.Authenticate(campaignHandler.GetStoryArcs)).Methods("GET")
-	api.HandleFunc("/sessions/{sessionId}/story-arcs/{arcId}", authMiddleware.RequireDM()(campaignHandler.UpdateStoryArc)).Methods("PUT")
-	
-	// Session Memory routes
-	api.HandleFunc("/sessions/{sessionId}/memories", authMiddleware.RequireDM()(campaignHandler.CreateSessionMemory)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/memories", authMiddleware.Authenticate(campaignHandler.GetSessionMemories)).Methods("GET")
-	api.HandleFunc("/sessions/{sessionId}/recap", authMiddleware.Authenticate(campaignHandler.GenerateRecap)).Methods("POST")
-	
-	// Plot Thread routes
-	api.HandleFunc("/sessions/{sessionId}/plot-threads", authMiddleware.RequireDM()(campaignHandler.CreatePlotThread)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/plot-threads", authMiddleware.Authenticate(campaignHandler.GetPlotThreads)).Methods("GET")
-	
-	// Foreshadowing routes
-	api.HandleFunc("/sessions/{sessionId}/foreshadowing", authMiddleware.RequireDM()(campaignHandler.GenerateForeshadowing)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/foreshadowing/unrevealed", authMiddleware.RequireDM()(campaignHandler.GetUnrevealedForeshadowing)).Methods("GET")
-	api.HandleFunc("/foreshadowing/{elementId}/reveal", authMiddleware.RequireDM()(campaignHandler.RevealForeshadowing)).Methods("POST")
-	
-	// Timeline routes
-	api.HandleFunc("/sessions/{sessionId}/timeline", authMiddleware.Authenticate(campaignHandler.AddTimelineEvent)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/timeline", authMiddleware.Authenticate(campaignHandler.GetTimeline)).Methods("GET")
-	
-	// NPC Relationship routes
-	api.HandleFunc("/sessions/{sessionId}/npc-relationships", authMiddleware.RequireDM()(campaignHandler.UpdateNPCRelationship)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/npcs/{npcId}/relationships", authMiddleware.Authenticate(campaignHandler.GetNPCRelationships)).Methods("GET")
-	
-	// Combat Automation routes
-	// Auto-resolution
-	api.HandleFunc("/sessions/{sessionId}/combat/auto-resolve", authMiddleware.RequireDM()(combatAutomationHandler.AutoResolveCombat)).Methods("POST")
-	
-	// Smart Initiative
-	api.HandleFunc("/sessions/{sessionId}/combat/smart-initiative", authMiddleware.Authenticate(combatAutomationHandler.SmartInitiative)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/initiative-rules", authMiddleware.RequireDM()(combatAutomationHandler.SetInitiativeRules)).Methods("POST")
-	
-	// Battle Maps
-	api.HandleFunc("/sessions/{sessionId}/battle-maps", authMiddleware.RequireDM()(combatAutomationHandler.GenerateBattleMap)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/battle-maps", authMiddleware.Authenticate(combatAutomationHandler.GetBattleMaps)).Methods("GET")
-	api.HandleFunc("/battle-maps/{mapId}", authMiddleware.Authenticate(combatAutomationHandler.GetBattleMap)).Methods("GET")
-	
-	// Combat Analytics
-	api.HandleFunc("/combat/{combatId}/analytics", authMiddleware.Authenticate(combatAutomationHandler.GetCombatAnalytics)).Methods("GET")
-	api.HandleFunc("/sessions/{sessionId}/combat-history", authMiddleware.Authenticate(combatAutomationHandler.GetSessionCombatHistory)).Methods("GET")
-	
-	// World Building routes
-	// Settlement routes
-	api.HandleFunc("/sessions/{sessionId}/settlements/generate", authMiddleware.RequireDM()(worldBuildingHandler.GenerateSettlement)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/settlements", authMiddleware.Authenticate(worldBuildingHandler.GetSettlements)).Methods("GET")
-	api.HandleFunc("/settlements/{settlementId}", authMiddleware.Authenticate(worldBuildingHandler.GetSettlement)).Methods("GET")
-	api.HandleFunc("/settlements/{settlementId}/market", authMiddleware.Authenticate(worldBuildingHandler.GetSettlementMarket)).Methods("GET")
-	api.HandleFunc("/settlements/{settlementId}/calculate-price", authMiddleware.Authenticate(worldBuildingHandler.CalculateItemPrice)).Methods("POST")
-	
-	// Faction routes
-	api.HandleFunc("/sessions/{sessionId}/factions", authMiddleware.RequireDM()(worldBuildingHandler.CreateFaction)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/factions", authMiddleware.Authenticate(worldBuildingHandler.GetFactions)).Methods("GET")
-	api.HandleFunc("/factions/{faction1Id}/relationships/{faction2Id}", authMiddleware.RequireDM()(worldBuildingHandler.UpdateFactionRelationship)).Methods("PUT")
-	api.HandleFunc("/sessions/{sessionId}/factions/simulate-conflicts", authMiddleware.RequireDM()(worldBuildingHandler.SimulateFactionConflicts)).Methods("POST")
-	
-	// World Event routes
-	api.HandleFunc("/sessions/{sessionId}/world-events", authMiddleware.RequireDM()(worldBuildingHandler.CreateWorldEvent)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/world-events/active", authMiddleware.Authenticate(worldBuildingHandler.GetActiveWorldEvents)).Methods("GET")
-	api.HandleFunc("/sessions/{sessionId}/world-events/progress", authMiddleware.RequireDM()(worldBuildingHandler.ProgressWorldEvents)).Methods("POST")
-	
-	// Trade Route and Economic routes
-	api.HandleFunc("/trade-routes", authMiddleware.RequireDM()(worldBuildingHandler.CreateTradeRoute)).Methods("POST")
-	api.HandleFunc("/sessions/{sessionId}/economy/simulate", authMiddleware.RequireDM()(worldBuildingHandler.SimulateEconomics)).Methods("POST")
-	
-	// Rule Builder routes (protected)
-	// Rule Template routes
-	api.HandleFunc("/rules/templates", authMiddleware.Authenticate(h.GetRuleTemplates)).Methods("GET")
-	api.HandleFunc("/rules/templates", authMiddleware.RequireDM()(h.CreateRuleTemplate)).Methods("POST")
-	api.HandleFunc("/rules/templates/{id}", authMiddleware.Authenticate(h.GetRuleTemplate)).Methods("GET")
-	api.HandleFunc("/rules/templates/{id}", authMiddleware.RequireDM()(h.UpdateRuleTemplate)).Methods("PUT")
-	api.HandleFunc("/rules/templates/{id}", authMiddleware.RequireDM()(h.DeleteRuleTemplate)).Methods("DELETE")
-	api.HandleFunc("/rules/templates/{id}/compile", authMiddleware.Authenticate(h.CompileRuleTemplate)).Methods("POST")
-	api.HandleFunc("/rules/templates/{id}/validate", authMiddleware.Authenticate(h.ValidateRuleTemplate)).Methods("POST")
-	api.HandleFunc("/rules/templates/{id}/analyze", authMiddleware.Authenticate(h.AnalyzeRuleBalance)).Methods("POST")
-	api.HandleFunc("/rules/templates/{id}/export", authMiddleware.Authenticate(h.ExportRuleTemplate)).Methods("GET")
-	api.HandleFunc("/rules/templates/import", authMiddleware.RequireDM()(h.ImportRuleTemplate)).Methods("POST")
-	
-	// Node Template routes
-	api.HandleFunc("/rules/nodes/templates", authMiddleware.Authenticate(h.GetNodeTemplates)).Methods("GET")
-	
-	// Active Rule routes
-	api.HandleFunc("/rules/active", authMiddleware.Authenticate(h.GetActiveRules)).Methods("GET")
-	api.HandleFunc("/rules/activate", authMiddleware.Authenticate(h.ActivateRule)).Methods("POST")
-	api.HandleFunc("/rules/active/{id}", authMiddleware.Authenticate(h.DeactivateRule)).Methods("DELETE")
-	api.HandleFunc("/rules/execute", authMiddleware.Authenticate(h.ExecuteRule)).Methods("POST")
-	
-	// Conditional Reality routes
-	api.HandleFunc("/rules/conditional/{id}", authMiddleware.Authenticate(h.GetConditionalModifiers)).Methods("GET")
-	
-	// Rule History routes
-	api.HandleFunc("/rules/history", authMiddleware.Authenticate(h.GetRuleHistory)).Methods("GET")
-	
-	// Register narrative routes if available
-	if narrativeHandler != nil {
-		narrativeHandler.RegisterRoutes(api, authMiddleware.Authenticate)
+	// Configure route dependencies
+	routeConfig := &routes.Config{
+		Handlers:                h,
+		CharCreationHandler:     charCreationHandler,
+		InventoryHandler:        inventoryHandler,
+		CampaignHandler:         campaignHandler,
+		CombatAutomationHandler: combatAutomationHandler,
+		WorldBuildingHandler:    worldBuildingHandler,
+		NarrativeHandler:        narrativeHandler,
+		AuthMiddleware:          authMiddleware,
+		CSRFStore:               csrfStore,
+		AuthRateLimiter:         authRateLimiter,
+		APIRateLimiter:          apiRateLimiter,
 	}
-
+	
+	// Register all routes
+	routes.RegisterRoutes(router, routeConfig)
+	
 	// Initialize WebSocket with JWT manager
 	websocket.SetJWTManager(jwtManager)
 	
 	// WebSocket endpoint
 	router.HandleFunc("/ws", websocket.HandleWebSocket)
-
+	
 	// Serve static files
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend/build/")))
 
 	// Setup CORS
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:8080"},
+	allowedOrigins := []string{"http://localhost:3000", "http://localhost:8080"}
+	
+	// Add production origins from environment
+	if prodOrigin := os.Getenv("PRODUCTION_ORIGIN"); prodOrigin != "" {
+		allowedOrigins = append(allowedOrigins, prodOrigin)
+	}
+	
+	// In production, use strict CORS
+	corsOptions := cors.Options{
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		AllowCredentials: true,
 		ExposedHeaders:   []string{"Authorization"},
-	})
+		MaxAge:           86400, // 24 hours
+	}
+	
+	// In development, allow all headers
+	if isDevelopment {
+		corsOptions.AllowedHeaders = []string{"*"}
+		corsOptions.Debug = true
+	}
+	
+	c := cors.New(corsOptions)
 
 	handler := c.Handler(router)
 

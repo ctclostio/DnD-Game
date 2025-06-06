@@ -1,3 +1,5 @@
+import { createElement, clearElement, createInput, createSelect, appendChildren } from '../utils/dom.js';
+
 export class CharacterView {
     constructor(container, api) {
         this.container = container;
@@ -7,107 +9,163 @@ export class CharacterView {
     }
 
     render() {
-        this.container.innerHTML = `
-            <div class="character-view">
-                <h2>Character Management</h2>
-                <div class="character-actions">
-                    <button id="create-character-btn">Create New Character</button>
-                    <button id="load-character-btn">Load Character</button>
-                </div>
-                <div id="character-content"></div>
-            </div>
-        `;
-
-        this.setupEventListeners();
-    }
-
-    setupEventListeners() {
-        document.getElementById('create-character-btn').addEventListener('click', () => {
-            this.showCharacterForm();
+        clearElement(this.container);
+        
+        const characterView = createElement('div', { className: 'character-view' });
+        
+        const heading = createElement('h2', { textContent: 'Character Management' });
+        
+        const actions = createElement('div', { className: 'character-actions' });
+        const createBtn = createElement('button', {
+            id: 'create-character-btn',
+            textContent: 'Create New Character',
+            events: { click: () => this.showCharacterForm() }
         });
-
-        document.getElementById('load-character-btn').addEventListener('click', () => {
-            this.showCharacterList();
+        const loadBtn = createElement('button', {
+            id: 'load-character-btn',
+            textContent: 'Load Character',
+            events: { click: () => this.showCharacterList() }
         });
+        
+        actions.appendChild(createBtn);
+        actions.appendChild(loadBtn);
+        
+        const content = createElement('div', { id: 'character-content' });
+        
+        characterView.appendChild(heading);
+        characterView.appendChild(actions);
+        characterView.appendChild(content);
+        
+        this.container.appendChild(characterView);
     }
 
     showCharacterForm(character = null) {
         const content = document.getElementById('character-content');
-        content.innerHTML = `
-            <form id="character-form" class="character-form">
-                <h3>${character ? 'Edit' : 'Create'} Character</h3>
-                
-                <div class="form-group">
-                    <label for="char-name">Name</label>
-                    <input type="text" id="char-name" value="${character?.name || ''}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="char-race">Race</label>
-                    <select id="char-race" required>
-                        <option value="">Select Race</option>
-                        <option value="human" ${character?.race === 'human' ? 'selected' : ''}>Human</option>
-                        <option value="elf" ${character?.race === 'elf' ? 'selected' : ''}>Elf</option>
-                        <option value="dwarf" ${character?.race === 'dwarf' ? 'selected' : ''}>Dwarf</option>
-                        <option value="halfling" ${character?.race === 'halfling' ? 'selected' : ''}>Halfling</option>
-                        <option value="dragonborn" ${character?.race === 'dragonborn' ? 'selected' : ''}>Dragonborn</option>
-                        <option value="tiefling" ${character?.race === 'tiefling' ? 'selected' : ''}>Tiefling</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="char-class">Class</label>
-                    <select id="char-class" required>
-                        <option value="">Select Class</option>
-                        <option value="fighter" ${character?.class === 'fighter' ? 'selected' : ''}>Fighter</option>
-                        <option value="wizard" ${character?.class === 'wizard' ? 'selected' : ''}>Wizard</option>
-                        <option value="cleric" ${character?.class === 'cleric' ? 'selected' : ''}>Cleric</option>
-                        <option value="rogue" ${character?.class === 'rogue' ? 'selected' : ''}>Rogue</option>
-                        <option value="ranger" ${character?.class === 'ranger' ? 'selected' : ''}>Ranger</option>
-                        <option value="paladin" ${character?.class === 'paladin' ? 'selected' : ''}>Paladin</option>
-                    </select>
-                </div>
-
-                <div class="attributes">
-                    <div class="attribute-box">
-                        <h4>STR</h4>
-                        <input type="number" id="attr-str" min="3" max="18" value="${character?.attributes?.strength || 10}" required>
-                    </div>
-                    <div class="attribute-box">
-                        <h4>DEX</h4>
-                        <input type="number" id="attr-dex" min="3" max="18" value="${character?.attributes?.dexterity || 10}" required>
-                    </div>
-                    <div class="attribute-box">
-                        <h4>CON</h4>
-                        <input type="number" id="attr-con" min="3" max="18" value="${character?.attributes?.constitution || 10}" required>
-                    </div>
-                    <div class="attribute-box">
-                        <h4>INT</h4>
-                        <input type="number" id="attr-int" min="3" max="18" value="${character?.attributes?.intelligence || 10}" required>
-                    </div>
-                    <div class="attribute-box">
-                        <h4>WIS</h4>
-                        <input type="number" id="attr-wis" min="3" max="18" value="${character?.attributes?.wisdom || 10}" required>
-                    </div>
-                    <div class="attribute-box">
-                        <h4>CHA</h4>
-                        <input type="number" id="attr-cha" min="3" max="18" value="${character?.attributes?.charisma || 10}" required>
-                    </div>
-                </div>
-
-                <button type="submit">${character ? 'Update' : 'Create'} Character</button>
-                <button type="button" id="cancel-btn">Cancel</button>
-            </form>
-        `;
-
-        document.getElementById('character-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveCharacter(character?.id);
+        clearElement(content);
+        
+        const form = createElement('form', {
+            id: 'character-form',
+            className: 'character-form',
+            events: {
+                submit: (e) => {
+                    e.preventDefault();
+                    this.saveCharacter(character?.id);
+                }
+            }
         });
-
-        document.getElementById('cancel-btn').addEventListener('click', () => {
-            this.showCharacterSheet(this.currentCharacter);
+        
+        const heading = createElement('h3', {
+            textContent: `${character ? 'Edit' : 'Create'} Character`
         });
+        form.appendChild(heading);
+        
+        // Name field
+        const nameGroup = createElement('div', { className: 'form-group' });
+        const nameLabel = createElement('label', {
+            textContent: 'Name',
+            attributes: { for: 'char-name' }
+        });
+        const nameInput = createInput({
+            type: 'text',
+            id: 'char-name',
+            value: character?.name || '',
+            required: true
+        });
+        nameGroup.appendChild(nameLabel);
+        nameGroup.appendChild(nameInput);
+        form.appendChild(nameGroup);
+        
+        // Race field
+        const raceGroup = createElement('div', { className: 'form-group' });
+        const raceLabel = createElement('label', {
+            textContent: 'Race',
+            attributes: { for: 'char-race' }
+        });
+        const raceSelect = createSelect({
+            id: 'char-race',
+            required: true,
+            options: [
+                { value: '', text: 'Select Race' },
+                { value: 'human', text: 'Human', selected: character?.race === 'human' },
+                { value: 'elf', text: 'Elf', selected: character?.race === 'elf' },
+                { value: 'dwarf', text: 'Dwarf', selected: character?.race === 'dwarf' },
+                { value: 'halfling', text: 'Halfling', selected: character?.race === 'halfling' },
+                { value: 'dragonborn', text: 'Dragonborn', selected: character?.race === 'dragonborn' },
+                { value: 'tiefling', text: 'Tiefling', selected: character?.race === 'tiefling' }
+            ]
+        });
+        raceGroup.appendChild(raceLabel);
+        raceGroup.appendChild(raceSelect);
+        form.appendChild(raceGroup);
+        
+        // Class field
+        const classGroup = createElement('div', { className: 'form-group' });
+        const classLabel = createElement('label', {
+            textContent: 'Class',
+            attributes: { for: 'char-class' }
+        });
+        const classSelect = createSelect({
+            id: 'char-class',
+            required: true,
+            options: [
+                { value: '', text: 'Select Class' },
+                { value: 'fighter', text: 'Fighter', selected: character?.class === 'fighter' },
+                { value: 'wizard', text: 'Wizard', selected: character?.class === 'wizard' },
+                { value: 'cleric', text: 'Cleric', selected: character?.class === 'cleric' },
+                { value: 'rogue', text: 'Rogue', selected: character?.class === 'rogue' },
+                { value: 'ranger', text: 'Ranger', selected: character?.class === 'ranger' },
+                { value: 'paladin', text: 'Paladin', selected: character?.class === 'paladin' }
+            ]
+        });
+        classGroup.appendChild(classLabel);
+        classGroup.appendChild(classSelect);
+        form.appendChild(classGroup);
+        
+        // Attributes
+        const attributesDiv = createElement('div', { className: 'attributes' });
+        const attributes = [
+            { name: 'STR', id: 'attr-str', value: character?.attributes?.strength || 10 },
+            { name: 'DEX', id: 'attr-dex', value: character?.attributes?.dexterity || 10 },
+            { name: 'CON', id: 'attr-con', value: character?.attributes?.constitution || 10 },
+            { name: 'INT', id: 'attr-int', value: character?.attributes?.intelligence || 10 },
+            { name: 'WIS', id: 'attr-wis', value: character?.attributes?.wisdom || 10 },
+            { name: 'CHA', id: 'attr-cha', value: character?.attributes?.charisma || 10 }
+        ];
+        
+        attributes.forEach(attr => {
+            const box = createElement('div', { className: 'attribute-box' });
+            const heading = createElement('h4', { textContent: attr.name });
+            const input = createInput({
+                type: 'number',
+                id: attr.id,
+                min: 3,
+                max: 18,
+                value: attr.value,
+                required: true
+            });
+            box.appendChild(heading);
+            box.appendChild(input);
+            attributesDiv.appendChild(box);
+        });
+        form.appendChild(attributesDiv);
+        
+        // Buttons
+        const submitBtn = createElement('button', {
+            type: 'submit',
+            textContent: `${character ? 'Update' : 'Create'} Character`
+        });
+        const cancelBtn = createElement('button', {
+            type: 'button',
+            id: 'cancel-btn',
+            textContent: 'Cancel',
+            events: {
+                click: () => this.showCharacterSheet(this.currentCharacter)
+            }
+        });
+        form.appendChild(submitBtn);
+        form.appendChild(cancelBtn);
+        
+        content.appendChild(form);
     }
 
     async saveCharacter(characterId) {
@@ -144,164 +202,178 @@ export class CharacterView {
         try {
             const characters = await this.api.getCharacters();
             const content = document.getElementById('character-content');
+            clearElement(content);
             
             if (characters.length === 0) {
-                content.innerHTML = '<p>No characters found. Create your first character!</p>';
+                const message = createElement('p', {
+                    textContent: 'No characters found. Create your first character!'
+                });
+                content.appendChild(message);
                 return;
             }
-
-            content.innerHTML = `
-                <div class="character-list">
-                    <h3>Select a Character</h3>
-                    <div class="character-cards">
-                        ${characters.map(char => `
-                            <div class="character-card" data-id="${char.id}">
-                                <h4>${char.name}</h4>
-                                <p>${char.race} ${char.class}</p>
-                                <p>Level ${char.level}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-
-            document.querySelectorAll('.character-card').forEach(card => {
-                card.addEventListener('click', async (e) => {
-                    const characterId = e.currentTarget.dataset.id;
-                    const character = await this.api.getCharacter(characterId);
-                    this.currentCharacter = character;
-                    this.showCharacterSheet(character);
+            
+            const heading = createElement('h3', { textContent: 'Your Characters' });
+            content.appendChild(heading);
+            
+            const list = createElement('div', { className: 'character-list' });
+            
+            characters.forEach(char => {
+                const card = createElement('div', {
+                    className: 'character-card',
+                    events: {
+                        click: () => this.loadCharacter(char.id)
+                    }
                 });
+                
+                const name = createElement('h4', { textContent: char.name });
+                const info = createElement('p', {
+                    textContent: `Level ${char.level} ${char.race} ${char.class}`
+                });
+                
+                card.appendChild(name);
+                card.appendChild(info);
+                list.appendChild(card);
             });
+            
+            content.appendChild(list);
         } catch (error) {
             console.error('Failed to load characters:', error);
-            alert('Failed to load characters. Please try again.');
+            const content = document.getElementById('character-content');
+            clearElement(content);
+            const errorMsg = createElement('p', {
+                textContent: 'Failed to load characters. Please try again.'
+            });
+            content.appendChild(errorMsg);
+        }
+    }
+
+    async loadCharacter(characterId) {
+        try {
+            const character = await this.api.getCharacter(characterId);
+            this.currentCharacter = character;
+            this.showCharacterSheet(character);
+        } catch (error) {
+            console.error('Failed to load character:', error);
+            alert('Failed to load character. Please try again.');
         }
     }
 
     showCharacterSheet(character) {
         if (!character) {
-            document.getElementById('character-content').innerHTML = '<p>No character selected</p>';
+            this.render();
             return;
         }
 
         const content = document.getElementById('character-content');
-        content.innerHTML = `
-            <div class="character-sheet">
-                <div class="character-header">
-                    <div>
-                        <h3>${character.name}</h3>
-                        <p>${character.race} ${character.class} - Level ${character.level}</p>
-                    </div>
-                    <div>
-                        <button id="edit-character-btn">Edit</button>
-                        <button id="skill-check-btn">Skill Checks</button>
-                    </div>
-                </div>
-
-                <div class="character-stats">
-                    <div class="stat-box">
-                        <h4>Hit Points</h4>
-                        <p>${character.hitPoints} / ${character.maxHitPoints}</p>
-                    </div>
-                    <div class="stat-box">
-                        <h4>Armor Class</h4>
-                        <p>${character.armorClass}</p>
-                    </div>
-                    <div class="stat-box">
-                        <h4>Speed</h4>
-                        <p>${character.speed} ft</p>
-                    </div>
-                </div>
-
-                <div class="attributes">
-                    <div class="attribute-box">
-                        <h4>STR</h4>
-                        <div class="attribute-value">${character.strength || 10}</div>
-                        <div class="attribute-modifier">${this.getModifier(character.strength || 10) >= 0 ? '+' : ''}${this.getModifier(character.strength || 10)}</div>
-                    </div>
-                    <div class="attribute-box">
-                        <h4>DEX</h4>
-                        <div class="attribute-value">${character.dexterity || 10}</div>
-                        <div class="attribute-modifier">${this.getModifier(character.dexterity || 10) >= 0 ? '+' : ''}${this.getModifier(character.dexterity || 10)}</div>
-                    </div>
-                    <div class="attribute-box">
-                        <h4>CON</h4>
-                        <div class="attribute-value">${character.constitution || 10}</div>
-                        <div class="attribute-modifier">${this.getModifier(character.constitution || 10) >= 0 ? '+' : ''}${this.getModifier(character.constitution || 10)}</div>
-                    </div>
-                    <div class="attribute-box">
-                        <h4>INT</h4>
-                        <div class="attribute-value">${character.intelligence || 10}</div>
-                        <div class="attribute-modifier">${this.getModifier(character.intelligence || 10) >= 0 ? '+' : ''}${this.getModifier(character.intelligence || 10)}</div>
-                    </div>
-                    <div class="attribute-box">
-                        <h4>WIS</h4>
-                        <div class="attribute-value">${character.wisdom || 10}</div>
-                        <div class="attribute-modifier">${this.getModifier(character.wisdom || 10) >= 0 ? '+' : ''}${this.getModifier(character.wisdom || 10)}</div>
-                    </div>
-                    <div class="attribute-box">
-                        <h4>CHA</h4>
-                        <div class="attribute-value">${character.charisma || 10}</div>
-                        <div class="attribute-modifier">${this.getModifier(character.charisma || 10) >= 0 ? '+' : ''}${this.getModifier(character.charisma || 10)}</div>
-                    </div>
-                </div>
-
-                <div class="skills-section">
-                    <h4>Skills</h4>
-                    <div class="skills-list">
-                        ${character.skills?.map(skill => `
-                            <div class="skill-item">
-                                <span>${skill.name}</span>
-                                <span>${skill.modifier >= 0 ? '+' : ''}${skill.modifier}</span>
-                            </div>
-                        `).join('') || '<p>No skills recorded</p>'}
-                    </div>
-                </div>
-
-                <div id="experience-container"></div>
-                
-                <div id="spell-slot-container"></div>
-                
-                <div id="skill-check-view" style="display: none;"></div>
-            </div>
-        `;
-
-        document.getElementById('edit-character-btn').addEventListener('click', () => {
-            this.showCharacterForm(character);
-        });
+        clearElement(content);
         
-        document.getElementById('skill-check-btn').addEventListener('click', () => {
-            // Toggle skill check view
-            const skillCheckView = document.getElementById('skill-check-view');
-            if (skillCheckView.style.display === 'none') {
-                skillCheckView.style.display = 'block';
-                // Initialize skill check view if available
-                if (window.skillCheckView) {
-                    window.skillCheckView.init(character);
-                }
-            } else {
-                skillCheckView.style.display = 'none';
+        const sheet = createElement('div', { className: 'character-sheet' });
+        
+        // Header
+        const header = createElement('div', { className: 'character-header' });
+        const name = createElement('h3', { textContent: character.name });
+        const info = createElement('p', {
+            textContent: `Level ${character.level} ${character.race} ${character.class}`
+        });
+        const editBtn = createElement('button', {
+            textContent: 'Edit',
+            events: {
+                click: () => this.showCharacterForm(character)
             }
         });
-
-        // Initialize experience tracker
-        if (window.experienceTracker) {
-            window.experienceTracker.setCharacter(character);
+        
+        header.appendChild(name);
+        header.appendChild(info);
+        header.appendChild(editBtn);
+        sheet.appendChild(header);
+        
+        // Stats
+        const statsSection = createElement('div', { className: 'stats-section' });
+        const statsHeading = createElement('h4', { textContent: 'Stats' });
+        statsSection.appendChild(statsHeading);
+        
+        const stats = createElement('div', { className: 'stats' });
+        
+        // HP
+        const hpStat = createElement('div', { className: 'stat' });
+        const hpLabel = createElement('span', { textContent: 'HP:' });
+        const hpValue = createElement('span', {
+            textContent: `${character.currentHP || character.maxHP}/${character.maxHP}`
+        });
+        hpStat.appendChild(hpLabel);
+        hpStat.appendChild(hpValue);
+        stats.appendChild(hpStat);
+        
+        // AC
+        const acStat = createElement('div', { className: 'stat' });
+        const acLabel = createElement('span', { textContent: 'AC:' });
+        const acValue = createElement('span', { textContent: character.armorClass });
+        acStat.appendChild(acLabel);
+        acStat.appendChild(acValue);
+        stats.appendChild(acStat);
+        
+        // Speed
+        const speedStat = createElement('div', { className: 'stat' });
+        const speedLabel = createElement('span', { textContent: 'Speed:' });
+        const speedValue = createElement('span', { textContent: character.speed });
+        speedStat.appendChild(speedLabel);
+        speedStat.appendChild(speedValue);
+        stats.appendChild(speedStat);
+        
+        statsSection.appendChild(stats);
+        sheet.appendChild(statsSection);
+        
+        // Attributes
+        const attrSection = createElement('div', { className: 'attributes-section' });
+        const attrHeading = createElement('h4', { textContent: 'Attributes' });
+        attrSection.appendChild(attrHeading);
+        
+        const attrGrid = createElement('div', { className: 'attributes-grid' });
+        
+        Object.entries(character.attributes).forEach(([key, value]) => {
+            const attrBox = createElement('div', { className: 'attribute-display' });
+            const attrName = createElement('div', {
+                className: 'attr-name',
+                textContent: key.toUpperCase().slice(0, 3)
+            });
+            const attrValue = createElement('div', {
+                className: 'attr-value',
+                textContent: value
+            });
+            const modifier = Math.floor((value - 10) / 2);
+            const attrMod = createElement('div', {
+                className: 'attr-modifier',
+                textContent: modifier >= 0 ? `+${modifier}` : `${modifier}`
+            });
+            
+            attrBox.appendChild(attrName);
+            attrBox.appendChild(attrValue);
+            attrBox.appendChild(attrMod);
+            attrGrid.appendChild(attrBox);
+        });
+        
+        attrSection.appendChild(attrGrid);
+        sheet.appendChild(attrSection);
+        
+        // Skills
+        if (character.skills && character.skills.length > 0) {
+            const skillsSection = createElement('div', { className: 'skills-section' });
+            const skillsHeading = createElement('h4', { textContent: 'Skills' });
+            skillsSection.appendChild(skillsHeading);
+            
+            const skillsList = createElement('div', { className: 'skills-list' });
+            character.skills.forEach(skill => {
+                const skillItem = createElement('div', {
+                    className: 'skill-item',
+                    textContent: skill
+                });
+                skillsList.appendChild(skillItem);
+            });
+            
+            skillsSection.appendChild(skillsList);
+            sheet.appendChild(skillsSection);
         }
-
-        // Initialize spell slot manager if character has spell data
-        if (window.spellSlotManager && character.spells) {
-            window.spellSlotManager.setCharacter(character);
-        }
-    }
-
-    updateCharacter(character) {
-        this.currentCharacter = character;
-        this.showCharacterSheet(character);
-    }
-
-    getModifier(abilityScore) {
-        return Math.floor((abilityScore - 10) / 2);
+        
+        content.appendChild(sheet);
     }
 }
