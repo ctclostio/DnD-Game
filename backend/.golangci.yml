@@ -1,0 +1,229 @@
+run:
+  timeout: 5m
+  tests: true
+  build-tags:
+    - integration
+  skip-dirs:
+    - vendor
+    - node_modules
+  skip-files:
+    - ".*_mock.go"
+    - ".*_gen.go"
+
+linters:
+  enable:
+    - bodyclose
+    - dogsled
+    - dupl
+    - errcheck
+    - exportloopref
+    - exhaustive
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - gomnd
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - noctx
+    - nolintlint
+    - rowserrcheck
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+    - prealloc
+    - predeclared
+    - asciicheck
+    - errorlint
+    - exhaustivestruct
+    - forcetypeassert
+    - goerr113
+    - godot
+    - godox
+    - goheader
+    - gci
+    - ifshort
+    - importas
+    - makezero
+    - nestif
+    - nlreturn
+    - nilerr
+    - paralleltest
+    - thelper
+    - tparallel
+    - revive
+    - sqlclosecheck
+    - tagliatelle
+    - testpackage
+    - wastedassign
+    - wrapcheck
+
+  disable:
+    - depguard
+    - funlen
+    - gocognit
+    - gomodguard
+    - wsl
+    - gochecknoglobals
+
+linters-settings:
+  dupl:
+    threshold: 100
+  exhaustive:
+    default-signifies-exhaustive: false
+  funlen:
+    lines: 100
+    statements: 50
+  gci:
+    local-prefixes: github.com/your-username/dnd-game
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport
+      - ifElseChain
+      - octalLiteral
+      - whyNoLint
+      - wrapperFunc
+  gocyclo:
+    min-complexity: 15
+  goimports:
+    local-prefixes: github.com/your-username/dnd-game
+  golint:
+    min-confidence: 0
+  gomnd:
+    settings:
+      mnd:
+        checks:
+          - argument
+          - case
+          - condition
+          - return
+        ignored-numbers:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '10'
+        ignored-files:
+          - 'test'
+        ignored-functions:
+          - 'strconv.ParseInt'
+  govet:
+    check-shadowing: true
+  lll:
+    line-length: 140
+  maligned:
+    suggest-new: true
+  misspell:
+    locale: US
+  nolintlint:
+    allow-leading-space: true
+    allow-unused: false
+    require-explanation: false
+    require-specific: false
+  prealloc:
+    simple: true
+    range-loops: true
+    for-loops: true
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+  testpackage:
+    skip-regexp: (export|internal)_test\.go
+  errorlint:
+    errorf: true
+    asserts: true
+    comparison: true
+  exhaustivestruct:
+    struct-patterns:
+      - '*.Test*'
+      - '*.test*'
+      - '*.Mock*'
+      - '*.mock*'
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gomnd
+        - goconst
+        - gosec
+        - noctx
+        - dogsled
+        - bodyclose
+        - testpackage
+        - paralleltest
+        - tparallel
+        - errorlint
+    - path: testing\.go
+      linters:
+        - gosec
+    - path: cmd/
+      linters:
+        - gochecknoinits
+        - gochecknoglobals
+        - exhaustivestruct
+    - path: internal/models/
+      linters:
+        - exhaustivestruct
+    - linters:
+        - lll
+      source: "^//go:generate "
+    - linters:
+        - goerr113
+      text: "do not define dynamic errors"
+    - linters:
+        - stylecheck
+      text: "ST1000:"
+    - linters:
+        - revive
+      text: "exported:"
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+
+service:
+  golangci-lint-version: 1.55.x

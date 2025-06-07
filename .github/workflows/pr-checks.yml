@@ -1,0 +1,80 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  pr-size:
+    name: Check PR Size
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR Size
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+            const total = additions + deletions;
+            
+            let comment = '';
+            
+            if (total > 1000) {
+              comment = `⚠️ This PR changes ${total} lines (${additions} additions, ${deletions} deletions). Consider breaking it into smaller PRs for easier review.`;
+            } else if (total > 500) {
+              comment = `ℹ️ This PR changes ${total} lines (${additions} additions, ${deletions} deletions). This is a medium-sized PR.`;
+            } else {
+              comment = `✅ This PR changes ${total} lines (${additions} additions, ${deletions} deletions). Good job keeping it focused!`;
+            }
+            
+            // Check if tests are included
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+            
+            const hasTests = files.data.some(file => 
+              file.filename.includes('_test.go') || 
+              file.filename.includes('.test.ts') || 
+              file.filename.includes('.test.tsx')
+            );
+            
+            if (!hasTests && additions > 50) {
+              comment += '\n\n⚠️ No test files detected. Please consider adding tests for your changes.';
+            } else if (hasTests) {
+              comment += '\n\n✅ Test files detected. Thank you for including tests!';
+            }
+            
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  check-migrations:
+    name: Check Database Migrations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for migration conflicts
+        run: |
+          # Get list of migration files
+          MIGRATIONS=$(find backend/internal/database/migrations -name "*.sql" -type f | sort)
+          
+          # Check for duplicate migration numbers
+          DUPLICATES=$(echo "$MIGRATIONS" | grep -oE "[0-9]{3}_" | sort | uniq -d)
+          
+          if [ ! -z "$DUPLICATES" ]; then
+            echo "❌ Duplicate migration numbers found: $DUPLICATES"
+            exit 1
+          else
+            echo "✅ No duplicate migration numbers found"
+          fi
