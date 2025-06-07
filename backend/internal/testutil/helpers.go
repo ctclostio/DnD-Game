@@ -24,8 +24,8 @@ func TestLogger() *logger.Logger {
 	return logger.New(cfg)
 }
 
-// TestContext returns a context with test values
-func TestContext(t *testing.T) context.Context {
+// TestContextWithT returns a context with test values
+func TestContextWithT(t *testing.T) context.Context {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logger.RequestIDKey, "test-request-id")
 	return ctx

@@ -307,8 +307,8 @@ type SocialClass struct {
 	Markers      []string `json:"markers"` // Visual or behavioral markers
 }
 
-// WorldEvent represents a significant event in the living world
-type WorldEvent struct {
+// EmergentWorldEvent represents a significant event in the living world simulation
+type EmergentWorldEvent struct {
 	ID               string                 `json:"id" db:"id"`
 	SessionID        string                 `json:"session_id" db:"session_id"`
 	EventType        string                 `json:"event_type" db:"event_type"`

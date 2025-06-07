@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/your-username/dnd-game/backend/internal/models"
@@ -729,7 +730,7 @@ func (r *EmergentWorldRepository) UpdateCulture(culture *models.ProceduralCultur
 // World Event Methods
 
 // CreateWorldEvent creates a new world event
-func (r *EmergentWorldRepository) CreateWorldEvent(event *models.WorldEvent) error {
+func (r *EmergentWorldRepository) CreateWorldEvent(event *models.EmergentWorldEvent) error {
 	impactJSON, _ := json.Marshal(event.Impact)
 	affectedEntitiesJSON, _ := json.Marshal(event.AffectedEntities)
 	consequencesJSON, _ := json.Marshal(event.Consequences)
@@ -759,7 +760,7 @@ func (r *EmergentWorldRepository) CreateWorldEvent(event *models.WorldEvent) err
 }
 
 // GetWorldEvents retrieves world events for a session
-func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, onlyPlayerVisible bool) ([]models.WorldEvent, error) {
+func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, onlyPlayerVisible bool) ([]models.EmergentWorldEvent, error) {
 	query := `
 		SELECT id, session_id, event_type, title, description,
 		       impact, affected_entities, consequences,
@@ -787,9 +788,9 @@ func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, on
 	}
 	defer rows.Close()
 
-	var events []models.WorldEvent
+	var events []models.EmergentWorldEvent
 	for rows.Next() {
-		var event models.WorldEvent
+		var event models.EmergentWorldEvent
 		var impactJSON, affectedEntitiesJSON, consequencesJSON []byte
 
 		err := rows.Scan(

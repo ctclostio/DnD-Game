@@ -38,7 +38,7 @@ type LogicNode struct {
 	ID         string                 `json:"id"`
 	Type       string                 `json:"type"` // trigger, condition, action, effect, calculation, variable
 	SubType    string                 `json:"subtype"` // specific node functionality
-	Position   Position               `json:"position"`
+	Position   EditorPosition         `json:"position"`
 	Properties map[string]interface{} `json:"properties"`
 	Inputs     []NodePort             `json:"inputs"`
 	Outputs    []NodePort             `json:"outputs"`
@@ -63,8 +63,8 @@ type NodeConnection struct {
 	DataMapping  string `json:"data_mapping"` // How data transforms between nodes
 }
 
-// Position represents x,y coordinates in the visual editor
-type Position struct {
+// EditorPosition represents x,y coordinates in the visual editor
+type EditorPosition struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 }

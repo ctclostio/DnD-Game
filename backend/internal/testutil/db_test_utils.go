@@ -11,20 +11,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// MockDB provides a mock database for testing
-type MockDB struct {
+// MockDBWithStruct provides a mock database for testing
+type MockDBWithStruct struct {
 	DB   *sqlx.DB
 	Mock sqlmock.Sqlmock
 }
 
-// NewMockDB creates a new mock database
-func NewMockDB(t *testing.T) *MockDB {
+// NewMockDBWithStruct creates a new mock database
+func NewMockDBWithStruct(t *testing.T) *MockDBWithStruct {
 	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	require.NoError(t, err)
 
 	sqlxDB := sqlx.NewDb(db, "postgres")
 	
-	return &MockDB{
+	return &MockDBWithStruct{
 		DB:   sqlxDB,
 		Mock: mock,
 	}

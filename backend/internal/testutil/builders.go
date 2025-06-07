@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/your-org/dnd-game/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 // Builder interface for all test builders
@@ -127,8 +127,8 @@ func (b *CharacterBuilder) WithLevel(level int) *CharacterBuilder {
 	return b
 }
 
-func (b *CharacterBuilder) WithAbilities(abilities models.AbilityScores) *CharacterBuilder {
-	b.character.Abilities = abilities
+func (b *CharacterBuilder) WithAbilities(attributes models.Attributes) *CharacterBuilder {
+	b.character.Attributes = attributes
 	return b
 }
 
@@ -203,32 +203,39 @@ type CombatBuilder struct {
 func NewCombatBuilder() *CombatBuilder {
 	return &CombatBuilder{
 		combat: models.Combat{
-			ID:              1,
-			GameSessionID:   1,
+			ID:              "combat-1",
+			GameSessionID:   "session-1",
+			Name:            "Test Combat",
 			Round:           1,
-			TurnOrder:       []models.CombatParticipant{},
 			CurrentTurn:     0,
-			Status:          "active",
-			Conditions:      map[string][]string{},
-			CombatLog:       []models.CombatLogEntry{},
-			StartTime:       time.Now(),
-			LastActionTime:  time.Now(),
+			Combatants:      []models.Combatant{},
+			TurnOrder:       []string{},
+			ActiveEffects:   []models.CombatEffect{},
+			IsActive:        true,
+			CreatedAt:       time.Now(),
+			UpdatedAt:       time.Now(),
 		},
 	}
 }
 
-func (b *CombatBuilder) WithID(id int64) *CombatBuilder {
+func (b *CombatBuilder) WithID(id string) *CombatBuilder {
 	b.combat.ID = id
 	return b
 }
 
-func (b *CombatBuilder) WithGameSession(sessionID int64) *CombatBuilder {
+func (b *CombatBuilder) WithGameSession(sessionID string) *CombatBuilder {
 	b.combat.GameSessionID = sessionID
 	return b
 }
 
-func (b *CombatBuilder) WithParticipants(participants ...models.CombatParticipant) *CombatBuilder {
-	b.combat.TurnOrder = participants
+func (b *CombatBuilder) WithParticipants(participants ...models.Combatant) *CombatBuilder {
+	b.combat.Combatants = participants
+	// Set turn order based on participant IDs
+	turnOrder := make([]string, len(participants))
+	for i, p := range participants {
+		turnOrder[i] = p.ID
+	}
+	b.combat.TurnOrder = turnOrder
 	return b
 }
 
@@ -241,15 +248,15 @@ func (b *CombatBuilder) Build() *models.Combat {
 	return &b.combat
 }
 
-// CombatParticipantBuilder for creating combat participants
-type CombatParticipantBuilder struct {
-	participant models.CombatParticipant
+// CombatantBuilder for creating combat participants
+type CombatantBuilder struct {
+	participant models.Combatant
 }
 
-// NewCombatParticipantBuilder creates a new participant builder
-func NewCombatParticipantBuilder() *CombatParticipantBuilder {
-	return &CombatParticipantBuilder{
-		participant: models.CombatParticipant{
+// NewCombatantBuilder creates a new participant builder
+func NewCombatantBuilder() *CombatantBuilder {
+	return &CombatantBuilder{
+		participant: models.Combatant{
 			ID:           "participant-1",
 			Name:         "Fighter",
 			Type:         "character",
@@ -264,39 +271,39 @@ func NewCombatParticipantBuilder() *CombatParticipantBuilder {
 	}
 }
 
-func (b *CombatParticipantBuilder) WithID(id string) *CombatParticipantBuilder {
+func (b *CombatantBuilder) WithID(id string) *CombatantBuilder {
 	b.participant.ID = id
 	return b
 }
 
-func (b *CombatParticipantBuilder) WithName(name string) *CombatParticipantBuilder {
+func (b *CombatantBuilder) WithName(name string) *CombatantBuilder {
 	b.participant.Name = name
 	return b
 }
 
-func (b *CombatParticipantBuilder) WithType(pType string) *CombatParticipantBuilder {
+func (b *CombatantBuilder) WithType(pType string) *CombatantBuilder {
 	b.participant.Type = pType
 	return b
 }
 
-func (b *CombatParticipantBuilder) WithInitiative(init int) *CombatParticipantBuilder {
+func (b *CombatantBuilder) WithInitiative(init int) *CombatantBuilder {
 	b.participant.Initiative = init
 	return b
 }
 
-func (b *CombatParticipantBuilder) WithHP(current, max int) *CombatParticipantBuilder {
+func (b *CombatantBuilder) WithHP(current, max int) *CombatantBuilder {
 	b.participant.HP = current
 	b.participant.MaxHP = max
 	return b
 }
 
-func (b *CombatParticipantBuilder) AsNPC() *CombatParticipantBuilder {
+func (b *CombatantBuilder) AsNPC() *CombatantBuilder {
 	b.participant.Type = "npc"
 	b.participant.CharacterID = 0
 	return b
 }
 
-func (b *CombatParticipantBuilder) Build() models.CombatParticipant {
+func (b *CombatantBuilder) Build() models.Combatant {
 	return b.participant
 }
 
@@ -462,18 +469,18 @@ func NewTestScenario(t *testing.T) *TestScenario {
 
 // WithCombat adds a combat scenario
 func (s *TestScenario) WithCombat() *TestScenario {
-	participants := []models.CombatParticipant{
-		NewCombatParticipantBuilder().
+	participants := []models.Combatant{
+		NewCombatantBuilder().
 			WithID("char-2").
 			WithName(s.Characters[1].Name).
 			WithInitiative(18).
 			Build(),
-		NewCombatParticipantBuilder().
+		NewCombatantBuilder().
 			WithID("char-3").
 			WithName(s.Characters[2].Name).
 			WithInitiative(15).
 			Build(),
-		NewCombatParticipantBuilder().
+		NewCombatantBuilder().
 			WithID("npc-1").
 			WithName("Goblin").
 			AsNPC().

@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"github.com/ctclostio/dnd-game/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )

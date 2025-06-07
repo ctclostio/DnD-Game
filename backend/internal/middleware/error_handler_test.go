@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
-	"github.com/your-org/dnd-game/internal/testutil"
-	"github.com/your-org/dnd-game/pkg/errors"
+	"github.com/your-username/dnd-game/backend/internal/testutil"
+	"github.com/your-username/dnd-game/backend/pkg/errors"
 )
 
 func TestErrorHandlerMiddleware(t *testing.T) {

@@ -62,8 +62,8 @@ type EncounterEnemy struct {
 	Flaw              string                 `json:"flaw" db:"flaw"`
 	Tactics           string                 `json:"tactics" db:"tactics"`
 	MoraleThreshold   int                    `json:"moraleThreshold" db:"morale_threshold"`
-	InitialPosition   *Position              `json:"initialPosition,omitempty" db:"initial_position"`
-	CurrentPosition   *Position              `json:"currentPosition,omitempty" db:"current_position"`
+	InitialPosition   *GridPosition              `json:"initialPosition,omitempty" db:"initial_position"`
+	CurrentPosition   *GridPosition              `json:"currentPosition,omitempty" db:"current_position"`
 	Conditions        []string               `json:"conditions" db:"conditions"`
 	IsAlive           bool                   `json:"isAlive" db:"is_alive"`
 	Fled              bool                   `json:"fled" db:"fled"`

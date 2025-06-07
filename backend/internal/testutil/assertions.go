@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/your-org/dnd-game/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 // AssertHelpers provides custom assertion methods for D&D game entities
@@ -34,18 +34,18 @@ func (a *AssertHelpers) AssertCharacterValid(char *models.Character) {
 	require.GreaterOrEqual(a.t, char.ArmorClass, 0)
 	
 	// Validate ability scores
-	a.AssertAbilityScoresValid(char.Abilities)
+	a.AssertAbilityScoresValid(char.Attributes)
 }
 
 // AssertAbilityScoresValid asserts ability scores are within D&D bounds
-func (a *AssertHelpers) AssertAbilityScoresValid(abilities models.AbilityScores) {
+func (a *AssertHelpers) AssertAbilityScoresValid(attributes models.Attributes) {
 	scores := []int{
-		abilities.Strength,
-		abilities.Dexterity,
-		abilities.Constitution,
-		abilities.Intelligence,
-		abilities.Wisdom,
-		abilities.Charisma,
+		attributes.Strength,
+		attributes.Dexterity,
+		attributes.Constitution,
+		attributes.Intelligence,
+		attributes.Wisdom,
+		attributes.Charisma,
 	}
 	
 	for _, score := range scores {
@@ -57,21 +57,21 @@ func (a *AssertHelpers) AssertAbilityScoresValid(abilities models.AbilityScores)
 // AssertDiceRollValid asserts a dice roll result is valid
 func (a *AssertHelpers) AssertDiceRollValid(roll *models.DiceRoll) {
 	require.NotNil(a.t, roll)
-	require.NotEmpty(a.t, roll.DiceNotation)
-	require.NotEmpty(a.t, roll.RollType)
-	require.Greater(a.t, len(roll.Rolls), 0)
+	require.NotEmpty(a.t, roll.RollNotation)
+	require.NotEmpty(a.t, roll.Purpose)
+	require.Greater(a.t, len(roll.Results), 0)
 	
 	// Validate each individual roll
-	for _, r := range roll.Rolls {
+	for _, r := range roll.Results {
 		require.Greater(a.t, r, 0, "Dice roll must be positive")
 	}
 	
 	// Validate result matches rolls + modifiers
 	sum := 0
-	for _, r := range roll.Rolls {
+	for _, r := range roll.Results {
 		sum += r
 	}
-	require.Equal(a.t, sum+roll.Modifiers, roll.Result)
+	require.Equal(a.t, sum+roll.Modifier, roll.Total)
 }
 
 // AssertCombatValid asserts combat state is valid
@@ -82,19 +82,26 @@ func (a *AssertHelpers) AssertCombatValid(combat *models.Combat) {
 	require.Less(a.t, combat.CurrentTurn, len(combat.TurnOrder))
 	
 	// Validate turn order
-	for i, participant := range combat.TurnOrder {
-		require.NotEmpty(a.t, participant.ID, "Participant %d must have ID", i)
-		require.NotEmpty(a.t, participant.Name, "Participant %d must have name", i)
-		require.GreaterOrEqual(a.t, participant.HP, 0)
-		require.LessOrEqual(a.t, participant.HP, participant.MaxHP)
+	for i, combatantID := range combat.TurnOrder {
+		require.NotEmpty(a.t, combatantID, "Turn order entry %d must have combatant ID", i)
 	}
 	
-	// Ensure initiatives are sorted (highest first)
-	for i := 1; i < len(combat.TurnOrder); i++ {
-		require.GreaterOrEqual(a.t, 
-			combat.TurnOrder[i-1].Initiative, 
-			combat.TurnOrder[i].Initiative,
-			"Turn order should be sorted by initiative")
+	// Validate combatants
+	for i, combatant := range combat.Combatants {
+		require.NotEmpty(a.t, combatant.ID, "Combatant %d must have ID", i)
+		require.NotEmpty(a.t, combatant.Name, "Combatant %d must have name", i)
+		require.GreaterOrEqual(a.t, combatant.HP, 0)
+		require.LessOrEqual(a.t, combatant.HP, combatant.MaxHP)
+	}
+	
+	// Ensure turn order contains valid combatant IDs
+	combatantIDMap := make(map[string]bool)
+	for _, combatant := range combat.Combatants {
+		combatantIDMap[combatant.ID] = true
+	}
+	
+	for _, id := range combat.TurnOrder {
+		require.True(a.t, combatantIDMap[id], "Turn order contains invalid combatant ID: %s", id)
 	}
 }
 
@@ -155,16 +162,15 @@ func (a *AssertHelpers) AssertMagicItemPropertiesValid(props map[string]interfac
 }
 
 // AssertSpellSlotsValid validates spell slot structure
-func (a *AssertHelpers) AssertSpellSlotsValid(slots map[string]models.SpellSlotInfo) {
-	for level, slot := range slots {
-		require.GreaterOrEqual(a.t, slot.Used, 0)
-		require.LessOrEqual(a.t, slot.Used, slot.Total)
+func (a *AssertHelpers) AssertSpellSlotsValid(slots []models.SpellSlot) {
+	for _, slot := range slots {
+		require.GreaterOrEqual(a.t, slot.Remaining, 0)
+		require.LessOrEqual(a.t, slot.Remaining, slot.Total)
 		require.GreaterOrEqual(a.t, slot.Total, 0)
 		
 		// Validate spell level
-		levelNum := 0
-		_, err := json.Marshal(level) // Simple validation
-		require.NoError(a.t, err)
+		require.GreaterOrEqual(a.t, slot.Level, 1)
+		require.LessOrEqual(a.t, slot.Level, 9)
 	}
 }
 
@@ -265,20 +271,20 @@ func (c *CombatAssertions) AssertDamageApplied(
 
 // AssertConditionApplied asserts a condition was applied
 func (c *CombatAssertions) AssertConditionApplied(
-	participant models.CombatParticipant,
+	combatant models.Combatant,
 	condition string,
 ) {
-	require.Contains(c.t, participant.Conditions, condition)
+	require.Contains(c.t, combatant.Condition, condition)
 }
 
 // AssertInitiativeOrder asserts combat order is correct
-func (c *CombatAssertions) AssertInitiativeOrder(participants []models.CombatParticipant) {
-	require.Greater(c.t, len(participants), 0)
+func (c *CombatAssertions) AssertInitiativeOrder(combatants []models.Combatant) {
+	require.Greater(c.t, len(combatants), 0)
 	
-	for i := 1; i < len(participants); i++ {
+	for i := 1; i < len(combatants); i++ {
 		assert.GreaterOrEqual(c.t,
-			participants[i-1].Initiative,
-			participants[i].Initiative,
+			combatants[i-1].Initiative,
+			combatants[i].Initiative,
 			"Initiative order should be descending")
 	}
 }

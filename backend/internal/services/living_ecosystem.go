@@ -68,7 +68,7 @@ func (les *LivingEcosystemService) SimulateWorldProgress(ctx context.Context, se
 	}
 
 	// Simulate various aspects of the world
-	events := []models.WorldEvent{}
+	events := []models.EmergentWorldEvent{}
 
 	// 1. Simulate NPC activities
 	npcEvents, err := les.simulateNPCActivities(ctx, sessionID, timeDelta)
@@ -141,8 +141,8 @@ func (les *LivingEcosystemService) SimulateWorldProgress(ctx context.Context, se
 }
 
 // simulateNPCActivities simulates autonomous NPC actions
-func (les *LivingEcosystemService) simulateNPCActivities(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.WorldEvent, error) {
-	events := []models.WorldEvent{}
+func (les *LivingEcosystemService) simulateNPCActivities(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.EmergentWorldEvent, error) {
+	events := []models.EmergentWorldEvent{}
 
 	// Get all NPCs in the session
 	npcs, err := les.npcRepo.GetByGameSession(ctx, sessionID)
@@ -197,7 +197,7 @@ func (les *LivingEcosystemService) simulateNPCActivities(ctx context.Context, se
 }
 
 // simulateGoalProgress simulates progress on an NPC goal
-func (les *LivingEcosystemService) simulateGoalProgress(ctx context.Context, npc *models.NPC, goal models.NPCGoal, timeDelta time.Duration) (*models.WorldEvent, float64) {
+func (les *LivingEcosystemService) simulateGoalProgress(ctx context.Context, npc *models.NPC, goal models.NPCGoal, timeDelta time.Duration) (*models.EmergentWorldEvent, float64) {
 	// Calculate progress based on goal type and time
 	progressRate := 0.1 * (timeDelta.Hours() / 24.0) // Base 10% progress per day
 	
@@ -220,7 +220,7 @@ func (les *LivingEcosystemService) simulateGoalProgress(ctx context.Context, npc
 
 	// Generate event if significant progress
 	if newProgress-goal.Progress > 0.25 {
-		event := &models.WorldEvent{
+		event := &models.EmergentWorldEvent{
 			ID:          uuid.New().String(),
 			SessionID:   npc.GameSessionID,
 			EventType:   "npc_goal_progress",
@@ -287,8 +287,8 @@ Create a specific, achievable goal that fits their personality. Return a brief d
 }
 
 // simulateNPCSchedule simulates daily NPC activities
-func (les *LivingEcosystemService) simulateNPCSchedule(ctx context.Context, npc *models.NPC, timeDelta time.Duration) []models.WorldEvent {
-	events := []models.WorldEvent{}
+func (les *LivingEcosystemService) simulateNPCSchedule(ctx context.Context, npc *models.NPC, timeDelta time.Duration) []models.EmergentWorldEvent {
+	events := []models.EmergentWorldEvent{}
 
 	// Get NPC schedule
 	schedule, err := les.worldRepo.GetNPCSchedule(npc.ID)
@@ -321,7 +321,7 @@ func (les *LivingEcosystemService) simulateNPCSchedule(ctx context.Context, npc 
 }
 
 // generateScheduleEvent creates an event from a scheduled activity
-func (les *LivingEcosystemService) generateScheduleEvent(npc *models.NPC, activity models.NPCSchedule) *models.WorldEvent {
+func (les *LivingEcosystemService) generateScheduleEvent(npc *models.NPC, activity models.NPCSchedule) *models.EmergentWorldEvent {
 	// Use AI to generate interesting event from routine activity
 	prompt := fmt.Sprintf(`Generate a brief interesting event that occurs during this NPC's routine:
 NPC: %s
@@ -337,7 +337,7 @@ Create a 1-2 sentence description of something noteworthy that happens. It could
 		return nil
 	}
 
-	return &models.WorldEvent{
+	return &models.EmergentWorldEvent{
 		ID:          uuid.New().String(),
 		SessionID:   npc.GameSessionID,
 		EventType:   "npc_activity",
@@ -397,8 +397,8 @@ func (les *LivingEcosystemService) generateDefaultSchedule(npc *models.NPC) {
 }
 
 // simulateEconomicChanges simulates economic shifts in the world
-func (les *LivingEcosystemService) simulateEconomicChanges(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.WorldEvent, error) {
-	events := []models.WorldEvent{}
+func (les *LivingEcosystemService) simulateEconomicChanges(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.EmergentWorldEvent, error) {
+	events := []models.EmergentWorldEvent{}
 
 	// Get settlements
 	settlements, err := les.settlementRepo.GetSettlementsBySession(sessionID)
@@ -423,7 +423,7 @@ func (les *LivingEcosystemService) simulateEconomicChanges(ctx context.Context, 
 }
 
 // generateEconomicEvent creates an economic event for a settlement
-func (les *LivingEcosystemService) generateEconomicEvent(ctx context.Context, settlement *models.Settlement) *models.WorldEvent {
+func (les *LivingEcosystemService) generateEconomicEvent(ctx context.Context, settlement *models.Settlement) *models.EmergentWorldEvent {
 	eventTypes := []string{
 		"trade_boom", "trade_disruption", "new_resource", "resource_depletion",
 		"merchant_arrival", "market_crash", "guild_formation", "technological_advance",
@@ -453,7 +453,7 @@ Create a brief description (2-3 sentences) of this economic event and its immedi
 		impact = -math.Abs(impact)
 	}
 
-	return &models.WorldEvent{
+	return &models.EmergentWorldEvent{
 		ID:          uuid.New().String(),
 		SessionID:   settlement.SessionID,
 		EventType:   "economic_" + eventType,
@@ -516,8 +516,8 @@ func (les *LivingEcosystemService) updateSettlementProsperity(ctx context.Contex
 }
 
 // simulatePoliticalDevelopments simulates political changes and faction activities
-func (les *LivingEcosystemService) simulatePoliticalDevelopments(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.WorldEvent, error) {
-	events := []models.WorldEvent{}
+func (les *LivingEcosystemService) simulatePoliticalDevelopments(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.EmergentWorldEvent, error) {
+	events := []models.EmergentWorldEvent{}
 
 	// Get factions
 	factions, err := les.factionRepo.GetFactionsBySession(sessionID)
@@ -571,7 +571,7 @@ func (les *LivingEcosystemService) simulatePoliticalDevelopments(ctx context.Con
 }
 
 // simulateAgendaProgress advances a faction's political agenda
-func (les *LivingEcosystemService) simulateAgendaProgress(ctx context.Context, faction *models.Faction, personality *models.FactionPersonality, agenda *models.FactionAgenda, timeDelta time.Duration) *models.WorldEvent {
+func (les *LivingEcosystemService) simulateAgendaProgress(ctx context.Context, faction *models.Faction, personality *models.FactionPersonality, agenda *models.FactionAgenda, timeDelta time.Duration) *models.EmergentWorldEvent {
 	// Calculate progress based on faction traits and resources
 	progressRate := 0.05 * (timeDelta.Hours() / 168.0) // Base 5% per week
 
@@ -595,7 +595,7 @@ func (les *LivingEcosystemService) simulateAgendaProgress(ctx context.Context, f
 				agenda.Progress = float64(i+1) / float64(len(agenda.Stages))
 
 				// Generate completion event
-				return &models.WorldEvent{
+				return &models.EmergentWorldEvent{
 					ID:          uuid.New().String(),
 					SessionID:   faction.SessionID,
 					EventType:   "political_milestone",
@@ -626,7 +626,7 @@ func (les *LivingEcosystemService) simulateAgendaProgress(ctx context.Context, f
 }
 
 // generatePoliticalOpportunity creates new political events for factions
-func (les *LivingEcosystemService) generatePoliticalOpportunity(ctx context.Context, faction *models.Faction, personality *models.FactionPersonality) *models.WorldEvent {
+func (les *LivingEcosystemService) generatePoliticalOpportunity(ctx context.Context, faction *models.Faction, personality *models.FactionPersonality) *models.EmergentWorldEvent {
 	opportunities := []string{
 		"alliance_proposal", "trade_agreement", "territorial_claim",
 		"diplomatic_summit", "military_buildup", "espionage_discovered",
@@ -650,7 +650,7 @@ Create a compelling description (2-3 sentences) of this political development.`,
 		return nil
 	}
 
-	return &models.WorldEvent{
+	return &models.EmergentWorldEvent{
 		ID:          uuid.New().String(),
 		SessionID:   faction.SessionID,
 		EventType:   "political_opportunity",
@@ -669,8 +669,8 @@ Create a compelling description (2-3 sentences) of this political development.`,
 }
 
 // simulateFactionInteractions simulates diplomatic and conflict interactions
-func (les *LivingEcosystemService) simulateFactionInteractions(ctx context.Context, factions []*models.Faction, timeDelta time.Duration) []models.WorldEvent {
-	events := []models.WorldEvent{}
+func (les *LivingEcosystemService) simulateFactionInteractions(ctx context.Context, factions []*models.Faction, timeDelta time.Duration) []models.EmergentWorldEvent {
+	events := []models.EmergentWorldEvent{}
 
 	// Check each faction pair
 	for i := 0; i < len(factions); i++ {
@@ -702,8 +702,8 @@ func (les *LivingEcosystemService) simulateFactionInteractions(ctx context.Conte
 }
 
 // simulateNaturalEvents generates natural world events
-func (les *LivingEcosystemService) simulateNaturalEvents(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.WorldEvent, error) {
-	events := []models.WorldEvent{}
+func (les *LivingEcosystemService) simulateNaturalEvents(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.EmergentWorldEvent, error) {
+	events := []models.EmergentWorldEvent{}
 
 	// Chance of natural events
 	eventChance := 0.2 * (timeDelta.Hours() / 168.0) // 20% chance per week
@@ -731,7 +731,7 @@ Create a dramatic description (2-3 sentences) of this event and its immediate im
 		// Determine affected area
 		affectedEntities := les.determineAffectedEntities(ctx, sessionID, eventType)
 
-		event := models.WorldEvent{
+		event := models.EmergentWorldEvent{
 			ID:          uuid.New().String(),
 			SessionID:   sessionID,
 			EventType:   "natural_" + eventType,
@@ -754,8 +754,8 @@ Create a dramatic description (2-3 sentences) of this event and its immediate im
 }
 
 // simulateCulturalEvolution simulates gradual cultural changes
-func (les *LivingEcosystemService) simulateCulturalEvolution(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.WorldEvent, error) {
-	events := []models.WorldEvent{}
+func (les *LivingEcosystemService) simulateCulturalEvolution(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.EmergentWorldEvent, error) {
+	events := []models.EmergentWorldEvent{}
 
 	// Get cultures
 	cultures, err := les.worldRepo.GetCulturesBySession(sessionID)
@@ -816,7 +816,7 @@ func (les *LivingEcosystemService) getFactionRelationship(faction1, faction2 *mo
 	return 0.0
 }
 
-func (les *LivingEcosystemService) generateFactionInteraction(ctx context.Context, faction1, faction2 *models.Faction, relationship float64) *models.WorldEvent {
+func (les *LivingEcosystemService) generateFactionInteraction(ctx context.Context, faction1, faction2 *models.Faction, relationship float64) *models.EmergentWorldEvent {
 	interactionTypes := []string{}
 
 	if relationship < -25 {
@@ -856,7 +856,7 @@ Create a description (2-3 sentences) of this interaction and its outcome.`,
 		relationshipChange = (rand.Float64() - 0.5) * 10
 	}
 
-	return &models.WorldEvent{
+	return &models.EmergentWorldEvent{
 		ID:          uuid.New().String(),
 		SessionID:   faction1.SessionID,
 		EventType:   "faction_interaction",
@@ -929,7 +929,7 @@ func (les *LivingEcosystemService) getEventArea(eventType string) string {
 	return "local"
 }
 
-func (les *LivingEcosystemService) generateCulturalShift(ctx context.Context, culture *models.ProceduralCulture) *models.WorldEvent {
+func (les *LivingEcosystemService) generateCulturalShift(ctx context.Context, culture *models.ProceduralCulture) *models.EmergentWorldEvent {
 	shiftTypes := []string{
 		"artistic_renaissance", "religious_reform", "linguistic_evolution",
 		"social_movement", "technological_adoption", "cultural_fusion",
@@ -951,7 +951,7 @@ Describe this cultural shift and its impact on society (2-3 sentences).`,
 		return nil
 	}
 
-	return &models.WorldEvent{
+	return &models.EmergentWorldEvent{
 		ID:          uuid.New().String(),
 		SessionID:   culture.Metadata["session_id"].(string),
 		EventType:   "cultural_shift",

@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/your-org/dnd-game/internal/models"
-	"github.com/your-org/dnd-game/internal/testutil"
-	"github.com/your-org/dnd-game/pkg/dice"
+	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/testutil"
+	"github.com/your-username/dnd-game/backend/pkg/dice"
 )
 
 func TestDiceHandler_Roll(t *testing.T) {

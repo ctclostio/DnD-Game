@@ -213,13 +213,13 @@ type CombatRequest struct {
 	TargetID    string          `json:"targetId,omitempty"`
 	WeaponID    string          `json:"weaponId,omitempty"`
 	SpellID     string          `json:"spellId,omitempty"`
-	Movement    Position        `json:"movement,omitempty"`
+	Movement    GridPosition    `json:"movement,omitempty"`
 	Advantage   bool            `json:"advantage"`
 	Disadvantage bool           `json:"disadvantage"`
 	Description string          `json:"description,omitempty"`
 }
 
-type Position struct {
+type GridPosition struct {
 	X int `json:"x"`
 	Y int `json:"y"`
 }

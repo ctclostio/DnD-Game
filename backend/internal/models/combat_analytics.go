@@ -180,12 +180,12 @@ type TacticalAnalysis struct {
 
 type BattleMapTerrainFeature struct {
 	Type        string    `json:"type"` // wall, pillar, tree, water, etc.
-	Position    Position  `json:"position"`
+	Position    GridPosition  `json:"position"`
 	Size        Size      `json:"size"`
 	Properties  []string  `json:"properties"` // blocks_movement, blocks_sight, difficult_terrain
 }
 
-// Note: Position is defined in combat.go
+// Note: GridPosition is defined in combat.go
 
 type Size struct {
 	Width  int `json:"width"`
@@ -194,7 +194,7 @@ type Size struct {
 
 type HazardZone struct {
 	Type        string     `json:"type"` // fire, acid, spike_pit, etc.
-	Area        []Position `json:"area"`
+	Area        []GridPosition `json:"area"`
 	DamageType  string     `json:"damage_type"`
 	DamageDice  string     `json:"damage_dice"`
 	SaveDC      int        `json:"save_dc"`
@@ -202,7 +202,7 @@ type HazardZone struct {
 }
 
 type TacticalNote struct {
-	Position    Position `json:"position"`
+	Position    GridPosition `json:"position"`
 	Note        string   `json:"note"`
 	Importance  string   `json:"importance"` // high, medium, low
 }

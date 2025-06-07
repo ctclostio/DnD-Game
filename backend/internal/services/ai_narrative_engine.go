@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"backend/internal/config"
-	"backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/config"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 // NarrativeEngine orchestrates the AI-powered dynamic storytelling system
@@ -139,7 +139,7 @@ Provide analysis in JSON format with:
 }
 
 // GeneratePersonalizedNarrative creates a narrative tailored to a specific player
-func (ne *NarrativeEngine) GeneratePersonalizedNarrative(ctx context.Context, baseEvent models.WorldEvent, profile *models.NarrativeProfile, backstory []models.BackstoryElement) (*models.PersonalizedNarrative, error) {
+func (ne *NarrativeEngine) GeneratePersonalizedNarrative(ctx context.Context, baseEvent models.NarrativeEvent, profile *models.NarrativeProfile, backstory []models.BackstoryElement) (*models.PersonalizedNarrative, error) {
 	if !ne.cfg.AIConfig.Enabled {
 		// Return basic narrative without personalization
 		return &models.PersonalizedNarrative{
@@ -410,7 +410,7 @@ Provide consequences in JSON format as an array of:
 }
 
 // GenerateMultiplePerspectives creates different viewpoints of the same event
-func (pg *PerspectiveGenerator) GenerateMultiplePerspectives(ctx context.Context, event models.WorldEvent, sources []models.PerspectiveSource) ([]models.PerspectiveNarrative, error) {
+func (pg *PerspectiveGenerator) GenerateMultiplePerspectives(ctx context.Context, event models.NarrativeEvent, sources []models.PerspectiveSource) ([]models.PerspectiveNarrative, error) {
 	if !pg.cfg.AIConfig.Enabled {
 		// Return single neutral perspective without AI
 		return []models.PerspectiveNarrative{{
@@ -535,7 +535,7 @@ Provide the perspective in JSON format:
 
 // Helper functions
 
-func (ne *NarrativeEngine) selectRelevantBackstory(backstory []models.BackstoryElement, event models.WorldEvent) []models.BackstoryElement {
+func (ne *NarrativeEngine) selectRelevantBackstory(backstory []models.BackstoryElement, event models.NarrativeEvent) []models.BackstoryElement {
 	// Select up to 3 most relevant backstory elements based on tags and type
 	relevant := make([]models.BackstoryElement, 0)
 	
@@ -663,7 +663,7 @@ func formatWorldState(state map[string]interface{}) string {
 	return string(formatted)
 }
 
-func extractEventTags(event models.WorldEvent) []string {
+func extractEventTags(event models.NarrativeEvent) []string {
 	// Extract relevant tags from event for matching
 	tags := []string{event.Type}
 	tags = append(tags, strings.Fields(event.Name)...)

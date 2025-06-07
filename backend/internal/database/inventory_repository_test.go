@@ -8,8 +8,8 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
-	"github.com/your-org/dnd-game/internal/models"
-	"github.com/your-org/dnd-game/internal/testutil"
+	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/testutil"
 )
 
 func TestInventoryRepository_CreateItem(t *testing.T) {

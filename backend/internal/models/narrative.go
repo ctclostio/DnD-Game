@@ -153,8 +153,8 @@ type Contradiction struct {
 	TruthValue         string `json:"truth_value"` // "this_true", "other_true", "both_partial", "neither_true"
 }
 
-// WorldEvent represents a significant event in the game world
-type WorldEvent struct {
+// NarrativeEvent represents a significant event in the game world from a narrative perspective
+type NarrativeEvent struct {
 	ID                string                   `json:"id" db:"id"`
 	Type              string                   `json:"type" db:"type"`
 	Name              string                   `json:"name" db:"name"`

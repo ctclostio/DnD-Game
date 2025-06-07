@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/mock"
-	"github.com/your-org/dnd-game/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 // MockFactory creates mock objects for testing
@@ -293,7 +293,7 @@ type MockCombatService struct {
 	mock.Mock
 }
 
-func (m *MockCombatService) StartCombat(sessionID int64, participants []models.CombatParticipant) (*models.Combat, error) {
+func (m *MockCombatService) StartCombat(sessionID int64, participants []models.Combatant) (*models.Combat, error) {
 	args := m.Called(sessionID, participants)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

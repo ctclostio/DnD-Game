@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 // NarrativeRepository handles all narrative-related database operations
@@ -359,8 +359,8 @@ func (r *NarrativeRepository) GetPendingConsequences(sessionID string, currentTi
 	return consequences, rows.Err()
 }
 
-// CreateWorldEvent creates a new world event
-func (r *NarrativeRepository) CreateWorldEvent(event *models.WorldEvent) error {
+// CreateNarrativeEvent creates a new narrative event
+func (r *NarrativeRepository) CreateNarrativeEvent(event *models.NarrativeEvent) error {
 	event.ID = uuid.New().String()
 	event.Timestamp = time.Now()
 

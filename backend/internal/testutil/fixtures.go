@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ctclostio/dnd-game/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/google/uuid"
 )
 
@@ -149,6 +149,8 @@ func NPCFixture(t *testing.T, sessionID uuid.UUID) *models.NPC {
 }
 
 // CampaignFixture creates a test campaign
+// TODO: Campaign model doesn't exist yet
+/*
 func CampaignFixture(t *testing.T, dmID uuid.UUID) *models.Campaign {
 	t.Helper()
 	return &models.Campaign{
@@ -174,25 +176,24 @@ func CampaignFixture(t *testing.T, dmID uuid.UUID) *models.Campaign {
 		UpdatedAt: time.Now(),
 	}
 }
+}
+*/
 
 // DiceRollFixture creates a test dice roll
 func DiceRollFixture(t *testing.T, userID, sessionID uuid.UUID) *models.DiceRoll {
 	t.Helper()
 	return &models.DiceRoll{
-		ID:        uuid.New(),
-		UserID:    userID,
-		SessionID: sessionID,
-		Roll:      "1d20+3",
-		Result:    18,
-		Details: models.RollDetails{
-			Dice: []models.DieResult{
-				{Sides: 20, Result: 15},
-			},
-			Modifier: 3,
-			Total:    18,
-		},
-		Purpose:   "Attack Roll",
-		CreatedAt: time.Now(),
+		ID:            uuid.New().String(),
+		GameSessionID: sessionID.String(),
+		UserID:        userID.String(),
+		DiceType:      "d20",
+		Count:         1,
+		Modifier:      3,
+		Results:       []int{15},
+		Total:         18,
+		Purpose:       "attack",
+		RollNotation:  "1d20+3",
+		Timestamp:     time.Now(),
 	}
 }
 

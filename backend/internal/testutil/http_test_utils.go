@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
-	"github.com/your-org/dnd-game/internal/auth"
+	"github.com/your-username/dnd-game/backend/internal/auth"
 )
 
 // HTTPTestClient provides utilities for testing HTTP endpoints
@@ -293,7 +293,7 @@ func SetContextValue(c *gin.Context, key string, value interface{}) {
 }
 
 // AssertErrorResponse asserts an error response structure
-func AssertErrorResponse(t *testing.T, w *httptest.ResponseRecorder, expectedCode string, expectedStatus int) {
+func AssertErrorResponseWithCode(t *testing.T, w *httptest.ResponseRecorder, expectedCode string, expectedStatus int) {
 	require.Equal(t, expectedStatus, w.Code)
 	
 	var response map[string]interface{}
