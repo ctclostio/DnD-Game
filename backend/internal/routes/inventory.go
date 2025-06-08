@@ -12,7 +12,7 @@ func RegisterInventoryRoutes(api *mux.Router, cfg *Config) {
 		return
 	}
 	
-	inventoryHandler, ok := cfg.InventoryHandler.(*handlers.InventoryHandlers)
+	inventoryHandler, ok := cfg.InventoryHandler.(*handlers.InventoryHandler)
 	if !ok {
 		return
 	}

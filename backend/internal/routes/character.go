@@ -12,7 +12,7 @@ func RegisterCharacterRoutes(api *mux.Router, cfg *Config) {
 	
 	// Character creation routes
 	if cfg.CharCreationHandler != nil {
-		if h, ok := cfg.CharCreationHandler.(*handlers.CharacterCreationHandlers); ok {
+		if h, ok := cfg.CharCreationHandler.(*handlers.CharacterCreationHandler); ok {
 			api.HandleFunc("/characters/options", auth(h.GetCharacterOptions)).Methods("GET")
 			api.HandleFunc("/characters/create", auth(h.CreateCharacter)).Methods("POST")
 			api.HandleFunc("/characters/create-custom", auth(h.CreateCustomCharacter)).Methods("POST")

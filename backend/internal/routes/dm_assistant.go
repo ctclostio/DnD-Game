@@ -2,7 +2,6 @@ package routes
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/your-username/dnd-game/backend/internal/handlers"
 )
 
 // RegisterDMAssistantRoutes registers all DM Assistant-related routes
