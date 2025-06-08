@@ -12,7 +12,7 @@ import (
 
 // sendJSONResponse sends a JSON response (DEPRECATED - use response.JSON)
 // Deprecated: Use response.JSON instead
-func sendJSONResponse(w http.ResponseWriter, status int, data interface{}) {
+func deprecatedSendJSONResponse(w http.ResponseWriter, status int, data interface{}) {
 	// Create a minimal request with empty context for backward compatibility
 	r, _ := http.NewRequest("", "", nil)
 	response.JSON(w, r, status, data)
@@ -20,7 +20,7 @@ func sendJSONResponse(w http.ResponseWriter, status int, data interface{}) {
 
 // sendErrorResponse sends an error response (DEPRECATED - use response.Error)
 // Deprecated: Use response.Error or response.ErrorWithCode instead
-func sendErrorResponse(w http.ResponseWriter, status int, message string) {
+func deprecatedSendErrorResponse(w http.ResponseWriter, status int, message string) {
 	// Create a minimal request with empty context for backward compatibility
 	r, _ := http.NewRequest("", "", nil)
 	response.BadRequest(w, r, message)
@@ -28,7 +28,7 @@ func sendErrorResponse(w http.ResponseWriter, status int, message string) {
 
 // respondWithJSON sends a JSON response (DEPRECATED - use response.JSON)
 // Deprecated: Use response.JSON instead
-func respondWithJSON(w http.ResponseWriter, status int, data interface{}) {
+func deprecatedRespondWithJSON(w http.ResponseWriter, status int, data interface{}) {
 	// Create a minimal request with empty context for backward compatibility
 	r, _ := http.NewRequest("", "", nil)
 	response.JSON(w, r, status, data)
@@ -36,7 +36,7 @@ func respondWithJSON(w http.ResponseWriter, status int, data interface{}) {
 
 // respondWithError sends an error response (DEPRECATED - use response.Error)
 // Deprecated: Use response.Error or response.ErrorWithCode instead
-func respondWithError(w http.ResponseWriter, status int, message string) {
+func deprecatedRespondWithError(w http.ResponseWriter, status int, message string) {
 	// Create a minimal request with empty context for backward compatibility
 	r, _ := http.NewRequest("", "", nil)
 	

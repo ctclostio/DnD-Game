@@ -15,11 +15,11 @@ type HealthResponse struct {
 	Version   string                 `json:"version"`
 	Uptime    string                 `json:"uptime"`
 	Service   string                 `json:"service"`
-	Checks    map[string]HealthCheck `json:"checks,omitempty"`
+	Checks    map[string]HealthCheckResult `json:"checks,omitempty"`
 }
 
-// HealthCheck represents an individual component health check
-type HealthCheck struct {
+// HealthCheckResult represents an individual component health check
+type HealthCheckResult struct {
 	Status  string `json:"status"`
 	Message string `json:"message,omitempty"`
 }
@@ -235,8 +235,8 @@ func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// Standalone HealthCheck function for backward compatibility
-func HealthCheck(w http.ResponseWriter, r *http.Request) {
+// Standalone HealthCheckV2 function for backward compatibility
+func HealthCheckV2(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"status": "healthy",

@@ -83,8 +83,8 @@ func (h *HandlersV2) AuthHandler() *AuthHandlerV2 {
 }
 
 // CharacterHandler returns character handler with logging
-func (h *HandlersV2) CharacterHandler() *CharacterHandlerV2 {
-	return &CharacterHandlerV2{
+func (h *HandlersV2) CharacterHandler() *CharacterHandlerV2WithLogging {
+	return &CharacterHandlerV2WithLogging{
 		characterService: h.characterService,
 		log:             h.log.WithOperation("character", "handler"),
 	}
@@ -140,8 +140,8 @@ type AuthHandlerV2 struct {
 	log                 *logger.LoggerV2
 }
 
-// CharacterHandlerV2 handles character operations with logging
-type CharacterHandlerV2 struct {
+// CharacterHandlerV2WithLogging handles character operations with logging
+type CharacterHandlerV2WithLogging struct {
 	characterService CharacterService
 	log             *logger.LoggerV2
 }

@@ -1,16 +1,11 @@
 package websocket
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-	"net"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 	
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/middleware"
@@ -132,7 +127,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	log := h.log.WithContext(ctx)
 	
 	// Extract connection metadata
-	clientIP := getClientIP(r)
+	clientIP := r.RemoteAddr
 	userAgent := r.UserAgent()
 	
 	// Log connection attempt
@@ -153,7 +148,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Generate client ID
-	clientID := generateClientID()
+	clientID := "ws-" + time.Now().Format("20060102150405")
 	
 	// Log successful upgrade
 	log.Info().
@@ -171,13 +166,9 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	
-	// Create temporary client for authentication
-	tempClient := &Client{
-		id:   clientID,
-		conn: conn,
-		send: make(chan []byte, 256),
-		hub:  h.hub,
-	}
+	// Create temporary client for authentication  
+	// Using a minimal client for authentication phase
+	tempConn := conn
 	
 	// Send authentication request
 	authRequest := map[string]string{
@@ -185,7 +176,8 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		"message": "Please authenticate",
 	}
 	
-	if err := tempClient.sendJSON(authRequest); err != nil {
+	authData, _ := json.Marshal(authRequest)
+	if err := tempConn.WriteMessage(websocket.TextMessage, authData); err != nil {
 		log.Error().
 			Err(err).
 			Str("client_id", clientID).
@@ -203,7 +195,9 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Err(err).
 			Str("client_id", clientID).
 			Msg("Failed to read auth message")
-		tempClient.sendError("Authentication failed")
+		errorMsg := map[string]string{"type": "error", "message": "Authentication failed"}
+		errorData, _ := json.Marshal(errorMsg)
+		tempConn.WriteMessage(websocket.TextMessage, errorData)
 		conn.Close()
 		return
 	}
@@ -215,7 +209,9 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Str("auth_type", authMsg.Type).
 			Bool("has_token", authMsg.Token != "").
 			Msg("Invalid auth message")
-		tempClient.sendError("Invalid authentication message")
+		errorMsg := map[string]string{"type": "error", "message": "Invalid authentication message"}
+		errorData, _ := json.Marshal(errorMsg)
+		tempConn.WriteMessage(websocket.TextMessage, errorData)
 		conn.Close()
 		return
 	}
@@ -227,29 +223,32 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Err(err).
 			Str("client_id", clientID).
 			Msg("Token validation failed")
-		tempClient.sendError("Invalid token")
+		errorMsg := map[string]string{"type": "error", "message": "Invalid token"}
+		errorData, _ := json.Marshal(errorMsg)
+		tempConn.WriteMessage(websocket.TextMessage, errorData)
 		conn.Close()
 		return
 	}
 	userID := claims.UserID
 	
 	// Create authenticated client
-	client := &ClientV2{
-		ID:     clientID,
-		UserID: userID,
-		conn:   conn,
-		send:   make(chan []byte, 256),
-		hub:    h.hub,
-		log:    log,
+	client := &Client{
+		id:       clientID,
+		username: claims.Username,
+		conn:     conn,
+		send:     make(chan []byte, 256),
+		hub:      h.hub,
+		role:     claims.Role,
 	}
 	
 	// Join room if specified
 	if authMsg.Room != "" {
-		client.room = authMsg.Room
+		client.roomID = authMsg.Room
 		// Logger already has room context from creation
 		
-		client.log.Info().
+		log.Info().
 			Str("room", authMsg.Room).
+			Str("client_id", clientID).
 			Msg("Client joining room")
 	}
 	
@@ -264,211 +263,27 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		"client_id": clientID,
 	}
 	
-	if err := client.sendJSON(successMsg); err != nil {
-		client.log.Error().
+	successData, _ := json.Marshal(successMsg)
+	if err := conn.WriteMessage(websocket.TextMessage, successData); err != nil {
+		log.Error().
 			Err(err).
 			Msg("Failed to send auth success")
 	}
 	
 	// Log successful authentication
-	client.log.Info().
-		Str("room", client.room).
+	log.Info().
+		Str("client_id", clientID).
+		Str("user_id", userID).
+		Str("room", client.roomID).
 		Msg("WebSocket client authenticated and registered")
 	
 	// Reset read deadline for normal operation
 	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	
 	// Start client goroutines
-	go client.writePump()
-	go client.readPump()
+	go client.WritePump()
+	go client.ReadPump()
 }
 
-// ClientV2 represents a WebSocket client with logging
-type ClientV2 struct {
-	ID     string
-	UserID string
-	conn   *websocket.Conn
-	send   chan []byte
-	hub    *Hub
-	room   string
-	log    *logger.LoggerV2
-}
-
-// sendJSON sends a JSON message to the client
-func (c *ClientV2) sendJSON(v interface{}) error {
-	data, err := json.Marshal(v)
-	if err != nil {
-		c.log.Error().
-			Err(err).
-			Msg("Failed to marshal JSON")
-		return err
-	}
-	
-	select {
-	case c.send <- data:
-		return nil
-	default:
-		c.log.Warn().Msg("Client send buffer full")
-		return fmt.Errorf("send buffer full")
-	}
-}
-
-// sendError sends an error message to the client
-func (c *ClientV2) sendError(message string) {
-	errorMsg := map[string]string{
-		"type":    "error",
-		"message": message,
-	}
-	c.sendJSON(errorMsg)
-}
-
-// readPump handles incoming messages from the client
-func (c *ClientV2) readPump() {
-	defer func() {
-		c.hub.unregister <- c
-		c.conn.Close()
-		c.log.Info().Msg("Client disconnected")
-	}()
-	
-	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error {
-		c.conn.SetReadDeadline(time.Now().Add(pongWait))
-		return nil
-	})
-	
-	for {
-		var message Message
-		err := c.conn.ReadJSON(&message)
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				c.log.Error().
-					Err(err).
-					Msg("Unexpected WebSocket close")
-			} else {
-				c.log.Debug().
-					Err(err).
-					Msg("WebSocket read error")
-			}
-			break
-		}
-		
-		// Log received message
-		c.log.Debug().
-			Str("message_type", message.Type).
-			Interface("data", message.Data).
-			Msg("Received WebSocket message")
-		
-		// Handle message based on type
-		switch message.Type {
-		case "ping":
-			c.sendJSON(map[string]string{"type": "pong"})
-			
-		case "join_room":
-			if roomID, ok := message.Data["room_id"].(string); ok {
-				c.room = roomID
-				c.log = c.log.WithField("room", roomID)
-				c.log.Info().Msg("Client joined room")
-			}
-			
-		case "leave_room":
-			oldRoom := c.room
-			c.room = ""
-			c.log.Info().
-				Str("old_room", oldRoom).
-				Msg("Client left room")
-			
-		case "broadcast":
-			// Broadcast to room
-			if c.room != "" {
-				c.hub.broadcast <- &BroadcastMessage{
-					Room:    c.room,
-					Message: message,
-					Sender:  c.ID,
-				}
-				c.log.Debug().
-					Str("room", c.room).
-					Msg("Broadcasting message to room")
-			}
-			
-		default:
-			c.log.Warn().
-				Str("message_type", message.Type).
-				Msg("Unknown message type")
-		}
-	}
-}
-
-// writePump handles outgoing messages to the client
-func (c *ClientV2) writePump() {
-	ticker := time.NewTicker(pingPeriod)
-	defer func() {
-		ticker.Stop()
-		c.conn.Close()
-	}()
-	
-	for {
-		select {
-		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				c.log.Debug().Msg("Send channel closed")
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-			
-			w, err := c.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				c.log.Error().
-					Err(err).
-					Msg("Failed to get writer")
-				return
-			}
-			w.Write(message)
-			
-			// Add queued messages to the current websocket message
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-c.send)
-			}
-			
-			if err := w.Close(); err != nil {
-				c.log.Error().
-					Err(err).
-					Msg("Failed to close writer")
-				return
-			}
-			
-			c.log.Debug().
-				Int("message_count", n+1).
-				Msg("Sent messages to client")
-			
-		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				c.log.Debug().
-					Err(err).
-					Msg("Failed to send ping")
-				return
-			}
-		}
-	}
-}
-
-// Helper functions
-
-func generateClientID() string {
-	return fmt.Sprintf("ws_%s", uuid.New().String())
-}
-
-func getClientIP(r *http.Request) string {
-	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
-		parts := strings.Split(ip, ",")
-		return strings.TrimSpace(parts[0])
-	}
-	if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		return ip
-	}
-	return r.RemoteAddr
-}
+// Handler V2 uses the standard Client type from hub.go
+// All WebSocket communication is handled by the standard Client ReadPump and WritePump methods
