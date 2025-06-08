@@ -88,8 +88,8 @@ const uiSlice = createSlice({
     },
     
     setCustomBinding: (state, action: PayloadAction<{ action: string; binding: string }>) => {
-      const { action, binding } = action.payload;
-      state.shortcuts.customBindings[action] = binding;
+      const { action: actionName, binding } = action.payload;
+      state.shortcuts.customBindings[actionName] = binding;
     },
     
     resetCustomBindings: (state) => {
