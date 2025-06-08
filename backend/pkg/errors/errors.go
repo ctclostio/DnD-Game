@@ -175,6 +175,27 @@ type ValidationErrors struct {
 	Errors map[string][]string `json:"errors"`
 }
 
+// Error implements the error interface
+func (v *ValidationErrors) Error() string {
+	if len(v.Errors) == 0 {
+		return "validation errors"
+	}
+	
+	// Create a simple string representation of the errors
+	var messages []string
+	for field, errs := range v.Errors {
+		for _, err := range errs {
+			messages = append(messages, fmt.Sprintf("%s: %s", field, err))
+		}
+	}
+	
+	if len(messages) == 1 {
+		return messages[0]
+	}
+	
+	return fmt.Sprintf("validation errors: %v", messages)
+}
+
 // Add adds a validation error for a field
 func (v *ValidationErrors) Add(field, message string) {
 	if v.Errors == nil {

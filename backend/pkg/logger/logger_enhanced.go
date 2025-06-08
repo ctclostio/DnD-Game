@@ -152,7 +152,7 @@ func NewV2(cfg ConfigV2) (*LoggerV2, error) {
 
 // WithContext enriches the logger with context values
 func (l *LoggerV2) WithContext(ctx context.Context) *LoggerV2 {
-	zl := l.With()
+	zl := l.Logger.With()
 
 	// Add all context values
 	contextKeys := []struct {
@@ -180,7 +180,7 @@ func (l *LoggerV2) WithContext(ctx context.Context) *LoggerV2 {
 
 // WithOperation adds operation context
 func (l *LoggerV2) WithOperation(service, method string) *LoggerV2 {
-	logger := l.With().
+	logger := l.Logger.With().
 		Str("service", service).
 		Str("method", method).
 		Logger()
@@ -189,7 +189,7 @@ func (l *LoggerV2) WithOperation(service, method string) *LoggerV2 {
 
 // WithGameContext adds game-specific context
 func (l *LoggerV2) WithGameContext(sessionID, characterID string) *LoggerV2 {
-	zl := l.With()
+	zl := l.Logger.With()
 	if sessionID != "" {
 		zl = zl.Str("session_id", sessionID)
 	}

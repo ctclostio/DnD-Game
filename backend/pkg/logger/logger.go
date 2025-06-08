@@ -62,7 +62,7 @@ func New(cfg Config) *Logger {
 
 // WithContext returns a logger with context values
 func (l *Logger) WithContext(ctx context.Context) *Logger {
-	zl := l.With()
+	zl := l.Logger.With()
 
 	// Add request ID if present
 	if requestID, ok := ctx.Value(RequestIDKey).(string); ok && requestID != "" {
@@ -80,31 +80,31 @@ func (l *Logger) WithContext(ctx context.Context) *Logger {
 
 // WithRequestID adds request ID to logger
 func (l *Logger) WithRequestID(requestID string) *Logger {
-	logger := l.With().Str("request_id", requestID).Logger()
+	logger := l.Logger.With().Str("request_id", requestID).Logger()
 	return &Logger{&logger}
 }
 
 // WithUserID adds user ID to logger
 func (l *Logger) WithUserID(userID string) *Logger {
-	logger := l.With().Str("user_id", userID).Logger()
+	logger := l.Logger.With().Str("user_id", userID).Logger()
 	return &Logger{&logger}
 }
 
 // WithError adds error to logger
 func (l *Logger) WithError(err error) *Logger {
-	logger := l.With().Err(err).Logger()
+	logger := l.Logger.With().Err(err).Logger()
 	return &Logger{&logger}
 }
 
 // WithField adds a field to logger
 func (l *Logger) WithField(key string, value interface{}) *Logger {
-	logger := l.With().Interface(key, value).Logger()
+	logger := l.Logger.With().Interface(key, value).Logger()
 	return &Logger{&logger}
 }
 
 // WithFields adds multiple fields to logger
 func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
-	logContext := l.With()
+	logContext := l.Logger.With()
 	for k, v := range fields {
 		logContext = logContext.Interface(k, v)
 	}

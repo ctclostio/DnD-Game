@@ -11,7 +11,7 @@ type JSONB json.RawMessage
 
 // Value implements the driver.Valuer interface for JSONB
 func (j JSONB) Value() (driver.Value, error) {
-	if j == nil {
+	if len(j) == 0 {
 		return nil, nil
 	}
 	return json.RawMessage(j).MarshalJSON()
@@ -20,16 +20,16 @@ func (j JSONB) Value() (driver.Value, error) {
 // Scan implements the sql.Scanner interface for JSONB
 func (j *JSONB) Scan(value interface{}) error {
 	if value == nil {
-		*j = nil
+		*j = JSONB{}
 		return nil
 	}
 
 	switch v := value.(type) {
 	case []byte:
-		*j = JSONB(v)
+		*j = v
 		return nil
 	case string:
-		*j = JSONB(v)
+		*j = []byte(v)
 		return nil
 	default:
 		return errors.New("cannot scan unknown type into JSONB")
@@ -38,7 +38,7 @@ func (j *JSONB) Scan(value interface{}) error {
 
 // MarshalJSON implements json.Marshaler for JSONB
 func (j JSONB) MarshalJSON() ([]byte, error) {
-	if j == nil {
+	if len(j) == 0 {
 		return []byte("null"), nil
 	}
 	return json.RawMessage(j).MarshalJSON()

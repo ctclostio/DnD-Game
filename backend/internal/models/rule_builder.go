@@ -6,23 +6,26 @@ import (
 
 // RuleTemplate represents a reusable rule pattern created through the visual builder
 type RuleTemplate struct {
-	ID               string                 `json:"id" db:"id"`
-	Name             string                 `json:"name" db:"name"`
-	Description      string                 `json:"description" db:"description"`
-	Category         string                 `json:"category" db:"category"` // spell, ability, item, environmental, condition
-	CreatedByID      string                 `json:"created_by_id" db:"created_by"`
-	IsPublic         bool                   `json:"is_public" db:"is_public"`
-	Version          int                    `json:"version" db:"version"`
-	LogicGraph       LogicGraph             `json:"logic_graph" db:"logic_graph"`
-	Parameters       []RuleParameter        `json:"parameters" db:"parameters"`
-	BalanceMetrics   BalanceMetrics         `json:"balance_metrics" db:"balance_metrics"`
-	ConditionalRules []ConditionalRule      `json:"conditional_rules" db:"conditional_rules"`
-	Tags             []string               `json:"tags" db:"tags"`
-	UsageCount       int                    `json:"usage_count" db:"usage_count"`
-	ApprovalStatus   string                 `json:"approval_status" db:"approval_status"`
-	Metadata         map[string]interface{} `json:"metadata" db:"metadata"`
-	CreatedAt        time.Time              `json:"created_at" db:"created_at"`
-	UpdatedAt        time.Time              `json:"updated_at" db:"updated_at"`
+	ID                   string                   `json:"id" db:"id"`
+	Name                 string                   `json:"name" db:"name"`
+	Description          string                   `json:"description" db:"description"`
+	Category             string                   `json:"category" db:"category"` // spell, ability, item, environmental, condition
+	Complexity           int                      `json:"complexity" db:"complexity"` // 1-5 scale
+	CreatedByID          string                   `json:"created_by_id" db:"created_by"`
+	IsPublic             bool                     `json:"is_public" db:"is_public"`
+	Version              int                      `json:"version" db:"version"`
+	LogicGraph           LogicGraph               `json:"logic_graph" db:"logic_graph"`
+	Parameters           []RuleParameter          `json:"parameters" db:"parameters"`
+	BalanceMetrics       BalanceMetrics           `json:"balance_metrics" db:"balance_metrics"`
+	ConditionalRules     []ConditionalRule        `json:"conditional_rules" db:"conditional_rules"`
+	ConditionalModifiers []ConditionalModifier    `json:"conditional_modifiers" db:"conditional_modifiers"`
+	Tags                 []string                 `json:"tags" db:"tags"`
+	UsageCount           int                      `json:"usage_count" db:"usage_count"`
+	AverageRating        float64                  `json:"average_rating" db:"average_rating"`
+	ApprovalStatus       string                   `json:"approval_status" db:"approval_status"`
+	Metadata             map[string]interface{}   `json:"metadata" db:"metadata"`
+	CreatedAt            time.Time                `json:"created_at" db:"created_at"`
+	UpdatedAt            time.Time                `json:"updated_at" db:"updated_at"`
 }
 
 // LogicGraph represents the visual node-based logic structure

@@ -1,14 +1,16 @@
 package middleware
 
 import (
+	"bufio"
 	"context"
+	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/pkg/logger"
-	"github.com/your-username/dnd-game/backend/pkg/response"
 )
 
 // LoggingMiddleware logs all HTTP requests with enhanced context
