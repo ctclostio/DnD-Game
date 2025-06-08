@@ -58,7 +58,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "mini-css-extract-plugin": "^2.9.2",
     "playwright": "^1.52.0",
-    "style-loader": "^3.3.3",
+    "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.3.14",
     "ts-loader": "^9.5.2",
     "webpack": "^5.89.0",
