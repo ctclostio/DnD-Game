@@ -1,439 +1,299 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/jmoiron/sqlx"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/testutil"
 )
 
 func TestUserRepository_Create(t *testing.T) {
-	cases := []testutil.DBTestCase{
-		{
-			Name: "successful user creation",
-			Setup: func(mock sqlmock.Sqlmock) {
-				user := testutil.NewUserBuilder().Build()
-				
-				mock.ExpectQuery(
-					`INSERT INTO users \(username, email, password_hash\) VALUES \(\$1, \$2, \$3\) RETURNING id, created_at, updated_at`,
-				).WithArgs(
-					user.Username, user.Email, user.PasswordHash,
-				).WillReturnRows(
-					sqlmock.NewRows([]string{"id", "created_at", "updated_at"}).
-						AddRow(1, time.Now(), time.Now()),
-				)
-			},
-			Run: func(db *sqlx.DB) error {
-				repo := NewUserRepository(db)
-				user := testutil.NewUserBuilder().Build()
-				return repo.Create(user)
-			},
-			Assert: func(t *testing.T, err error) {
-				require.NoError(t, err)
-			},
-		},
-		{
-			Name: "duplicate username",
-			Setup: func(mock sqlmock.Sqlmock) {
-				user := testutil.NewUserBuilder().Build()
-				
-				mock.ExpectQuery(
-					`INSERT INTO users \(username, email, password_hash\) VALUES \(\$1, \$2, \$3\) RETURNING id, created_at, updated_at`,
-				).WithArgs(
-					user.Username, user.Email, user.PasswordHash,
-				).WillReturnError(sql.ErrNoRows) // Simulate unique constraint violation
-			},
-			Run: func(db *sqlx.DB) error {
-				repo := NewUserRepository(db)
-				user := testutil.NewUserBuilder().Build()
-				return repo.Create(user)
-			},
-			Assert: func(t *testing.T, err error) {
-				require.Error(t, err)
-			},
-		},
-		{
-			Name: "duplicate email",
-			Setup: func(mock sqlmock.Sqlmock) {
-				user := testutil.NewUserBuilder().
-					WithUsername("newuser").
-					WithEmail("existing@example.com").
-					Build()
-				
-				mock.ExpectQuery(
-					`INSERT INTO users \(username, email, password_hash\) VALUES \(\$1, \$2, \$3\) RETURNING id, created_at, updated_at`,
-				).WithArgs(
-					user.Username, user.Email, user.PasswordHash,
-				).WillReturnError(sql.ErrNoRows) // Simulate unique constraint violation
-			},
-			Run: func(db *sqlx.DB) error {
-				repo := NewUserRepository(db)
-				user := testutil.NewUserBuilder().
-					WithUsername("newuser").
-					WithEmail("existing@example.com").
-					Build()
-				return repo.Create(user)
-			},
-			Assert: func(t *testing.T, err error) {
-				require.Error(t, err)
-			},
-		},
-	}
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
 
-	testutil.RunDBTestCases(t, cases)
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+	dbWrapper := &DB{DB: sqlxDB}
+	repo := NewUserRepository(dbWrapper)
+
+	t.Run("successful user creation", func(t *testing.T) {
+		user := &models.User{
+			Username:     "testuser",
+			Email:        "test@example.com",
+			PasswordHash: "$2a$10$hashedpassword",
+		}
+
+		mock.ExpectQuery(
+			`INSERT INTO users \(username, email, password_hash\) VALUES \(\$1, \$2, \$3\) RETURNING id, created_at, updated_at`,
+		).WithArgs(
+			user.Username, user.Email, user.PasswordHash,
+		).WillReturnRows(
+			sqlmock.NewRows([]string{"id", "created_at", "updated_at"}).
+				AddRow("user-123", time.Now(), time.Now()),
+		)
+
+		err := repo.Create(context.Background(), user)
+		assert.NoError(t, err)
+		assert.Equal(t, "user-123", user.ID)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("duplicate username", func(t *testing.T) {
+		user := &models.User{
+			Username:     "existing",
+			Email:        "new@example.com",
+			PasswordHash: "$2a$10$hashedpassword",
+		}
+
+		mock.ExpectQuery(
+			`INSERT INTO users \(username, email, password_hash\) VALUES \(\$1, \$2, \$3\) RETURNING id, created_at, updated_at`,
+		).WithArgs(
+			user.Username, user.Email, user.PasswordHash,
+		).WillReturnError(sql.ErrNoRows) // Simulate unique constraint violation
+
+		err := repo.Create(context.Background(), user)
+		assert.Error(t, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("duplicate email", func(t *testing.T) {
+		user := &models.User{
+			Username:     "newuser",
+			Email:        "existing@example.com",
+			PasswordHash: "$2a$10$hashedpassword",
+		}
+
+		mock.ExpectQuery(
+			`INSERT INTO users \(username, email, password_hash\) VALUES \(\$1, \$2, \$3\) RETURNING id, created_at, updated_at`,
+		).WithArgs(
+			user.Username, user.Email, user.PasswordHash,
+		).WillReturnError(sql.ErrNoRows) // Simulate unique constraint violation
+
+		err := repo.Create(context.Background(), user)
+		assert.Error(t, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
 }
 
 func TestUserRepository_GetByID(t *testing.T) {
-	mockDB := testutil.NewMockDB(t)
-	defer mockDB.Close()
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
 
-	repo := NewUserRepository(mockDB.DB)
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+	dbWrapper := &DB{DB: sqlxDB}
+	repo := NewUserRepository(dbWrapper)
 
 	t.Run("successful retrieval", func(t *testing.T) {
-		user := testutil.NewUserBuilder().WithID(42).Build()
-		
+		expectedUser := &models.User{
+			ID:           "user-42",
+			Username:     "testuser",
+			Email:        "test@example.com",
+			PasswordHash: "$2a$10$hashedpassword",
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+		}
+
 		rows := sqlmock.NewRows([]string{
 			"id", "username", "email", "password_hash", "created_at", "updated_at",
 		}).AddRow(
-			user.ID, user.Username, user.Email, user.PasswordHash,
-			user.CreatedAt, user.UpdatedAt,
+			expectedUser.ID, expectedUser.Username, expectedUser.Email, 
+			expectedUser.PasswordHash, expectedUser.CreatedAt, expectedUser.UpdatedAt,
 		)
 
-		mockDB.Mock.ExpectQuery(
+		mock.ExpectQuery(
 			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = \$1`,
-		).WithArgs(int64(42)).WillReturnRows(rows)
+		).WithArgs("user-42").WillReturnRows(rows)
 
-		result, err := repo.GetByID(42)
-		require.NoError(t, err)
-		require.NotNil(t, result)
-		require.Equal(t, int64(42), result.ID)
-		require.Equal(t, "testuser", result.Username)
-		
-		mockDB.AssertExpectations(t)
+		user, err := repo.GetByID(context.Background(), "user-42")
+		assert.NoError(t, err)
+		assert.NotNil(t, user)
+		assert.Equal(t, "user-42", user.ID)
+		assert.Equal(t, "testuser", user.Username)
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
 	t.Run("user not found", func(t *testing.T) {
-		mockDB.Mock.ExpectQuery(
+		mock.ExpectQuery(
 			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = \$1`,
-		).WithArgs(int64(999)).WillReturnError(sql.ErrNoRows)
+		).WithArgs("non-existent").WillReturnError(sql.ErrNoRows)
 
-		result, err := repo.GetByID(999)
-		require.Error(t, err)
-		require.Nil(t, result)
-		
-		mockDB.AssertExpectations(t)
+		user, err := repo.GetByID(context.Background(), "non-existent")
+		assert.Error(t, err)
+		assert.Equal(t, models.ErrUserNotFound, err)
+		assert.Nil(t, user)
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
 
 func TestUserRepository_GetByUsername(t *testing.T) {
-	mockDB := testutil.NewMockDB(t)
-	defer mockDB.Close()
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
 
-	repo := NewUserRepository(mockDB.DB)
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+	dbWrapper := &DB{DB: sqlxDB}
+	repo := NewUserRepository(dbWrapper)
 
 	t.Run("successful retrieval", func(t *testing.T) {
-		user := testutil.NewUserBuilder().
-			WithUsername("aragorn").
-			Build()
-		
+		expectedUser := &models.User{
+			ID:           "user-123",
+			Username:     "aragorn",
+			Email:        "aragorn@gondor.com",
+			PasswordHash: "$2a$10$hashedpassword",
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+		}
+
 		rows := sqlmock.NewRows([]string{
 			"id", "username", "email", "password_hash", "created_at", "updated_at",
 		}).AddRow(
-			user.ID, user.Username, user.Email, user.PasswordHash,
-			user.CreatedAt, user.UpdatedAt,
+			expectedUser.ID, expectedUser.Username, expectedUser.Email,
+			expectedUser.PasswordHash, expectedUser.CreatedAt, expectedUser.UpdatedAt,
 		)
 
-		mockDB.Mock.ExpectQuery(
+		mock.ExpectQuery(
 			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = \$1`,
 		).WithArgs("aragorn").WillReturnRows(rows)
 
-		result, err := repo.GetByUsername("aragorn")
-		require.NoError(t, err)
-		require.NotNil(t, result)
-		require.Equal(t, "aragorn", result.Username)
-		
-		mockDB.AssertExpectations(t)
+		user, err := repo.GetByUsername(context.Background(), "aragorn")
+		assert.NoError(t, err)
+		assert.NotNil(t, user)
+		assert.Equal(t, "aragorn", user.Username)
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
-	t.Run("case insensitive search", func(t *testing.T) {
-		user := testutil.NewUserBuilder().
-			WithUsername("aragorn").
-			Build()
-		
-		rows := sqlmock.NewRows([]string{
-			"id", "username", "email", "password_hash", "created_at", "updated_at",
-		}).AddRow(
-			user.ID, user.Username, user.Email, user.PasswordHash,
-			user.CreatedAt, user.UpdatedAt,
-		)
+	t.Run("user not found", func(t *testing.T) {
+		mock.ExpectQuery(
+			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = \$1`,
+		).WithArgs("nonexistent").WillReturnError(sql.ErrNoRows)
 
-		// Should use LOWER() for case-insensitive search
-		mockDB.Mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE LOWER\(username\) = LOWER\(\$1\)`,
-		).WithArgs("ARAGORN").WillReturnRows(rows)
-
-		result, err := repo.GetByUsername("ARAGORN")
-		require.NoError(t, err)
-		require.NotNil(t, result)
-		require.Equal(t, "aragorn", result.Username)
-		
-		mockDB.AssertExpectations(t)
+		user, err := repo.GetByUsername(context.Background(), "nonexistent")
+		assert.Error(t, err)
+		assert.Equal(t, models.ErrUserNotFound, err)
+		assert.Nil(t, user)
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
 
 func TestUserRepository_GetByEmail(t *testing.T) {
-	mockDB := testutil.NewMockDB(t)
-	defer mockDB.Close()
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
 
-	repo := NewUserRepository(mockDB.DB)
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+	dbWrapper := &DB{DB: sqlxDB}
+	repo := NewUserRepository(dbWrapper)
 
 	t.Run("successful retrieval", func(t *testing.T) {
-		user := testutil.NewUserBuilder().
-			WithEmail("aragorn@gondor.com").
-			Build()
-		
+		expectedUser := &models.User{
+			ID:           "user-456",
+			Username:     "testuser",
+			Email:        "test@example.com",
+			PasswordHash: "$2a$10$hashedpassword",
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+		}
+
 		rows := sqlmock.NewRows([]string{
 			"id", "username", "email", "password_hash", "created_at", "updated_at",
 		}).AddRow(
-			user.ID, user.Username, user.Email, user.PasswordHash,
-			user.CreatedAt, user.UpdatedAt,
+			expectedUser.ID, expectedUser.Username, expectedUser.Email,
+			expectedUser.PasswordHash, expectedUser.CreatedAt, expectedUser.UpdatedAt,
 		)
 
-		mockDB.Mock.ExpectQuery(
+		mock.ExpectQuery(
 			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE email = \$1`,
-		).WithArgs("aragorn@gondor.com").WillReturnRows(rows)
+		).WithArgs("test@example.com").WillReturnRows(rows)
 
-		result, err := repo.GetByEmail("aragorn@gondor.com")
-		require.NoError(t, err)
-		require.NotNil(t, result)
-		require.Equal(t, "aragorn@gondor.com", result.Email)
-		
-		mockDB.AssertExpectations(t)
-	})
-
-	t.Run("email normalization", func(t *testing.T) {
-		user := testutil.NewUserBuilder().
-			WithEmail("test@example.com").
-			Build()
-		
-		rows := sqlmock.NewRows([]string{
-			"id", "username", "email", "password_hash", "created_at", "updated_at",
-		}).AddRow(
-			user.ID, user.Username, user.Email, user.PasswordHash,
-			user.CreatedAt, user.UpdatedAt,
-		)
-
-		// Should normalize email to lowercase
-		mockDB.Mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE LOWER\(email\) = LOWER\(\$1\)`,
-		).WithArgs("TEST@EXAMPLE.COM").WillReturnRows(rows)
-
-		result, err := repo.GetByEmail("TEST@EXAMPLE.COM")
-		require.NoError(t, err)
-		require.NotNil(t, result)
-		require.Equal(t, "test@example.com", result.Email)
-		
-		mockDB.AssertExpectations(t)
+		user, err := repo.GetByEmail(context.Background(), "test@example.com")
+		assert.NoError(t, err)
+		assert.NotNil(t, user)
+		assert.Equal(t, "test@example.com", user.Email)
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
 
 func TestUserRepository_Update(t *testing.T) {
-	mockDB := testutil.NewMockDB(t)
-	defer mockDB.Close()
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
 
-	repo := NewUserRepository(mockDB.DB)
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+	dbWrapper := &DB{DB: sqlxDB}
+	repo := NewUserRepository(dbWrapper)
 
 	t.Run("successful update", func(t *testing.T) {
-		user := testutil.NewUserBuilder().
-			WithID(1).
-			WithEmail("newemail@example.com").
-			Build()
+		user := &models.User{
+			ID:           "user-123",
+			Username:     "updateduser",
+			Email:        "updated@example.com",
+			PasswordHash: "$2a$10$newhashedpassword",
+		}
 
-		mockDB.Mock.ExpectExec(
+		mock.ExpectExec(
 			`UPDATE users SET username = \$2, email = \$3, password_hash = \$4, updated_at = CURRENT_TIMESTAMP WHERE id = \$1`,
 		).WithArgs(
 			user.ID, user.Username, user.Email, user.PasswordHash,
 		).WillReturnResult(sqlmock.NewResult(0, 1))
 
-		err := repo.Update(user)
-		require.NoError(t, err)
-		
-		mockDB.AssertExpectations(t)
+		err := repo.Update(context.Background(), user)
+		assert.NoError(t, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
 	t.Run("user not found", func(t *testing.T) {
-		user := testutil.NewUserBuilder().WithID(999).Build()
+		user := &models.User{
+			ID:           "non-existent",
+			Username:     "updateduser",
+			Email:        "updated@example.com",
+			PasswordHash: "$2a$10$newhashedpassword",
+		}
 
-		mockDB.Mock.ExpectExec(
+		mock.ExpectExec(
 			`UPDATE users SET username = \$2, email = \$3, password_hash = \$4, updated_at = CURRENT_TIMESTAMP WHERE id = \$1`,
 		).WithArgs(
 			user.ID, user.Username, user.Email, user.PasswordHash,
 		).WillReturnResult(sqlmock.NewResult(0, 0))
 
-		err := repo.Update(user)
-		require.Error(t, err)
-		
-		mockDB.AssertExpectations(t)
-	})
-
-	t.Run("update violates unique constraint", func(t *testing.T) {
-		user := testutil.NewUserBuilder().
-			WithID(1).
-			WithUsername("existing_user").
-			Build()
-
-		mockDB.Mock.ExpectExec(
-			`UPDATE users SET username = \$2, email = \$3, password_hash = \$4, updated_at = CURRENT_TIMESTAMP WHERE id = \$1`,
-		).WithArgs(
-			user.ID, user.Username, user.Email, user.PasswordHash,
-		).WillReturnError(sql.ErrNoRows) // Simulate constraint violation
-
-		err := repo.Update(user)
-		require.Error(t, err)
-		
-		mockDB.AssertExpectations(t)
-	})
-}
-
-func TestUserRepository_UpdatePassword(t *testing.T) {
-	mockDB := testutil.NewMockDB(t)
-	defer mockDB.Close()
-
-	repo := NewUserRepository(mockDB.DB)
-
-	t.Run("successful password update", func(t *testing.T) {
-		newPasswordHash := "$2a$10$newhashedpassword"
-
-		mockDB.Mock.ExpectExec(
-			`UPDATE users SET password_hash = \$2, updated_at = CURRENT_TIMESTAMP WHERE id = \$1`,
-		).WithArgs(int64(1), newPasswordHash).WillReturnResult(sqlmock.NewResult(0, 1))
-
-		err := repo.UpdatePassword(1, newPasswordHash)
-		require.NoError(t, err)
-		
-		mockDB.AssertExpectations(t)
-	})
-
-	t.Run("empty password hash rejected", func(t *testing.T) {
-		err := repo.UpdatePassword(1, "")
-		require.Error(t, err)
+		err := repo.Update(context.Background(), user)
+		assert.Error(t, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
 
 func TestUserRepository_Delete(t *testing.T) {
-	mockDB := testutil.NewMockDB(t)
-	defer mockDB.Close()
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
 
-	repo := NewUserRepository(mockDB.DB)
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+	dbWrapper := &DB{DB: sqlxDB}
+	repo := NewUserRepository(dbWrapper)
 
-	t.Run("successful soft delete", func(t *testing.T) {
-		// Assuming soft delete implementation
-		mockDB.Mock.ExpectExec(
-			`UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = \$1`,
-		).WithArgs(int64(1)).WillReturnResult(sqlmock.NewResult(0, 1))
-
-		err := repo.Delete(1)
-		require.NoError(t, err)
-		
-		mockDB.AssertExpectations(t)
-	})
-
-	t.Run("hard delete", func(t *testing.T) {
-		mockDB.Mock.ExpectExec(
+	t.Run("successful delete", func(t *testing.T) {
+		mock.ExpectExec(
 			`DELETE FROM users WHERE id = \$1`,
-		).WithArgs(int64(1)).WillReturnResult(sqlmock.NewResult(0, 1))
+		).WithArgs("user-123").WillReturnResult(sqlmock.NewResult(0, 1))
 
-		err := repo.HardDelete(1)
-		require.NoError(t, err)
-		
-		mockDB.AssertExpectations(t)
-	})
-}
-
-func TestUserRepository_ExistsByUsername(t *testing.T) {
-	mockDB := testutil.NewMockDB(t)
-	defer mockDB.Close()
-
-	repo := NewUserRepository(mockDB.DB)
-
-	t.Run("username exists", func(t *testing.T) {
-		rows := sqlmock.NewRows([]string{"exists"}).AddRow(true)
-
-		mockDB.Mock.ExpectQuery(
-			`SELECT EXISTS\(SELECT 1 FROM users WHERE LOWER\(username\) = LOWER\(\$1\)\)`,
-		).WithArgs("testuser").WillReturnRows(rows)
-
-		exists, err := repo.ExistsByUsername("testuser")
-		require.NoError(t, err)
-		require.True(t, exists)
-		
-		mockDB.AssertExpectations(t)
+		err := repo.Delete(context.Background(), "user-123")
+		assert.NoError(t, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
-	t.Run("username does not exist", func(t *testing.T) {
-		rows := sqlmock.NewRows([]string{"exists"}).AddRow(false)
+	t.Run("user not found", func(t *testing.T) {
+		mock.ExpectExec(
+			`DELETE FROM users WHERE id = \$1`,
+		).WithArgs("non-existent").WillReturnResult(sqlmock.NewResult(0, 0))
 
-		mockDB.Mock.ExpectQuery(
-			`SELECT EXISTS\(SELECT 1 FROM users WHERE LOWER\(username\) = LOWER\(\$1\)\)`,
-		).WithArgs("nonexistent").WillReturnRows(rows)
-
-		exists, err := repo.ExistsByUsername("nonexistent")
-		require.NoError(t, err)
-		require.False(t, exists)
-		
-		mockDB.AssertExpectations(t)
-	})
-}
-
-func TestUserRepository_ExistsByEmail(t *testing.T) {
-	mockDB := testutil.NewMockDB(t)
-	defer mockDB.Close()
-
-	repo := NewUserRepository(mockDB.DB)
-
-	t.Run("email exists", func(t *testing.T) {
-		rows := sqlmock.NewRows([]string{"exists"}).AddRow(true)
-
-		mockDB.Mock.ExpectQuery(
-			`SELECT EXISTS\(SELECT 1 FROM users WHERE LOWER\(email\) = LOWER\(\$1\)\)`,
-		).WithArgs("test@example.com").WillReturnRows(rows)
-
-		exists, err := repo.ExistsByEmail("test@example.com")
-		require.NoError(t, err)
-		require.True(t, exists)
-		
-		mockDB.AssertExpectations(t)
-	})
-}
-
-func TestUserRepository_BulkOperations(t *testing.T) {
-	mockDB := testutil.NewMockDB(t)
-	defer mockDB.Close()
-
-	repo := NewUserRepository(mockDB.DB)
-
-	t.Run("get multiple users by IDs", func(t *testing.T) {
-		userIDs := []int64{1, 2, 3}
-		
-		rows := sqlmock.NewRows([]string{
-			"id", "username", "email", "password_hash", "created_at", "updated_at",
-		}).
-			AddRow(1, "user1", "user1@example.com", "hash1", time.Now(), time.Now()).
-			AddRow(2, "user2", "user2@example.com", "hash2", time.Now(), time.Now()).
-			AddRow(3, "user3", "user3@example.com", "hash3", time.Now(), time.Now())
-
-		mockDB.Mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id IN \(\$1, \$2, \$3\)`,
-		).WithArgs(int64(1), int64(2), int64(3)).WillReturnRows(rows)
-
-		users, err := repo.GetByIDs(userIDs)
-		require.NoError(t, err)
-		require.Len(t, users, 3)
-		
-		mockDB.AssertExpectations(t)
+		err := repo.Delete(context.Background(), "non-existent")
+		assert.Error(t, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"strings"
 	"testing"
 
 	"github.com/rs/zerolog"
@@ -87,8 +86,9 @@ func TestNew(t *testing.T) {
 
 func TestLogger_WithContext(t *testing.T) {
 	var buf bytes.Buffer
+	zl := zerolog.New(&buf).With().Timestamp().Logger()
 	logger := &Logger{
-		Logger: &zerolog.New(&buf).With().Timestamp().Logger(),
+		Logger: &zl,
 	}
 
 	ctx := context.Background()
@@ -109,7 +109,7 @@ func TestLogger_WithContext(t *testing.T) {
 func TestLogger_WithRequestID(t *testing.T) {
 	var buf bytes.Buffer
 	logger := &Logger{
-		Logger: &zerolog.New(&buf).With().Timestamp().Logger(),
+		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger(); return &l }(),
 	}
 
 	requestLogger := logger.WithRequestID("req-123")
@@ -124,7 +124,7 @@ func TestLogger_WithRequestID(t *testing.T) {
 func TestLogger_WithUserID(t *testing.T) {
 	var buf bytes.Buffer
 	logger := &Logger{
-		Logger: &zerolog.New(&buf).With().Timestamp().Logger(),
+		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger(); return &l }(),
 	}
 
 	userLogger := logger.WithUserID("user-456")
@@ -139,7 +139,7 @@ func TestLogger_WithUserID(t *testing.T) {
 func TestLogger_WithError(t *testing.T) {
 	var buf bytes.Buffer
 	logger := &Logger{
-		Logger: &zerolog.New(&buf).With().Timestamp().Logger(),
+		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger(); return &l }(),
 	}
 
 	testErr := assert.AnError
@@ -155,7 +155,7 @@ func TestLogger_WithError(t *testing.T) {
 func TestLogger_WithField(t *testing.T) {
 	var buf bytes.Buffer
 	logger := &Logger{
-		Logger: &zerolog.New(&buf).With().Timestamp().Logger(),
+		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger(); return &l }(),
 	}
 
 	fieldLogger := logger.WithField("custom_field", "custom_value")
@@ -170,7 +170,7 @@ func TestLogger_WithField(t *testing.T) {
 func TestLogger_WithFields(t *testing.T) {
 	var buf bytes.Buffer
 	logger := &Logger{
-		Logger: &zerolog.New(&buf).With().Timestamp().Logger(),
+		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger(); return &l }(),
 	}
 
 	fields := map[string]interface{}{
@@ -291,7 +291,7 @@ func TestWithContext_Global(t *testing.T) {
 func TestLogger_ChainedOperations(t *testing.T) {
 	var buf bytes.Buffer
 	logger := &Logger{
-		Logger: &zerolog.New(&buf).With().Timestamp().Logger(),
+		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger(); return &l }(),
 	}
 
 	// Test chaining multiple operations
@@ -319,7 +319,7 @@ func TestLogger_ChainedOperations(t *testing.T) {
 func TestLogger_EmptyContext(t *testing.T) {
 	var buf bytes.Buffer
 	logger := &Logger{
-		Logger: &zerolog.New(&buf).With().Timestamp().Logger(),
+		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger(); return &l }(),
 	}
 
 	// Test with empty context values
@@ -335,7 +335,7 @@ func TestLogger_EmptyContext(t *testing.T) {
 func TestLogger_NilError(t *testing.T) {
 	var buf bytes.Buffer
 	logger := &Logger{
-		Logger: &zerolog.New(&buf).With().Timestamp().Logger(),
+		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger(); return &l }(),
 	}
 
 	// Test with nil error

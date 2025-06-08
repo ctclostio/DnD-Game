@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -321,6 +322,16 @@ func (m *MockCombatService) EndCombat(combatID int64) error {
 // MockLLMProvider creates a mock LLM provider
 type MockLLMProvider struct {
 	mock.Mock
+}
+
+func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+	args := m.Called(ctx, prompt, systemPrompt)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+	args := m.Called(ctx, prompt, systemPrompt)
+	return args.String(0), args.Error(1)
 }
 
 func (m *MockLLMProvider) GenerateResponse(prompt string, options map[string]interface{}) (string, error) {

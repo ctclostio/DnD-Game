@@ -61,15 +61,7 @@ type MockCustomClassRepository struct {
 	mock.Mock
 }
 
-// MockLLMProvider is a mock implementation of LLMProvider
-type MockLLMProvider struct {
-	mock.Mock
-}
-
-func (m *MockLLMProvider) Chat(prompt string) (string, error) {
-	args := m.Called(prompt)
-	return args.String(0), args.Error(1)
-}
+// Use the MockLLMProvider from the llm_providers.go file instead
 
 func TestCharacterService_CreateCharacter(t *testing.T) {
 	ctx := context.Background()
@@ -493,14 +485,6 @@ func TestCalculateCarryCapacity(t *testing.T) {
 }
 
 // Helper functions
-func getModifier(ability int) int {
-	return (ability - 10) / 2
-}
-
-func CalculateCarryCapacity(strength int) float64 {
-	return float64(strength) * 15
-}
-
 func timeNow() time.Time {
 	return time.Now().Truncate(time.Second)
 }

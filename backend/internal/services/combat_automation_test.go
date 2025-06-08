@@ -13,57 +13,7 @@ import (
 	"github.com/your-username/dnd-game/backend/pkg/dice"
 )
 
-// Mock repositories
-type MockCombatAnalyticsRepository struct {
-	mock.Mock
-}
-
-func (m *MockCombatAnalyticsRepository) CreateAutoCombatResolution(resolution *models.AutoCombatResolution) error {
-	args := m.Called(resolution)
-	return args.Error(0)
-}
-
-func (m *MockCombatAnalyticsRepository) GetAutoCombatResolutionsBySession(sessionID uuid.UUID) ([]*models.AutoCombatResolution, error) {
-	args := m.Called(sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.AutoCombatResolution), args.Error(1)
-}
-
-func (m *MockCombatAnalyticsRepository) GetInitiativeRule(sessionID, combatantID uuid.UUID) (*models.SmartInitiativeRule, error) {
-	args := m.Called(sessionID, combatantID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.SmartInitiativeRule), args.Error(1)
-}
-
-func (m *MockCombatAnalyticsRepository) CreateOrUpdateInitiativeRule(rule *models.SmartInitiativeRule) error {
-	args := m.Called(rule)
-	return args.Error(0)
-}
-
-func (m *MockCombatAnalyticsRepository) CreateBattleMap(battleMap *models.BattleMap) error {
-	args := m.Called(battleMap)
-	return args.Error(0)
-}
-
-func (m *MockCombatAnalyticsRepository) GetBattleMap(mapID uuid.UUID) (*models.BattleMap, error) {
-	args := m.Called(mapID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.BattleMap), args.Error(1)
-}
-
-func (m *MockCombatAnalyticsRepository) GetBattleMapsBySession(sessionID uuid.UUID) ([]*models.BattleMap, error) {
-	args := m.Called(sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.BattleMap), args.Error(1)
-}
+// Using MockCombatAnalyticsRepository from combat_analytics_test.go
 
 type MockCharacterRepositoryForCombat struct {
 	mock.Mock

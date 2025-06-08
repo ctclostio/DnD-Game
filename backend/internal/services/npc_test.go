@@ -650,11 +650,4 @@ func (m *MockNPCRepository) CreateFromTemplate(ctx context.Context, templateID, 
 	return args.Get(0).(*models.NPC), args.Error(1)
 }
 
-type MockDiceRoller struct {
-	mock.Mock
-}
-
-func (m *MockDiceRoller) Roll(notation string) (dice.RollResult, error) {
-	args := m.Called(notation)
-	return args.Get(0).(dice.RollResult), args.Error(1)
-}
+// Using MockDiceRoller from combat_test.go

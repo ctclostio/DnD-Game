@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -22,7 +21,15 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/websocket"
 )
 
-func setupIntegrationTest(t *testing.T) (*Handlers, *mux.Router, func()) {
+type testContext struct {
+	handlers   *Handlers
+	router     *mux.Router
+	db         *database.DB
+	repos      *database.Repositories
+	jwtManager *auth.JWTManager
+}
+
+func setupIntegrationTest(t *testing.T) (*testContext, func()) {
 	// Setup test database
 	sqlxDB := testutil.SetupTestDB(t)
 	
@@ -37,8 +44,9 @@ func setupIntegrationTest(t *testing.T) (*Handlers, *mux.Router, func()) {
 		Characters:   database.NewCharacterRepository(db),
 		GameSessions: database.NewGameSessionRepository(db),
 		DiceRolls:    database.NewDiceRollRepository(db),
-		NPCs:         database.NewNPCRepository(db),
+		NPCs:         database.NewNPCRepository(sqlxDB),
 		Inventory:    database.NewInventoryRepository(sqlxDB),
+		CustomClasses: database.NewCustomClassRepository(db.DB.DB),
 	}
 
 	// Create services
@@ -48,12 +56,12 @@ func setupIntegrationTest(t *testing.T) (*Handlers, *mux.Router, func()) {
 	mockLLM := &testutil.MockLLMProvider{}
 	
 	svc := &services.Services{
-		Users:         services.NewUserService(repos.Users, nil),
+		Users:         services.NewUserService(repos.Users),
 		Characters:    services.NewCharacterService(repos.Characters, repos.CustomClasses, mockLLM),
-		GameSessions:  services.NewGameSessionService(repos.GameSessions, repos.Characters, repos.Users),
+		GameSessions:  services.NewGameSessionService(repos.GameSessions),
 		DiceRolls:     services.NewDiceRollService(repos.DiceRolls),
 		Combat:        services.NewCombatService(),
-		NPCs:          services.NewNPCService(repos.NPCs, nil),
+		NPCs:          services.NewNPCService(repos.NPCs),
 		Inventory:     services.NewInventoryService(repos.Inventory, repos.Characters),
 		JWTManager:    jwtManager,
 		Config:        &config.Config{},
@@ -81,10 +89,16 @@ func setupIntegrationTest(t *testing.T) (*Handlers, *mux.Router, func()) {
 	router.HandleFunc("/api/v1/characters/{characterId}/inventory/{itemId}/equip", authMiddleware.Authenticate(inventoryHandler.EquipItem)).Methods("POST")
 
 	cleanup := func() {
-		testutil.CleanupDB(db)
+		sqlxDB.Close()
 	}
 
-	return handlers, router, cleanup
+	return &testContext{
+		handlers:   handlers,
+		router:     router,
+		db:         db,
+		repos:      repos,
+		jwtManager: jwtManager,
+	}, cleanup
 }
 
 func createAuthenticatedRequest(t *testing.T, method, url string, body interface{}, userID string, jwtManager *auth.JWTManager) *http.Request {
@@ -101,21 +115,21 @@ func createAuthenticatedRequest(t *testing.T, method, url string, body interface
 	req.Header.Set("Content-Type", "application/json")
 
 	// Generate token and add to request
-	token, _, err := jwtManager.GenerateTokens(userID, "testuser", auth.RolePlayer)
+	tokenPair, err := jwtManager.GenerateTokenPair(userID, "testuser", "test@example.com", "player")
 	require.NoError(t, err)
-	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Authorization", "Bearer "+tokenPair.AccessToken)
 
 	return req
 }
 
 func TestCharacterAPI_Integration(t *testing.T) {
-	handlers, router, cleanup := setupIntegrationTest(t)
+	ctx, cleanup := setupIntegrationTest(t)
 	defer cleanup()
 
 	userID := "user-test-123"
 	
 	// Seed test user
-	testutil.SeedTestUser(t, handlers.userService.(*services.UserService).repo.(*database.UserRepository).db, 
+	testutil.SeedTestUser(t, ctx.db.DB, 
 		userID, "testuser", "test@example.com", "player")
 
 	t.Run("Create Character", func(t *testing.T) {
@@ -134,10 +148,10 @@ func TestCharacterAPI_Integration(t *testing.T) {
 			},
 		}
 
-		req := createAuthenticatedRequest(t, "POST", "/api/v1/characters", charData, userID, handlers.jwtManager)
+		req := createAuthenticatedRequest(t, "POST", "/api/v1/characters", charData, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		ctx.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusCreated, w.Code)
 
@@ -148,19 +162,19 @@ func TestCharacterAPI_Integration(t *testing.T) {
 		assert.Equal(t, "Character created successfully", response["message"])
 
 		// Verify character was created in database
-		testutil.AssertRowExists(t, handlers.characterService.(*services.CharacterService).repo.(*database.CharacterRepository).db,
+		testutil.AssertRowExists(t, ctx.db.DB,
 			"characters", "name", "Aragorn")
 	})
 
 	t.Run("Get Characters", func(t *testing.T) {
 		// Create a second character
-		testutil.SeedTestCharacter(t, handlers.characterService.(*services.CharacterService).repo.(*database.CharacterRepository).db,
+		testutil.SeedTestCharacter(t, ctx.db.DB,
 			"char-2", userID, "Legolas")
 
-		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters", nil, userID, handlers.jwtManager)
+		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters", nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		ctx.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -177,14 +191,13 @@ func TestCharacterAPI_Integration(t *testing.T) {
 	t.Run("Get Single Character", func(t *testing.T) {
 		// Get the character ID from database
 		var charID string
-		db := handlers.characterService.(*services.CharacterService).repo.(*database.CharacterRepository).db
-		err := db.Get(&charID, "SELECT id FROM characters WHERE name = 'Aragorn'")
+		err := ctx.db.Get(&charID, "SELECT id FROM characters WHERE name = 'Aragorn'")
 		require.NoError(t, err)
 
-		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters/"+charID, nil, userID, handlers.jwtManager)
+		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters/"+charID, nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		ctx.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -199,8 +212,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 	t.Run("Update Character", func(t *testing.T) {
 		// Get the character ID
 		var charID string
-		db := handlers.characterService.(*services.CharacterService).repo.(*database.CharacterRepository).db
-		err := db.Get(&charID, "SELECT id FROM characters WHERE name = 'Aragorn'")
+		err := ctx.db.Get(&charID, "SELECT id FROM characters WHERE name = 'Aragorn'")
 		require.NoError(t, err)
 
 		updateData := models.Character{
@@ -209,16 +221,16 @@ func TestCharacterAPI_Integration(t *testing.T) {
 			Level: 2,
 		}
 
-		req := createAuthenticatedRequest(t, "PUT", "/api/v1/characters/"+charID, updateData, userID, handlers.jwtManager)
+		req := createAuthenticatedRequest(t, "PUT", "/api/v1/characters/"+charID, updateData, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		ctx.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Verify update in database
 		var updatedName string
-		err = db.Get(&updatedName, "SELECT name FROM characters WHERE id = $1", charID)
+		err = ctx.db.Get(&updatedName, "SELECT name FROM characters WHERE id = $1", charID)
 		require.NoError(t, err)
 		assert.Equal(t, "Strider", updatedName)
 	})
@@ -226,34 +238,33 @@ func TestCharacterAPI_Integration(t *testing.T) {
 	t.Run("Delete Character", func(t *testing.T) {
 		// Get Legolas's ID
 		var charID string
-		db := handlers.characterService.(*services.CharacterService).repo.(*database.CharacterRepository).db
-		err := db.Get(&charID, "SELECT id FROM characters WHERE name = 'Legolas'")
+		err := ctx.db.Get(&charID, "SELECT id FROM characters WHERE name = 'Legolas'")
 		require.NoError(t, err)
 
-		req := createAuthenticatedRequest(t, "DELETE", "/api/v1/characters/"+charID, nil, userID, handlers.jwtManager)
+		req := createAuthenticatedRequest(t, "DELETE", "/api/v1/characters/"+charID, nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		ctx.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNoContent, w.Code)
 
 		// Verify deletion
-		testutil.AssertRowNotExists(t, db, "characters", "id", charID)
+		testutil.AssertRowNotExists(t, ctx.db.DB, "characters", "id", charID)
 	})
 
 	t.Run("Cannot Access Other User's Characters", func(t *testing.T) {
 		// Create another user and their character
 		otherUserID := "user-other-456"
-		testutil.SeedTestUser(t, handlers.userService.(*services.UserService).repo.(*database.UserRepository).db,
+		testutil.SeedTestUser(t, ctx.db.DB,
 			otherUserID, "otheruser", "other@example.com", "player")
-		testutil.SeedTestCharacter(t, handlers.characterService.(*services.CharacterService).repo.(*database.CharacterRepository).db,
+		testutil.SeedTestCharacter(t, ctx.db.DB,
 			"char-other", otherUserID, "Gimli")
 
 		// Try to get the other user's character
-		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters", nil, userID, handlers.jwtManager)
+		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters", nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		ctx.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -268,7 +279,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 }
 
 func TestInventoryAPI_Integration(t *testing.T) {
-	handlers, router, cleanup := setupIntegrationTest(t)
+	ctx, cleanup := setupIntegrationTest(t)
 	defer cleanup()
 
 	userID := "user-test-123"
@@ -276,10 +287,9 @@ func TestInventoryAPI_Integration(t *testing.T) {
 	itemID := "item-test-123"
 
 	// Seed test data
-	db := handlers.characterService.(*services.CharacterService).repo.(*database.CharacterRepository).db
-	testutil.SeedTestUser(t, db, userID, "testuser", "test@example.com", "player")
-	testutil.SeedTestCharacter(t, db, charID, userID, "Thorin")
-	testutil.SeedTestItem(t, db, itemID, "Longsword", "weapon", 1500)
+	testutil.SeedTestUser(t, ctx.db.DB, userID, "testuser", "test@example.com", "player")
+	testutil.SeedTestCharacter(t, ctx.db.DB, charID, userID, "Thorin")
+	testutil.SeedTestItem(t, ctx.db.DB, itemID, "Longsword", "weapon", 1500)
 
 	t.Run("Add Item to Inventory", func(t *testing.T) {
 		reqBody := map[string]interface{}{
@@ -287,22 +297,22 @@ func TestInventoryAPI_Integration(t *testing.T) {
 			"quantity": 1,
 		}
 
-		req := createAuthenticatedRequest(t, "POST", "/api/v1/characters/"+charID+"/inventory", reqBody, userID, handlers.jwtManager)
+		req := createAuthenticatedRequest(t, "POST", "/api/v1/characters/"+charID+"/inventory", reqBody, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		ctx.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Verify item was added
-		testutil.AssertRowExists(t, db, "character_inventory", "character_id", charID)
+		testutil.AssertRowExists(t, ctx.db.DB, "character_inventory", "character_id", charID)
 	})
 
 	t.Run("Get Character Inventory", func(t *testing.T) {
-		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters/"+charID+"/inventory", nil, userID, handlers.jwtManager)
+		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters/"+charID+"/inventory", nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		ctx.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -314,16 +324,16 @@ func TestInventoryAPI_Integration(t *testing.T) {
 	})
 
 	t.Run("Equip Item", func(t *testing.T) {
-		req := createAuthenticatedRequest(t, "POST", "/api/v1/characters/"+charID+"/inventory/"+itemID+"/equip", nil, userID, handlers.jwtManager)
+		req := createAuthenticatedRequest(t, "POST", "/api/v1/characters/"+charID+"/inventory/"+itemID+"/equip", nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		ctx.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Verify item is equipped
 		var equipped bool
-		err := db.Get(&equipped, "SELECT equipped FROM character_inventory WHERE character_id = $1 AND item_id = $2", charID, itemID)
+		err := ctx.db.Get(&equipped, "SELECT equipped FROM character_inventory WHERE character_id = $1 AND item_id = $2", charID, itemID)
 		require.NoError(t, err)
 		assert.True(t, equipped)
 	})

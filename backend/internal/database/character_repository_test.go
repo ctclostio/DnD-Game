@@ -1,15 +1,7 @@
 package database
 
 import (
-	"context"
 	"testing"
-	"time"
-
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/jmoiron/sqlx"
-	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/testutil"
 )
 
 func TestCharacterRepository_Create(t *testing.T) {

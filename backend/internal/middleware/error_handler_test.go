@@ -286,9 +286,9 @@ func TestErrorHandlerMiddleware_DatabaseErrors(t *testing.T) {
 				var err error
 				if stderrors.Is(tt.dbError, sql.ErrNoRows) {
 					err = errors.NewNotFoundError("Resource").WithCode(string(errors.ErrCodeCharacterNotFound))
-				} else if stderrors.As(tt.dbError, &stderrors.New("connection refused")) {
+				} else if tt.dbError != nil && tt.dbError.Error() == "connection refused" {
 					err = errors.NewServiceUnavailableError("Database unavailable").WithCode(string(errors.ErrCodeDatabaseError))
-				} else if stderrors.As(tt.dbError, &stderrors.New("duplicate key value violates unique constraint")) {
+				} else if tt.dbError != nil && tt.dbError.Error() == "duplicate key value violates unique constraint" {
 					err = errors.NewConflictError("Resource already exists").WithCode(string(errors.ErrCodeDuplicateEntry))
 				}
 				c.Error(err)
@@ -366,7 +366,7 @@ func BenchmarkErrorHandler(b *testing.B) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	
-	router.Use(ErrorHandler())
+	router.Use(ErrorHandlerGin())
 	
 	router.GET("/test", func(c *gin.Context) {
 		err := errors.NewNotFoundError("resource").WithCode(string(errors.ErrCodeCharacterNotFound))

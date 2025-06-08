@@ -711,57 +711,7 @@ func TestCustomRaceService_IncrementUsage(t *testing.T) {
 	})
 }
 
-// Mock implementations
-type MockCustomRaceRepository struct {
-	mock.Mock
-}
-
-func (m *MockCustomRaceRepository) Create(ctx context.Context, race *models.CustomRace) error {
-	args := m.Called(ctx, race)
-	return args.Error(0)
-}
-
-func (m *MockCustomRaceRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.CustomRace, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.CustomRace), args.Error(1)
-}
-
-func (m *MockCustomRaceRepository) GetByUserID(ctx context.Context, userID uuid.UUID) ([]*models.CustomRace, error) {
-	args := m.Called(ctx, userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.CustomRace), args.Error(1)
-}
-
-func (m *MockCustomRaceRepository) GetPublicRaces(ctx context.Context) ([]*models.CustomRace, error) {
-	args := m.Called(ctx)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.CustomRace), args.Error(1)
-}
-
-func (m *MockCustomRaceRepository) GetPendingApproval(ctx context.Context) ([]*models.CustomRace, error) {
-	args := m.Called(ctx)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.CustomRace), args.Error(1)
-}
-
-func (m *MockCustomRaceRepository) Update(ctx context.Context, race *models.CustomRace) error {
-	args := m.Called(ctx, race)
-	return args.Error(0)
-}
-
-func (m *MockCustomRaceRepository) IncrementUsage(ctx context.Context, id uuid.UUID) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
-}
+// Using MockCustomRaceRepository from character_builder_test.go
 
 type MockAIRaceGeneratorService struct {
 	mock.Mock

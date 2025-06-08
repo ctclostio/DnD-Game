@@ -607,43 +607,7 @@ func TestRollDiceWithModifier(t *testing.T) {
 	}
 }
 
-// Test helper functions that would be in the actual service
-func parseRollNotation(notation string) (count, sides, modifier int, err error) {
-	// Simple implementation for testing
-	if notation == "invalid" || notation == "1dx20" {
-		return 0, 0, 0, errors.New("invalid format")
-	}
-	if notation == "0d20" {
-		return 0, 0, 0, errors.New("dice count must be at least 1")
-	}
-	if notation == "101d20" {
-		return 0, 0, 0, errors.New("dice count cannot exceed 100")
-	}
-	if notation == "1d7" {
-		return 0, 0, 0, errors.New("invalid dice type")
-	}
-	if notation == "1d20+abc" {
-		return 0, 0, 0, errors.New("invalid modifier")
-	}
-	
-	// Simple parsing for test purposes
-	switch notation {
-	case "1d20":
-		return 1, 20, 0, nil
-	case "2d6+3":
-		return 2, 6, 3, nil
-	case "1d8-2":
-		return 1, 8, -2, nil
-	case "4d10+5":
-		return 4, 10, 5, nil
-	case "3d4":
-		return 3, 4, 0, nil
-	case "1d100":
-		return 1, 100, 0, nil
-	default:
-		return 0, 0, 0, errors.New("unhandled notation in test")
-	}
-}
+// Using parseRollNotation from dice_roll.go
 
 func rollDiceWithModifier(count, sides, modifier int) ([]int, int) {
 	rolls := make([]int, count)
