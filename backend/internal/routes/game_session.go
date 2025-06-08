@@ -17,11 +17,9 @@ func RegisterGameSessionRoutes(api *mux.Router, cfg *Config) {
 	api.HandleFunc("/game/sessions/{id}/join", auth(cfg.Handlers.JoinGameSession)).Methods("POST")
 	api.HandleFunc("/game/sessions/{id}/leave", auth(cfg.Handlers.LeaveGameSession)).Methods("POST")
 	
-	// Additional session routes (if available)
-	if cfg.Handlers.GetActiveSessions != nil {
-		api.HandleFunc("/game/sessions", auth(cfg.Handlers.GetActiveSessions)).Methods("GET")
-		api.HandleFunc("/game/sessions/{id}/players", auth(cfg.Handlers.GetSessionPlayers)).Methods("GET")
-		api.HandleFunc("/game/sessions/{id}/kick/{playerId}", 
-			dmOnly(cfg.Handlers.KickPlayer)).Methods("POST")
-	}
+	// Additional session routes
+	api.HandleFunc("/game/sessions", auth(cfg.Handlers.GetActiveSessions)).Methods("GET")
+	api.HandleFunc("/game/sessions/{id}/players", auth(cfg.Handlers.GetSessionPlayers)).Methods("GET")
+	api.HandleFunc("/game/sessions/{id}/kick/{playerId}", 
+		dmOnly(cfg.Handlers.KickPlayer)).Methods("POST")
 }

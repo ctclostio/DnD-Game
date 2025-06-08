@@ -271,3 +271,13 @@ type CombatantUpdate struct {
 	TempHP    int    `json:"tempHp,omitempty"`
 	Condition string `json:"condition,omitempty"`
 }
+
+// RollDetails represents the details of a dice roll
+type RollDetails struct {
+	Total      int      `json:"total"`
+	Rolls      []int    `json:"rolls"`
+	Modifier   int      `json:"modifier"`
+	Type       RollType `json:"type"`
+	Advantage  bool     `json:"advantage"`
+	Disadvantage bool   `json:"disadvantage"`
+}

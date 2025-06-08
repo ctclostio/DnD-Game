@@ -108,9 +108,9 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 		require.NotNil(t, class)
 		require.Equal(t, "Shadowdancer", class.Name)
 		require.Equal(t, "Masters of stealth and shadow magic", class.Description)
-		require.Equal(t, "1d8", class.HitDice)
+		require.Equal(t, 8, class.HitDie)
 		require.Equal(t, "dexterity", class.PrimaryAbility)
-		require.Len(t, class.Features, 3)
+		require.Len(t, class.ClassFeatures, 3)
 		require.Equal(t, 7, class.BalanceScore)
 	})
 
@@ -290,8 +290,8 @@ func TestAIClassGenerator_parseClassResponse(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, class)
 		require.Equal(t, "Test Class", class.Name)
-		require.Equal(t, "1d10", class.HitDice)
-		require.Len(t, class.Features, 1)
+		require.Equal(t, 10, class.HitDie)
+		require.Len(t, class.ClassFeatures, 1)
 	})
 
 	t.Run("invalid JSON", func(t *testing.T) {
@@ -329,9 +329,7 @@ func TestAIClassGenerator_generateSpellSlotProgression(t *testing.T) {
 		{
 			name: "full caster",
 			class: &models.CustomClass{
-				Spellcasting: &models.SpellcastingInfo{
-					SpellcastingAbility: "intelligence",
-				},
+				SpellcastingAbility: "intelligence",
 			},
 			expectedCantrips: 3,
 			expectedLevel1:   2,
@@ -340,10 +338,8 @@ func TestAIClassGenerator_generateSpellSlotProgression(t *testing.T) {
 		{
 			name: "half caster",
 			class: &models.CustomClass{
-				Spellcasting: &models.SpellcastingInfo{
-					SpellcastingAbility: "wisdom",
-					SpellsKnown:         5, // Indicates half-caster
-				},
+				SpellcastingAbility: "wisdom",
+				SpellsKnownProgression: []int{0, 0, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11}, // Indicates half-caster
 			},
 			expectedCantrips: 0,
 			expectedLevel1:   2,
@@ -405,10 +401,10 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 			class: &models.CustomClass{
 				Name:           "Valid Class",
 				Description:    "A balanced class",
-				HitDice:        "1d8",
+				HitDie:         8,
 				PrimaryAbility: "wisdom",
 				BalanceScore:   6,
-				Features: []models.ClassFeature{
+				ClassFeatures: []models.ClassFeature{
 					{Level: 1, Name: "Feature 1"},
 					{Level: 3, Name: "Feature 2"},
 				},
@@ -419,7 +415,7 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 			name: "empty name",
 			class: &models.CustomClass{
 				Description: "No name",
-				HitDice:     "1d8",
+				HitDie:      8,
 			},
 			wantErr: true,
 			errMsg:  "class name cannot be empty",
@@ -428,7 +424,7 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 			name: "invalid hit dice",
 			class: &models.CustomClass{
 				Name:    "Bad Dice",
-				HitDice: "1d13",
+				HitDie: 13,
 			},
 			wantErr: true,
 			errMsg:  "invalid hit dice",
@@ -437,8 +433,8 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 			name: "too many features at level 1",
 			class: &models.CustomClass{
 				Name:    "Feature Heavy",
-				HitDice: "1d8",
-				Features: []models.ClassFeature{
+				HitDie: 8,
+				ClassFeatures: []models.ClassFeature{
 					{Level: 1, Name: "Feature 1"},
 					{Level: 1, Name: "Feature 2"},
 					{Level: 1, Name: "Feature 3"},
@@ -453,7 +449,7 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 			name: "overpowered class",
 			class: &models.CustomClass{
 				Name:         "Overpowered",
-				HitDice:      "1d12",
+				HitDie:       12,
 				BalanceScore: 12,
 			},
 			wantErr: true,
@@ -463,7 +459,7 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 			name: "invalid primary ability",
 			class: &models.CustomClass{
 				Name:           "Bad Ability",
-				HitDice:        "1d8",
+				HitDie:         8,
 				PrimaryAbility: "luck",
 			},
 			wantErr: true,
@@ -496,9 +492,9 @@ func TestAIClassGenerator_calculateBalanceScore(t *testing.T) {
 		{
 			name: "basic fighter-like class",
 			class: &models.CustomClass{
-				HitDice:        "1d10",
+				HitDie:         10,
 				PrimaryAbility: "strength",
-				Features: []models.ClassFeature{
+				ClassFeatures: []models.ClassFeature{
 					{Level: 1, Name: "Fighting Style"},
 					{Level: 2, Name: "Second Wind"},
 				},
@@ -508,13 +504,10 @@ func TestAIClassGenerator_calculateBalanceScore(t *testing.T) {
 		{
 			name: "caster class",
 			class: &models.CustomClass{
-				HitDice:        "1d6",
+				HitDie:         6,
 				PrimaryAbility: "intelligence",
-				Spellcasting: &models.SpellcastingInfo{
-					SpellcastingAbility: "intelligence",
-					CantripsKnown:       3,
-				},
-				Features: []models.ClassFeature{
+				SpellcastingAbility: "intelligence",
+				ClassFeatures: []models.ClassFeature{
 					{Level: 1, Name: "Spellcasting"},
 				},
 			},
@@ -523,12 +516,10 @@ func TestAIClassGenerator_calculateBalanceScore(t *testing.T) {
 		{
 			name: "hybrid class with many features",
 			class: &models.CustomClass{
-				HitDice:        "1d8",
+				HitDie:         8,
 				PrimaryAbility: "charisma",
-				Spellcasting: &models.SpellcastingInfo{
-					SpellcastingAbility: "charisma",
-				},
-				Features: []models.ClassFeature{
+				SpellcastingAbility: "charisma",
+				ClassFeatures: []models.ClassFeature{
 					{Level: 1, Name: "Feature 1"},
 					{Level: 1, Name: "Feature 2"},
 					{Level: 3, Name: "Feature 3"},
@@ -703,8 +694,8 @@ func TestAIClassGenerator_Integration(t *testing.T) {
 		require.NotNil(t, class.SpellSlotsProgression)
 
 		// Verify it has appropriate features for a hybrid class
-		require.NotNil(t, class.Spellcasting)
-		require.Equal(t, "1d10", class.HitDice) // Good HP for a hybrid
+		require.NotEmpty(t, class.SpellcastingAbility)
+		require.Equal(t, 10, class.HitDie) // Good HP for a hybrid
 	})
 }
 
@@ -744,10 +735,10 @@ func BenchmarkAIClassGenerator_validateClass(b *testing.B) {
 	class := &models.CustomClass{
 		Name:           "Test Class",
 		Description:    "A test class",
-		HitDice:        "1d8",
+		HitDie:         8,
 		PrimaryAbility: "wisdom",
 		BalanceScore:   6,
-		Features: []models.ClassFeature{
+		ClassFeatures: []models.ClassFeature{
 			{Level: 1, Name: "Feature 1"},
 			{Level: 3, Name: "Feature 2"},
 		},

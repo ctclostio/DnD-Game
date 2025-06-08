@@ -220,3 +220,142 @@ type CombatNarrationRequest struct {
 	TargetHP       int    `json:"targetHP"`
 	TargetMaxHP    int    `json:"targetMaxHP"`
 }
+
+// EnvironmentRequest for generating environment descriptions
+type EnvironmentRequest struct {
+	Location    string   `json:"location"`
+	Type        string   `json:"type"`
+	Atmosphere  string   `json:"atmosphere"`
+	Features    []string `json:"features"`
+	TimeOfDay   string   `json:"timeOfDay,omitempty"`
+	Weather     string   `json:"weather,omitempty"`
+	KeyFeatures []string `json:"keyFeatures,omitempty"`
+}
+
+// EnvironmentDescription represents generated environment details
+type EnvironmentDescription struct {
+	Description       string          `json:"description"`
+	SensoryDetails    SensoryDetails  `json:"sensoryDetails"`
+	NotableFeatures   []string        `json:"notableFeatures"`
+	PossibleActions   []string        `json:"possibleActions"`
+	HiddenElements    []string        `json:"hiddenElements"`
+	PointsOfInterest  []string        `json:"pointsOfInterest,omitempty"`
+	PotentialHazards  []string        `json:"potentialHazards,omitempty"`
+}
+
+// SensoryDetails represents the sensory aspects of an environment
+type SensoryDetails struct {
+	Sight string `json:"sight"`
+	Sound string `json:"sound"`
+	Smell string `json:"smell"`
+	Touch string `json:"touch"`
+	Taste string `json:"taste"`
+}
+
+// PlotHookRequest for generating plot hooks
+type PlotHookRequest struct {
+	CurrentSituation string   `json:"currentSituation"`
+	PlayerGoals      []string `json:"playerGoals"`
+	WorldEvents      []string `json:"worldEvents"`
+	NPCMotivations   []string `json:"npcMotivations"`
+	Theme            string   `json:"theme,omitempty"`
+	PartyLevel       int      `json:"partyLevel,omitempty"`
+	Setting          string   `json:"setting,omitempty"`
+	PartyComposition []string `json:"partyComposition,omitempty"`
+}
+
+// PlotHook represents a generated plot hook
+type PlotHook struct {
+	Title             string    `json:"title"`
+	Hook              string    `json:"hook"`
+	Background        string    `json:"background,omitempty"`
+	KeyNPCs           []PlotNPC `json:"keyNPCs,omitempty"`
+	InitialClues      []string  `json:"initialClues,omitempty"`
+	PotentialRewards  []string  `json:"potentialRewards,omitempty"`
+	Escalation        string    `json:"escalation,omitempty"`
+	NPCInvolved       []string  `json:"npcInvolved"`
+	Urgency           string    `json:"urgency"`
+	Reward            string    `json:"reward"`
+	Consequences      string    `json:"consequences"`
+}
+
+// PlotNPC represents an NPC involved in a plot hook
+type PlotNPC struct {
+	Name       string `json:"name"`
+	Role       string `json:"role"`
+	Motivation string `json:"motivation"`
+}
+
+// RulingRequest for DM rulings
+type RulingRequest struct {
+	Situation      string `json:"situation"`
+	RuleInQuestion string `json:"ruleInQuestion"`
+	PlayerAction   string `json:"playerAction"`
+	Context        string `json:"context"`
+	RulesContext   string `json:"rulesContext,omitempty"`
+	PlayerIntent   string `json:"playerIntent,omitempty"`
+}
+
+// RulingSuggestion represents a suggested ruling
+type RulingSuggestion struct {
+	Ruling                string   `json:"ruling"`
+	Reasoning             string   `json:"reasoning"`
+	RuleReference         string   `json:"ruleReference"`
+	Alternative           string   `json:"alternative"`
+	Precedent             string   `json:"precedent,omitempty"`
+	Alternatives          []string `json:"alternatives,omitempty"`
+	BalanceConsiderations string   `json:"balanceConsiderations,omitempty"`
+}
+
+// TreasureRequest for generating treasure
+type TreasureRequest struct {
+	ChallengeRating int    `json:"challengeRating"`
+	TreasureType    string `json:"treasureType"`
+	PartyLevel      int    `json:"partyLevel"`
+	Context         string `json:"context"`
+	PartySize       int    `json:"partySize,omitempty"`
+}
+
+// TreasureHoard represents generated treasure
+type TreasureHoard struct {
+	Currency    map[string]int   `json:"currency"`
+	Items       []string         `json:"items"`
+	MagicItems  []string         `json:"magicItems"`
+	SpecialItems []string        `json:"specialItems"`
+	TotalValue  int              `json:"totalValue"`
+	Coins       CoinageBreakdown `json:"coins,omitempty"`
+	Gems        []Gem            `json:"gems,omitempty"`
+	ArtObjects  []ArtObject      `json:"artObjects,omitempty"`
+	MagicItemDetails []MagicItem `json:"magicItemDetails,omitempty"`
+}
+
+// CoinageBreakdown represents the breakdown of coins in treasure
+type CoinageBreakdown struct {
+	Copper   int `json:"copper"`
+	Silver   int `json:"silver"`
+	Gold     int `json:"gold"`
+	Platinum int `json:"platinum"`
+}
+
+// Gem represents a gem found in treasure
+type Gem struct {
+	Name        string `json:"name"`
+	Value       int    `json:"value"`
+	Quantity    int    `json:"quantity"`
+	Description string `json:"description"`
+}
+
+// ArtObject represents an art object found in treasure
+type ArtObject struct {
+	Name        string `json:"name"`
+	Value       int    `json:"value"`
+	Description string `json:"description"`
+}
+
+// MagicItem represents a magic item with detailed properties
+type MagicItem struct {
+	Name        string   `json:"name"`
+	Rarity      string   `json:"rarity"`
+	Description string   `json:"description"`
+	Properties  []string `json:"properties"`
+}

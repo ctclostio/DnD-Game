@@ -222,7 +222,7 @@ func TestGlobalLoggerFunctions(t *testing.T) {
 	var buf bytes.Buffer
 	
 	// Initialize with a buffer logger for testing
-	zl := zerolog.New(&buf).With().Timestamp().Logger()
+	zl := zerolog.New(&buf).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	defaultLogger = &Logger{&zl}
 
 	tests := []struct {
@@ -273,7 +273,7 @@ func TestGlobalLoggerFunctions(t *testing.T) {
 
 func TestWithContext_Global(t *testing.T) {
 	var buf bytes.Buffer
-	zl := zerolog.New(&buf).With().Timestamp().Logger()
+	zl := zerolog.New(&buf).With().Timestamp().Logger().Level(zerolog.InfoLevel)
 	defaultLogger = &Logger{&zl}
 
 	ctx := context.Background()
@@ -291,7 +291,7 @@ func TestWithContext_Global(t *testing.T) {
 func TestLogger_ChainedOperations(t *testing.T) {
 	var buf bytes.Buffer
 	logger := &Logger{
-		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger(); return &l }(),
+		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger().Level(zerolog.InfoLevel); return &l }(),
 	}
 
 	// Test chaining multiple operations
@@ -335,7 +335,7 @@ func TestLogger_EmptyContext(t *testing.T) {
 func TestLogger_NilError(t *testing.T) {
 	var buf bytes.Buffer
 	logger := &Logger{
-		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger(); return &l }(),
+		Logger: func() *zerolog.Logger { l := zerolog.New(&buf).With().Timestamp().Logger().Level(zerolog.InfoLevel); return &l }(),
 	}
 
 	// Test with nil error

@@ -13,7 +13,20 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
-// MockLLMProvider is already defined in character_test.go
+// MockLLMProviderDMTest is a mock implementation for testing
+type MockLLMProviderDMTest struct {
+	mock.Mock
+}
+
+func (m *MockLLMProviderDMTest) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+	args := m.Called(ctx, prompt, systemPrompt)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockLLMProviderDMTest) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+	args := m.Called(ctx, prompt, systemPrompt)
+	return args.String(0), args.Error(1)
+}
 
 func TestAIDMAssistantService_GenerateNPCDialogue(t *testing.T) {
 	ctx := context.Background()
@@ -83,10 +96,10 @@ func TestAIDMAssistantService_GenerateNPCDialogue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockLLM := new(MockLLMProvider)
+			mockLLM := new(MockLLMProviderDMTest)
 
 			if tt.expectedError == "" && tt.request.NPCName != "" {
-				mockLLM.On("Chat", mock.AnythingOfType("string")).Return(tt.mockResponse, tt.mockError)
+				mockLLM.On("GenerateCompletion", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(tt.mockResponse, tt.mockError)
 			}
 
 			service := NewAIDMAssistantService(mockLLM)
@@ -250,7 +263,7 @@ func TestAIDMAssistantService_GenerateEnvironmentDescription(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockLLM := new(MockLLMProvider)
+			mockLLM := new(MockLLMProviderDMTest)
 
 			if tt.expectedError == "" && tt.request.Location != "" {
 				mockLLM.On("Chat", mock.AnythingOfType("string")).Return(tt.mockResponse, nil)
@@ -428,7 +441,7 @@ func TestAIDMAssistantService_GeneratePlotHook(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockLLM := new(MockLLMProvider)
+			mockLLM := new(MockLLMProviderDMTest)
 
 			if tt.expectedError == "" && tt.request.PartyLevel > 0 {
 				mockLLM.On("Chat", mock.AnythingOfType("string")).Return(tt.mockResponse, nil)
@@ -533,7 +546,7 @@ func TestAIDMAssistantService_SuggestRuling(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockLLM := new(MockLLMProvider)
+			mockLLM := new(MockLLMProviderDMTest)
 
 			if tt.expectedError == "" && tt.request.Situation != "" {
 				mockLLM.On("Chat", mock.AnythingOfType("string")).Return(tt.mockResponse, nil)
@@ -652,7 +665,7 @@ func TestAIDMAssistantService_GenerateTreasure(t *testing.T) {
 						Description: "Leather-bound tome with silver clasps, contains theoretical magic essays",
 					},
 				},
-				MagicItems: []models.MagicItem{
+				MagicItemDetails: []models.MagicItem{
 					{
 						Name:        "Wand of Magic Detection",
 						Rarity:      "uncommon",
@@ -681,7 +694,7 @@ func TestAIDMAssistantService_GenerateTreasure(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockLLM := new(MockLLMProvider)
+			mockLLM := new(MockLLMProviderDMTest)
 
 			if tt.expectedError == "" && tt.request.ChallengeRating > 0 {
 				mockLLM.On("Chat", mock.AnythingOfType("string")).Return(tt.mockResponse, nil)
@@ -712,7 +725,7 @@ func (s *AIDMAssistantService) GenerateEnvironmentDescription(ctx context.Contex
 	}
 
 	prompt := "Generate environment description based on request"
-	response, err := s.llmProvider.Chat(prompt)
+	response, err := s.llmProvider.GenerateCompletion(ctx, prompt, "")
 	if err != nil {
 		return models.EnvironmentDescription{}, err
 	}
@@ -731,7 +744,7 @@ func (s *AIDMAssistantService) GeneratePlotHook(ctx context.Context, req models.
 	}
 
 	prompt := "Generate plot hook based on request"
-	response, err := s.llmProvider.Chat(prompt)
+	response, err := s.llmProvider.GenerateCompletion(ctx, prompt, "")
 	if err != nil {
 		return models.PlotHook{}, errors.New("failed to generate plot hook")
 	}
@@ -750,7 +763,7 @@ func (s *AIDMAssistantService) SuggestRuling(ctx context.Context, req models.Rul
 	}
 
 	prompt := "Suggest ruling based on request"
-	response, err := s.llmProvider.Chat(prompt)
+	response, err := s.llmProvider.GenerateCompletion(ctx, prompt, "")
 	if err != nil {
 		return models.RulingSuggestion{}, err
 	}
@@ -769,7 +782,7 @@ func (s *AIDMAssistantService) GenerateTreasure(ctx context.Context, req models.
 	}
 
 	prompt := "Generate treasure based on request"
-	response, err := s.llmProvider.Chat(prompt)
+	response, err := s.llmProvider.GenerateCompletion(ctx, prompt, "")
 	if err != nil {
 		return models.TreasureHoard{}, err
 	}

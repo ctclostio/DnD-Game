@@ -228,3 +228,39 @@ type InitiativeEntry struct {
 	Roll       int    `json:"roll"`
 	Bonus      int    `json:"bonus"`
 }
+
+// PlayerCombatStats represents a player's combat statistics across all sessions
+type PlayerCombatStats struct {
+	PlayerID         uuid.UUID `json:"player_id"`
+	CharacterID      uuid.UUID `json:"character_id"`
+	CharacterName    string    `json:"character_name"`
+	TotalCombats     int       `json:"total_combats"`
+	TotalDamageDealt int       `json:"total_damage_dealt"`
+	TotalDamageTaken int       `json:"total_damage_taken"`
+	TotalHealing     int       `json:"total_healing"`
+	TotalKills       int       `json:"total_kills"`
+	AverageAccuracy  float64   `json:"average_accuracy"`
+	MVPCount         int       `json:"mvp_count"`
+}
+
+// SessionCombatStats represents combat statistics for a game session
+type SessionCombatStats struct {
+	SessionID        uuid.UUID `json:"session_id"`
+	TotalCombats     int       `json:"total_combats"`
+	AverageDuration  int       `json:"average_duration"`
+	TotalDamageDealt int       `json:"total_damage_dealt"`
+	TotalHealing     int       `json:"total_healing"`
+	PlayerDeaths     int       `json:"player_deaths"`
+	EnemyDeaths      int       `json:"enemy_deaths"`
+}
+
+// CombatTrends represents trends in combat over time
+type CombatTrends struct {
+	SessionID            uuid.UUID `json:"session_id"`
+	AverageCombatLength  float64   `json:"average_combat_length"`
+	DifficultyTrend      string    `json:"difficulty_trend"` // increasing, decreasing, stable
+	PlayerPerformance    string    `json:"player_performance"` // improving, declining, stable
+	MostEffectivePlayer  string    `json:"most_effective_player"`
+	MostTargetedPlayer   string    `json:"most_targeted_player"`
+	PopularStrategies    []string  `json:"popular_strategies"`
+}

@@ -305,3 +305,16 @@ type LevelRange struct {
 	Min int `json:"min"`
 	Max int `json:"max"`
 }
+
+// CustomRule represents a custom rule created by users
+type CustomRule struct {
+	ID          string                 `json:"id" db:"id"`
+	Name        string                 `json:"name" db:"name"`
+	Description string                 `json:"description" db:"description"`
+	RuleType    string                 `json:"rule_type" db:"rule_type"`
+	Logic       map[string]interface{} `json:"logic" db:"logic"`
+	IsActive    bool                   `json:"is_active" db:"is_active"`
+	CreatedBy   string                 `json:"created_by" db:"created_by"`
+	CreatedAt   time.Time              `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at" db:"updated_at"`
+}

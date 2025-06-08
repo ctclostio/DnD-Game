@@ -22,6 +22,11 @@ func (m *MockLLMProviderForTest) GenerateCompletion(ctx context.Context, prompt 
 	return args.String(0), args.Error(1)
 }
 
+func (m *MockLLMProviderForTest) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+	args := m.Called(ctx, prompt, systemPrompt)
+	return args.String(0), args.Error(1)
+}
+
 func TestNewAICharacterService(t *testing.T) {
 	tests := []struct {
 		name        string

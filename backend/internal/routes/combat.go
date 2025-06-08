@@ -25,18 +25,14 @@ func RegisterCombatRoutes(api *mux.Router, cfg *Config) {
 	api.HandleFunc("/combat/{id}/combatants/{combatantId}/heal", 
 		auth(cfg.Handlers.HealCombatant)).Methods("POST")
 		
-	// Combat automation routes (if available)
-	if cfg.Handlers.AutomateCombat != nil {
-		api.HandleFunc("/combat/{id}/automate", auth(cfg.Handlers.AutomateCombat)).Methods("POST")
-		api.HandleFunc("/combat/{id}/suggestion", auth(cfg.Handlers.GetCombatSuggestion)).Methods("GET")
-	}
+	// Combat automation routes (commented out until handlers are implemented)
+	// api.HandleFunc("/combat/{id}/automate", auth(cfg.Handlers.AutomateCombat)).Methods("POST")
+	// api.HandleFunc("/combat/{id}/suggestion", auth(cfg.Handlers.GetCombatSuggestion)).Methods("GET")
 	
-	// Combat analytics routes (if available)
-	if cfg.Handlers.GetCombatAnalytics != nil {
-		api.HandleFunc("/combat/{id}/analytics", auth(cfg.Handlers.GetCombatAnalytics)).Methods("GET")
-		api.HandleFunc("/sessions/{sessionId}/combat-analytics", 
-			auth(cfg.Handlers.GetSessionCombatAnalytics)).Methods("GET")
-		api.HandleFunc("/characters/{characterId}/combat-stats", 
-			auth(cfg.Handlers.GetCharacterCombatStats)).Methods("GET")
-	}
+	// Combat analytics routes (commented out until handlers are implemented)
+	// api.HandleFunc("/combat/{id}/analytics", auth(cfg.Handlers.GetCombatAnalytics)).Methods("GET")
+	// api.HandleFunc("/sessions/{sessionId}/combat-analytics", 
+	//	auth(cfg.Handlers.GetSessionCombatAnalytics)).Methods("GET")
+	// api.HandleFunc("/characters/{characterId}/combat-stats", 
+	//	auth(cfg.Handlers.GetCharacterCombatStats)).Methods("GET")
 }

@@ -33,12 +33,12 @@ func TestNewV2(t *testing.T) {
 		name      string
 		config    ConfigV2
 		wantError bool
-		verify    func(t *testing.T, logger *LoggerV2, logOutput string)
+		verify    func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer)
 	}{
 		{
 			name:   "default config",
 			config: DefaultConfig(),
-			verify: func(t *testing.T, logger *LoggerV2, logOutput string) {
+			verify: func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer) {
 				assert.NotNil(t, logger)
 				assert.NotNil(t, logger.Logger)
 			},
@@ -54,11 +54,11 @@ func TestNewV2(t *testing.T) {
 					"region":  "us-east-1",
 				},
 			},
-			verify: func(t *testing.T, logger *LoggerV2, logOutput string) {
+			verify: func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer) {
 				logger.Info().Msg("test")
 				
 				var logEntry map[string]interface{}
-				lines := strings.Split(strings.TrimSpace(logOutput), "\n")
+				lines := strings.Split(strings.TrimSpace(logOutput.String()), "\n")
 				require.NoError(t, json.Unmarshal([]byte(lines[0]), &logEntry))
 				
 				assert.Equal(t, "test-service", logEntry["service"])
@@ -72,7 +72,7 @@ func TestNewV2(t *testing.T) {
 			config: ConfigV2{
 				Level: "invalid",
 			},
-			verify: func(t *testing.T, logger *LoggerV2, logOutput string) {
+			verify: func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer) {
 				assert.NotNil(t, logger)
 				assert.Equal(t, zerolog.InfoLevel, zerolog.GlobalLevel())
 			},
@@ -83,7 +83,7 @@ func TestNewV2(t *testing.T) {
 				Level:        "debug",
 				SamplingRate: 0.5,
 			},
-			verify: func(t *testing.T, logger *LoggerV2, logOutput string) {
+			verify: func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer) {
 				assert.NotNil(t, logger)
 			},
 		},
@@ -93,7 +93,7 @@ func TestNewV2(t *testing.T) {
 				Level:  "info",
 				Output: "stderr",
 			},
-			verify: func(t *testing.T, logger *LoggerV2, logOutput string) {
+			verify: func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer) {
 				assert.NotNil(t, logger)
 			},
 		},
@@ -117,7 +117,11 @@ func TestNewV2(t *testing.T) {
 			require.NoError(t, err)
 			
 			// Replace logger output with buffer for testing
-			zl := zerolog.New(&buf).With().Timestamp().Logger()
+			level, _ := zerolog.ParseLevel(tt.config.Level)
+			if level == zerolog.NoLevel {
+				level = zerolog.InfoLevel
+			}
+			zl := zerolog.New(&buf).With().Timestamp().Logger().Level(level)
 			if tt.config.ServiceName != "" {
 				zl = zl.With().Str("service", tt.config.ServiceName).Logger()
 			}
@@ -129,7 +133,7 @@ func TestNewV2(t *testing.T) {
 			}
 			logger.Logger = &zl
 			
-			tt.verify(t, logger, buf.String())
+			tt.verify(t, logger, &buf)
 		})
 	}
 }
