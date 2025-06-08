@@ -13,9 +13,12 @@ func TestLoad(t *testing.T) {
 	// Save original env vars
 	originalEnv := make(map[string]string)
 	envVars := []string{
-		"DATABASE_HOST", "DATABASE_PORT", "DATABASE_USER",
-		"DATABASE_PASSWORD", "DATABASE_NAME", "DATABASE_SSLMODE",
-		"JWT_SECRET", "SERVER_PORT",
+		"PORT", "ENV",
+		"DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_SSLMODE",
+		"DB_MAX_OPEN_CONNS", "DB_MAX_IDLE_CONNS", "DB_MAX_LIFETIME",
+		"REDIS_HOST", "REDIS_PORT", "REDIS_PASSWORD", "REDIS_DB",
+		"JWT_SECRET", "ACCESS_TOKEN_DURATION", "REFRESH_TOKEN_DURATION", "BCRYPT_COST",
+		"AI_PROVIDER", "AI_API_KEY", "AI_MODEL",
 	}
 	for _, key := range envVars {
 		originalEnv[key] = os.Getenv(key)
@@ -26,6 +29,8 @@ func TestLoad(t *testing.T) {
 		for key, value := range originalEnv {
 			if value != "" {
 				os.Setenv(key, value)
+			} else {
+				os.Unsetenv(key)
 			}
 		}
 	}()
@@ -35,53 +40,102 @@ func TestLoad(t *testing.T) {
 		require.NoError(t, err)
 		
 		// Check default values
+		assert.Equal(t, "8080", cfg.Server.Port)
+		assert.Equal(t, "development", cfg.Server.Environment)
+		
 		assert.Equal(t, "localhost", cfg.Database.Host)
 		assert.Equal(t, 5432, cfg.Database.Port)
-		assert.Equal(t, "postgres", cfg.Database.User)
+		assert.Equal(t, "dndgame", cfg.Database.User)
+		assert.Equal(t, "", cfg.Database.Password) // No default for password
+		assert.Equal(t, "dndgame", cfg.Database.DatabaseName)
 		assert.Equal(t, "disable", cfg.Database.SSLMode)
-		assert.Equal(t, 10, cfg.Database.MaxOpenConns)
-		assert.Equal(t, 5, cfg.Database.MaxIdleConns)
-		assert.Equal(t, 1*time.Hour, cfg.Database.MaxLifetime)
+		assert.Equal(t, 25, cfg.Database.MaxOpenConns)
+		assert.Equal(t, 25, cfg.Database.MaxIdleConns)
+		assert.Equal(t, 5*time.Minute, cfg.Database.MaxLifetime)
 		
-		assert.Equal(t, "8080", cfg.Server.Port)
+		assert.Equal(t, "localhost", cfg.Redis.Host)
+		assert.Equal(t, 6379, cfg.Redis.Port)
+		assert.Equal(t, "", cfg.Redis.Password)
+		assert.Equal(t, 0, cfg.Redis.DB)
+		
+		assert.Equal(t, "", cfg.Auth.JWTSecret) // No default for JWT secret
 		assert.Equal(t, 15*time.Minute, cfg.Auth.AccessTokenDuration)
 		assert.Equal(t, 7*24*time.Hour, cfg.Auth.RefreshTokenDuration)
+		assert.Equal(t, 10, cfg.Auth.BcryptCost)
 		
-		// JWT secret should be generated
-		assert.NotEmpty(t, cfg.Auth.JWTSecret)
+		assert.Equal(t, "mock", cfg.AI.Provider)
+		assert.Equal(t, "", cfg.AI.APIKey)
+		assert.Equal(t, "gpt-4-turbo-preview", cfg.AI.Model)
 	})
 
 	t.Run("loads from environment variables", func(t *testing.T) {
 		// Set test env vars
-		os.Setenv("DATABASE_HOST", "test-host")
-		os.Setenv("DATABASE_PORT", "5433")
-		os.Setenv("DATABASE_USER", "test-user")
-		os.Setenv("DATABASE_PASSWORD", "test-pass")
-		os.Setenv("DATABASE_NAME", "test-db")
-		os.Setenv("DATABASE_SSLMODE", "require")
-		os.Setenv("JWT_SECRET", "test-secret")
-		os.Setenv("SERVER_PORT", "3000")
+		os.Setenv("PORT", "3000")
+		os.Setenv("ENV", "production")
+		os.Setenv("DB_HOST", "test-host")
+		os.Setenv("DB_PORT", "5433")
+		os.Setenv("DB_USER", "test-user")
+		os.Setenv("DB_PASSWORD", "test-pass")
+		os.Setenv("DB_NAME", "test-db")
+		os.Setenv("DB_SSLMODE", "require")
+		os.Setenv("DB_MAX_OPEN_CONNS", "50")
+		os.Setenv("DB_MAX_IDLE_CONNS", "10")
+		os.Setenv("DB_MAX_LIFETIME", "10m")
+		os.Setenv("REDIS_HOST", "redis-host")
+		os.Setenv("REDIS_PORT", "6380")
+		os.Setenv("REDIS_PASSWORD", "redis-pass")
+		os.Setenv("REDIS_DB", "1")
+		os.Setenv("JWT_SECRET", "test-secret-key-that-is-long-enough")
+		os.Setenv("ACCESS_TOKEN_DURATION", "30m")
+		os.Setenv("REFRESH_TOKEN_DURATION", "336h")
+		os.Setenv("BCRYPT_COST", "12")
+		os.Setenv("AI_PROVIDER", "openai")
+		os.Setenv("AI_API_KEY", "test-api-key")
+		os.Setenv("AI_MODEL", "gpt-4")
 		
 		cfg, err := Load()
 		require.NoError(t, err)
 		
+		assert.Equal(t, "3000", cfg.Server.Port)
+		assert.Equal(t, "production", cfg.Server.Environment)
 		assert.Equal(t, "test-host", cfg.Database.Host)
 		assert.Equal(t, 5433, cfg.Database.Port)
 		assert.Equal(t, "test-user", cfg.Database.User)
 		assert.Equal(t, "test-pass", cfg.Database.Password)
 		assert.Equal(t, "test-db", cfg.Database.DatabaseName)
 		assert.Equal(t, "require", cfg.Database.SSLMode)
-		assert.Equal(t, "test-secret", cfg.Auth.JWTSecret)
-		assert.Equal(t, "3000", cfg.Server.Port)
+		assert.Equal(t, 50, cfg.Database.MaxOpenConns)
+		assert.Equal(t, 10, cfg.Database.MaxIdleConns)
+		assert.Equal(t, 10*time.Minute, cfg.Database.MaxLifetime)
+		assert.Equal(t, "redis-host", cfg.Redis.Host)
+		assert.Equal(t, 6380, cfg.Redis.Port)
+		assert.Equal(t, "redis-pass", cfg.Redis.Password)
+		assert.Equal(t, 1, cfg.Redis.DB)
+		assert.Equal(t, "test-secret-key-that-is-long-enough", cfg.Auth.JWTSecret)
+		assert.Equal(t, 30*time.Minute, cfg.Auth.AccessTokenDuration)
+		assert.Equal(t, 14*24*time.Hour, cfg.Auth.RefreshTokenDuration)
+		assert.Equal(t, 12, cfg.Auth.BcryptCost)
+		assert.Equal(t, "openai", cfg.AI.Provider)
+		assert.Equal(t, "test-api-key", cfg.AI.APIKey)
+		assert.Equal(t, "gpt-4", cfg.AI.Model)
 	})
 
 	t.Run("handles invalid port", func(t *testing.T) {
-		os.Setenv("DATABASE_PORT", "invalid")
+		os.Setenv("DB_PORT", "invalid")
 		
 		cfg, err := Load()
 		require.NoError(t, err)
 		// Should fall back to default
 		assert.Equal(t, 5432, cfg.Database.Port)
+	})
+
+	t.Run("handles invalid duration", func(t *testing.T) {
+		os.Setenv("ACCESS_TOKEN_DURATION", "invalid")
+		
+		cfg, err := Load()
+		require.NoError(t, err)
+		// Should fall back to default
+		assert.Equal(t, 15*time.Minute, cfg.Auth.AccessTokenDuration)
 	})
 }
 
@@ -95,6 +149,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid configuration",
 			config: &Config{
+				Server: ServerConfig{
+					Port:        "8080",
+					Environment: "development",
+				},
 				Database: DatabaseConfig{
 					Host:         "localhost",
 					Port:         5432,
@@ -103,14 +161,47 @@ func TestValidate(t *testing.T) {
 					DatabaseName: "db",
 				},
 				Auth: AuthConfig{
-					JWTSecret: "secret",
+					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					AccessTokenDuration:  15 * time.Minute,
+					RefreshTokenDuration: 7 * 24 * time.Hour,
+					BcryptCost:           10,
+				},
+				AI: AIConfig{
+					Provider: "mock", // Mock provider doesn't require API key
 				},
 			},
 			wantErr: false,
 		},
 		{
+			name: "missing server port",
+			config: &Config{
+				Server: ServerConfig{
+					Environment: "development",
+				},
+				Database: DatabaseConfig{
+					Host:         "localhost",
+					Port:         5432,
+					User:         "user",
+					Password:     "pass",
+					DatabaseName: "db",
+				},
+				Auth: AuthConfig{
+					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					AccessTokenDuration:  15 * time.Minute,
+					RefreshTokenDuration: 7 * 24 * time.Hour,
+					BcryptCost:           10,
+				},
+			},
+			wantErr: true,
+			errMsg:  "server port is required",
+		},
+		{
 			name: "missing database host",
 			config: &Config{
+				Server: ServerConfig{
+					Port:        "8080",
+					Environment: "development",
+				},
 				Database: DatabaseConfig{
 					Port:         5432,
 					User:         "user",
@@ -118,32 +209,22 @@ func TestValidate(t *testing.T) {
 					DatabaseName: "db",
 				},
 				Auth: AuthConfig{
-					JWTSecret: "secret",
+					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					AccessTokenDuration:  15 * time.Minute,
+					RefreshTokenDuration: 7 * 24 * time.Hour,
+					BcryptCost:           10,
 				},
 			},
 			wantErr: true,
 			errMsg:  "database host is required",
 		},
 		{
-			name: "invalid database port",
-			config: &Config{
-				Database: DatabaseConfig{
-					Host:         "localhost",
-					Port:         0,
-					User:         "user",
-					Password:     "pass",
-					DatabaseName: "db",
-				},
-				Auth: AuthConfig{
-					JWTSecret: "secret",
-				},
-			},
-			wantErr: true,
-			errMsg:  "database port must be positive",
-		},
-		{
 			name: "missing database user",
 			config: &Config{
+				Server: ServerConfig{
+					Port:        "8080",
+					Environment: "development",
+				},
 				Database: DatabaseConfig{
 					Host:         "localhost",
 					Port:         5432,
@@ -151,15 +232,45 @@ func TestValidate(t *testing.T) {
 					DatabaseName: "db",
 				},
 				Auth: AuthConfig{
-					JWTSecret: "secret",
+					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					AccessTokenDuration:  15 * time.Minute,
+					RefreshTokenDuration: 7 * 24 * time.Hour,
+					BcryptCost:           10,
 				},
 			},
 			wantErr: true,
 			errMsg:  "database user is required",
 		},
 		{
+			name: "missing database password",
+			config: &Config{
+				Server: ServerConfig{
+					Port:        "8080",
+					Environment: "development",
+				},
+				Database: DatabaseConfig{
+					Host:         "localhost",
+					Port:         5432,
+					User:         "user",
+					DatabaseName: "db",
+				},
+				Auth: AuthConfig{
+					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					AccessTokenDuration:  15 * time.Minute,
+					RefreshTokenDuration: 7 * 24 * time.Hour,
+					BcryptCost:           10,
+				},
+			},
+			wantErr: true,
+			errMsg:  "database password is required",
+		},
+		{
 			name: "missing database name",
 			config: &Config{
+				Server: ServerConfig{
+					Port:        "8080",
+					Environment: "development",
+				},
 				Database: DatabaseConfig{
 					Host:     "localhost",
 					Port:     5432,
@@ -167,7 +278,10 @@ func TestValidate(t *testing.T) {
 					Password: "pass",
 				},
 				Auth: AuthConfig{
-					JWTSecret: "secret",
+					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					AccessTokenDuration:  15 * time.Minute,
+					RefreshTokenDuration: 7 * 24 * time.Hour,
+					BcryptCost:           10,
 				},
 			},
 			wantErr: true,
@@ -176,6 +290,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "missing JWT secret",
 			config: &Config{
+				Server: ServerConfig{
+					Port:        "8080",
+					Environment: "development",
+				},
 				Database: DatabaseConfig{
 					Host:         "localhost",
 					Port:         5432,
@@ -183,10 +301,90 @@ func TestValidate(t *testing.T) {
 					Password:     "pass",
 					DatabaseName: "db",
 				},
-				Auth: AuthConfig{},
+				Auth: AuthConfig{
+					AccessTokenDuration:  15 * time.Minute,
+					RefreshTokenDuration: 7 * 24 * time.Hour,
+					BcryptCost:           10,
+				},
 			},
 			wantErr: true,
 			errMsg:  "JWT secret is required",
+		},
+		{
+			name: "JWT secret too short",
+			config: &Config{
+				Server: ServerConfig{
+					Port:        "8080",
+					Environment: "development",
+				},
+				Database: DatabaseConfig{
+					Host:         "localhost",
+					Port:         5432,
+					User:         "user",
+					Password:     "pass",
+					DatabaseName: "db",
+				},
+				Auth: AuthConfig{
+					JWTSecret:            "short-secret",
+					AccessTokenDuration:  15 * time.Minute,
+					RefreshTokenDuration: 7 * 24 * time.Hour,
+					BcryptCost:           10,
+				},
+			},
+			wantErr: true,
+			errMsg:  "JWT secret must be at least 32 characters",
+		},
+		{
+			name: "invalid bcrypt cost",
+			config: &Config{
+				Server: ServerConfig{
+					Port:        "8080",
+					Environment: "development",
+				},
+				Database: DatabaseConfig{
+					Host:         "localhost",
+					Port:         5432,
+					User:         "user",
+					Password:     "pass",
+					DatabaseName: "db",
+				},
+				Auth: AuthConfig{
+					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					AccessTokenDuration:  15 * time.Minute,
+					RefreshTokenDuration: 7 * 24 * time.Hour,
+					BcryptCost:           3, // Too low
+				},
+			},
+			wantErr: true,
+			errMsg:  "bcrypt cost must be between 4 and 31",
+		},
+		{
+			name: "AI provider requires API key",
+			config: &Config{
+				Server: ServerConfig{
+					Port:        "8080",
+					Environment: "development",
+				},
+				Database: DatabaseConfig{
+					Host:         "localhost",
+					Port:         5432,
+					User:         "user",
+					Password:     "pass",
+					DatabaseName: "db",
+				},
+				Auth: AuthConfig{
+					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					AccessTokenDuration:  15 * time.Minute,
+					RefreshTokenDuration: 7 * 24 * time.Hour,
+					BcryptCost:           10,
+				},
+				AI: AIConfig{
+					Provider: "openai",
+					APIKey:   "", // Missing API key
+				},
+			},
+			wantErr: true,
+			errMsg:  "AI API key is required when AI provider is not 'mock'",
 		},
 	}
 

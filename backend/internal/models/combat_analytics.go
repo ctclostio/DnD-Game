@@ -23,6 +23,18 @@ type CombatAnalytics struct {
 	UpdatedAt         time.Time  `json:"updated_at" db:"updated_at"`
 }
 
+// CombatSummary represents a summary of combat analytics
+type CombatSummary struct {
+	CombatID         uuid.UUID              `json:"combat_id"`
+	Duration         int                    `json:"duration"`
+	TotalRounds      int                    `json:"total_rounds"`
+	TotalDamage      int                    `json:"total_damage"`
+	TotalHealing     int                    `json:"total_healing"`
+	ParticipantStats []CombatantAnalytics   `json:"participant_stats"`
+	MVP              *CombatantAnalytics    `json:"mvp,omitempty"`
+	Highlights       []string               `json:"highlights"`
+}
+
 // CombatantAnalytics represents individual performance metrics
 type CombatantAnalytics struct {
 	ID                   uuid.UUID  `json:"id" db:"id"`

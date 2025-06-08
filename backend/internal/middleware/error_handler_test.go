@@ -1,7 +1,8 @@
 package middleware
 
 import (
-	"errors"
+	"database/sql"
+	stderrors "errors"
 	"net/http"
 	"testing"
 
@@ -22,45 +23,45 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 		{
 			name: "handles custom error with code",
 			handler: func(c *gin.Context) {
-				err := errors.NewError(errors.CodeCharacterNotFound, "character not found")
+				err := errors.NewNotFoundError("character").WithCode(string(errors.ErrCodeCharacterNotFound))
 				c.Error(err)
 				c.Abort()
 			},
 			expectedStatus: http.StatusNotFound,
-			expectedCode:   errors.CodeCharacterNotFound,
+			expectedCode:   string(errors.ErrCodeCharacterNotFound),
 			expectedMsg:    "character not found",
 		},
 		{
 			name: "handles validation error",
 			handler: func(c *gin.Context) {
-				err := errors.NewValidationError("name", "is required")
+				err := errors.NewValidationError("name is required").WithCode(string(errors.ErrCodeValidationFailed))
 				c.Error(err)
 				c.Abort()
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedCode:   errors.CodeValidationFailed,
+			expectedCode:   string(errors.ErrCodeValidationFailed),
 			expectedMsg:    "name is required",
 		},
 		{
 			name: "handles authorization error",
 			handler: func(c *gin.Context) {
-				err := errors.NewError(errors.CodeUnauthorized, "invalid token")
+				err := errors.NewAuthenticationError("invalid token").WithCode(string(errors.ErrCodeTokenInvalid))
 				c.Error(err)
 				c.Abort()
 			},
 			expectedStatus: http.StatusUnauthorized,
-			expectedCode:   errors.CodeUnauthorized,
+			expectedCode:   string(errors.ErrCodeTokenInvalid),
 			expectedMsg:    "invalid token",
 		},
 		{
 			name: "handles generic error",
 			handler: func(c *gin.Context) {
-				err := errors.New("something went wrong")
+				err := stderrors.New("something went wrong")
 				c.Error(err)
 				c.Abort()
 			},
 			expectedStatus: http.StatusInternalServerError,
-			expectedCode:   errors.CodeInternalError,
+			expectedCode:   string(errors.ErrCodeInternalError),
 			expectedMsg:    "Internal server error",
 		},
 		{
@@ -69,31 +70,31 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 				panic("unexpected panic")
 			},
 			expectedStatus: http.StatusInternalServerError,
-			expectedCode:   errors.CodeInternalError,
+			expectedCode:   string(errors.ErrCodeInternalError),
 			expectedMsg:    "Internal server error",
 		},
 		{
 			name: "preserves request ID",
 			handler: func(c *gin.Context) {
 				c.Set("request_id", "test-request-123")
-				err := errors.NewError(errors.CodeNotFound, "not found")
+				err := errors.NewNotFoundError("resource").WithCode(string(errors.ErrCodeCharacterNotFound))
 				c.Error(err)
 				c.Abort()
 			},
 			expectedStatus: http.StatusNotFound,
-			expectedCode:   errors.CodeNotFound,
+			expectedCode:   string(errors.ErrCodeCharacterNotFound),
 		},
 		{
 			name: "handles multiple errors (returns first)",
 			handler: func(c *gin.Context) {
-				err1 := errors.NewError(errors.CodeValidationFailed, "first error")
-				err2 := errors.NewError(errors.CodeNotFound, "second error")
+				err1 := errors.NewValidationError("first error").WithCode(string(errors.ErrCodeValidationFailed))
+				err2 := errors.NewNotFoundError("resource").WithCode(string(errors.ErrCodeCharacterNotFound))
 				c.Error(err1)
 				c.Error(err2)
 				c.Abort()
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedCode:   errors.CodeValidationFailed,
+			expectedCode:   string(errors.ErrCodeValidationFailed),
 			expectedMsg:    "first error",
 		},
 	}
@@ -106,7 +107,7 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 			// Add recovery middleware first
 			router.Use(gin.Recovery())
 			// Add error handler middleware
-			router.Use(ErrorHandler())
+			router.Use(ErrorHandlerGin())
 			
 			router.GET("/test", tt.handler)
 			
@@ -135,12 +136,12 @@ func TestErrorHandlerMiddleware_ContextEnrichment(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
 		
-		router.Use(ErrorHandler())
+		router.Use(ErrorHandlerGin())
 		
 		router.GET("/test", func(c *gin.Context) {
 			c.Set("user_id", int64(123))
 			c.Set("username", "testuser")
-			err := errors.NewError(errors.CodeForbidden, "access denied")
+			err := errors.NewAuthorizationError("access denied").WithCode(string(errors.ErrCodeInsufficientPrivilege))
 			c.Error(err)
 			c.Abort()
 		})
@@ -155,19 +156,19 @@ func TestErrorHandlerMiddleware_ContextEnrichment(t *testing.T) {
 		
 		// In production, user context might be logged but not returned
 		// This test verifies the middleware has access to context
-		require.Equal(t, errors.CodeForbidden, response["code"])
+		require.Equal(t, string(errors.ErrCodeInsufficientPrivilege), response["code"])
 	})
 
 	t.Run("includes game session context", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
 		
-		router.Use(ErrorHandler())
+		router.Use(ErrorHandlerGin())
 		
 		router.GET("/test", func(c *gin.Context) {
 			c.Set("session_id", int64(456))
 			c.Set("is_dm", true)
-			err := errors.NewError(errors.CodeGameSessionNotFound, "session not found")
+			err := errors.NewNotFoundError("session").WithCode(string(errors.ErrCodeSessionNotFound))
 			c.Error(err)
 			c.Abort()
 		})
@@ -184,13 +185,13 @@ func TestErrorHandlerMiddleware_ValidationErrors(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
 		
-		router.Use(ErrorHandler())
+		router.Use(ErrorHandlerGin())
 		
 		router.POST("/test", func(c *gin.Context) {
-			validationErrors := errors.NewValidationErrors()
-			validationErrors.AddFieldError("name", "is required")
-			validationErrors.AddFieldError("level", "must be between 1 and 20")
-			validationErrors.AddFieldError("abilities.strength", "must be at least 3")
+			validationErrors := &errors.ValidationErrors{}
+			validationErrors.Add("name", "is required")
+			validationErrors.Add("level", "must be between 1 and 20")
+			validationErrors.Add("abilities.strength", "must be at least 3")
 			
 			c.Error(validationErrors)
 			c.Abort()
@@ -204,7 +205,7 @@ func TestErrorHandlerMiddleware_ValidationErrors(t *testing.T) {
 		var response map[string]interface{}
 		resp.DecodeJSON(&response)
 		
-		require.Equal(t, errors.CodeValidationFailed, response["code"])
+		require.Equal(t, string(errors.ErrCodeValidationFailed), response["code"])
 		
 		// Check for field errors
 		fieldErrors, ok := response["field_errors"].(map[string]interface{})
@@ -220,10 +221,10 @@ func TestErrorHandlerMiddleware_RateLimiting(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
 		
-		router.Use(ErrorHandler())
+		router.Use(ErrorHandlerGin())
 		
 		router.GET("/test", func(c *gin.Context) {
-			err := errors.NewRateLimitError(60) // 60 seconds until retry
+			err := errors.NewRateLimitError("Too many requests").WithDetails(map[string]interface{}{"retry_after": 60})
 			c.Error(err)
 			c.Abort()
 		})
@@ -238,7 +239,7 @@ func TestErrorHandlerMiddleware_RateLimiting(t *testing.T) {
 		var response map[string]interface{}
 		testResp.DecodeJSON(&response)
 		
-		require.Equal(t, errors.CodeRateLimitExceeded, response["code"])
+		require.Equal(t, string(errors.ErrCodeRateLimitExceeded), response["code"])
 	})
 }
 
@@ -254,21 +255,21 @@ func TestErrorHandlerMiddleware_DatabaseErrors(t *testing.T) {
 			name:           "not found error",
 			dbError:        sql.ErrNoRows,
 			expectedStatus: http.StatusNotFound,
-			expectedCode:   errors.CodeNotFound,
+			expectedCode:   string(errors.ErrCodeCharacterNotFound),
 			expectedMsg:    "Resource not found",
 		},
 		{
 			name:           "connection error",
-			dbError:        errors.New("connection refused"),
+			dbError:        stderrors.New("connection refused"),
 			expectedStatus: http.StatusServiceUnavailable,
-			expectedCode:   errors.CodeDatabaseError,
+			expectedCode:   string(errors.ErrCodeDatabaseError),
 			expectedMsg:    "Database unavailable",
 		},
 		{
 			name:           "constraint violation",
-			dbError:        errors.New("duplicate key value violates unique constraint"),
+			dbError:        stderrors.New("duplicate key value violates unique constraint"),
 			expectedStatus: http.StatusConflict,
-			expectedCode:   errors.CodeDuplicateEntry,
+			expectedCode:   string(errors.ErrCodeDuplicateEntry),
 			expectedMsg:    "Resource already exists",
 		},
 	}
@@ -278,11 +279,18 @@ func TestErrorHandlerMiddleware_DatabaseErrors(t *testing.T) {
 			gin.SetMode(gin.TestMode)
 			router := gin.New()
 			
-			router.Use(ErrorHandler())
+			router.Use(ErrorHandlerGin())
 			
 			router.GET("/test", func(c *gin.Context) {
-				// Wrap database error
-				err := errors.WrapDatabaseError(tt.dbError)
+				// Convert database error to app error
+				var err error
+				if stderrors.Is(tt.dbError, sql.ErrNoRows) {
+					err = errors.NewNotFoundError("Resource").WithCode(string(errors.ErrCodeCharacterNotFound))
+				} else if stderrors.As(tt.dbError, &stderrors.New("connection refused")) {
+					err = errors.NewServiceUnavailableError("Database unavailable").WithCode(string(errors.ErrCodeDatabaseError))
+				} else if stderrors.As(tt.dbError, &stderrors.New("duplicate key value violates unique constraint")) {
+					err = errors.NewConflictError("Resource already exists").WithCode(string(errors.ErrCodeDuplicateEntry))
+				}
 				c.Error(err)
 				c.Abort()
 			})
@@ -306,11 +314,11 @@ func TestErrorHandlerMiddleware_SecurityErrors(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
 		
-		router.Use(ErrorHandler())
+		router.Use(ErrorHandlerGin())
 		
 		router.GET("/test", func(c *gin.Context) {
 			// Error containing sensitive info
-			err := errors.New("invalid password: expected 'secret123' but got 'wrongpass'")
+			err := stderrors.New("invalid password: expected 'secret123' but got 'wrongpass'")
 			c.Error(err)
 			c.Abort()
 		})
@@ -333,10 +341,10 @@ func TestErrorHandlerMiddleware_SecurityErrors(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
 		
-		router.Use(ErrorHandler())
+		router.Use(ErrorHandlerGin())
 		
 		router.POST("/test", func(c *gin.Context) {
-			err := errors.NewError(errors.CodeCSRFTokenInvalid, "CSRF token mismatch")
+			err := errors.NewAuthorizationError("CSRF token mismatch").WithCode(string(errors.ErrCodeCSRFTokenMismatch))
 			c.Error(err)
 			c.Abort()
 		})
@@ -349,7 +357,7 @@ func TestErrorHandlerMiddleware_SecurityErrors(t *testing.T) {
 		var response map[string]interface{}
 		resp.DecodeJSON(&response)
 		
-		require.Equal(t, errors.CodeCSRFTokenInvalid, response["code"])
+		require.Equal(t, string(errors.ErrCodeCSRFTokenMismatch), response["code"])
 	})
 }
 
@@ -361,7 +369,7 @@ func BenchmarkErrorHandler(b *testing.B) {
 	router.Use(ErrorHandler())
 	
 	router.GET("/test", func(c *gin.Context) {
-		err := errors.NewError(errors.CodeNotFound, "not found")
+		err := errors.NewNotFoundError("resource").WithCode(string(errors.ErrCodeCharacterNotFound))
 		c.Error(err)
 		c.Abort()
 	})
