@@ -43,10 +43,7 @@ type PerspectiveGenerator struct {
 
 // NewNarrativeEngine creates a new narrative engine instance
 func NewNarrativeEngine(cfg *config.Config) (*NarrativeEngine, error) {
-	llm, err := NewLLMProvider(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create LLM provider: %w", err)
-	}
+	llm := NewLLMProvider(cfg.AI)
 
 	return &NarrativeEngine{
 		llm: llm,
@@ -59,7 +56,7 @@ func NewNarrativeEngine(cfg *config.Config) (*NarrativeEngine, error) {
 
 // AnalyzePlayerDecision updates player profile based on a decision
 func (ps *PlayerProfileService) AnalyzePlayerDecision(ctx context.Context, profile *models.NarrativeProfile, decision models.DecisionRecord) (*models.NarrativeProfile, error) {
-	if !ps.cfg.AIConfig.Enabled {
+	if !ps.cfg.AI.Enabled {
 		// Simple analysis without AI
 		profile.DecisionHistory = append(profile.DecisionHistory, decision)
 		return profile, nil
@@ -99,7 +96,7 @@ Provide analysis in JSON format with:
 		decision.Consequences,
 	)
 
-	response, err := ps.llm.GenerateContent(ctx, prompt, 0.7, 1000)
+	response, err := ps.llm.GenerateContent(ctx, prompt, "You are a D&D narrative assistant focusing on player psychology and storytelling.")
 	if err != nil {
 		return profile, fmt.Errorf("failed to analyze decision: %w", err)
 	}
@@ -140,7 +137,7 @@ Provide analysis in JSON format with:
 
 // GeneratePersonalizedNarrative creates a narrative tailored to a specific player
 func (ne *NarrativeEngine) GeneratePersonalizedNarrative(ctx context.Context, baseEvent models.NarrativeEvent, profile *models.NarrativeProfile, backstory []models.BackstoryElement) (*models.PersonalizedNarrative, error) {
-	if !ne.cfg.AIConfig.Enabled {
+	if !ne.cfg.AI.Enabled {
 		// Return basic narrative without personalization
 		return &models.PersonalizedNarrative{
 			ID:          uuid.New().String(),
@@ -197,7 +194,7 @@ Provide the narrative in JSON format with:
 		formatBackstoryElements(relevantBackstory),
 	)
 
-	response, err := ne.llm.GenerateContent(ctx, prompt, 0.8, 1500)
+	response, err := ne.llm.GenerateContent(ctx, prompt, "You are a D&D narrative engine that creates dynamic storylines based on player actions.")
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate personalized narrative: %w", err)
 	}
@@ -267,7 +264,7 @@ Provide the narrative in JSON format with:
 
 // CalculateConsequences determines the ripple effects of a player action
 func (ce *ConsequenceEngine) CalculateConsequences(ctx context.Context, action models.PlayerAction, worldState map[string]interface{}) ([]models.ConsequenceEvent, error) {
-	if !ce.cfg.AIConfig.Enabled {
+	if !ce.cfg.AI.Enabled {
 		// Return minimal consequences without AI
 		return []models.ConsequenceEvent{}, nil
 	}
@@ -323,7 +320,7 @@ Provide consequences in JSON format as an array of:
 		formatWorldState(worldState),
 	)
 
-	response, err := ce.llm.GenerateContent(ctx, prompt, 0.7, 2000)
+	response, err := ce.llm.GenerateContent(ctx, prompt, "You are a D&D narrative assistant that analyzes and tracks story consequences.")
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate consequences: %w", err)
 	}
@@ -411,7 +408,7 @@ Provide consequences in JSON format as an array of:
 
 // GenerateMultiplePerspectives creates different viewpoints of the same event
 func (pg *PerspectiveGenerator) GenerateMultiplePerspectives(ctx context.Context, event models.NarrativeEvent, sources []models.PerspectiveSource) ([]models.PerspectiveNarrative, error) {
-	if !pg.cfg.AIConfig.Enabled {
+	if !pg.cfg.AI.Enabled {
 		// Return single neutral perspective without AI
 		return []models.PerspectiveNarrative{{
 			ID:              uuid.New().String(),
@@ -484,7 +481,7 @@ Provide the perspective in JSON format:
 			source.CulturalContext,
 		)
 
-		response, err := pg.llm.GenerateContent(ctx, prompt, 0.8, 1200)
+		response, err := pg.llm.GenerateContent(ctx, prompt, "You are a D&D perspective generator that creates authentic character viewpoints.")
 		if err != nil {
 			continue // Skip this perspective on error
 		}

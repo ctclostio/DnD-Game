@@ -180,7 +180,7 @@ func (ba *AIBalanceAnalyzer) calculateDamageExpectation(template *models.RuleTem
 
 // generateBalanceSuggestions uses AI to suggest balance adjustments
 func (ba *AIBalanceAnalyzer) generateBalanceSuggestions(ctx context.Context, template *models.RuleTemplate, simResults []models.SimulationResult) ([]models.BalanceSuggestion, error) {
-	if !ba.cfg.AIConfig.Enabled {
+	if !ba.cfg.AI.Enabled {
 		return ba.generateDefaultSuggestions(template, simResults), nil
 	}
 
@@ -236,7 +236,8 @@ Consider:
 		template.BalanceMetrics.ActionEconomy,
 	)
 
-	response, err := ba.llm.GenerateContent(ctx, prompt, 0.7, 1500)
+	systemPrompt := "You are a D&D 5th edition game balance expert. Analyze the provided rule and suggest balance adjustments."
+	response, err := ba.llm.GenerateContent(ctx, prompt, systemPrompt)
 	if err != nil {
 		return nil, err
 	}

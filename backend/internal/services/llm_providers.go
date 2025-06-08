@@ -13,6 +13,7 @@ import (
 // LLMProvider defines the interface for Large Language Model providers
 type LLMProvider interface {
 	GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error)
+	GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error)
 }
 
 // AIConfig holds configuration for AI services
@@ -111,6 +112,11 @@ func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, prompt string, 
 	return response.Choices[0].Message.Content, nil
 }
 
+// GenerateContent is an alias for GenerateCompletion
+func (p *OpenAIProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+	return p.GenerateCompletion(ctx, prompt, systemPrompt)
+}
+
 // AnthropicProvider implements LLMProvider using Anthropic's Claude API
 type AnthropicProvider struct {
 	apiKey     string
@@ -181,6 +187,11 @@ func (p *AnthropicProvider) GenerateCompletion(ctx context.Context, prompt strin
 	}
 
 	return response.Content[0].Text, nil
+}
+
+// GenerateContent is an alias for GenerateCompletion
+func (p *AnthropicProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+	return p.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 
 // OpenRouterProvider implements LLMProvider using OpenRouter's API
@@ -297,4 +308,26 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 	}
 	
 	return m.Response, nil
+}
+
+// GenerateContent is an alias for GenerateCompletion
+func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+	return m.GenerateCompletion(ctx, prompt, systemPrompt)
+}
+
+// NewLLMProvider creates a new LLM provider based on configuration
+func NewLLMProvider(config AIConfig) LLMProvider {
+	if !config.Enabled {
+		return &MockLLMProvider{}
+	}
+	
+	switch config.Provider {
+	case "openai":
+		return NewOpenAIProvider(config.APIKey, config.Model)
+	case "anthropic":
+		return NewAnthropicProvider(config.APIKey, config.Model)
+	default:
+		// Default to mock provider if unknown
+		return &MockLLMProvider{}
+	}
 }

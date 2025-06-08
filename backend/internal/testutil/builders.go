@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -23,7 +24,7 @@ type UserBuilder struct {
 func NewUserBuilder() *UserBuilder {
 	return &UserBuilder{
 		user: models.User{
-			ID:        1,
+			ID:        "1",
 			Username:  "testuser",
 			Email:     "test@example.com",
 			CreatedAt: time.Now(),
@@ -33,7 +34,7 @@ func NewUserBuilder() *UserBuilder {
 }
 
 func (b *UserBuilder) WithID(id int64) *UserBuilder {
-	b.user.ID = id
+	b.user.ID = fmt.Sprintf("%d", id)
 	return b
 }
 
@@ -65,8 +66,8 @@ type CharacterBuilder struct {
 func NewCharacterBuilder() *CharacterBuilder {
 	return &CharacterBuilder{
 		character: models.Character{
-			ID:               1,
-			UserID:           1,
+			ID:               "1",
+			UserID:           "1",
 			Name:             "Gandalf",
 			Race:             "Human",
 			Class:            "Wizard",
@@ -77,7 +78,7 @@ func NewCharacterBuilder() *CharacterBuilder {
 			ArmorClass:       12,
 			Initiative:       2,
 			Speed:            30,
-			Abilities: models.AbilityScores{
+			Attributes: models.Attributes{
 				Strength:     10,
 				Dexterity:    14,
 				Constitution: 12,
@@ -85,12 +86,10 @@ func NewCharacterBuilder() *CharacterBuilder {
 				Wisdom:       14,
 				Charisma:     12,
 			},
-			Skills:         map[string]int{"Arcana": 5, "Investigation": 5},
-			Proficiencies:  []string{"Light Armor", "Simple Weapons"},
-			Equipment:      []string{"Spellbook", "Component Pouch", "Staff"},
-			SpellSlots:     map[string]models.SpellSlotInfo{"1": {Total: 2, Used: 0}},
-			KnownSpells:    []string{"Mage Hand", "Fire Bolt", "Shield", "Magic Missile"},
-			PreparedSpells: []string{"Shield", "Magic Missile"},
+			Skills:         []models.Skill{{Name: "Arcana", Modifier: 5, Proficiency: true}, {Name: "Investigation", Modifier: 5, Proficiency: true}},
+			Proficiencies:  models.Proficiencies{Languages: []string{"Common"}, Tools: []string{}, Weapons: []string{"Simple Weapons"}, Armor: []string{"Light Armor"}},
+			Equipment:      []models.Item{},
+			Spells:         models.SpellData{},
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 		},
@@ -98,12 +97,12 @@ func NewCharacterBuilder() *CharacterBuilder {
 }
 
 func (b *CharacterBuilder) WithID(id int64) *CharacterBuilder {
-	b.character.ID = id
+	b.character.ID = fmt.Sprintf("%d", id)
 	return b
 }
 
 func (b *CharacterBuilder) WithUserID(userID int64) *CharacterBuilder {
-	b.character.UserID = userID
+	b.character.UserID = fmt.Sprintf("%d", userID)
 	return b
 }
 
@@ -151,22 +150,19 @@ type GameSessionBuilder struct {
 func NewGameSessionBuilder() *GameSessionBuilder {
 	return &GameSessionBuilder{
 		session: models.GameSession{
-			ID:           1,
-			Name:         "Test Campaign",
-			DmID:         1,
-			Status:       "active",
-			MaxPlayers:   6,
-			CurrentTurn:  1,
-			InCombat:     false,
-			SessionNotes: "Test session",
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
+			ID:          "1",
+			Name:        "Test Campaign",
+			DMID:        "1",
+			Description: "Test session",
+			Status:      models.GameStatusActive,
+			State:       map[string]interface{}{},
+			CreatedAt:   time.Now(),
 		},
 	}
 }
 
 func (b *GameSessionBuilder) WithID(id int64) *GameSessionBuilder {
-	b.session.ID = id
+	b.session.ID = fmt.Sprintf("%d", id)
 	return b
 }
 
@@ -176,17 +172,12 @@ func (b *GameSessionBuilder) WithName(name string) *GameSessionBuilder {
 }
 
 func (b *GameSessionBuilder) WithDM(dmID int64) *GameSessionBuilder {
-	b.session.DmID = dmID
+	b.session.DMID = fmt.Sprintf("%d", dmID)
 	return b
 }
 
-func (b *GameSessionBuilder) WithStatus(status string) *GameSessionBuilder {
+func (b *GameSessionBuilder) WithStatus(status models.GameStatus) *GameSessionBuilder {
 	b.session.Status = status
-	return b
-}
-
-func (b *GameSessionBuilder) InCombat(inCombat bool) *GameSessionBuilder {
-	b.session.InCombat = inCombat
 	return b
 }
 

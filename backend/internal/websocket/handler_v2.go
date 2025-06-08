@@ -37,15 +37,15 @@ var (
 	space   = []byte{' '}
 )
 
-// AuthMessage represents the authentication message
-type AuthMessage struct {
+// AuthMessageV2 represents the authentication message
+type AuthMessageV2 struct {
 	Type  string `json:"type"`
 	Token string `json:"token"`
 	Room  string `json:"room"`
 }
 
-// Message represents a WebSocket message
-type Message struct {
+// MessageV2 represents a WebSocket message
+type MessageV2 struct {
 	Type string                 `json:"type"`
 	Data map[string]interface{} `json:"data"`
 }
@@ -53,7 +53,7 @@ type Message struct {
 // BroadcastMessage represents a message to broadcast
 type BroadcastMessage struct {
 	Room    string
-	Message Message
+	Message MessageV2
 	Sender  string
 }
 
@@ -198,7 +198,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Wait for authentication
 	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 	
-	var authMsg AuthMessage
+	var authMsg AuthMessageV2
 	if err := conn.ReadJSON(&authMsg); err != nil {
 		log.Warn().
 			Err(err).
@@ -234,7 +234,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Create authenticated client
-	client := &Client{
+	client := &ClientV2{
 		ID:     clientID,
 		UserID: userID,
 		conn:   conn,
@@ -286,8 +286,8 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	go client.readPump()
 }
 
-// Client represents a WebSocket client with logging
-type Client struct {
+// ClientV2 represents a WebSocket client with logging
+type ClientV2 struct {
 	ID     string
 	UserID string
 	conn   *websocket.Conn
@@ -298,7 +298,7 @@ type Client struct {
 }
 
 // sendJSON sends a JSON message to the client
-func (c *Client) sendJSON(v interface{}) error {
+func (c *ClientV2) sendJSON(v interface{}) error {
 	data, err := json.Marshal(v)
 	if err != nil {
 		c.log.Error().
@@ -317,7 +317,7 @@ func (c *Client) sendJSON(v interface{}) error {
 }
 
 // sendError sends an error message to the client
-func (c *Client) sendError(message string) {
+func (c *ClientV2) sendError(message string) {
 	errorMsg := map[string]string{
 		"type":    "error",
 		"message": message,
@@ -326,7 +326,7 @@ func (c *Client) sendError(message string) {
 }
 
 // readPump handles incoming messages from the client
-func (c *Client) readPump() {
+func (c *ClientV2) readPump() {
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
@@ -403,7 +403,7 @@ func (c *Client) readPump() {
 }
 
 // writePump handles outgoing messages to the client
-func (c *Client) writePump() {
+func (c *ClientV2) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()

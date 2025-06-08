@@ -201,6 +201,9 @@ type Position struct {
 // CombatParticipant is an alias for Combatant to maintain compatibility
 type CombatParticipant = Combatant
 
+// GridPosition is an alias for Position to maintain compatibility
+type GridPosition = Position
+
 // ActionResult represents the result of a combat action
 type ActionResult struct {
 	Success       bool           `json:"success"`
@@ -238,11 +241,6 @@ type CombatRequest struct {
 	Advantage   bool            `json:"advantage"`
 	Disadvantage bool           `json:"disadvantage"`
 	Description string          `json:"description,omitempty"`
-}
-
-type GridPosition struct {
-	X int `json:"x"`
-	Y int `json:"y"`
 }
 
 type CombatUpdate struct {

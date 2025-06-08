@@ -108,20 +108,21 @@ func (a *AssertHelpers) AssertCombatValid(combat *models.Combat) {
 // AssertInventoryItemValid asserts an inventory item is valid
 func (a *AssertHelpers) AssertInventoryItemValid(item *models.InventoryItem) {
 	require.NotNil(a.t, item)
-	require.NotEmpty(a.t, item.Name)
-	require.NotEmpty(a.t, item.Type)
+	require.NotNil(a.t, item.Item, "InventoryItem must have an Item")
+	require.NotEmpty(a.t, item.Item.Name)
+	require.NotEmpty(a.t, item.Item.Type)
 	require.Greater(a.t, item.Quantity, 0)
-	require.GreaterOrEqual(a.t, item.Weight, 0.0)
-	require.GreaterOrEqual(a.t, item.Value, 0)
+	require.GreaterOrEqual(a.t, item.Item.Weight, 0.0)
+	require.GreaterOrEqual(a.t, item.Item.Value, 0)
 	
 	// Validate type-specific properties
-	switch item.Type {
-	case "weapon":
-		a.AssertWeaponPropertiesValid(item.Properties)
-	case "armor":
-		a.AssertArmorPropertiesValid(item.Properties)
-	case "magic":
-		a.AssertMagicItemPropertiesValid(item.Properties)
+	switch item.Item.Type {
+	case models.ItemTypeWeapon:
+		a.AssertWeaponPropertiesValid(item.Item.Properties)
+	case models.ItemTypeArmor:
+		a.AssertArmorPropertiesValid(item.Item.Properties)
+	case models.ItemTypeMagic:
+		a.AssertMagicItemPropertiesValid(item.Item.Properties)
 	}
 }
 

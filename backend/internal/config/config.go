@@ -56,6 +56,7 @@ type AIConfig struct {
 	Provider string // "openai", "anthropic", or "mock"
 	APIKey   string
 	Model    string
+	Enabled  bool
 }
 
 // Load loads configuration from environment variables

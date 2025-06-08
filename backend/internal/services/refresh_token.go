@@ -31,7 +31,7 @@ func (s *RefreshTokenService) Create(userID, refreshToken string) error {
 	}
 
 	// Store the token
-	return s.repo.Create(userID, claims.ID, refreshToken, claims.ExpiresAt.Time)
+	return s.repo.Create(userID, claims.RegisteredClaims.ID, refreshToken, claims.RegisteredClaims.ExpiresAt.Time)
 }
 
 // RefreshAccessToken validates a refresh token and generates a new token pair
