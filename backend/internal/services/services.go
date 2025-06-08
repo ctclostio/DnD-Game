@@ -31,4 +31,8 @@ type Services struct {
 	RefreshTokens      *RefreshTokenService
 	Config             *config.Config
 	NarrativeEngine    *NarrativeEngine
+	WorldBuilding      interface{} // TODO: Add proper world building service
+	RuleBuilder        interface{} // TODO: Add proper rule builder service
+	AICampaignManager  *AICampaignManager
+	BattleMapGen       *AIBattleMapGenerator
 }

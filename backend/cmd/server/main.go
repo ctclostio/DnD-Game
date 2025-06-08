@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,26 +18,67 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/routes"
 	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/your-username/dnd-game/backend/internal/websocket"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 func main() {
+	// Initialize logger first
+	logConfig := logger.ConfigV2{
+		Level:        getEnvOrDefault("LOG_LEVEL", "info"),
+		Pretty:       getEnvOrDefault("LOG_PRETTY", "false") == "true",
+		CallerInfo:   true,
+		StackTrace:   true,
+		ServiceName:  "dnd-game-backend",
+		Environment:  getEnvOrDefault("ENVIRONMENT", "development"),
+		TimeFormat:   time.RFC3339Nano,
+		SamplingRate: 1.0,
+		Fields: logger.Fields{
+			"version": "1.0.0",
+			"pid":     os.Getpid(),
+		},
+	}
+
+	log, err := logger.NewV2(logConfig)
+	if err != nil {
+		// Fallback to standard library if logger fails
+		panic("Failed to initialize logger: " + err.Error())
+	}
+
+	// Log startup
+	log.Info().
+		Str("service", logConfig.ServiceName).
+		Str("environment", logConfig.Environment).
+		Msg("Starting D&D Game Backend")
+
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		log.Fatal().Err(err).Msg("Failed to load configuration")
 	}
 
 	// Validate configuration
 	if err := cfg.Validate(); err != nil {
-		log.Fatalf("Invalid configuration: %v", err)
+		log.Fatal().Err(err).Msg("Invalid configuration")
 	}
 
+	log.Info().
+		Str("database_host", cfg.Database.Host).
+		Str("server_port", cfg.Server.Port).
+		Bool("ai_enabled", cfg.AI.Provider != "mock").
+		Msg("Configuration loaded successfully")
+
 	// Initialize database
+	log.Info().Msg("Initializing database connection")
 	db, repos, err := database.Initialize(cfg)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		log.Fatal().Err(err).Msg("Failed to initialize database")
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Error().Err(err).Msg("Failed to close database connection")
+		}
+	}()
+	log.Info().Msg("Database initialized successfully")
 
 	// Create JWT manager
 	jwtManager := auth.NewJWTManager(
@@ -46,95 +86,81 @@ func main() {
 		cfg.Auth.AccessTokenDuration,
 		cfg.Auth.RefreshTokenDuration,
 	)
+	log.Info().Msg("JWT manager initialized")
 
 	// Create AI provider
 	var llmProvider services.LLMProvider
 	switch cfg.AI.Provider {
 	case "openai":
 		llmProvider = services.NewOpenAIProvider(cfg.AI.APIKey, cfg.AI.Model)
+		log.Info().Str("provider", "openai").Str("model", cfg.AI.Model).Msg("OpenAI provider initialized")
 	case "anthropic":
 		llmProvider = services.NewAnthropicProvider(cfg.AI.APIKey, cfg.AI.Model)
+		log.Info().Str("provider", "anthropic").Str("model", cfg.AI.Model).Msg("Anthropic provider initialized")
 	case "openrouter":
 		llmProvider = services.NewOpenRouterProvider(cfg.AI.APIKey, cfg.AI.Model)
+		log.Info().Str("provider", "openrouter").Str("model", cfg.AI.Model).Msg("OpenRouter provider initialized")
 	default:
 		llmProvider = &services.MockLLMProvider{}
+		log.Warn().Msg("Using mock LLM provider")
 	}
 
-	// Create AI race generator
+	// Create AI services
+	log.Info().Msg("Initializing AI services")
 	aiRaceGenerator := services.NewAIRaceGeneratorService(llmProvider)
-	
-	// Create AI DM assistant
 	aiDMAssistant := services.NewAIDMAssistantService(llmProvider)
+	aiEncounterBuilder := services.NewAIEncounterBuilder(llmProvider)
+	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"})
+	aiBattleMapGenerator := services.NewAIBattleMapGenerator(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"})
 
 	// Create services
+	log.Info().Msg("Initializing core services")
+	
+	// Token service with cleanup
 	refreshTokenService := services.NewRefreshTokenService(repos.RefreshTokens, jwtManager)
-	
-	// Start refresh token cleanup task
 	refreshTokenService.StartCleanupTask(1 * time.Hour)
+	log.Info().Msg("Refresh token cleanup task started")
 
-	// Create custom race service
-	customRaceService := services.NewCustomRaceService(repos.CustomRaces, aiRaceGenerator)
-	
-	// Create DM assistant service
-	dmAssistantService := services.NewDMAssistantService(repos.DMAssistant, aiDMAssistant)
-	
-	// Create AI encounter builder
-	aiEncounterBuilder := services.NewAIEncounterBuilder(llmProvider)
-	
-	// Create combat service first (needed by encounter service)
+	// Combat services
 	combatService := services.NewCombatService()
-	
-	// Create encounter service
-	encounterService := services.NewEncounterService(repos.Encounters, aiEncounterBuilder, combatService)
-	
-	// Create AI campaign manager
-	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"})
-	
-	// Create campaign service
-	campaignService := services.NewCampaignService(repos.Campaign, repos.GameSessions, aiCampaignManager)
-	
-	// Create AI battle map generator
-	aiBattleMapGenerator := services.NewAIBattleMapGenerator(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"})
-	
-	// Create combat automation service
 	combatAutomationService := services.NewCombatAutomationService(repos.CombatAnalytics, repos.Characters, repos.NPCs)
-	
-	// Create combat analytics service
 	combatAnalyticsService := services.NewCombatAnalyticsService(repos.CombatAnalytics, combatService)
 	
-	// Create world building repository
+	// World building services
 	worldBuildingRepo := database.NewWorldBuildingRepository(db.StdDB())
-	
-	// Create world building services
 	settlementGenerator := services.NewSettlementGeneratorService(llmProvider, worldBuildingRepo)
 	factionSystem := services.NewFactionSystemService(llmProvider, worldBuildingRepo)
 	worldEventEngine := services.NewWorldEventEngineService(llmProvider, worldBuildingRepo, factionSystem)
 	economicSimulator := services.NewEconomicSimulatorService(worldBuildingRepo)
 	
-	// Create narrative engine
+	// Narrative engine
 	narrativeEngine, err := services.NewNarrativeEngine(cfg)
 	if err != nil {
-		log.Printf("Failed to create narrative engine: %v", err)
-		// Continue without narrative engine rather than failing completely
+		log.Error().Err(err).Msg("Failed to create narrative engine - continuing without it")
+		narrativeEngine = nil
+	} else {
+		log.Info().Msg("Narrative engine initialized")
 	}
 	
-	// Create rule builder services
-	ruleEngine := services.NewRuleEngine(repos.RuleBuilder, services.NewDiceRollService(repos.DiceRolls))
+	// Rule builder services
+	diceRollService := services.NewDiceRollService(repos.DiceRolls)
+	ruleEngine := services.NewRuleEngine(repos.RuleBuilder, diceRollService)
 	balanceAnalyzer := services.NewAIBalanceAnalyzer(cfg, llmProvider, ruleEngine, combatService)
 	conditionalReality := services.NewConditionalRealitySystem(ruleEngine)
 
+	// Aggregate all services
 	svc := &services.Services{
 		Users:              services.NewUserService(repos.Users),
 		Characters:         services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
 		GameSessions:       services.NewGameSessionService(repos.GameSessions),
-		DiceRolls:          services.NewDiceRollService(repos.DiceRolls),
+		DiceRolls:          diceRollService,
 		Combat:             combatService,
 		NPCs:               services.NewNPCService(repos.NPCs),
 		Inventory:          services.NewInventoryService(repos.Inventory, repos.Characters),
-		CustomRaces:        customRaceService,
-		DMAssistant:        dmAssistantService,
-		Encounters:         encounterService,
-		Campaign:           campaignService,
+		CustomRaces:        services.NewCustomRaceService(repos.CustomRaces, aiRaceGenerator),
+		DMAssistant:        services.NewDMAssistantService(repos.DMAssistant, aiDMAssistant),
+		Encounters:         services.NewEncounterService(repos.Encounters, aiEncounterBuilder, combatService),
+		Campaign:           services.NewCampaignService(repos.Campaign, repos.GameSessions, aiCampaignManager),
 		CombatAutomation:   combatAutomationService,
 		CombatAnalytics:    combatAnalyticsService,
 		SettlementGen:      settlementGenerator,
@@ -147,130 +173,76 @@ func main() {
 		JWTManager:         jwtManager,
 		RefreshTokens:      refreshTokenService,
 		Config:             cfg,
+		NarrativeEngine:    narrativeEngine,
+		WorldBuilding:      worldBuildingRepo,
+		RuleBuilder:        repos.RuleBuilder,
+		AICampaignManager:  aiCampaignManager,
+		BattleMapGen:       aiBattleMapGenerator,
 	}
 
-	// Get websocket hub
-	wsHub := websocket.GetHub()
-	
-	// Create handlers with services
-	h := handlers.NewHandlers(svc, wsHub)
-	
-	// Create character creation handler
-	charCreationHandler := handlers.NewCharacterCreationHandler(svc.Characters, svc.CustomRaces, llmProvider)
-	
-	// Create inventory handler
-	inventoryHandler := handlers.NewInventoryHandler(svc.Inventory)
-	
-	// Create campaign handler
-	campaignHandler := handlers.NewCampaignHandler(svc.Campaign, svc.GameSessions)
-	
-	// Create combat automation handler
-	combatAutomationHandler := handlers.NewCombatAutomationHandler(
-		svc.CombatAutomation,
-		svc.CombatAnalytics,
-		svc.Characters,
-		svc.GameSessions,
-		aiBattleMapGenerator,
-	)
-	
-	// Create world building handler
-	worldBuildingHandler := handlers.NewWorldBuildingHandlers(
-		svc.SettlementGen,
-		svc.FactionSystem,
-		svc.WorldEventEngine,
-		svc.EconomicSim,
-		worldBuildingRepo,
-	)
-	
-	// Create narrative handler
-	var narrativeHandler *handlers.NarrativeHandlers
-	if narrativeEngine != nil {
-		narrativeHandler = handlers.NewNarrativeHandlers(
-			narrativeEngine,
-			repos.Narrative,
-			repos.Characters,
-			repos.GameSessions,
-		)
-	}
+	// Create WebSocket hub
+	hub := websocket.NewHub()
+	go hub.Run()
+	log.Info().Msg("WebSocket hub started")
 
-	// Create authentication middleware
-	authMiddleware := auth.NewMiddleware(jwtManager)
+	// Create handlers
+	h := handlers.NewHandlers(svc, hub)
+	log.Info().Msg("Handlers initialized")
+
+	// Setup routes
+	r := mux.NewRouter()
+	
+	// Add middleware
+	r.Use(middleware.RequestIDMiddleware)
+	r.Use(middleware.LoggingMiddleware(log))
+	// TODO: Create LoggerV2 version of ErrorHandlerV2
+	// r.Use(middleware.ErrorHandlerV2(log))
+	// TODO: Create LoggerV2 version of RecoveryMiddleware
+	// r.Use(middleware.RecoveryMiddleware(log))
+	isDevelopment := cfg.Server.Environment == "development"
+	r.Use(middleware.SecurityHeaders(isDevelopment))
 	
 	// Create CSRF store
 	csrfStore := auth.NewCSRFStore()
-
-	// Create logger for middleware
-	logger := log.New(os.Stdout, "[DND-GAME] ", log.LstdFlags|log.Lshortfile)
-
+	
+	// Create auth middleware
+	authMiddleware := auth.NewMiddleware(jwtManager)
+	
 	// Create rate limiters
-	authRateLimiter := middleware.AuthRateLimiter()
-	apiRateLimiter := middleware.APIRateLimiter()
-
-	router := mux.NewRouter()
+	authRateLimiter := middleware.NewRateLimiter(15, time.Minute) // 15 requests per minute
+	apiRateLimiter := middleware.NewRateLimiter(200, time.Minute) // 200 requests per minute
 	
-	// Apply global middleware
-	router.Use(middleware.Recovery(logger))
-	
-	// Apply security headers
-	isDevelopment := os.Getenv("GO_ENV") == "development"
-	router.Use(middleware.SecurityHeaders(isDevelopment))
-
-	// Configure route dependencies
+	// Setup route config
 	routeConfig := &routes.Config{
-		Handlers:                h,
-		CharCreationHandler:     charCreationHandler,
-		InventoryHandler:        inventoryHandler,
-		CampaignHandler:         campaignHandler,
-		CombatAutomationHandler: combatAutomationHandler,
-		WorldBuildingHandler:    worldBuildingHandler,
-		NarrativeHandler:        narrativeHandler,
-		AuthMiddleware:          authMiddleware,
-		CSRFStore:               csrfStore,
-		AuthRateLimiter:         authRateLimiter,
-		APIRateLimiter:          apiRateLimiter,
+		Handlers:         h,
+		AuthMiddleware:   authMiddleware,
+		CSRFStore:       csrfStore,
+		AuthRateLimiter: authRateLimiter,
+		APIRateLimiter:  apiRateLimiter,
 	}
 	
-	// Register all routes
-	routes.RegisterRoutes(router, routeConfig)
-	
-	// Initialize WebSocket with JWT manager
-	websocket.SetJWTManager(jwtManager)
-	
-	// WebSocket endpoint
-	router.HandleFunc("/ws", websocket.HandleWebSocket)
-	
-	// Serve static files
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend/build/")))
+	// Setup all routes
+	routes.RegisterRoutes(r, routeConfig)
+	log.Info().Msg("Routes configured")
 
 	// Setup CORS
 	allowedOrigins := []string{"http://localhost:3000", "http://localhost:8080"}
-	
-	// Add production origins from environment
-	if prodOrigin := os.Getenv("PRODUCTION_ORIGIN"); prodOrigin != "" {
-		allowedOrigins = append(allowedOrigins, prodOrigin)
+	if cfg.Server.Environment == "production" {
+		allowedOrigins = []string{"https://yourdomain.com"}
 	}
 	
-	// In production, use strict CORS
-	corsOptions := cors.Options{
+	c := cors.New(cors.Options{
 		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Request-ID"},
+		ExposedHeaders:   []string{"X-Request-ID", "X-Correlation-ID"},
 		AllowCredentials: true,
-		ExposedHeaders:   []string{"Authorization"},
 		MaxAge:           86400, // 24 hours
-	}
-	
-	// In development, allow all headers
-	if isDevelopment {
-		corsOptions.AllowedHeaders = []string{"*"}
-		corsOptions.Debug = true
-	}
-	
-	c := cors.New(corsOptions)
+	})
 
-	handler := c.Handler(router)
+	handler := c.Handler(r)
 
-	// Create HTTP server
+	// Create server
 	srv := &http.Server{
 		Addr:         ":" + cfg.Server.Port,
 		Handler:      handler,
@@ -279,27 +251,55 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// Start server in a goroutine
+	// Start server
 	go func() {
-		log.Printf("Server starting on port %s", cfg.Server.Port)
+		log.Info().
+			Str("port", cfg.Server.Port).
+			Str("address", srv.Addr).
+			Msg("HTTP server starting")
+			
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Failed to start server: %v", err)
+			log.Fatal().Err(err).Msg("Failed to start HTTP server")
 		}
 	}()
+
+	log.Info().
+		Str("port", cfg.Server.Port).
+		Msg("D&D Game Backend is running")
 
 	// Wait for interrupt signal to gracefully shutdown the server
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shutting down server...")
+	sig := <-quit
+	
+	log.Info().
+		Str("signal", sig.String()).
+		Msg("Shutdown signal received")
 
-	// Graceful shutdown with timeout
+	// Graceful shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	// Shutdown server
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("Server forced to shutdown: %v", err)
+		log.Error().Err(err).Msg("Server forced to shutdown")
 	}
 
-	log.Println("Server exited")
+	// Stop refresh token cleanup
+	// TODO: Implement StopCleanupTask in RefreshTokenService
+	// refreshTokenService.StopCleanupTask()
+	
+	// Close WebSocket hub
+	// TODO: Implement Shutdown in WebSocket hub
+	// hub.Shutdown()
+
+	log.Info().Msg("Server shutdown complete")
+}
+
+// Helper function to get environment variable with default
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }

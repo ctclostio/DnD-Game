@@ -269,6 +269,11 @@ func (p *OpenRouterProvider) GenerateCompletion(ctx context.Context, prompt stri
 	return response.Choices[0].Message.Content, nil
 }
 
+// GenerateContent is an alias for GenerateCompletion
+func (p *OpenRouterProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+	return p.GenerateCompletion(ctx, prompt, systemPrompt)
+}
+
 // MockLLMProvider for testing
 type MockLLMProvider struct {
 	Response string
