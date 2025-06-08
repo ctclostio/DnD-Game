@@ -52,7 +52,7 @@ type ExecutionStep struct {
 // CompiledRule represents a compiled rule ready for execution
 type CompiledRule struct {
 	TemplateID     string
-	Graph          models.LogicGraph
+	Graph          *models.LogicGraph
 	ExecutionOrder []string
 	Parameters     []models.RuleParameter
 	CompiledAt     time.Time
@@ -60,17 +60,20 @@ type CompiledRule struct {
 
 // TriggerData represents data that triggered rule execution
 type TriggerData struct {
-	Type    string
-	Source  interface{}
-	Context map[string]interface{}
+	Type       string
+	Source     interface{}
+	Target     interface{}
+	Properties map[string]interface{}
 }
 
 // ExecutionResult represents the result of rule execution
 type ExecutionResult struct {
 	Success       bool
-	Result        interface{}
-	State         *ExecutionState
-	ExecutionTime time.Duration
+	Duration      time.Duration
+	ExecutedNodes []string
+	FinalState    map[string]interface{}
+	Errors        []string
+	ExecutionPath []ExecutionStep
 }
 
 // ValidationResult represents the result of rule validation
@@ -416,30 +419,6 @@ func (re *RuleEngine) isCriticalError(err error) bool {
 
 // Supporting types
 
-type CompiledRule struct {
-	TemplateID     string
-	Graph          *models.LogicGraph
-	ExecutionOrder []string
-	Parameters     []models.RuleParameter
-	CompiledAt     time.Time
-}
-
-type TriggerData struct {
-	Type       string
-	Source     interface{}
-	Target     interface{}
-	Properties map[string]interface{}
-}
-
-type ExecutionResult struct {
-	Success       bool
-	Duration      time.Duration
-	ExecutedNodes []string
-	FinalState    map[string]interface{}
-	Errors        []string
-	ExecutionPath []ExecutionStep
-}
-
 // Node Executor Implementations
 
 // MathExecutor handles mathematical operations
@@ -778,15 +757,6 @@ func (re *RuleEngine) DeactivateRule(ruleID string) error {
 	return re.repository.DeactivateRule(ruleID)
 }
 
-// ExecuteRule executes a rule with given context
-func (re *RuleEngine) ExecuteRule(ruleID string, context map[string]interface{}) (interface{}, error) {
-	// This method will be called by handlers - implement the actual execution logic
-	// For now, return a placeholder
-	return map[string]interface{}{
-		"success": true,
-		"result":  "Rule executed successfully",
-	}, nil
-}
 
 // ValidateRule validates a logic graph
 func (re *RuleEngine) ValidateRule(graph models.LogicGraph) (*ValidationResult, error) {

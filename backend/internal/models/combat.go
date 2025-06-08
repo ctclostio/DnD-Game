@@ -192,6 +192,27 @@ type Roll struct {
 
 type RollType string
 
+// Position represents a location on the battle grid
+type Position struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
+// CombatParticipant is an alias for Combatant to maintain compatibility
+type CombatParticipant = Combatant
+
+// ActionResult represents the result of a combat action
+type ActionResult struct {
+	Success       bool           `json:"success"`
+	Message       string         `json:"message"`
+	Action        *CombatAction  `json:"action,omitempty"`
+	DamageDealt   int            `json:"damageDealt,omitempty"`
+	HealingDone   int            `json:"healingDone,omitempty"`
+	TargetKilled  bool           `json:"targetKilled,omitempty"`
+	NewConditions []Condition    `json:"newConditions,omitempty"`
+	RemovedConditions []string   `json:"removedConditions,omitempty"`
+}
+
 const (
 	RollTypeAttack       RollType = "attack"
 	RollTypeDamage       RollType = "damage"

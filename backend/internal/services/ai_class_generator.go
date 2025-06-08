@@ -298,9 +298,9 @@ func (g *AIClassGenerator) calculateBalanceScore(class *models.CustomClass) int 
 	score += hitDieScores[class.HitDie]
 	
 	// Armor proficiency scoring
-	if contains(class.ArmorProficiencies, "Heavy armor") {
+	if containsInClassGen(class.ArmorProficiencies, "Heavy armor") {
 		score += 2
-	} else if contains(class.ArmorProficiencies, "Medium armor") {
+	} else if containsInClassGen(class.ArmorProficiencies, "Medium armor") {
 		score += 1
 	}
 	
@@ -340,7 +340,7 @@ func (g *AIClassGenerator) calculateBalanceScore(class *models.CustomClass) int 
 	return score
 }
 
-func contains(slice []string, item string) bool {
+func containsInClassGen(slice []string, item string) bool {
 	for _, s := range slice {
 		if strings.EqualFold(s, item) {
 			return true

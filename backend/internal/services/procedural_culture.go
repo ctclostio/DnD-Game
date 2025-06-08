@@ -1161,7 +1161,7 @@ func (pcs *ProceduralCultureService) generateColorPalette(cultureName string) []
 	
 	for i := 0; i < numColors; i++ {
 		color := allColors[rand.Intn(len(allColors))]
-		if !contains(selected, color) {
+		if !containsInCulture(selected, color) {
 			selected = append(selected, color)
 		}
 	}
@@ -1341,7 +1341,7 @@ func (pcs *ProceduralCultureService) getResponseDescription(response CulturalRes
 	}
 }
 
-func contains(slice []string, item string) bool {
+func containsInCulture(slice []string, item string) bool {
 	for _, s := range slice {
 		if s == item {
 			return true

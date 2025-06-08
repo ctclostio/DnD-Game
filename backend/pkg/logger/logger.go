@@ -138,27 +138,27 @@ func GetLogger() *Logger {
 
 // Debug logs a debug message
 func Debug() *zerolog.Event {
-	return defaultLogger.Debug()
+	return defaultLogger.Logger.Debug()
 }
 
 // Info logs an info message
 func Info() *zerolog.Event {
-	return defaultLogger.Info()
+	return defaultLogger.Logger.Info()
 }
 
 // Warn logs a warning message
 func Warn() *zerolog.Event {
-	return defaultLogger.Warn()
+	return defaultLogger.Logger.Warn()
 }
 
 // Error logs an error message
 func Error() *zerolog.Event {
-	return defaultLogger.Error()
+	return defaultLogger.Logger.Error()
 }
 
 // Fatal logs a fatal message and exits
 func Fatal() *zerolog.Event {
-	return defaultLogger.Fatal()
+	return defaultLogger.Logger.Fatal()
 }
 
 // WithContext returns a logger with context

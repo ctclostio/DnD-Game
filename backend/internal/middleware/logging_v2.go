@@ -56,7 +56,7 @@ func LoggingMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 				Str("method", r.Method).
 				Str("path", r.URL.Path).
 				Str("query", sanitizeQuery(r.URL.RawQuery)).
-				Str("remote_ip", getClientIP(r)).
+				Str("remote_ip", getClientIPV2(r)).
 				Str("user_agent", r.UserAgent()).
 				Str("referer", r.Referer()).
 				Int64("content_length", r.ContentLength).
@@ -86,7 +86,7 @@ func LoggingMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 				Dur("duration", duration).
 				Int64("duration_ms", duration.Milliseconds()).
 				Int("bytes_sent", rw.bytesWritten).
-				Str("remote_ip", getClientIP(r)).
+				Str("remote_ip", getClientIPV2(r)).
 				Msg(getRequestMessage(rw.statusCode))
 		})
 	}
@@ -181,7 +181,7 @@ func NewDatabaseQueryLogger(log *logger.LoggerV2) *DatabaseQueryLogger {
 func (d *DatabaseQueryLogger) LogQuery(ctx context.Context, query string, args []interface{}, duration time.Duration, err error) {
 	log := d.log.WithContext(ctx)
 	
-	event := log.Debug().
+	event := log.Logger.Debug().
 		Str("query", truncateQuery(query)).
 		Dur("duration", duration).
 		Int("args_count", len(args))
@@ -195,7 +195,7 @@ func (d *DatabaseQueryLogger) LogQuery(ctx context.Context, query string, args [
 
 // Helper functions
 
-func getClientIP(r *http.Request) string {
+func getClientIPV2(r *http.Request) string {
 	// Check CF-Connecting-IP for Cloudflare
 	if ip := r.Header.Get("CF-Connecting-IP"); ip != "" {
 		return ip

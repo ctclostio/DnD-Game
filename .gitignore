@@ -74,4 +74,4 @@ docker-compose.override.yml
 /out/
 
 # Claude settings
-.claude/
+.claude/.github_token

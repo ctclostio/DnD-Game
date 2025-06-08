@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 
 	"github.com/your-username/dnd-game/backend/internal/config"
 	"github.com/your-username/dnd-game/backend/internal/models"
@@ -121,7 +122,7 @@ func (ba *AIBalanceAnalyzer) simulateScenario(ctx context.Context, template *mod
 			successCount++
 		}
 		outcomes = append(outcomes, outcome)
-		if edgeCase != "" && !contains(edgeCases, edgeCase) {
+		if edgeCase != "" && !containsInBalancer(edgeCases, edgeCase) {
 			edgeCases = append(edgeCases, edgeCase)
 		}
 	}
@@ -551,7 +552,7 @@ func (ba *AIBalanceAnalyzer) listNodeTypes(graph models.LogicGraph, prefix strin
 	return strings.Join(types, ", ")
 }
 
-func contains(slice []string, item string) bool {
+func containsInBalancer(slice []string, item string) bool {
 	for _, s := range slice {
 		if s == item {
 			return true

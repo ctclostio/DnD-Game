@@ -26,10 +26,10 @@ func (j *JSONB) Scan(value interface{}) error {
 
 	switch v := value.(type) {
 	case []byte:
-		*j = v
+		*j = JSONB(v)
 		return nil
 	case string:
-		*j = []byte(v)
+		*j = JSONB([]byte(v))
 		return nil
 	default:
 		return errors.New("cannot scan unknown type into JSONB")

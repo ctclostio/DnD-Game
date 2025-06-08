@@ -202,7 +202,7 @@ func (l *LoggerV2) WithGameContext(sessionID, characterID string) *LoggerV2 {
 
 // LogHTTPRequest logs HTTP request details
 func (l *LoggerV2) LogHTTPRequest(method, path string, statusCode int, duration time.Duration, fields ...map[string]interface{}) {
-	event := l.Info().
+	event := l.Logger.Info().
 		Str("method", method).
 		Str("path", path).
 		Int("status", statusCode).
@@ -230,7 +230,7 @@ func (l *LoggerV2) LogHTTPRequest(method, path string, statusCode int, duration 
 
 // LogDatabaseQuery logs database query details
 func (l *LoggerV2) LogDatabaseQuery(query string, duration time.Duration, err error, args ...interface{}) {
-	event := l.Debug().
+	event := l.Logger.Debug().
 		Str("query", truncateQuery(query)).
 		Dur("duration", duration).
 		Int("args_count", len(args))
@@ -244,7 +244,7 @@ func (l *LoggerV2) LogDatabaseQuery(query string, duration time.Duration, err er
 
 // LogAIOperation logs AI operation details
 func (l *LoggerV2) LogAIOperation(operation string, provider string, duration time.Duration, tokens int, err error) {
-	event := l.Info().
+	event := l.Logger.Info().
 		Str("operation", operation).
 		Str("provider", provider).
 		Dur("duration", duration).
@@ -259,7 +259,7 @@ func (l *LoggerV2) LogAIOperation(operation string, provider string, duration ti
 
 // LogWebSocketEvent logs WebSocket events
 func (l *LoggerV2) LogWebSocketEvent(eventType string, clientID string, data interface{}) {
-	l.Debug().
+	l.Logger.Debug().
 		Str("event_type", eventType).
 		Str("client_id", clientID).
 		Interface("data", data).
@@ -268,7 +268,7 @@ func (l *LoggerV2) LogWebSocketEvent(eventType string, clientID string, data int
 
 // LogGameEvent logs game-specific events
 func (l *LoggerV2) LogGameEvent(eventType string, sessionID string, details map[string]interface{}) {
-	event := l.Info().
+	event := l.Logger.Info().
 		Str("event_type", eventType).
 		Str("session_id", sessionID)
 
