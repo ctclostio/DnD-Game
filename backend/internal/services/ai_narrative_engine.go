@@ -18,9 +18,9 @@ import (
 type NarrativeEngine struct {
 	llm              LLMProvider
 	cfg              *config.Config
-	profileService   *PlayerProfileService
-	consequenceEngine *ConsequenceEngine
-	perspectiveGen   *PerspectiveGenerator
+	ProfileService   *PlayerProfileService
+	ConsequenceEngine *ConsequenceEngine
+	PerspectiveGen   *PerspectiveGenerator
 }
 
 // PlayerProfileService manages player narrative preferences and patterns
@@ -53,9 +53,9 @@ func NewNarrativeEngine(cfg *config.Config) (*NarrativeEngine, error) {
 	return &NarrativeEngine{
 		llm: llm,
 		cfg: cfg,
-		profileService: &PlayerProfileService{llm: llm, cfg: cfg},
-		consequenceEngine: &ConsequenceEngine{llm: llm, cfg: cfg},
-		perspectiveGen: &PerspectiveGenerator{llm: llm, cfg: cfg},
+		ProfileService: &PlayerProfileService{llm: llm, cfg: cfg},
+		ConsequenceEngine: &ConsequenceEngine{llm: llm, cfg: cfg},
+		PerspectiveGen: &PerspectiveGenerator{llm: llm, cfg: cfg},
 	}, nil
 }
 

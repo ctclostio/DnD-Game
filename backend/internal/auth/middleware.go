@@ -116,3 +116,9 @@ func GetUserIDFromContext(ctx context.Context) (string, bool) {
 	}
 	return claims.UserID, true
 }
+
+// GetClaimsFromContext is an alias for GetUserFromContext for backward compatibility
+func GetClaimsFromContext(ctx context.Context) *Claims {
+	claims, _ := GetUserFromContext(ctx)
+	return claims
+}

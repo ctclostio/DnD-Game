@@ -30,4 +30,5 @@ type Services struct {
 	JWTManager         *auth.JWTManager
 	RefreshTokens      *RefreshTokenService
 	Config             *config.Config
+	NarrativeEngine    *NarrativeEngine
 }

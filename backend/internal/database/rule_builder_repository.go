@@ -596,3 +596,51 @@ func (r *RuleBuilderRepository) GetConditionalModifiers(ruleID string) ([]models
 
 	return modifiers, nil
 }
+
+// GetRuleInstance retrieves a rule instance by ID
+func (r *RuleBuilderRepository) GetRuleInstance(instanceID string) (*models.RuleInstance, error) {
+	query := `
+		SELECT id, template_id, game_session_id, owner_id,
+			   parameter_values, is_active, created_at, updated_at
+		FROM rule_instances
+		WHERE id = $1
+	`
+
+	var instance models.RuleInstance
+	var parameterValuesJSON []byte
+
+	err := r.db.QueryRow(query, instanceID).Scan(
+		&instance.ID,
+		&instance.TemplateID,
+		&instance.SessionID,
+		&instance.OwnerID,
+		&parameterValuesJSON,
+		&instance.IsActive,
+		&instance.CreatedAt,
+		&instance.CreatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal parameter values
+	if err := json.Unmarshal(parameterValuesJSON, &instance.ParameterValues); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal parameter values: %w", err)
+	}
+
+	return &instance, nil
+}
+
+// DeactivateRuleInstance deactivates a rule instance
+func (r *RuleBuilderRepository) DeactivateRuleInstance(instanceID string) error {
+	query := `
+		UPDATE rule_instances
+		SET is_active = false, updated_at = $2
+		WHERE id = $1
+	`
+
+	_, err := r.db.Exec(query, instanceID, time.Now())
+	return err
+}
+

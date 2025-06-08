@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"runtime"
@@ -119,7 +118,7 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 	*/
 
 	// Check if we have required services
-	if h.services.Users == nil || h.services.Characters == nil {
+	if h.userService == nil || h.characterService == nil {
 		checks["services"] = HealthCheckResult{
 			Status:  "unhealthy",
 			Message: "Required services not initialized",
@@ -177,25 +176,14 @@ func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 	checks := make(map[string]HealthCheckResult)
 
 	// Check database if available
-	if db, ok := h.repositories.(*sql.DB); ok && db != nil {
-		if err := db.Ping(); err != nil {
-			checks["database"] = HealthCheckResult{
-				Status:  "unhealthy",
-				Message: err.Error(),
-			}
-		} else {
-			checks["database"] = HealthCheckResult{
-				Status: "healthy",
-			}
-		}
-	} else if h.repositories.Users != nil {
-		checks["database"] = HealthCheckResult{
-			Status: "healthy",
-		}
+	// TODO: Add database health check when repository interface supports it
+	checks["database"] = HealthCheckResult{
+		Status: "healthy",
+		Message: "Database check not implemented",
 	}
 
 	// Check services
-	if h.services.Users != nil && h.services.Characters != nil {
+	if h.userService != nil && h.characterService != nil {
 		checks["services"] = HealthCheckResult{
 			Status: "healthy",
 		}

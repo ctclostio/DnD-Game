@@ -62,7 +62,7 @@ func New(svc *services.Services, hub *websocket.Hub, log *logger.LoggerV2) *Hand
 		ruleEngine:          svc.RuleEngine,
 		balanceAnalyzer:     svc.BalanceAnalyzer,
 		conditionalReality:  svc.ConditionalReality,
-		narrativeEngine:     svc.AINarrativeEngine,
+		narrativeEngine:     svc.NarrativeEngine,
 		jwtManager:          svc.JWTManager,
 		refreshTokenService: svc.RefreshTokens,
 		websocketHub:        hub,

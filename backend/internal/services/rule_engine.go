@@ -697,6 +697,32 @@ func (re *RuleEngine) UpdateRuleTemplate(templateID string, updates map[string]i
 	return re.repository.GetRuleTemplate(templateID)
 }
 
+// GetRuleInstance retrieves a rule instance by ID
+func (re *RuleEngine) GetRuleInstance(instanceID string) (*models.RuleInstance, error) {
+	return re.repository.GetRuleInstance(instanceID)
+}
+
+// DeactivateRule deactivates a rule instance
+func (re *RuleEngine) DeactivateRule(instanceID string) error {
+	return re.repository.DeactivateRuleInstance(instanceID)
+}
+
+// ValidateRule validates a logic graph
+func (re *RuleEngine) ValidateRule(graph models.LogicGraph) (*ValidationResult, error) {
+	err := re.validateLogicGraph(&graph)
+	result := &ValidationResult{
+		IsValid:  err == nil,
+		Errors:   []string{},
+		Warnings: []string{},
+	}
+	
+	if err != nil {
+		result.Errors = append(result.Errors, err.Error())
+	}
+	
+	return result, nil
+}
+
 // DeleteRuleTemplate deletes a rule template
 func (re *RuleEngine) DeleteRuleTemplate(templateID string) error {
 	return re.repository.DeleteRuleTemplate(templateID)
@@ -747,28 +773,6 @@ func (re *RuleEngine) GetActiveRules(gameSessionID, characterID string) ([]model
 	return re.repository.GetActiveRules(gameSessionID, characterID)
 }
 
-// DeactivateRule deactivates an active rule
-func (re *RuleEngine) DeactivateRule(ruleID string) error {
-	return re.repository.DeactivateRule(ruleID)
-}
-
-
-// ValidateRule validates a logic graph
-func (re *RuleEngine) ValidateRule(graph models.LogicGraph) (*ValidationResult, error) {
-	result := &ValidationResult{
-		IsValid:  true,
-		Errors:   []string{},
-		Warnings: []string{},
-	}
-	
-	// Validate graph structure
-	if err := re.validateLogicGraph(&graph); err != nil {
-		result.IsValid = false
-		result.Errors = append(result.Errors, err.Error())
-	}
-	
-	return result, nil
-}
 
 // GetRuleExecutionHistory gets rule execution history
 func (re *RuleEngine) GetRuleExecutionHistory(gameSessionID, characterID string, limit int) ([]models.RuleExecution, error) {

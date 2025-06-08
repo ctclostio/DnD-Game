@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -10,25 +10,23 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/lib/pq"
 )
 
 // NarrativeHandlers manages narrative-related HTTP endpoints
 type NarrativeHandlers struct {
 	narrativeEngine *services.NarrativeEngine
 	narrativeRepo   *database.NarrativeRepository
-	characterRepo   *database.CharacterRepository
-	gameRepo        *database.GameSessionRepository
+	characterRepo   database.CharacterRepository
+	gameRepo        database.GameSessionRepository
 }
 
 // NewNarrativeHandlers creates a new narrative handlers instance
 func NewNarrativeHandlers(
 	narrativeEngine *services.NarrativeEngine,
 	narrativeRepo *database.NarrativeRepository,
-	characterRepo *database.CharacterRepository,
-	gameRepo *database.GameSessionRepository,
+	characterRepo database.CharacterRepository,
+	gameRepo database.GameSessionRepository,
 ) *NarrativeHandlers {
 	return &NarrativeHandlers{
 		narrativeEngine: narrativeEngine,
@@ -80,7 +78,7 @@ func (h *NarrativeHandlers) GetNarrativeProfile(w http.ResponseWriter, r *http.R
 	characterID := vars["characterId"]
 
 	// Verify character ownership
-	character, err := h.characterRepo.GetByID(characterID)
+	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
 		return
@@ -131,7 +129,7 @@ func (h *NarrativeHandlers) CreateNarrativeProfile(w http.ResponseWriter, r *htt
 	}
 
 	// Verify character ownership
-	character, err := h.characterRepo.GetByID(profile.CharacterID)
+	character, err := h.characterRepo.GetByID(r.Context(), profile.CharacterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
 		return
@@ -160,7 +158,7 @@ func (h *NarrativeHandlers) UpdateNarrativeProfile(w http.ResponseWriter, r *htt
 	characterID := vars["characterId"]
 
 	// Verify character ownership
-	character, err := h.characterRepo.GetByID(characterID)
+	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
 		return
@@ -226,7 +224,7 @@ func (h *NarrativeHandlers) GetBackstoryElements(w http.ResponseWriter, r *http.
 	characterID := vars["characterId"]
 
 	// Verify character ownership
-	character, err := h.characterRepo.GetByID(characterID)
+	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
 		return
@@ -258,7 +256,7 @@ func (h *NarrativeHandlers) CreateBackstoryElement(w http.ResponseWriter, r *htt
 	}
 
 	// Verify character ownership
-	character, err := h.characterRepo.GetByID(element.CharacterID)
+	character, err := h.characterRepo.GetByID(r.Context(), element.CharacterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
 		return
@@ -290,7 +288,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 	}
 
 	// Verify character ownership
-	character, err := h.characterRepo.GetByID(action.CharacterID)
+	character, err := h.characterRepo.GetByID(r.Context(), action.CharacterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
 		return
@@ -302,8 +300,21 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 	}
 
 	// Verify session participation
-	participant, err := h.gameRepo.GetParticipant(action.SessionID, claims.UserID)
-	if err != nil || participant == nil {
+	participants, err := h.gameRepo.GetParticipants(r.Context(), action.SessionID)
+	if err != nil {
+		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+		return
+	}
+	
+	isParticipant := false
+	for _, p := range participants {
+		if p.UserID == claims.UserID {
+			isParticipant = true
+			break
+		}
+	}
+	
+	if !isParticipant {
 		http.Error(w, "Not a participant in this session", http.StatusForbidden)
 		return
 	}
@@ -317,7 +328,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 	// Calculate consequences asynchronously
 	go func() {
 		ctx := r.Context()
-		worldState := h.buildWorldState(action.SessionID)
+		worldState := h.buildWorldState(ctx, action.SessionID)
 		consequences, err := h.narrativeEngine.ConsequenceEngine.CalculateConsequences(ctx, action, worldState)
 		if err == nil {
 			for _, consequence := range consequences {
@@ -358,8 +369,21 @@ func (h *NarrativeHandlers) GetPendingConsequences(w http.ResponseWriter, r *htt
 	sessionID := vars["sessionId"]
 
 	// Verify session participation
-	participant, err := h.gameRepo.GetParticipant(sessionID, claims.UserID)
-	if err != nil || participant == nil {
+	participants, err := h.gameRepo.GetParticipants(r.Context(), sessionID)
+	if err != nil {
+		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+		return
+	}
+	
+	isParticipant := false
+	for _, p := range participants {
+		if p.UserID == claims.UserID {
+			isParticipant = true
+			break
+		}
+	}
+	
+	if !isParticipant {
 		http.Error(w, "Not a participant in this session", http.StatusForbidden)
 		return
 	}
@@ -389,8 +413,21 @@ func (h *NarrativeHandlers) TriggerConsequence(w http.ResponseWriter, r *http.Re
 	}
 
 	// Verify DM role
-	participant, err := h.gameRepo.GetParticipant(triggerData.SessionID, claims.UserID)
-	if err != nil || participant == nil || participant.Role != "dm" {
+	participants, err := h.gameRepo.GetParticipants(r.Context(), triggerData.SessionID)
+	if err != nil {
+		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+		return
+	}
+	
+	isDM := false
+	for _, p := range participants {
+		if p.UserID == claims.UserID && p.Role == models.ParticipantRoleDM {
+			isDM = true
+			break
+		}
+	}
+	
+	if !isDM {
 		http.Error(w, "Only DM can trigger consequences", http.StatusForbidden)
 		return
 	}
@@ -409,7 +446,7 @@ func (h *NarrativeHandlers) TriggerConsequence(w http.ResponseWriter, r *http.Re
 func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 
-	var event models.WorldEvent
+	var event models.NarrativeEvent
 	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -417,8 +454,21 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 
 	// Verify DM role for the session
 	if sessionID, ok := event.Metadata["session_id"].(string); ok {
-		participant, err := h.gameRepo.GetParticipant(sessionID, claims.UserID)
-		if err != nil || participant == nil || participant.Role != "dm" {
+		participants, err := h.gameRepo.GetParticipants(r.Context(), sessionID)
+		if err != nil {
+			http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+			return
+		}
+		
+		isDM := false
+		for _, p := range participants {
+			if p.UserID == claims.UserID && p.Role == models.ParticipantRoleDM {
+				isDM = true
+				break
+			}
+		}
+		
+		if !isDM {
 			http.Error(w, "Only DM can create world events", http.StatusForbidden)
 			return
 		}
@@ -484,7 +534,7 @@ func (h *NarrativeHandlers) PersonalizeEvent(w http.ResponseWriter, r *http.Requ
 	characterID := vars["characterId"]
 
 	// Verify character ownership
-	character, err := h.characterRepo.GetByID(characterID)
+	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
 		return
@@ -552,7 +602,7 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 	}
 
 	// Verify character ownership
-	character, err := h.characterRepo.GetByID(request.CharacterID)
+	character, err := h.characterRepo.GetByID(r.Context(), request.CharacterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
 		return
@@ -564,7 +614,7 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 	}
 
 	// Create base event
-	event := models.WorldEvent{
+	event := models.NarrativeEvent{
 		Type:        request.EventType,
 		Name:        "Generated Story Event",
 		Description: "A personalized story event",
@@ -601,7 +651,7 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 
 	var request struct {
 		EventID   string                     `json:"event_id"`
-		Sources   []services.PerspectiveSource `json:"sources"`
+		Sources   []models.PerspectiveSource `json:"sources"`
 		SessionID string                     `json:"session_id"`
 	}
 
@@ -611,8 +661,21 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 	}
 
 	// Verify DM role
-	participant, err := h.gameRepo.GetParticipant(request.SessionID, claims.UserID)
-	if err != nil || participant == nil || participant.Role != "dm" {
+	participants, err := h.gameRepo.GetParticipants(r.Context(), request.SessionID)
+	if err != nil {
+		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+		return
+	}
+	
+	isDM := false
+	for _, p := range participants {
+		if p.UserID == claims.UserID && p.Role == models.ParticipantRoleDM {
+			isDM = true
+			break
+		}
+	}
+	
+	if !isDM {
 		http.Error(w, "Only DM can generate perspectives", http.StatusForbidden)
 		return
 	}
@@ -649,7 +712,7 @@ func (h *NarrativeHandlers) GetCharacterMemories(w http.ResponseWriter, r *http.
 	characterID := vars["characterId"]
 
 	// Verify character ownership
-	character, err := h.characterRepo.GetByID(characterID)
+	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
 		return
@@ -681,7 +744,7 @@ func (h *NarrativeHandlers) CreateMemory(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Verify character ownership
-	character, err := h.characterRepo.GetByID(memory.CharacterID)
+	character, err := h.characterRepo.GetByID(r.Context(), memory.CharacterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
 		return
@@ -726,8 +789,21 @@ func (h *NarrativeHandlers) CreateThread(w http.ResponseWriter, r *http.Request)
 
 	// Verify DM role if session is specified
 	if sessionID, ok := thread.Metadata["session_id"].(string); ok {
-		participant, err := h.gameRepo.GetParticipant(sessionID, claims.UserID)
-		if err != nil || participant == nil || participant.Role != "dm" {
+		participants, err := h.gameRepo.GetParticipants(r.Context(), sessionID)
+		if err != nil {
+			http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+			return
+		}
+		
+		isDM := false
+		for _, p := range participants {
+			if p.UserID == claims.UserID && p.Role == models.ParticipantRoleDM {
+				isDM = true
+				break
+			}
+		}
+		
+		if !isDM {
 			http.Error(w, "Only DM can create narrative threads", http.StatusForbidden)
 			return
 		}
@@ -745,12 +821,12 @@ func (h *NarrativeHandlers) CreateThread(w http.ResponseWriter, r *http.Request)
 
 // Helper functions
 
-func (h *NarrativeHandlers) buildWorldState(sessionID string) map[string]interface{} {
+func (h *NarrativeHandlers) buildWorldState(ctx context.Context, sessionID string) map[string]interface{} {
 	// Build world state from various sources
 	worldState := make(map[string]interface{})
 	
 	// Add session info
-	session, err := h.gameRepo.GetByID(sessionID)
+	session, err := h.gameRepo.GetByID(ctx, sessionID)
 	if err == nil {
 		worldState["session"] = session
 	}
@@ -770,13 +846,13 @@ func (h *NarrativeHandlers) buildWorldState(sessionID string) map[string]interfa
 	return worldState
 }
 
-func (h *NarrativeHandlers) getRelevantPerspectiveSources(event models.WorldEvent) []services.PerspectiveSource {
+func (h *NarrativeHandlers) getRelevantPerspectiveSources(event models.NarrativeEvent) []models.PerspectiveSource {
 	// Get relevant NPCs, factions, etc. that might have perspectives
-	sources := []services.PerspectiveSource{}
+	sources := []models.PerspectiveSource{}
 
 	// Add participants as sources
 	for _, participantID := range event.Participants {
-		sources = append(sources, services.PerspectiveSource{
+		sources = append(sources, models.PerspectiveSource{
 			ID:   participantID,
 			Type: "participant",
 			Name: participantID, // Would be replaced with actual name from DB
@@ -785,7 +861,7 @@ func (h *NarrativeHandlers) getRelevantPerspectiveSources(event models.WorldEven
 
 	// Add witnesses
 	for _, witnessID := range event.Witnesses {
-		sources = append(sources, services.PerspectiveSource{
+		sources = append(sources, models.PerspectiveSource{
 			ID:   witnessID,
 			Type: "witness",
 			Name: witnessID,
@@ -793,7 +869,7 @@ func (h *NarrativeHandlers) getRelevantPerspectiveSources(event models.WorldEven
 	}
 
 	// Add a neutral historian perspective
-	sources = append(sources, services.PerspectiveSource{
+	sources = append(sources, models.PerspectiveSource{
 		ID:   "historian",
 		Type: "historical",
 		Name: "Scholar of the Realm",
@@ -813,96 +889,3 @@ func interfaceSliceToStringSlice(input []interface{}) []string {
 	}
 	return result
 }
-
-// The following methods should be implemented in the NarrativeRepository
-// GetWorldEvent retrieves a world event by ID
-/*
-func (r *NarrativeRepository) GetWorldEvent(eventID string) (*models.WorldEvent, error) {
-	var event models.WorldEvent
-	var playerInvolvementJSON, metadataJSON []byte
-
-	query := `
-		SELECT id, type, name, description, location, timestamp,
-			   participants, witnesses, immediate_effects, player_involvement,
-			   status, metadata
-		FROM world_events
-		WHERE id = $1`
-
-	err := r.db.QueryRow(query, eventID).Scan(
-		&event.ID,
-		&event.Type,
-		&event.Name,
-		&event.Description,
-		&event.Location,
-		&event.Timestamp,
-		pq.Array(&event.Participants),
-		pq.Array(&event.Witnesses),
-		pq.Array(&event.ImmediateEffects),
-		&playerInvolvementJSON,
-		&event.Status,
-		&metadataJSON,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Unmarshal JSON fields
-	if err := json.Unmarshal(playerInvolvementJSON, &event.PlayerInvolvement); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal player involvement: %w", err)
-	}
-
-	if err := json.Unmarshal(metadataJSON, &event.Metadata); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
-	}
-
-	return &event, nil
-}
-
-func (r *NarrativeRepository) CreatePersonalizedNarrative(narrative *models.PersonalizedNarrative) error {
-	narrative.ID = uuid.New().String()
-	narrative.GeneratedAt = time.Now()
-
-	personalizedHooksJSON, err := json.Marshal(narrative.PersonalizedHooks)
-	if err != nil {
-		return fmt.Errorf("failed to marshal personalized hooks: %w", err)
-	}
-
-	backstoryCallbacksJSON, err := json.Marshal(narrative.BackstoryCallbacks)
-	if err != nil {
-		return fmt.Errorf("failed to marshal backstory callbacks: %w", err)
-	}
-
-	predictedImpactJSON, err := json.Marshal(narrative.PredictedImpact)
-	if err != nil {
-		return fmt.Errorf("failed to marshal predicted impact: %w", err)
-	}
-
-	metadataJSON, err := json.Marshal(narrative.Metadata)
-	if err != nil {
-		return fmt.Errorf("failed to marshal metadata: %w", err)
-	}
-
-	query := `
-		INSERT INTO personalized_narratives (
-			id, base_event_id, character_id, personalized_hooks,
-			backstory_callbacks, emotional_resonance, predicted_impact,
-			metadata, generated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
-
-	_, err = r.db.Exec(
-		query,
-		narrative.ID,
-		narrative.BaseEventID,
-		narrative.CharacterID,
-		personalizedHooksJSON,
-		backstoryCallbacksJSON,
-		narrative.EmotionalResonance,
-		predictedImpactJSON,
-		metadataJSON,
-		narrative.GeneratedAt,
-	)
-
-	return err
-}
-*/
