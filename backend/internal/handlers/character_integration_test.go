@@ -24,7 +24,12 @@ import (
 
 func setupIntegrationTest(t *testing.T) (*Handlers, *mux.Router, func()) {
 	// Setup test database
-	db := testutil.SetupTestDB(t)
+	sqlxDB := testutil.SetupTestDB(t)
+	
+	// Wrap in database.DB type
+	db := &database.DB{
+		DB: sqlxDB,
+	}
 
 	// Create repositories
 	repos := &database.Repositories{
@@ -33,18 +38,22 @@ func setupIntegrationTest(t *testing.T) (*Handlers, *mux.Router, func()) {
 		GameSessions: database.NewGameSessionRepository(db),
 		DiceRolls:    database.NewDiceRollRepository(db),
 		NPCs:         database.NewNPCRepository(db),
-		Inventory:    database.NewInventoryRepository(db),
+		Inventory:    database.NewInventoryRepository(sqlxDB),
 	}
 
 	// Create services
 	jwtManager := auth.NewJWTManager("test-secret", 15*time.Minute, 24*time.Hour)
+	
+	// Create mock LLM provider for character service
+	mockLLM := &testutil.MockLLMProvider{}
+	
 	svc := &services.Services{
-		Users:         services.NewUserService(repos.Users),
-		Characters:    services.NewCharacterService(repos.Characters),
-		GameSessions:  services.NewGameSessionService(repos.GameSessions),
+		Users:         services.NewUserService(repos.Users, nil),
+		Characters:    services.NewCharacterService(repos.Characters, repos.CustomClasses, mockLLM),
+		GameSessions:  services.NewGameSessionService(repos.GameSessions, repos.Characters, repos.Users),
 		DiceRolls:     services.NewDiceRollService(repos.DiceRolls),
 		Combat:        services.NewCombatService(),
-		NPCs:          services.NewNPCService(repos.NPCs),
+		NPCs:          services.NewNPCService(repos.NPCs, nil),
 		Inventory:     services.NewInventoryService(repos.Inventory, repos.Characters),
 		JWTManager:    jwtManager,
 		Config:        &config.Config{},

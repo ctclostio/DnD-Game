@@ -375,13 +375,7 @@ func (m *MockDiceRollService) GetSessionHistory(sessionID int64, limit int) ([]*
 	return args.Get(0).([]*models.DiceRoll), args.Error(1)
 }
 
-func (m *MockDiceRollService) GetCharacterStatistics(characterID int64) (*models.DiceStatistics, error) {
-	args := m.Called(characterID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.DiceStatistics), args.Error(1)
-}
+// GetCharacterStatistics method removed - not in current service interface
 
 type MockDiceRoller struct {
 	mock.Mock
