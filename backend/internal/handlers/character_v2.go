@@ -238,14 +238,8 @@ func (h *CharacterHandlerV2) DeleteCharacter(w http.ResponseWriter, r *http.Requ
 			WithCode(string(errors.ErrCodeCharacterNotOwned))
 	}
 
-	// Check if character is in active game session
-	if character.CurrentGameSessionID != nil {
-		return errors.NewBadRequestError("Cannot delete character while in active game session").
-			WithCode(string(errors.ErrCodeSessionInProgress)).
-			WithDetails(map[string]interface{}{
-				"session_id": *character.CurrentGameSessionID,
-			})
-	}
+	// TODO: Check if character is in active game session
+	// This would require checking the game_participants table or adding a CurrentGameSessionID field to Character
 
 	if err := h.characterService.DeleteCharacter(r.Context(), characterID); err != nil {
 		return errors.NewInternalError("Failed to delete character", err).

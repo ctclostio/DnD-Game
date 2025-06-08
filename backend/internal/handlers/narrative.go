@@ -814,7 +814,9 @@ func interfaceSliceToStringSlice(input []interface{}) []string {
 	return result
 }
 
-// Add these methods to NarrativeRepository if not present
+// The following methods should be implemented in the NarrativeRepository
+// GetWorldEvent retrieves a world event by ID
+/*
 func (r *NarrativeRepository) GetWorldEvent(eventID string) (*models.WorldEvent, error) {
 	var event models.WorldEvent
 	var playerInvolvementJSON, metadataJSON []byte
@@ -903,13 +905,4 @@ func (r *NarrativeRepository) CreatePersonalizedNarrative(narrative *models.Pers
 
 	return err
 }
-
-func (r *NarrativeRepository) UpdatePlayerAction(action *models.PlayerAction) error {
-	query := `
-		UPDATE player_actions
-		SET potential_consequences = $1
-		WHERE id = $2`
-
-	_, err := r.db.Exec(query, action.PotentialConsequences, action.ID)
-	return err
-}
+*/

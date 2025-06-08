@@ -97,53 +97,49 @@ func (h *Handlers) LivenessProbe(w http.ResponseWriter, r *http.Request) {
 // @Failure 503 {object} HealthResponse "Service is not ready"
 // @Router /health/ready [get]
 func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
-	checks := make(map[string]HealthCheck)
+	checks := make(map[string]HealthCheckResult)
 	allHealthy := true
 
-	// Check database connection if available
+	// TODO: Check database connection if available
+	// This would require adding a GetDB() method to repositories or passing DB separately
+	/*
 	if db, ok := h.repositories.(*sql.DB); ok && db != nil {
 		if err := db.Ping(); err != nil {
-			checks["database"] = HealthCheck{
+			checks["database"] = HealthCheckResult{
 				Status:  "unhealthy",
 				Message: "Database connection failed",
 			}
 			allHealthy = false
 		} else {
-			checks["database"] = HealthCheck{
-				Status: "healthy",
-			}
-		}
-	} else {
-		// If we have repositories, assume database is ok
-		if h.repositories.Users != nil {
-			checks["database"] = HealthCheck{
+			checks["database"] = HealthCheckResult{
 				Status: "healthy",
 			}
 		}
 	}
+	*/
 
 	// Check if we have required services
 	if h.services.Users == nil || h.services.Characters == nil {
-		checks["services"] = HealthCheck{
+		checks["services"] = HealthCheckResult{
 			Status:  "unhealthy",
 			Message: "Required services not initialized",
 		}
 		allHealthy = false
 	} else {
-		checks["services"] = HealthCheck{
+		checks["services"] = HealthCheckResult{
 			Status: "healthy",
 		}
 	}
 
 	// Check JWT manager
 	if h.jwtManager == nil {
-		checks["auth"] = HealthCheck{
+		checks["auth"] = HealthCheckResult{
 			Status:  "unhealthy",
 			Message: "JWT manager not initialized",
 		}
 		allHealthy = false
 	} else {
-		checks["auth"] = HealthCheck{
+		checks["auth"] = HealthCheckResult{
 			Status: "healthy",
 		}
 	}
@@ -178,29 +174,29 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 // @Router /health/detailed [get]
 func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 	// Get basic health info
-	checks := make(map[string]HealthCheck)
+	checks := make(map[string]HealthCheckResult)
 
 	// Check database if available
 	if db, ok := h.repositories.(*sql.DB); ok && db != nil {
 		if err := db.Ping(); err != nil {
-			checks["database"] = HealthCheck{
+			checks["database"] = HealthCheckResult{
 				Status:  "unhealthy",
 				Message: err.Error(),
 			}
 		} else {
-			checks["database"] = HealthCheck{
+			checks["database"] = HealthCheckResult{
 				Status: "healthy",
 			}
 		}
 	} else if h.repositories.Users != nil {
-		checks["database"] = HealthCheck{
+		checks["database"] = HealthCheckResult{
 			Status: "healthy",
 		}
 	}
 
 	// Check services
 	if h.services.Users != nil && h.services.Characters != nil {
-		checks["services"] = HealthCheck{
+		checks["services"] = HealthCheckResult{
 			Status: "healthy",
 		}
 	}

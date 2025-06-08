@@ -316,7 +316,10 @@ func (s *CharacterService) AddExperience(ctx context.Context, characterID string
 	// Check for level up
 	newLevel := s.calculateLevelFromXP(char.ExperiencePoints)
 	if newLevel > char.Level {
-		return s.levelUp(ctx, char, newLevel)
+		// For automatic level up, use class hit die average
+		hpIncrease := s.calculateHPIncrease(char.Class, getModifier(char.Attributes.Constitution))
+		_, err := s.LevelUp(ctx, char.ID, hpIncrease, "")
+		return err
 	}
 
 	return s.UpdateCharacter(ctx, char)
@@ -394,8 +397,15 @@ func (s *CharacterService) GetXPForNextLevel(level int) int {
 	return 999999
 }
 
-// levelUp handles character level progression
-func (s *CharacterService) levelUp(ctx context.Context, char *models.Character, newLevel int) error {
+// LevelUp handles character level progression
+func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitPointIncrease int, attributeIncrease string) (*models.Character, error) {
+	// Get character
+	char, err := s.repo.GetByID(ctx, characterID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get character: %w", err)
+	}
+	
+	newLevel := char.Level + 1
 	oldLevel := char.Level
 	char.Level = newLevel
 
@@ -425,7 +435,34 @@ func (s *CharacterService) levelUp(ctx context.Context, char *models.Character, 
 	// TODO: Add class features based on new level
 	// TODO: Update skill modifiers
 
-	return s.UpdateCharacter(ctx, char)
+	// Apply hit point increase
+	char.MaxHitPoints += hitPointIncrease
+	char.HitPoints += hitPointIncrease
+	
+	// Apply attribute increase if specified
+	if attributeIncrease != "" {
+		switch attributeIncrease {
+		case "strength":
+			char.Attributes.Strength++
+		case "dexterity":
+			char.Attributes.Dexterity++
+		case "constitution":
+			char.Attributes.Constitution++
+		case "intelligence":
+			char.Attributes.Intelligence++
+		case "wisdom":
+			char.Attributes.Wisdom++
+		case "charisma":
+			char.Attributes.Charisma++
+		}
+	}
+	
+	// Update the character
+	if err := s.UpdateCharacter(ctx, char); err != nil {
+		return nil, err
+	}
+	
+	return char, nil
 }
 
 // calculateHPIncrease calculates HP gained on level up

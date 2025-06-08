@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/database"
@@ -18,6 +19,8 @@ type EmergentWorldHandlers struct {
 	factionPersonality   *services.FactionPersonalityService
 	proceduralCulture    *services.ProceduralCultureService
 	worldRepo            *database.EmergentWorldRepository
+	gameService          *services.GameSessionService
+	factionRepo          *database.WorldBuildingRepository
 }
 
 // NewEmergentWorldHandlers creates new emergent world handlers
@@ -26,12 +29,16 @@ func NewEmergentWorldHandlers(
 	factionPersonality *services.FactionPersonalityService,
 	proceduralCulture *services.ProceduralCultureService,
 	worldRepo *database.EmergentWorldRepository,
+	gameService *services.GameSessionService,
+	factionRepo *database.WorldBuildingRepository,
 ) *EmergentWorldHandlers {
 	return &EmergentWorldHandlers{
 		livingEcosystem:    livingEcosystem,
 		factionPersonality: factionPersonality,
 		proceduralCulture:  proceduralCulture,
 		worldRepo:          worldRepo,
+		gameService:        gameService,
+		factionRepo:        factionRepo,
 	}
 }
 
@@ -41,9 +48,9 @@ func (h *EmergentWorldHandlers) SimulateWorld(w http.ResponseWriter, r *http.Req
 	sessionID := vars["sessionId"]
 
 	// Verify user is DM
-	userID := auth.GetUserIDFromContext(r.Context())
-	session, err := h.gameService.GetByID(r.Context(), sessionID)
-	if err != nil || session.DMUserID != userID {
+	userID, _ := auth.GetUserIDFromContext(r.Context())
+	session, err := h.gameService.GetSessionByID(r.Context(), sessionID)
+	if err != nil || session.DMID != userID {
 		sendErrorResponse(w, http.StatusForbidden, "Only the DM can simulate world progress")
 		return
 	}
@@ -134,7 +141,7 @@ func (h *EmergentWorldHandlers) CreateNPCGoal(w http.ResponseWriter, r *http.Req
 	}
 
 	goal.NPCID = npcID
-	goal.ID = generateUUID()
+	goal.ID = uuid.New().String()
 
 	if err := h.worldRepo.CreateNPCGoal(&goal); err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, "Failed to create NPC goal")
@@ -166,7 +173,8 @@ func (h *EmergentWorldHandlers) InitializeFactionPersonality(w http.ResponseWrit
 	factionID := vars["factionId"]
 
 	// Get faction
-	faction, err := h.factionRepo.GetFaction(factionID)
+	factionUUID, _ := uuid.Parse(factionID)
+	faction, err := h.factionRepo.GetFaction(factionUUID)
 	if err != nil {
 		sendErrorResponse(w, http.StatusNotFound, "Faction not found")
 		return
@@ -201,7 +209,7 @@ func (h *EmergentWorldHandlers) MakeFactionDecision(w http.ResponseWriter, r *ht
 	vars := mux.Vars(r)
 	factionID := vars["factionId"]
 
-	var decision services.FactionDecision
+	var decision models.FactionDecision
 	if err := json.NewDecoder(r.Body).Decode(&decision); err != nil {
 		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
@@ -235,7 +243,7 @@ func (h *EmergentWorldHandlers) RecordFactionInteraction(w http.ResponseWriter, 
 	vars := mux.Vars(r)
 	factionID := vars["factionId"]
 
-	var interaction services.PlayerInteraction
+	var interaction models.PlayerInteraction
 	if err := json.NewDecoder(r.Body).Decode(&interaction); err != nil {
 		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
@@ -376,9 +384,9 @@ func (h *EmergentWorldHandlers) GetSimulationLogs(w http.ResponseWriter, r *http
 	sessionID := vars["sessionId"]
 
 	// Only DM can view simulation logs
-	userID := auth.GetUserIDFromContext(r.Context())
-	session, err := h.gameService.GetByID(r.Context(), sessionID)
-	if err != nil || session.DMUserID != userID {
+	userID, _ := auth.GetUserIDFromContext(r.Context())
+	session, err := h.gameService.GetSessionByID(r.Context(), sessionID)
+	if err != nil || session.DMID != userID {
 		sendErrorResponse(w, http.StatusForbidden, "Only the DM can view simulation logs")
 		return
 	}
@@ -405,9 +413,9 @@ func (h *EmergentWorldHandlers) TriggerWorldEvent(w http.ResponseWriter, r *http
 	sessionID := vars["sessionId"]
 
 	// Only DM can trigger world events
-	userID := auth.GetUserIDFromContext(r.Context())
-	session, err := h.gameService.GetByID(r.Context(), sessionID)
-	if err != nil || session.DMUserID != userID {
+	userID, _ := auth.GetUserIDFromContext(r.Context())
+	session, err := h.gameService.GetSessionByID(r.Context(), sessionID)
+	if err != nil || session.DMID != userID {
 		sendErrorResponse(w, http.StatusForbidden, "Only the DM can trigger world events")
 		return
 	}
@@ -418,10 +426,23 @@ func (h *EmergentWorldHandlers) TriggerWorldEvent(w http.ResponseWriter, r *http
 		return
 	}
 
-	event.SessionID = sessionID
-	event.ID = generateUUID()
+	event.GameSessionID, _ = uuid.Parse(sessionID)
+	event.ID = uuid.New()
 
-	if err := h.worldRepo.CreateWorldEvent(&event); err != nil {
+	// Convert WorldEvent to EmergentWorldEvent for creation
+	emergentEvent := &models.EmergentWorldEvent{
+		ID:          event.ID.String(),
+		SessionID:   sessionID,
+		EventType:   string(event.Type),
+		Title:       event.Name,
+		Description: event.Description,
+		Impact:      make(map[string]interface{}),
+		AffectedEntities: []string{},
+		IsPlayerVisible: true,
+		OccurredAt:  event.CreatedAt,
+	}
+	
+	if err := h.worldRepo.CreateWorldEvent(emergentEvent); err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, "Failed to create world event")
 		return
 	}
