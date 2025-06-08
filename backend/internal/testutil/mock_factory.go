@@ -2,7 +2,6 @@ package testutil
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/your-username/dnd-game/backend/internal/models"

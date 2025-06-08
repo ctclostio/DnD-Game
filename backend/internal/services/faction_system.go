@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"

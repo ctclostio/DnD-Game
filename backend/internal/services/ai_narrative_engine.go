@@ -43,7 +43,12 @@ type PerspectiveGenerator struct {
 
 // NewNarrativeEngine creates a new narrative engine instance
 func NewNarrativeEngine(cfg *config.Config) (*NarrativeEngine, error) {
-	llm := NewLLMProvider(cfg.AI)
+	llm := NewLLMProvider(AIConfig{
+		Provider: cfg.AI.Provider,
+		APIKey: cfg.AI.APIKey,
+		Model: cfg.AI.Model,
+		Enabled: cfg.AI.Enabled,
+	})
 
 	return &NarrativeEngine{
 		llm: llm,

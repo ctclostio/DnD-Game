@@ -12,32 +12,33 @@ import (
 func UserFixture(t *testing.T) *models.User {
 	t.Helper()
 	return &models.User{
-		ID:        uuid.New(),
-		Username:  "testuser_" + uuid.New().String()[:8],
-		Email:     "test_" + uuid.New().String()[:8] + "@example.com",
-		Password:  "hashedpassword123",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:           uuid.New().String(),
+		Username:     "testuser_" + uuid.New().String()[:8],
+		Email:        "test_" + uuid.New().String()[:8] + "@example.com",
+		PasswordHash: "hashedpassword123",
+		Role:         "player",
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 }
 
 // CharacterFixture creates a test character
-func CharacterFixture(t *testing.T, userID uuid.UUID) *models.Character {
+func CharacterFixture(t *testing.T, userID string) *models.Character {
 	t.Helper()
 	return &models.Character{
-		ID:          uuid.New(),
+		ID:          uuid.New().String(),
 		UserID:      userID,
 		Name:        "Test Character",
 		Race:        "Human",
 		Class:       "Fighter",
-		Level:       1,
-		Experience:  0,
-		HitPoints:   10,
-		MaxHP:       10,
-		ArmorClass:  15,
-		Initiative:  2,
-		Speed:       30,
-		AbilityScores: models.AbilityScores{
+		Level:            1,
+		ExperiencePoints: 0,
+		HitPoints:        10,
+		MaxHitPoints:     10,
+		ArmorClass:       15,
+		Initiative:       2,
+		Speed:            30,
+		Attributes: models.Attributes{
 			Strength:     16,
 			Dexterity:    14,
 			Constitution: 15,
@@ -45,61 +46,27 @@ func CharacterFixture(t *testing.T, userID uuid.UUID) *models.Character {
 			Wisdom:       12,
 			Charisma:     8,
 		},
-		Skills: models.Skills{
-			Acrobatics:     0,
-			AnimalHandling: 1,
-			Arcana:         0,
-			Athletics:      3,
-			Deception:      -1,
-			History:        0,
-			Insight:        1,
-			Intimidation:   -1,
-			Investigation:  0,
-			Medicine:       1,
-			Nature:         0,
-			Perception:     1,
-			Performance:    -1,
-			Persuasion:     -1,
-			Religion:       0,
-			SleightOfHand:  2,
-			Stealth:        2,
-			Survival:       1,
+		Skills: []models.Skill{
+			{Name: "Athletics", Modifier: 3, Proficiency: true},
+			{Name: "Intimidation", Modifier: -1, Proficiency: false},
 		},
 		SavingThrows: models.SavingThrows{
-			Strength:     3,
-			Dexterity:    2,
-			Constitution: 2,
-			Intelligence: 0,
-			Wisdom:       1,
-			Charisma:     -1,
+			Strength:     models.SavingThrow{Modifier: 3, Proficiency: true},
+			Dexterity:    models.SavingThrow{Modifier: 2, Proficiency: false},
+			Constitution: models.SavingThrow{Modifier: 2, Proficiency: true},
+			Intelligence: models.SavingThrow{Modifier: 0, Proficiency: false},
+			Wisdom:       models.SavingThrow{Modifier: 1, Proficiency: false},
+			Charisma:     models.SavingThrow{Modifier: -1, Proficiency: false},
 		},
-		Equipment: []models.Equipment{
-			{
-				ID:       uuid.New().String(),
-				Name:     "Longsword",
-				Type:     "Weapon",
-				Quantity: 1,
-				Weight:   3,
-			},
-			{
-				ID:       uuid.New().String(),
-				Name:     "Chain Mail",
-				Type:     "Armor",
-				Quantity: 1,
-				Weight:   55,
-			},
+		Equipment: []models.Item{},
+		ProficiencyBonus: 2,
+		Features: []models.Feature{
+			{Name: "Fighting Style", Description: "Choose a fighting style", Level: 1, Source: "Fighter"},
+			{Name: "Second Wind", Description: "Regain hit points", Level: 1, Source: "Fighter"},
 		},
-		Features: []string{"Fighting Style", "Second Wind"},
-		SpellSlots: models.SpellSlots{
-			Level1: models.SpellSlotInfo{Max: 0, Used: 0},
-			Level2: models.SpellSlotInfo{Max: 0, Used: 0},
-			Level3: models.SpellSlotInfo{Max: 0, Used: 0},
-			Level4: models.SpellSlotInfo{Max: 0, Used: 0},
-			Level5: models.SpellSlotInfo{Max: 0, Used: 0},
-			Level6: models.SpellSlotInfo{Max: 0, Used: 0},
-			Level7: models.SpellSlotInfo{Max: 0, Used: 0},
-			Level8: models.SpellSlotInfo{Max: 0, Used: 0},
-			Level9: models.SpellSlotInfo{Max: 0, Used: 0},
+		Spells: models.SpellData{
+			SpellSlots: []models.SpellSlot{},
+			SpellsKnown: []models.Spell{},
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -107,36 +74,51 @@ func CharacterFixture(t *testing.T, userID uuid.UUID) *models.Character {
 }
 
 // GameSessionFixture creates a test game session
-func GameSessionFixture(t *testing.T, dmID uuid.UUID) *models.GameSession {
+func GameSessionFixture(t *testing.T, dmID string) *models.GameSession {
 	t.Helper()
 	return &models.GameSession{
-		ID:          uuid.New(),
+		ID:          uuid.New().String(),
 		Name:        "Test Campaign",
 		Description: "A test campaign for unit testing",
-		DmID:        dmID,
-		MaxPlayers:  5,
-		Status:      "active",
+		DMID:        dmID,
+		Status:      models.GameStatusActive,
+		State:       map[string]interface{}{},
 		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
 	}
 }
 
 // NPCFixture creates a test NPC
-func NPCFixture(t *testing.T, sessionID uuid.UUID) *models.NPC {
+func NPCFixture(t *testing.T, sessionID string) *models.NPC {
 	t.Helper()
 	return &models.NPC{
-		ID:          uuid.New(),
-		SessionID:   sessionID,
-		Name:        "Guard Captain",
-		Description: "A grizzled veteran guard",
-		Stats: models.NPCStats{
-			HitPoints:    20,
-			ArmorClass:   16,
-			Speed:        30,
-			Challenge:    2,
-			Abilities:    models.AbilityScores{Strength: 15, Dexterity: 12, Constitution: 14, Intelligence: 10, Wisdom: 11, Charisma: 12},
-			SavingThrows: models.SavingThrows{Strength: 4, Dexterity: 1, Constitution: 3, Intelligence: 0, Wisdom: 0, Charisma: 1},
+		ID:          uuid.New().String(),
+		Name:             "Guard Captain",
+		Type:             "humanoid",
+		Size:             "medium",
+		Alignment:        "lawful neutral",
+		ArmorClass:       16,
+		HitPoints:        20,
+		MaxHitPoints:     20,
+		Speed:            map[string]int{"walk": 30},
+		Attributes: models.Attributes{
+			Strength:     15,
+			Dexterity:    12,
+			Constitution: 14,
+			Intelligence: 10,
+			Wisdom:       11,
+			Charisma:     12,
 		},
+		SavingThrows: models.SavingThrows{
+			Strength:     models.SavingThrow{Modifier: 4, Proficiency: true},
+			Dexterity:    models.SavingThrow{Modifier: 1, Proficiency: false},
+			Constitution: models.SavingThrow{Modifier: 3, Proficiency: true},
+			Intelligence: models.SavingThrow{Modifier: 0, Proficiency: false},
+			Wisdom:       models.SavingThrow{Modifier: 0, Proficiency: false},
+			Charisma:     models.SavingThrow{Modifier: 1, Proficiency: false},
+		},
+		ChallengeRating:  2,
+		ExperiencePoints: 450,
+		GameSessionID:    sessionID,
 		Actions: []models.NPCAction{
 			{
 				Name:        "Longsword",
@@ -198,19 +180,29 @@ func DiceRollFixture(t *testing.T, userID, sessionID uuid.UUID) *models.DiceRoll
 }
 
 // InventoryItemFixture creates a test inventory item
-func InventoryItemFixture(t *testing.T) *models.InventoryItem {
+func InventoryItemFixture(t *testing.T, characterID string) *models.InventoryItem {
 	t.Helper()
 	return &models.InventoryItem{
-		ID:          uuid.New(),
-		Name:        "Healing Potion",
-		Description: "Restores 2d4+2 hit points",
-		Type:        "consumable",
-		Rarity:      "common",
-		Weight:      0.5,
-		Value:       50,
-		Properties: map[string]interface{}{
-			"healing": "2d4+2",
-			"uses":    1,
+		ID:          uuid.New().String(),
+		CharacterID: characterID,
+		ItemID:      "item-1",
+		Quantity:    1,
+		Equipped:    false,
+		Attuned:     false,
+		Item: &models.Item{
+			ID:          "item-1",
+			Name:        "Healing Potion",
+			Type:        models.ItemTypeConsumable,
+			Rarity:      models.ItemRarityCommon,
+			Weight:      0.5,
+			Value:       50,
+			Description: "Restores 2d4+2 hit points",
+			Properties: models.ItemProperties{
+				"healing": "2d4+2",
+				"uses":    1,
+			},
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -218,29 +210,25 @@ func InventoryItemFixture(t *testing.T) *models.InventoryItem {
 }
 
 // EncounterFixture creates a test encounter
-func EncounterFixture(t *testing.T, sessionID uuid.UUID) *models.Encounter {
+func EncounterFixture(t *testing.T, sessionID string) *models.Encounter {
 	t.Helper()
 	return &models.Encounter{
-		ID:          uuid.New(),
-		SessionID:   sessionID,
+		ID:          uuid.New().String(),
+		GameSessionID:   sessionID,
 		Name:        "Goblin Ambush",
 		Description: "Goblins attack from the bushes!",
 		Difficulty:  "medium",
 		Status:      "prepared",
 		Enemies: []models.EncounterEnemy{
 			{
-				ID:       uuid.New(),
-				Name:     "Goblin",
-				Quantity: 4,
-				CR:       0.25,
+				ID:               uuid.New().String(),
+				Name:             "Goblin",
+				Quantity:         4,
+				ChallengeRating:  0.25,
 			},
 		},
-		Environment: "forest",
-		Rewards: models.EncounterRewards{
-			Experience: 200,
-			Gold:       50,
-			Items:      []string{"Crude weapons", "Goblin ears"},
-		},
+		TotalXP:    200,
+		AdjustedXP: 200,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

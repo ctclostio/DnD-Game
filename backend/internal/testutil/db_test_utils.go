@@ -2,14 +2,24 @@ package testutil
 
 import (
 	"database/sql"
-	"fmt"
+	"database/sql/driver"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
+
+// convertToDriverValues converts interface{} slice to driver.Value slice
+func convertToDriverValues(args []interface{}) []driver.Value {
+	driverValues := make([]driver.Value, len(args))
+	for i, arg := range args {
+		driverValues[i] = driver.Value(arg)
+	}
+	return driverValues
+}
 
 // MockDBWithStruct provides a mock database for testing
 type MockDBWithStruct struct {
@@ -31,30 +41,30 @@ func NewMockDBWithStruct(t *testing.T) *MockDBWithStruct {
 }
 
 // Close closes the mock database
-func (m *MockDB) Close() error {
+func (m *MockDBWithStruct) Close() error {
 	return m.DB.Close()
 }
 
 // ExpectBegin expects a transaction begin
-func (m *MockDB) ExpectBegin() *MockDB {
+func (m *MockDBWithStruct) ExpectBegin() *MockDBWithStruct {
 	m.Mock.ExpectBegin()
 	return m
 }
 
 // ExpectCommit expects a transaction commit
-func (m *MockDB) ExpectCommit() *MockDB {
+func (m *MockDBWithStruct) ExpectCommit() *MockDBWithStruct {
 	m.Mock.ExpectCommit()
 	return m
 }
 
 // ExpectRollback expects a transaction rollback
-func (m *MockDB) ExpectRollback() *MockDB {
+func (m *MockDBWithStruct) ExpectRollback() *MockDBWithStruct {
 	m.Mock.ExpectRollback()
 	return m
 }
 
 // AssertExpectations asserts all expectations were met
-func (m *MockDB) AssertExpectations(t *testing.T) {
+func (m *MockDBWithStruct) AssertExpectations(t *testing.T) {
 	err := m.Mock.ExpectationsWereMet()
 	require.NoError(t, err)
 }
@@ -70,7 +80,7 @@ func NewQueryBuilder(mock sqlmock.Sqlmock) *QueryBuilder {
 }
 
 // ExpectUserByID expects a query for user by ID
-func (q *QueryBuilder) ExpectUserByID(userID int64, user *User) {
+func (q *QueryBuilder) ExpectUserByID(userID int64, user *models.User) {
 	query := `SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = $1`
 	
 	rows := sqlmock.NewRows([]string{"id", "username", "email", "password_hash", "created_at", "updated_at"}).
@@ -82,7 +92,7 @@ func (q *QueryBuilder) ExpectUserByID(userID int64, user *User) {
 }
 
 // ExpectUserByUsername expects a query for user by username
-func (q *QueryBuilder) ExpectUserByUsername(username string, user *User) {
+func (q *QueryBuilder) ExpectUserByUsername(username string, user *models.User) {
 	query := `SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = $1`
 	
 	rows := sqlmock.NewRows([]string{"id", "username", "email", "password_hash", "created_at", "updated_at"}).
@@ -94,21 +104,21 @@ func (q *QueryBuilder) ExpectUserByUsername(username string, user *User) {
 }
 
 // ExpectCharacterByID expects a query for character by ID
-func (q *QueryBuilder) ExpectCharacterByID(charID int64, char *Character) {
+func (q *QueryBuilder) ExpectCharacterByID(charID int64, char *models.Character) {
 	query := `SELECT * FROM characters WHERE id = $1`
 	
 	rows := sqlmock.NewRows([]string{
 		"id", "user_id", "name", "race", "class", "level", 
 		"experience_points", "hit_points", "max_hit_points",
 		"armor_class", "initiative", "speed", "abilities",
-		"skills", "proficiencies", "equipment", "spell_slots",
-		"known_spells", "prepared_spells", "created_at", "updated_at",
+		"skills", "proficiencies", "equipment", "spells",
+		"created_at", "updated_at",
 	}).AddRow(
 		char.ID, char.UserID, char.Name, char.Race, char.Class, char.Level,
 		char.ExperiencePoints, char.HitPoints, char.MaxHitPoints,
-		char.ArmorClass, char.Initiative, char.Speed, char.Abilities,
-		char.Skills, char.Proficiencies, char.Equipment, char.SpellSlots,
-		char.KnownSpells, char.PreparedSpells, char.CreatedAt, char.UpdatedAt,
+		char.ArmorClass, char.Initiative, char.Speed, char.Attributes,
+		char.Skills, char.Proficiencies, char.Equipment, char.Spells,
+		char.CreatedAt, char.UpdatedAt,
 	)
 	
 	q.mock.ExpectQuery(query).
@@ -117,7 +127,7 @@ func (q *QueryBuilder) ExpectCharacterByID(charID int64, char *Character) {
 }
 
 // ExpectInsertUser expects an insert user query
-func (q *QueryBuilder) ExpectInsertUser(user *User) {
+func (q *QueryBuilder) ExpectInsertUser(user *models.User) {
 	query := `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, created_at, updated_at`
 	
 	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at"}).
@@ -140,7 +150,7 @@ func (q *QueryBuilder) ExpectUpdateCharacterHP(charID int64, hp int) {
 // ExpectNotFound expects a query that returns no rows
 func (q *QueryBuilder) ExpectNotFound(query string, args ...interface{}) {
 	q.mock.ExpectQuery(query).
-		WithArgs(args...).
+		WithArgs(convertToDriverValues(args)...).
 		WillReturnError(sql.ErrNoRows)
 }
 
@@ -156,20 +166,21 @@ type DBTestCase struct {
 func RunDBTestCases(t *testing.T, cases []DBTestCase) {
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			mockDB := NewMockDB(t)
-			defer mockDB.Close()
+			db, mock := NewMockDB(t)
+			defer db.Close()
 
 			if tc.Setup != nil {
-				tc.Setup(mockDB.Mock)
+				tc.Setup(mock)
 			}
 
-			err := tc.Run(mockDB.DB)
+			err := tc.Run(db)
 
 			if tc.Assert != nil {
 				tc.Assert(t, err)
 			}
 
-			mockDB.AssertExpectations(t)
+			err = mock.ExpectationsWereMet()
+			require.NoError(t, err)
 		})
 	}
 }
@@ -282,31 +293,35 @@ func AssertTimestampsEqual(t *testing.T, expected, actual time.Time, message str
 // TestRepository provides a base for repository tests
 type TestRepository struct {
 	t      *testing.T
-	mockDB *MockDB
+	db     *sqlx.DB
+	mock   sqlmock.Sqlmock
 }
 
 // NewTestRepository creates a new test repository
 func NewTestRepository(t *testing.T) *TestRepository {
+	db, mock := NewMockDB(t)
 	return &TestRepository{
-		t:      t,
-		mockDB: NewMockDB(t),
+		t:    t,
+		db:   db,
+		mock: mock,
 	}
 }
 
 // Cleanup cleans up test resources
 func (r *TestRepository) Cleanup() {
-	r.mockDB.Close()
-	r.mockDB.AssertExpectations(r.t)
+	r.db.Close()
+	err := r.mock.ExpectationsWereMet()
+	require.NoError(r.t, err)
 }
 
 // ExpectQuery adds a query expectation
 func (r *TestRepository) ExpectQuery(query string) *sqlmock.ExpectedQuery {
-	return r.mockDB.Mock.ExpectQuery(query)
+	return r.mock.ExpectQuery(query)
 }
 
 // ExpectExec adds an exec expectation
 func (r *TestRepository) ExpectExec(query string) *sqlmock.ExpectedExec {
-	return r.mockDB.Mock.ExpectExec(query)
+	return r.mock.ExpectExec(query)
 }
 
 // Simple struct definitions for the mock helpers

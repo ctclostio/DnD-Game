@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
@@ -239,8 +238,8 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 
 // NotifyPartyOfEvent makes the party aware of an event
 func (s *WorldEventEngineService) NotifyPartyOfEvent(eventID uuid.UUID) error {
-	query := `UPDATE world_events SET party_aware = true WHERE id = $1`
-	// This would be implemented in the repository
+	// TODO: Implement repository method to update party_aware
+	// query := `UPDATE world_events SET party_aware = true WHERE id = $1`
 	return nil
 }
 
@@ -270,7 +269,7 @@ func (s *WorldEventEngineService) shouldEventProgress(event *models.WorldEvent) 
 		progressChance += 0.2
 	}
 
-	return rand.Float32() < progressChance
+	return rand.Float64() < progressChance
 }
 
 func (s *WorldEventEngineService) progressEvent(ctx context.Context, event *models.WorldEvent) error {
@@ -312,13 +311,13 @@ func (s *WorldEventEngineService) checkResolutionConditions(ctx context.Context,
 		resolutionChance = 0.3
 	}
 
-	return rand.Float32() < resolutionChance
+	return rand.Float64() < resolutionChance
 }
 
 func (s *WorldEventEngineService) resolveEvent(ctx context.Context, event *models.WorldEvent) error {
 	// Mark event as resolved
-	query := `UPDATE world_events SET is_resolved = true, is_active = false WHERE id = $1`
-	// This would be in repository
+	// TODO: Implement repository method to mark event as resolved
+	// query := `UPDATE world_events SET is_resolved = true, is_active = false WHERE id = $1`
 
 	// Apply resolution consequences
 	var consequences map[string]string
@@ -516,8 +515,7 @@ func (s *WorldEventEngineService) determineAffectedFactions(factions []*models.F
 	targetFactionTypes := map[models.WorldEventType][]models.FactionType{
 		models.EventPolitical:   {models.FactionPolitical, models.FactionMilitary},
 		models.EventEconomic:    {models.FactionMerchant, models.FactionCriminal},
-		models.EventReligious:   {models.FactionReligious, models.FactionCult},
-		models.EventSupernatural: {models.FactionCult, models.FactionAncientOrder},
+		models.EventSupernatural: {models.FactionCult, models.FactionAncientOrder, models.FactionReligious},
 		models.EventAncientAwakening: {models.FactionAncientOrder, models.FactionCult},
 	}
 

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"sort"
 	"strings"
 
 	"github.com/your-username/dnd-game/backend/internal/config"

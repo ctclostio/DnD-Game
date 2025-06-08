@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
@@ -143,10 +142,6 @@ func (re *RuleEngine) ExecuteRule(ctx context.Context, compiled *CompiledRule, i
 	state.Context["instance"] = instance
 
 	// Execute nodes in order
-	currentData := map[string]interface{}{
-		"trigger": trigger,
-	}
-
 	for _, nodeID := range compiled.ExecutionOrder {
 		node := re.findNode(compiled.Graph, nodeID)
 		if node == nil {

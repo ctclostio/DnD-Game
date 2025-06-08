@@ -3,6 +3,7 @@ package testutil
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/auth"
 )
 
 // HTTPTestClient provides utilities for testing HTTP endpoints
@@ -45,9 +45,10 @@ func (c *HTTPTestClient) WithAuth(token string) *HTTPTestClient {
 
 // WithUser creates a JWT token for the given user ID
 func (c *HTTPTestClient) WithUser(userID int64) *HTTPTestClient {
-	token, err := auth.GenerateToken(userID)
+	jwtManager := TestJWTManager()
+	tokenPair, err := jwtManager.GenerateTokenPair(fmt.Sprintf("%d", userID), "testuser", "test@example.com", "player")
 	require.NoError(c.t, err)
-	c.token = token
+	c.token = tokenPair.AccessToken
 	return c
 }
 

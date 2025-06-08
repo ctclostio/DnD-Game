@@ -255,9 +255,8 @@ func NewCombatantBuilder() *CombatantBuilder {
 			HP:           20,
 			MaxHP:        20,
 			AC:           16,
-			Conditions:   []string{},
-			IsActive:     true,
-			CharacterID:  1,
+			Conditions:   []models.Condition{},
+			CharacterID:  "1",
 		},
 	}
 }
@@ -273,7 +272,7 @@ func (b *CombatantBuilder) WithName(name string) *CombatantBuilder {
 }
 
 func (b *CombatantBuilder) WithType(pType string) *CombatantBuilder {
-	b.participant.Type = pType
+	b.participant.Type = models.CombatantType(pType)
 	return b
 }
 
@@ -289,8 +288,8 @@ func (b *CombatantBuilder) WithHP(current, max int) *CombatantBuilder {
 }
 
 func (b *CombatantBuilder) AsNPC() *CombatantBuilder {
-	b.participant.Type = "npc"
-	b.participant.CharacterID = 0
+	b.participant.Type = models.CombatantTypeNPC
+	b.participant.CharacterID = ""
 	return b
 }
 
@@ -307,34 +306,34 @@ type DiceRollBuilder struct {
 func NewDiceRollBuilder() *DiceRollBuilder {
 	return &DiceRollBuilder{
 		roll: models.DiceRoll{
-			ID:            1,
-			UserID:        1,
-			CharacterID:   1,
-			GameSessionID: 1,
-			RollType:      "attack",
-			DiceNotation:  "1d20+5",
-			Result:        18,
-			Rolls:         []int{13},
-			Modifiers:     5,
+			ID:            "1",
+			UserID:        "1",
+			GameSessionID: "1",
+			DiceType:      "d20",
+			Count:         1,
+			Modifier:      5,
+			Results:       []int{13},
+			Total:         18,
 			Purpose:       "Attack roll",
-			CreatedAt:     time.Now(),
+			RollNotation:  "1d20+5",
+			Timestamp:     time.Now(),
 		},
 	}
 }
 
 func (b *DiceRollBuilder) WithType(rollType string) *DiceRollBuilder {
-	b.roll.RollType = rollType
+	b.roll.Purpose = rollType
 	return b
 }
 
 func (b *DiceRollBuilder) WithNotation(notation string) *DiceRollBuilder {
-	b.roll.DiceNotation = notation
+	b.roll.RollNotation = notation
 	return b
 }
 
 func (b *DiceRollBuilder) WithResult(result int, rolls []int) *DiceRollBuilder {
-	b.roll.Result = result
-	b.roll.Rolls = rolls
+	b.roll.Total = result
+	b.roll.Results = rolls
 	return b
 }
 
@@ -351,20 +350,31 @@ type InventoryItemBuilder struct {
 func NewInventoryItemBuilder() *InventoryItemBuilder {
 	return &InventoryItemBuilder{
 		item: models.InventoryItem{
-			ID:          1,
-			CharacterID: 1,
-			Name:        "Longsword",
-			Type:        "weapon",
+			ID:          "1",
+			CharacterID: "1",
+			ItemID:      "item-1",
 			Quantity:    1,
-			Weight:      3.0,
-			Value:       15,
-			Properties: map[string]interface{}{
-				"damage":     "1d8",
-				"damageType": "slashing",
-				"versatile":  "1d10",
-			},
 			Equipped:    true,
-			Description: "A standard longsword",
+			Attuned:     false,
+			CustomProperties: models.ItemProperties{},
+			Notes:       "",
+			Item: &models.Item{
+				ID:     "item-1",
+				Name:   "Longsword",
+				Type:   models.ItemTypeWeapon,
+				Rarity: models.ItemRarityCommon,
+				Weight: 3.0,
+				Value:  15,
+				Properties: models.ItemProperties{
+					"damage":     "1d8",
+					"damageType": "slashing",
+					"versatile":  "1d10",
+				},
+				RequiresAttunement: false,
+				Description:        "A standard longsword",
+				CreatedAt:          time.Now(),
+				UpdatedAt:          time.Now(),
+			},
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
@@ -372,12 +382,16 @@ func NewInventoryItemBuilder() *InventoryItemBuilder {
 }
 
 func (b *InventoryItemBuilder) WithName(name string) *InventoryItemBuilder {
-	b.item.Name = name
+	if b.item.Item != nil {
+		b.item.Item.Name = name
+	}
 	return b
 }
 
 func (b *InventoryItemBuilder) WithType(itemType string) *InventoryItemBuilder {
-	b.item.Type = itemType
+	if b.item.Item != nil {
+		b.item.Item.Type = models.ItemType(itemType)
+	}
 	return b
 }
 
@@ -387,18 +401,22 @@ func (b *InventoryItemBuilder) WithQuantity(qty int) *InventoryItemBuilder {
 }
 
 func (b *InventoryItemBuilder) AsArmor(ac int) *InventoryItemBuilder {
-	b.item.Type = "armor"
-	b.item.Properties = map[string]interface{}{
-		"armorClass": ac,
-		"stealthDisadvantage": false,
+	if b.item.Item != nil {
+		b.item.Item.Type = models.ItemTypeArmor
+		b.item.Item.Properties = models.ItemProperties{
+			"armorClass": ac,
+			"stealthDisadvantage": false,
+		}
 	}
 	return b
 }
 
 func (b *InventoryItemBuilder) AsMagicItem(rarity string) *InventoryItemBuilder {
-	b.item.Type = "magic"
-	b.item.Properties["rarity"] = rarity
-	b.item.Properties["requiresAttunement"] = true
+	if b.item.Item != nil {
+		b.item.Item.Type = models.ItemTypeMagic
+		b.item.Item.Rarity = models.ItemRarity(rarity)
+		b.item.Item.RequiresAttunement = true
+	}
 	return b
 }
 
@@ -424,13 +442,13 @@ func NewTestScenario(t *testing.T) *TestScenario {
 
 	dmChar := NewCharacterBuilder().
 		WithID(1).
-		WithUserID(dm.ID).
+		WithUserID(1).
 		WithName("DM Character").
 		Build()
 
 	playerChar1 := NewCharacterBuilder().
 		WithID(2).
-		WithUserID(player1.ID).
+		WithUserID(2).
 		WithName("Aragorn").
 		WithClass("Fighter").
 		WithLevel(5).
@@ -438,7 +456,7 @@ func NewTestScenario(t *testing.T) *TestScenario {
 
 	playerChar2 := NewCharacterBuilder().
 		WithID(3).
-		WithUserID(player2.ID).
+		WithUserID(3).
 		WithName("Legolas").
 		WithClass("Ranger").
 		WithLevel(5).
@@ -446,7 +464,7 @@ func NewTestScenario(t *testing.T) *TestScenario {
 
 	session := NewGameSessionBuilder().
 		WithID(1).
-		WithDM(dm.ID).
+		WithDM(1).
 		WithName("Test Adventure").
 		Build()
 

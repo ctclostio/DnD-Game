@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -51,22 +52,22 @@ func TestCharacter() *models.Character {
 		Class:     "fighter",
 		Level:     1,
 		HitPoints: 10,
-		MaxHP:     10,
+		MaxHitPoints: 10,
 		ArmorClass: 10,
-		Attributes: map[string]int{
-			"strength":     15,
-			"dexterity":    12,
-			"constitution": 14,
-			"intelligence": 10,
-			"wisdom":       13,
-			"charisma":     8,
+		Attributes: models.Attributes{
+			Strength:     15,
+			Dexterity:    12,
+			Constitution: 14,
+			Intelligence: 10,
+			Wisdom:       13,
+			Charisma:     8,
 		},
 	}
 }
 
 // TestJWTManager returns a JWT manager for testing
 func TestJWTManager() *auth.JWTManager {
-	return auth.NewJWTManager("test-secret-key-32-characters-long", "15m", "7d")
+	return auth.NewJWTManager("test-secret-key-32-characters-long", 15*time.Minute, 7*24*time.Hour)
 }
 
 // AuthenticatedRequest creates an authenticated HTTP request
@@ -90,9 +91,9 @@ func AuthenticatedRequest(t *testing.T, method, path string, body interface{}, u
 	// Add authentication
 	if user != nil {
 		jwtManager := TestJWTManager()
-		token, err := jwtManager.GenerateToken(user.ID, user.Username, user.Role, auth.AccessToken)
+		tokenPair, err := jwtManager.GenerateTokenPair(user.ID, user.Username, user.Email, user.Role)
 		require.NoError(t, err)
-		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Authorization", "Bearer "+tokenPair.AccessToken)
 		
 		// Add user to context
 		ctx := context.WithValue(req.Context(), auth.UserContextKey, user)

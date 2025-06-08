@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 	"strings"
 	"time"
@@ -96,10 +97,7 @@ Return as JSON with keys: values (map), taboos (array), origin_story, cultural_h
 		name, params.Environment, params.HistoricalContext,
 		params.NeighboringCultures, params.SpecialTraits)
 
-	response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-		Temperature: 0.9,
-		MaxTokens:   1500,
-	})
+	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant specializing in unique cultural generation.")
 	if err != nil {
 		return pcs.generateDefaultFoundation(name), nil
 	}
@@ -131,10 +129,16 @@ Generate:
 Return as JSON with keys: common_words (map), idioms (array of {expression, literal, meaning}), grammar_summary, honorifics (array)`,
 		cultureName, foundation.Values, foundation.Worldview)
 
-	response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-		Temperature: 0.8,
-		MaxTokens:   800,
-	})
+	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant specializing in language generation.")
+	if err != nil {
+		// Return default language on error
+		return models.CultureLanguage{
+			Name:          cultureName + "ish",
+			Phonemes:      phonemes,
+			WritingSystem: pcs.generateWritingSystem(),
+			CommonWords:   pcs.generateDefaultWords(phonemes),
+		}
+	}
 
 	var langData map[string]interface{}
 	json.Unmarshal([]byte(response), &langData)
@@ -205,10 +209,7 @@ Generate a unique cultural practice including:
 Return as JSON with keys: name, description, frequency, participants, significance`,
 			customType, cultureName, foundation.Values, foundation.Taboos)
 
-		response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-			Temperature: 0.8,
-			MaxTokens:   400,
-		})
+		response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
 
 		var customData map[string]interface{}
 		if err == nil && json.Unmarshal([]byte(response), &customData) == nil {
@@ -245,10 +246,7 @@ Create:
 Return as JSON with keys: mediums (array), motifs (array), colors (array of {color, meaning}), sacred_symbols (array of {name, description, meaning}), style_description`,
 		cultureName, foundation.Environment, foundation.Values, foundation.Worldview)
 
-	response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-		Temperature: 0.9,
-		MaxTokens:   600,
-	})
+	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
 
 	var artData map[string]interface{}
 	artStyle := models.CultureArtStyle{
@@ -326,10 +324,7 @@ Return as JSON with keys: name, deities (array of {name, title, domains, persona
 		selectedType, cultureName, foundation.OriginStory,
 		foundation.CulturalHeroes, foundation.Values)
 
-	response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-		Temperature: 0.9,
-		MaxTokens:   1000,
-	})
+	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
 
 	var beliefData map[string]interface{}
 	beliefSystem := models.CultureBeliefSystem{
@@ -423,10 +418,7 @@ Include the cultural significance behind each greeting.
 Return as JSON map of context to greeting phrase.`,
 		cultureName, foundation.Values, foundation.SocialPriorities, contexts)
 
-	response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-		Temperature: 0.7,
-		MaxTokens:   400,
-	})
+	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
 
 	if err == nil {
 		json.Unmarshal([]byte(response), &greetings)
@@ -462,10 +454,7 @@ Create:
 Return as JSON with keys: style_name, features (array), defenses (array), decorations (array), layout_description`,
 		cultureName, foundation.Environment, materials, foundation.Values)
 
-	response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-		Temperature: 0.8,
-		MaxTokens:   500,
-	})
+	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
 
 	architecture := models.ArchitectureStyle{
 		Materials:     materials,
@@ -529,10 +518,7 @@ Generate:
 Return as JSON with keys: name, ingredients (array), preparation, occasion, significance`,
 			cuisineType, cultureName, ingredients, foundation.Taboos)
 
-		response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-			Temperature: 0.8,
-			MaxTokens:   300,
-		})
+		response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
 
 		var dishData map[string]interface{}
 		if err == nil && json.Unmarshal([]byte(response), &dishData) == nil {
@@ -586,10 +572,7 @@ Generate:
 Return as JSON with keys: style_name, instruments (array), rhythms (array), occasions (array), themes (array), dances (array)`,
 		cultureName, foundation.Values, foundation.CulturalHeroes)
 
-	response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-		Temperature: 0.8,
-		MaxTokens:   400,
-	})
+	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
 
 	musicStyle := models.MusicStyle{
 		Scales: pcs.generateMusicalScales(),
@@ -641,10 +624,7 @@ Return as JSON with keys: name, description, decorations (array)`,
 				gender, clothingType, cultureName, foundation.Environment,
 				clothingStyle.Materials, foundation.Values)
 
-			response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-				Temperature: 0.8,
-				MaxTokens:   200,
-			})
+			response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
 
 			var itemData map[string]interface{}
 			if err == nil && json.Unmarshal([]byte(response), &itemData) == nil {
@@ -706,10 +686,7 @@ Return as JSON with keys: given_patterns (array), family_patterns (array), title
 		cultureName, pcs.getLanguagePatterns(cultureName),
 		foundation.Values, foundation.SocialPriorities)
 
-	response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-		Temperature: 0.8,
-		MaxTokens:   500,
-	})
+	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
 
 	namingConventions := models.NamingConventions{
 		NameMeanings: make(map[string]string),
@@ -753,10 +730,7 @@ Generate:
 Return as JSON with keys: classes (array of {name, rank, privileges, restrictions, occupations}), mobility, leadership, family_unit, outsider_treatment`,
 		selectedType, cultureName, foundation.Values, foundation.SocialPriorities)
 
-	response, err := pcs.llm.Generate(ctx, prompt, &LLMOptions{
-		Temperature: 0.8,
-		MaxTokens:   600,
-	})
+	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
 
 	socialStructure := models.SocialStructure{
 		Type:        selectedType,
@@ -843,7 +817,8 @@ func (pcs *ProceduralCultureService) RespondToPlayerAction(ctx context.Context, 
 	if response.Impact > 0.5 {
 		event := pcs.generateCulturalResponseEvent(ctx, culture, action, response)
 		if event != nil {
-			pcs.worldRepo.CreateWorldEvent(event)
+			// TODO: Convert EmergentWorldEvent to WorldEvent or create appropriate repository method
+			// pcs.worldRepo.CreateEmergentWorldEvent(event)
 		}
 	}
 
@@ -1298,7 +1273,7 @@ func (pcs *ProceduralCultureService) adjustSocialStructure(culture *models.Proce
 	}
 }
 
-func (pcs *ProceduralCultureService) generateCulturalResponseEvent(ctx context.Context, culture *models.ProceduralCulture, action PlayerCulturalAction, response CulturalResponse) *models.WorldEvent {
+func (pcs *ProceduralCultureService) generateCulturalResponseEvent(ctx context.Context, culture *models.ProceduralCulture, action PlayerCulturalAction, response CulturalResponse) *models.EmergentWorldEvent {
 	eventTypes := map[string]string{
 		"trade":     "commercial_shift",
 		"diplomacy": "diplomatic_development",
@@ -1306,7 +1281,7 @@ func (pcs *ProceduralCultureService) generateCulturalResponseEvent(ctx context.C
 		"influence": "cultural_evolution",
 	}
 	
-	return &models.WorldEvent{
+	return &models.EmergentWorldEvent{
 		ID:          uuid.New().String(),
 		SessionID:   culture.Metadata["session_id"].(string),
 		EventType:   "cultural_response",

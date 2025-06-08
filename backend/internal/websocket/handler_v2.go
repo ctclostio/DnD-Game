@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -174,10 +173,10 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	
 	// Create temporary client for authentication
 	tempClient := &Client{
-		ID:   clientID,
+		id:   clientID,
 		conn: conn,
 		send: make(chan []byte, 256),
-		log:  log.WithField("client_id", clientID),
+		hub:  h.hub,
 	}
 	
 	// Send authentication request
@@ -222,7 +221,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Verify JWT token
-	userID, err := h.jwtManager.VerifyToken(authMsg.Token)
+	claims, err := h.jwtManager.ValidateToken(authMsg.Token, auth.AccessToken)
 	if err != nil {
 		log.Warn().
 			Err(err).
@@ -232,6 +231,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		conn.Close()
 		return
 	}
+	userID := claims.UserID
 	
 	// Create authenticated client
 	client := &ClientV2{
@@ -240,16 +240,13 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		conn:   conn,
 		send:   make(chan []byte, 256),
 		hub:    h.hub,
-		log:    log.WithFields(map[string]interface{}{
-			"client_id": clientID,
-			"user_id":   userID,
-		}),
+		log:    log,
 	}
 	
 	// Join room if specified
 	if authMsg.Room != "" {
 		client.room = authMsg.Room
-		client.log = client.log.WithField("room", authMsg.Room)
+		// Logger already has room context from creation
 		
 		client.log.Info().
 			Str("room", authMsg.Room).
