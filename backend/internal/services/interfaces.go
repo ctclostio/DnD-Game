@@ -12,11 +12,14 @@ import (
 
 // CombatServiceInterface defines the combat service contract
 type CombatServiceInterface interface {
-	StartCombat(sessionID string, participants []models.CombatParticipant) (*models.Combat, error)
-	GetCombat(combatID string) (*models.Combat, error)
-	ProcessAction(combatID string, action models.CombatAction) (*models.ActionResult, error)
-	NextTurn(combatID string) error
-	EndCombat(combatID string) error
+	StartCombat(ctx context.Context, sessionID string, participants []models.Combatant) (*models.Combat, error)
+	GetCombatState(ctx context.Context, combatID string) (*models.Combat, error)
+	ExecuteAction(ctx context.Context, combatID string, action models.CombatAction) (*models.Combat, error)
+	EndCombat(ctx context.Context, combatID string) error
+	ApplyDamage(ctx context.Context, combatID, targetID string, damage int, damageType string) (*models.Combat, error)
+	ApplyHealing(ctx context.Context, combatID, targetID string, healing int) (*models.Combat, error)
+	DeathSavingThrow(ctx context.Context, combatID, characterID string) (*models.Combat, *models.DeathSaveResult, error)
+	SetCombatState(combat *models.Combat)
 }
 
 // RuleEngineInterface defines the rule engine contract

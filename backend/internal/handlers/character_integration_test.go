@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -27,6 +28,7 @@ type testContext struct {
 	db         *database.DB
 	repos      *database.Repositories
 	jwtManager *auth.JWTManager
+	services   *services.Services
 }
 
 func setupIntegrationTest(t *testing.T) (*testContext, func()) {
@@ -55,16 +57,38 @@ func setupIntegrationTest(t *testing.T) (*testContext, func()) {
 	// Create mock LLM provider for character service
 	mockLLM := &testutil.MockLLMProvider{}
 	
+	// Initialize refresh token repository for auth
+	refreshTokenRepo := database.NewRefreshTokenRepository(sqlxDB)
+	
+	// Create all required services with minimal/stub implementations
 	svc := &services.Services{
-		Users:         services.NewUserService(repos.Users),
-		Characters:    services.NewCharacterService(repos.Characters, repos.CustomClasses, mockLLM),
-		GameSessions:  services.NewGameSessionService(repos.GameSessions),
-		DiceRolls:     services.NewDiceRollService(repos.DiceRolls),
-		Combat:        services.NewCombatService(),
-		NPCs:          services.NewNPCService(repos.NPCs),
-		Inventory:     services.NewInventoryService(repos.Inventory, repos.Characters),
-		JWTManager:    jwtManager,
-		Config:        &config.Config{},
+		Users:              services.NewUserService(repos.Users),
+		Characters:         services.NewCharacterService(repos.Characters, repos.CustomClasses, mockLLM),
+		GameSessions:       services.NewGameSessionService(repos.GameSessions),
+		DiceRolls:          services.NewDiceRollService(repos.DiceRolls),
+		Combat:             services.NewCombatService(),
+		NPCs:               services.NewNPCService(repos.NPCs),
+		Inventory:          services.NewInventoryService(repos.Inventory, repos.Characters),
+		RefreshTokens:      services.NewRefreshTokenService(refreshTokenRepo, jwtManager),
+		JWTManager:         jwtManager,
+		Config:             &config.Config{},
+		// Initialize nil pointers to prevent panics - these services aren't used in character tests
+		Encounters:         nil,
+		CustomRaces:        nil,
+		DMAssistant:        nil,
+		Campaign:           nil,
+		CombatAutomation:   nil,
+		CombatAnalytics:    nil,
+		SettlementGen:      nil,
+		FactionSystem:      nil,
+		WorldEventEngine:   nil,
+		EconomicSim:        nil,
+		RuleEngine:         nil,
+		BalanceAnalyzer:    nil,
+		ConditionalReality: nil,
+		NarrativeEngine:    nil,
+		AICampaignManager:  nil,
+		BattleMapGen:       nil,
 	}
 
 	// Create handlers
@@ -98,6 +122,7 @@ func setupIntegrationTest(t *testing.T) (*testContext, func()) {
 		db:         db,
 		repos:      repos,
 		jwtManager: jwtManager,
+		services:   svc,
 	}, cleanup
 }
 
@@ -155,11 +180,12 @@ func TestCharacterAPI_Integration(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, w.Code)
 
-		var response map[string]interface{}
-		err := json.NewDecoder(w.Body).Decode(&response)
+		var createdChar models.Character
+		err := json.NewDecoder(w.Body).Decode(&createdChar)
 		require.NoError(t, err)
-		assert.NotEmpty(t, response["id"])
-		assert.Equal(t, "Character created successfully", response["message"])
+		assert.NotEmpty(t, createdChar.ID)
+		assert.Equal(t, "Aragorn", createdChar.Name)
+		assert.Equal(t, userID, createdChar.UserID)
 
 		// Verify character was created in database
 		testutil.AssertRowExists(t, ctx.db.DB,
@@ -176,6 +202,11 @@ func TestCharacterAPI_Integration(t *testing.T) {
 
 		ctx.router.ServeHTTP(w, req)
 
+		// Log the response for debugging
+		if w.Code != http.StatusOK {
+			t.Logf("GetCharacters response: %s", w.Body.String())
+		}
+		
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var characters []models.Character
@@ -210,15 +241,37 @@ func TestCharacterAPI_Integration(t *testing.T) {
 	})
 
 	t.Run("Update Character", func(t *testing.T) {
-		// Get the character ID
-		var charID string
-		err := ctx.db.Get(&charID, "SELECT id FROM characters WHERE name = 'Aragorn'")
+		// Seed a character for this test
+		charID := "char-update-test"
+		testutil.SeedTestCharacter(t, ctx.db.DB, charID, userID, "Aragorn")
+		
+		// Verify character exists and get its details
+		var dbChar struct {
+			ID     string `db:"id"`
+			Name   string `db:"name"`
+			UserID string `db:"user_id"`
+		}
+		err := ctx.db.Get(&dbChar, "SELECT id, name, user_id FROM characters WHERE id = $1", charID)
 		require.NoError(t, err)
+		t.Logf("Character in DB: ID=%s, Name=%s, UserID=%s", dbChar.ID, dbChar.Name, dbChar.UserID)
 
-		updateData := models.Character{
-			ID:    charID,
-			Name:  "Strider",
-			Level: 2,
+		name := "Strider"
+		level := 2
+		updateData := map[string]interface{}{
+			"name":  &name,
+			"level": &level,
+		}
+		
+		// Log the update data
+		updateJSON, _ := json.Marshal(updateData)
+		t.Logf("Update request data: %s", string(updateJSON))
+		
+		// Test GetCharacterByID directly
+		char, err := ctx.services.Characters.GetCharacterByID(context.Background(), charID)
+		if err != nil {
+			t.Logf("Direct service GetCharacterByID error: %v", err)
+		} else {
+			t.Logf("Direct service GetCharacterByID success: Name=%s", char.Name)
 		}
 
 		req := createAuthenticatedRequest(t, "PUT", "/api/v1/characters/"+charID, updateData, userID, ctx.jwtManager)
@@ -226,6 +279,9 @@ func TestCharacterAPI_Integration(t *testing.T) {
 
 		ctx.router.ServeHTTP(w, req)
 
+		if w.Code != http.StatusOK {
+			t.Logf("Update character error: status=%d, body=%s", w.Code, w.Body.String())
+		}
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Verify update in database
@@ -236,10 +292,8 @@ func TestCharacterAPI_Integration(t *testing.T) {
 	})
 
 	t.Run("Delete Character", func(t *testing.T) {
-		// Get Legolas's ID
-		var charID string
-		err := ctx.db.Get(&charID, "SELECT id FROM characters WHERE name = 'Legolas'")
-		require.NoError(t, err)
+		// Use the char-2 ID we created earlier
+		charID := "char-2"
 
 		req := createAuthenticatedRequest(t, "DELETE", "/api/v1/characters/"+charID, nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
@@ -253,6 +307,10 @@ func TestCharacterAPI_Integration(t *testing.T) {
 	})
 
 	t.Run("Cannot Access Other User's Characters", func(t *testing.T) {
+		// Seed a character for the main user
+		testutil.SeedTestCharacter(t, ctx.db.DB,
+			"char-main-user", userID, "Strider")
+		
 		// Create another user and their character
 		otherUserID := "user-other-456"
 		testutil.SeedTestUser(t, ctx.db.DB,
@@ -273,8 +331,15 @@ func TestCharacterAPI_Integration(t *testing.T) {
 		require.NoError(t, err)
 		
 		// Should only see own character (Strider), not Gimli
-		assert.Len(t, characters, 1)
-		assert.Equal(t, "Strider", characters[0].Name)
+		// Note: May see multiple characters if previous tests created some
+		found := false
+		for _, char := range characters {
+			assert.NotEqual(t, "Gimli", char.Name, "Should not see other user's character")
+			if char.Name == "Strider" {
+				found = true
+			}
+		}
+		assert.True(t, found, "Should find own character")
 	})
 }
 
@@ -286,7 +351,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 	charID := "char-test-123"
 	itemID := "item-test-123"
 
-	// Seed test data
+	// Seed test data ONCE before all subtests
 	testutil.SeedTestUser(t, ctx.db.DB, userID, "testuser", "test@example.com", "player")
 	testutil.SeedTestCharacter(t, ctx.db.DB, charID, userID, "Thorin")
 	testutil.SeedTestItem(t, ctx.db.DB, itemID, "Longsword", "weapon", 1500)
@@ -301,6 +366,11 @@ func TestInventoryAPI_Integration(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
+
+		// Debug: log response if not OK
+		if w.Code != http.StatusOK {
+			t.Logf("AddItemToInventory response status: %d, body: %s", w.Code, w.Body.String())
+		}
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -324,17 +394,73 @@ func TestInventoryAPI_Integration(t *testing.T) {
 	})
 
 	t.Run("Equip Item", func(t *testing.T) {
+		// First check if item is already in inventory
+		var existingCount int
+		err := ctx.db.Get(&existingCount, "SELECT COUNT(*) FROM character_inventory WHERE character_id = $1 AND item_id = $2", charID, itemID)
+		require.NoError(t, err)
+		
+		if existingCount == 0 {
+			// Add the item to inventory if not already there
+			addReqBody := map[string]interface{}{
+				"item_id":  itemID,
+				"quantity": 1,
+			}
+			addReq := createAuthenticatedRequest(t, "POST", "/api/v1/characters/"+charID+"/inventory", addReqBody, userID, ctx.jwtManager)
+			addW := httptest.NewRecorder()
+			ctx.router.ServeHTTP(addW, addReq)
+			
+			// Log the add response
+			t.Logf("Add item response: status=%d, body=%s", addW.Code, addW.Body.String())
+			require.Equal(t, http.StatusOK, addW.Code, "Failed to add item to inventory")
+		}
+		
+		// Verify the item was actually added
+		var invCount int
+		err = ctx.db.Get(&invCount, "SELECT COUNT(*) FROM character_inventory WHERE character_id = $1 AND item_id = $2", charID, itemID)
+		require.NoError(t, err)
+		t.Logf("Items in inventory after add: %d", invCount)
+		
+		// Debug: Get the actual IDs from the database
+		type invItem struct {
+			CharacterID string `db:"character_id"`
+			ItemID      string `db:"item_id"`
+		}
+		var dbItem invItem
+		err = ctx.db.Get(&dbItem, "SELECT character_id, item_id FROM character_inventory LIMIT 1")
+		if err == nil {
+			t.Logf("DB has character_id='%s', item_id='%s'", dbItem.CharacterID, dbItem.ItemID)
+			t.Logf("We're looking for character_id='%s', item_id='%s'", charID, itemID)
+		}
+		
+		// Debug: First try to get the inventory via API
+		getReq := createAuthenticatedRequest(t, "GET", "/api/v1/characters/"+charID+"/inventory", nil, userID, ctx.jwtManager)
+		getW := httptest.NewRecorder()
+		ctx.router.ServeHTTP(getW, getReq)
+		t.Logf("Get inventory response: status=%d", getW.Code)
+		if getW.Code != http.StatusOK {
+			t.Logf("Get inventory error: %s", getW.Body.String())
+		}
+		
+		// Now equip the item
 		req := createAuthenticatedRequest(t, "POST", "/api/v1/characters/"+charID+"/inventory/"+itemID+"/equip", nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
 
+		// Debug: log response if not OK
+		if w.Code != http.StatusOK {
+			t.Logf("EquipItem response status: %d, body: %s", w.Code, w.Body.String())
+		}
+
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Verify item is equipped
 		var equipped bool
-		err := ctx.db.Get(&equipped, "SELECT equipped FROM character_inventory WHERE character_id = $1 AND item_id = $2", charID, itemID)
+		err = ctx.db.Get(&equipped, "SELECT equipped FROM character_inventory WHERE character_id = $1 AND item_id = $2", charID, itemID)
 		require.NoError(t, err)
+		if !equipped {
+			t.Logf("Item equipped status: %v", equipped)
+		}
 		assert.True(t, equipped)
 	})
 }

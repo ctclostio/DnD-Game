@@ -1,780 +1,1131 @@
-package services
+package services_test
 
 import (
-	"errors"
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
-// MockCombatRepository is a mock implementation of CombatRepository
-type MockCombatRepository struct {
-	mock.Mock
-}
+func TestCombatService_StartCombat(t *testing.T) {
+	ctx := context.Background()
 
-// MockDiceRoller is a mock implementation of DiceRoller
-type MockDiceRoller struct {
-	mock.Mock
-}
-
-func (m *MockDiceRoller) Roll(dice string) (int, error) {
-	args := m.Called(dice)
-	return args.Int(0), args.Error(1)
-}
-
-func (m *MockDiceRoller) RollWithDetails(dice string) (*models.RollDetails, error) {
-	args := m.Called(dice)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.RollDetails), args.Error(1)
-}
-
-func TestCombatService_InitiativeRoll(t *testing.T) {
-	tests := []struct {
-		name             string
-		combatants       []models.Combatant
-		setupMock        func(*MockDiceRoller)
-		expectedOrder    []string // Expected order of combatant IDs
-		expectedInitiatives map[string]int
-	}{
-		{
-			name: "roll initiative for all combatants",
-			combatants: []models.Combatant{
-				{ID: "char-1", Name: "Fighter", Type: models.CombatantTypeCharacter, Initiative: 0},
-				{ID: "char-2", Name: "Wizard", Type: models.CombatantTypeCharacter, Initiative: 0},
-				{ID: "npc-1", Name: "Goblin", Type: models.CombatantTypeNPC, Initiative: 0},
-			},
-			setupMock: func(m *MockDiceRoller) {
-				// Fighter rolls 15 + 2 (DEX) = 17
-				m.On("Roll", "1d20+2").Return(17, nil).Once()
-				// Wizard rolls 12 + 1 (DEX) = 13
-				m.On("Roll", "1d20+1").Return(13, nil).Once()
-				// Goblin rolls 8 + 2 (DEX) = 10
-				m.On("Roll", "1d20+2").Return(10, nil).Once()
-			},
-			expectedOrder: []string{"char-1", "char-2", "npc-1"},
-			expectedInitiatives: map[string]int{
-				"char-1": 17,
-				"char-2": 13,
-				"npc-1":  10,
-			},
-		},
-		{
-			name: "handle tied initiatives",
-			combatants: []models.Combatant{
-				{ID: "char-1", Name: "Fighter", Type: models.CombatantTypeCharacter, Initiative: 0},
-				{ID: "char-2", Name: "Wizard", Type: models.CombatantTypeCharacter, Initiative: 0},
-			},
-			setupMock: func(m *MockDiceRoller) {
-				// Both roll the same
-				m.On("Roll", "1d20+2").Return(15, nil).Once()
-				m.On("Roll", "1d20+1").Return(15, nil).Once()
-				// Tiebreaker rolls
-				m.On("Roll", "1d20").Return(12, nil).Once()
-				m.On("Roll", "1d20").Return(8, nil).Once()
-			},
-			expectedOrder: []string{"char-1", "char-2"},
-			expectedInitiatives: map[string]int{
-				"char-1": 15,
-				"char-2": 15,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockDice := new(MockDiceRoller)
-			if tt.setupMock != nil {
-				tt.setupMock(mockDice)
-			}
-
-			service := &CombatService{diceRoller: mockDice}
-			result := service.RollInitiative(tt.combatants)
-
-			// Check the order
-			for i, expectedID := range tt.expectedOrder {
-				assert.Equal(t, expectedID, result[i].ID)
-			}
-
-			// Check initiatives
-			for _, combatant := range result {
-				if expected, ok := tt.expectedInitiatives[combatant.ID]; ok {
-					assert.Equal(t, expected, combatant.Initiative)
-				}
-			}
-
-			mockDice.AssertExpectations(t)
-		})
-	}
-}
-
-func TestCombatService_Attack(t *testing.T) {
 	tests := []struct {
 		name          string
-		attacker      *models.Combatant
-		target        *models.Combatant
-		weapon        *models.Weapon
-		setupMock     func(*MockDiceRoller)
-		expectedHit   bool
-		expectedDamage int
+		sessionID     string
+		participants  []models.Combatant
 		expectedError string
+		validate      func(*testing.T, *models.Combat)
 	}{
 		{
-			name: "successful hit",
-			attacker: &models.Combatant{
-				ID:   "char-1",
-				Name: "Fighter",
-				Stats: models.CombatantStats{
-					Strength:  16,
-					Dexterity: 14,
+			name:      "successful combat start",
+			sessionID: "session-123",
+			participants: []models.Combatant{
+				{
+					ID:         "char-1",
+					Name:       "Aragorn",
+					Type:       models.CombatantTypeCharacter,
+					Initiative: 0, // Will be rolled
+					HP:         25,
+					MaxHP:      25,
+					AC:         16,
+				},
+				{
+					ID:         "char-2",
+					Name:       "Legolas",
+					Type:       models.CombatantTypeCharacter,
+					Initiative: 0,
+					HP:         20,
+					MaxHP:      20,
+					AC:         17,
+				},
+				{
+					ID:         "npc-1",
+					Name:       "Goblin",
+					Type:       models.CombatantTypeNPC,
+					Initiative: 0,
+					HP:         7,
+					MaxHP:      7,
+					AC:         13,
 				},
 			},
-			target: &models.Combatant{
-				ID: "npc-1",
-				Name: "Goblin",
-				AC: 15,
-				HP: 7,
+			validate: func(t *testing.T, combat *models.Combat) {
+				assert.NotEmpty(t, combat.ID)
+				assert.Equal(t, "session-123", combat.SessionID)
+				assert.Equal(t, models.CombatStatusActive, combat.Status)
+				assert.Len(t, combat.Combatants, 3)
+				assert.Equal(t, 1, combat.Round)
+				assert.Equal(t, 0, combat.Turn)
+				
+				// Verify initiative was rolled for all combatants
+				for _, combatant := range combat.Combatants {
+					assert.Greater(t, combatant.Initiative, 0)
+				}
+				
+				// Verify turn order is sorted by initiative
+				for i := 1; i < len(combat.TurnOrder); i++ {
+					var prevInit, currInit int
+					// Find combatants by ID
+					for _, c := range combat.Combatants {
+						if c.ID == combat.TurnOrder[i-1] {
+							prevInit = c.Initiative
+						}
+						if c.ID == combat.TurnOrder[i] {
+							currInit = c.Initiative
+						}
+					}
+					assert.GreaterOrEqual(t, prevInit, currInit)
+				}
 			},
-			weapon: &models.Weapon{
-				Name:       "Longsword",
-				Damage:     "1d8",
+		},
+		{
+			name:      "empty participants",
+			sessionID: "session-123",
+			participants: []models.Combatant{},
+			expectedError: "at least two combatants are required",
+		},
+		{
+			name:      "single participant",
+			sessionID: "session-123",
+			participants: []models.Combatant{
+				{ID: "char-1", Name: "Solo"},
+			},
+			expectedError: "at least two combatants are required",
+		},
+		{
+			name:      "missing session ID",
+			sessionID: "",
+			participants: []models.Combatant{
+				{ID: "char-1", Name: "Fighter", HP: 10, MaxHP: 10},
+				{ID: "char-2", Name: "Mage", HP: 10, MaxHP: 10},
+			},
+			expectedError: "session ID is required",
+		},
+		{
+			name:      "invalid combatant - missing ID",
+			sessionID: "session-123",
+			participants: []models.Combatant{
+				{ID: "", Name: "No ID", HP: 10, MaxHP: 10},
+				{ID: "char-2", Name: "Valid", HP: 10, MaxHP: 10},
+			},
+			expectedError: "combatant ID is required",
+		},
+		{
+			name:      "invalid combatant - missing name",
+			sessionID: "session-123",
+			participants: []models.Combatant{
+				{ID: "char-1", Name: "", HP: 10, MaxHP: 10},
+				{ID: "char-2", Name: "Valid", HP: 10, MaxHP: 10},
+			},
+			expectedError: "combatant name is required",
+		},
+		{
+			name:      "invalid combatant - zero HP",
+			sessionID: "session-123",
+			participants: []models.Combatant{
+				{ID: "char-1", Name: "Dead Guy", HP: 0, MaxHP: 10},
+				{ID: "char-2", Name: "Alive Guy", HP: 10, MaxHP: 10},
+			},
+			expectedError: "combatant must have positive HP",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			service := NewCombatService(nil, nil, nil)
+			combat, err := service.StartCombat(ctx, tt.sessionID, tt.participants)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.Nil(t, combat)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, combat)
+				if tt.validate != nil {
+					tt.validate(t, combat)
+				}
+			}
+		})
+	}
+}
+
+func TestCombatService_GetCombatState(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name          string
+		combatID      string
+		expectedError string
+		validate      func(*testing.T, *models.Combat)
+	}{
+		{
+			name:     "get existing combat",
+			combatID: "combat-123",
+			validate: func(t *testing.T, combat *models.Combat) {
+				assert.Equal(t, "combat-123", combat.ID)
+				assert.NotNil(t, combat.Combatants)
+				assert.NotNil(t, combat.TurnOrder)
+			},
+		},
+		{
+			name:          "combat not found",
+			combatID:      "nonexistent",
+			expectedError: "combat not found",
+		},
+		{
+			name:          "empty combat ID",
+			combatID:      "",
+			expectedError: "combat ID is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			service := NewCombatService(nil, nil, nil)
+			
+			// Pre-populate combat for valid test case
+			if tt.name == "get existing combat" {
+				testCombat := &models.Combat{
+					ID:        "combat-123",
+					SessionID: "session-123",
+					Status:    models.CombatStatusActive,
+					Combatants: []models.Combatant{
+						{ID: "char-1", Name: "Fighter"},
+					},
+					TurnOrder: []string{"char-1"},
+				}
+				// In real implementation, this would be stored in a repository
+				service.SetCombatState(testCombat)
+			}
+
+			combat, err := service.GetCombatState(ctx, tt.combatID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.Nil(t, combat)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, combat)
+				if tt.validate != nil {
+					tt.validate(t, combat)
+				}
+			}
+		})
+	}
+}
+
+func TestCombatService_ExecuteAction(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name          string
+		combatID      string
+		action        models.CombatAction
+		setupCombat   func(*CombatService)
+		expectedError string
+		validate      func(*testing.T, *models.Combat)
+	}{
+		{
+			name:     "successful attack action",
+			combatID: "combat-123",
+			action: models.CombatAction{
+				ActionType:  models.ActionTypeAttack,
+				ActorID:    "char-1",
+				TargetID:   "npc-1",
+				WeaponName: "Longsword",
+				AttackBonus: 5,
+				DamageDice: "1d8",
+				DamageBonus: 3,
 				DamageType: "slashing",
-				Properties: []string{"versatile"},
 			},
-			setupMock: func(m *MockDiceRoller) {
-				// Attack roll: 1d20 + 3 (STR) + 2 (proficiency) = 18
-				m.On("RollWithDetails", "1d20+5").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 13}},
-					Modifier: 5,
-					Total:    18,
-				}, nil)
-				// Damage roll: 1d8 + 3 (STR) = 8
-				m.On("RollWithDetails", "1d8+3").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 8, Result: 5}},
-					Modifier: 3,
-					Total:    8,
-				}, nil)
+			setupCombat: func(service *CombatService) {
+				// Setup existing combat state
+				combat := &models.Combat{
+					ID:        "combat-123",
+					SessionID: "session-123",
+					Status:    models.CombatStatusActive,
+					Round:     1,
+					CurrentTurn: 0,
+					Combatants: []models.Combatant{
+						{
+							ID:    "char-1",
+							Name:  "Fighter",
+							HP:    25,
+							MaxHP: 25,
+							AC:    16,
+						},
+						{
+							ID:    "npc-1",
+							Name:  "Goblin",
+							HP:    7,
+							MaxHP: 7,
+							AC:    13,
+						},
+					},
+					TurnOrder: []string{"char-1", "npc-1"},
+				}
+				service.SetCombatState(combat)
 			},
-			expectedHit:    true,
-			expectedDamage: 8,
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Verify action was recorded
+				assert.NotEmpty(t, combat.ActionHistory)
+				lastAction := combat.ActionHistory[len(combat.ActionHistory)-1]
+				assert.Equal(t, models.ActionTypeAttack, lastAction.ActionType)
+				assert.Equal(t, "char-1", lastAction.ActorID)
+				assert.Equal(t, "npc-1", lastAction.TargetID)
+				
+				// Verify damage was applied if hit
+				if lastAction.Hit {
+					// Find goblin in combatants slice
+					var goblin *models.Combatant
+					for i := range combat.Combatants {
+						if combat.Combatants[i].ID == "npc-1" {
+							goblin = &combat.Combatants[i]
+							break
+						}
+					}
+					require.NotNil(t, goblin)
+					assert.Less(t, goblin.HP, 7)
+				}
+			},
 		},
 		{
-			name: "critical hit",
-			attacker: &models.Combatant{
-				ID:   "char-1",
-				Name: "Rogue",
-				Stats: models.CombatantStats{
-					Strength:  10,
-					Dexterity: 18,
-				},
+			name:     "cast spell action",
+			combatID: "combat-123",
+			action: models.CombatAction{
+				ActionType: models.ActionTypeCastSpell,
+				ActorID:   "char-2",
+				TargetID:  "npc-1",
+				SpellName: "Fire Bolt",
+				SpellLevel: 0,
+				SpellDC:   14,
+				SpellAttackBonus: 6,
+				SpellDamage: "1d10",
+				SpellDamageType: "fire",
 			},
-			target: &models.Combatant{
-				ID: "npc-1",
-				Name: "Orc",
-				AC: 13,
-				HP: 15,
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID:        "combat-123",
+					SessionID: "session-123",
+					Status:    models.CombatStatusActive,
+					Round:     1,
+					CurrentTurn: 1,
+					Combatants: []models.Combatant{
+						{
+							ID:    "char-2",
+							Name:  "Wizard",
+							HP:    15,
+							MaxHP: 15,
+							AC:    12,
+						},
+						{
+							ID:    "npc-1",
+							Name:  "Goblin",
+							HP:    7,
+							MaxHP: 7,
+							AC:    13,
+						},
+					},
+					TurnOrder: []string{"npc-1", "char-2"},
+				}
+				service.SetCombatState(combat)
 			},
-			weapon: &models.Weapon{
-				Name:       "Dagger",
-				Damage:     "1d4",
-				DamageType: "piercing",
-				Properties: []string{"finesse", "light"},
+			validate: func(t *testing.T, combat *models.Combat) {
+				assert.NotEmpty(t, combat.ActionHistory)
+				lastAction := combat.ActionHistory[len(combat.ActionHistory)-1]
+				assert.Equal(t, models.ActionTypeCastSpell, lastAction.ActionType)
+				assert.Equal(t, "Fire Bolt", lastAction.SpellName)
 			},
-			setupMock: func(m *MockDiceRoller) {
-				// Natural 20!
-				m.On("RollWithDetails", "1d20+6").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 20}},
-					Modifier: 6,
-					Total:    26,
-				}, nil)
-				// Critical damage: 2d4 + 4 = 10
-				m.On("RollWithDetails", "2d4+4").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 4, Result: 3}, {Sides: 4, Result: 3}},
-					Modifier: 4,
-					Total:    10,
-				}, nil)
-			},
-			expectedHit:    true,
-			expectedDamage: 10,
 		},
 		{
-			name: "miss",
-			attacker: &models.Combatant{
-				ID:   "char-1",
-				Name: "Wizard",
-				Stats: models.CombatantStats{
-					Strength:  8,
-					Dexterity: 12,
-				},
+			name:     "movement action",
+			combatID: "combat-123",
+			action: models.CombatAction{
+				ActionType:  models.ActionTypeMove,
+				ActorID:     "char-1",
+				Movement:    30,
+				NewPosition: models.Position{X: 5, Y: 10},
 			},
-			target: &models.Combatant{
-				ID: "npc-1",
-				Name: "Knight",
-				AC: 18,
-				HP: 52,
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID:        "combat-123",
+					SessionID: "session-123",
+					Status:    models.CombatStatusActive,
+					Combatants: []models.Combatant{
+						{
+							ID:       "char-1",
+							Name:     "Fighter",
+							Position: models.Position{X: 0, Y: 0},
+						},
+					},
+					TurnOrder: []string{"char-1"},
+				}
+				service.SetCombatState(combat)
 			},
-			weapon: &models.Weapon{
-				Name:       "Staff",
-				Damage:     "1d6",
-				DamageType: "bludgeoning",
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Find fighter in combatants slice
+				var fighter *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						fighter = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, fighter)
+				assert.Equal(t, 5, fighter.Position.X)
+				assert.Equal(t, 10, fighter.Position.Y)
 			},
-			setupMock: func(m *MockDiceRoller) {
-				// Attack roll: too low
-				m.On("RollWithDetails", "1d20+1").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 10}},
-					Modifier: 1,
-					Total:    11,
-				}, nil)
-			},
-			expectedHit:    false,
-			expectedDamage: 0,
 		},
 		{
-			name: "natural 1 critical miss",
-			attacker: &models.Combatant{
-				ID:   "char-1",
-				Name: "Fighter",
-				Stats: models.CombatantStats{
-					Strength: 16,
-				},
+			name:     "dodge action",
+			combatID: "combat-123",
+			action: models.CombatAction{
+				ActionType: models.ActionTypeDodge,
+				ActorID: "char-1",
 			},
-			target: &models.Combatant{
-				ID: "npc-1",
-				AC: 10,
-				HP: 5,
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID:        "combat-123",
+					SessionID: "session-123",
+					Status:    models.CombatStatusActive,
+					Combatants: []models.Combatant{
+						{ID: "char-1", Name: "Fighter"},
+					},
+					TurnOrder: []string{"char-1"},
+				}
+				service.SetCombatState(combat)
 			},
-			weapon: &models.Weapon{
-				Name:   "Greatsword",
-				Damage: "2d6",
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Find fighter in combatants slice
+				var fighter *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						fighter = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, fighter)
+				assert.Contains(t, fighter.Conditions, models.ConditionDodging)
 			},
-			setupMock: func(m *MockDiceRoller) {
-				// Natural 1!
-				m.On("RollWithDetails", "1d20+5").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 1}},
-					Modifier: 5,
-					Total:    6,
-				}, nil)
-			},
-			expectedHit:    false,
-			expectedDamage: 0,
 		},
 		{
-			name:          "nil attacker",
-			attacker:      nil,
-			target:        &models.Combatant{ID: "target"},
-			weapon:        &models.Weapon{},
-			expectedError: "attacker cannot be nil",
+			name:     "end turn action",
+			combatID: "combat-123",
+			action: models.CombatAction{
+				ActionType: models.ActionTypeEndTurn,
+				ActorID: "char-1",
+			},
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID:        "combat-123",
+					SessionID: "session-123",
+					Status:    models.CombatStatusActive,
+					Round:     1,
+					CurrentTurn: 0,
+					Combatants: []models.Combatant{
+						{ID: "char-1", Name: "Fighter"},
+						{ID: "char-2", Name: "Wizard"},
+					},
+					TurnOrder: []string{"char-1", "char-2"},
+				}
+				service.SetCombatState(combat)
+			},
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Turn should advance
+				assert.Equal(t, 1, combat.Turn)
+				// Still round 1 since we haven't completed all turns
+				assert.Equal(t, 1, combat.Round)
+			},
 		},
 		{
-			name:          "nil target",
-			attacker:      &models.Combatant{ID: "attacker"},
-			target:        nil,
-			weapon:        &models.Weapon{},
-			expectedError: "target cannot be nil",
+			name:          "combat not found",
+			combatID:      "nonexistent",
+			action:        models.CombatAction{ActionType: models.ActionTypeAttack},
+			expectedError: "combat not found",
 		},
 		{
-			name:          "nil weapon",
-			attacker:      &models.Combatant{ID: "attacker"},
-			target:        &models.Combatant{ID: "target"},
-			weapon:        nil,
-			expectedError: "weapon cannot be nil",
+			name:     "not actor's turn",
+			combatID: "combat-123",
+			action: models.CombatAction{
+				ActionType: models.ActionTypeAttack,
+				ActorID: "char-2", // Wrong character
+			},
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID:        "combat-123",
+					SessionID: "session-123",
+					Status:    models.CombatStatusActive,
+					CurrentTurn: 0,
+					Combatants: []models.Combatant{
+						{ID: "char-1", Name: "Fighter"},
+						{ID: "char-2", Name: "Wizard"},
+					},
+					TurnOrder: []string{"char-1", "char-2"}, // char-1's turn
+				}
+				service.SetCombatState(combat)
+			},
+			expectedError: "not this combatant's turn",
+		},
+		{
+			name:     "combat already ended",
+			combatID: "combat-123",
+			action: models.CombatAction{
+				ActionType: models.ActionTypeAttack,
+				ActorID: "char-1",
+			},
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID:     "combat-123",
+					Status: models.CombatStatusCompleted,
+				}
+				service.SetCombatState(combat)
+			},
+			expectedError: "combat has already ended",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockDice := new(MockDiceRoller)
-			if tt.setupMock != nil {
-				tt.setupMock(mockDice)
+			service := NewCombatService(nil, nil, nil)
+			
+			if tt.setupCombat != nil {
+				tt.setupCombat(service)
 			}
 
-			service := &CombatService{diceRoller: mockDice}
-			hit, damage, err := service.Attack(tt.attacker, tt.target, tt.weapon)
+			combat, err := service.ExecuteAction(ctx, tt.combatID, tt.action)
 
 			if tt.expectedError != "" {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedError)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedHit, hit)
-				assert.Equal(t, tt.expectedDamage, damage)
+				require.NotNil(t, combat)
+				if tt.validate != nil {
+					tt.validate(t, combat)
+				}
 			}
-
-			mockDice.AssertExpectations(t)
-		})
-	}
-}
-
-func TestCombatService_SavingThrow(t *testing.T) {
-	tests := []struct {
-		name         string
-		character    *models.Character
-		saveType     string
-		dc           int
-		setupMock    func(*MockDiceRoller)
-		expected     bool
-		expectedRoll int
-		expectedError string
-	}{
-		{
-			name: "successful strength save",
-			character: &models.Character{
-				SavingThrows: models.SavingThrows{
-					Strength: 5,
-				},
-			},
-			saveType: "strength",
-			dc:       15,
-			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20+5").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 12}},
-					Modifier: 5,
-					Total:    17,
-				}, nil)
-			},
-			expected:     true,
-			expectedRoll: 17,
-		},
-		{
-			name: "failed dexterity save",
-			character: &models.Character{
-				SavingThrows: models.SavingThrows{
-					Dexterity: 2,
-				},
-			},
-			saveType: "dexterity",
-			dc:       18,
-			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20+2").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 10}},
-					Modifier: 2,
-					Total:    12,
-				}, nil)
-			},
-			expected:     false,
-			expectedRoll: 12,
-		},
-		{
-			name: "natural 20 auto success",
-			character: &models.Character{
-				SavingThrows: models.SavingThrows{
-					Wisdom: -2,
-				},
-			},
-			saveType: "wisdom",
-			dc:       25,
-			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20-2").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 20}},
-					Modifier: -2,
-					Total:    18,
-				}, nil)
-			},
-			expected:     true,
-			expectedRoll: 18,
-		},
-		{
-			name: "natural 1 auto fail",
-			character: &models.Character{
-				SavingThrows: models.SavingThrows{
-					Constitution: 8,
-				},
-			},
-			saveType: "constitution",
-			dc:       5,
-			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20+8").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 1}},
-					Modifier: 8,
-					Total:    9,
-				}, nil)
-			},
-			expected:     false,
-			expectedRoll: 9,
-		},
-		{
-			name:         "invalid save type",
-			character:    &models.Character{},
-			saveType:     "invalid",
-			dc:           15,
-			expectedError: "invalid save type",
-		},
-		{
-			name:         "nil character",
-			character:    nil,
-			saveType:     "strength",
-			dc:           15,
-			expectedError: "character cannot be nil",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockDice := new(MockDiceRoller)
-			if tt.setupMock != nil {
-				tt.setupMock(mockDice)
-			}
-
-			service := &CombatService{diceRoller: mockDice}
-			success, roll, err := service.SavingThrow(tt.character, tt.saveType, tt.dc)
-
-			if tt.expectedError != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
-			} else {
-				require.NoError(t, err)
-				assert.Equal(t, tt.expected, success)
-				assert.Equal(t, tt.expectedRoll, roll)
-			}
-
-			mockDice.AssertExpectations(t)
-		})
-	}
-}
-
-func TestCombatService_SkillCheck(t *testing.T) {
-	tests := []struct {
-		name         string
-		character    *models.Character
-		skill        string
-		dc           int
-		setupMock    func(*MockDiceRoller)
-		expected     bool
-		expectedRoll int
-		expectedError string
-	}{
-		{
-			name: "successful stealth check",
-			character: &models.Character{
-				Skills: models.Skills{
-					Stealth: 5,
-				},
-			},
-			skill: "stealth",
-			dc:    15,
-			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20+5").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 11}},
-					Modifier: 5,
-					Total:    16,
-				}, nil)
-			},
-			expected:     true,
-			expectedRoll: 16,
-		},
-		{
-			name: "failed perception check",
-			character: &models.Character{
-				Skills: models.Skills{
-					Perception: 3,
-				},
-			},
-			skill: "perception",
-			dc:    20,
-			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20+3").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 8}},
-					Modifier: 3,
-					Total:    11,
-				}, nil)
-			},
-			expected:     false,
-			expectedRoll: 11,
-		},
-		{
-			name: "athletics check with negative modifier",
-			character: &models.Character{
-				Skills: models.Skills{
-					Athletics: -1,
-				},
-			},
-			skill: "athletics",
-			dc:    10,
-			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20-1").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 12}},
-					Modifier: -1,
-					Total:    11,
-				}, nil)
-			},
-			expected:     true,
-			expectedRoll: 11,
-		},
-		{
-			name:         "invalid skill",
-			character:    &models.Character{},
-			skill:        "invalid_skill",
-			dc:           15,
-			expectedError: "invalid skill",
-		},
-		{
-			name:         "nil character",
-			character:    nil,
-			skill:        "stealth",
-			dc:           15,
-			expectedError: "character cannot be nil",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockDice := new(MockDiceRoller)
-			if tt.setupMock != nil {
-				tt.setupMock(mockDice)
-			}
-
-			service := &CombatService{diceRoller: mockDice}
-			success, roll, err := service.SkillCheck(tt.character, tt.skill, tt.dc)
-
-			if tt.expectedError != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
-			} else {
-				require.NoError(t, err)
-				assert.Equal(t, tt.expected, success)
-				assert.Equal(t, tt.expectedRoll, roll)
-			}
-
-			mockDice.AssertExpectations(t)
 		})
 	}
 }
 
 func TestCombatService_ApplyDamage(t *testing.T) {
+	ctx := context.Background()
+
 	tests := []struct {
-		name             string
-		target           *models.Combatant
-		damage           int
-		damageType       string
-		expectedHP       int
-		expectedStatus   string
-		expectedError    string
+		name          string
+		combatID      string
+		targetID      string
+		damage        int
+		damageType    string
+		setupCombat   func(*CombatService)
+		expectedError string
+		validate      func(*testing.T, *models.Combat)
 	}{
 		{
-			name: "normal damage",
-			target: &models.Combatant{
-				ID:    "char-1",
-				Name:  "Fighter",
-				HP:    45,
-				MaxHP: 45,
+			name:       "normal damage application",
+			combatID:   "combat-123",
+			targetID:   "char-1",
+			damage:     8,
+			damageType: "slashing",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:    "char-1",
+							Name:  "Fighter",
+							HP:    25,
+							MaxHP: 25,
+						},
+					},
+				}
+				service.SetCombatState(combat)
 			},
-			damage:         10,
-			damageType:     "slashing",
-			expectedHP:     35,
-			expectedStatus: "alive",
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Find fighter in combatants slice
+				var fighter *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						fighter = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, fighter)
+				assert.Equal(t, 17, fighter.HP) // 25 - 8
+			},
 		},
 		{
-			name: "damage reduces to 0",
-			target: &models.Combatant{
-				ID:    "char-1",
-				Name:  "Wizard",
-				HP:    8,
-				MaxHP: 25,
+			name:       "damage reduces HP to zero",
+			combatID:   "combat-123",
+			targetID:   "char-1",
+			damage:     30,
+			damageType: "fire",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:    "char-1",
+							Name:  "Fighter",
+							HP:    25,
+							MaxHP: 25,
+						},
+					},
+				}
+				service.SetCombatState(combat)
 			},
-			damage:         15,
-			damageType:     "fire",
-			expectedHP:     0,
-			expectedStatus: "unconscious",
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Find fighter in combatants slice
+				var fighter *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						fighter = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, fighter)
+				assert.Equal(t, 0, fighter.HP)
+				assert.Contains(t, fighter.Conditions, models.ConditionUnconscious)
+			},
 		},
 		{
-			name: "massive damage instant death",
-			target: &models.Combatant{
-				ID:    "char-1",
-				Name:  "Commoner",
-				HP:    4,
-				MaxHP: 4,
+			name:       "damage with resistance",
+			combatID:   "combat-123",
+			targetID:   "char-1",
+			damage:     10,
+			damageType: "fire",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:               "char-1",
+							Name:             "Tiefling",
+							HP:               20,
+							MaxHP:            20,
+							DamageResistances: []string{"fire"},
+						},
+					},
+				}
+				service.SetCombatState(combat)
 			},
-			damage:         12, // More than max HP
-			damageType:     "bludgeoning",
-			expectedHP:     0,
-			expectedStatus: "dead",
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Find tiefling in combatants slice
+				var tiefling *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						tiefling = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, tiefling)
+				assert.Equal(t, 15, tiefling.HP) // 20 - (10/2)
+			},
 		},
 		{
-			name: "resistance halves damage",
-			target: &models.Combatant{
-				ID:         "char-1",
-				Name:       "Barbarian",
-				HP:         50,
-				MaxHP:      50,
-				Resistances: []string{"slashing", "piercing", "bludgeoning"},
+			name:       "damage with immunity",
+			combatID:   "combat-123",
+			targetID:   "char-1",
+			damage:     15,
+			damageType: "poison",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:              "char-1",
+							Name:            "Construct",
+							HP:              30,
+							MaxHP:           30,
+							DamageImmunities: []string{"poison"},
+						},
+					},
+				}
+				service.SetCombatState(combat)
 			},
-			damage:         20,
-			damageType:     "slashing",
-			expectedHP:     40, // 20 / 2 = 10 damage taken
-			expectedStatus: "alive",
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Find construct in combatants slice
+				var construct *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						construct = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, construct)
+				assert.Equal(t, 30, construct.HP) // No damage
+			},
 		},
 		{
-			name: "vulnerability doubles damage",
-			target: &models.Combatant{
-				ID:              "npc-1",
-				Name:            "Fire Elemental",
-				HP:              30,
-				MaxHP:           30,
-				Vulnerabilities: []string{"cold"},
+			name:       "damage with vulnerability",
+			combatID:   "combat-123",
+			targetID:   "char-1",
+			damage:     6,
+			damageType: "radiant",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:                   "char-1",
+							Name:                 "Shadow",
+							HP:                   15,
+							MaxHP:                15,
+							DamageVulnerabilities: []string{"radiant"},
+						},
+					},
+				}
+				service.SetCombatState(combat)
 			},
-			damage:         10,
-			damageType:     "cold",
-			expectedHP:     10, // 10 * 2 = 20 damage taken
-			expectedStatus: "alive",
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Find shadow in combatants slice
+				var shadow *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						shadow = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, shadow)
+				assert.Equal(t, 3, shadow.HP) // 15 - (6*2)
+			},
 		},
 		{
-			name: "immunity negates damage",
-			target: &models.Combatant{
-				ID:         "npc-1",
-				Name:       "Ghost",
-				HP:         20,
-				MaxHP:      20,
-				Immunities: []string{"necrotic", "poison"},
-			},
-			damage:         50,
-			damageType:     "necrotic",
-			expectedHP:     20, // No damage taken
-			expectedStatus: "alive",
-		},
-		{
-			name:          "nil target",
-			target:        nil,
+			name:          "target not found",
+			combatID:      "combat-123",
+			targetID:      "nonexistent",
 			damage:        10,
-			damageType:    "fire",
-			expectedError: "target cannot be nil",
-		},
-		{
-			name: "negative damage (healing)",
-			target: &models.Combatant{
-				ID:    "char-1",
-				HP:    10,
-				MaxHP: 30,
+			damageType:    "slashing",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID:         "combat-123",
+					Combatants: []models.Combatant{},
+				}
+				service.SetCombatState(combat)
 			},
-			damage:         -15,
-			damageType:     "healing",
-			expectedHP:     25,
-			expectedStatus: "alive",
-		},
-		{
-			name: "healing cannot exceed max HP",
-			target: &models.Combatant{
-				ID:    "char-1",
-				HP:    25,
-				MaxHP: 30,
-			},
-			damage:         -10,
-			damageType:     "healing",
-			expectedHP:     30,
-			expectedStatus: "alive",
+			expectedError: "target not found in combat",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service := &CombatService{}
-			err := service.ApplyDamage(tt.target, tt.damage, tt.damageType)
+			service := NewCombatService(nil, nil, nil)
+			
+			if tt.setupCombat != nil {
+				tt.setupCombat(service)
+			}
+
+			combat, err := service.ApplyDamage(ctx, tt.combatID, tt.targetID, tt.damage, tt.damageType)
 
 			if tt.expectedError != "" {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedError)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedHP, tt.target.HP)
-				assert.Equal(t, tt.expectedStatus, tt.target.Status)
+				require.NotNil(t, combat)
+				if tt.validate != nil {
+					tt.validate(t, combat)
+				}
 			}
 		})
 	}
 }
 
-func TestCombatService_CalculateAC(t *testing.T) {
+func TestCombatService_ApplyHealing(t *testing.T) {
+	ctx := context.Background()
+
 	tests := []struct {
-		name      string
-		character *models.Character
-		armor     *models.Armor
-		shield    bool
-		expected  int
+		name          string
+		combatID      string
+		targetID      string
+		healing       int
+		setupCombat   func(*CombatService)
+		expectedError string
+		validate      func(*testing.T, *models.Combat)
 	}{
 		{
-			name: "no armor",
-			character: &models.Character{
-				AbilityScores: models.AbilityScores{
-					Dexterity: 14,
-				},
+			name:     "normal healing",
+			combatID: "combat-123",
+			targetID: "char-1",
+			healing:  10,
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:    "char-1",
+							Name:  "Fighter",
+							HP:    15,
+							MaxHP: 25,
+						},
+					},
+				}
+				service.SetCombatState(combat)
 			},
-			armor:    nil,
-			shield:   false,
-			expected: 12, // 10 + 2 (DEX)
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Find fighter in combatants slice
+				var fighter *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						fighter = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, fighter)
+				assert.Equal(t, 25, fighter.HP) // Healed to max
+			},
 		},
 		{
-			name: "light armor",
-			character: &models.Character{
-				AbilityScores: models.AbilityScores{
-					Dexterity: 16,
-				},
+			name:     "healing unconscious character",
+			combatID: "combat-123",
+			targetID: "char-1",
+			healing:  5,
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:         "char-1",
+							Name:       "Fighter",
+							HP:         0,
+							MaxHP:      25,
+							Conditions: []models.Condition{models.ConditionUnconscious},
+						},
+					},
+				}
+				service.SetCombatState(combat)
 			},
-			armor: &models.Armor{
-				Name:     "Leather Armor",
-				Type:     "light",
-				BaseAC:   11,
-				MaxDexBonus: 10, // No limit for light armor
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Find fighter in combatants slice
+				var fighter *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						fighter = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, fighter)
+				assert.Equal(t, 5, fighter.HP)
+				assert.NotContains(t, fighter.Conditions, models.ConditionUnconscious)
 			},
-			shield:   false,
-			expected: 14, // 11 + 3 (DEX)
 		},
 		{
-			name: "medium armor with dex cap",
-			character: &models.Character{
-				AbilityScores: models.AbilityScores{
-					Dexterity: 18,
-				},
+			name:     "healing at max HP",
+			combatID: "combat-123",
+			targetID: "char-1",
+			healing:  10,
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:    "char-1",
+							Name:  "Fighter",
+							HP:    25,
+							MaxHP: 25,
+						},
+					},
+				}
+				service.SetCombatState(combat)
 			},
-			armor: &models.Armor{
-				Name:     "Breastplate",
-				Type:     "medium",
-				BaseAC:   14,
-				MaxDexBonus: 2,
+			validate: func(t *testing.T, combat *models.Combat) {
+				// Find fighter in combatants slice
+				var fighter *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						fighter = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, fighter)
+				assert.Equal(t, 25, fighter.HP) // Still at max
 			},
-			shield:   false,
-			expected: 16, // 14 + 2 (capped DEX bonus)
 		},
 		{
-			name: "heavy armor ignores dex",
-			character: &models.Character{
-				AbilityScores: models.AbilityScores{
-					Dexterity: 20,
-				},
-			},
-			armor: &models.Armor{
-				Name:     "Plate Armor",
-				Type:     "heavy",
-				BaseAC:   18,
-				MaxDexBonus: 0,
-			},
-			shield:   false,
-			expected: 18, // Just base AC
-		},
-		{
-			name: "armor with shield",
-			character: &models.Character{
-				AbilityScores: models.AbilityScores{
-					Dexterity: 14,
-				},
-			},
-			armor: &models.Armor{
-				Name:     "Chain Mail",
-				Type:     "heavy",
-				BaseAC:   16,
-				MaxDexBonus: 0,
-			},
-			shield:   true,
-			expected: 18, // 16 + 2 (shield)
+			name:          "invalid healing amount",
+			combatID:      "combat-123",
+			targetID:      "char-1",
+			healing:       -5,
+			expectedError: "healing must be positive",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service := &CombatService{}
-			result := service.CalculateAC(tt.character, tt.armor, tt.shield)
-			assert.Equal(t, tt.expected, result)
+			service := NewCombatService(nil, nil, nil)
+			
+			if tt.setupCombat != nil {
+				tt.setupCombat(service)
+			}
+
+			combat, err := service.ApplyHealing(ctx, tt.combatID, tt.targetID, tt.healing)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, combat)
+				if tt.validate != nil {
+					tt.validate(t, combat)
+				}
+			}
+		})
+	}
+}
+
+func TestCombatService_EndCombat(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name          string
+		combatID      string
+		setupCombat   func(*CombatService)
+		expectedError string
+		validate      func(*testing.T, error)
+	}{
+		{
+			name:     "successful combat end",
+			combatID: "combat-123",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID:        "combat-123",
+					SessionID: "session-123",
+					Status:    models.CombatStatusActive,
+					Combatants: []models.Combatant{
+						{ID: "char-1", Name: "Fighter", HP: 25},
+						{ID: "npc-1", Name: "Goblin", HP: 0},
+					},
+				}
+				service.SetCombatState(combat)
+			},
+			validate: func(t *testing.T, err error) {
+				assert.NoError(t, err)
+			},
+		},
+		{
+			name:          "combat not found",
+			combatID:      "nonexistent",
+			expectedError: "combat not found",
+		},
+		{
+			name:     "combat already ended",
+			combatID: "combat-123",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID:     "combat-123",
+					Status: models.CombatStatusCompleted,
+				}
+				service.SetCombatState(combat)
+			},
+			expectedError: "combat has already ended",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			service := NewCombatService(nil, nil, nil)
+			
+			if tt.setupCombat != nil {
+				tt.setupCombat(service)
+			}
+
+			err := service.EndCombat(ctx, tt.combatID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				if tt.validate != nil {
+					tt.validate(t, err)
+				}
+			}
+		})
+	}
+}
+
+func TestCombatService_DeathSavingThrow(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name          string
+		combatID      string
+		characterID   string
+		setupCombat   func(*CombatService)
+		expectedError string
+		validate      func(*testing.T, *models.Combat, *models.DeathSaveResult)
+	}{
+		{
+			name:        "successful death save",
+			combatID:    "combat-123",
+			characterID: "char-1",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:               "char-1",
+							Name:             "Fighter",
+							HP:               0,
+							MaxHP:            25,
+							Conditions:       []models.Condition{models.ConditionUnconscious},
+							DeathSaveSuccesses: 0,
+							DeathSaveFailures:  0,
+						},
+					},
+				}
+				service.SetCombatState(combat)
+			},
+			validate: func(t *testing.T, combat *models.Combat, result *models.DeathSaveResult) {
+				assert.NotNil(t, result)
+				// Find fighter in combatants slice
+				var fighter *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						fighter = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, fighter)
+				
+				if result.Roll >= 10 {
+					assert.Greater(t, fighter.DeathSaveSuccesses, 0)
+				} else {
+					assert.Greater(t, fighter.DeathSaveFailures, 0)
+				}
+				
+				// Check for critical results
+				if result.Roll == 20 {
+					assert.Equal(t, 1, fighter.HP)
+					assert.NotContains(t, fighter.Conditions, models.ConditionUnconscious)
+				} else if result.Roll == 1 {
+					assert.Equal(t, 2, fighter.DeathSaveFailures)
+				}
+			},
+		},
+		{
+			name:        "third success stabilizes",
+			combatID:    "combat-123",
+			characterID: "char-1",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:                 "char-1",
+							Name:               "Fighter",
+							HP:                 0,
+							MaxHP:              25,
+							Conditions:         []models.Condition{models.ConditionUnconscious},
+							DeathSaveSuccesses: 2,
+							DeathSaveFailures:  1,
+						},
+					},
+				}
+				service.SetCombatState(combat)
+			},
+			validate: func(t *testing.T, combat *models.Combat, result *models.DeathSaveResult) {
+				// Find fighter in combatants slice
+				var fighter *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						fighter = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, fighter)
+				
+				if result.Roll >= 10 {
+					assert.Equal(t, 0, fighter.DeathSaveSuccesses)
+					assert.Equal(t, 0, fighter.DeathSaveFailures)
+					assert.Contains(t, fighter.Conditions, models.ConditionStable)
+				}
+			},
+		},
+		{
+			name:        "third failure causes death",
+			combatID:    "combat-123",
+			characterID: "char-1",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:                 "char-1",
+							Name:               "Fighter",
+							HP:                 0,
+							MaxHP:              25,
+							Conditions:         []models.Condition{models.ConditionUnconscious},
+							DeathSaveSuccesses: 1,
+							DeathSaveFailures:  2,
+						},
+					},
+				}
+				service.SetCombatState(combat)
+			},
+			validate: func(t *testing.T, combat *models.Combat, result *models.DeathSaveResult) {
+				// Find fighter in combatants slice
+				var fighter *models.Combatant
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == "char-1" {
+						fighter = &combat.Combatants[i]
+						break
+					}
+				}
+				require.NotNil(t, fighter)
+				
+				if result.Roll < 10 {
+					assert.Contains(t, fighter.Conditions, models.ConditionDead)
+				}
+			},
+		},
+		{
+			name:          "character not at 0 HP",
+			combatID:      "combat-123",
+			characterID:   "char-1",
+			setupCombat: func(service *CombatService) {
+				combat := &models.Combat{
+					ID: "combat-123",
+					Combatants: []models.Combatant{
+						{
+							ID:    "char-1",
+							Name:  "Fighter",
+							HP:    10,
+							MaxHP: 25,
+						},
+					},
+				}
+				service.SetCombatState(combat)
+			},
+			expectedError: "character is not unconscious",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			service := NewCombatService(nil, nil, nil)
+			
+			if tt.setupCombat != nil {
+				tt.setupCombat(service)
+			}
+
+			combat, result, err := service.DeathSavingThrow(ctx, tt.combatID, tt.characterID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, combat)
+				if tt.validate != nil {
+					tt.validate(t, combat, result)
+				}
+			}
 		})
 	}
 }

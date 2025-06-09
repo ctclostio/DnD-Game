@@ -105,7 +105,9 @@ func TestValidationMiddleware_Validate(t *testing.T) {
 			// Check response
 			if tt.expectedError {
 				assert.Equal(t, tt.expectedStatus, rec.Code)
-				assert.Contains(t, rec.Body.String(), "error")
+				// Error responses contain "message" and "type" fields, not "error"
+				assert.Contains(t, rec.Body.String(), "message")
+				assert.Contains(t, rec.Body.String(), "type")
 			} else {
 				assert.Equal(t, http.StatusOK, rec.Code)
 			}

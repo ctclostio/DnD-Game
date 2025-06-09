@@ -730,7 +730,7 @@ func (les *LivingEcosystemService) simulateNaturalEvents(ctx context.Context, se
 Event Type: %s
 World Setting: Fantasy D&D
 
-Create a dramatic description (2-3 sentences) of this event and its immediate impact on the region.`)
+Create a dramatic description (2-3 sentences) of this event and its immediate impact on the region.`, eventType)
 
 		description, err := les.llm.GenerateContent(ctx, prompt, "")
 		if err != nil {

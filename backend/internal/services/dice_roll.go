@@ -94,6 +94,36 @@ func (s *DiceRollService) DeleteRoll(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
+// SimulateRoll simulates a dice roll without saving to the database
+func (s *DiceRollService) SimulateRoll(notation string) (*models.DiceRoll, error) {
+	// Parse roll notation
+	count, diceType, modifier, err := parseRollNotation(notation)
+	if err != nil {
+		return nil, err
+	}
+	
+	roll := &models.DiceRoll{
+		RollNotation: notation,
+		Count:        count,
+		DiceType:     diceType,
+		Modifier:     modifier,
+		Results:      make([]int, count),
+		Total:        modifier,
+	}
+	
+	// Perform the rolls
+	rand.Seed(time.Now().UnixNano())
+	diceMax := getDiceMax(diceType)
+	
+	for i := 0; i < count; i++ {
+		result := rand.Intn(diceMax) + 1
+		roll.Results[i] = result
+		roll.Total += result
+	}
+	
+	return roll, nil
+}
+
 // parseRollNotation parses a dice roll notation like "2d20+5" or "1d6-2"
 func parseRollNotation(notation string) (count int, diceType string, modifier int, err error) {
 	// Regular expression to match dice notation

@@ -92,11 +92,12 @@ func (r *customRaceRepository) Create(ctx context.Context, race *models.CustomRa
 			created_by, approval_status, balance_score,
 			approval_notes, is_public
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-			$11, $12, $13, $14, $15, $16, $17, $18, $19,
-			$20, $21
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?
 		)`
 
+	query = r.db.Rebind(query)
 	_, err = r.db.ExecContext(ctx, query,
 		race.ID, race.Name, race.Description, race.UserPrompt,
 		abilityScoresJSON, race.Size, race.Speed,
@@ -139,8 +140,9 @@ func (r *customRaceRepository) GetByID(ctx context.Context, id uuid.UUID) (*mode
 			times_used, is_public,
 			created_at, updated_at
 		FROM custom_races
-		WHERE id = $1`
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&race.ID, &race.Name, &race.Description, &race.UserPrompt,
 		&abilityScoresJSON, &race.Size, &race.Speed,
@@ -183,9 +185,10 @@ func (r *customRaceRepository) GetByUserID(ctx context.Context, userID uuid.UUID
 			times_used, is_public,
 			created_at, updated_at
 		FROM custom_races
-		WHERE created_by = $1
+		WHERE created_by = ?
 		ORDER BY created_at DESC`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
@@ -213,7 +216,7 @@ func (r *customRaceRepository) GetPublicRaces(ctx context.Context) ([]*models.Cu
 		WHERE is_public = true AND approval_status = 'approved'
 		ORDER BY times_used DESC, created_at DESC`
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, r.db.Rebind(query))
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +243,7 @@ func (r *customRaceRepository) GetPendingApproval(ctx context.Context) ([]*model
 		WHERE approval_status = 'pending'
 		ORDER BY created_at ASC`
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, r.db.Rebind(query))
 	if err != nil {
 		return nil, err
 	}
@@ -299,19 +302,20 @@ func (r *customRaceRepository) Update(ctx context.Context, race *models.CustomRa
 
 	query := `
 		UPDATE custom_races SET
-			name = $2, description = $3, user_prompt = $4,
-			ability_score_increases = $5, size = $6, speed = $7,
-			traits = $8, languages = $9, darkvision = $10,
-			resistances = $11, immunities = $12,
-			skill_proficiencies = $13, tool_proficiencies = $14,
-			weapon_proficiencies = $15, armor_proficiencies = $16,
-			approved_by = $17, approval_status = $18,
-			approval_notes = $19, balance_score = $20,
-			is_public = $21, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $1`
+			name = ?, description = ?, user_prompt = ?,
+			ability_score_increases = ?, size = ?, speed = ?,
+			traits = ?, languages = ?, darkvision = ?,
+			resistances = ?, immunities = ?,
+			skill_proficiencies = ?, tool_proficiencies = ?,
+			weapon_proficiencies = ?, armor_proficiencies = ?,
+			approved_by = ?, approval_status = ?,
+			approval_notes = ?, balance_score = ?,
+			is_public = ?, updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	_, err = r.db.ExecContext(ctx, query,
-		race.ID, race.Name, race.Description, race.UserPrompt,
+		race.Name, race.Description, race.UserPrompt,
 		abilityScoresJSON, race.Size, race.Speed,
 		traitsJSON, languagesJSON, race.Darkvision,
 		resistancesJSON, immunitiesJSON,
@@ -319,7 +323,7 @@ func (r *customRaceRepository) Update(ctx context.Context, race *models.CustomRa
 		weaponProfJSON, armorProfJSON,
 		race.ApprovedBy, race.ApprovalStatus,
 		race.ApprovalNotes, race.BalanceScore,
-		race.IsPublic,
+		race.IsPublic, race.ID,
 	)
 
 	return err
@@ -327,14 +331,16 @@ func (r *customRaceRepository) Update(ctx context.Context, race *models.CustomRa
 
 // Delete removes a custom race
 func (r *customRaceRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	query := `DELETE FROM custom_races WHERE id = $1`
+	query := `DELETE FROM custom_races WHERE id = ?`
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
 }
 
 // IncrementUsage increments the usage counter for a custom race
 func (r *customRaceRepository) IncrementUsage(ctx context.Context, id uuid.UUID) error {
-	query := `UPDATE custom_races SET times_used = times_used + 1 WHERE id = $1`
+	query := `UPDATE custom_races SET times_used = times_used + 1 WHERE id = ?`
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
 }

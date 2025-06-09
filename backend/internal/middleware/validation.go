@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/your-username/dnd-game/backend/pkg/validation"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 // ValidationMiddleware provides request validation
@@ -25,7 +26,7 @@ func (vm *ValidationMiddleware) Validate(targetStruct interface{}) func(http.Han
 			// Only validate for methods with body
 			if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch {
 				if err := vm.validator.ValidateRequest(r, targetStruct); err != nil {
-					SendError(w, err, nil)
+					SendError(w, err, logger.GetLogger().WithContext(r.Context()))
 					return
 				}
 			}

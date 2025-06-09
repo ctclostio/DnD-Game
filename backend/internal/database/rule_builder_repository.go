@@ -1,7 +1,7 @@
 package database
 
 import (
-	"database/sql"
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -11,11 +11,11 @@ import (
 
 // RuleBuilderRepository handles database operations for rule builder
 type RuleBuilderRepository struct {
-	db *sql.DB
+	db *DB
 }
 
 // NewRuleBuilderRepository creates a new rule builder repository
-func NewRuleBuilderRepository(db *sql.DB) *RuleBuilderRepository {
+func NewRuleBuilderRepository(db *DB) *RuleBuilderRepository {
 	return &RuleBuilderRepository{db: db}
 }
 
@@ -29,7 +29,7 @@ func (r *RuleBuilderRepository) CreateRuleTemplate(template *models.RuleTemplate
 			logic_graph, parameters, conditional_modifiers,
 			tags, is_public, created_by, 
 			average_rating, usage_count, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	logicGraphJSON, err := json.Marshal(template.LogicGraph)
@@ -52,7 +52,7 @@ func (r *RuleBuilderRepository) CreateRuleTemplate(template *models.RuleTemplate
 		return fmt.Errorf("failed to marshal tags: %w", err)
 	}
 
-	_, err = r.db.Exec(query,
+	_, err = r.db.ExecRebind(query,
 		template.ID,
 		template.Name,
 		template.Description,
@@ -81,13 +81,13 @@ func (r *RuleBuilderRepository) GetRuleTemplate(templateID string) (*models.Rule
 			   tags, is_public, created_by, 
 			   average_rating, usage_count, created_at, updated_at
 		FROM rule_templates
-		WHERE id = $1
+		WHERE id = ?
 	`
 
 	var template models.RuleTemplate
 	var logicGraphJSON, parametersJSON, condModsJSON, tagsJSON []byte
 
-	err := r.db.QueryRow(query, templateID).Scan(
+	err := r.db.QueryRowRebind(query, templateID).Scan(
 		&template.ID,
 		&template.Name,
 		&template.Description,
@@ -141,27 +141,24 @@ func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPubl
 	`
 
 	args := []interface{}{}
-	argCount := 0
 
 	if isPublic {
-		argCount++
-		query += fmt.Sprintf(" AND is_public = $%d", argCount)
+		query += " AND is_public = ?"
 		args = append(args, true)
 	} else if userID != "" {
-		argCount++
-		query += fmt.Sprintf(" AND (is_public = true OR created_by = $%d)", argCount)
+		query += " AND (is_public = true OR created_by = ?)"
 		args = append(args, userID)
 	}
 
 	if category != "" && category != "all" {
-		argCount++
-		query += fmt.Sprintf(" AND category = $%d", argCount)
+		query += " AND category = ?"
 		args = append(args, category)
 	}
 
 	query += " ORDER BY usage_count DESC, average_rating DESC"
 
-	rows, err := r.db.Query(query, args...)
+	query = r.db.Rebind(query)
+	rows, err := r.db.QueryContext(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -220,13 +217,11 @@ func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPubl
 // UpdateRuleTemplate updates a rule template
 func (r *RuleBuilderRepository) UpdateRuleTemplate(templateID string, updates map[string]interface{}) error {
 	// Build dynamic update query
-	query := "UPDATE rule_templates SET updated_at = $1"
+	query := "UPDATE rule_templates SET updated_at = ?"
 	args := []interface{}{time.Now()}
-	argCount := 1
 
 	for key, value := range updates {
-		argCount++
-		query += fmt.Sprintf(", %s = $%d", key, argCount)
+		query += fmt.Sprintf(", %s = ?", key)
 		
 		// Handle JSON fields
 		switch key {
@@ -241,24 +236,23 @@ func (r *RuleBuilderRepository) UpdateRuleTemplate(templateID string, updates ma
 		}
 	}
 
-	argCount++
-	query += fmt.Sprintf(" WHERE id = $%d", argCount)
+	query += " WHERE id = ?"
 	args = append(args, templateID)
 
-	_, err := r.db.Exec(query, args...)
+	_, err := r.db.ExecRebind(query, args...)
 	return err
 }
 
 // DeleteRuleTemplate deletes a rule template
 func (r *RuleBuilderRepository) DeleteRuleTemplate(templateID string) error {
-	_, err := r.db.Exec("DELETE FROM rule_templates WHERE id = $1", templateID)
+	_, err := r.db.ExecRebind("DELETE FROM rule_templates WHERE id = ?", templateID)
 	return err
 }
 
 // IncrementUsageCount increments the usage count for a template
 func (r *RuleBuilderRepository) IncrementUsageCount(templateID string) error {
 	_, err := r.db.Exec(
-		"UPDATE rule_templates SET usage_count = usage_count + 1 WHERE id = $1",
+		"UPDATE rule_templates SET usage_count = usage_count + 1 WHERE id = ?",
 		templateID,
 	)
 	return err
@@ -275,7 +269,7 @@ func (r *RuleBuilderRepository) GetNodeTemplates() ([]models.NodeTemplate, error
 		ORDER BY category, name
 	`
 
-	rows, err := r.db.Query(query)
+	rows, err := r.db.QueryContext(context.Background(), r.db.Rebind(query))
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +326,7 @@ func (r *RuleBuilderRepository) CreateActiveRule(rule *models.ActiveRule) error 
 			id, template_id, game_session_id, character_id,
 			compiled_logic, parameters, is_active,
 			created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	compiledLogicJSON, err := json.Marshal(rule.CompiledLogic)
@@ -345,7 +339,7 @@ func (r *RuleBuilderRepository) CreateActiveRule(rule *models.ActiveRule) error 
 		return fmt.Errorf("failed to marshal parameters: %w", err)
 	}
 
-	_, err = r.db.Exec(query,
+	_, err = r.db.ExecRebind(query,
 		rule.ID,
 		rule.TemplateID,
 		rule.GameSessionID,
@@ -371,21 +365,19 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 	`
 
 	args := []interface{}{}
-	argCount := 0
 
 	if gameSessionID != "" {
-		argCount++
-		query += fmt.Sprintf(" AND game_session_id = $%d", argCount)
+		query += " AND game_session_id = ?"
 		args = append(args, gameSessionID)
 	}
 
 	if characterID != "" {
-		argCount++
-		query += fmt.Sprintf(" AND character_id = $%d", argCount)
+		query += " AND character_id = ?"
 		args = append(args, characterID)
 	}
 
-	rows, err := r.db.Query(query, args...)
+	query = r.db.Rebind(query)
+	rows, err := r.db.QueryContext(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -430,7 +422,7 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 // DeactivateRule deactivates an active rule
 func (r *RuleBuilderRepository) DeactivateRule(ruleID string) error {
 	_, err := r.db.Exec(
-		"UPDATE active_rules SET is_active = false, updated_at = $1 WHERE id = $2",
+		"UPDATE active_rules SET is_active = false, updated_at = ? WHERE id = ?",
 		time.Now(),
 		ruleID,
 	)
@@ -446,7 +438,7 @@ func (r *RuleBuilderRepository) CreateRuleExecution(execution *models.RuleExecut
 			id, rule_id, game_session_id, character_id,
 			trigger_context, execution_result, success,
 			error_message, executed_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	triggerContextJSON, err := json.Marshal(execution.TriggerContext)
@@ -459,7 +451,7 @@ func (r *RuleBuilderRepository) CreateRuleExecution(execution *models.RuleExecut
 		return fmt.Errorf("failed to marshal execution result: %w", err)
 	}
 
-	_, err = r.db.Exec(query,
+	_, err = r.db.ExecRebind(query,
 		execution.ID,
 		execution.RuleID,
 		execution.GameSessionID,
@@ -485,29 +477,26 @@ func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, character
 	`
 
 	args := []interface{}{}
-	argCount := 0
 
 	if gameSessionID != "" {
-		argCount++
-		query += fmt.Sprintf(" AND game_session_id = $%d", argCount)
+		query += " AND game_session_id = ?"
 		args = append(args, gameSessionID)
 	}
 
 	if characterID != "" {
-		argCount++
-		query += fmt.Sprintf(" AND character_id = $%d", argCount)
+		query += " AND character_id = ?"
 		args = append(args, characterID)
 	}
 
 	query += " ORDER BY executed_at DESC"
 	
 	if limit > 0 {
-		argCount++
-		query += fmt.Sprintf(" LIMIT $%d", argCount)
+		query += " LIMIT ?"
 		args = append(args, limit)
 	}
 
-	rows, err := r.db.Query(query, args...)
+	query = r.db.Rebind(query)
+	rows, err := r.db.QueryContext(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -556,12 +545,12 @@ func (r *RuleBuilderRepository) GetConditionalModifiers(ruleID string) ([]models
 	query := `
 		SELECT cm.*
 		FROM conditional_modifiers cm
-		JOIN rule_templates rt ON rt.id = $1
+		JOIN rule_templates rt ON rt.id = ?
 		WHERE cm.id = ANY(rt.conditional_modifiers)
 		ORDER BY cm.priority DESC
 	`
 
-	rows, err := r.db.Query(query, ruleID)
+	rows, err := r.db.QueryContext(context.Background(), r.db.Rebind(query), ruleID)
 	if err != nil {
 		return nil, err
 	}
@@ -603,13 +592,13 @@ func (r *RuleBuilderRepository) GetRuleInstance(instanceID string) (*models.Rule
 		SELECT id, template_id, game_session_id, owner_id,
 			   parameter_values, is_active, created_at, updated_at
 		FROM rule_instances
-		WHERE id = $1
+		WHERE id = ?
 	`
 
 	var instance models.RuleInstance
 	var parameterValuesJSON []byte
 
-	err := r.db.QueryRow(query, instanceID).Scan(
+	err := r.db.QueryRowRebind(query, instanceID).Scan(
 		&instance.ID,
 		&instance.TemplateID,
 		&instance.SessionID,
@@ -636,11 +625,11 @@ func (r *RuleBuilderRepository) GetRuleInstance(instanceID string) (*models.Rule
 func (r *RuleBuilderRepository) DeactivateRuleInstance(instanceID string) error {
 	query := `
 		UPDATE rule_instances
-		SET is_active = false, updated_at = $2
-		WHERE id = $1
+		SET is_active = false, updated_at = ?
+		WHERE id = ?
 	`
 
-	_, err := r.db.Exec(query, instanceID, time.Now())
+	_, err := r.db.ExecRebind(query, time.Now(), instanceID)
 	return err
 }
 

@@ -64,14 +64,14 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 		Inventory:       NewInventoryRepository(db.DB),
 		RefreshTokens:   NewRefreshTokenRepository(db.DB),
 		CustomRaces:     NewCustomRaceRepository(db.DB),
-		CustomClasses:   NewCustomClassRepository(db.StdDB()),
+		CustomClasses:   NewCustomClassRepository(db),
 		DMAssistant:     NewDMAssistantRepository(db.DB),
 		Encounters:      NewEncounterRepository(db.StdDB()),
 		Campaign:        NewCampaignRepository(db.DB),
 		CombatAnalytics: NewCombatAnalyticsRepository(db.DB),
 		WorldBuilding:   NewWorldBuildingRepository(db.DB.DB),
 		Narrative:       NewNarrativeRepository(db.DB),
-		RuleBuilder:     NewRuleBuilderRepository(db.StdDB()),
+		RuleBuilder:     NewRuleBuilderRepository(db),
 	}
 
 	return db, repos, nil

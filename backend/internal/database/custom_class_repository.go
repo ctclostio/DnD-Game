@@ -1,7 +1,7 @@
 package database
 
 import (
-	"database/sql"
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -10,10 +10,10 @@ import (
 )
 
 type CustomClassRepository struct {
-	db *sql.DB
+	db *DB
 }
 
-func NewCustomClassRepository(db *sql.DB) *CustomClassRepository {
+func NewCustomClassRepository(db *DB) *CustomClassRepository {
 	return &CustomClassRepository{db: db}
 }
 
@@ -44,11 +44,11 @@ func (r *CustomClassRepository) Create(class *models.CustomClass) error {
 			cantrips_known_progression, spell_slots_progression, ritual_casting,
 			spellcasting_focus, balance_score, power_level, dm_notes
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
-			$16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 		) RETURNING id, created_at, updated_at`
 
-	err = r.db.QueryRow(
+	err = r.db.QueryRowRebind(
 		query,
 		class.UserID,
 		class.Name,
@@ -92,12 +92,12 @@ func (r *CustomClassRepository) GetByID(id string) (*models.CustomClass, error) 
 			spellcasting_focus, balance_score, power_level, is_approved,
 			approved_by, approved_at, dm_notes, created_at, updated_at
 		FROM custom_classes
-		WHERE id = $1`
+		WHERE id = ?`
 
 	var class models.CustomClass
 	var classFeatures, subclasses, spellSlots []byte
 
-	err := r.db.QueryRow(query, id).Scan(
+	err := r.db.QueryRowRebind(query, id).Scan(
 		&class.ID,
 		&class.UserID,
 		&class.Name,
@@ -157,7 +157,7 @@ func (r *CustomClassRepository) GetByUserID(userID string, includeUnapproved boo
 		SELECT id, name, description, hit_die, primary_ability,
 			balance_score, power_level, is_approved, created_at
 		FROM custom_classes
-		WHERE user_id = $1`
+		WHERE user_id = ?`
 
 	if !includeUnapproved {
 		query += " AND is_approved = true"
@@ -165,7 +165,8 @@ func (r *CustomClassRepository) GetByUserID(userID string, includeUnapproved boo
 
 	query += " ORDER BY created_at DESC"
 
-	rows, err := r.db.Query(query, userID)
+	query = r.db.Rebind(query)
+	rows, err := r.db.QueryContext(context.Background(), query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +203,7 @@ func (r *CustomClassRepository) GetApproved() ([]*models.CustomClass, error) {
 		WHERE is_approved = true
 		ORDER BY name`
 
-	rows, err := r.db.Query(query)
+	rows, err := r.db.QueryContext(context.Background(), r.db.Rebind(query))
 	if err != nil {
 		return nil, err
 	}
@@ -233,15 +234,15 @@ func (r *CustomClassRepository) GetApproved() ([]*models.CustomClass, error) {
 func (r *CustomClassRepository) Approve(id, approverID string) error {
 	query := `
 		UPDATE custom_classes
-		SET is_approved = true, approved_by = $2, approved_at = CURRENT_TIMESTAMP
-		WHERE id = $1`
+		SET is_approved = true, approved_by = ?, approved_at = CURRENT_TIMESTAMP
+		WHERE id = ?`
 
-	_, err := r.db.Exec(query, id, approverID)
+	_, err := r.db.ExecRebind(query, approverID, id)
 	return err
 }
 
 func (r *CustomClassRepository) Delete(id, userID string) error {
-	query := `DELETE FROM custom_classes WHERE id = $1 AND user_id = $2`
-	_, err := r.db.Exec(query, id, userID)
+	query := `DELETE FROM custom_classes WHERE id = ? AND user_id = ?`
+	_, err := r.db.ExecRebind(query, id, userID)
 	return err
 }

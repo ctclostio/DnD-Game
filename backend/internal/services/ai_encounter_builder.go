@@ -157,7 +157,7 @@ Respond with a JSON object in this exact format:
       },
       {
         "name": "Desperate",
-        "trigger": "Below 50% forces",
+        "trigger": "Below 50%% forces",
         "tactics": "Fighting retreat to reinforcement location"
       }
     ],

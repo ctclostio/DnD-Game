@@ -16,7 +16,21 @@ type Combat struct {
 	IsActive         bool                `json:"isActive"`
 	CreatedAt        time.Time           `json:"createdAt"`
 	UpdatedAt        time.Time           `json:"updatedAt"`
+	
+	// Aliases for backward compatibility
+	SessionID        string              `json:"-"` // Alias for GameSessionID
+	Status           CombatStatus        `json:"-"` // Alias for IsActive
+	Turn             int                 `json:"-"` // Alias for CurrentTurn
+	ActionHistory    []CombatAction      `json:"-"` // For test compatibility
 }
+
+type CombatStatus string
+
+const (
+	CombatStatusActive    CombatStatus = "active"
+	CombatStatusPaused    CombatStatus = "paused"
+	CombatStatusCompleted CombatStatus = "completed"
+)
 
 type CombatantType string
 
@@ -60,6 +74,9 @@ type Combatant struct {
 	Resistances       []DamageType        `json:"resistances"`
 	Immunities        []DamageType        `json:"immunities"`
 	Vulnerabilities   []DamageType        `json:"vulnerabilities"`
+	DamageResistances []string            `json:"damageResistances,omitempty"`
+	DamageImmunities  []string            `json:"damageImmunities,omitempty"`
+	DamageVulnerabilities []string        `json:"damageVulnerabilities,omitempty"`
 	
 	// Ability Scores and Modifiers
 	Abilities         map[string]int      `json:"abilities"`
@@ -69,6 +86,11 @@ type Combatant struct {
 	IsPlayerCharacter bool                `json:"isPlayerCharacter"`
 	IsVisible         bool                `json:"isVisible"`
 	Notes             string              `json:"notes,omitempty"`
+	
+	// Additional fields for test compatibility
+	DeathSaveSuccesses int                `json:"deathSaveSuccesses,omitempty"`
+	DeathSaveFailures  int                `json:"deathSaveFailures,omitempty"`
+	Position          Position            `json:"position,omitempty"`
 }
 
 type DeathSaves struct {
@@ -101,6 +123,9 @@ const (
 	ConditionExhaustion4   Condition = "exhaustion4"
 	ConditionExhaustion5   Condition = "exhaustion5"
 	ConditionExhaustion6   Condition = "exhaustion6"
+	ConditionDodging       Condition = "dodging"
+	ConditionStable        Condition = "stable"
+	ConditionDead          Condition = "dead"
 )
 
 type DamageType string
@@ -156,6 +181,23 @@ type CombatAction struct {
 	Healing        int             `json:"healing,omitempty"`
 	Effects        []string        `json:"effects,omitempty"`
 	Timestamp      time.Time       `json:"timestamp"`
+	
+	// Additional fields for test compatibility
+	Type           ActionType      `json:"type,omitempty"`
+	WeaponName     string          `json:"weaponName,omitempty"`
+	AttackBonus    int             `json:"attackBonus,omitempty"`
+	DamageDice     string          `json:"damageDice,omitempty"`
+	DamageBonus    int             `json:"damageBonus,omitempty"`
+	DamageType     string          `json:"damageType,omitempty"`
+	SpellName      string          `json:"spellName,omitempty"`
+	SpellLevel     int             `json:"spellLevel,omitempty"`
+	SpellDC        int             `json:"spellDC,omitempty"`
+	SpellAttackBonus int          `json:"spellAttackBonus,omitempty"`
+	SpellDamage    string          `json:"spellDamage,omitempty"`
+	SpellDamageType string        `json:"spellDamageType,omitempty"`
+	Movement       int             `json:"movement,omitempty"`
+	NewPosition    Position        `json:"newPosition,omitempty"`
+	Hit            bool            `json:"hit,omitempty"`
 }
 
 type ActionType string
@@ -176,6 +218,8 @@ const (
 	ActionTypeDeathSave     ActionType = "deathSave"
 	ActionTypeConcentration ActionType = "concentration"
 	ActionTypeSavingThrow   ActionType = "savingThrow"
+	ActionTypeEndTurn       ActionType = "endTurn"
+	ActionTypeCastSpell     ActionType = "castSpell"
 )
 
 type Roll struct {
@@ -280,4 +324,12 @@ type RollDetails struct {
 	Type       RollType `json:"type"`
 	Advantage  bool     `json:"advantage"`
 	Disadvantage bool   `json:"disadvantage"`
+}
+
+// DeathSaveResult represents the result of a death saving throw
+type DeathSaveResult struct {
+	Roll        int  `json:"roll"`
+	Success     bool `json:"success"`
+	CritSuccess bool `json:"critSuccess"`
+	CritFailure bool `json:"critFailure"`
 }

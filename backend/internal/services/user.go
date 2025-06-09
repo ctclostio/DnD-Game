@@ -93,6 +93,9 @@ func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*mode
 
 // GetUserByID retrieves a user by ID
 func (s *UserService) GetUserByID(ctx context.Context, id string) (*models.User, error) {
+	if id == "" {
+		return nil, fmt.Errorf("user ID is required")
+	}
 	return s.repo.GetByID(ctx, id)
 }
 
@@ -147,6 +150,9 @@ func (s *UserService) ChangePassword(ctx context.Context, userID, oldPassword, n
 
 // DeleteUser deletes a user account
 func (s *UserService) DeleteUser(ctx context.Context, id string) error {
+	if id == "" {
+		return fmt.Errorf("user ID is required")
+	}
 	return s.repo.Delete(ctx, id)
 }
 

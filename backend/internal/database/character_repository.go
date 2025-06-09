@@ -53,10 +53,10 @@ func (r *characterRepository) Create(ctx context.Context, character *models.Char
 			id, user_id, name, race, class, level, experience_points,
 			hit_points, max_hit_points, armor_class, speed,
 			attributes, skills, equipment, spells
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		RETURNING id, created_at, updated_at`
 
-	err = r.db.QueryRowContext(ctx, query,
+	err = r.db.QueryRowContextRebind(ctx, query,
 		character.ID, character.UserID, character.Name, character.Race, character.Class,
 		character.Level, character.ExperiencePoints, character.HitPoints,
 		character.MaxHitPoints, character.ArmorClass, character.Speed,
@@ -142,9 +142,10 @@ func (r *characterRepository) GetByUserID(ctx context.Context, userID string) ([
 			   hit_points, max_hit_points, armor_class, speed,
 			   attributes, skills, equipment, spells, created_at, updated_at
 		FROM characters
-		WHERE user_id = $1
+		WHERE user_id = ?
 		ORDER BY created_at DESC`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get characters by user id: %w", err)
@@ -242,9 +243,9 @@ func (r *characterRepository) Update(ctx context.Context, character *models.Char
 
 // Delete deletes a character
 func (r *characterRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM characters WHERE id = $1`
+	query := `DELETE FROM characters WHERE id = ?`
 	
-	result, err := r.db.ExecContext(ctx, query, id)
+	result, err := r.db.ExecContextRebind(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete character: %w", err)
 	}
@@ -269,8 +270,9 @@ func (r *characterRepository) List(ctx context.Context, offset, limit int) ([]*m
 			   attributes, skills, equipment, spells, created_at, updated_at
 		FROM characters
 		ORDER BY created_at DESC
-		LIMIT $1 OFFSET $2`
+		LIMIT ? OFFSET ?`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list characters: %w", err)
