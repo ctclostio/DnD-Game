@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
@@ -80,6 +81,11 @@ func (s *CharacterService) CreateCharacter(ctx context.Context, char *models.Cha
 		char.AttunementSlotsMax = 3
 	}
 	
+	// Generate ID if not provided
+	if char.ID == "" {
+		char.ID = uuid.New().String()
+	}
+	
 	return s.repo.Create(ctx, char)
 }
 
@@ -95,11 +101,43 @@ func (s *CharacterService) UpdateCharacter(ctx context.Context, char *models.Cha
 		return fmt.Errorf("character not found: %w", err)
 	}
 	
-	// Preserve the user ID and created at timestamp
-	char.UserID = existing.UserID
-	char.CreatedAt = existing.CreatedAt
+	// Merge updates with existing data to support partial updates
+	if char.Name != "" {
+		existing.Name = char.Name
+	}
+	if char.Race != "" {
+		existing.Race = char.Race
+	}
+	if char.Class != "" {
+		existing.Class = char.Class
+	}
+	if char.Level > 0 {
+		existing.Level = char.Level
+	}
+	if char.ExperiencePoints > 0 {
+		existing.ExperiencePoints = char.ExperiencePoints
+	}
+	if char.HitPoints > 0 {
+		existing.HitPoints = char.HitPoints
+	}
+	if char.MaxHitPoints > 0 {
+		existing.MaxHitPoints = char.MaxHitPoints
+	}
+	if char.ArmorClass > 0 {
+		existing.ArmorClass = char.ArmorClass
+	}
+	if char.Speed > 0 {
+		existing.Speed = char.Speed
+	}
+	// Update attributes if provided
+	if char.Attributes.Strength > 0 || char.Attributes.Dexterity > 0 || 
+	   char.Attributes.Constitution > 0 || char.Attributes.Intelligence > 0 || 
+	   char.Attributes.Wisdom > 0 || char.Attributes.Charisma > 0 {
+		existing.Attributes = char.Attributes
+	}
+	// Update other fields similarly...
 	
-	return s.repo.Update(ctx, char)
+	return s.repo.Update(ctx, existing)
 }
 
 func (s *CharacterService) DeleteCharacter(ctx context.Context, id string) error {

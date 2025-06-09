@@ -22,10 +22,10 @@ func NewUserRepository(db *DB) UserRepository {
 func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 	query := `
 		INSERT INTO users (username, email, password_hash)
-		VALUES ($1, $2, $3)
+		VALUES (?, ?, ?)
 		RETURNING id, created_at, updated_at`
 
-	err := r.db.QueryRowContext(ctx, query, user.Username, user.Email, user.PasswordHash).
+	err := r.db.QueryRowContextRebind(ctx, query, user.Username, user.Email, user.PasswordHash).
 		Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
@@ -40,8 +40,9 @@ func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, 
 	query := `
 		SELECT id, username, email, password_hash, created_at, updated_at
 		FROM users
-		WHERE id = $1`
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	err := r.db.GetContext(ctx, &user, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -59,8 +60,9 @@ func (r *userRepository) GetByUsername(ctx context.Context, username string) (*m
 	query := `
 		SELECT id, username, email, password_hash, created_at, updated_at
 		FROM users
-		WHERE username = $1`
+		WHERE username = ?`
 
+	query = r.db.Rebind(query)
 	err := r.db.GetContext(ctx, &user, query, username)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -78,8 +80,9 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	query := `
 		SELECT id, username, email, password_hash, created_at, updated_at
 		FROM users
-		WHERE email = $1`
+		WHERE email = ?`
 
+	query = r.db.Rebind(query)
 	err := r.db.GetContext(ctx, &user, query, email)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -95,11 +98,11 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 func (r *userRepository) Update(ctx context.Context, user *models.User) error {
 	query := `
 		UPDATE users
-		SET username = $2, email = $3, password_hash = $4, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $1
+		SET username = ?, email = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
 		RETURNING updated_at`
 
-	err := r.db.QueryRowContext(ctx, query, user.ID, user.Username, user.Email, user.PasswordHash).
+	err := r.db.QueryRowContextRebind(ctx, query, user.Username, user.Email, user.PasswordHash, user.ID).
 		Scan(&user.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -113,9 +116,9 @@ func (r *userRepository) Update(ctx context.Context, user *models.User) error {
 
 // Delete deletes a user
 func (r *userRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM users WHERE id = $1`
+	query := `DELETE FROM users WHERE id = ?`
 	
-	result, err := r.db.ExecContext(ctx, query, id)
+	result, err := r.db.ExecContextRebind(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
 	}
@@ -139,8 +142,9 @@ func (r *userRepository) List(ctx context.Context, offset, limit int) ([]*models
 		SELECT id, username, email, password_hash, created_at, updated_at
 		FROM users
 		ORDER BY created_at DESC
-		LIMIT $1 OFFSET $2`
+		LIMIT ? OFFSET ?`
 
+	query = r.db.Rebind(query)
 	err := r.db.SelectContext(ctx, &users, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list users: %w", err)

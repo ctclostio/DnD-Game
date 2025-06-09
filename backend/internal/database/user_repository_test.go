@@ -30,7 +30,7 @@ func TestUserRepository_Create(t *testing.T) {
 		}
 
 		mock.ExpectQuery(
-			`INSERT INTO users \(username, email, password_hash\) VALUES \(\$1, \$2, \$3\) RETURNING id, created_at, updated_at`,
+			`INSERT INTO users \(username, email, password_hash\) VALUES \(\?, \?, \?\) RETURNING id, created_at, updated_at`,
 		).WithArgs(
 			user.Username, user.Email, user.PasswordHash,
 		).WillReturnRows(
@@ -52,7 +52,7 @@ func TestUserRepository_Create(t *testing.T) {
 		}
 
 		mock.ExpectQuery(
-			`INSERT INTO users \(username, email, password_hash\) VALUES \(\$1, \$2, \$3\) RETURNING id, created_at, updated_at`,
+			`INSERT INTO users \(username, email, password_hash\) VALUES \(\?, \?, \?\) RETURNING id, created_at, updated_at`,
 		).WithArgs(
 			user.Username, user.Email, user.PasswordHash,
 		).WillReturnError(sql.ErrNoRows) // Simulate unique constraint violation
@@ -70,7 +70,7 @@ func TestUserRepository_Create(t *testing.T) {
 		}
 
 		mock.ExpectQuery(
-			`INSERT INTO users \(username, email, password_hash\) VALUES \(\$1, \$2, \$3\) RETURNING id, created_at, updated_at`,
+			`INSERT INTO users \(username, email, password_hash\) VALUES \(\?, \?, \?\) RETURNING id, created_at, updated_at`,
 		).WithArgs(
 			user.Username, user.Email, user.PasswordHash,
 		).WillReturnError(sql.ErrNoRows) // Simulate unique constraint violation
@@ -108,7 +108,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 		)
 
 		mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = \$1`,
+			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = \?`,
 		).WithArgs("user-42").WillReturnRows(rows)
 
 		user, err := repo.GetByID(context.Background(), "user-42")
@@ -121,7 +121,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 
 	t.Run("user not found", func(t *testing.T) {
 		mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = \$1`,
+			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = \?`,
 		).WithArgs("non-existent").WillReturnError(sql.ErrNoRows)
 
 		user, err := repo.GetByID(context.Background(), "non-existent")
@@ -159,7 +159,7 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 		)
 
 		mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = \$1`,
+			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = \?`,
 		).WithArgs("aragorn").WillReturnRows(rows)
 
 		user, err := repo.GetByUsername(context.Background(), "aragorn")
@@ -171,7 +171,7 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 
 	t.Run("user not found", func(t *testing.T) {
 		mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = \$1`,
+			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = \?`,
 		).WithArgs("nonexistent").WillReturnError(sql.ErrNoRows)
 
 		user, err := repo.GetByUsername(context.Background(), "nonexistent")
@@ -209,7 +209,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 		)
 
 		mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE email = \$1`,
+			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE email = \?`,
 		).WithArgs("test@example.com").WillReturnRows(rows)
 
 		user, err := repo.GetByEmail(context.Background(), "test@example.com")
@@ -237,11 +237,12 @@ func TestUserRepository_Update(t *testing.T) {
 			PasswordHash: "$2a$10$newhashedpassword",
 		}
 
-		mock.ExpectExec(
-			`UPDATE users SET username = \$2, email = \$3, password_hash = \$4, updated_at = CURRENT_TIMESTAMP WHERE id = \$1`,
+		// The Update method uses QueryRowContext with RETURNING
+		mock.ExpectQuery(
+			`UPDATE users SET username = \?, email = \?, password_hash = \?, updated_at = CURRENT_TIMESTAMP WHERE id = \? RETURNING updated_at`,
 		).WithArgs(
-			user.ID, user.Username, user.Email, user.PasswordHash,
-		).WillReturnResult(sqlmock.NewResult(0, 1))
+			user.Username, user.Email, user.PasswordHash, user.ID,
+		).WillReturnRows(sqlmock.NewRows([]string{"updated_at"}).AddRow(time.Now()))
 
 		err := repo.Update(context.Background(), user)
 		assert.NoError(t, err)
@@ -256,14 +257,17 @@ func TestUserRepository_Update(t *testing.T) {
 			PasswordHash: "$2a$10$newhashedpassword",
 		}
 
-		mock.ExpectExec(
-			`UPDATE users SET username = \$2, email = \$3, password_hash = \$4, updated_at = CURRENT_TIMESTAMP WHERE id = \$1`,
+		// The Update method uses QueryRowContext with RETURNING
+		// For user not found, it should return sql.ErrNoRows
+		mock.ExpectQuery(
+			`UPDATE users SET username = \?, email = \?, password_hash = \?, updated_at = CURRENT_TIMESTAMP WHERE id = \? RETURNING updated_at`,
 		).WithArgs(
-			user.ID, user.Username, user.Email, user.PasswordHash,
-		).WillReturnResult(sqlmock.NewResult(0, 0))
+			user.Username, user.Email, user.PasswordHash, user.ID,
+		).WillReturnError(sql.ErrNoRows)
 
 		err := repo.Update(context.Background(), user)
 		assert.Error(t, err)
+		assert.Equal(t, models.ErrUserNotFound, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
@@ -279,7 +283,7 @@ func TestUserRepository_Delete(t *testing.T) {
 
 	t.Run("successful delete", func(t *testing.T) {
 		mock.ExpectExec(
-			`DELETE FROM users WHERE id = \$1`,
+			`DELETE FROM users WHERE id = \?`,
 		).WithArgs("user-123").WillReturnResult(sqlmock.NewResult(0, 1))
 
 		err := repo.Delete(context.Background(), "user-123")
@@ -289,7 +293,7 @@ func TestUserRepository_Delete(t *testing.T) {
 
 	t.Run("user not found", func(t *testing.T) {
 		mock.ExpectExec(
-			`DELETE FROM users WHERE id = \$1`,
+			`DELETE FROM users WHERE id = \?`,
 		).WithArgs("non-existent").WillReturnResult(sqlmock.NewResult(0, 0))
 
 		err := repo.Delete(context.Background(), "non-existent")

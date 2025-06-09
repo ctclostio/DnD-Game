@@ -22,10 +22,10 @@ func NewGameSessionRepository(db *DB) GameSessionRepository {
 func (r *gameSessionRepository) Create(ctx context.Context, session *models.GameSession) error {
 	query := `
 		INSERT INTO game_sessions (name, dm_user_id, status)
-		VALUES ($1, $2, $3)
+		VALUES (?, ?, ?)
 		RETURNING id, created_at`
 
-	err := r.db.QueryRowContext(ctx, query, session.Name, session.DMID, session.Status).
+	err := r.db.QueryRowContextRebind(ctx, query, session.Name, session.DMID, session.Status).
 		Scan(&session.ID, &session.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create game session: %w", err)
@@ -40,9 +40,9 @@ func (r *gameSessionRepository) GetByID(ctx context.Context, id string) (*models
 	query := `
 		SELECT id, name, dm_user_id, status, created_at, updated_at
 		FROM game_sessions
-		WHERE id = $1`
+		WHERE id = ?`
 
-	err := r.db.GetContext(ctx, &session, query, id)
+	err := r.db.GetContext(ctx, &session, r.db.Rebind(query), id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("game session not found")
@@ -66,10 +66,10 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 	query := `
 		SELECT id, name, dm_user_id, status, created_at, updated_at
 		FROM game_sessions
-		WHERE dm_user_id = $1
+		WHERE dm_user_id = ?
 		ORDER BY created_at DESC`
 
-	err := r.db.SelectContext(ctx, &sessions, query, dmUserID)
+	err := r.db.SelectContext(ctx, &sessions, r.db.Rebind(query), dmUserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get game sessions by dm user id: %w", err)
 	}
@@ -93,10 +93,10 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 		SELECT DISTINCT gs.id, gs.name, gs.dm_user_id, gs.status, gs.created_at, gs.updated_at
 		FROM game_sessions gs
 		JOIN game_participants gp ON gs.id = gp.game_session_id
-		WHERE gp.user_id = $1 OR gs.dm_user_id = $1
+		WHERE gp.user_id = ? OR gs.dm_user_id = ?
 		ORDER BY gs.created_at DESC`
 
-	err := r.db.SelectContext(ctx, &sessions, query, userID)
+	err := r.db.SelectContext(ctx, &sessions, r.db.Rebind(query), userID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get game sessions by participant user id: %w", err)
 	}
@@ -117,10 +117,10 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 func (r *gameSessionRepository) Update(ctx context.Context, session *models.GameSession) error {
 	query := `
 		UPDATE game_sessions
-		SET name = $2, status = $3, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $1`
+		SET name = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?`
 
-	_, err := r.db.ExecContext(ctx, query, session.ID, session.Name, session.Status)
+	_, err := r.db.ExecContextRebind(ctx, query, session.Name, session.Status, session.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("game session not found")
@@ -133,9 +133,9 @@ func (r *gameSessionRepository) Update(ctx context.Context, session *models.Game
 
 // Delete deletes a game session
 func (r *gameSessionRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM game_sessions WHERE id = $1`
+	query := `DELETE FROM game_sessions WHERE id = ?`
 	
-	result, err := r.db.ExecContext(ctx, query, id)
+	result, err := r.db.ExecContextRebind(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete game session: %w", err)
 	}
@@ -159,9 +159,9 @@ func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]
 		SELECT id, name, dm_user_id, status, created_at, updated_at
 		FROM game_sessions
 		ORDER BY created_at DESC
-		LIMIT $1 OFFSET $2`
+		LIMIT ? OFFSET ?`
 
-	err := r.db.SelectContext(ctx, &sessions, query, limit, offset)
+	err := r.db.SelectContext(ctx, &sessions, r.db.Rebind(query), limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list game sessions: %w", err)
 	}
@@ -173,11 +173,11 @@ func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]
 func (r *gameSessionRepository) AddParticipant(ctx context.Context, sessionID, userID string, characterID *string) error {
 	query := `
 		INSERT INTO game_participants (game_session_id, user_id, character_id)
-		VALUES ($1, $2, $3)
+		VALUES (?, ?, ?)
 		ON CONFLICT (game_session_id, user_id) DO UPDATE
 		SET character_id = EXCLUDED.character_id`
 
-	_, err := r.db.ExecContext(ctx, query, sessionID, userID, characterID)
+	_, err := r.db.ExecContextRebind(ctx, query, sessionID, userID, characterID)
 	if err != nil {
 		return fmt.Errorf("failed to add participant: %w", err)
 	}
@@ -189,9 +189,9 @@ func (r *gameSessionRepository) AddParticipant(ctx context.Context, sessionID, u
 func (r *gameSessionRepository) RemoveParticipant(ctx context.Context, sessionID, userID string) error {
 	query := `
 		DELETE FROM game_participants
-		WHERE game_session_id = $1 AND user_id = $2`
+		WHERE game_session_id = ? AND user_id = ?`
 
-	result, err := r.db.ExecContext(ctx, query, sessionID, userID)
+	result, err := r.db.ExecContextRebind(ctx, query, sessionID, userID)
 	if err != nil {
 		return fmt.Errorf("failed to remove participant: %w", err)
 	}
@@ -216,10 +216,10 @@ func (r *gameSessionRepository) GetParticipants(ctx context.Context, sessionID s
 			u.id, u.username, u.email, u.created_at, u.updated_at
 		FROM game_participants gp
 		JOIN users u ON gp.user_id = u.id
-		WHERE gp.game_session_id = $1
+		WHERE gp.game_session_id = ?
 		ORDER BY gp.joined_at`
 
-	rows, err := r.db.QueryContext(ctx, query, sessionID)
+	rows, err := r.db.QueryContextRebind(ctx, query, sessionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get participants: %w", err)
 	}
@@ -248,10 +248,10 @@ func (r *gameSessionRepository) GetParticipants(ctx context.Context, sessionID s
 func (r *gameSessionRepository) UpdateParticipantOnlineStatus(ctx context.Context, sessionID, userID string, isOnline bool) error {
 	query := `
 		UPDATE game_participants
-		SET is_online = $3
-		WHERE game_session_id = $1 AND user_id = $2`
+		SET is_online = ?
+		WHERE game_session_id = ? AND user_id = ?`
 
-	result, err := r.db.ExecContext(ctx, query, sessionID, userID, isOnline)
+	result, err := r.db.ExecContextRebind(ctx, query, isOnline, sessionID, userID)
 	if err != nil {
 		return fmt.Errorf("failed to update participant online status: %w", err)
 	}

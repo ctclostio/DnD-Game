@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -98,6 +99,16 @@ func (db *DB) GetDB() *sqlx.DB {
 	return db.DB
 }
 
+// QueryRowContext executes a query with context that is expected to return at most one row
+func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	return db.DB.QueryRowContext(ctx, query, args...)
+}
+
+// ExecContext executes a query with context without returning any rows
+func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return db.DB.ExecContext(ctx, query, args...)
+}
+
 // GetConfig returns the database configuration
 func (db *DB) GetConfig() Config {
 	return db.config
@@ -126,4 +137,35 @@ func (db *DB) Get(dest interface{}, query string, args ...interface{}) error {
 // Select executes a query and scans the results into dest
 func (db *DB) Select(dest interface{}, query string, args ...interface{}) error {
 	return db.DB.Select(dest, query, args...)
+}
+
+// Rebind transforms a query from QUESTION to the DB driver's bindvar type
+// This allows us to write queries with ? placeholders that work with both SQLite and PostgreSQL
+func (db *DB) Rebind(query string) string {
+	return db.DB.Rebind(query)
+}
+
+// ExecRebind executes a query after rebinding placeholders
+func (db *DB) ExecRebind(query string, args ...interface{}) (sql.Result, error) {
+	return db.DB.Exec(db.Rebind(query), args...)
+}
+
+// QueryRowRebind executes a query after rebinding placeholders
+func (db *DB) QueryRowRebind(query string, args ...interface{}) *sql.Row {
+	return db.DB.QueryRow(db.Rebind(query), args...)
+}
+
+// ExecContextRebind executes a query with context after rebinding placeholders
+func (db *DB) ExecContextRebind(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return db.DB.ExecContext(ctx, db.Rebind(query), args...)
+}
+
+// QueryRowContextRebind executes a query with context after rebinding placeholders
+func (db *DB) QueryRowContextRebind(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	return db.DB.QueryRowContext(ctx, db.Rebind(query), args...)
+}
+
+// QueryContextRebind executes a query with context after rebinding placeholders
+func (db *DB) QueryContextRebind(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	return db.DB.QueryContext(ctx, db.Rebind(query), args...)
 }

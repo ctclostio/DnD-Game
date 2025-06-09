@@ -102,7 +102,7 @@ func TestInventoryRepository_GetItem(t *testing.T) {
 
 		propertiesJSON, _ := json.Marshal(expectedItem.Properties)
 		
-		mock.ExpectQuery(`SELECT \* FROM items WHERE id = \$1`).
+		mock.ExpectQuery(`SELECT id, name, type, rarity, weight, value, properties, requires_attunement, attunement_requirements, description, created_at, updated_at FROM items WHERE id = \$1`).
 			WithArgs("test-item-id").
 			WillReturnRows(sqlmock.NewRows([]string{
 				"id", "name", "type", "rarity", "weight", "value", "properties",
@@ -123,7 +123,7 @@ func TestInventoryRepository_GetItem(t *testing.T) {
 	})
 
 	t.Run("item not found", func(t *testing.T) {
-		mock.ExpectQuery(`SELECT \* FROM items WHERE id = \$1`).
+		mock.ExpectQuery(`SELECT id, name, type, rarity, weight, value, properties, requires_attunement, attunement_requirements, description, created_at, updated_at FROM items WHERE id = \$1`).
 			WithArgs("non-existent").
 			WillReturnError(sql.ErrNoRows)
 
@@ -154,10 +154,11 @@ func TestInventoryRepository_AddItemToInventory(t *testing.T) {
 			sqlmock.AnyArg(), characterID, itemID, quantity, sqlmock.AnyArg(), sqlmock.AnyArg(),
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
-		// Expect the weight update query - this would be in updateCharacterWeight
-		mock.ExpectQuery(`SELECT SUM\(i\.weight \* ci\.quantity\)`).
-			WithArgs(characterID).
-			WillReturnRows(sqlmock.NewRows([]string{"sum"}).AddRow(50.0))
+		// Expect the weight update query from updateCharacterWeight
+		// Need to match the full query including WHERE clause
+		mock.ExpectExec(
+			`UPDATE characters SET current_weight = \(\s*SELECT COALESCE\(SUM\(i\.weight \* ci\.quantity\), 0\)\s*FROM character_inventory ci\s*JOIN items i ON ci\.item_id = i\.id\s*WHERE ci\.character_id = \$1\s*\)\s*WHERE id = \$1`,
+		).WithArgs(characterID).WillReturnResult(sqlmock.NewResult(0, 1))
 
 		err := repo.AddItemToInventory(characterID, itemID, quantity)
 		assert.NoError(t, err)
@@ -191,7 +192,7 @@ func TestInventoryRepository_GetCharacterInventory(t *testing.T) {
 			time.Now(), time.Now(),
 		)
 
-		mock.ExpectQuery(`SELECT .* FROM character_inventory .* WHERE .* character_id = \$1`).
+		mock.ExpectQuery(`SELECT ci\.id, ci\.character_id, ci\.item_id, ci\.quantity, ci\.equipped, ci\.attuned, ci\.custom_properties, ci\.notes, ci\.created_at, ci\.updated_at, i\.id, i\.name, i\.type, i\.rarity, i\.weight, i\.value, i\.properties, i\.requires_attunement, i\.attunement_requirements, i\.description, i\.created_at, i\.updated_at FROM character_inventory ci JOIN items i ON ci\.item_id = i\.id WHERE ci\.character_id = \? ORDER BY i\.name`).
 			WithArgs(characterID).
 			WillReturnRows(rows)
 

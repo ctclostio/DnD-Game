@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
@@ -21,6 +22,11 @@ func NewCharacterRepository(db *DB) CharacterRepository {
 
 // Create creates a new character
 func (r *characterRepository) Create(ctx context.Context, character *models.Character) error {
+	// Generate ID if not provided (for SQLite compatibility)
+	if character.ID == "" {
+		character.ID = uuid.New().String()
+	}
+	
 	// Convert complex types to JSON
 	attributesJSON, err := json.Marshal(character.Attributes)
 	if err != nil {
@@ -44,14 +50,14 @@ func (r *characterRepository) Create(ctx context.Context, character *models.Char
 
 	query := `
 		INSERT INTO characters (
-			user_id, name, race, class, level, experience_points,
+			id, user_id, name, race, class, level, experience_points,
 			hit_points, max_hit_points, armor_class, speed,
 			attributes, skills, equipment, spells
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 		RETURNING id, created_at, updated_at`
 
 	err = r.db.QueryRowContext(ctx, query,
-		character.UserID, character.Name, character.Race, character.Class,
+		character.ID, character.UserID, character.Name, character.Race, character.Class,
 		character.Level, character.ExperiencePoints, character.HitPoints,
 		character.MaxHitPoints, character.ArmorClass, character.Speed,
 		attributesJSON, skillsJSON, equipmentJSON, spellsJSON).
@@ -69,15 +75,17 @@ func (r *characterRepository) GetByID(ctx context.Context, id string) (*models.C
 	var attributesJSON, skillsJSON, equipmentJSON, spellsJSON []byte
 
 	query := `
-		SELECT id, user_id, name, race, class, level, experience_points,
+		SELECT id, user_id, name, race, COALESCE(subrace, ''), class, COALESCE(subclass, ''),
+			   COALESCE(background, ''), COALESCE(alignment, ''), level, experience_points,
 			   hit_points, max_hit_points, armor_class, speed,
 			   attributes, skills, equipment, spells, created_at, updated_at
 		FROM characters
-		WHERE id = $1`
+		WHERE id = ?`
 
-	err := r.db.QueryRowContext(ctx, query, id).Scan(
-		&character.ID, &character.UserID, &character.Name, &character.Race,
-		&character.Class, &character.Level, &character.ExperiencePoints,
+	err := r.db.QueryRowContextRebind(ctx, query, id).Scan(
+		&character.ID, &character.UserID, &character.Name, &character.Race, &character.Subrace,
+		&character.Class, &character.Subclass, &character.Background, &character.Alignment,
+		&character.Level, &character.ExperiencePoints,
 		&character.HitPoints, &character.MaxHitPoints, &character.ArmorClass,
 		&character.Speed, &attributesJSON, &skillsJSON, &equipmentJSON,
 		&spellsJSON, &character.CreatedAt, &character.UpdatedAt)
@@ -85,7 +93,7 @@ func (r *characterRepository) GetByID(ctx context.Context, id string) (*models.C
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("character not found")
 		}
-		return nil, fmt.Errorf("failed to get character by id: %w", err)
+		return nil, fmt.Errorf("failed to scan character data: %w", err)
 	}
 
 	// Unmarshal JSON fields
@@ -100,6 +108,28 @@ func (r *characterRepository) GetByID(ctx context.Context, id string) (*models.C
 	}
 	if err := json.Unmarshal(spellsJSON, &character.Spells); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal spells: %w", err)
+	}
+	
+	// Initialize fields that might not be in the database
+	// Note: We don't need to check if SavingThrows is empty since it only contains basic types
+	// Initialize empty slices and maps
+	if character.Proficiencies.Languages == nil {
+		character.Proficiencies.Languages = []string{}
+	}
+	if character.Proficiencies.Tools == nil {
+		character.Proficiencies.Tools = []string{}
+	}
+	if character.Proficiencies.Weapons == nil {
+		character.Proficiencies.Weapons = []string{}
+	}
+	if character.Proficiencies.Armor == nil {
+		character.Proficiencies.Armor = []string{}
+	}
+	if character.Features == nil {
+		character.Features = []models.Feature{}
+	}
+	if character.Resources == nil {
+		character.Resources = make(map[string]interface{})
 	}
 
 	return &character, nil
@@ -179,26 +209,32 @@ func (r *characterRepository) Update(ctx context.Context, character *models.Char
 		return fmt.Errorf("failed to marshal spells: %w", err)
 	}
 
+	// Use ? placeholders and rebind for database compatibility
 	query := `
 		UPDATE characters
-		SET name = $2, race = $3, class = $4, level = $5, experience_points = $6,
-			hit_points = $7, max_hit_points = $8, armor_class = $9, speed = $10,
-			attributes = $11, skills = $12, equipment = $13, spells = $14,
+		SET name = ?, race = ?, class = ?, level = ?, experience_points = ?,
+			hit_points = ?, max_hit_points = ?, armor_class = ?, speed = ?,
+			attributes = ?, skills = ?, equipment = ?, spells = ?,
 			updated_at = CURRENT_TIMESTAMP
-		WHERE id = $1
-		RETURNING updated_at`
+		WHERE id = ?`
 
-	err = r.db.QueryRowContext(ctx, query,
-		character.ID, character.Name, character.Race, character.Class,
+	result, err := r.db.ExecContextRebind(ctx, query,
+		character.Name, character.Race, character.Class,
 		character.Level, character.ExperiencePoints, character.HitPoints,
 		character.MaxHitPoints, character.ArmorClass, character.Speed,
-		attributesJSON, skillsJSON, equipmentJSON, spellsJSON).
-		Scan(&character.UpdatedAt)
+		attributesJSON, skillsJSON, equipmentJSON, spellsJSON,
+		character.ID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return fmt.Errorf("character not found")
-		}
 		return fmt.Errorf("failed to update character: %w", err)
+	}
+	
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+	
+	if rowsAffected == 0 {
+		return fmt.Errorf("character not found")
 	}
 
 	return nil

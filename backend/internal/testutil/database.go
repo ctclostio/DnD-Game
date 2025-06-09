@@ -190,14 +190,14 @@ func SeedTestUser(t *testing.T, db *sqlx.DB, id, username, email, role string) {
 func SeedTestCharacter(t *testing.T, db *sqlx.DB, id, userID, name string) {
 	query := `
 		INSERT INTO characters (
-			id, user_id, name, race, class, level,
-			hit_points, max_hit_points, armor_class,
-			attributes, saving_throws, skills
+			id, user_id, name, race, subrace, class, subclass, background, alignment, level,
+			experience_points, hit_points, max_hit_points, armor_class, speed,
+			attributes, saving_throws, skills, equipment, spells
 		) VALUES (
-			$1, $2, $3, 'Human', 'Fighter', 1,
-			10, 10, 15,
+			$1, $2, $3, 'Human', NULL, 'Fighter', NULL, 'Soldier', 'Lawful Good', 1,
+			0, 10, 10, 15, 30,
 			'{"strength":16,"dexterity":14,"constitution":14,"intelligence":10,"wisdom":12,"charisma":8}',
-			'{}', '[]'
+			'{}', '[]', '[]', '{}'
 		)
 	`
 	_, err := db.Exec(query, id, userID, name)

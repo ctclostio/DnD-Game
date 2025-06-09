@@ -25,10 +25,10 @@ func (r *diceRollRepository) Create(ctx context.Context, roll *models.DiceRoll) 
 		INSERT INTO dice_rolls (
 			game_session_id, user_id, dice_type, count, modifier,
 			results, total, purpose, roll_notation
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		RETURNING id, timestamp`
 
-	err := r.db.QueryRowContext(ctx, query,
+	err := r.db.QueryRowContextRebind(ctx, query,
 		roll.GameSessionID, roll.UserID, roll.DiceType, roll.Count,
 		roll.Modifier, pq.Array(roll.Results), roll.Total,
 		roll.Purpose, roll.RollNotation).
@@ -47,9 +47,9 @@ func (r *diceRollRepository) GetByID(ctx context.Context, id string) (*models.Di
 		SELECT id, game_session_id, user_id, dice_type, count, modifier,
 			   results, total, purpose, roll_notation, timestamp
 		FROM dice_rolls
-		WHERE id = $1`
+		WHERE id = ?`
 
-	err := r.db.QueryRowContext(ctx, query, id).Scan(
+	err := r.db.QueryRowContextRebind(ctx, query, id).Scan(
 		&roll.ID, &roll.GameSessionID, &roll.UserID, &roll.DiceType,
 		&roll.Count, &roll.Modifier, pq.Array(&roll.Results),
 		&roll.Total, &roll.Purpose, &roll.RollNotation, &roll.Timestamp)
@@ -69,11 +69,11 @@ func (r *diceRollRepository) GetByGameSession(ctx context.Context, sessionID str
 		SELECT id, game_session_id, user_id, dice_type, count, modifier,
 			   results, total, purpose, roll_notation, timestamp
 		FROM dice_rolls
-		WHERE game_session_id = $1
+		WHERE game_session_id = ?
 		ORDER BY timestamp DESC
-		LIMIT $2 OFFSET $3`
+		LIMIT ? OFFSET ?`
 
-	rows, err := r.db.QueryContext(ctx, query, sessionID, limit, offset)
+	rows, err := r.db.QueryContextRebind(ctx, query, sessionID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dice rolls by game session: %w", err)
 	}
@@ -101,11 +101,11 @@ func (r *diceRollRepository) GetByUser(ctx context.Context, userID string, offse
 		SELECT id, game_session_id, user_id, dice_type, count, modifier,
 			   results, total, purpose, roll_notation, timestamp
 		FROM dice_rolls
-		WHERE user_id = $1
+		WHERE user_id = ?
 		ORDER BY timestamp DESC
-		LIMIT $2 OFFSET $3`
+		LIMIT ? OFFSET ?`
 
-	rows, err := r.db.QueryContext(ctx, query, userID, limit, offset)
+	rows, err := r.db.QueryContextRebind(ctx, query, userID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dice rolls by user: %w", err)
 	}
@@ -133,11 +133,11 @@ func (r *diceRollRepository) GetByGameSessionAndUser(ctx context.Context, sessio
 		SELECT id, game_session_id, user_id, dice_type, count, modifier,
 			   results, total, purpose, roll_notation, timestamp
 		FROM dice_rolls
-		WHERE game_session_id = $1 AND user_id = $2
+		WHERE game_session_id = ? AND user_id = ?
 		ORDER BY timestamp DESC
-		LIMIT $3 OFFSET $4`
+		LIMIT ? OFFSET ?`
 
-	rows, err := r.db.QueryContext(ctx, query, sessionID, userID, limit, offset)
+	rows, err := r.db.QueryContextRebind(ctx, query, sessionID, userID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dice rolls by game session and user: %w", err)
 	}
@@ -161,9 +161,9 @@ func (r *diceRollRepository) GetByGameSessionAndUser(ctx context.Context, sessio
 
 // Delete deletes a dice roll
 func (r *diceRollRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM dice_rolls WHERE id = $1`
+	query := `DELETE FROM dice_rolls WHERE id = ?`
 	
-	result, err := r.db.ExecContext(ctx, query, id)
+	result, err := r.db.ExecContextRebind(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete dice roll: %w", err)
 	}

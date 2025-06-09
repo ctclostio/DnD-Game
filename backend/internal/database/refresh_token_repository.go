@@ -35,8 +35,9 @@ func NewRefreshTokenRepository(db *sqlx.DB) RefreshTokenRepository {
 func (r *refreshTokenRepository) Create(userID, tokenID string, token string, expiresAt time.Time) error {
 	query := `
 		INSERT INTO refresh_tokens (user_id, token_hash, token_id, expires_at)
-		VALUES ($1, $2, $3, $4)
+		VALUES (?, ?, ?, ?)
 	`
+	query = r.db.Rebind(query)
 
 	tokenHash := hashToken(token)
 	_, err := r.db.Exec(query, userID, tokenHash, tokenID, expiresAt)
@@ -52,10 +53,11 @@ func (r *refreshTokenRepository) ValidateAndGet(token string) (*RefreshToken, er
 	query := `
 		SELECT id, user_id, token_hash, token_id, expires_at, created_at, revoked_at
 		FROM refresh_tokens
-		WHERE token_hash = $1 
+		WHERE token_hash = ? 
 		  AND expires_at > CURRENT_TIMESTAMP
 		  AND revoked_at IS NULL
 	`
+	query = r.db.Rebind(query)
 
 	tokenHash := hashToken(token)
 	var refreshToken RefreshToken
@@ -75,8 +77,9 @@ func (r *refreshTokenRepository) Revoke(tokenID string) error {
 	query := `
 		UPDATE refresh_tokens 
 		SET revoked_at = CURRENT_TIMESTAMP
-		WHERE token_id = $1 AND revoked_at IS NULL
+		WHERE token_id = ? AND revoked_at IS NULL
 	`
+	query = r.db.Rebind(query)
 
 	result, err := r.db.Exec(query, tokenID)
 	if err != nil {
@@ -100,8 +103,9 @@ func (r *refreshTokenRepository) RevokeAllForUser(userID string) error {
 	query := `
 		UPDATE refresh_tokens 
 		SET revoked_at = CURRENT_TIMESTAMP
-		WHERE user_id = $1 AND revoked_at IS NULL
+		WHERE user_id = ? AND revoked_at IS NULL
 	`
+	query = r.db.Rebind(query)
 
 	_, err := r.db.Exec(query, userID)
 	if err != nil {
@@ -118,6 +122,7 @@ func (r *refreshTokenRepository) CleanupExpired() error {
 		WHERE expires_at < CURRENT_TIMESTAMP
 		   OR revoked_at < CURRENT_TIMESTAMP - INTERVAL '30 days'
 	`
+	query = r.db.Rebind(query)
 
 	_, err := r.db.Exec(query)
 	if err != nil {

@@ -38,31 +38,89 @@ func (r *inventoryRepository) CreateItem(item *models.Item) error {
 
 func (r *inventoryRepository) GetItem(itemID string) (*models.Item, error) {
 	var item models.Item
-	query := `SELECT * FROM items WHERE id = $1`
-	err := r.db.Get(&item, query, itemID)
+	var attunementReq, description sql.NullString
+	
+	query := `
+		SELECT id, name, type, rarity, weight, value, properties, 
+			requires_attunement, attunement_requirements, description, created_at, updated_at
+		FROM items WHERE id = $1
+	`
+	err := r.db.QueryRow(query, itemID).Scan(
+		&item.ID, &item.Name, &item.Type, &item.Rarity, &item.Weight, &item.Value,
+		&item.Properties, &item.RequiresAttunement, &attunementReq, &description,
+		&item.CreatedAt, &item.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
-	return &item, err
+	if err != nil {
+		return nil, err
+	}
+	
+	// Handle nullable fields
+	if attunementReq.Valid {
+		item.AttunementRequirements = attunementReq.String
+	}
+	if description.Valid {
+		item.Description = description.String
+	}
+	
+	return &item, nil
 }
 
 func (r *inventoryRepository) GetItemsByType(itemType models.ItemType) ([]*models.Item, error) {
+	query := `
+		SELECT id, name, type, rarity, weight, value, properties, 
+			requires_attunement, attunement_requirements, description, created_at, updated_at
+		FROM items WHERE type = $1 ORDER BY name
+	`
+	
+	rows, err := r.db.Query(query, itemType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
 	var items []*models.Item
-	query := `SELECT * FROM items WHERE type = $1 ORDER BY name`
-	err := r.db.Select(&items, query, itemType)
-	return items, err
+	for rows.Next() {
+		var item models.Item
+		var attunementReq, description sql.NullString
+		
+		err := rows.Scan(
+			&item.ID, &item.Name, &item.Type, &item.Rarity, &item.Weight, &item.Value,
+			&item.Properties, &item.RequiresAttunement, &attunementReq, &description,
+			&item.CreatedAt, &item.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		
+		// Handle nullable fields
+		if attunementReq.Valid {
+			item.AttunementRequirements = attunementReq.String
+		}
+		if description.Valid {
+			item.Description = description.String
+		}
+		
+		items = append(items, &item)
+	}
+	
+	return items, nil
 }
 
 func (r *inventoryRepository) AddItemToInventory(characterID, itemID string, quantity int) error {
 	id := uuid.New().String()
 	now := time.Now()
 	
+	// SQLite requires different syntax for upsert
 	query := `
 		INSERT INTO character_inventory (id, character_id, item_id, quantity, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		ON CONFLICT (character_id, item_id) 
-		DO UPDATE SET quantity = character_inventory.quantity + EXCLUDED.quantity,
-			updated_at = EXCLUDED.updated_at
+		DO UPDATE SET 
+			quantity = character_inventory.quantity + excluded.quantity,
+			updated_at = excluded.updated_at
 	`
 	_, err := r.db.Exec(query, id, characterID, itemID, quantity, now, now)
 	if err != nil {
@@ -104,13 +162,19 @@ func (r *inventoryRepository) RemoveItemFromInventory(characterID, itemID string
 
 func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*models.InventoryItem, error) {
 	query := `
-		SELECT ci.*, i.* 
+		SELECT 
+			ci.id, ci.character_id, ci.item_id, ci.quantity, ci.equipped, ci.attuned,
+			ci.custom_properties, ci.notes, ci.created_at, ci.updated_at,
+			i.id, i.name, i.type, i.rarity, i.weight, i.value, i.properties,
+			i.requires_attunement, i.attunement_requirements, i.description,
+			i.created_at, i.updated_at
 		FROM character_inventory ci
 		JOIN items i ON ci.item_id = i.id
-		WHERE ci.character_id = $1
+		WHERE ci.character_id = ?
 		ORDER BY i.name
 	`
 	
+	query = r.db.Rebind(query)
 	rows, err := r.db.Query(query, characterID)
 	if err != nil {
 		return nil, err
@@ -121,18 +185,30 @@ func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*mode
 	for rows.Next() {
 		var inv models.InventoryItem
 		var item models.Item
+		var invNotes, attunementReq, description sql.NullString
 		
 		err := rows.Scan(
 			&inv.ID, &inv.CharacterID, &inv.ItemID, &inv.Quantity,
-			&inv.Equipped, &inv.Attuned, &inv.CustomProperties, &inv.Notes,
+			&inv.Equipped, &inv.Attuned, &inv.CustomProperties, &invNotes,
 			&inv.CreatedAt, &inv.UpdatedAt,
 			&item.ID, &item.Name, &item.Type, &item.Rarity, &item.Weight,
 			&item.Value, &item.Properties, &item.RequiresAttunement,
-			&item.AttunementRequirements, &item.Description,
+			&attunementReq, &description,
 			&item.CreatedAt, &item.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
+		}
+		
+		// Handle nullable fields
+		if invNotes.Valid {
+			inv.Notes = invNotes.String
+		}
+		if attunementReq.Valid {
+			item.AttunementRequirements = attunementReq.String
+		}
+		if description.Valid {
+			item.Description = description.String
 		}
 		
 		inv.Item = &item
@@ -143,9 +219,25 @@ func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*mode
 }
 
 func (r *inventoryRepository) EquipItem(characterID, itemID string, equip bool) error {
-	query := `UPDATE character_inventory SET equipped = $3, updated_at = $4 WHERE character_id = $1 AND item_id = $2`
-	_, err := r.db.Exec(query, characterID, itemID, equip, time.Now())
-	return err
+	// Use ? placeholders and rebind for database compatibility
+	query := `UPDATE character_inventory SET equipped = ?, updated_at = ? WHERE character_id = ? AND item_id = ?`
+	// Rebind the query to match the database driver's placeholder style
+	query = r.db.Rebind(query)
+	result, err := r.db.Exec(query, equip, time.Now(), characterID, itemID)
+	if err != nil {
+		return err
+	}
+	
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	
+	if rowsAffected == 0 {
+		return fmt.Errorf("no inventory item found for character %s and item %s", characterID, itemID)
+	}
+	
+	return nil
 }
 
 func (r *inventoryRepository) AttuneItem(characterID, itemID string) error {
