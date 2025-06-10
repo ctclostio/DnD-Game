@@ -47,8 +47,8 @@ func setupIntegrationTest(t *testing.T) (*testContext, func()) {
 		GameSessions: database.NewGameSessionRepository(db),
 		DiceRolls:    database.NewDiceRollRepository(db),
 		NPCs:         database.NewNPCRepository(sqlxDB),
-		Inventory:    database.NewInventoryRepository(sqlxDB),
-		CustomClasses: database.NewCustomClassRepository(db.DB.DB),
+		Inventory:    database.NewInventoryRepository(db),
+		CustomClasses: database.NewCustomClassRepository(db),
 	}
 
 	// Create services

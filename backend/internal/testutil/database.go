@@ -35,6 +35,16 @@ func SetupTestDB(t *testing.T) *sqlx.DB {
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
 
+	CREATE TABLE IF NOT EXISTS refresh_tokens (
+		id TEXT PRIMARY KEY,
+		user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		token_hash TEXT NOT NULL UNIQUE,
+		token_id TEXT NOT NULL UNIQUE,
+		expires_at TIMESTAMP NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		revoked_at TIMESTAMP
+	);
+
 	CREATE TABLE IF NOT EXISTS characters (
 		id TEXT PRIMARY KEY,
 		user_id TEXT NOT NULL REFERENCES users(id),
@@ -167,6 +177,7 @@ func TruncateTables(t *testing.T, db *sqlx.DB) {
 		"character_inventory",
 		"items",
 		"characters",
+		"refresh_tokens",
 		"users",
 	}
 
@@ -180,9 +191,9 @@ func TruncateTables(t *testing.T, db *sqlx.DB) {
 func SeedTestUser(t *testing.T, db *sqlx.DB, id, username, email, role string) {
 	query := `
 		INSERT INTO users (id, username, email, password_hash, role)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES (?, ?, ?, ?, ?)
 	`
-	_, err := db.Exec(query, id, username, email, "hashed_password", role)
+	_, err := db.Exec(db.Rebind(query), id, username, email, "hashed_password", role)
 	require.NoError(t, err)
 }
 

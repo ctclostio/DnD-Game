@@ -4,7 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
@@ -20,6 +23,36 @@ func NewUserRepository(db *DB) UserRepository {
 
 // Create creates a new user
 func (r *userRepository) Create(ctx context.Context, user *models.User) error {
+	// For SQLite compatibility, generate UUID and timestamps in application
+	if r.db.DriverName() == "sqlite3" {
+		user.ID = uuid.New().String()
+		user.CreatedAt = time.Now()
+		user.UpdatedAt = time.Now()
+		user.Role = "player" // Default role
+		
+		query := `
+			INSERT INTO users (id, username, email, password_hash, role, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?)`
+		
+		_, err := r.db.ExecContextRebind(ctx, query, 
+			user.ID, user.Username, user.Email, user.PasswordHash, user.Role, 
+			user.CreatedAt, user.UpdatedAt)
+		if err != nil {
+			// Check for constraint violations
+			if strings.Contains(err.Error(), "UNIQUE") {
+				if strings.Contains(err.Error(), "username") {
+					return models.ErrDuplicateUsername
+				}
+				if strings.Contains(err.Error(), "email") {
+					return models.ErrDuplicateEmail
+				}
+			}
+			return fmt.Errorf("failed to create user: %w", err)
+		}
+		return nil
+	}
+	
+	// PostgreSQL version with RETURNING clause
 	query := `
 		INSERT INTO users (username, email, password_hash)
 		VALUES (?, ?, ?)
@@ -28,6 +61,15 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 	err := r.db.QueryRowContextRebind(ctx, query, user.Username, user.Email, user.PasswordHash).
 		Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
+		// Check for constraint violations
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE") {
+			if strings.Contains(err.Error(), "username") {
+				return models.ErrDuplicateUsername
+			}
+			if strings.Contains(err.Error(), "email") {
+				return models.ErrDuplicateEmail
+			}
+		}
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 
@@ -38,7 +80,7 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	var user models.User
 	query := `
-		SELECT id, username, email, password_hash, created_at, updated_at
+		SELECT id, username, email, password_hash, COALESCE(role, 'player') as role, created_at, updated_at
 		FROM users
 		WHERE id = ?`
 
@@ -58,7 +100,7 @@ func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, 
 func (r *userRepository) GetByUsername(ctx context.Context, username string) (*models.User, error) {
 	var user models.User
 	query := `
-		SELECT id, username, email, password_hash, created_at, updated_at
+		SELECT id, username, email, password_hash, COALESCE(role, 'player') as role, created_at, updated_at
 		FROM users
 		WHERE username = ?`
 
@@ -78,7 +120,7 @@ func (r *userRepository) GetByUsername(ctx context.Context, username string) (*m
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
 	query := `
-		SELECT id, username, email, password_hash, created_at, updated_at
+		SELECT id, username, email, password_hash, COALESCE(role, 'player') as role, created_at, updated_at
 		FROM users
 		WHERE email = ?`
 
@@ -139,7 +181,7 @@ func (r *userRepository) Delete(ctx context.Context, id string) error {
 func (r *userRepository) List(ctx context.Context, offset, limit int) ([]*models.User, error) {
 	var users []*models.User
 	query := `
-		SELECT id, username, email, password_hash, created_at, updated_at
+		SELECT id, username, email, password_hash, COALESCE(role, 'player') as role, created_at, updated_at
 		FROM users
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?`
