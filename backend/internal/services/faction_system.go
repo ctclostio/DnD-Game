@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 // FactionSystemService manages faction creation, relationships, and conflicts
@@ -169,7 +170,7 @@ Respond in JSON format:
 	// Generate initial relationships with existing factions
 	if err := s.generateInitialRelationships(ctx, faction); err != nil {
 		// Non-fatal error
-		fmt.Printf("Warning: failed to generate faction relationships: %v\n", err)
+		logger.WithContext(ctx).WithError(err).Warn().Msg("Failed to generate faction relationships")
 	}
 
 	return faction, nil

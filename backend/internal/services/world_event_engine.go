@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 // WorldEventEngineService manages world events that happen regardless of party actions
@@ -199,14 +200,14 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 		// Check if event should progress
 		if s.shouldEventProgress(event) {
 			if err := s.progressEvent(ctx, event); err != nil {
-				fmt.Printf("Warning: failed to progress event %s: %v\n", event.Name, err)
+				logger.WithContext(ctx).WithError(err).WithField("event_name", event.Name).Warn().Msg("Failed to progress event")
 			}
 		}
 
 		// Check resolution conditions
 		if s.checkResolutionConditions(ctx, event) {
 			if err := s.resolveEvent(ctx, event); err != nil {
-				fmt.Printf("Warning: failed to resolve event %s: %v\n", event.Name, err)
+				logger.WithContext(ctx).WithError(err).WithField("event_name", event.Name).Warn().Msg("Failed to resolve event")
 			}
 		}
 	}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 // EconomicSimulatorService manages market dynamics and trade
@@ -40,13 +41,13 @@ func (s *EconomicSimulatorService) SimulateEconomicCycle(ctx context.Context, ga
 	// Update each settlement's market
 	for _, settlement := range settlements {
 		if err := s.updateSettlementMarket(ctx, settlement, activeEvents); err != nil {
-			fmt.Printf("Warning: failed to update market for %s: %v\n", settlement.Name, err)
+			logger.WithContext(ctx).WithError(err).WithField("settlement_name", settlement.Name).Warn().Msg("Failed to update market")
 		}
 	}
 
 	// Update trade route conditions
 	if err := s.updateTradeRoutes(ctx, gameSessionID); err != nil {
-		fmt.Printf("Warning: failed to update trade routes: %v\n", err)
+		logger.WithContext(ctx).WithError(err).Warn().Msg("Failed to update trade routes")
 	}
 
 	// Trigger economic events if conditions warrant

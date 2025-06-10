@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 // DMAssistantService handles DM assistance operations
@@ -165,7 +166,7 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 	historyEntry.Prompt = prompt
 	if err := s.repo.SaveHistory(ctx, historyEntry); err != nil {
 		// Log error but don't fail the request
-		fmt.Printf("Failed to save history: %v\n", err)
+		logger.WithContext(ctx).WithError(err).Error().Msg("Failed to save history")
 	}
 
 	return result, nil
