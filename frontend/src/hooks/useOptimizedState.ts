@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
+import { unstable_batchedUpdates } from 'react-dom';
 
 /**
  * Hook that provides optimized state management with built-in performance features
@@ -12,6 +13,7 @@ export function useOptimizedState<T>(
 ) {
   const [state, setState] = useState(initialValue);
   const previousValueRef = useRef(state);
+  const memoizedOptions = useMemo(() => options, [options?.compareFunction, options?.onUpdate]);
   
   // Custom setState that only updates if value actually changed
   const setOptimizedState = useCallback((newValue: T | ((prev: T) => T)) => {
@@ -21,16 +23,16 @@ export function useOptimizedState<T>(
         : newValue;
       
       // Use custom compare function if provided
-      const hasChanged = options?.compareFunction
-        ? !options.compareFunction(prev, nextValue)
+      const hasChanged = memoizedOptions?.compareFunction
+        ? !memoizedOptions.compareFunction(prev, nextValue)
         : prev !== nextValue;
       
       if (hasChanged) {
         previousValueRef.current = prev;
         
         // Call onUpdate callback if provided
-        if (options?.onUpdate) {
-          options.onUpdate(nextValue, prev);
+        if (memoizedOptions?.onUpdate) {
+          memoizedOptions.onUpdate(nextValue, prev);
         }
         
         return nextValue;
@@ -38,7 +40,7 @@ export function useOptimizedState<T>(
       
       return prev;
     });
-  }, [options?.compareFunction, options?.onUpdate]);
+  }, [memoizedOptions]);
   
   // Reset to initial value
   const reset = useCallback(() => {
@@ -59,11 +61,13 @@ export function useOptimizedState<T>(
 /**
  * Hook for managing complex form state with optimizations
  */
-export function useOptimizedForm<T extends Record<string, any>>(
+export function useOptimizedForm<T extends Record<string, unknown>>(
   initialValues: T,
   options?: {
     validateOnChange?: boolean;
     validator?: (values: T) => Record<string, string>;
+    shallowCompare?: boolean;
+    ariaLive?: boolean;
   }
 ) {
   const [values, setValues] = useState(initialValues);
@@ -77,8 +81,9 @@ export function useOptimizedForm<T extends Record<string, any>>(
   }, [options?.validator]);
   
   // Update single field
-  const setFieldValue = useCallback((field: keyof T, value: any) => {
-    setValues(prev => {
+  const setFieldValue = useCallback(<K extends keyof T>(field: K, value: T[K]) => {
+    unstable_batchedUpdates(() => {
+      setValues(prev => {
       if (prev[field] === value) return prev;
       
       const newValues = { ...prev, [field]: value };
@@ -90,6 +95,7 @@ export function useOptimizedForm<T extends Record<string, any>>(
       }
       
       return newValues;
+    });
     });
   }, [touched, validate, options?.validateOnChange]);
   
@@ -103,7 +109,8 @@ export function useOptimizedForm<T extends Record<string, any>>(
   
   // Bulk update values
   const setMultipleValues = useCallback((updates: Partial<T>) => {
-    setValues(prev => {
+    unstable_batchedUpdates(() => {
+      setValues(prev => {
       const hasChanges = Object.entries(updates).some(
         ([key, value]) => prev[key] !== value
       );
@@ -111,6 +118,7 @@ export function useOptimizedForm<T extends Record<string, any>>(
       if (!hasChanges) return prev;
       
       return { ...prev, ...updates };
+    });
     });
   }, []);
   
@@ -124,13 +132,17 @@ export function useOptimizedForm<T extends Record<string, any>>(
   
   // Submit handler
   const handleSubmit = useCallback(
-    (onSubmit: (values: T) => void | Promise<void>) => {
+    (onSubmit: (values: T) => void | Promise<void>, options?: { ariaLive?: boolean }) => {
       return async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         
         setIsSubmitting(true);
         const validationErrors = validate(values);
-        setErrors(validationErrors);
+        setErrors(prev => ({
+          ...prev,
+          ...validationErrors,
+          ...(options?.ariaLive ? { __ariaLive: 'true' } : {})
+        }));
         
         if (Object.keys(validationErrors).length === 0) {
           try {
@@ -153,10 +165,11 @@ export function useOptimizedForm<T extends Record<string, any>>(
   
   // Check if form is dirty
   const isDirty = useMemo(() => {
-    return Object.entries(values).some(
-      ([key, value]) => value !== initialValues[key]
-    );
-  }, [values, initialValues]);
+    if (options?.shallowCompare) {
+      return Object.keys(values).some(key => values[key] !== initialValues[key]);
+    }
+    return !Object.is(values, initialValues);
+  }, [values, initialValues, options?.shallowCompare]);
   
   return {
     values,
@@ -167,6 +180,8 @@ export function useOptimizedForm<T extends Record<string, any>>(
     isDirty,
     setFieldValue,
     setFieldTouched,
+    setFieldError: <K extends keyof T>(field: K, message: string) =>
+      setErrors(prev => ({ ...prev, [field]: message })),
     setMultipleValues,
     handleSubmit,
     reset,

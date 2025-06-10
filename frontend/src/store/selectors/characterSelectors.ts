@@ -1,6 +1,6 @@
 import { createSelector } from 'reselect';
 import { RootState } from '../index';
-import { Character, AbilityScore } from '../../types/game';
+import { Character, AbilityScore, SpellSlot } from '../../types/game';
 
 // Base selectors
 const selectCharacterState = (state: RootState) => state.character;
@@ -32,7 +32,7 @@ export const selectCharacterModifiers = createSelector(
   (character) => {
     if (!character) return null;
     
-    const modifiers: Record<AbilityScore, number> = {} as any;
+    const modifiers = {} as Record<AbilityScore, number>;
     
     Object.entries(character.abilityScores).forEach(([ability, score]: [string, number]) => {
       modifiers[ability as AbilityScore] = Math.floor((score - 10) / 2);
@@ -48,7 +48,7 @@ export const selectSpellSlotsSummary = createSelector(
   (character) => {
     if (!character || !character.spellSlots) return null;
     
-    return character.spellSlots.reduce((summary: any, slot: any) => {
+    return character.spellSlots.reduce((summary, slot: SpellSlot) => {
       summary[`level${slot.level}`] = {
         total: slot.total,
         used: slot.used,
@@ -127,7 +127,7 @@ export const selectCharacterSavingThrows = createSelector(
   (character, modifiers) => {
     if (!character || !modifiers) return null;
     
-    const savingThrows: Record<AbilityScore, number> = {} as any;
+    const savingThrows = {} as Record<AbilityScore, number>;
     
     Object.entries(modifiers).forEach(([ability, modifier]) => {
       const isProficient = character.savingThrowProficiencies[ability as AbilityScore];

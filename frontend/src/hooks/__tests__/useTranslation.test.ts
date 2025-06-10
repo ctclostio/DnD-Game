@@ -3,7 +3,7 @@ import { useTranslation } from '../useTranslation';
 
 // Mock the i18n module
 const mockListeners = new Set<() => void>();
-const mockI18n = {
+const mockI18n: { [key: string]: jest.Mock } = {
   getLocale: jest.fn(() => 'en'),
   setLocale: jest.fn((locale: string) => {
     mockI18n.getLocale.mockReturnValue(locale);
@@ -13,7 +13,7 @@ const mockI18n = {
     mockListeners.add(listener);
     return () => mockListeners.delete(listener);
   }),
-  t: jest.fn((key: string, params?: Record<string, any>) => {
+  t: jest.fn((key: string, params?: Record<string, string | number>) => {
     if (params) {
       return `${key} with params: ${JSON.stringify(params)}`;
     }

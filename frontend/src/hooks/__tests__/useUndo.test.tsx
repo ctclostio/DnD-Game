@@ -3,6 +3,8 @@ import { renderHook, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { useUndo } from '../useUndo';
+import { RootState } from '../../store';
+import { DMToolsState } from '../../types/state';
 import dmToolsSlice, { undo, redo, addUndoableAction } from '../../store/slices/dmToolsSlice';
 
 // Mock the store hooks
@@ -11,11 +13,11 @@ const mockUseAppSelector = jest.fn();
 
 jest.mock('../../store/index', () => ({
   useAppDispatch: () => mockDispatch,
-  useAppSelector: (selector: any) => mockUseAppSelector(selector),
+  useAppSelector: (selector: (state: RootState) => any) => mockUseAppSelector(selector),
 }));
 
 // Create a test store
-const createTestStore = (initialState = {}) => {
+const createTestStore = (initialState: Partial<DMToolsState> = {}) => {
   return configureStore({
     reducer: {
       dmTools: dmToolsSlice,
@@ -24,6 +26,16 @@ const createTestStore = (initialState = {}) => {
       dmTools: {
         canUndo: false,
         canRedo: false,
+        undoStack: [],
+        redoStack: [],
+        quickReferences: {
+          conditions: [],
+          rules: [],
+        },
+        sessionNotes: '',
+        campaignNotes: '',
+        isLoading: {},
+        errors: {},
         ...initialState,
       },
     },
@@ -144,7 +156,7 @@ describe('useUndo', () => {
       addUndoableAction({
         id: expect.stringMatching(/^action-\d+$/),
         type: 'user-action',
-        timestamp: expect.any(Number),
+        timestamp: expect.any(Number) as number,
         description,
         undo: undoAction,
         redo: redoAction,
@@ -155,7 +167,7 @@ describe('useUndo', () => {
   it('should generate unique action IDs', () => {
     const { result } = renderHook(() => useUndo());
 
-    const actions: any[] = [];
+    const actions: ReturnType<typeof addUndoableAction>[] = [];
     mockDispatch.mockImplementation((action) => {
       actions.push(action);
     });
@@ -236,8 +248,6 @@ describe('useUndo - Integration', () => {
     const store = createTestStore({
       canUndo: true,
       canRedo: false,
-      history: [],
-      currentIndex: -1,
     });
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (

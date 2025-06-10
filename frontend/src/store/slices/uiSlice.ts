@@ -38,7 +38,7 @@ const uiSlice = createSlice({
     },
     
     // Modal management
-    openModal: (state, action: PayloadAction<{ key: string; data?: any }>) => {
+    openModal: (state, action: PayloadAction<{ key: string; data?: Record<string, unknown> }>) => {
       const { key, data } = action.payload;
       state.modals[key] = {
         isOpen: true,

@@ -1,7 +1,7 @@
 import { en } from './translations/en';
 import { es } from './translations/es';
 
-export type TranslationKey = typeof en;
+export type TranslationKey = Record<string, any>;
 
 export interface I18nConfig {
   locale: string;
@@ -12,7 +12,7 @@ export interface I18nConfig {
 class I18n {
   private locale: string;
   private fallbackLocale: string;
-  private translations: Record<string, any>;
+  private translations: Record<string, TranslationKey>;
   private listeners: Set<() => void> = new Set();
 
   constructor(config: I18nConfig) {
@@ -39,7 +39,7 @@ class I18n {
   }
 
   // Get translation
-  t(key: string, params?: Record<string, any>): string {
+  t(key: string, params?: Record<string, string | number>): string {
     const keys = key.split('.');
     let translation = this.translations[this.locale] || this.translations[this.fallbackLocale];
     
@@ -55,7 +55,7 @@ class I18n {
 
     // Replace parameters
     if (params) {
-      return translation.replace(/\{\{(\w+)\}\}/g, (match, param) => {
+      return String(translation).replace(/\{\{(\w+)\}\}/g, (match, param) => {
         return params[param] !== undefined ? String(params[param]) : match;
       });
     }

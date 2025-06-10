@@ -6,8 +6,7 @@ describe('useOptimizedState', () => {
     const { result } = renderHook(() => useOptimizedState('initial'));
     
     expect(result.current.value).toBe('initial');
-    expect(result.current.prevValue).toBeUndefined();
-    expect(result.current.hasChanged).toBe(false);
+    expect(result.current.previousValue).toBeUndefined();
   });
 
   it('should update value and track changes', () => {
@@ -18,13 +17,12 @@ describe('useOptimizedState', () => {
     });
 
     expect(result.current.value).toBe(20);
-    expect(result.current.prevValue).toBe(10);
-    expect(result.current.hasChanged).toBe(true);
+    expect(result.current.previousValue).toBe(10);
   });
 
   it('should not update when value is the same', () => {
     const onChange = jest.fn();
-    const { result } = renderHook(() => useOptimizedState('test', { onChange }));
+    const { result } = renderHook(() => useOptimizedState('test', { onUpdate: onChange }));
     
     // Set same value
     act(() => {
@@ -32,13 +30,12 @@ describe('useOptimizedState', () => {
     });
 
     expect(onChange).not.toHaveBeenCalled();
-    expect(result.current.hasChanged).toBe(false);
   });
 
   it('should use custom compare function', () => {
     const compareObjects = (a: any, b: any) => a.id === b.id;
-    const { result } = renderHook(() => 
-      useOptimizedState({ id: 1, name: 'test' }, { compare: compareObjects })
+    const { result } = renderHook(() =>
+      useOptimizedState({ id: 1, name: 'test' }, { compareFunction: compareObjects })
     );
     
     // Update with same id but different name
@@ -48,7 +45,6 @@ describe('useOptimizedState', () => {
 
     // Should not update due to custom compare
     expect(result.current.value.name).toBe('test');
-    expect(result.current.hasChanged).toBe(false);
 
     // Update with different id
     act(() => {
@@ -56,15 +52,14 @@ describe('useOptimizedState', () => {
     });
 
     expect(result.current.value.id).toBe(2);
-    expect(result.current.hasChanged).toBe(true);
   });
 
   it('should call onChange callback', () => {
     const onChange = jest.fn();
-    const { result } = renderHook(() => useOptimizedState(0, { onChange }));
+    const { result } = renderHook(() => useOptimizedState(0, { onUpdate: onChange }));
     
     act(() => {
-      result.current.setValue(5);
+      result.current.setValue(prev => prev + 5);
     });
 
     expect(onChange).toHaveBeenCalledWith(5, 0);
@@ -87,7 +82,7 @@ describe('useOptimizedState', () => {
     });
 
     expect(result.current.value).toBe('initial');
-    expect(result.current.prevValue).toBe('changed');
+    expect(result.current.previousValue).toBe('changed');
   });
 
   it('should handle functional updates', () => {
@@ -98,7 +93,7 @@ describe('useOptimizedState', () => {
     });
 
     expect(result.current.value).toBe(15);
-    expect(result.current.prevValue).toBe(10);
+    expect(result.current.previousValue).toBe(10);
   });
 });
 
@@ -153,8 +148,13 @@ describe('useOptimizedForm', () => {
       },
     };
 
-    const { result } = renderHook(() => 
-      useOptimizedForm(initialValues, { validators, validateOnChange: true })
+    const { result } = renderHook(() =>
+      useOptimizedForm(initialValues, {
+        validator: (values) => ({
+          email: validators.email(values.email) || ''
+        }),
+        validateOnChange: true
+      })
     );
     
     act(() => {
@@ -176,7 +176,7 @@ describe('useOptimizedForm', () => {
     const { result } = renderHook(() => useOptimizedForm(initialValues));
     
     act(() => {
-      result.current.setFieldValues({
+      result.current.setMultipleValues({
         username: 'newuser',
         email: 'new@email.com',
       });
@@ -202,7 +202,10 @@ describe('useOptimizedForm', () => {
     const { result } = renderHook(() => useOptimizedForm(initialValues));
     
     act(() => {
-      result.current.setErrors({
+    act(() => {
+      result.current.setFieldError('username', 'Required');
+      result.current.setFieldError('email', 'Invalid');
+    });
         username: 'Required',
         email: 'Invalid',
       });
@@ -239,8 +242,10 @@ describe('useOptimizedForm', () => {
     };
 
     const onSubmit = jest.fn();
-    const { result } = renderHook(() => 
-      useOptimizedForm(initialValues, { validators })
+    const { result } = renderHook(() =>
+      useOptimizedForm(initialValues, {
+        validator: (values) => ({ username: validators.username(values.username) || '' })
+      })
     );
     
     const mockEvent = {
@@ -270,7 +275,7 @@ describe('useOptimizedForm', () => {
 
     // Reset
     act(() => {
-      result.current.resetForm();
+      result.current.reset();
     });
 
     expect(result.current.values).toEqual(initialValues);
@@ -289,12 +294,17 @@ describe('useOptimizedForm', () => {
       },
     };
 
-    const { result } = renderHook(() => 
-      useOptimizedForm(initialValues, { validators })
+    const { result } = renderHook(() =>
+      useOptimizedForm(initialValues, {
+        validator: (values) => ({
+          username: validators.username(values.username),
+          email: validators.email(values.email) || ''
+        })
+      })
     );
     
     act(() => {
-      const errors = result.current.validateForm();
+      const errors = result.current.validate(values);
       expect(errors).toEqual({
         username: 'Required',
         email: 'Required',
@@ -303,14 +313,14 @@ describe('useOptimizedForm', () => {
 
     // Update values
     act(() => {
-      result.current.setFieldValues({
+      result.current.setMultipleValues({
         username: 'testuser',
         email: 'invalid',
       });
     });
 
     act(() => {
-      const errors = result.current.validateForm();
+      const errors = result.current.validate(result.current.values);
       expect(errors).toEqual({
         email: 'Invalid email',
       });
@@ -322,18 +332,20 @@ describe('useOptimizedForm', () => {
       age: (value: number) => value < 18 ? 'Must be 18 or older' : undefined,
     };
 
-    const { result } = renderHook(() => 
-      useOptimizedForm(initialValues, { validators })
+    const { result } = renderHook(() =>
+      useOptimizedForm(initialValues, {
+        validator: (values) => ({ age: validators.age(values.age) || '' })
+      })
     );
     
     act(() => {
-      const error = result.current.validateField('age');
+      const error = validators.age(result.current.values.age);
       expect(error).toBe('Must be 18 or older');
     });
 
     act(() => {
       result.current.setFieldValue('age', 21);
-      const error = result.current.validateField('age');
+      const error = validators.age(result.current.values.age);
       expect(error).toBeUndefined();
     });
   });

@@ -1,27 +1,28 @@
 import { persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
-import { PersistConfig } from 'redux-persist/es/types';
+import { PersistConfig } from 'redux-persist';
+import { AuthState, CharacterState, UIState, GameDataState, RootState } from '../types/state';
 
 // Persist configurations for different slices
-export const authPersistConfig: PersistConfig<any> = {
+export const authPersistConfig: PersistConfig<AuthState> = {
   key: 'auth',
   storage,
   whitelist: ['user', 'token'], // Only persist user and token
 };
 
-export const characterPersistConfig: PersistConfig<any> = {
+export const characterPersistConfig: PersistConfig<CharacterState> = {
   key: 'characters',
   storage,
   whitelist: ['characters', 'currentCharacterId'],
 };
 
-export const uiPersistConfig: PersistConfig<any> = {
+export const uiPersistConfig: PersistConfig<UIState> = {
   key: 'ui',
   storage,
   whitelist: ['theme', 'shortcuts', 'sidebarOpen'],
 };
 
-export const gameDataPersistConfig: PersistConfig<any> = {
+export const gameDataPersistConfig: PersistConfig<GameDataState> = {
   key: 'gameData',
   storage,
   whitelist: ['spells', 'equipment', 'classes', 'races'],
@@ -31,7 +32,7 @@ export const gameDataPersistConfig: PersistConfig<any> = {
 // Combat state should NOT be persisted to avoid inconsistencies
 // WebSocket state should NOT be persisted as connections are ephemeral
 
-export const rootPersistConfig: PersistConfig<any> = {
+export const rootPersistConfig: PersistConfig<RootState> = {
   key: 'root',
   storage,
   blacklist: ['combat', 'websocket', 'dmTools'], // These will not be persisted

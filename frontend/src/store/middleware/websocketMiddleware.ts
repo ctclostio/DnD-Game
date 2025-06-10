@@ -184,7 +184,7 @@ export const wsDisconnect = () => ({
   type: WS_DISCONNECT,
 });
 
-export const wsSendMessage = (type: string, roomId: string, data: any) => ({
+export const wsSendMessage = (type: string, roomId: string, data: Record<string, unknown>) => ({
   type: WS_SEND_MESSAGE,
   payload: { type, roomId, data },
 });

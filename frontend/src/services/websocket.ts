@@ -3,7 +3,7 @@ import { createElement } from '../utils/dom';
 
 interface WebSocketMessage {
   type: string;
-  data: any;
+  data: Record<string, unknown>;
 }
 
 interface ChatMessage {
@@ -120,7 +120,7 @@ export class WebSocketService {
           console.error('WebSocket error:', message.data);
           if (message.data?.error === 'Invalid token') {
             // Token is invalid, try to refresh
-            this.handleTokenRefresh();
+            this.handleTokenRefresh().catch(error => console.error("Token refresh failed:", error));
           }
           return;
         }
@@ -167,16 +167,10 @@ export class WebSocketService {
 
   private async handleTokenRefresh(): Promise<void> {
     try {
-      // Try to refresh the token
-      const refreshed = await authService.refreshToken();
-      if (refreshed) {
-        // Reconnect with new token
+      const newToken = await authService.refreshAccessToken();
+      if (newToken) {
         console.log('Token refreshed, reconnecting...');
-        if (this.roomId) {
-          this.connect(this.roomId);
-        }
       } else {
-        // Refresh failed, user needs to log in again
         console.error('Token refresh failed');
         this.disconnect();
       }
@@ -199,10 +193,14 @@ export class WebSocketService {
     // Handle specific message types
     switch (message.type) {
       case 'chat':
-        this.displayChatMessage(message.data as ChatMessage);
+        if (this.isChatMessage(message.data)) {
+          this.displayChatMessage(message.data);
+        }
         break;
       case 'dice_roll':
-        this.displayDiceRoll(message.data as DiceRollMessage);
+        if (this.isDiceRollMessage(message.data)) {
+          this.displayDiceRoll(message.data);
+        }
         break;
       case 'player_joined':
         this.displaySystemMessage(`${message.data.username} joined the game`);
@@ -213,7 +211,7 @@ export class WebSocketService {
     }
   }
 
-  sendMessage(type: string, data: any): void {
+  sendMessage(type: string, data: Record<string, unknown>): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type, data }));
     } else {
@@ -405,6 +403,24 @@ export class WebSocketService {
   isConnected(): boolean {
     return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
   }
+  private isChatMessage(data: unknown): data is ChatMessage {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'username' in data &&
+      'message' in data
+    );
+  }
+
+  private isDiceRollMessage(data: unknown): data is DiceRollMessage {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'playerName' in data &&
+      'diceType' in data &&
+      'result' in data
+    );
+  }
 }
 
 // Create singleton instance
@@ -413,7 +429,7 @@ const wsService = new WebSocketService();
 // Export convenience functions
 export const connectWebSocket = (roomId: string): void => wsService.connect(roomId);
 export const disconnectWebSocket = (): void => wsService.disconnect();
-export const sendMessage = (type: string, data: any): void => wsService.sendMessage(type, data);
+export const sendMessage = (type: string, data: Record<string, unknown>): void => wsService.sendMessage(type, data);
 export const sendChatMessage = (text: string): void => wsService.sendChatMessage(text);
 export const sendDiceRoll = (diceType: string, purpose?: string): void => wsService.sendDiceRoll(diceType, purpose);
 export const onMessage = (handler: MessageHandler): CleanupFunction => wsService.onMessage(handler);

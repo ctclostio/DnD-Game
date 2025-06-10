@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { CombatState, CombatAction, EntityState } from '../../types/state';
+import { CombatState, CombatAction, EntityState, RootState } from '../../types/state';
 import { CombatParticipant } from '../../types/game';
 import { addUndoableAction } from './dmToolsSlice';
 
@@ -55,7 +55,7 @@ export const startCombat = createAsyncThunk(
 export const executeCombatAction = createAsyncThunk(
   'combat/executeAction',
   async (action: CombatAction, { getState, dispatch }) => {
-    const state = getState() as any;
+    const state = getState() as RootState;
     const combat = state.combat as CombatState;
     
     // Validate action
@@ -245,10 +245,7 @@ const combatSlice = createSlice({
       
       // Execute combat action
       .addCase(executeCombatAction.pending, (state, action) => {
-        state.pendingAction = {
-          type: action.meta.arg.type,
-          data: action.meta.arg,
-        };
+        state.pendingAction = action.meta.arg;
       })
       .addCase(executeCombatAction.fulfilled, (state, action) => {
         state.pendingAction = null;
@@ -264,7 +261,7 @@ const combatSlice = createSlice({
             break;
           case 'MOVE':
             const mover = state.participants.entities[combatAction.actorId];
-            if (mover) {
+            if (mover && typeof combatAction.data.distance === 'number') {
               mover.movementUsed += combatAction.data.distance;
             }
             break;

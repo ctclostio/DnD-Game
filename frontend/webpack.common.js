@@ -23,17 +23,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(ts|tsx)$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'ts-loader',
-          options: {
-            transpileOnly: true,
-          },
-        },
-      },
-      {
-        test: /\.(js|jsx)$/,
+        test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',

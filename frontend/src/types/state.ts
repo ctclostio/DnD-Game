@@ -72,10 +72,7 @@ export interface CombatState {
   historyIndex: number;
   
   // Temporary states during actions
-  pendingAction: {
-    type: string;
-    data: any;
-  } | null;
+  pendingAction: CombatAction | null;
   
   isLoading: LoadingState;
   errors: ErrorState;
@@ -83,7 +80,7 @@ export interface CombatState {
 
 export interface CombatHistoryEntry {
   timestamp: number;
-  action: any;
+  action: CombatAction;
   previousState: Partial<CombatState>;
   description: string;
 }
@@ -92,8 +89,8 @@ export interface CombatHistoryEntry {
 export interface GameDataState {
   spells: EntityState<Spell>;
   equipment: EntityState<Equipment>;
-  classes: any;
-  races: any;
+  classes: EntityState<DndClass>;
+  races: EntityState<DndRace>;
   isLoaded: boolean;
   isLoading: boolean;
   error: string | null;
@@ -119,7 +116,7 @@ export interface UIState {
   modals: {
     [key: string]: {
       isOpen: boolean;
-      data?: any;
+      data?: Record<string, unknown>;
     };
   };
   notifications: Notification[];
@@ -147,8 +144,8 @@ export interface DMToolsState {
   
   // Quick references
   quickReferences: {
-    conditions: any[];
-    rules: any[];
+    conditions: Condition[];
+    rules: Rule[];
   };
   
   // Notes
@@ -164,8 +161,8 @@ export interface UndoableAction {
   type: string;
   timestamp: number;
   description: string;
-  undo: () => any;
-  redo: () => any;
+  undo: () => void;
+  redo: () => void;
 }
 
 // Root State
@@ -183,7 +180,7 @@ export interface RootState {
 export interface WebSocketMessage {
   type: string;
   roomId: string;
-  data: any;
+  data: Record<string, unknown>;
   timestamp: number;
 }
 
@@ -192,5 +189,41 @@ export interface CombatAction {
         'MOVE' | 'END_TURN' | 'INITIATIVE_ROLL';
   actorId: string;
   targetId?: string;
-  data: any;
+  data: {
+    distance?: number;
+    damage?: number;
+    heal?: number;
+    condition?: Condition;
+    spellId?: string;
+  };
+}
+
+export interface DndClass {
+  id: string;
+  name: string;
+  description: string;
+  hitDie: number;
+  proficiencies: string[];
+  features: string[];
+}
+
+export interface DndRace {
+  id: string;
+  name: string;
+  description: string;
+  speed: number;
+  abilityScoreBonuses: Record<string, number>;
+  traits: string[];
+}
+
+export interface Condition {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface Rule {
+  id: string;
+  name: string;
+  description: string;
 }

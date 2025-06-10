@@ -1,11 +1,19 @@
 import authService from './auth';
 import { fetchWithCSRF } from '../utils/csrf';
+import {
+  Character,
+  GameSession,
+  Equipment,
+  Spell,
+  AbilityScores,
+} from '../types/game';
+import { CombatState, CombatAction } from '../types/state';
 
 interface RequestOptions extends RequestInit {
   headers?: HeadersInit;
 }
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   message?: string;
@@ -18,7 +26,7 @@ export class ApiService {
     this.baseURL = '/api/v1';
   }
 
-  async request<T = any>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  async request<T = unknown>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
     // Use authenticated request if user is logged in
@@ -65,22 +73,22 @@ export class ApiService {
 
   // Character endpoints
   async getCharacters() {
-    return this.request<any[]>('/characters');
+    return this.request<Character[]>('/characters');
   }
 
   async getCharacter(id: string) {
-    return this.request(`/characters/${id}`);
+    return this.request<Character>(`/characters/${id}`);
   }
 
-  async createCharacter(characterData: any) {
-    return this.request('/characters', {
+  async createCharacter(characterData: Partial<Character>) {
+    return this.request<Character>('/characters', {
       method: 'POST',
       body: JSON.stringify(characterData),
     });
   }
 
-  async updateCharacter(id: string, characterData: any) {
-    return this.request(`/characters/${id}`, {
+  async updateCharacter(id: string, characterData: Partial<Character>) {
+    return this.request<Character>(`/characters/${id}`, {
       method: 'PUT',
       body: JSON.stringify(characterData),
     });
@@ -94,25 +102,30 @@ export class ApiService {
 
   // Character creation endpoints
   async getCharacterOptions() {
-    return this.request('/characters/options');
+    return this.request<{
+      races: string[];
+      classes: string[];
+      backgrounds: string[];
+      alignments: string[];
+    }>('/characters/options');
   }
 
-  async validateCharacter(characterData: any) {
-    return this.request('/characters/validate', {
+  async validateCharacter(characterData: Partial<Character>) {
+    return this.request<{ isValid: boolean; errors: Record<string, string> }>('/characters/validate', {
       method: 'POST',
       body: JSON.stringify(characterData),
     });
   }
 
   async rollAbilityScores() {
-    return this.request('/characters/roll-abilities', {
+    return this.request<AbilityScores>('/characters/roll-abilities', {
       method: 'POST',
     });
   }
 
   // Spell endpoints
-  async castSpell(characterId: string, spellData: any) {
-    return this.request(`/characters/${characterId}/cast-spell`, {
+  async castSpell(characterId: string, spellData: { spellId: string; level: number }) {
+    return this.request<Character>(`/characters/${characterId}/cast-spell`, {
       method: 'POST',
       body: JSON.stringify(spellData),
     });
@@ -142,19 +155,19 @@ export class ApiService {
   }
 
   // Game session endpoints
-  async createGameSession(sessionData: any) {
-    return this.request('/game/sessions', {
+  async createGameSession(sessionData: Partial<GameSession>) {
+    return this.request<GameSession>('/game/sessions', {
       method: 'POST',
       body: JSON.stringify(sessionData),
     });
   }
 
   async getGameSession(id: string) {
-    return this.request(`/game/sessions/${id}`);
+    return this.request<GameSession>(`/game/sessions/${id}`);
   }
 
-  async updateGameSession(id: string, sessionData: any) {
-    return this.request(`/game/sessions/${id}`, {
+  async updateGameSession(id: string, sessionData: Partial<GameSession>) {
+    return this.request<GameSession>(`/game/sessions/${id}`, {
       method: 'PUT',
       body: JSON.stringify(sessionData),
     });
@@ -173,19 +186,19 @@ export class ApiService {
   }
 
   // Combat endpoints
-  async startCombat(combatData: any) {
-    return this.request('/combat/start', {
+  async startCombat(combatData: { sessionId: string; participantIds: string[] }) {
+    return this.request<CombatState>('/combat/start', {
       method: 'POST',
       body: JSON.stringify(combatData),
     });
   }
 
   async getCombat(id: string) {
-    return this.request(`/combat/${id}`);
+    return this.request<CombatState>(`/combat/${id}`);
   }
 
   async getCombatBySession(sessionId: string) {
-    return this.request(`/combat/session/${sessionId}`);
+    return this.request<CombatState>(`/combat/session/${sessionId}`);
   }
 
   async nextTurn(combatId: string) {
@@ -194,8 +207,8 @@ export class ApiService {
     });
   }
 
-  async processCombatAction(combatId: string, action: any) {
-    return this.request(`/combat/${combatId}/action`, {
+  async processCombatAction(combatId: string, action: CombatAction) {
+    return this.request<CombatState>(`/combat/${combatId}/action`, {
       method: 'POST',
       body: JSON.stringify(action),
     });
@@ -208,11 +221,18 @@ export class ApiService {
   }
 
   // Skill check endpoints
-  async performSkillCheck(checkData: any) {
-    return this.request('/skill-check', {
-      method: 'POST',
-      body: JSON.stringify(checkData),
-    });
+  async performSkillCheck(checkData: {
+    characterId: string;
+    skill: string;
+    dc?: number;
+  }) {
+    return this.request<{ success: boolean; roll: number }>(
+      '/skill-check',
+      {
+        method: 'POST',
+        body: JSON.stringify(checkData),
+      }
+    );
   }
 
   async getCharacterChecks(characterId: string) {
@@ -220,19 +240,19 @@ export class ApiService {
   }
 
   // NPC endpoints
-  async createNPC(npcData: any) {
-    return this.request('/npcs', {
+  async createNPC(npcData: Partial<Character>) {
+    return this.request<Character>('/npcs', {
       method: 'POST',
       body: JSON.stringify(npcData),
     });
   }
 
   async getNPC(id: string) {
-    return this.request(`/npcs/${id}`);
+    return this.request<Character>(`/npcs/${id}`);
   }
 
-  async updateNPC(id: string, npcData: any) {
-    return this.request(`/npcs/${id}`, {
+  async updateNPC(id: string, npcData: Partial<Character>) {
+    return this.request<Character>(`/npcs/${id}`, {
       method: 'PUT',
       body: JSON.stringify(npcData),
     });
@@ -258,11 +278,11 @@ export class ApiService {
 
   // Inventory endpoints
   async getCharacterInventory(characterId: string) {
-    return this.request(`/characters/${characterId}/inventory`);
+    return this.request<Equipment[]>(`/characters/${characterId}/inventory`);
   }
 
-  async addItemToInventory(characterId: string, item: any) {
-    return this.request(`/characters/${characterId}/inventory`, {
+  async addItemToInventory(characterId: string, item: Partial<Equipment>) {
+    return this.request<Equipment>(`/characters/${characterId}/inventory`, {
       method: 'POST',
       body: JSON.stringify(item),
     });
@@ -288,18 +308,24 @@ export class ApiService {
   }
 
   // DM Assistant endpoints
-  async generateDMContent(type: string, context: any) {
-    return this.request('/dm/assistant/generate', {
+  async generateDMContent(
+    type: string,
+    context: Record<string, unknown>
+  ) {
+    return this.request<{ content: string }>('/dm/assistant/generate', {
       method: 'POST',
       body: JSON.stringify({ type, context }),
     });
   }
 
-  async saveDMNote(sessionId: string, note: any) {
-    return this.request(`/dm/assistant/sessions/${sessionId}/notes`, {
-      method: 'POST',
-      body: JSON.stringify(note),
-    });
+  async saveDMNote(sessionId: string, note: { content: string }) {
+    return this.request<{ success: boolean }>(
+      `/dm/assistant/sessions/${sessionId}/notes`,
+      {
+        method: 'POST',
+        body: JSON.stringify(note),
+      }
+    );
   }
 
   async getDMNotes(sessionId: string) {

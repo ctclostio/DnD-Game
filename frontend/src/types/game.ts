@@ -89,7 +89,7 @@ export interface Equipment {
   quantity: number;
   weight: number;
   equipped: boolean;
-  properties?: any;
+  properties?: Record<string, string | number>;
 }
 
 export interface Character {
@@ -202,7 +202,7 @@ export interface CombatEvent {
   actorId: string;
   targetId?: string;
   description: string;
-  details: any;
+  details: Record<string, unknown>;
 }
 
 export interface GameSession {
@@ -219,8 +219,8 @@ export interface GameSession {
   
   // Session State
   sessionNotes: string;
-  sharedResources: any;
-  mapData?: any;
+  sharedResources: Record<string, string>;
+  mapData?: MapData;
   
   createdAt: string;
   updatedAt: string;
@@ -233,7 +233,7 @@ export interface Campaign {
   dmId: string;
   playerIds: string[];
   sessions: string[];
-  worldData: any;
+  worldData: WorldData;
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -251,4 +251,39 @@ export interface User {
     autoRoll: boolean;
     notifications: boolean;
   };
+}
+
+export interface MapData {
+  imageUrl: string;
+  gridSize: number;
+  tokens: MapToken[];
+}
+
+export interface MapToken {
+  id: string;
+  characterId?: string;
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+}
+
+export interface WorldData {
+  deities: string[];
+  locations: Record<string, WorldLocation>;
+  factions: Faction[];
+}
+
+export interface WorldLocation {
+  id: string;
+  name: string;
+  description: string;
+  population: number;
+}
+
+export interface Faction {
+  id: string;
+  name: string;
+  description: string;
+  reputation: number;
 }

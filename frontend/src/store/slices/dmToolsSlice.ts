@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { DMToolsState, UndoableAction } from '../../types/state';
+import { DMToolsState, UndoableAction, Condition, Rule } from '../../types/state';
 
 const MAX_UNDO_HISTORY = 50;
 
@@ -75,7 +75,7 @@ const dmToolsSlice = createSlice({
     },
     
     // Quick references
-    setQuickReferences: (state, action: PayloadAction<{ conditions: any[]; rules: any[] }>) => {
+    setQuickReferences: (state, action: PayloadAction<{ conditions: Condition[]; rules: Rule[] }>) => {
       state.quickReferences = action.payload;
     },
     
