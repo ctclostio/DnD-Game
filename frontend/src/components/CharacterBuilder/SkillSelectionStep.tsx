@@ -3,10 +3,10 @@ import { CharacterData, CharacterOptions } from './CharacterBuilder';
 
 interface SkillSelectionStepProps {
   characterData: CharacterData;
-  onUpdate: (field: keyof CharacterData, value: any) => void;
+  onUpdate: <K extends keyof CharacterData>(field: K, value: CharacterData[K]) => void;
   options: CharacterOptions;
-  errors: Record<string, string>;
-  touched: Record<string, boolean>;
+  errors: Partial<Record<keyof CharacterData, string>>;
+  touched: Partial<Record<keyof CharacterData, boolean>>;
   setFieldTouched: (field: keyof CharacterData, touched: boolean) => void;
 }
 
@@ -67,12 +67,18 @@ const SkillCheckbox = memo(({
   onChange: (skill: string, checked: boolean) => void;
   modifier: number;
 }) => (
-  <label className={`skill-checkbox ${isDisabled ? 'disabled' : ''}`}>
+  <label
+    className={`skill-checkbox ${isDisabled ? 'disabled' : ''}`}
+    aria-label={`Select skill ${skill} (modifier ${modifier >= 0 ? '+' : ''}${modifier})`}
+  >
     <input
       type="checkbox"
       checked={isSelected}
       disabled={isDisabled}
       onChange={(e) => onChange(skill, e.target.checked)}
+      aria-checked={isSelected}
+      aria-disabled={isDisabled}
+      aria-label={skill}
     />
     <span className="skill-name">{skill}</span>
     <span className="skill-modifier">
