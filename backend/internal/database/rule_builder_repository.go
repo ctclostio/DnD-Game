@@ -251,7 +251,7 @@ func (r *RuleBuilderRepository) DeleteRuleTemplate(templateID string) error {
 
 // IncrementUsageCount increments the usage count for a template
 func (r *RuleBuilderRepository) IncrementUsageCount(templateID string) error {
-	_, err := r.db.Exec(
+	_, err := r.db.ExecRebind(
 		"UPDATE rule_templates SET usage_count = usage_count + 1 WHERE id = ?",
 		templateID,
 	)
@@ -421,7 +421,7 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 
 // DeactivateRule deactivates an active rule
 func (r *RuleBuilderRepository) DeactivateRule(ruleID string) error {
-	_, err := r.db.Exec(
+	_, err := r.db.ExecRebind(
 		"UPDATE active_rules SET is_active = false, updated_at = ? WHERE id = ?",
 		time.Now(),
 		ruleID,

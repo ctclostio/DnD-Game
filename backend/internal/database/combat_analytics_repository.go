@@ -61,11 +61,7 @@ func (r *combatAnalyticsRepository) CreateCombatAnalytics(analytics *models.Comb
 			id, combat_id, game_session_id, combat_duration,
 			total_damage_dealt, total_healing_done, killing_blows,
 			combat_summary, mvp_id, mvp_type, tactical_rating
-		) VALUES (
-			:id, :combat_id, :game_session_id, :combat_duration,
-			:total_damage_dealt, :total_healing_done, :killing_blows,
-			:combat_summary, :mvp_id, :mvp_type, :tactical_rating
-		)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	if analytics.ID == uuid.Nil {
 		analytics.ID = uuid.New()
@@ -73,7 +69,19 @@ func (r *combatAnalyticsRepository) CreateCombatAnalytics(analytics *models.Comb
 	analytics.CreatedAt = time.Now()
 	analytics.UpdatedAt = time.Now()
 
-	_, err := r.db.NamedExec(query, analytics)
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query,
+		analytics.ID,
+		analytics.CombatID,
+		analytics.GameSessionID,
+		analytics.CombatDuration,
+		analytics.TotalDamageDealt,
+		analytics.TotalHealingDone,
+		analytics.KillingBlows,
+		analytics.CombatSummary,
+		analytics.MVPID,
+		analytics.MVPType,
+		analytics.TacticalRating)
 	return err
 }
 
@@ -115,20 +123,36 @@ func (r *combatAnalyticsRepository) CreateCombatantAnalytics(analytics *models.C
 			attacks_made, attacks_hit, attacks_missed, critical_hits, critical_misses,
 			saves_made, saves_failed, rounds_survived, final_hp,
 			conditions_suffered, abilities_used, tactical_decisions
-		) VALUES (
-			:id, :combat_analytics_id, :combatant_id, :combatant_type, :combatant_name,
-			:damage_dealt, :damage_taken, :healing_done, :healing_received,
-			:attacks_made, :attacks_hit, :attacks_missed, :critical_hits, :critical_misses,
-			:saves_made, :saves_failed, :rounds_survived, :final_hp,
-			:conditions_suffered, :abilities_used, :tactical_decisions
-		)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	if analytics.ID == uuid.Nil {
 		analytics.ID = uuid.New()
 	}
 	analytics.CreatedAt = time.Now()
 
-	_, err := r.db.NamedExec(query, analytics)
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query,
+		analytics.ID,
+		analytics.CombatAnalyticsID,
+		analytics.CombatantID,
+		analytics.CombatantType,
+		analytics.CombatantName,
+		analytics.DamageDealt,
+		analytics.DamageTaken,
+		analytics.HealingDone,
+		analytics.HealingReceived,
+		analytics.AttacksMade,
+		analytics.AttacksHit,
+		analytics.AttacksMissed,
+		analytics.CriticalHits,
+		analytics.CriticalMisses,
+		analytics.SavesMade,
+		analytics.SavesFailed,
+		analytics.RoundsSurvived,
+		analytics.FinalHP,
+		analytics.ConditionsSuffered,
+		analytics.AbilitiesUsed,
+		analytics.TacticalDecisions)
 	return err
 }
 
@@ -158,19 +182,27 @@ func (r *combatAnalyticsRepository) CreateAutoCombatResolution(resolution *model
 			enemy_composition, resolution_type, outcome, rounds_simulated,
 			party_resources_used, loot_generated, experience_awarded,
 			narrative_summary
-		) VALUES (
-			:id, :game_session_id, :encounter_difficulty, :party_composition,
-			:enemy_composition, :resolution_type, :outcome, :rounds_simulated,
-			:party_resources_used, :loot_generated, :experience_awarded,
-			:narrative_summary
-		)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	if resolution.ID == uuid.Nil {
 		resolution.ID = uuid.New()
 	}
 	resolution.CreatedAt = time.Now()
 
-	_, err := r.db.NamedExec(query, resolution)
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query,
+		resolution.ID,
+		resolution.GameSessionID,
+		resolution.EncounterDifficulty,
+		resolution.PartyComposition,
+		resolution.EnemyComposition,
+		resolution.ResolutionType,
+		resolution.Outcome,
+		resolution.RoundsSimulated,
+		resolution.PartyResourcesUsed,
+		resolution.LootGenerated,
+		resolution.ExperienceAwarded,
+		resolution.NarrativeSummary)
 	return err
 }
 
@@ -205,12 +237,7 @@ func (r *combatAnalyticsRepository) CreateBattleMap(battleMap *models.BattleMap)
 			map_type, grid_size_x, grid_size_y, terrain_features,
 			obstacle_positions, cover_positions, hazard_zones,
 			spawn_points, tactical_notes, visual_theme
-		) VALUES (
-			:id, :combat_id, :game_session_id, :location_description,
-			:map_type, :grid_size_x, :grid_size_y, :terrain_features,
-			:obstacle_positions, :cover_positions, :hazard_zones,
-			:spawn_points, :tactical_notes, :visual_theme
-		)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	if battleMap.ID == uuid.Nil {
 		battleMap.ID = uuid.New()
@@ -218,7 +245,22 @@ func (r *combatAnalyticsRepository) CreateBattleMap(battleMap *models.BattleMap)
 	battleMap.CreatedAt = time.Now()
 	battleMap.UpdatedAt = time.Now()
 
-	_, err := r.db.NamedExec(query, battleMap)
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query,
+		battleMap.ID,
+		battleMap.CombatID,
+		battleMap.GameSessionID,
+		battleMap.LocationDescription,
+		battleMap.MapType,
+		battleMap.GridSizeX,
+		battleMap.GridSizeY,
+		battleMap.TerrainFeatures,
+		battleMap.ObstaclePositions,
+		battleMap.CoverPositions,
+		battleMap.HazardZones,
+		battleMap.SpawnPoints,
+		battleMap.TacticalNotes,
+		battleMap.VisualTheme)
 	return err
 }
 
@@ -264,30 +306,66 @@ func (r *combatAnalyticsRepository) UpdateBattleMap(id uuid.UUID, updates map[st
 // Smart Initiative methods
 
 func (r *combatAnalyticsRepository) CreateOrUpdateInitiativeRule(rule *models.SmartInitiativeRule) error {
-	query := `
-		INSERT INTO smart_initiative_rules (
-			id, game_session_id, entity_id, entity_type,
-			base_initiative_bonus, advantage_on_initiative,
-			alert_feat, special_rules
-		) VALUES (
-			:id, :game_session_id, :entity_id, :entity_type,
-			:base_initiative_bonus, :advantage_on_initiative,
-			:alert_feat, :special_rules
-		) ON CONFLICT (game_session_id, entity_id) DO UPDATE SET
-			entity_type = EXCLUDED.entity_type,
-			base_initiative_bonus = EXCLUDED.base_initiative_bonus,
-			advantage_on_initiative = EXCLUDED.advantage_on_initiative,
-			alert_feat = EXCLUDED.alert_feat,
-			special_rules = EXCLUDED.special_rules,
-			updated_at = CURRENT_TIMESTAMP`
-
-	if rule.ID == uuid.Nil {
-		rule.ID = uuid.New()
+	// Check if rule exists
+	var existingID string
+	checkQuery := `SELECT id FROM smart_initiative_rules WHERE game_session_id = ? AND entity_id = ?`
+	checkQuery = r.db.Rebind(checkQuery)
+	err := r.db.QueryRow(checkQuery, rule.GameSessionID, rule.EntityID).Scan(&existingID)
+	
+	if err == sql.ErrNoRows {
+		// Insert new rule
+		if rule.ID == uuid.Nil {
+			rule.ID = uuid.New()
+		}
+		rule.CreatedAt = time.Now()
+		rule.UpdatedAt = time.Now()
+		
+		insertQuery := `
+			INSERT INTO smart_initiative_rules (
+				id, game_session_id, entity_id, entity_type,
+				base_initiative_bonus, advantage_on_initiative,
+				alert_feat, special_rules, created_at, updated_at
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		
+		insertQuery = r.db.Rebind(insertQuery)
+		_, err = r.db.Exec(insertQuery,
+			rule.ID,
+			rule.GameSessionID,
+			rule.EntityID,
+			rule.EntityType,
+			rule.BaseInitiativeBonus,
+			rule.AdvantageOnInitiative,
+			rule.AlertFeat,
+			rule.SpecialRules,
+			rule.CreatedAt,
+			rule.UpdatedAt)
+		return err
+	} else if err != nil {
+		return err
 	}
-	rule.CreatedAt = time.Now()
+	
+	// Update existing rule
 	rule.UpdatedAt = time.Now()
-
-	_, err := r.db.NamedExec(query, rule)
+	updateQuery := `
+		UPDATE smart_initiative_rules SET
+			entity_type = ?,
+			base_initiative_bonus = ?,
+			advantage_on_initiative = ?,
+			alert_feat = ?,
+			special_rules = ?,
+			updated_at = ?
+		WHERE game_session_id = ? AND entity_id = ?`
+	
+	updateQuery = r.db.Rebind(updateQuery)
+	_, err = r.db.Exec(updateQuery,
+		rule.EntityType,
+		rule.BaseInitiativeBonus,
+		rule.AdvantageOnInitiative,
+		rule.AlertFeat,
+		rule.SpecialRules,
+		rule.UpdatedAt,
+		rule.GameSessionID,
+		rule.EntityID)
 	return err
 }
 
@@ -323,20 +401,30 @@ func (r *combatAnalyticsRepository) CreateCombatAction(action *models.CombatActi
 			target_id, target_type, roll_results,
 			outcome, damage_dealt, conditions_applied,
 			resources_used, position_data
-		) VALUES (
-			:id, :combat_id, :round_number, :turn_number,
-			:actor_id, :actor_type, :action_type,
-			:target_id, :target_type, :roll_results,
-			:outcome, :damage_dealt, :conditions_applied,
-			:resources_used, :position_data
-		)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	if action.ID == uuid.Nil {
 		action.ID = uuid.New()
 	}
 	action.Timestamp = time.Now()
 
-	_, err := r.db.NamedExec(query, action)
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query,
+		action.ID,
+		action.CombatID,
+		action.RoundNumber,
+		action.TurnNumber,
+		action.ActorID,
+		action.ActorType,
+		action.ActionType,
+		action.TargetID,
+		action.TargetType,
+		action.RollResults,
+		action.Outcome,
+		action.DamageDealt,
+		action.ConditionsApplied,
+		action.ResourcesUsed,
+		action.PositionData)
 	return err
 }
 
