@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"encoding/json"
 	"time"
 
@@ -11,11 +10,11 @@ import (
 
 // WorldBuildingRepository handles all world building data operations
 type WorldBuildingRepository struct {
-	db *sql.DB
+	db *DB
 }
 
 // NewWorldBuildingRepository creates a new world building repository
-func NewWorldBuildingRepository(db *sql.DB) *WorldBuildingRepository {
+func NewWorldBuildingRepository(db *DB) *WorldBuildingRepository {
 	return &WorldBuildingRepository{db: db}
 }
 
@@ -47,12 +46,12 @@ func (r *WorldBuildingRepository) CreateSettlement(settlement *models.Settlement
 			notable_locations, defenses, problems, secrets,
 			created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
-			$13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23,
-			$24, $25, $26, $27, $28, $29
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?
 		)`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecRebind(query,
 		settlement.ID, settlement.GameSessionID, settlement.Name, settlement.Type,
 		settlement.Population, settlement.AgeCategory, settlement.Description,
 		settlement.History, settlement.GovernmentType, settlement.Alignment,
@@ -81,9 +80,9 @@ func (r *WorldBuildingRepository) GetSettlement(id uuid.UUID) (*models.Settlemen
 			ancient_ruins_nearby, eldritch_influence, ley_line_connection,
 			notable_locations, defenses, problems, secrets,
 			created_at, updated_at
-		FROM settlements WHERE id = $1`
+		FROM settlements WHERE id = ?`
 
-	err := r.db.QueryRow(query, id).Scan(
+	err := r.db.QueryRowRebind(query, id).Scan(
 		&settlement.ID, &settlement.GameSessionID, &settlement.Name, &settlement.Type,
 		&settlement.Population, &settlement.AgeCategory, &settlement.Description,
 		&settlement.History, &settlement.GovernmentType, &settlement.Alignment,
@@ -121,7 +120,7 @@ func (r *WorldBuildingRepository) GetSettlementsByGameSession(gameSessionID uuid
 	query := `
 		SELECT id, name, type, population, region, danger_level, corruption_level
 		FROM settlements 
-		WHERE game_session_id = $1
+		WHERE game_session_id = ?
 		ORDER BY population DESC`
 
 	rows, err := r.db.Query(query, gameSessionID)
@@ -173,11 +172,11 @@ func (r *WorldBuildingRepository) CreateSettlementNPC(npc *models.SettlementNPC)
 			faction_affiliations, relationships, stats, skills, inventory, plot_hooks,
 			created_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
-			$13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 		)`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecRebind(query,
 		npc.ID, npc.SettlementID, npc.Name, npc.Race, npc.Class, npc.Level,
 		npc.Role, npc.Occupation, personalityTraits, ideals, bonds, flaws,
 		npc.AncientKnowledge, npc.CorruptionTouched, npc.SecretAgenda, npc.TrueAge,
@@ -194,7 +193,7 @@ func (r *WorldBuildingRepository) GetSettlementNPCs(settlementID uuid.UUID) ([]m
 		SELECT id, name, race, class, level, role, occupation,
 			ancient_knowledge, corruption_touched
 		FROM settlement_npcs
-		WHERE settlement_id = $1`
+		WHERE settlement_id = ?`
 
 	rows, err := r.db.Query(query, settlementID)
 	if err != nil {
@@ -241,10 +240,10 @@ func (r *WorldBuildingRepository) CreateSettlementShop(shop *models.SettlementSh
 			black_market, ancient_artifacts, faction_discount,
 			reputation_required, operating_hours, current_rumors, created_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 		)`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecRebind(query,
 		shop.ID, shop.SettlementID, shop.Name, shop.Type, shop.OwnerNPCID,
 		shop.QualityLevel, shop.PriceModifier, availableItems, specialItems,
 		shop.CanCraft, craftingSpecialties, shop.BlackMarket, shop.AncientArtifacts,
@@ -261,7 +260,7 @@ func (r *WorldBuildingRepository) GetSettlementShops(settlementID uuid.UUID) ([]
 		SELECT id, name, type, owner_npc_id, quality_level, price_modifier,
 			black_market, ancient_artifacts
 		FROM settlement_shops
-		WHERE settlement_id = $1`
+		WHERE settlement_id = ?`
 
 	rows, err := r.db.Query(query, settlementID)
 	if err != nil {
@@ -315,11 +314,11 @@ func (r *WorldBuildingRepository) CreateFaction(faction *models.Faction) error {
 			faction_relationships, symbols, rituals, resources,
 			created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-			$14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 		)`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecRebind(query,
 		faction.ID, faction.GameSessionID, faction.Name, faction.Type,
 		faction.Description, faction.FoundingDate,
 		publicGoals, secretGoals, motivations,
@@ -349,9 +348,9 @@ func (r *WorldBuildingRepository) GetFaction(id uuid.UUID) (*models.Faction, err
 			leadership_structure, headquarters_location, member_count, territory_control,
 			faction_relationships, symbols, rituals, resources,
 			created_at, updated_at
-		FROM factions WHERE id = $1`
+		FROM factions WHERE id = ?`
 
-	err := r.db.QueryRow(query, id).Scan(
+	err := r.db.QueryRowRebind(query, id).Scan(
 		&faction.ID, &faction.GameSessionID, &faction.Name, &faction.Type,
 		&faction.Description, &faction.FoundingDate,
 		&publicGoals, &secretGoals, &motivations,
@@ -386,7 +385,7 @@ func (r *WorldBuildingRepository) GetFactionsByGameSession(gameSessionID uuid.UU
 	query := `
 		SELECT id, name, type, influence_level, corrupted
 		FROM factions 
-		WHERE game_session_id = $1
+		WHERE game_session_id = ?
 		ORDER BY influence_level DESC`
 
 	rows, err := r.db.Query(query, gameSessionID)
@@ -432,8 +431,8 @@ func (r *WorldBuildingRepository) UpdateFactionRelationship(faction1ID, faction2
 	updatedRelationships, _ := json.Marshal(relationships)
 
 	// Update in database
-	query := `UPDATE factions SET faction_relationships = $1, updated_at = $2 WHERE id = $3`
-	_, err = r.db.Exec(query, updatedRelationships, time.Now(), faction1ID)
+	query := `UPDATE factions SET faction_relationships = ?, updated_at = ? WHERE id = ?`
+	_, err = r.db.ExecRebind(query, updatedRelationships, time.Now(), faction1ID)
 
 	// Also update faction 2's relationship with faction 1
 	if err == nil {
@@ -451,7 +450,7 @@ func (r *WorldBuildingRepository) UpdateFactionRelationship(faction1ID, faction2
 			}
 
 			updatedRelationships2, _ := json.Marshal(relationships2)
-			r.db.Exec(query, updatedRelationships2, time.Now(), faction2ID)
+			r.db.ExecRebind(query, updatedRelationships2, time.Now(), faction2ID)
 		}
 	}
 
@@ -488,11 +487,11 @@ func (r *WorldBuildingRepository) CreateWorldEvent(event *models.WorldEvent) err
 			party_aware, party_involved, party_actions,
 			created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
-			$15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 		)`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecRebind(query,
 		event.ID, event.GameSessionID, event.Name, event.Type, event.Severity,
 		event.Description, event.Cause, event.StartDate, event.Duration,
 		event.IsActive, event.IsResolved, event.AncientCause, event.AwakensAncientEvil,
@@ -511,7 +510,7 @@ func (r *WorldBuildingRepository) GetActiveWorldEvents(gameSessionID uuid.UUID) 
 		SELECT id, name, type, severity, description, current_stage,
 			party_aware, party_involved
 		FROM world_events 
-		WHERE game_session_id = $1 AND is_active = true
+		WHERE game_session_id = ? AND is_active = true
 		ORDER BY severity DESC, created_at DESC`
 
 	rows, err := r.db.Query(query, gameSessionID)
@@ -542,10 +541,10 @@ func (r *WorldBuildingRepository) GetActiveWorldEvents(gameSessionID uuid.UUID) 
 func (r *WorldBuildingRepository) ProgressWorldEvent(eventID uuid.UUID) error {
 	query := `
 		UPDATE world_events 
-		SET current_stage = current_stage + 1, updated_at = $1
-		WHERE id = $2`
+		SET current_stage = current_stage + 1, updated_at = ?
+		WHERE id = ?`
 
-	_, err := r.db.Exec(query, time.Now(), eventID)
+	_, err := r.db.ExecRebind(query, time.Now(), eventID)
 	return err
 }
 
@@ -571,16 +570,16 @@ func (r *WorldBuildingRepository) CreateOrUpdateMarket(market *models.Market) er
 			black_market_active, artifact_dealer_present,
 			economic_boom, economic_depression, last_updated
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 		) ON CONFLICT (settlement_id) DO UPDATE SET
-			food_price_modifier = $3, common_goods_modifier = $4,
-			weapons_armor_modifier = $5, magical_items_modifier = $6,
-			ancient_artifacts_modifier = $7, high_demand_items = $8,
-			surplus_items = $9, banned_items = $10, black_market_active = $11,
-			artifact_dealer_present = $12, economic_boom = $13,
-			economic_depression = $14, last_updated = $15`
+			food_price_modifier = ?, common_goods_modifier = ?,
+			weapons_armor_modifier = ?, magical_items_modifier = ?,
+			ancient_artifacts_modifier = ?, high_demand_items = ?,
+			surplus_items = ?, banned_items = ?, black_market_active = ?,
+			artifact_dealer_present = ?, economic_boom = ?,
+			economic_depression = ?, last_updated = ?`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecRebind(query,
 		market.ID, market.SettlementID,
 		market.FoodPriceModifier, market.CommonGoodsModifier,
 		market.WeaponsArmorModifier, market.MagicalItemsModifier,
@@ -603,9 +602,9 @@ func (r *WorldBuildingRepository) GetMarketBySettlement(settlementID uuid.UUID) 
 			high_demand_items, surplus_items, banned_items,
 			black_market_active, artifact_dealer_present,
 			economic_boom, economic_depression, last_updated
-		FROM markets WHERE settlement_id = $1`
+		FROM markets WHERE settlement_id = ?`
 
-	err := r.db.QueryRow(query, settlementID).Scan(
+	err := r.db.QueryRowRebind(query, settlementID).Scan(
 		&market.ID, &market.SettlementID,
 		&market.FoodPriceModifier, &market.CommonGoodsModifier,
 		&market.WeaponsArmorModifier, &market.MagicalItemsModifier,
@@ -649,11 +648,11 @@ func (r *WorldBuildingRepository) CreateTradeRoute(route *models.TradeRoute) err
 			is_active, disruption_events,
 			created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
-			$13, $14, $15, $16, $17, $18, $19, $20, $21
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?, ?, ?
 		)`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecRebind(query,
 		route.ID, route.GameSessionID, route.Name,
 		route.StartSettlementID, route.EndSettlementID,
 		route.RouteType, route.Distance, route.DifficultyRating,
@@ -674,9 +673,9 @@ func (r *WorldBuildingRepository) GetTradeRoutesBySettlement(settlementID uuid.U
 		SELECT id, name, start_settlement_id, end_settlement_id,
 			route_type, distance, difficulty_rating, is_active
 		FROM trade_routes 
-		WHERE (start_settlement_id = $1 OR end_settlement_id = $1) AND is_active = true`
+		WHERE (start_settlement_id = ? OR end_settlement_id = ?) AND is_active = true`
 
-	rows, err := r.db.Query(query, settlementID)
+	rows, err := r.db.Query(query, settlementID, settlementID)
 	if err != nil {
 		return nil, err
 	}
@@ -725,11 +724,11 @@ func (r *WorldBuildingRepository) CreateAncientSite(site *models.AncientSite) er
 			original_purpose, fall_description, prophecies,
 			created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
-			$13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 		)`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecRebind(query,
 		site.ID, site.GameSessionID, site.Name, site.TrueName, site.Type,
 		site.AgeCategory, site.LocationDescription, site.NearestSettlementID,
 		coordinates, site.ExplorationLevel, site.CorruptionLevel,
@@ -748,7 +747,7 @@ func (r *WorldBuildingRepository) GetAncientSitesByGameSession(gameSessionID uui
 	query := `
 		SELECT id, name, type, age_category, corruption_level, exploration_level
 		FROM ancient_sites 
-		WHERE game_session_id = $1
+		WHERE game_session_id = ?
 		ORDER BY corruption_level DESC`
 
 	rows, err := r.db.Query(query, gameSessionID)
@@ -783,7 +782,7 @@ func (r *WorldBuildingRepository) SimulateEconomicChanges(gameSessionID uuid.UUI
 	query := `
 		SELECT id, economic_impacts 
 		FROM world_events 
-		WHERE game_session_id = $1 AND is_active = true`
+		WHERE game_session_id = ? AND is_active = true`
 
 	rows, err := r.db.Query(query, gameSessionID)
 	if err != nil {

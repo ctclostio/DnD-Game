@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -12,11 +13,11 @@ import (
 
 // EmergentWorldRepository handles database operations for the emergent world system
 type EmergentWorldRepository struct {
-	db *sql.DB
+	db *DB
 }
 
 // NewEmergentWorldRepository creates a new emergent world repository
-func NewEmergentWorldRepository(db *sql.DB) *EmergentWorldRepository {
+func NewEmergentWorldRepository(db *DB) *EmergentWorldRepository {
 	return &EmergentWorldRepository{db: db}
 }
 
@@ -28,14 +29,14 @@ func (r *EmergentWorldRepository) GetWorldState(sessionID string) (*models.World
 		SELECT id, session_id, current_time, last_simulated, world_data, 
 		       is_active, created_at, updated_at
 		FROM world_states
-		WHERE session_id = $1 AND is_active = true
+		WHERE session_id = ? AND is_active = true
 		LIMIT 1
 	`
 
 	var state models.WorldState
 	var worldDataJSON []byte
 
-	err := r.db.QueryRow(query, sessionID).Scan(
+	err := r.db.QueryRowContextRebind(context.Background(), query, sessionID).Scan(
 		&state.ID,
 		&state.SessionID,
 		&state.CurrentTime,
@@ -79,10 +80,10 @@ func (r *EmergentWorldRepository) createWorldState(sessionID string) (*models.Wo
 		INSERT INTO world_states (
 			id, session_id, current_time, last_simulated, 
 			world_data, is_active, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecContextRebind(context.Background(), query,
 		state.ID,
 		state.SessionID,
 		state.CurrentTime,
@@ -111,17 +112,17 @@ func (r *EmergentWorldRepository) UpdateWorldState(state *models.WorldState) err
 
 	query := `
 		UPDATE world_states
-		SET current_time = $2, last_simulated = $3, world_data = $4, 
-		    updated_at = $5
-		WHERE id = $1
+		SET current_time = ?, last_simulated = ?, world_data = ?, 
+		    updated_at = ?
+		WHERE id = ?
 	`
 
-	_, err = r.db.Exec(query,
-		state.ID,
+	_, err = r.db.ExecContextRebind(context.Background(), query,
 		state.CurrentTime,
 		state.LastSimulated,
 		worldDataJSON,
 		state.UpdatedAt,
+		state.ID,
 	)
 
 	return err
@@ -140,10 +141,10 @@ func (r *EmergentWorldRepository) CreateNPCGoal(goal *models.NPCGoal) error {
 		INSERT INTO npc_goals (
 			id, npc_id, goal_type, priority, description,
 			progress, parameters, status, started_at, completed_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	_, err = r.db.Exec(query,
+	_, err = r.db.ExecContextRebind(context.Background(), query,
 		goal.ID,
 		goal.NPCID,
 		goal.GoalType,
@@ -165,11 +166,11 @@ func (r *EmergentWorldRepository) GetNPCGoals(npcID string) ([]models.NPCGoal, e
 		SELECT id, npc_id, goal_type, priority, description,
 		       progress, parameters, status, started_at, completed_at
 		FROM npc_goals
-		WHERE npc_id = $1
+		WHERE npc_id = ?
 		ORDER BY priority DESC, started_at DESC
 	`
 
-	rows, err := r.db.Query(query, npcID)
+	rows, err := r.db.QueryContextRebind(context.Background(), query, npcID)
 	if err != nil {
 		return nil, err
 	}
@@ -216,13 +217,12 @@ func (r *EmergentWorldRepository) UpdateNPCGoal(goal *models.NPCGoal) error {
 
 	query := `
 		UPDATE npc_goals
-		SET goal_type = $2, priority = $3, description = $4,
-		    progress = $5, parameters = $6, status = $7, completed_at = $8
-		WHERE id = $1
+		SET goal_type = ?, priority = ?, description = ?,
+		    progress = ?, parameters = ?, status = ?, completed_at = ?
+		WHERE id = ?
 	`
 
-	_, err = r.db.Exec(query,
-		goal.ID,
+	_, err = r.db.ExecContextRebind(context.Background(), query,
 		goal.GoalType,
 		goal.Priority,
 		goal.Description,
@@ -230,6 +230,7 @@ func (r *EmergentWorldRepository) UpdateNPCGoal(goal *models.NPCGoal) error {
 		parametersJSON,
 		goal.Status,
 		goal.CompletedAt,
+		goal.ID,
 	)
 
 	return err
@@ -247,10 +248,10 @@ func (r *EmergentWorldRepository) CreateNPCSchedule(schedule *models.NPCSchedule
 	query := `
 		INSERT INTO npc_schedules (
 			id, npc_id, time_of_day, activity, location, parameters
-		) VALUES ($1, $2, $3, $4, $5, $6)
+		) VALUES (?, ?, ?, ?, ?, ?)
 	`
 
-	_, err = r.db.Exec(query,
+	_, err = r.db.ExecContextRebind(context.Background(), query,
 		schedule.ID,
 		schedule.NPCID,
 		schedule.TimeOfDay,
@@ -267,7 +268,7 @@ func (r *EmergentWorldRepository) GetNPCSchedule(npcID string) ([]models.NPCSche
 	query := `
 		SELECT id, npc_id, time_of_day, activity, location, parameters
 		FROM npc_schedules
-		WHERE npc_id = $1
+		WHERE npc_id = ?
 		ORDER BY 
 			CASE time_of_day
 				WHEN 'morning' THEN 1
@@ -277,7 +278,7 @@ func (r *EmergentWorldRepository) GetNPCSchedule(npcID string) ([]models.NPCSche
 			END
 	`
 
-	rows, err := r.db.Query(query, npcID)
+	rows, err := r.db.QueryContextRebind(context.Background(), query, npcID)
 	if err != nil {
 		return nil, err
 	}
@@ -325,10 +326,10 @@ func (r *EmergentWorldRepository) CreateFactionPersonality(personality *models.F
 		INSERT INTO faction_personalities (
 			id, faction_id, traits, values, memories,
 			current_mood, decision_weights, learning_data, last_learning_time
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecContextRebind(context.Background(), query,
 		personality.ID,
 		personality.FactionID,
 		traitsJSON,
@@ -349,14 +350,14 @@ func (r *EmergentWorldRepository) GetFactionPersonality(factionID string) (*mode
 		SELECT id, faction_id, traits, values, memories,
 		       current_mood, decision_weights, learning_data, last_learning_time
 		FROM faction_personalities
-		WHERE faction_id = $1
+		WHERE faction_id = ?
 		LIMIT 1
 	`
 
 	var personality models.FactionPersonality
 	var traitsJSON, valuesJSON, memoriesJSON, decisionWeightsJSON, learningDataJSON []byte
 
-	err := r.db.QueryRow(query, factionID).Scan(
+	err := r.db.QueryRowContextRebind(context.Background(), query, factionID).Scan(
 		&personality.ID,
 		&personality.FactionID,
 		&traitsJSON,
@@ -392,14 +393,13 @@ func (r *EmergentWorldRepository) UpdateFactionPersonality(personality *models.F
 
 	query := `
 		UPDATE faction_personalities
-		SET traits = $2, values = $3, memories = $4,
-		    current_mood = $5, decision_weights = $6, 
-		    learning_data = $7, last_learning_time = $8
-		WHERE id = $1
+		SET traits = ?, values = ?, memories = ?,
+		    current_mood = ?, decision_weights = ?, 
+		    learning_data = ?, last_learning_time = ?
+		WHERE id = ?
 	`
 
-	_, err := r.db.Exec(query,
-		personality.ID,
+	_, err := r.db.ExecContextRebind(context.Background(), query,
 		traitsJSON,
 		valuesJSON,
 		memoriesJSON,
@@ -407,6 +407,7 @@ func (r *EmergentWorldRepository) UpdateFactionPersonality(personality *models.F
 		decisionWeightsJSON,
 		learningDataJSON,
 		personality.LastLearningTime,
+		personality.ID,
 	)
 
 	return err
@@ -423,10 +424,10 @@ func (r *EmergentWorldRepository) CreateFactionAgenda(agenda *models.FactionAgen
 		INSERT INTO faction_agendas (
 			id, faction_id, agenda_type, title, description,
 			priority, stages, progress, status, parameters, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecContextRebind(context.Background(), query,
 		agenda.ID,
 		agenda.FactionID,
 		agenda.AgendaType,
@@ -449,11 +450,11 @@ func (r *EmergentWorldRepository) GetFactionAgendas(factionID string) ([]models.
 		SELECT id, faction_id, agenda_type, title, description,
 		       priority, stages, progress, status, parameters, created_at
 		FROM faction_agendas
-		WHERE faction_id = $1
+		WHERE faction_id = ?
 		ORDER BY priority DESC, created_at DESC
 	`
 
-	rows, err := r.db.Query(query, factionID)
+	rows, err := r.db.QueryContextRebind(context.Background(), query, factionID)
 	if err != nil {
 		return nil, err
 	}
@@ -498,14 +499,13 @@ func (r *EmergentWorldRepository) UpdateFactionAgenda(agenda *models.FactionAgen
 
 	query := `
 		UPDATE faction_agendas
-		SET agenda_type = $2, title = $3, description = $4,
-		    priority = $5, stages = $6, progress = $7,
-		    status = $8, parameters = $9
-		WHERE id = $1
+		SET agenda_type = ?, title = ?, description = ?,
+		    priority = ?, stages = ?, progress = ?,
+		    status = ?, parameters = ?
+		WHERE id = ?
 	`
 
-	_, err := r.db.Exec(query,
-		agenda.ID,
+	_, err := r.db.ExecContextRebind(context.Background(), query,
 		agenda.AgendaType,
 		agenda.Title,
 		agenda.Description,
@@ -514,6 +514,7 @@ func (r *EmergentWorldRepository) UpdateFactionAgenda(agenda *models.FactionAgen
 		agenda.Progress,
 		agenda.Status,
 		parametersJSON,
+		agenda.ID,
 	)
 
 	return err
@@ -544,10 +545,10 @@ func (r *EmergentWorldRepository) CreateCulture(culture *models.ProceduralCultur
 			values, taboos, greetings, architecture, cuisine,
 			music_style, clothing_style, naming_conventions,
 			social_structure, metadata, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecContextRebind(context.Background(), query,
 		culture.ID,
 		culture.Name,
 		languageJSON,
@@ -578,7 +579,7 @@ func (r *EmergentWorldRepository) GetCulture(cultureID string) (*models.Procedur
 		       music_style, clothing_style, naming_conventions,
 		       social_structure, metadata, created_at
 		FROM procedural_cultures
-		WHERE id = $1
+		WHERE id = ?
 	`
 
 	var culture models.ProceduralCulture
@@ -587,7 +588,7 @@ func (r *EmergentWorldRepository) GetCulture(cultureID string) (*models.Procedur
 	var cuisineJSON, musicStyleJSON, clothingStyleJSON []byte
 	var namingConventionsJSON, socialStructureJSON, metadataJSON []byte
 
-	err := r.db.QueryRow(query, cultureID).Scan(
+	err := r.db.QueryRowContextRebind(context.Background(), query, cultureID).Scan(
 		&culture.ID,
 		&culture.Name,
 		&languageJSON,
@@ -638,11 +639,11 @@ func (r *EmergentWorldRepository) GetCulturesBySession(sessionID string) ([]*mod
 		       music_style, clothing_style, naming_conventions,
 		       social_structure, metadata, created_at
 		FROM procedural_cultures
-		WHERE metadata->>'session_id' = $1
+		WHERE metadata->>'session_id' = ?
 		ORDER BY created_at DESC
 	`
 
-	rows, err := r.db.Query(query, sessionID)
+	rows, err := r.db.QueryContextRebind(context.Background(), query, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -712,16 +713,16 @@ func (r *EmergentWorldRepository) UpdateCulture(culture *models.ProceduralCultur
 
 	query := `
 		UPDATE procedural_cultures
-		SET values = $2, customs = $3, social_structure = $4, metadata = $5
-		WHERE id = $1
+		SET values = ?, customs = ?, social_structure = ?, metadata = ?
+		WHERE id = ?
 	`
 
-	_, err := r.db.Exec(query,
-		culture.ID,
+	_, err := r.db.ExecContextRebind(context.Background(), query,
 		valuesJSON,
 		customsJSON,
 		socialStructureJSON,
 		metadataJSON,
+		culture.ID,
 	)
 
 	return err
@@ -740,10 +741,10 @@ func (r *EmergentWorldRepository) CreateWorldEvent(event *models.EmergentWorldEv
 			id, session_id, event_type, title, description,
 			impact, affected_entities, consequences,
 			is_player_visible, occurred_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecContextRebind(context.Background(), query,
 		event.ID,
 		event.SessionID,
 		event.EventType,
@@ -766,7 +767,7 @@ func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, on
 		       impact, affected_entities, consequences,
 		       is_player_visible, occurred_at
 		FROM world_events
-		WHERE session_id = $1
+		WHERE session_id = ?
 	`
 
 	args := []interface{}{sessionID}
@@ -778,11 +779,11 @@ func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, on
 	query += " ORDER BY occurred_at DESC"
 
 	if limit > 0 {
-		query += " LIMIT $2"
+		query += " LIMIT ?"
 		args = append(args, limit)
 	}
 
-	rows, err := r.db.Query(query, args...)
+	rows, err := r.db.QueryContextRebind(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -830,10 +831,10 @@ func (r *EmergentWorldRepository) CreateSimulationLog(log *models.SimulationLog)
 		INSERT INTO simulation_logs (
 			id, session_id, simulation_type, start_time, end_time,
 			events_created, details, success, error_message
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := r.db.Exec(query,
+	_, err := r.db.ExecContextRebind(context.Background(), query,
 		log.ID,
 		log.SessionID,
 		log.SimulationType,
@@ -854,18 +855,18 @@ func (r *EmergentWorldRepository) GetSimulationLogs(sessionID string, limit int)
 		SELECT id, session_id, simulation_type, start_time, end_time,
 		       events_created, details, success, error_message
 		FROM simulation_logs
-		WHERE session_id = $1
+		WHERE session_id = ?
 		ORDER BY start_time DESC
 	`
 
 	args := []interface{}{sessionID}
 
 	if limit > 0 {
-		query += " LIMIT $2"
+		query += " LIMIT ?"
 		args = append(args, limit)
 	}
 
-	rows, err := r.db.Query(query, args...)
+	rows, err := r.db.QueryContextRebind(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}

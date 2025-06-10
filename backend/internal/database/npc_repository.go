@@ -43,14 +43,15 @@ func (r *npcRepository) Create(ctx context.Context, npc *models.NPC) error {
 			senses, languages, challenge_rating, experience_points,
 			abilities, actions, legendary_actions, is_template, created_by
 		) VALUES (
-			$1, $2, $3, $4, $5, $6,
-			$7, $8, $9, $10,
-			$11, $12, $13,
-			$14, $15, $16,
-			$17, $18, $19, $20,
-			$21, $22, $23, $24, $25
+			?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?,
+			?, ?, ?,
+			?, ?, ?,
+			?, ?, ?, ?,
+			?, ?, ?, ?, ?
 		)`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query,
 		npc.ID, npc.GameSessionID, npc.Name, npc.Type, npc.Size, npc.Alignment,
 		npc.ArmorClass, npc.HitPoints, npc.MaxHitPoints, speedJSON,
@@ -74,7 +75,7 @@ func (r *npcRepository) GetByID(ctx context.Context, id string) (*models.NPC, er
 			abilities, actions, legendary_actions, is_template, created_by,
 			created_at, updated_at
 		FROM npcs
-		WHERE id = $1`
+		WHERE id = ?`
 
 	var npc models.NPC
 	var speedJSON, attributesJSON, savingThrowsJSON, skillsJSON []byte
@@ -98,7 +99,7 @@ func (r *npcRepository) GetByID(ctx context.Context, id string) (*models.NPC, er
 		Senses:       sensesJSON,
 		Abilities:    abilitiesJSON,
 		Actions:      actionsJSON,
-	}, query, id)
+	}, r.db.Rebind(query), id)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -130,10 +131,10 @@ func (r *npcRepository) GetByGameSession(ctx context.Context, gameSessionID stri
 			abilities, actions, legendary_actions, is_template, created_by,
 			created_at, updated_at
 		FROM npcs
-		WHERE game_session_id = $1 AND is_template = false
+		WHERE game_session_id = ? AND is_template = false
 		ORDER BY name`
 
-	rows, err := r.db.QueryContext(ctx, query, gameSessionID)
+	rows, err := r.db.QueryContext(ctx, r.db.Rebind(query), gameSessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -163,29 +164,31 @@ func (r *npcRepository) Update(ctx context.Context, npc *models.NPC) error {
 
 	query := `
 		UPDATE npcs SET
-			name = $2, type = $3, size = $4, alignment = $5,
-			armor_class = $6, hit_points = $7, max_hit_points = $8, speed = $9,
-			attributes = $10, saving_throws = $11, skills = $12,
-			damage_resistances = $13, damage_immunities = $14, condition_immunities = $15,
-			senses = $16, languages = $17, challenge_rating = $18, experience_points = $19,
-			abilities = $20, actions = $21, legendary_actions = $22,
+			name = ?, type = ?, size = ?, alignment = ?,
+			armor_class = ?, hit_points = ?, max_hit_points = ?, speed = ?,
+			attributes = ?, saving_throws = ?, skills = ?,
+			damage_resistances = ?, damage_immunities = ?, condition_immunities = ?,
+			senses = ?, languages = ?, challenge_rating = ?, experience_points = ?,
+			abilities = ?, actions = ?, legendary_actions = ?,
 			updated_at = CURRENT_TIMESTAMP
-		WHERE id = $1`
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query,
-		npc.ID, npc.Name, npc.Type, npc.Size, npc.Alignment,
+		npc.Name, npc.Type, npc.Size, npc.Alignment,
 		npc.ArmorClass, npc.HitPoints, npc.MaxHitPoints, speedJSON,
 		attributesJSON, savingThrowsJSON, skillsJSON,
 		npc.DamageResistances, npc.DamageImmunities, npc.ConditionImmunities,
 		sensesJSON, npc.Languages, npc.ChallengeRating, npc.ExperiencePoints,
-		abilitiesJSON, actionsJSON, npc.LegendaryActions,
+		abilitiesJSON, actionsJSON, npc.LegendaryActions, npc.ID,
 	)
 
 	return err
 }
 
 func (r *npcRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM npcs WHERE id = $1`
+	query := `DELETE FROM npcs WHERE id = ?`
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
 }
@@ -204,41 +207,34 @@ func (r *npcRepository) Search(ctx context.Context, filter models.NPCSearchFilte
 		WHERE 1=1`
 
 	args := []interface{}{}
-	argCount := 0
 
 	if filter.GameSessionID != "" {
-		argCount++
-		query += fmt.Sprintf(" AND game_session_id = $%d", argCount)
+		query += " AND game_session_id = ?"
 		args = append(args, filter.GameSessionID)
 	}
 
 	if filter.Name != "" {
-		argCount++
-		query += fmt.Sprintf(" AND name ILIKE $%d", argCount)
+		query += " AND name ILIKE ?"
 		args = append(args, "%"+filter.Name+"%")
 	}
 
 	if filter.Type != "" {
-		argCount++
-		query += fmt.Sprintf(" AND type = $%d", argCount)
+		query += " AND type = ?"
 		args = append(args, filter.Type)
 	}
 
 	if filter.Size != "" {
-		argCount++
-		query += fmt.Sprintf(" AND size = $%d", argCount)
+		query += " AND size = ?"
 		args = append(args, filter.Size)
 	}
 
 	if filter.MinCR > 0 {
-		argCount++
-		query += fmt.Sprintf(" AND challenge_rating >= $%d", argCount)
+		query += " AND challenge_rating >= ?"
 		args = append(args, filter.MinCR)
 	}
 
 	if filter.MaxCR > 0 {
-		argCount++
-		query += fmt.Sprintf(" AND challenge_rating <= $%d", argCount)
+		query += " AND challenge_rating <= ?"
 		args = append(args, filter.MaxCR)
 	}
 
@@ -248,6 +244,7 @@ func (r *npcRepository) Search(ctx context.Context, filter models.NPCSearchFilte
 
 	query += " ORDER BY name"
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -279,7 +276,7 @@ func (r *npcRepository) GetTemplates(ctx context.Context) ([]*models.NPCTemplate
 		FROM npc_templates
 		ORDER BY challenge_rating, name`
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, r.db.Rebind(query))
 	if err != nil {
 		return nil, err
 	}
@@ -308,10 +305,10 @@ func (r *npcRepository) GetTemplateByID(ctx context.Context, id string) (*models
 			abilities, actions, legendary_actions,
 			created_at
 		FROM npc_templates
-		WHERE id = $1`
+		WHERE id = ?`
 
 	var template models.NPCTemplate
-	err := r.db.GetContext(ctx, &template, query, id)
+	err := r.db.GetContext(ctx, &template, r.db.Rebind(query), id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("template not found")

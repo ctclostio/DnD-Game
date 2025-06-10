@@ -47,8 +47,9 @@ func (r *NarrativeRepository) CreateNarrativeProfile(profile *models.NarrativePr
 		INSERT INTO narrative_profiles (
 			id, user_id, character_id, preferences, decision_history,
 			play_style, analytics, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
+	query = r.db.Rebind(query)
 	_, err = r.db.Exec(
 		query,
 		profile.ID,
@@ -74,8 +75,9 @@ func (r *NarrativeRepository) GetNarrativeProfile(characterID string) (*models.N
 		SELECT id, user_id, character_id, preferences, decision_history,
 			   play_style, analytics, created_at, updated_at
 		FROM narrative_profiles
-		WHERE character_id = $1`
+		WHERE character_id = ?`
 
+	query = r.db.Rebind(query)
 	err := r.db.QueryRow(query, characterID).Scan(
 		&profile.ID,
 		&profile.UserID,
@@ -129,10 +131,11 @@ func (r *NarrativeRepository) UpdateNarrativeProfile(profile *models.NarrativePr
 
 	query := `
 		UPDATE narrative_profiles 
-		SET preferences = $1, decision_history = $2, play_style = $3,
-			analytics = $4, updated_at = $5
-		WHERE id = $6`
+		SET preferences = ?, decision_history = ?, play_style = ?,
+			analytics = ?, updated_at = ?
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	_, err = r.db.Exec(
 		query,
 		preferencesJSON,
@@ -155,8 +158,9 @@ func (r *NarrativeRepository) CreateBackstoryElement(element *models.BackstoryEl
 		INSERT INTO backstory_elements (
 			id, character_id, type, content, weight, used,
 			usage_count, tags, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.Exec(
 		query,
 		element.ID,
@@ -179,9 +183,10 @@ func (r *NarrativeRepository) GetBackstoryElements(characterID string) ([]models
 		SELECT id, character_id, type, content, weight, used,
 			   usage_count, tags, created_at
 		FROM backstory_elements
-		WHERE character_id = $1
+		WHERE character_id = ?
 		ORDER BY weight DESC`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.Query(query, characterID)
 	if err != nil {
 		return nil, err
@@ -226,8 +231,9 @@ func (r *NarrativeRepository) CreatePlayerAction(action *models.PlayerAction) er
 			id, session_id, character_id, action_type, target_type,
 			target_id, action_description, moral_weight, immediate_result,
 			potential_consequences, timestamp, metadata
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
+	query = r.db.Rebind(query)
 	_, err = r.db.Exec(
 		query,
 		action.ID,
@@ -272,8 +278,9 @@ func (r *NarrativeRepository) CreateConsequenceEvent(consequence *models.Consequ
 			id, trigger_action_id, trigger_type, description, severity,
 			delay, actual_trigger_time, affected_entities, cascade_effects,
 			status, metadata, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
+	query = r.db.Rebind(query)
 	_, err = r.db.Exec(
 		query,
 		consequence.ID,
@@ -295,23 +302,29 @@ func (r *NarrativeRepository) CreateConsequenceEvent(consequence *models.Consequ
 
 // GetPendingConsequences retrieves consequences ready to trigger
 func (r *NarrativeRepository) GetPendingConsequences(sessionID string, currentTime time.Time) ([]models.ConsequenceEvent, error) {
+	// Calculate time thresholds for database-agnostic queries
+	shortThreshold := currentTime.Add(-1 * time.Hour)
+	mediumThreshold := currentTime.Add(-24 * time.Hour)
+	longThreshold := currentTime.Add(-7 * 24 * time.Hour)
+
 	query := `
 		SELECT ce.id, ce.trigger_action_id, ce.trigger_type, ce.description,
 			   ce.severity, ce.delay, ce.actual_trigger_time, ce.affected_entities,
 			   ce.cascade_effects, ce.status, ce.metadata, ce.created_at
 		FROM consequence_events ce
 		JOIN player_actions pa ON ce.trigger_action_id = pa.id
-		WHERE pa.session_id = $1 
+		WHERE pa.session_id = ? 
 		  AND ce.status = 'pending'
 		  AND (
 			(ce.delay = 'immediate') OR
-			(ce.delay = 'short' AND ce.created_at < $2 - INTERVAL '1 hour') OR
-			(ce.delay = 'medium' AND ce.created_at < $2 - INTERVAL '1 day') OR
-			(ce.delay = 'long' AND ce.created_at < $2 - INTERVAL '1 week')
+			(ce.delay = 'short' AND ce.created_at < ?) OR
+			(ce.delay = 'medium' AND ce.created_at < ?) OR
+			(ce.delay = 'long' AND ce.created_at < ?)
 		  )
 		ORDER BY ce.severity DESC`
 
-	rows, err := r.db.Query(query, sessionID, currentTime)
+	query = r.db.Rebind(query)
+	rows, err := r.db.Query(query, sessionID, shortThreshold, mediumThreshold, longThreshold)
 	if err != nil {
 		return nil, err
 	}
@@ -379,8 +392,9 @@ func (r *NarrativeRepository) CreateNarrativeEvent(event *models.NarrativeEvent)
 			id, type, name, description, location, timestamp,
 			participants, witnesses, immediate_effects, player_involvement,
 			status, metadata
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
+	query = r.db.Rebind(query)
 	_, err = r.db.Exec(
 		query,
 		event.ID,
@@ -420,8 +434,9 @@ func (r *NarrativeRepository) CreatePerspectiveNarrative(perspective *models.Per
 			id, event_id, perspective_type, source_id, source_name,
 			narrative, bias, truth_level, hidden_details, contradictions,
 			emotional_tone, cultural_context, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
+	query = r.db.Rebind(query)
 	_, err = r.db.Exec(
 		query,
 		perspective.ID,
@@ -449,9 +464,10 @@ func (r *NarrativeRepository) GetEventPerspectives(eventID string) ([]models.Per
 			   narrative, bias, truth_level, hidden_details, contradictions,
 			   emotional_tone, cultural_context, created_at
 		FROM perspective_narratives
-		WHERE event_id = $1
+		WHERE event_id = ?
 		ORDER BY created_at`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.Query(query, eventID)
 	if err != nil {
 		return nil, err
@@ -513,8 +529,9 @@ func (r *NarrativeRepository) CreateNarrativeMemory(memory *models.NarrativeMemo
 			id, session_id, character_id, memory_type, content,
 			emotional_weight, connections, active, last_referenced,
 			reference_count, tags, metadata, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
+	query = r.db.Rebind(query)
 	_, err = r.db.Exec(
 		query,
 		memory.ID,
@@ -542,10 +559,11 @@ func (r *NarrativeRepository) GetActiveMemories(characterID string, limit int) (
 			   emotional_weight, connections, active, last_referenced,
 			   reference_count, tags, metadata, created_at
 		FROM narrative_memories
-		WHERE character_id = $1 AND active = true
+		WHERE character_id = ? AND active = true
 		ORDER BY emotional_weight DESC, last_referenced DESC
-		LIMIT $2`
+		LIMIT ?`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.Query(query, characterID, limit)
 	if err != nil {
 		return nil, err
@@ -590,9 +608,10 @@ func (r *NarrativeRepository) GetActiveMemories(characterID string, limit int) (
 func (r *NarrativeRepository) UpdateConsequenceStatus(consequenceID string, status string, triggerTime *time.Time) error {
 	query := `
 		UPDATE consequence_events
-		SET status = $1, actual_trigger_time = $2
-		WHERE id = $3`
+		SET status = ?, actual_trigger_time = ?
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.Exec(query, status, triggerTime, consequenceID)
 	return err
 }
@@ -602,8 +621,9 @@ func (r *NarrativeRepository) IncrementBackstoryUsage(elementID string) error {
 	query := `
 		UPDATE backstory_elements
 		SET used = true, usage_count = usage_count + 1
-		WHERE id = $1`
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.Exec(query, elementID)
 	return err
 }
@@ -624,8 +644,9 @@ func (r *NarrativeRepository) CreateNarrativeThread(thread *models.NarrativeThre
 			id, name, description, thread_type, status,
 			connected_events, key_participants, tension_level,
 			resolution_proximity, created_at, updated_at, metadata
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
+	query = r.db.Rebind(query)
 	_, err = r.db.Exec(
 		query,
 		thread.ID,
@@ -656,6 +677,7 @@ func (r *NarrativeRepository) GetActiveNarrativeThreads() ([]models.NarrativeThr
 		WHERE status IN ('active', 'dormant')
 		ORDER BY tension_level DESC`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err

@@ -6,15 +6,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type inventoryRepository struct {
-	db *sqlx.DB
+	db *DB
 }
 
-func NewInventoryRepository(db *sqlx.DB) InventoryRepository {
+func NewInventoryRepository(db *DB) InventoryRepository {
 	return &inventoryRepository{db: db}
 }
 
@@ -28,9 +27,9 @@ func (r *inventoryRepository) CreateItem(item *models.Item) error {
 	query := `
 		INSERT INTO items (id, name, type, rarity, weight, value, properties, 
 			requires_attunement, attunement_requirements, description, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	_, err := r.db.Exec(query, item.ID, item.Name, item.Type, item.Rarity, item.Weight,
+	_, err := r.db.ExecRebind(query, item.ID, item.Name, item.Type, item.Rarity, item.Weight,
 		item.Value, item.Properties, item.RequiresAttunement, item.AttunementRequirements,
 		item.Description, item.CreatedAt, item.UpdatedAt)
 	return err
@@ -43,9 +42,9 @@ func (r *inventoryRepository) GetItem(itemID string) (*models.Item, error) {
 	query := `
 		SELECT id, name, type, rarity, weight, value, properties, 
 			requires_attunement, attunement_requirements, description, created_at, updated_at
-		FROM items WHERE id = $1
+		FROM items WHERE id = ?
 	`
-	err := r.db.QueryRow(query, itemID).Scan(
+	err := r.db.QueryRowRebind(query, itemID).Scan(
 		&item.ID, &item.Name, &item.Type, &item.Rarity, &item.Weight, &item.Value,
 		&item.Properties, &item.RequiresAttunement, &attunementReq, &description,
 		&item.CreatedAt, &item.UpdatedAt,
@@ -72,9 +71,10 @@ func (r *inventoryRepository) GetItemsByType(itemType models.ItemType) ([]*model
 	query := `
 		SELECT id, name, type, rarity, weight, value, properties, 
 			requires_attunement, attunement_requirements, description, created_at, updated_at
-		FROM items WHERE type = $1 ORDER BY name
+		FROM items WHERE type = ? ORDER BY name
 	`
 	
+	query = r.db.Rebind(query)
 	rows, err := r.db.Query(query, itemType)
 	if err != nil {
 		return nil, err
@@ -116,13 +116,13 @@ func (r *inventoryRepository) AddItemToInventory(characterID, itemID string, qua
 	// SQLite requires different syntax for upsert
 	query := `
 		INSERT INTO character_inventory (id, character_id, item_id, quantity, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT (character_id, item_id) 
 		DO UPDATE SET 
 			quantity = character_inventory.quantity + excluded.quantity,
 			updated_at = excluded.updated_at
 	`
-	_, err := r.db.Exec(query, id, characterID, itemID, quantity, now, now)
+	_, err := r.db.ExecRebind(query, id, characterID, itemID, quantity, now, now)
 	if err != nil {
 		return err
 	}
@@ -138,16 +138,21 @@ func (r *inventoryRepository) RemoveItemFromInventory(characterID, itemID string
 	defer tx.Rollback()
 
 	var currentQty int
-	err = tx.Get(&currentQty, `SELECT quantity FROM character_inventory WHERE character_id = $1 AND item_id = $2`, characterID, itemID)
+	query := `SELECT quantity FROM character_inventory WHERE character_id = ? AND item_id = ?`
+	query = r.db.Rebind(query)
+	err = tx.Get(&currentQty, query, characterID, itemID)
 	if err != nil {
 		return err
 	}
 
 	if currentQty <= quantity {
-		_, err = tx.Exec(`DELETE FROM character_inventory WHERE character_id = $1 AND item_id = $2`, characterID, itemID)
+		query := `DELETE FROM character_inventory WHERE character_id = ? AND item_id = ?`
+		query = r.db.Rebind(query)
+		_, err = tx.Exec(query, characterID, itemID)
 	} else {
-		_, err = tx.Exec(`UPDATE character_inventory SET quantity = quantity - $3, updated_at = $4 WHERE character_id = $1 AND item_id = $2`,
-			characterID, itemID, quantity, time.Now())
+		query := `UPDATE character_inventory SET quantity = quantity - ?, updated_at = ? WHERE character_id = ? AND item_id = ?`
+		query = r.db.Rebind(query)
+		_, err = tx.Exec(query, quantity, time.Now(), characterID, itemID)
 	}
 	if err != nil {
 		return err
@@ -248,12 +253,16 @@ func (r *inventoryRepository) AttuneItem(characterID, itemID string) error {
 	defer tx.Rollback()
 
 	var slotsUsed, maxSlots int
-	err = tx.Get(&slotsUsed, `SELECT attunement_slots_used FROM characters WHERE id = $1`, characterID)
+	query := `SELECT attunement_slots_used FROM characters WHERE id = ?`
+	query = r.db.Rebind(query)
+	err = tx.Get(&slotsUsed, query, characterID)
 	if err != nil {
 		return err
 	}
 	
-	err = tx.Get(&maxSlots, `SELECT attunement_slots_max FROM characters WHERE id = $1`, characterID)
+	query = `SELECT attunement_slots_max FROM characters WHERE id = ?`
+	query = r.db.Rebind(query)
+	err = tx.Get(&maxSlots, query, characterID)
 	if err != nil {
 		return err
 	}
@@ -263,7 +272,9 @@ func (r *inventoryRepository) AttuneItem(characterID, itemID string) error {
 	}
 
 	var requiresAttunement bool
-	err = tx.Get(&requiresAttunement, `SELECT requires_attunement FROM items WHERE id = $1`, itemID)
+	query = `SELECT requires_attunement FROM items WHERE id = ?`
+	query = r.db.Rebind(query)
+	err = tx.Get(&requiresAttunement, query, itemID)
 	if err != nil {
 		return err
 	}
@@ -272,13 +283,16 @@ func (r *inventoryRepository) AttuneItem(characterID, itemID string) error {
 		return fmt.Errorf("item does not require attunement")
 	}
 
-	_, err = tx.Exec(`UPDATE character_inventory SET attuned = true, updated_at = $3 WHERE character_id = $1 AND item_id = $2`,
-		characterID, itemID, time.Now())
+	query = `UPDATE character_inventory SET attuned = true, updated_at = ? WHERE character_id = ? AND item_id = ?`
+	query = r.db.Rebind(query)
+	_, err = tx.Exec(query, time.Now(), characterID, itemID)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(`UPDATE characters SET attunement_slots_used = attunement_slots_used + 1 WHERE id = $1`, characterID)
+	query = `UPDATE characters SET attunement_slots_used = attunement_slots_used + 1 WHERE id = ?`
+	query = r.db.Rebind(query)
+	_, err = tx.Exec(query, characterID)
 	if err != nil {
 		return err
 	}
@@ -293,13 +307,16 @@ func (r *inventoryRepository) UnattuneItem(characterID, itemID string) error {
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec(`UPDATE character_inventory SET attuned = false, updated_at = $3 WHERE character_id = $1 AND item_id = $2`,
-		characterID, itemID, time.Now())
+	query := `UPDATE character_inventory SET attuned = false, updated_at = ? WHERE character_id = ? AND item_id = ?`
+	query = r.db.Rebind(query)
+	_, err = tx.Exec(query, time.Now(), characterID, itemID)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(`UPDATE characters SET attunement_slots_used = attunement_slots_used - 1 WHERE id = $1`, characterID)
+	query = `UPDATE characters SET attunement_slots_used = attunement_slots_used - 1 WHERE id = ?`
+	query = r.db.Rebind(query)
+	_, err = tx.Exec(query, characterID)
 	if err != nil {
 		return err
 	}
@@ -309,7 +326,8 @@ func (r *inventoryRepository) UnattuneItem(characterID, itemID string) error {
 
 func (r *inventoryRepository) GetCharacterCurrency(characterID string) (*models.Currency, error) {
 	var currency models.Currency
-	query := `SELECT * FROM character_currency WHERE character_id = $1`
+	query := `SELECT * FROM character_currency WHERE character_id = ?`
+	query = r.db.Rebind(query)
 	err := r.db.Get(&currency, query, characterID)
 	if err == sql.ErrNoRows {
 		currency = models.Currency{
@@ -328,9 +346,9 @@ func (r *inventoryRepository) GetCharacterCurrency(characterID string) (*models.
 func (r *inventoryRepository) CreateCharacterCurrency(currency *models.Currency) error {
 	query := `
 		INSERT INTO character_currency (character_id, copper, silver, electrum, gold, platinum, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	_, err := r.db.Exec(query, currency.CharacterID, currency.Copper, currency.Silver,
+	_, err := r.db.ExecRebind(query, currency.CharacterID, currency.Copper, currency.Silver,
 		currency.Electrum, currency.Gold, currency.Platinum, currency.CreatedAt, currency.UpdatedAt)
 	return err
 }
@@ -339,11 +357,11 @@ func (r *inventoryRepository) UpdateCharacterCurrency(currency *models.Currency)
 	currency.UpdatedAt = time.Now()
 	query := `
 		UPDATE character_currency 
-		SET copper = $2, silver = $3, electrum = $4, gold = $5, platinum = $6, updated_at = $7
-		WHERE character_id = $1
+		SET copper = ?, silver = ?, electrum = ?, gold = ?, platinum = ?, updated_at = ?
+		WHERE character_id = ?
 	`
-	_, err := r.db.Exec(query, currency.CharacterID, currency.Copper, currency.Silver,
-		currency.Electrum, currency.Gold, currency.Platinum, currency.UpdatedAt)
+	_, err := r.db.ExecRebind(query, currency.Copper, currency.Silver,
+		currency.Electrum, currency.Gold, currency.Platinum, currency.UpdatedAt, currency.CharacterID)
 	return err
 }
 
@@ -354,11 +372,11 @@ func (r *inventoryRepository) updateCharacterWeight(characterID string) error {
 			SELECT COALESCE(SUM(i.weight * ci.quantity), 0)
 			FROM character_inventory ci
 			JOIN items i ON ci.item_id = i.id
-			WHERE ci.character_id = $1
+			WHERE ci.character_id = ?
 		)
-		WHERE id = $1
+		WHERE id = ?
 	`
-	_, err := r.db.Exec(query, characterID)
+	_, err := r.db.ExecRebind(query, characterID, characterID)
 	return err
 }
 
@@ -367,9 +385,9 @@ func (r *inventoryRepository) GetCharacterWeight(characterID string) (*models.In
 	query := `
 		SELECT current_weight, carry_capacity 
 		FROM characters 
-		WHERE id = $1
+		WHERE id = ?
 	`
-	err := r.db.QueryRow(query, characterID).Scan(&weight.CurrentWeight, &weight.CarryCapacity)
+	err := r.db.QueryRowRebind(query, characterID).Scan(&weight.CurrentWeight, &weight.CarryCapacity)
 	if err != nil {
 		return nil, err
 	}

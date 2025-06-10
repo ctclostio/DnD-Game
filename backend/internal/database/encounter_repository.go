@@ -1,7 +1,7 @@
 package database
 
 import (
-	"database/sql"
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -10,10 +10,10 @@ import (
 )
 
 type EncounterRepository struct {
-	db *sql.DB
+	db *DB
 }
 
-func NewEncounterRepository(db *sql.DB) *EncounterRepository {
+func NewEncounterRepository(db *DB) *EncounterRepository {
 	return &EncounterRepository{db: db}
 }
 
@@ -41,12 +41,12 @@ func (r *EncounterRepository) Create(encounter *models.Encounter) error {
 			social_solutions, stealth_options, environmental_solutions,
 			scaling_options, reinforcement_waves, escape_routes
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-			$14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 		) RETURNING id, created_at, updated_at`
 
-	err := r.db.QueryRow(
-		query,
+	err := r.db.QueryRowContextRebind(
+		context.Background(), query,
 		encounter.GameSessionID,
 		encounter.CreatedBy,
 		encounter.Name,
@@ -107,12 +107,12 @@ func (r *EncounterRepository) CreateEncounterEnemy(enemy *models.EncounterEnemy)
 			tactics, morale_threshold, initial_position, current_position,
 			conditions, is_alive, fled
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-			$14, $15, $16, $17, $18, $19, $20, $21, $22, $23
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 		) RETURNING id`
 
-	err := r.db.QueryRow(
-		query,
+	err := r.db.QueryRowContextRebind(
+		context.Background(), query,
 		enemy.EncounterID,
 		enemy.NPCID,
 		enemy.Name,
@@ -153,7 +153,7 @@ func (r *EncounterRepository) GetByID(id string) (*models.Encounter, error) {
 			status, started_at, completed_at, outcome,
 			created_at, updated_at
 		FROM encounters
-		WHERE id = $1`
+		WHERE id = ?`
 
 	var encounter models.Encounter
 	var partyComposition, enemies, enemyTactics, environmentalHazards,
@@ -161,7 +161,7 @@ func (r *EncounterRepository) GetByID(id string) (*models.Encounter, error) {
 		environmentalSolutions, scalingOptions, reinforcementWaves,
 		escapeRoutes []byte
 
-	err := r.db.QueryRow(query, id).Scan(
+	err := r.db.QueryRowContextRebind(context.Background(), query, id).Scan(
 		&encounter.ID,
 		&encounter.GameSessionID,
 		&encounter.CreatedBy,
@@ -231,9 +231,9 @@ func (r *EncounterRepository) getEncounterEnemies(encounterID string) ([]models.
 			tactics, morale_threshold, initial_position, current_position,
 			conditions, is_alive, fled
 		FROM encounter_enemies
-		WHERE encounter_id = $1`
+		WHERE encounter_id = ?`
 
-	rows, err := r.db.Query(query, encounterID)
+	rows, err := r.db.QueryContextRebind(context.Background(), query, encounterID)
 	if err != nil {
 		return nil, err
 	}
@@ -295,10 +295,10 @@ func (r *EncounterRepository) GetByGameSession(gameSessionID string) ([]*models.
 		SELECT id, name, description, location, encounter_type,
 			difficulty, challenge_rating, status, created_at
 		FROM encounters
-		WHERE game_session_id = $1
+		WHERE game_session_id = ?
 		ORDER BY created_at DESC`
 
-	rows, err := r.db.Query(query, gameSessionID)
+	rows, err := r.db.QueryContextRebind(context.Background(), query, gameSessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -328,8 +328,8 @@ func (r *EncounterRepository) GetByGameSession(gameSessionID string) ([]*models.
 }
 
 func (r *EncounterRepository) UpdateStatus(id string, status string) error {
-	query := `UPDATE encounters SET status = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $1`
-	_, err := r.db.Exec(query, id, status)
+	query := `UPDATE encounters SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+	_, err := r.db.ExecContextRebind(context.Background(), query, status, id)
 	return err
 }
 
@@ -337,8 +337,8 @@ func (r *EncounterRepository) StartEncounter(id string) error {
 	query := `
 		UPDATE encounters 
 		SET status = 'active', started_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
-		WHERE id = $1`
-	_, err := r.db.Exec(query, id)
+		WHERE id = ?`
+	_, err := r.db.ExecContextRebind(context.Background(), query, id)
 	return err
 }
 
@@ -346,9 +346,9 @@ func (r *EncounterRepository) CompleteEncounter(id string, outcome string) error
 	query := `
 		UPDATE encounters 
 		SET status = 'completed', completed_at = CURRENT_TIMESTAMP, 
-			outcome = $2, updated_at = CURRENT_TIMESTAMP 
-		WHERE id = $1`
-	_, err := r.db.Exec(query, id, outcome)
+			outcome = ?, updated_at = CURRENT_TIMESTAMP 
+		WHERE id = ?`
+	_, err := r.db.ExecContextRebind(context.Background(), query, outcome, id)
 	return err
 }
 
@@ -361,11 +361,11 @@ func (r *EncounterRepository) CreateEvent(event *models.EncounterEvent) error {
 			actor_id, actor_name, description, mechanical_effect,
 			ai_suggestion, suggestion_used
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 		) RETURNING id, created_at`
 
-	err := r.db.QueryRow(
-		query,
+	err := r.db.QueryRowContextRebind(
+		context.Background(), query,
 		event.EncounterID,
 		event.RoundNumber,
 		event.EventType,
@@ -387,11 +387,11 @@ func (r *EncounterRepository) GetEvents(encounterID string, limit int) ([]*model
 			actor_id, actor_name, description, mechanical_effect,
 			ai_suggestion, suggestion_used, created_at
 		FROM encounter_events
-		WHERE encounter_id = $1
+		WHERE encounter_id = ?
 		ORDER BY created_at DESC
-		LIMIT $2`
+		LIMIT ?`
 
-	rows, err := r.db.Query(query, encounterID, limit)
+	rows, err := r.db.QueryContextRebind(context.Background(), query, encounterID, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -431,20 +431,19 @@ func (r *EncounterRepository) GetEvents(encounterID string, limit int) ([]*model
 func (r *EncounterRepository) UpdateEnemyStatus(enemyID string, updates map[string]interface{}) error {
 	// Build dynamic update query
 	setClause := ""
-	args := []interface{}{enemyID}
-	argCount := 2
+	args := []interface{}{}
 
 	for key, value := range updates {
 		if setClause != "" {
 			setClause += ", "
 		}
-		setClause += fmt.Sprintf("%s = $%d", key, argCount)
+		setClause += fmt.Sprintf("%s = ?", key)
 		args = append(args, value)
-		argCount++
 	}
 
-	query := fmt.Sprintf("UPDATE encounter_enemies SET %s WHERE id = $1", setClause)
-	_, err := r.db.Exec(query, args...)
+	args = append(args, enemyID)
+	query := fmt.Sprintf("UPDATE encounter_enemies SET %s WHERE id = ?", setClause)
+	_, err := r.db.ExecContextRebind(context.Background(), query, args...)
 	return err
 }
 
@@ -459,11 +458,11 @@ func (r *EncounterRepository) CreateObjective(objective *models.EncounterObjecti
 			failure_conditions, xp_reward, gold_reward, item_rewards,
 			story_rewards
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9
+			?, ?, ?, ?, ?, ?, ?, ?, ?
 		) RETURNING id, created_at`
 
-	err := r.db.QueryRow(
-		query,
+	err := r.db.QueryRowContextRebind(
+		context.Background(), query,
 		objective.EncounterID,
 		objective.Type,
 		objective.Description,
@@ -484,9 +483,9 @@ func (r *EncounterRepository) GetObjectives(encounterID string) ([]*models.Encou
 			failure_conditions, xp_reward, gold_reward, item_rewards,
 			story_rewards, is_completed, is_failed, completed_at, created_at
 		FROM encounter_objectives
-		WHERE encounter_id = $1`
+		WHERE encounter_id = ?`
 
-	rows, err := r.db.Query(query, encounterID)
+	rows, err := r.db.QueryContextRebind(context.Background(), query, encounterID)
 	if err != nil {
 		return nil, err
 	}
@@ -532,8 +531,8 @@ func (r *EncounterRepository) CompleteObjective(id string) error {
 	query := `
 		UPDATE encounter_objectives 
 		SET is_completed = true, completed_at = CURRENT_TIMESTAMP 
-		WHERE id = $1`
-	_, err := r.db.Exec(query, id)
+		WHERE id = ?`
+	_, err := r.db.ExecContextRebind(context.Background(), query, id)
 	return err
 }
 
@@ -541,7 +540,7 @@ func (r *EncounterRepository) FailObjective(id string) error {
 	query := `
 		UPDATE encounter_objectives 
 		SET is_failed = true, completed_at = CURRENT_TIMESTAMP 
-		WHERE id = $1`
-	_, err := r.db.Exec(query, id)
+		WHERE id = ?`
+	_, err := r.db.ExecContextRebind(context.Background(), query, id)
 	return err
 }

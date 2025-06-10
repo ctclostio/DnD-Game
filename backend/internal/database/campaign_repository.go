@@ -85,7 +85,8 @@ func (r *campaignRepository) CreateStoryArc(arc *models.StoryArc) error {
 
 func (r *campaignRepository) GetStoryArc(id uuid.UUID) (*models.StoryArc, error) {
 	var arc models.StoryArc
-	query := `SELECT * FROM story_arcs WHERE id = $1`
+	query := `SELECT * FROM story_arcs WHERE id = ?`
+	query = r.db.Rebind(query)
 	err := r.db.Get(&arc, query, id)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("story arc not found")
@@ -97,8 +98,9 @@ func (r *campaignRepository) GetStoryArcsBySession(sessionID uuid.UUID) ([]*mode
 	var arcs []*models.StoryArc
 	query := `
 		SELECT * FROM story_arcs 
-		WHERE game_session_id = $1 
+		WHERE game_session_id = ? 
 		ORDER BY importance_level DESC, created_at DESC`
+	query = r.db.Rebind(query)
 	err := r.db.Select(&arcs, query, sessionID)
 	return arcs, err
 }
@@ -106,12 +108,15 @@ func (r *campaignRepository) GetStoryArcsBySession(sessionID uuid.UUID) ([]*mode
 func (r *campaignRepository) UpdateStoryArc(id uuid.UUID, updates map[string]interface{}) error {
 	updates["updated_at"] = time.Now()
 	query, args := buildUpdateQuery("story_arcs", id, updates)
+	query = r.db.Rebind(query)
 	_, err := r.db.Exec(query, args...)
 	return err
 }
 
 func (r *campaignRepository) DeleteStoryArc(id uuid.UUID) error {
-	_, err := r.db.Exec(`DELETE FROM story_arcs WHERE id = $1`, id)
+	query := `DELETE FROM story_arcs WHERE id = ?`
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query, id)
 	return err
 }
 
@@ -139,7 +144,8 @@ func (r *campaignRepository) CreateSessionMemory(memory *models.SessionMemory) e
 
 func (r *campaignRepository) GetSessionMemory(id uuid.UUID) (*models.SessionMemory, error) {
 	var memory models.SessionMemory
-	query := `SELECT * FROM session_memories WHERE id = $1`
+	query := `SELECT * FROM session_memories WHERE id = ?`
+	query = r.db.Rebind(query)
 	err := r.db.Get(&memory, query, id)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("session memory not found")
@@ -151,9 +157,10 @@ func (r *campaignRepository) GetSessionMemories(sessionID uuid.UUID, limit int) 
 	var memories []*models.SessionMemory
 	query := `
 		SELECT * FROM session_memories 
-		WHERE game_session_id = $1 
+		WHERE game_session_id = ? 
 		ORDER BY session_date DESC
-		LIMIT $2`
+		LIMIT ?`
+	query = r.db.Rebind(query)
 	err := r.db.Select(&memories, query, sessionID, limit)
 	return memories, err
 }
@@ -162,9 +169,10 @@ func (r *campaignRepository) GetLatestSessionMemory(sessionID uuid.UUID) (*model
 	var memory models.SessionMemory
 	query := `
 		SELECT * FROM session_memories 
-		WHERE game_session_id = $1 
+		WHERE game_session_id = ? 
 		ORDER BY session_date DESC 
 		LIMIT 1`
+	query = r.db.Rebind(query)
 	err := r.db.Get(&memory, query, sessionID)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -175,6 +183,7 @@ func (r *campaignRepository) GetLatestSessionMemory(sessionID uuid.UUID) (*model
 func (r *campaignRepository) UpdateSessionMemory(id uuid.UUID, updates map[string]interface{}) error {
 	updates["updated_at"] = time.Now()
 	query, args := buildUpdateQuery("session_memories", id, updates)
+	query = r.db.Rebind(query)
 	_, err := r.db.Exec(query, args...)
 	return err
 }
@@ -211,7 +220,8 @@ func (r *campaignRepository) CreatePlotThread(thread *models.PlotThread) error {
 
 func (r *campaignRepository) GetPlotThread(id uuid.UUID) (*models.PlotThread, error) {
 	var thread models.PlotThread
-	query := `SELECT * FROM plot_threads WHERE id = $1`
+	query := `SELECT * FROM plot_threads WHERE id = ?`
+	query = r.db.Rebind(query)
 	err := r.db.Get(&thread, query, id)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("plot thread not found")
@@ -223,8 +233,9 @@ func (r *campaignRepository) GetPlotThreadsBySession(sessionID uuid.UUID) ([]*mo
 	var threads []*models.PlotThread
 	query := `
 		SELECT * FROM plot_threads 
-		WHERE game_session_id = $1 
+		WHERE game_session_id = ? 
 		ORDER BY tension_level DESC, created_at DESC`
+	query = r.db.Rebind(query)
 	err := r.db.Select(&threads, query, sessionID)
 	return threads, err
 }
@@ -233,8 +244,9 @@ func (r *campaignRepository) GetActivePlotThreads(sessionID uuid.UUID) ([]*model
 	var threads []*models.PlotThread
 	query := `
 		SELECT * FROM plot_threads 
-		WHERE game_session_id = $1 AND status = 'active'
+		WHERE game_session_id = ? AND status = 'active'
 		ORDER BY tension_level DESC, created_at DESC`
+	query = r.db.Rebind(query)
 	err := r.db.Select(&threads, query, sessionID)
 	return threads, err
 }
@@ -242,12 +254,15 @@ func (r *campaignRepository) GetActivePlotThreads(sessionID uuid.UUID) ([]*model
 func (r *campaignRepository) UpdatePlotThread(id uuid.UUID, updates map[string]interface{}) error {
 	updates["updated_at"] = time.Now()
 	query, args := buildUpdateQuery("plot_threads", id, updates)
+	query = r.db.Rebind(query)
 	_, err := r.db.Exec(query, args...)
 	return err
 }
 
 func (r *campaignRepository) DeletePlotThread(id uuid.UUID) error {
-	_, err := r.db.Exec(`DELETE FROM plot_threads WHERE id = $1`, id)
+	query := `DELETE FROM plot_threads WHERE id = ?`
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query, id)
 	return err
 }
 
@@ -278,7 +293,8 @@ func (r *campaignRepository) CreateForeshadowingElement(element *models.Foreshad
 
 func (r *campaignRepository) GetForeshadowingElement(id uuid.UUID) (*models.ForeshadowingElement, error) {
 	var element models.ForeshadowingElement
-	query := `SELECT * FROM foreshadowing_elements WHERE id = $1`
+	query := `SELECT * FROM foreshadowing_elements WHERE id = ?`
+	query = r.db.Rebind(query)
 	err := r.db.Get(&element, query, id)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("foreshadowing element not found")
@@ -290,8 +306,9 @@ func (r *campaignRepository) GetUnrevealedForeshadowing(sessionID uuid.UUID) ([]
 	var elements []*models.ForeshadowingElement
 	query := `
 		SELECT * FROM foreshadowing_elements 
-		WHERE game_session_id = $1 AND revealed = false
+		WHERE game_session_id = ? AND revealed = false
 		ORDER BY subtlety_level ASC, created_at ASC`
+	query = r.db.Rebind(query)
 	err := r.db.Select(&elements, query, sessionID)
 	return elements, err
 }
@@ -299,9 +316,10 @@ func (r *campaignRepository) GetUnrevealedForeshadowing(sessionID uuid.UUID) ([]
 func (r *campaignRepository) RevealForeshadowing(id uuid.UUID, sessionNumber int) error {
 	query := `
 		UPDATE foreshadowing_elements 
-		SET revealed = true, revealed_session = $2, updated_at = $3
-		WHERE id = $1`
-	_, err := r.db.Exec(query, id, sessionNumber, time.Now())
+		SET revealed = true, revealed_session = ?, updated_at = ?
+		WHERE id = ?`
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query, sessionNumber, time.Now(), id)
 	return err
 }
 
@@ -334,9 +352,10 @@ func (r *campaignRepository) GetTimelineEvents(sessionID uuid.UUID, startDate, e
 	var events []*models.CampaignTimeline
 	query := `
 		SELECT * FROM campaign_timeline 
-		WHERE game_session_id = $1 
-		AND event_date BETWEEN $2 AND $3
+		WHERE game_session_id = ? 
+		AND event_date BETWEEN ? AND ?
 		ORDER BY event_date ASC`
+	query = r.db.Rebind(query)
 	err := r.db.Select(&events, query, sessionID, startDate, endDate)
 	return events, err
 }
@@ -344,27 +363,54 @@ func (r *campaignRepository) GetTimelineEvents(sessionID uuid.UUID, startDate, e
 // NPC Relationship methods
 
 func (r *campaignRepository) CreateOrUpdateNPCRelationship(relationship *models.NPCRelationship) error {
-	query := `
-		INSERT INTO npc_relationships (
-			id, game_session_id, npc_id, target_type, target_id,
-			relationship_type, relationship_score, last_interaction_session,
-			interaction_history
-		) VALUES (
-			:id, :game_session_id, :npc_id, :target_type, :target_id,
-			:relationship_type, :relationship_score, :last_interaction_session,
-			:interaction_history
-		) ON CONFLICT (game_session_id, npc_id, target_id) DO UPDATE SET
-			relationship_type = EXCLUDED.relationship_type,
-			relationship_score = EXCLUDED.relationship_score,
-			last_interaction_session = EXCLUDED.last_interaction_session,
-			interaction_history = EXCLUDED.interaction_history,
-			updated_at = CURRENT_TIMESTAMP`
-
 	if relationship.ID == uuid.Nil {
 		relationship.ID = uuid.New()
 	}
 
-	_, err := r.db.NamedExec(query, relationship)
+	// First, try to find existing relationship
+	var existingID uuid.UUID
+	checkQuery := `
+		SELECT id FROM npc_relationships 
+		WHERE game_session_id = ? AND npc_id = ? AND target_id = ?`
+	checkQuery = r.db.Rebind(checkQuery)
+	err := r.db.Get(&existingID, checkQuery, relationship.GameSessionID, relationship.NPCID, relationship.TargetID)
+
+	if err == sql.ErrNoRows {
+		// Insert new relationship
+		insertQuery := `
+			INSERT INTO npc_relationships (
+				id, game_session_id, npc_id, target_type, target_id,
+				relationship_type, relationship_score, last_interaction_session,
+				interaction_history
+			) VALUES (
+				:id, :game_session_id, :npc_id, :target_type, :target_id,
+				:relationship_type, :relationship_score, :last_interaction_session,
+				:interaction_history
+			)`
+		_, err = r.db.NamedExec(insertQuery, relationship)
+		return err
+	} else if err != nil {
+		return err
+	}
+
+	// Update existing relationship
+	updateQuery := `
+		UPDATE npc_relationships SET
+			relationship_type = ?,
+			relationship_score = ?,
+			last_interaction_session = ?,
+			interaction_history = ?,
+			updated_at = ?
+		WHERE id = ?`
+	updateQuery = r.db.Rebind(updateQuery)
+	_, err = r.db.Exec(updateQuery, 
+		relationship.RelationshipType,
+		relationship.RelationshipScore,
+		relationship.LastInteractionSession,
+		relationship.InteractionHistory,
+		time.Now(),
+		existingID,
+	)
 	return err
 }
 
@@ -372,8 +418,9 @@ func (r *campaignRepository) GetNPCRelationships(sessionID uuid.UUID, npcID uuid
 	var relationships []*models.NPCRelationship
 	query := `
 		SELECT * FROM npc_relationships 
-		WHERE game_session_id = $1 AND npc_id = $2
+		WHERE game_session_id = ? AND npc_id = ?
 		ORDER BY relationship_score DESC`
+	query = r.db.Rebind(query)
 	err := r.db.Select(&relationships, query, sessionID, npcID)
 	return relationships, err
 }
@@ -381,10 +428,11 @@ func (r *campaignRepository) GetNPCRelationships(sessionID uuid.UUID, npcID uuid
 func (r *campaignRepository) UpdateRelationshipScore(sessionID, npcID, targetID uuid.UUID, scoreDelta int) error {
 	query := `
 		UPDATE npc_relationships 
-		SET relationship_score = GREATEST(-100, LEAST(100, relationship_score + $4)),
+		SET relationship_score = GREATEST(-100, LEAST(100, relationship_score + ?)),
 		    updated_at = CURRENT_TIMESTAMP
-		WHERE game_session_id = $1 AND npc_id = $2 AND target_id = $3`
-	_, err := r.db.Exec(query, sessionID, npcID, targetID, scoreDelta)
+		WHERE game_session_id = ? AND npc_id = ? AND target_id = ?`
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query, scoreDelta, sessionID, npcID, targetID)
 	return err
 }
 
@@ -392,20 +440,17 @@ func (r *campaignRepository) UpdateRelationshipScore(sessionID, npcID, targetID 
 func buildUpdateQuery(table string, id uuid.UUID, updates map[string]interface{}) (string, []interface{}) {
 	var setClauses []string
 	var args []interface{}
-	argCount := 1
 
 	for column, value := range updates {
-		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", column, argCount))
+		setClauses = append(setClauses, fmt.Sprintf("%s = ?", column))
 		args = append(args, value)
-		argCount++
 	}
 
 	args = append(args, id)
 	query := fmt.Sprintf(
-		"UPDATE %s SET %s WHERE id = $%d",
+		"UPDATE %s SET %s WHERE id = ?",
 		table,
 		joinStrings(setClauses, ", "),
-		argCount,
 	)
 
 	return query, args

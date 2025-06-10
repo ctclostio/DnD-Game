@@ -127,7 +127,7 @@ func main() {
 	combatAnalyticsService := services.NewCombatAnalyticsService(repos.CombatAnalytics, combatService)
 	
 	// World building services
-	worldBuildingRepo := database.NewWorldBuildingRepository(db.StdDB())
+	worldBuildingRepo := database.NewWorldBuildingRepository(db)
 	settlementGenerator := services.NewSettlementGeneratorService(llmProvider, worldBuildingRepo)
 	factionSystem := services.NewFactionSystemService(llmProvider, worldBuildingRepo)
 	worldEventEngine := services.NewWorldEventEngineService(llmProvider, worldBuildingRepo, factionSystem)

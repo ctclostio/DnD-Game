@@ -81,10 +81,11 @@ func (r *dmAssistantRepository) SaveNPC(ctx context.Context, npc *models.AINPC) 
 			relationship_to_party, stat_block, generated_dialogue,
 			created_by, is_recurring, notes
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-			$11, $12, $13, $14, $15, $16, $17
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?
 		)`
 
+	query = r.db.Rebind(query)
 	_, err = r.db.ExecContext(ctx, query,
 		npc.ID, npc.GameSessionID, npc.Name, npc.Race, npc.Occupation,
 		personalityJSON, npc.Appearance, npc.VoiceDescription,
@@ -109,8 +110,9 @@ func (r *dmAssistantRepository) GetNPCByID(ctx context.Context, id uuid.UUID) (*
 			created_by, is_recurring, last_seen_session, notes,
 			created_at, updated_at
 		FROM ai_npcs
-		WHERE id = $1`
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&npc.ID, &npc.GameSessionID, &npc.Name, &npc.Race, &npc.Occupation,
 		&personalityJSON, &npc.Appearance, &npc.VoiceDescription,
@@ -150,9 +152,10 @@ func (r *dmAssistantRepository) GetNPCsBySession(ctx context.Context, sessionID 
 			created_by, is_recurring, last_seen_session, notes,
 			created_at, updated_at
 		FROM ai_npcs
-		WHERE game_session_id = $1
+		WHERE game_session_id = ?
 		ORDER BY created_at DESC`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.QueryContext(ctx, query, sessionID)
 	if err != nil {
 		return nil, err
@@ -178,22 +181,24 @@ func (r *dmAssistantRepository) UpdateNPC(ctx context.Context, npc *models.AINPC
 
 	query := `
 		UPDATE ai_npcs SET
-			name = $2, race = $3, occupation = $4,
-			personality_traits = $5, appearance = $6,
-			voice_description = $7, motivations = $8,
-			secrets = $9, dialogue_style = $10,
-			relationship_to_party = $11, stat_block = $12,
-			generated_dialogue = $13, is_recurring = $14,
-			last_seen_session = $15, notes = $16,
+			name = ?, race = ?, occupation = ?,
+			personality_traits = ?, appearance = ?,
+			voice_description = ?, motivations = ?,
+			secrets = ?, dialogue_style = ?,
+			relationship_to_party = ?, stat_block = ?,
+			generated_dialogue = ?, is_recurring = ?,
+			last_seen_session = ?, notes = ?,
 			updated_at = CURRENT_TIMESTAMP
-		WHERE id = $1`
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query,
-		npc.ID, npc.Name, npc.Race, npc.Occupation,
+		npc.Name, npc.Race, npc.Occupation,
 		personalityJSON, npc.Appearance, npc.VoiceDescription,
 		npc.Motivations, npc.Secrets, npc.DialogueStyle,
 		npc.RelationshipToParty, statBlockJSON, dialogueJSON,
 		npc.IsRecurring, npc.LastSeenSession, npc.Notes,
+		npc.ID,
 	)
 
 	return err
@@ -229,10 +234,11 @@ func (r *dmAssistantRepository) SaveLocation(ctx context.Context, location *mode
 			environmental_effects, created_by,
 			parent_location_id, is_discovered
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-			$11, $12, $13, $14
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?
 		)`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query,
 		location.ID, location.GameSessionID, location.Name,
 		location.Type, location.Description, location.Atmosphere,
@@ -257,8 +263,9 @@ func (r *dmAssistantRepository) GetLocationByID(ctx context.Context, id uuid.UUI
 			parent_location_id, is_discovered,
 			created_at, updated_at
 		FROM ai_locations
-		WHERE id = $1`
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&location.ID, &location.GameSessionID, &location.Name,
 		&location.Type, &location.Description, &location.Atmosphere,
@@ -291,9 +298,10 @@ func (r *dmAssistantRepository) GetLocationsBySession(ctx context.Context, sessi
 			parent_location_id, is_discovered,
 			created_at, updated_at
 		FROM ai_locations
-		WHERE game_session_id = $1
+		WHERE game_session_id = ?
 		ORDER BY created_at DESC`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.QueryContext(ctx, query, sessionID)
 	if err != nil {
 		return nil, err
@@ -320,20 +328,22 @@ func (r *dmAssistantRepository) UpdateLocation(ctx context.Context, location *mo
 
 	query := `
 		UPDATE ai_locations SET
-			name = $2, type = $3, description = $4,
-			atmosphere = $5, notable_features = $6,
-			npcs_present = $7, available_actions = $8,
-			secrets_and_hidden = $9, environmental_effects = $10,
-			parent_location_id = $11, is_discovered = $12,
+			name = ?, type = ?, description = ?,
+			atmosphere = ?, notable_features = ?,
+			npcs_present = ?, available_actions = ?,
+			secrets_and_hidden = ?, environmental_effects = ?,
+			parent_location_id = ?, is_discovered = ?,
 			updated_at = CURRENT_TIMESTAMP
-		WHERE id = $1`
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query,
-		location.ID, location.Name, location.Type,
+		location.Name, location.Type,
 		location.Description, location.Atmosphere,
 		featuresJSON, npcsJSON, actionsJSON, secretsJSON,
 		location.EnvironmentalEffects, location.ParentLocationID,
 		location.IsDiscovered,
+		location.ID,
 	)
 
 	return err
@@ -350,8 +360,9 @@ func (r *dmAssistantRepository) SaveNarration(ctx context.Context, narration *mo
 			id, game_session_id, type, context,
 			narration, intensity_level, tags,
 			created_by, used_count
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query,
 		narration.ID, narration.GameSessionID, narration.Type,
 		contextJSON, narration.Narration, narration.IntensityLevel,
@@ -367,9 +378,10 @@ func (r *dmAssistantRepository) GetNarrationsByType(ctx context.Context, session
 			narration, intensity_level, tags,
 			created_by, used_count, created_at
 		FROM ai_narrations
-		WHERE game_session_id = $1 AND type = $2
+		WHERE game_session_id = ? AND type = ?
 		ORDER BY created_at DESC`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.QueryContext(ctx, query, sessionID, narrationType)
 	if err != nil {
 		return nil, err
@@ -412,10 +424,11 @@ func (r *dmAssistantRepository) SaveStoryElement(ctx context.Context, element *m
 			prerequisites, consequences, foreshadowing_hints,
 			created_by, used
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-			$11, $12, $13
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?
 		)`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query,
 		element.ID, element.GameSessionID, element.Type,
 		element.Title, element.Description, contextJSON,
@@ -435,9 +448,10 @@ func (r *dmAssistantRepository) GetUnusedStoryElements(ctx context.Context, sess
 			prerequisites, consequences, foreshadowing_hints,
 			created_by, used, used_at, created_at
 		FROM ai_story_elements
-		WHERE game_session_id = $1 AND used = false
+		WHERE game_session_id = ? AND used = false
 		ORDER BY created_at DESC`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.QueryContext(ctx, query, sessionID)
 	if err != nil {
 		return nil, err
@@ -460,8 +474,9 @@ func (r *dmAssistantRepository) MarkStoryElementUsed(ctx context.Context, elemen
 	query := `
 		UPDATE ai_story_elements 
 		SET used = true, used_at = CURRENT_TIMESTAMP
-		WHERE id = $1`
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query, elementID)
 	return err
 }
@@ -477,10 +492,11 @@ func (r *dmAssistantRepository) SaveEnvironmentalHazard(ctx context.Context, haz
 			is_trap, is_natural, reset_condition,
 			created_by, is_active, triggered_count
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-			$11, $12, $13, $14, $15, $16, $17
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?
 		)`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query,
 		hazard.ID, hazard.GameSessionID, hazard.LocationID,
 		hazard.Name, hazard.Description, hazard.TriggerCondition,
@@ -503,9 +519,10 @@ func (r *dmAssistantRepository) GetActiveHazardsByLocation(ctx context.Context, 
 			is_trap, is_natural, reset_condition,
 			created_by, is_active, triggered_count, created_at
 		FROM ai_environmental_hazards
-		WHERE location_id = $1 AND is_active = true
+		WHERE location_id = ? AND is_active = true
 		ORDER BY created_at DESC`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.QueryContext(ctx, query, locationID)
 	if err != nil {
 		return nil, err
@@ -528,8 +545,9 @@ func (r *dmAssistantRepository) TriggerHazard(ctx context.Context, hazardID uuid
 	query := `
 		UPDATE ai_environmental_hazards 
 		SET triggered_count = triggered_count + 1
-		WHERE id = $1`
+		WHERE id = ?`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query, hazardID)
 	return err
 }
@@ -541,8 +559,9 @@ func (r *dmAssistantRepository) SaveHistory(ctx context.Context, history *models
 		INSERT INTO dm_assistant_history (
 			id, game_session_id, user_id, request_type,
 			request_context, prompt, response, feedback
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 
+	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query,
 		history.ID, history.GameSessionID, history.UserID,
 		history.RequestType, contextJSON, history.Prompt,
@@ -559,10 +578,11 @@ func (r *dmAssistantRepository) GetHistoryBySession(ctx context.Context, session
 			request_context, prompt, response, feedback,
 			created_at
 		FROM dm_assistant_history
-		WHERE game_session_id = $1
+		WHERE game_session_id = ?
 		ORDER BY created_at DESC
-		LIMIT $2`
+		LIMIT ?`
 
+	query = r.db.Rebind(query)
 	rows, err := r.db.QueryContext(ctx, query, sessionID, limit)
 	if err != nil {
 		return nil, err
