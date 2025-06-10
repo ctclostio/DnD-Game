@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/your-username/dnd-game/backend/internal/websocket"
+	"github.com/your-username/dnd-game/backend/pkg/errors"
+	"github.com/your-username/dnd-game/backend/pkg/response"
 )
 
 // Handlers holds all HTTP handlers
@@ -53,309 +54,550 @@ func NewHandlers(svc *services.Services, hub *websocket.Hub) *Handlers {
 
 // HealthCheck handles health check requests
 func (h *Handlers) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	response := map[string]interface{}{
+	data := map[string]interface{}{
 		"status": "healthy",
 		"service": "dnd-game-backend",
 	}
 	
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	response.JSON(w, r, http.StatusOK, data)
 }
 
-// Helper function to send JSON response
-func sendJSONResponse(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
-}
-
-// Helper function to send error response
-func sendErrorResponse(w http.ResponseWriter, status int, message string) {
-	response := map[string]string{
-		"error": message,
-	}
-	sendJSONResponse(w, status, response)
-}
 
 // Combat automation methods (stubs for now)
 func (h *Handlers) AutomateCombat(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Combat automation not implemented")
+	response.BadRequest(w, r, "Combat automation not implemented")
 }
 
 func (h *Handlers) GetCombatSuggestion(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Combat suggestions not implemented")
+	response.BadRequest(w, r, "Combat suggestions not implemented")
 }
 
 // Combat analytics methods (stubs for now)
 func (h *Handlers) GetCombatAnalytics(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Combat analytics not implemented")
+	response.BadRequest(w, r, "Combat analytics not implemented")
 }
 
 func (h *Handlers) GetSessionCombatAnalytics(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Session combat analytics not implemented")
+	response.BadRequest(w, r, "Session combat analytics not implemented")
 }
 
 func (h *Handlers) GetCharacterCombatStats(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Character combat stats not implemented")
+	response.BadRequest(w, r, "Character combat stats not implemented")
 }
 
 // DM Assistant methods (stubs for now)
 func (h *Handlers) GenerateDMContent(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "DM content generation not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "DM content generation not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GenerateNPC(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "NPC generation not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "NPC generation not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GenerateLocation(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Location generation not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Location generation not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GenerateQuest(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Quest generation not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Quest generation not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetDMNotes(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get DM notes not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get DM notes not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) SaveDMNote(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Save DM note not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Save DM note not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) UpdateDMNote(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Update DM note not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Update DM note not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) DeleteDMNote(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Delete DM note not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Delete DM note not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GenerateStoryHook(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Story hook generation not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Story hook generation not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GenerateNPCDialogue(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "NPC dialogue generation not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "NPC dialogue generation not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 // Game session methods (stubs for now)
 func (h *Handlers) GetActiveSessions(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get active sessions not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get active sessions not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetSessionPlayers(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get session players not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get session players not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) KickPlayer(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Kick player not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Kick player not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 // Narrative methods (stubs for now)
 func (h *Handlers) GetStoryThreads(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get story threads not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get story threads not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) CreateStoryThread(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Create story thread not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Create story thread not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetStoryThread(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get story thread not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get story thread not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) UpdateStoryThread(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Update story thread not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Update story thread not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) AdvanceStoryThread(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Advance story thread not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Advance story thread not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) ResolveStoryThread(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Resolve story thread not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Resolve story thread not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetCharacterMemories(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get character memories not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get character memories not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) AddCharacterMemory(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Add character memory not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Add character memory not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetCharacterPerspective(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get character perspective not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get character perspective not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetConsequences(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get consequences not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get consequences not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetActiveConsequences(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get active consequences not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get active consequences not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) ResolveConsequence(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Resolve consequence not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Resolve consequence not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GenerateSessionRecap(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Generate session recap not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Generate session recap not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GenerateForeshadowing(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Generate foreshadowing not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Generate foreshadowing not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GeneratePlotTwist(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Generate plot twist not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Generate plot twist not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetBackstoryHooks(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get backstory hooks not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get backstory hooks not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) IntegrateBackstory(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Integrate backstory not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Integrate backstory not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 // Rule builder methods (stubs for now)
 func (h *Handlers) GetRules(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get rules not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get rules not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) CreateRule(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Create rule not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Create rule not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetRule(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get rule not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get rule not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) UpdateRule(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Update rule not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Update rule not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) DeleteRule(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Delete rule not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Delete rule not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) ValidateRule(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Validate rule not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Validate rule not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) TestRule(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Test rule not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Test rule not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) SimulateRule(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Simulate rule not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Simulate rule not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetRuleLibrary(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get rule library not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get rule library not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) AnalyzeBalance(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Analyze balance not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Analyze balance not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) AnalyzeRuleImpact(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Analyze rule impact not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Analyze rule impact not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 // World building methods (stubs for now)
 func (h *Handlers) GetSettlements(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get settlements not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get settlements not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) CreateSettlement(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Create settlement not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Create settlement not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetSettlement(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get settlement not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get settlement not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) UpdateSettlement(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Update settlement not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Update settlement not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) DeleteSettlement(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Delete settlement not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Delete settlement not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GenerateSettlement(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Generate settlement not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Generate settlement not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetFactions(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get factions not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get factions not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) CreateFaction(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Create faction not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Create faction not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetFaction(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get faction not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get faction not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) UpdateFaction(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Update faction not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Update faction not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) DeleteFaction(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Delete faction not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Delete faction not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetFactionRelationships(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get faction relationships not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get faction relationships not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) UpdateFactionRelationship(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Update faction relationship not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Update faction relationship not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetWorldEvents(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get world events not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get world events not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetActiveWorldEvents(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get active world events not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get active world events not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) TriggerWorldEvent(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Trigger world event not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Trigger world event not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) ResolveWorldEvent(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Resolve world event not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Resolve world event not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetCultures(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get cultures not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get cultures not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) CreateCulture(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Create culture not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Create culture not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetCulture(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get culture not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get culture not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) UpdateCulture(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Update culture not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Update culture not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) SimulateEconomy(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Simulate economy not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Simulate economy not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }
 
 func (h *Handlers) GetEconomicStatus(w http.ResponseWriter, r *http.Request) {
-	sendErrorResponse(w, http.StatusNotImplemented, "Get economic status not implemented")
+	response.Error(w, r, &errors.AppError{
+		Type:       errors.ErrorTypeInternal,
+		Message:    "Get economic status not implemented",
+		StatusCode: http.StatusNotImplemented,
+	})
 }

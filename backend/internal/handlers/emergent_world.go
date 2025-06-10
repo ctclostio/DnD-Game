@@ -11,6 +11,7 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/your-username/dnd-game/backend/internal/services"
+	"github.com/your-username/dnd-game/backend/pkg/response"
 )
 
 // EmergentWorldHandlers manages handlers for the emergent world system
@@ -51,25 +52,25 @@ func (h *EmergentWorldHandlers) SimulateWorld(w http.ResponseWriter, r *http.Req
 	userID, _ := auth.GetUserIDFromContext(r.Context())
 	session, err := h.gameService.GetSessionByID(r.Context(), sessionID)
 	if err != nil || session.DMID != userID {
-		sendErrorResponse(w, http.StatusForbidden, "Only the DM can simulate world progress")
+		response.Forbidden(w, r, "Only the DM can simulate world progress")
 		return
 	}
 
 	// Run simulation
 	err = h.livingEcosystem.SimulateWorldProgress(r.Context(), sessionID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to simulate world progress")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
 	// Get recent events
 	events, err := h.worldRepo.GetWorldEvents(sessionID, 10, false)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve world events")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, map[string]interface{}{
+	response.JSON(w, r, http.StatusOK, map[string]interface{}{
 		"message": "World simulation completed",
 		"events":  events,
 	})
@@ -92,11 +93,11 @@ func (h *EmergentWorldHandlers) GetWorldEvents(w http.ResponseWriter, r *http.Re
 
 	events, err := h.worldRepo.GetWorldEvents(sessionID, limit, onlyVisible)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve world events")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, events)
+	response.JSON(w, r, http.StatusOK, events)
 }
 
 // GetWorldState handles GET /api/sessions/{sessionId}/world/state
@@ -106,11 +107,11 @@ func (h *EmergentWorldHandlers) GetWorldState(w http.ResponseWriter, r *http.Req
 
 	state, err := h.worldRepo.GetWorldState(sessionID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve world state")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, state)
+	response.JSON(w, r, http.StatusOK, state)
 }
 
 // NPC Autonomy Handlers
@@ -122,11 +123,11 @@ func (h *EmergentWorldHandlers) GetNPCGoals(w http.ResponseWriter, r *http.Reque
 
 	goals, err := h.worldRepo.GetNPCGoals(npcID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve NPC goals")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, goals)
+	response.JSON(w, r, http.StatusOK, goals)
 }
 
 // CreateNPCGoal handles POST /api/npcs/{npcId}/goals
@@ -136,7 +137,7 @@ func (h *EmergentWorldHandlers) CreateNPCGoal(w http.ResponseWriter, r *http.Req
 
 	var goal models.NPCGoal
 	if err := json.NewDecoder(r.Body).Decode(&goal); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
@@ -144,11 +145,11 @@ func (h *EmergentWorldHandlers) CreateNPCGoal(w http.ResponseWriter, r *http.Req
 	goal.ID = uuid.New().String()
 
 	if err := h.worldRepo.CreateNPCGoal(&goal); err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to create NPC goal")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusCreated, goal)
+	response.JSON(w, r, http.StatusCreated, goal)
 }
 
 // GetNPCSchedule handles GET /api/npcs/{npcId}/schedule
@@ -158,11 +159,11 @@ func (h *EmergentWorldHandlers) GetNPCSchedule(w http.ResponseWriter, r *http.Re
 
 	schedule, err := h.worldRepo.GetNPCSchedule(npcID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve NPC schedule")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, schedule)
+	response.JSON(w, r, http.StatusOK, schedule)
 }
 
 // Faction Personality Handlers
@@ -176,18 +177,18 @@ func (h *EmergentWorldHandlers) InitializeFactionPersonality(w http.ResponseWrit
 	factionUUID, _ := uuid.Parse(factionID)
 	faction, err := h.factionRepo.GetFaction(factionUUID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Faction not found")
+		response.NotFound(w, r, "Faction not found")
 		return
 	}
 
 	// Initialize personality
 	personality, err := h.factionPersonality.InitializeFactionPersonality(r.Context(), faction)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to initialize faction personality")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusCreated, personality)
+	response.JSON(w, r, http.StatusCreated, personality)
 }
 
 // GetFactionPersonality handles GET /api/factions/{factionId}/personality
@@ -197,11 +198,11 @@ func (h *EmergentWorldHandlers) GetFactionPersonality(w http.ResponseWriter, r *
 
 	personality, err := h.worldRepo.GetFactionPersonality(factionID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Faction personality not found")
+		response.NotFound(w, r, "Faction personality not found")
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, personality)
+	response.JSON(w, r, http.StatusOK, personality)
 }
 
 // MakeFactionDecision handles POST /api/factions/{factionId}/decide
@@ -211,17 +212,17 @@ func (h *EmergentWorldHandlers) MakeFactionDecision(w http.ResponseWriter, r *ht
 
 	var decision models.FactionDecision
 	if err := json.NewDecoder(r.Body).Decode(&decision); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	result, err := h.factionPersonality.MakeFactionDecision(r.Context(), factionID, decision)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to make faction decision")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, result)
+	response.JSON(w, r, http.StatusOK, result)
 }
 
 // GetFactionAgendas handles GET /api/factions/{factionId}/agendas
@@ -231,11 +232,11 @@ func (h *EmergentWorldHandlers) GetFactionAgendas(w http.ResponseWriter, r *http
 
 	agendas, err := h.worldRepo.GetFactionAgendas(factionID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve faction agendas")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, agendas)
+	response.JSON(w, r, http.StatusOK, agendas)
 }
 
 // RecordFactionInteraction handles POST /api/factions/{factionId}/interactions
@@ -245,17 +246,17 @@ func (h *EmergentWorldHandlers) RecordFactionInteraction(w http.ResponseWriter, 
 
 	var interaction models.PlayerInteraction
 	if err := json.NewDecoder(r.Body).Decode(&interaction); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	err := h.factionPersonality.LearnFromInteraction(r.Context(), factionID, interaction)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to record faction interaction")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, map[string]string{
+	response.JSON(w, r, http.StatusOK, map[string]string{
 		"message": "Faction interaction recorded successfully",
 	})
 }
@@ -269,17 +270,17 @@ func (h *EmergentWorldHandlers) GenerateCulture(w http.ResponseWriter, r *http.R
 
 	var params services.CultureGenParameters
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	culture, err := h.proceduralCulture.GenerateCulture(r.Context(), sessionID, params)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to generate culture")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusCreated, culture)
+	response.JSON(w, r, http.StatusCreated, culture)
 }
 
 // GetCultures handles GET /api/sessions/{sessionId}/cultures
@@ -289,11 +290,11 @@ func (h *EmergentWorldHandlers) GetCultures(w http.ResponseWriter, r *http.Reque
 
 	cultures, err := h.worldRepo.GetCulturesBySession(sessionID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve cultures")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, cultures)
+	response.JSON(w, r, http.StatusOK, cultures)
 }
 
 // GetCulture handles GET /api/cultures/{cultureId}
@@ -303,11 +304,11 @@ func (h *EmergentWorldHandlers) GetCulture(w http.ResponseWriter, r *http.Reques
 
 	culture, err := h.worldRepo.GetCulture(cultureID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Culture not found")
+		response.NotFound(w, r, "Culture not found")
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, culture)
+	response.JSON(w, r, http.StatusOK, culture)
 }
 
 // InteractWithCulture handles POST /api/cultures/{cultureId}/interact
@@ -317,20 +318,20 @@ func (h *EmergentWorldHandlers) InteractWithCulture(w http.ResponseWriter, r *ht
 
 	var action services.PlayerCulturalAction
 	if err := json.NewDecoder(r.Body).Decode(&action); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	err := h.proceduralCulture.RespondToPlayerAction(r.Context(), cultureID, action)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to process cultural interaction")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
 	// Get updated culture
 	culture, _ := h.worldRepo.GetCulture(cultureID)
 
-	sendJSONResponse(w, http.StatusOK, map[string]interface{}{
+	response.JSON(w, r, http.StatusOK, map[string]interface{}{
 		"message": "Cultural interaction processed",
 		"culture": culture,
 	})
@@ -343,11 +344,11 @@ func (h *EmergentWorldHandlers) GetCultureLanguage(w http.ResponseWriter, r *htt
 
 	culture, err := h.worldRepo.GetCulture(cultureID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Culture not found")
+		response.NotFound(w, r, "Culture not found")
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, culture.Language)
+	response.JSON(w, r, http.StatusOK, culture.Language)
 }
 
 // GetCultureBeliefs handles GET /api/cultures/{cultureId}/beliefs
@@ -357,11 +358,11 @@ func (h *EmergentWorldHandlers) GetCultureBeliefs(w http.ResponseWriter, r *http
 
 	culture, err := h.worldRepo.GetCulture(cultureID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Culture not found")
+		response.NotFound(w, r, "Culture not found")
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, culture.BeliefSystem)
+	response.JSON(w, r, http.StatusOK, culture.BeliefSystem)
 }
 
 // GetCultureCustoms handles GET /api/cultures/{cultureId}/customs
@@ -371,11 +372,11 @@ func (h *EmergentWorldHandlers) GetCultureCustoms(w http.ResponseWriter, r *http
 
 	culture, err := h.worldRepo.GetCulture(cultureID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Culture not found")
+		response.NotFound(w, r, "Culture not found")
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, culture.Customs)
+	response.JSON(w, r, http.StatusOK, culture.Customs)
 }
 
 // GetSimulationLogs handles GET /api/sessions/{sessionId}/world/logs
@@ -387,7 +388,7 @@ func (h *EmergentWorldHandlers) GetSimulationLogs(w http.ResponseWriter, r *http
 	userID, _ := auth.GetUserIDFromContext(r.Context())
 	session, err := h.gameService.GetSessionByID(r.Context(), sessionID)
 	if err != nil || session.DMID != userID {
-		sendErrorResponse(w, http.StatusForbidden, "Only the DM can view simulation logs")
+		response.Forbidden(w, r, "Only the DM can view simulation logs")
 		return
 	}
 
@@ -400,11 +401,11 @@ func (h *EmergentWorldHandlers) GetSimulationLogs(w http.ResponseWriter, r *http
 
 	logs, err := h.worldRepo.GetSimulationLogs(sessionID, limit)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve simulation logs")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, logs)
+	response.JSON(w, r, http.StatusOK, logs)
 }
 
 // TriggerWorldEvent handles POST /api/sessions/{sessionId}/world/events
@@ -416,13 +417,13 @@ func (h *EmergentWorldHandlers) TriggerWorldEvent(w http.ResponseWriter, r *http
 	userID, _ := auth.GetUserIDFromContext(r.Context())
 	session, err := h.gameService.GetSessionByID(r.Context(), sessionID)
 	if err != nil || session.DMID != userID {
-		sendErrorResponse(w, http.StatusForbidden, "Only the DM can trigger world events")
+		response.Forbidden(w, r, "Only the DM can trigger world events")
 		return
 	}
 
 	var event models.WorldEvent
 	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
@@ -443,9 +444,9 @@ func (h *EmergentWorldHandlers) TriggerWorldEvent(w http.ResponseWriter, r *http
 	}
 	
 	if err := h.worldRepo.CreateWorldEvent(emergentEvent); err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to create world event")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusCreated, event)
+	response.JSON(w, r, http.StatusCreated, event)
 }

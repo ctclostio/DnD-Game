@@ -7,23 +7,24 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/pkg/response"
 )
 
 func (h *Handlers) GetCharacters(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 	
 	characters, err := h.characterService.GetAllCharacters(r.Context(), userID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, characters)
+	response.JSON(w, r, http.StatusOK, characters)
 }
 
 func (h *Handlers) GetCharacter(w http.ResponseWriter, r *http.Request) {
@@ -33,46 +34,46 @@ func (h *Handlers) GetCharacter(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 	
 	character, err := h.characterService.GetCharacterByID(r.Context(), id)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, err.Error())
+		response.NotFound(w, r, err.Error())
 		return
 	}
 	
 	// Verify the character belongs to the authenticated user
 	if character.UserID != userID {
-		sendErrorResponse(w, http.StatusForbidden, "You don't have permission to access this character")
+		response.Forbidden(w, r, "You don't have permission to access this character")
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, character)
+	response.JSON(w, r, http.StatusOK, character)
 }
 
 func (h *Handlers) CreateCharacter(w http.ResponseWriter, r *http.Request) {
 	var character models.Character
 	if err := json.NewDecoder(r.Body).Decode(&character); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 	
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 	character.UserID = userID
 	
 	if err := h.characterService.CreateCharacter(r.Context(), &character); err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusCreated, character)
+	response.JSON(w, r, http.StatusCreated, character)
 }
 
 func (h *Handlers) UpdateCharacter(w http.ResponseWriter, r *http.Request) {
@@ -82,25 +83,25 @@ func (h *Handlers) UpdateCharacter(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 	
 	// Verify ownership before update
 	existing, err := h.characterService.GetCharacterByID(r.Context(), id)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Character not found")
+		response.NotFound(w, r, "Character not found")
 		return
 	}
 	
 	if existing.UserID != userID {
-		sendErrorResponse(w, http.StatusForbidden, "You don't have permission to update this character")
+		response.Forbidden(w, r, "You don't have permission to update this character")
 		return
 	}
 	
 	var character models.Character
 	if err := json.NewDecoder(r.Body).Decode(&character); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 	
@@ -108,18 +109,18 @@ func (h *Handlers) UpdateCharacter(w http.ResponseWriter, r *http.Request) {
 	character.UserID = userID // Ensure user can't change ownership
 	
 	if err := h.characterService.UpdateCharacter(r.Context(), &character); err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
 	// Fetch updated character
 	updated, err := h.characterService.GetCharacterByID(r.Context(), id)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, updated)
+	response.JSON(w, r, http.StatusOK, updated)
 }
 
 func (h *Handlers) DeleteCharacter(w http.ResponseWriter, r *http.Request) {
@@ -129,28 +130,28 @@ func (h *Handlers) DeleteCharacter(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 	
 	// Verify ownership before delete
 	character, err := h.characterService.GetCharacterByID(r.Context(), id)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Character not found")
+		response.NotFound(w, r, "Character not found")
 		return
 	}
 	
 	if character.UserID != userID {
-		sendErrorResponse(w, http.StatusForbidden, "You don't have permission to delete this character")
+		response.Forbidden(w, r, "You don't have permission to delete this character")
 		return
 	}
 	
 	if err := h.characterService.DeleteCharacter(r.Context(), id); err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusNoContent, nil)
+	response.JSON(w, r, http.StatusNoContent, nil)
 }
 
 // CastSpell handles spell casting requests
@@ -162,31 +163,31 @@ func (h *Handlers) CastSpell(w http.ResponseWriter, r *http.Request) {
 		SpellLevel int `json:"spellLevel"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	err := h.characterService.UseSpellSlot(r.Context(), characterID, req.SpellLevel)
 	if err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
 	// Return updated character
 	char, err := h.characterService.GetCharacterByID(r.Context(), characterID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve updated character")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, char)
+	response.JSON(w, r, http.StatusOK, char)
 }
 
 // GenerateCustomClass handles AI generation of custom classes
 func (h *Handlers) GenerateCustomClass(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(string)
 	if !ok {
-		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
@@ -199,13 +200,13 @@ func (h *Handlers) GenerateCustomClass(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	// Validate required fields
 	if req.Name == "" || req.Description == "" {
-		sendErrorResponse(w, http.StatusBadRequest, "Name and description are required")
+		response.BadRequest(w, r, "Name and description are required")
 		return
 	}
 
@@ -217,18 +218,18 @@ func (h *Handlers) GenerateCustomClass(w http.ResponseWriter, r *http.Request) {
 	// Generate custom class
 	customClass, err := h.characterService.GenerateCustomClass(r.Context(), userID, req.Name, req.Description, req.Role, req.Style, req.Features)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to generate custom class: "+err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, customClass)
+	response.JSON(w, r, http.StatusOK, customClass)
 }
 
 // GetCustomClasses returns the user's custom classes
 func (h *Handlers) GetCustomClasses(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(string)
 	if !ok {
-		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
@@ -236,11 +237,11 @@ func (h *Handlers) GetCustomClasses(w http.ResponseWriter, r *http.Request) {
 	
 	classes, err := h.characterService.GetUserCustomClasses(r.Context(), userID, includeUnapproved)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve custom classes")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, classes)
+	response.JSON(w, r, http.StatusOK, classes)
 }
 
 // GetCustomClass returns a specific custom class
@@ -250,11 +251,11 @@ func (h *Handlers) GetCustomClass(w http.ResponseWriter, r *http.Request) {
 
 	customClass, err := h.characterService.GetCustomClass(r.Context(), classID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Custom class not found")
+		response.NotFound(w, r, "Custom class not found")
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, customClass)
+	response.JSON(w, r, http.StatusOK, customClass)
 }
 
 // AddExperience handles adding XP to a character
@@ -265,19 +266,19 @@ func (h *Handlers) AddExperience(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
 	// Verify ownership
 	character, err := h.characterService.GetCharacterByID(r.Context(), characterID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Character not found")
+		response.NotFound(w, r, "Character not found")
 		return
 	}
 
 	if character.UserID != userID {
-		sendErrorResponse(w, http.StatusForbidden, "You don't have permission to modify this character")
+		response.Forbidden(w, r, "You don't have permission to modify this character")
 		return
 	}
 
@@ -285,40 +286,40 @@ func (h *Handlers) AddExperience(w http.ResponseWriter, r *http.Request) {
 		Experience int `json:"experience"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	if req.Experience <= 0 {
-		sendErrorResponse(w, http.StatusBadRequest, "Experience must be positive")
+		response.BadRequest(w, r, "Experience must be positive")
 		return
 	}
 
 	// Add experience
 	err = h.characterService.AddExperience(r.Context(), characterID, req.Experience)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
 	// Return updated character
 	char, err := h.characterService.GetCharacterByID(r.Context(), characterID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve updated character")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
 	// Calculate XP needed for next level
 	xpForNext := h.characterService.GetXPForNextLevel(char.Level)
 	
-	response := map[string]interface{}{
+	resp := map[string]interface{}{
 		"character":    char,
 		"xpForNext":    xpForNext,
 		"xpProgress":   char.ExperiencePoints,
 		"leveledUp":    false, // We could track this in the service
 	}
 
-	sendJSONResponse(w, http.StatusOK, response)
+	response.JSON(w, r, http.StatusOK, resp)
 }
 
 // Rest handles short and long rest requests
@@ -330,13 +331,13 @@ func (h *Handlers) Rest(w http.ResponseWriter, r *http.Request) {
 		RestType string `json:"restType"` // "short" or "long"
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	err := h.characterService.RestoreSpellSlots(r.Context(), characterID, req.RestType)
 	if err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
@@ -352,9 +353,9 @@ func (h *Handlers) Rest(w http.ResponseWriter, r *http.Request) {
 	// Return updated character
 	char, err := h.characterService.GetCharacterByID(r.Context(), characterID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve updated character")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, char)
+	response.JSON(w, r, http.StatusOK, char)
 }

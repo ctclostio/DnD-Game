@@ -9,6 +9,7 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/your-username/dnd-game/backend/internal/services"
+	"github.com/your-username/dnd-game/backend/pkg/response"
 )
 
 // Rule Template Handlers
@@ -23,11 +24,11 @@ func (h *Handlers) GetRuleTemplates(w http.ResponseWriter, r *http.Request) {
 	
 	templates, err := h.ruleEngine.GetRuleTemplates(userID, category, isPublic)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to get rule templates")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, templates)
+	response.JSON(w, r, http.StatusOK, templates)
 }
 
 // GetRuleTemplate handles GET /api/rules/templates/{id}
@@ -36,11 +37,11 @@ func (h *Handlers) GetRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Rule template not found")
+		response.NotFound(w, r, "Rule template not found")
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, template)
+	response.JSON(w, r, http.StatusOK, template)
 }
 
 // CreateRuleTemplate handles POST /api/rules/templates
@@ -49,7 +50,7 @@ func (h *Handlers) CreateRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	
 	var template models.RuleTemplate
 	if err := json.NewDecoder(r.Body).Decode(&template); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 	
@@ -57,11 +58,11 @@ func (h *Handlers) CreateRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	
 	createdTemplate, err := h.ruleEngine.CreateRuleTemplate(&template)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to create rule template")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusCreated, createdTemplate)
+	response.JSON(w, r, http.StatusCreated, createdTemplate)
 }
 
 // UpdateRuleTemplate handles PUT /api/rules/templates/{id}
@@ -71,29 +72,29 @@ func (h *Handlers) UpdateRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	
 	var updates map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 	
 	// Verify ownership
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Rule template not found")
+		response.NotFound(w, r, "Rule template not found")
 		return
 	}
 	
 	if template.CreatedByID != userID {
-		sendErrorResponse(w, http.StatusForbidden, "You can only update your own rule templates")
+		response.Forbidden(w, r, "You can only update your own rule templates")
 		return
 	}
 	
 	updatedTemplate, err := h.ruleEngine.UpdateRuleTemplate(templateID, updates)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to update rule template")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, updatedTemplate)
+	response.JSON(w, r, http.StatusOK, updatedTemplate)
 }
 
 // DeleteRuleTemplate handles DELETE /api/rules/templates/{id}
@@ -104,21 +105,21 @@ func (h *Handlers) DeleteRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	// Verify ownership
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Rule template not found")
+		response.NotFound(w, r, "Rule template not found")
 		return
 	}
 	
 	if template.CreatedByID != userID {
-		sendErrorResponse(w, http.StatusForbidden, "You can only delete your own rule templates")
+		response.Forbidden(w, r, "You can only delete your own rule templates")
 		return
 	}
 	
 	if err := h.ruleEngine.DeleteRuleTemplate(templateID); err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to delete rule template")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusNoContent, nil)
+	response.JSON(w, r, http.StatusNoContent, nil)
 }
 
 // CompileRuleTemplate handles POST /api/rules/templates/{id}/compile
@@ -130,25 +131,25 @@ func (h *Handlers) CompileRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	if err := json.NewDecoder(r.Body).Decode(&compileRequest); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 	
 	// Get the template first
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Rule template not found")
+		response.NotFound(w, r, "Rule template not found")
 		return
 	}
 	
 	// Compile the template
 	compiled, err := h.ruleEngine.CompileRule(template)
 	if err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, compiled)
+	response.JSON(w, r, http.StatusOK, compiled)
 }
 
 // ValidateRuleTemplate handles POST /api/rules/templates/{id}/validate
@@ -160,13 +161,13 @@ func (h *Handlers) ValidateRuleTemplate(w http.ResponseWriter, r *http.Request) 
 	}
 	
 	if err := json.NewDecoder(r.Body).Decode(&validateRequest); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 	
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Rule template not found")
+		response.NotFound(w, r, "Rule template not found")
 		return
 	}
 	
@@ -199,14 +200,14 @@ func (h *Handlers) ValidateRuleTemplate(w http.ResponseWriter, r *http.Request) 
 		executionResult, _ = h.ruleEngine.ExecuteRule(r.Context(), compiled, testInstance, testTrigger)
 	}
 	
-	response := map[string]interface{}{
+	resp := map[string]interface{}{
 		"is_valid":         validationResult.IsValid,
 		"errors":           validationResult.Errors,
 		"warnings":         validationResult.Warnings,
 		"execution_result": executionResult,
 	}
 	
-	sendJSONResponse(w, http.StatusOK, response)
+	response.JSON(w, r, http.StatusOK, resp)
 }
 
 // AnalyzeRuleBalance handles POST /api/rules/templates/{id}/analyze
@@ -228,29 +229,29 @@ func (h *Handlers) AnalyzeRuleBalance(w http.ResponseWriter, r *http.Request) {
 	
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Rule template not found")
+		response.NotFound(w, r, "Rule template not found")
 		return
 	}
 	
 	// Call the balance analyzer with the template
 	analysis, err := h.balanceAnalyzer.AnalyzeRuleBalance(r.Context(), template)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to analyze rule balance")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, analysis)
+	response.JSON(w, r, http.StatusOK, analysis)
 }
 
 // GetNodeTemplates handles GET /api/rules/nodes/templates
 func (h *Handlers) GetNodeTemplates(w http.ResponseWriter, r *http.Request) {
 	templates, err := h.ruleEngine.GetNodeTemplates()
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to get node templates")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, templates)
+	response.JSON(w, r, http.StatusOK, templates)
 }
 
 // Rule Instance Handlers
@@ -261,17 +262,17 @@ func (h *Handlers) GetActiveRules(w http.ResponseWriter, r *http.Request) {
 	characterID := r.URL.Query().Get("character_id")
 	
 	if gameSessionID == "" && characterID == "" {
-		sendErrorResponse(w, http.StatusBadRequest, "Either game_session_id or character_id is required")
+		response.BadRequest(w, r, "Either game_session_id or character_id is required")
 		return
 	}
 	
 	rules, err := h.ruleEngine.GetActiveRules(gameSessionID, characterID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to get active rules")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, rules)
+	response.JSON(w, r, http.StatusOK, rules)
 }
 
 // ActivateRule handles POST /api/rules/activate
@@ -284,7 +285,7 @@ func (h *Handlers) ActivateRule(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	if err := json.NewDecoder(r.Body).Decode(&activateRequest); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 	
@@ -296,11 +297,11 @@ func (h *Handlers) ActivateRule(w http.ResponseWriter, r *http.Request) {
 	)
 	
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to activate rule")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusCreated, activeRule)
+	response.JSON(w, r, http.StatusCreated, activeRule)
 }
 
 // DeactivateRule handles DELETE /api/rules/active/{id}
@@ -308,11 +309,11 @@ func (h *Handlers) DeactivateRule(w http.ResponseWriter, r *http.Request) {
 	ruleID := mux.Vars(r)["id"]
 	
 	if err := h.ruleEngine.DeactivateRule(ruleID); err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to deactivate rule")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusNoContent, nil)
+	response.JSON(w, r, http.StatusNoContent, nil)
 }
 
 // ExecuteRule handles POST /api/rules/execute
@@ -323,27 +324,27 @@ func (h *Handlers) ExecuteRule(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	if err := json.NewDecoder(r.Body).Decode(&executeRequest); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 	
 	// Get the rule instance and template
 	ruleInstance, err := h.ruleEngine.GetRuleInstance(executeRequest.RuleID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Rule instance not found")
+		response.NotFound(w, r, "Rule instance not found")
 		return
 	}
 	
 	template, err := h.ruleEngine.GetRuleTemplate(ruleInstance.TemplateID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Rule template not found")
+		response.NotFound(w, r, "Rule template not found")
 		return
 	}
 	
 	// Compile the rule
 	compiled, err := h.ruleEngine.CompileRule(template)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to compile rule")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
@@ -356,11 +357,11 @@ func (h *Handlers) ExecuteRule(w http.ResponseWriter, r *http.Request) {
 	// Execute the rule
 	result, err := h.ruleEngine.ExecuteRule(r.Context(), compiled, ruleInstance, trigger)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, result)
+	response.JSON(w, r, http.StatusOK, result)
 }
 
 // GetConditionalModifiers handles GET /api/rules/conditional/{id}
@@ -387,7 +388,7 @@ func (h *Handlers) GetConditionalModifiers(w http.ResponseWriter, r *http.Reques
 	// Get the rule template
 	template, err := h.ruleEngine.GetRuleTemplate(ruleID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Rule template not found")
+		response.NotFound(w, r, "Rule template not found")
 		return
 	}
 	
@@ -417,7 +418,7 @@ func (h *Handlers) GetConditionalModifiers(w http.ResponseWriter, r *http.Reques
 	
 	modifiedTemplate, err := h.conditionalReality.ApplyConditionalRules(template, testInstance, contexts)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to apply conditional modifiers")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
@@ -429,7 +430,7 @@ func (h *Handlers) GetConditionalModifiers(w http.ResponseWriter, r *http.Reques
 		"description": "Conditional modifications based on provided context",
 	}
 	
-	sendJSONResponse(w, http.StatusOK, modifiers)
+	response.JSON(w, r, http.StatusOK, modifiers)
 }
 
 // ExportRuleTemplate handles GET /api/rules/templates/{id}/export
@@ -442,7 +443,7 @@ func (h *Handlers) ExportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Rule template not found")
+		response.NotFound(w, r, "Rule template not found")
 		return
 	}
 	
@@ -452,7 +453,7 @@ func (h *Handlers) ExportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Disposition", "attachment; filename="+template.Name+".json")
 		json.NewEncoder(w).Encode(template)
 	default:
-		sendErrorResponse(w, http.StatusBadRequest, "Unsupported export format")
+		response.BadRequest(w, r, "Unsupported export format")
 	}
 }
 
@@ -462,7 +463,7 @@ func (h *Handlers) ImportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	
 	var template models.RuleTemplate
 	if err := json.NewDecoder(r.Body).Decode(&template); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid rule template format")
+		response.BadRequest(w, r, "Invalid rule template format")
 		return
 	}
 	
@@ -472,11 +473,11 @@ func (h *Handlers) ImportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	
 	imported, err := h.ruleEngine.CreateRuleTemplate(&template)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to import rule template")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusCreated, imported)
+	response.JSON(w, r, http.StatusCreated, imported)
 }
 
 // GetRuleHistory handles GET /api/rules/history
@@ -493,9 +494,9 @@ func (h *Handlers) GetRuleHistory(w http.ResponseWriter, r *http.Request) {
 	
 	history, err := h.ruleEngine.GetRuleExecutionHistory(gameSessionID, characterID, limit)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to get rule history")
+		response.InternalServerError(w, r, err)
 		return
 	}
 	
-	sendJSONResponse(w, http.StatusOK, history)
+	response.JSON(w, r, http.StatusOK, history)
 }

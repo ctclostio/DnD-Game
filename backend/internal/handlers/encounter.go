@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/your-username/dnd-game/backend/internal/services"
+	"github.com/your-username/dnd-game/backend/pkg/response"
 	"github.com/gorilla/mux"
 )
 
@@ -13,14 +14,14 @@ import (
 func (h *Handlers) GenerateEncounter(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(string)
 	if !ok {
-		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
 	// Get user role to check if they're a DM
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
-		sendErrorResponse(w, http.StatusForbidden, "Only DMs can create encounters")
+		response.Forbidden(w, r, "Only DMs can create encounters")
 		return
 	}
 
@@ -37,13 +38,13 @@ func (h *Handlers) GenerateEncounter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	// Validate required fields
 	if req.GameSessionID == "" || req.PartyLevel < 1 || req.PartySize < 1 {
-		sendErrorResponse(w, http.StatusBadRequest, "Missing required fields")
+		response.BadRequest(w, r, "Missing required fields")
 		return
 	}
 
@@ -70,11 +71,11 @@ func (h *Handlers) GenerateEncounter(w http.ResponseWriter, r *http.Request) {
 	// Generate encounter
 	encounter, err := h.encounterService.GenerateEncounter(r.Context(), encounterReq, req.GameSessionID, userID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to generate encounter: "+err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, encounter)
+	response.JSON(w, r, http.StatusOK, encounter)
 }
 
 // GetEncounter retrieves an encounter by ID
@@ -84,11 +85,11 @@ func (h *Handlers) GetEncounter(w http.ResponseWriter, r *http.Request) {
 
 	encounter, err := h.encounterService.GetEncounter(r.Context(), encounterID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusNotFound, "Encounter not found")
+		response.NotFound(w, r, "Encounter not found")
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, encounter)
+	response.JSON(w, r, http.StatusOK, encounter)
 }
 
 // GetSessionEncounters retrieves all encounters for a game session
@@ -98,11 +99,11 @@ func (h *Handlers) GetSessionEncounters(w http.ResponseWriter, r *http.Request) 
 
 	encounters, err := h.encounterService.GetEncountersBySession(r.Context(), sessionID)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve encounters")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, encounters)
+	response.JSON(w, r, http.StatusOK, encounters)
 }
 
 // StartEncounter begins an encounter
@@ -113,18 +114,18 @@ func (h *Handlers) StartEncounter(w http.ResponseWriter, r *http.Request) {
 	// Check if user is DM
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
-		sendErrorResponse(w, http.StatusForbidden, "Only DMs can start encounters")
+		response.Forbidden(w, r, "Only DMs can start encounters")
 		return
 	}
 
 	if err := h.encounterService.StartEncounter(r.Context(), encounterID); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
 	// Return updated encounter
 	encounter, _ := h.encounterService.GetEncounter(r.Context(), encounterID)
-	sendJSONResponse(w, http.StatusOK, encounter)
+	response.JSON(w, r, http.StatusOK, encounter)
 }
 
 // CompleteEncounter marks an encounter as completed
@@ -135,7 +136,7 @@ func (h *Handlers) CompleteEncounter(w http.ResponseWriter, r *http.Request) {
 	// Check if user is DM
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
-		sendErrorResponse(w, http.StatusForbidden, "Only DMs can complete encounters")
+		response.Forbidden(w, r, "Only DMs can complete encounters")
 		return
 	}
 
@@ -144,16 +145,16 @@ func (h *Handlers) CompleteEncounter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	if err := h.encounterService.CompleteEncounter(r.Context(), encounterID, req.Outcome); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, map[string]string{"status": "completed"})
+	response.JSON(w, r, http.StatusOK, map[string]string{"status": "completed"})
 }
 
 // ScaleEncounter adjusts encounter difficulty
@@ -164,7 +165,7 @@ func (h *Handlers) ScaleEncounter(w http.ResponseWriter, r *http.Request) {
 	// Check if user is DM
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
-		sendErrorResponse(w, http.StatusForbidden, "Only DMs can scale encounters")
+		response.Forbidden(w, r, "Only DMs can scale encounters")
 		return
 	}
 
@@ -173,17 +174,17 @@ func (h *Handlers) ScaleEncounter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	encounter, err := h.encounterService.ScaleEncounter(r.Context(), encounterID, req.Difficulty)
 	if err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, encounter)
+	response.JSON(w, r, http.StatusOK, encounter)
 }
 
 // GetTacticalSuggestion provides AI tactical advice
@@ -194,7 +195,7 @@ func (h *Handlers) GetTacticalSuggestion(w http.ResponseWriter, r *http.Request)
 	// Check if user is DM
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
-		sendErrorResponse(w, http.StatusForbidden, "Only DMs can request tactical suggestions")
+		response.Forbidden(w, r, "Only DMs can request tactical suggestions")
 		return
 	}
 
@@ -203,17 +204,17 @@ func (h *Handlers) GetTacticalSuggestion(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	suggestion, err := h.encounterService.GetTacticalSuggestion(r.Context(), encounterID, req.Situation)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to generate suggestion")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, map[string]string{
+	response.JSON(w, r, http.StatusOK, map[string]string{
 		"suggestion": suggestion,
 	})
 }
@@ -234,7 +235,7 @@ func (h *Handlers) LogEncounterEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
@@ -251,11 +252,11 @@ func (h *Handlers) LogEncounterEvent(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to log event")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, map[string]string{"status": "logged"})
+	response.JSON(w, r, http.StatusOK, map[string]string{"status": "logged"})
 }
 
 // GetEncounterEvents retrieves encounter events
@@ -273,11 +274,11 @@ func (h *Handlers) GetEncounterEvents(w http.ResponseWriter, r *http.Request) {
 
 	events, err := h.encounterService.GetEncounterEvents(r.Context(), encounterID, limit)
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve events")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, events)
+	response.JSON(w, r, http.StatusOK, events)
 }
 
 // UpdateEnemyStatus updates an enemy during combat
@@ -288,22 +289,22 @@ func (h *Handlers) UpdateEnemyStatus(w http.ResponseWriter, r *http.Request) {
 	// Check if user is DM
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
-		sendErrorResponse(w, http.StatusForbidden, "Only DMs can update enemy status")
+		response.Forbidden(w, r, "Only DMs can update enemy status")
 		return
 	}
 
 	var updates map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	if err := h.encounterService.UpdateEnemyStatus(r.Context(), enemyID, updates); err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to update enemy")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, map[string]string{"status": "updated"})
+	response.JSON(w, r, http.StatusOK, map[string]string{"status": "updated"})
 }
 
 // TriggerReinforcements activates a reinforcement wave
@@ -314,7 +315,7 @@ func (h *Handlers) TriggerReinforcements(w http.ResponseWriter, r *http.Request)
 	// Check if user is DM
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
-		sendErrorResponse(w, http.StatusForbidden, "Only DMs can trigger reinforcements")
+		response.Forbidden(w, r, "Only DMs can trigger reinforcements")
 		return
 	}
 
@@ -323,18 +324,18 @@ func (h *Handlers) TriggerReinforcements(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	if err := h.encounterService.TriggerReinforcements(r.Context(), encounterID, req.WaveIndex); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
 	// Return updated encounter
 	encounter, _ := h.encounterService.GetEncounter(r.Context(), encounterID)
-	sendJSONResponse(w, http.StatusOK, encounter)
+	response.JSON(w, r, http.StatusOK, encounter)
 }
 
 // CheckObjectives evaluates encounter objectives
@@ -345,14 +346,14 @@ func (h *Handlers) CheckObjectives(w http.ResponseWriter, r *http.Request) {
 	// Check if user is DM
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
-		sendErrorResponse(w, http.StatusForbidden, "Only DMs can check objectives")
+		response.Forbidden(w, r, "Only DMs can check objectives")
 		return
 	}
 
 	if err := h.encounterService.CheckObjectives(r.Context(), encounterID); err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, "Failed to check objectives")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, map[string]string{"status": "checked"})
+	response.JSON(w, r, http.StatusOK, map[string]string{"status": "checked"})
 }

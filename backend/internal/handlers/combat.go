@@ -10,21 +10,17 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/your-username/dnd-game/backend/internal/websocket"
+	"github.com/your-username/dnd-game/backend/pkg/errors"
+	"github.com/your-username/dnd-game/backend/pkg/response"
 )
 
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	response, _ := json.Marshal(payload)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
-}
-
-func respondWithError(w http.ResponseWriter, code int, message string) {
-	respondWithJSON(w, code, map[string]string{"error": message})
-}
 
 func (h *Handlers) StartCombat(w http.ResponseWriter, r *http.Request) {
-	claims := r.Context().Value("claims").(*auth.Claims)
+	claims, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
 
 	var req struct {
 		GameSessionID string              `json:"gameSessionId"`
@@ -32,26 +28,26 @@ func (h *Handlers) StartCombat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	// Verify user is in the game session
 	session, err := h.gameService.GetGameSession(r.Context(), req.GameSessionID)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Game session not found")
+		response.ErrorWithCode(w, r, errors.ErrCodeSessionNotFound)
 		return
 	}
 
 	// Check if user is DM
 	if session.DMID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can start combat")
+		response.ErrorWithCode(w, r, errors.ErrCodeNotDM, "Only the DM can start combat")
 		return
 	}
 
 	combat, err := h.combatService.StartCombat(r.Context(), req.GameSessionID, req.Combatants)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
@@ -62,7 +58,7 @@ func (h *Handlers) StartCombat(w http.ResponseWriter, r *http.Request) {
 		Message: "Combat has begun!",
 	})
 
-	respondWithJSON(w, http.StatusCreated, combat)
+	response.JSON(w, r, http.StatusCreated, combat)
 }
 
 func (h *Handlers) GetCombat(w http.ResponseWriter, r *http.Request) {
@@ -71,11 +67,11 @@ func (h *Handlers) GetCombat(w http.ResponseWriter, r *http.Request) {
 
 	combat, err := h.combatService.GetCombat(r.Context(), combatID)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Combat not found")
+		response.NotFound(w, r, "Combat")
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, combat)
+	response.JSON(w, r, http.StatusOK, combat)
 }
 
 func (h *Handlers) GetCombatBySession(w http.ResponseWriter, r *http.Request) {
@@ -84,39 +80,43 @@ func (h *Handlers) GetCombatBySession(w http.ResponseWriter, r *http.Request) {
 
 	combat, err := h.combatService.GetCombatBySession(r.Context(), sessionID)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "No active combat for session")
+		response.ErrorWithCode(w, r, errors.ErrCodeCombatNotActive)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, combat)
+	response.JSON(w, r, http.StatusOK, combat)
 }
 
 func (h *Handlers) NextTurn(w http.ResponseWriter, r *http.Request) {
-	claims := r.Context().Value("claims").(*auth.Claims)
+	claims, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
 	vars := mux.Vars(r)
 	combatID := vars["id"]
 
 	combat, err := h.combatService.GetCombat(r.Context(), combatID)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Combat not found")
+		response.NotFound(w, r, "Combat")
 		return
 	}
 
 	// Verify user is DM
 	session, err := h.gameService.GetGameSession(r.Context(), combat.GameSessionID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Failed to get game session")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
 	if session.DMID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can advance turns")
+		response.ErrorWithCode(w, r, errors.ErrCodeNotDM, "Only the DM can advance turns")
 		return
 	}
 
 	combatant, err := h.combatService.NextTurn(r.Context(), combatID)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
@@ -130,38 +130,42 @@ func (h *Handlers) NextTurn(w http.ResponseWriter, r *http.Request) {
 		Message: combatant.Name + "'s turn",
 	})
 
-	respondWithJSON(w, http.StatusOK, map[string]interface{}{
+	response.JSON(w, r, http.StatusOK, map[string]interface{}{
 		"currentCombatant": combatant,
 		"combat":           updatedCombat,
 	})
 }
 
 func (h *Handlers) ProcessCombatAction(w http.ResponseWriter, r *http.Request) {
-	claims := r.Context().Value("claims").(*auth.Claims)
+	claims, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
 	vars := mux.Vars(r)
 	combatID := vars["id"]
 
 	var request models.CombatRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	combat, err := h.combatService.GetCombat(r.Context(), combatID)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Combat not found")
+		response.NotFound(w, r, "Combat")
 		return
 	}
 
 	// Verify user can control the actor
 	if !h.canControlCombatant(r.Context(), claims.UserID, combat, request.ActorID) {
-		respondWithError(w, http.StatusForbidden, "You cannot control this combatant")
+		response.ErrorWithCode(w, r, errors.ErrCodeInsufficientPrivilege, "You cannot control this combatant")
 		return
 	}
 
 	action, err := h.combatService.ProcessAction(r.Context(), combatID, request)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
@@ -176,34 +180,38 @@ func (h *Handlers) ProcessCombatAction(w http.ResponseWriter, r *http.Request) {
 		Message: action.Description,
 	})
 
-	respondWithJSON(w, http.StatusOK, action)
+	response.JSON(w, r, http.StatusOK, action)
 }
 
 func (h *Handlers) EndCombat(w http.ResponseWriter, r *http.Request) {
-	claims := r.Context().Value("claims").(*auth.Claims)
+	claims, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
 	vars := mux.Vars(r)
 	combatID := vars["id"]
 
 	combat, err := h.combatService.GetCombat(r.Context(), combatID)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Combat not found")
+		response.NotFound(w, r, "Combat")
 		return
 	}
 
 	// Verify user is DM
 	session, err := h.gameService.GetGameSession(r.Context(), combat.GameSessionID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Failed to get game session")
+		response.InternalServerError(w, r, err)
 		return
 	}
 
 	if session.DMID != claims.UserID {
-		respondWithError(w, http.StatusForbidden, "Only the DM can end combat")
+		response.ErrorWithCode(w, r, errors.ErrCodeNotDM, "Only the DM can end combat")
 		return
 	}
 
 	if err := h.combatService.EndCombat(r.Context(), combatID); err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
@@ -213,11 +221,15 @@ func (h *Handlers) EndCombat(w http.ResponseWriter, r *http.Request) {
 		Message: "Combat has ended",
 	})
 
-	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Combat ended"})
+	response.JSON(w, r, http.StatusOK, map[string]string{"message": "Combat ended"})
 }
 
 func (h *Handlers) MakeSavingThrow(w http.ResponseWriter, r *http.Request) {
-	claims := r.Context().Value("claims").(*auth.Claims)
+	claims, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
 	vars := mux.Vars(r)
 	combatID := vars["id"]
 	combatantID := vars["combatantId"]
@@ -230,38 +242,42 @@ func (h *Handlers) MakeSavingThrow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	combat, err := h.combatService.GetCombat(r.Context(), combatID)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Combat not found")
+		response.NotFound(w, r, "Combat")
 		return
 	}
 
 	// Verify user can control the combatant
 	if !h.canControlCombatant(r.Context(), claims.UserID, combat, combatantID) {
-		respondWithError(w, http.StatusForbidden, "You cannot control this combatant")
+		response.ErrorWithCode(w, r, errors.ErrCodeInsufficientPrivilege, "You cannot control this combatant")
 		return
 	}
 
 	roll, success, err := h.combatService.MakeSavingThrow(r.Context(), combatID, combatantID, req.Ability, req.DC, req.Advantage, req.Disadvantage)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
-	response := map[string]interface{}{
+	result := map[string]interface{}{
 		"roll":    roll,
 		"success": success,
 	}
 
-	respondWithJSON(w, http.StatusOK, response)
+	response.JSON(w, r, http.StatusOK, result)
 }
 
 func (h *Handlers) ApplyDamage(w http.ResponseWriter, r *http.Request) {
-	claims := r.Context().Value("claims").(*auth.Claims)
+	claims, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
 	vars := mux.Vars(r)
 	combatID := vars["id"]
 	combatantID := vars["combatantId"]
@@ -271,26 +287,26 @@ func (h *Handlers) ApplyDamage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	combat, err := h.combatService.GetCombat(r.Context(), combatID)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Combat not found")
+		response.NotFound(w, r, "Combat")
 		return
 	}
 
 	// Verify user is DM or damage is self-inflicted
 	session, _ := h.gameService.GetGameSession(r.Context(), combat.GameSessionID)
 	if session.DMID != claims.UserID && !h.canControlCombatant(r.Context(), claims.UserID, combat, combatantID) {
-		respondWithError(w, http.StatusForbidden, "Insufficient permissions")
+		response.ErrorWithCode(w, r, errors.ErrCodeInsufficientPrivilege)
 		return
 	}
 
 	totalDamage, err := h.combatService.ApplyDamage(r.Context(), combatID, combatantID, req.Damage)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
@@ -313,11 +329,15 @@ func (h *Handlers) ApplyDamage(w http.ResponseWriter, r *http.Request) {
 		Message: fmt.Sprintf("%s takes %d damage", combatantName, totalDamage),
 	})
 
-	respondWithJSON(w, http.StatusOK, map[string]int{"totalDamage": totalDamage})
+	response.JSON(w, r, http.StatusOK, map[string]int{"totalDamage": totalDamage})
 }
 
 func (h *Handlers) HealCombatant(w http.ResponseWriter, r *http.Request) {
-	claims := r.Context().Value("claims").(*auth.Claims)
+	claims, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
 	vars := mux.Vars(r)
 	combatID := vars["id"]
 	combatantID := vars["combatantId"]
@@ -327,25 +347,25 @@ func (h *Handlers) HealCombatant(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	combat, err := h.combatService.GetCombat(r.Context(), combatID)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Combat not found")
+		response.NotFound(w, r, "Combat")
 		return
 	}
 
 	// Verify user is DM or healing is self-inflicted
 	session, _ := h.gameService.GetGameSession(r.Context(), combat.GameSessionID)
 	if session.DMID != claims.UserID && !h.canControlCombatant(r.Context(), claims.UserID, combat, combatantID) {
-		respondWithError(w, http.StatusForbidden, "Insufficient permissions")
+		response.ErrorWithCode(w, r, errors.ErrCodeInsufficientPrivilege)
 		return
 	}
 
 	if err := h.combatService.HealCombatant(r.Context(), combatID, combatantID, req.Healing); err != nil {
-		respondWithError(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
@@ -368,7 +388,7 @@ func (h *Handlers) HealCombatant(w http.ResponseWriter, r *http.Request) {
 		Message: fmt.Sprintf("%s heals for %d HP", combatantName, req.Healing),
 	})
 
-	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Healing applied"})
+	response.JSON(w, r, http.StatusOK, map[string]string{"message": "Healing applied"})
 }
 
 // Helper function to check if a user can control a combatant
