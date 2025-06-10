@@ -2,7 +2,7 @@ version: 2
 updates:
   # Backend Go dependencies
   - package-ecosystem: "gomod"
-    directory: "/backend"
+    directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -31,6 +31,27 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    automerge: true
+    groups:
+      webpack-stack:
+        patterns:
+          - "webpack"
+          - "webpack-cli"
+          - "webpack-dev-server"
+          - "*-loader"
+          - "html-webpack-plugin"
+      babel-stack:
+        patterns:
+          - "@babel/*"
+          - "babel-plugin-*"
+          - "babel-preset-*"
+      react-stack:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-router-dom"
+          - "@types/react"
+          - "@types/react-dom"
     ignore:
       # Ignore major version updates for critical dependencies
       - dependency-name: "react"
