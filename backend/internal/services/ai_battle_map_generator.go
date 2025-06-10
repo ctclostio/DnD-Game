@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 type AIBattleMapGenerator struct {
@@ -39,13 +39,19 @@ func (abmg *AIBattleMapGenerator) GenerateBattleMap(ctx context.Context, req mod
 
 	response, err := abmg.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
-		log.Printf("Error generating battle map: %v", err)
+		logger.WithContext(ctx).
+			WithError(err).
+			Error().
+			Msg("Error generating battle map")
 		return abmg.generateDefaultBattleMap(req), nil
 	}
 
 	var generatedMap GeneratedBattleMap
 	if err := json.Unmarshal([]byte(response), &generatedMap); err != nil {
-		log.Printf("Error parsing battle map response: %v", err)
+		logger.WithContext(ctx).
+			WithError(err).
+			Error().
+			Msg("Error parsing battle map response")
 		return abmg.generateDefaultBattleMap(req), nil
 	}
 
@@ -170,7 +176,7 @@ func (abmg *AIBattleMapGenerator) convertToBattleMap(generated GeneratedBattleMa
 
 func (abmg *AIBattleMapGenerator) inferMapType(description string) string {
 	desc := strings.ToLower(description)
-	
+
 	if strings.Contains(desc, "dungeon") || strings.Contains(desc, "cave") || strings.Contains(desc, "underground") {
 		return "dungeon"
 	} else if strings.Contains(desc, "forest") || strings.Contains(desc, "outdoor") || strings.Contains(desc, "field") {
@@ -178,31 +184,31 @@ func (abmg *AIBattleMapGenerator) inferMapType(description string) string {
 	} else if strings.Contains(desc, "city") || strings.Contains(desc, "street") || strings.Contains(desc, "tavern") {
 		return "urban"
 	}
-	
+
 	return "special"
 }
 
 func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBattleMapRequest) *models.BattleMap {
 	gridX, gridY := abmg.determineGridSize(req.DesiredSize)
-	
+
 	// Generate some basic terrain features
 	var terrainFeatures []models.BattleMapTerrainFeature
-	
+
 	// Add some walls or trees based on map type
 	if req.MapType == "dungeon" {
 		// Add walls around the edges
 		for x := 0; x < gridX; x++ {
-			terrainFeatures = append(terrainFeatures, 
+			terrainFeatures = append(terrainFeatures,
 				models.BattleMapTerrainFeature{
-					Type:     "wall",
-					Position: models.Position{X: x, Y: 0},
-					Size:     models.Size{Width: 1, Height: 1},
+					Type:       "wall",
+					Position:   models.Position{X: x, Y: 0},
+					Size:       models.Size{Width: 1, Height: 1},
 					Properties: []string{"blocks_movement", "blocks_sight"},
 				},
 				models.BattleMapTerrainFeature{
-					Type:     "wall",
-					Position: models.Position{X: x, Y: gridY - 1},
-					Size:     models.Size{Width: 1, Height: 1},
+					Type:       "wall",
+					Position:   models.Position{X: x, Y: gridY - 1},
+					Size:       models.Size{Width: 1, Height: 1},
 					Properties: []string{"blocks_movement", "blocks_sight"},
 				},
 			)
@@ -211,14 +217,14 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 		// Add some trees
 		for i := 0; i < 5; i++ {
 			terrainFeatures = append(terrainFeatures, models.BattleMapTerrainFeature{
-				Type:     "tree",
-				Position: models.Position{X: rand.Intn(gridX), Y: rand.Intn(gridY)},
-				Size:     models.Size{Width: 1, Height: 1},
+				Type:       "tree",
+				Position:   models.Position{X: rand.Intn(gridX), Y: rand.Intn(gridY)},
+				Size:       models.Size{Width: 1, Height: 1},
 				Properties: []string{"blocks_movement", "provides_cover"},
 			})
 		}
 	}
-	
+
 	// Add some cover positions
 	var coverPositions []map[string]interface{}
 	for i := 0; i < 3; i++ {
@@ -228,7 +234,7 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 			"direction":  "all",
 		})
 	}
-	
+
 	// Basic spawn points
 	spawnPoints := map[string][]map[string]interface{}{
 		"party": {
@@ -246,11 +252,11 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 			},
 		},
 	}
-	
+
 	terrainJSON, _ := json.Marshal(terrainFeatures)
 	coverJSON, _ := json.Marshal(coverPositions)
 	spawnJSON, _ := json.Marshal(spawnPoints)
-	
+
 	return &models.BattleMap{
 		ID:                  uuid.New(),
 		LocationDescription: req.LocationDescription,
@@ -269,21 +275,21 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 
 // GeneratedBattleMap represents the AI-generated battle map structure
 type GeneratedBattleMap struct {
-	TerrainFeatures    []models.BattleMapTerrainFeature `json:"terrain_features"`
-	ObstaclePositions  []ObstaclePosition              `json:"obstacle_positions"`
-	CoverPositions     []CoverPosition                 `json:"cover_positions"`
-	HazardZones        []models.HazardZone             `json:"hazard_zones"`
-	SpawnPoints        map[string][]SpawnPoint         `json:"spawn_points"`
-	TacticalNotes      []models.TacticalNote           `json:"tactical_notes"`
-	VisualTheme        string                          `json:"visual_theme"`
-	LightingConditions string                          `json:"lighting_conditions"`
-	EnvironmentalEffects []string                      `json:"environmental_effects"`
+	TerrainFeatures      []models.BattleMapTerrainFeature `json:"terrain_features"`
+	ObstaclePositions    []ObstaclePosition               `json:"obstacle_positions"`
+	CoverPositions       []CoverPosition                  `json:"cover_positions"`
+	HazardZones          []models.HazardZone              `json:"hazard_zones"`
+	SpawnPoints          map[string][]SpawnPoint          `json:"spawn_points"`
+	TacticalNotes        []models.TacticalNote            `json:"tactical_notes"`
+	VisualTheme          string                           `json:"visual_theme"`
+	LightingConditions   string                           `json:"lighting_conditions"`
+	EnvironmentalEffects []string                         `json:"environmental_effects"`
 }
 
 type ObstaclePosition struct {
-	Type          string           `json:"type"`
-	Position      models.Position  `json:"position"`
-	ProvidesCover string           `json:"provides_cover"`
+	Type          string          `json:"type"`
+	Position      models.Position `json:"position"`
+	ProvidesCover string          `json:"provides_cover"`
 }
 
 type CoverPosition struct {

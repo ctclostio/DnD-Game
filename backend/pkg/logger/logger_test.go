@@ -93,6 +93,7 @@ func TestLogger_WithContext(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, RequestIDKey, "test-request-id")
+	ctx = context.WithValue(ctx, CorrelationIDKey, "test-correlation-id")
 	ctx = context.WithValue(ctx, UserIDKey, "test-user-id")
 
 	contextLogger := logger.WithContext(ctx)
@@ -102,6 +103,7 @@ func TestLogger_WithContext(t *testing.T) {
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
 
 	assert.Equal(t, "test-request-id", logEntry["request_id"])
+	assert.Equal(t, "test-correlation-id", logEntry["correlation_id"])
 	assert.Equal(t, "test-user-id", logEntry["user_id"])
 	assert.Equal(t, "test message", logEntry["message"])
 }
@@ -119,6 +121,21 @@ func TestLogger_WithRequestID(t *testing.T) {
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
 
 	assert.Equal(t, "req-123", logEntry["request_id"])
+}
+
+func TestLogger_WithCorrelationID(t *testing.T) {
+	var buf bytes.Buffer
+	logger := &Logger{
+		Logger: func() *zerolog.Logger { zl := zerolog.New(&buf).With().Timestamp().Logger(); return &zl }(),
+	}
+
+	corrLogger := logger.WithCorrelationID("corr-123")
+	corrLogger.Info().Msg("test message")
+
+	var logEntry map[string]interface{}
+	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
+
+	assert.Equal(t, "corr-123", logEntry["correlation_id"])
 }
 
 func TestLogger_WithUserID(t *testing.T) {
@@ -220,7 +237,7 @@ func TestGetLogger(t *testing.T) {
 
 func TestGlobalLoggerFunctions(t *testing.T) {
 	var buf bytes.Buffer
-	
+
 	// Initialize with a buffer logger for testing
 	// Use SyncWriter to ensure all writes are captured
 	writer := zerolog.SyncWriter(&buf)
@@ -228,10 +245,10 @@ func TestGlobalLoggerFunctions(t *testing.T) {
 	defaultLogger = &Logger{&zl}
 
 	tests := []struct {
-		name     string
-		logFunc  func() *zerolog.Event
-		level    string
-		message  string
+		name    string
+		logFunc func() *zerolog.Event
+		level   string
+		message string
 	}{
 		{
 			name:    "Debug",
@@ -313,7 +330,7 @@ func TestLogger_ChainedOperations(t *testing.T) {
 		WithUserID("user-chain").
 		WithField("operation", "test").
 		WithFields(map[string]interface{}{
-			"count": 10,
+			"count":  10,
 			"active": true,
 		}).
 		Info().
@@ -360,7 +377,7 @@ func TestLogger_NilError(t *testing.T) {
 	var logEntry map[string]interface{}
 	err := json.Unmarshal(buf.Bytes(), &logEntry)
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, "nil error test", logEntry["message"])
 	// When error is nil, the error field should not be present
 	_, hasError := logEntry["error"]
@@ -387,13 +404,13 @@ func TestLogger_MultipleLogLevels(t *testing.T) {
 	for _, test := range levels {
 		t.Run(test.configLevel+"_"+test.testLevel.String(), func(t *testing.T) {
 			var buf bytes.Buffer
-			
+
 			// Create logger with specific level
 			logger := New(Config{
 				Level:  test.configLevel,
 				Pretty: false,
 			})
-			
+
 			// Override the writer for testing
 			zl := zerolog.New(&buf).Level(test.testLevel)
 			logger.Logger = &zl
@@ -423,6 +440,7 @@ func BenchmarkLogger_WithContext(b *testing.B) {
 	logger := New(Config{Level: "info", Pretty: false})
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, RequestIDKey, "bench-request-id")
+	ctx = context.WithValue(ctx, CorrelationIDKey, "bench-correlation-id")
 	ctx = context.WithValue(ctx, UserIDKey, "bench-user-id")
 
 	b.ResetTimer()
@@ -444,4 +462,15 @@ func BenchmarkLogger_WithFields(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		logger.WithFields(fields).Info().Msg("benchmark message")
 	}
+}
+
+func TestContextHelpers(t *testing.T) {
+	ctx := context.Background()
+
+	ctx = ContextWithRequestID(ctx, "req-123")
+	ctx = ContextWithCorrelationID(ctx, "corr-456")
+
+	assert.Equal(t, "req-123", ctx.Value(RequestIDKey))
+	assert.Equal(t, "corr-456", ctx.Value(CorrelationIDKey))
+	assert.Equal(t, "corr-456", GetCorrelationIDFromContext(ctx))
 }

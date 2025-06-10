@@ -16,11 +16,10 @@ import (
 
 // Enhanced context keys
 const (
-	CorrelationIDKey contextKey = "correlation_id"
-	SessionIDKey     contextKey = "session_id"
-	CharacterIDKey   contextKey = "character_id"
-	ServiceKey       contextKey = "service"
-	MethodKey        contextKey = "method"
+	SessionIDKey   contextKey = "session_id"
+	CharacterIDKey contextKey = "character_id"
+	ServiceKey     contextKey = "service"
+	MethodKey      contextKey = "method"
 )
 
 // LoggerV2 is an enhanced logger with additional features
@@ -31,20 +30,20 @@ type LoggerV2 struct {
 
 // ConfigV2 holds enhanced logger configuration
 type ConfigV2 struct {
-	Level         string        // Log level: debug, info, warn, error, fatal
-	Pretty        bool          // Pretty print for development
-	TimeFormat    string        // Time format
-	CallerInfo    bool          // Include caller information
-	StackTrace    bool          // Include stack trace for errors
-	Output        string        // Output: stdout, stderr, file path
-	MaxSize       int           // Max size in MB for file rotation (if Output is file)
-	MaxBackups    int           // Max number of backup files
-	MaxAge        int           // Max age in days for backup files
-	Compress      bool          // Compress backup files
-	SamplingRate  float32       // Sampling rate for debug logs (0.0 to 1.0)
-	ServiceName   string        // Service name to include in all logs
-	Environment   string        // Environment: development, staging, production
-	Fields        Fields        // Default fields to include in all logs
+	Level        string  // Log level: debug, info, warn, error, fatal
+	Pretty       bool    // Pretty print for development
+	TimeFormat   string  // Time format
+	CallerInfo   bool    // Include caller information
+	StackTrace   bool    // Include stack trace for errors
+	Output       string  // Output: stdout, stderr, file path
+	MaxSize      int     // Max size in MB for file rotation (if Output is file)
+	MaxBackups   int     // Max number of backup files
+	MaxAge       int     // Max age in days for backup files
+	Compress     bool    // Compress backup files
+	SamplingRate float32 // Sampling rate for debug logs (0.0 to 1.0)
+	ServiceName  string  // Service name to include in all logs
+	Environment  string  // Environment: development, staging, production
+	Fields       Fields  // Default fields to include in all logs
 }
 
 // Fields represents default fields
@@ -288,7 +287,7 @@ func truncateQuery(query string) string {
 	query = strings.ReplaceAll(query, "\n", " ")
 	query = strings.ReplaceAll(query, "\t", " ")
 	query = strings.Join(strings.Fields(query), " ")
-	
+
 	if len(query) > maxLength {
 		return query[:maxLength] + "..."
 	}
@@ -304,19 +303,9 @@ func GetCaller(skip int) string {
 	return fmt.Sprintf("%s:%d", filepath.Base(file), line)
 }
 
-// ContextWithRequestID adds request ID to context
-func ContextWithRequestID(ctx context.Context, requestID string) context.Context {
-	return context.WithValue(ctx, RequestIDKey, requestID)
-}
-
 // ContextWithUserID adds user ID to context
 func ContextWithUserID(ctx context.Context, userID string) context.Context {
 	return context.WithValue(ctx, UserIDKey, userID)
-}
-
-// ContextWithCorrelationID adds correlation ID to context
-func ContextWithCorrelationID(ctx context.Context, correlationID string) context.Context {
-	return context.WithValue(ctx, CorrelationIDKey, correlationID)
 }
 
 // ContextWithSessionID adds session ID to context

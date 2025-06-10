@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 type AICampaignManager struct {
@@ -31,18 +31,24 @@ func (acm *AICampaignManager) GenerateStoryArc(ctx context.Context, req models.G
 	}
 
 	prompt := acm.buildStoryArcPrompt(req)
-	
+
 	systemPrompt := "You are an expert D&D 5e Dungeon Master specializing in creating engaging, interconnected story arcs that adapt to player choices. Generate compelling narratives that feel organic and responsive to player actions. Your response must be valid JSON."
 
 	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
-		log.Printf("Error generating story arc: %v", err)
+		logger.WithContext(ctx).
+			WithError(err).
+			Error().
+			Msg("Error generating story arc")
 		return acm.generateDefaultStoryArc(req), nil
 	}
 
 	var arc models.GeneratedStoryArc
 	if err := json.Unmarshal([]byte(response), &arc); err != nil {
-		log.Printf("Error parsing story arc response: %v", err)
+		logger.WithContext(ctx).
+			WithError(err).
+			Error().
+			Msg("Error parsing story arc response")
 		return acm.generateDefaultStoryArc(req), nil
 	}
 
@@ -56,18 +62,24 @@ func (acm *AICampaignManager) GenerateSessionRecap(ctx context.Context, memories
 	}
 
 	prompt := acm.buildRecapPrompt(memories)
-	
+
 	systemPrompt := "You are a skilled narrator creating engaging 'Previously on...' recaps for D&D sessions. Create dramatic, concise summaries that remind players of key events while building excitement for the upcoming session. Your response must be valid JSON."
 
 	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
-		log.Printf("Error generating recap: %v", err)
+		logger.WithContext(ctx).
+			WithError(err).
+			Error().
+			Msg("Error generating recap")
 		return acm.generateDefaultRecap(memories), nil
 	}
 
 	var recap models.GeneratedRecap
 	if err := json.Unmarshal([]byte(response), &recap); err != nil {
-		log.Printf("Error parsing recap response: %v", err)
+		logger.WithContext(ctx).
+			WithError(err).
+			Error().
+			Msg("Error parsing recap response")
 		return acm.generateDefaultRecap(memories), nil
 	}
 
@@ -81,18 +93,24 @@ func (acm *AICampaignManager) GenerateForeshadowing(ctx context.Context, req mod
 	}
 
 	prompt := acm.buildForeshadowingPrompt(req, plotThread, storyArc)
-	
+
 	systemPrompt := "You are a master of narrative foreshadowing in D&D campaigns. Create subtle hints and clues that will make sense in retrospect without being too obvious. Balance mystery with clarity. Your response must be valid JSON."
 
 	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
-		log.Printf("Error generating foreshadowing: %v", err)
+		logger.WithContext(ctx).
+			WithError(err).
+			Error().
+			Msg("Error generating foreshadowing")
 		return acm.generateDefaultForeshadowing(req), nil
 	}
 
 	var foreshadowing models.GeneratedForeshadowing
 	if err := json.Unmarshal([]byte(response), &foreshadowing); err != nil {
-		log.Printf("Error parsing foreshadowing response: %v", err)
+		logger.WithContext(ctx).
+			WithError(err).
+			Error().
+			Msg("Error parsing foreshadowing response")
 		return acm.generateDefaultForeshadowing(req), nil
 	}
 
@@ -106,18 +124,24 @@ func (acm *AICampaignManager) AnalyzeSessionForMemory(ctx context.Context, event
 	}
 
 	prompt := acm.buildSessionAnalysisPrompt(events)
-	
+
 	systemPrompt := "You are an expert at analyzing D&D game sessions and extracting key information. Identify important events, decisions, NPCs, items, and plot developments to create a comprehensive session memory. Your response must be valid JSON."
 
 	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
-		log.Printf("Error analyzing session: %v", err)
+		logger.WithContext(ctx).
+			WithError(err).
+			Error().
+			Msg("Error analyzing session")
 		return acm.createBasicSessionMemory(events), nil
 	}
 
 	var memory models.SessionMemory
 	if err := json.Unmarshal([]byte(response), &memory); err != nil {
-		log.Printf("Error parsing session analysis: %v", err)
+		logger.WithContext(ctx).
+			WithError(err).
+			Error().
+			Msg("Error parsing session analysis")
 		return acm.createBasicSessionMemory(events), nil
 	}
 
@@ -216,7 +240,7 @@ Format as JSON:
 func (acm *AICampaignManager) buildForeshadowingPrompt(req models.GenerateForeshadowingRequest, plotThread *models.PlotThread, storyArc *models.StoryArc) string {
 	var context string
 	if plotThread != nil {
-		context = fmt.Sprintf("Plot Thread: %s\nDescription: %s\nType: %s", 
+		context = fmt.Sprintf("Plot Thread: %s\nDescription: %s\nType: %s",
 			plotThread.Title, plotThread.Description, plotThread.ThreadType)
 	} else if storyArc != nil {
 		context = fmt.Sprintf("Story Arc: %s\nDescription: %s\nType: %s",
@@ -254,7 +278,7 @@ Format as JSON:
 
 func (acm *AICampaignManager) buildSessionAnalysisPrompt(events []interface{}) string {
 	eventsJSON, _ := json.Marshal(events)
-	
+
 	return fmt.Sprintf(`Analyze this D&D session's events and extract key information:
 
 Events: %s
@@ -301,15 +325,15 @@ func (acm *AICampaignManager) generateDefaultStoryArc(req models.GenerateStoryAr
 func (acm *AICampaignManager) generateDefaultRecap(memories []*models.SessionMemory) *models.GeneratedRecap {
 	var events []string
 	if len(memories) > 0 {
-		events = append(events, fmt.Sprintf("Last session (#%d), the party continued their adventure", 
+		events = append(events, fmt.Sprintf("Last session (#%d), the party continued their adventure",
 			memories[0].SessionNumber))
 	}
-	
+
 	return &models.GeneratedRecap{
-		Summary:   "Previously, the party embarked on their journey through the realm...",
-		KeyEvents: events,
+		Summary:           "Previously, the party embarked on their journey through the realm...",
+		KeyEvents:         events,
 		UnresolvedThreads: []string{"The party's current quest remains unfinished"},
-		Cliffhanger: "As you gather once more, adventure awaits...",
+		Cliffhanger:       "As you gather once more, adventure awaits...",
 	}
 }
 
@@ -329,24 +353,24 @@ func (acm *AICampaignManager) generateDefaultForeshadowing(req models.GenerateFo
 
 func (acm *AICampaignManager) createBasicSessionMemory(events []interface{}) *models.SessionMemory {
 	memory := &models.SessionMemory{
-		ID:            uuid.New(),
-		RecapSummary:  "The party continued their adventure",
-		KeyEvents:     models.JSONB(`[]`),
-		NPCsEncountered: models.JSONB(`[]`),
-		DecisionsMade: models.JSONB(`[]`),
-		ItemsAcquired: models.JSONB(`[]`),
+		ID:               uuid.New(),
+		RecapSummary:     "The party continued their adventure",
+		KeyEvents:        models.JSONB(`[]`),
+		NPCsEncountered:  models.JSONB(`[]`),
+		DecisionsMade:    models.JSONB(`[]`),
+		ItemsAcquired:    models.JSONB(`[]`),
 		LocationsVisited: models.JSONB(`[]`),
 		CombatEncounters: models.JSONB(`[]`),
 		PlotDevelopments: models.JSONB(`[]`),
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
-	
+
 	// Basic analysis of events if needed
 	if len(events) > 0 {
 		// Process events to extract basic information
 		// This is a simplified version - expand as needed
 	}
-	
+
 	return memory
 }
