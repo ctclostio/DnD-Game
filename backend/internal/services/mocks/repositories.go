@@ -5,6 +5,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/models"
@@ -412,4 +413,227 @@ func (m *MockNPCRepository) CreateFromTemplate(ctx context.Context, templateID, 
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.NPC), args.Error(1)
+}
+
+// MockCustomRaceRepository is a mock implementation of database.CustomRaceRepository
+type MockCustomRaceRepository struct {
+	mock.Mock
+}
+
+func (m *MockCustomRaceRepository) Create(ctx context.Context, race *models.CustomRace) error {
+	args := m.Called(ctx, race)
+	return args.Error(0)
+}
+
+func (m *MockCustomRaceRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.CustomRace, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.CustomRace), args.Error(1)
+}
+
+func (m *MockCustomRaceRepository) GetByUserID(ctx context.Context, userID uuid.UUID) ([]*models.CustomRace, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.CustomRace), args.Error(1)
+}
+
+func (m *MockCustomRaceRepository) GetPublicRaces(ctx context.Context) ([]*models.CustomRace, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.CustomRace), args.Error(1)
+}
+
+func (m *MockCustomRaceRepository) GetPendingApproval(ctx context.Context) ([]*models.CustomRace, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.CustomRace), args.Error(1)
+}
+
+func (m *MockCustomRaceRepository) Update(ctx context.Context, race *models.CustomRace) error {
+	args := m.Called(ctx, race)
+	return args.Error(0)
+}
+
+func (m *MockCustomRaceRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockCustomRaceRepository) IncrementUsage(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+// MockCampaignRepository is a mock implementation of database.CampaignRepository
+type MockCampaignRepository struct {
+	mock.Mock
+}
+
+func (m *MockCampaignRepository) CreateStoryArc(arc *models.StoryArc) error {
+	args := m.Called(arc)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) GetStoryArc(id uuid.UUID) (*models.StoryArc, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.StoryArc), args.Error(1)
+}
+
+func (m *MockCampaignRepository) GetStoryArcsBySession(sessionID uuid.UUID) ([]*models.StoryArc, error) {
+	args := m.Called(sessionID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.StoryArc), args.Error(1)
+}
+
+func (m *MockCampaignRepository) UpdateStoryArc(id uuid.UUID, updates map[string]interface{}) error {
+	args := m.Called(id, updates)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) DeleteStoryArc(id uuid.UUID) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) CreateSessionMemory(memory *models.SessionMemory) error {
+	args := m.Called(memory)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) GetSessionMemory(id uuid.UUID) (*models.SessionMemory, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.SessionMemory), args.Error(1)
+}
+
+func (m *MockCampaignRepository) GetSessionMemories(sessionID uuid.UUID, limit int) ([]*models.SessionMemory, error) {
+	args := m.Called(sessionID, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.SessionMemory), args.Error(1)
+}
+
+func (m *MockCampaignRepository) GetLatestSessionMemory(sessionID uuid.UUID) (*models.SessionMemory, error) {
+	args := m.Called(sessionID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.SessionMemory), args.Error(1)
+}
+
+func (m *MockCampaignRepository) UpdateSessionMemory(id uuid.UUID, updates map[string]interface{}) error {
+	args := m.Called(id, updates)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) CreatePlotThread(thread *models.PlotThread) error {
+	args := m.Called(thread)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) GetPlotThread(id uuid.UUID) (*models.PlotThread, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.PlotThread), args.Error(1)
+}
+
+func (m *MockCampaignRepository) GetPlotThreadsBySession(sessionID uuid.UUID) ([]*models.PlotThread, error) {
+	args := m.Called(sessionID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.PlotThread), args.Error(1)
+}
+
+func (m *MockCampaignRepository) GetActivePlotThreads(sessionID uuid.UUID) ([]*models.PlotThread, error) {
+	args := m.Called(sessionID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.PlotThread), args.Error(1)
+}
+
+func (m *MockCampaignRepository) UpdatePlotThread(id uuid.UUID, updates map[string]interface{}) error {
+	args := m.Called(id, updates)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) DeletePlotThread(id uuid.UUID) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) CreateForeshadowingElement(element *models.ForeshadowingElement) error {
+	args := m.Called(element)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) GetForeshadowingElement(id uuid.UUID) (*models.ForeshadowingElement, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.ForeshadowingElement), args.Error(1)
+}
+
+func (m *MockCampaignRepository) GetUnrevealedForeshadowing(sessionID uuid.UUID) ([]*models.ForeshadowingElement, error) {
+	args := m.Called(sessionID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.ForeshadowingElement), args.Error(1)
+}
+
+func (m *MockCampaignRepository) RevealForeshadowing(id uuid.UUID, sessionNumber int) error {
+	args := m.Called(id, sessionNumber)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) CreateTimelineEvent(event *models.CampaignTimeline) error {
+	args := m.Called(event)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) GetTimelineEvents(sessionID uuid.UUID, startDate, endDate time.Time) ([]*models.CampaignTimeline, error) {
+	args := m.Called(sessionID, startDate, endDate)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.CampaignTimeline), args.Error(1)
+}
+
+func (m *MockCampaignRepository) CreateOrUpdateNPCRelationship(relationship *models.NPCRelationship) error {
+	args := m.Called(relationship)
+	return args.Error(0)
+}
+
+func (m *MockCampaignRepository) GetNPCRelationships(sessionID uuid.UUID, npcID uuid.UUID) ([]*models.NPCRelationship, error) {
+	args := m.Called(sessionID, npcID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.NPCRelationship), args.Error(1)
+}
+
+func (m *MockCampaignRepository) UpdateRelationshipScore(sessionID, npcID, targetID uuid.UUID, scoreDelta int) error {
+	args := m.Called(sessionID, npcID, targetID, scoreDelta)
+	return args.Error(0)
 }

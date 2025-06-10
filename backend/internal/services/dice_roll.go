@@ -213,6 +213,13 @@ func (s *DiceRollService) RollInitiative(ctx context.Context, sessionID string, 
 	
 	for i, p := range participants {
 		// Roll 1d20 + dexterity modifier
+		rollNotation := "1d20"
+		if p.DexModifier > 0 {
+			rollNotation = fmt.Sprintf("1d20+%d", p.DexModifier)
+		} else if p.DexModifier < 0 {
+			rollNotation = fmt.Sprintf("1d20%d", p.DexModifier) // negative already has the minus sign
+		}
+		
 		roll := &models.DiceRoll{
 			GameSessionID: sessionID,
 			UserID:        p.UserID,
@@ -220,7 +227,7 @@ func (s *DiceRollService) RollInitiative(ctx context.Context, sessionID string, 
 			Count:         1,
 			Modifier:      p.DexModifier,
 			Purpose:       "initiative",
-			RollNotation:  fmt.Sprintf("1d20+%d", p.DexModifier),
+			RollNotation:  rollNotation,
 		}
 		
 		if err := s.RollDice(ctx, roll); err != nil {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 	
+	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
@@ -48,6 +49,13 @@ type EventBus interface {
 	Subscribe(eventType string, handler EventHandler) error
 }
 
+// JWTManagerInterface defines the JWT manager contract
+type JWTManagerInterface interface {
+	GenerateTokenPair(userID, username, email, role string) (*auth.TokenPair, error)
+	ValidateToken(tokenString string, expectedType auth.TokenType) (*auth.Claims, error)
+	RefreshToken(refreshToken string) (*auth.TokenPair, error)
+}
+
 // Event represents a domain event
 type Event interface {
 	Type() string
@@ -77,3 +85,15 @@ const (
 	EventQuestCompleted  = "quest.completed"
 	EventFactionRelationChanged = "faction.relation.changed"
 )
+
+// AIRaceGeneratorInterface defines the AI race generation contract
+type AIRaceGeneratorInterface interface {
+	GenerateCustomRace(ctx context.Context, request models.CustomRaceRequest) (*models.CustomRaceGenerationResult, error)
+}
+
+// AICampaignManagerInterface defines the AI campaign management contract
+type AICampaignManagerInterface interface {
+	GenerateStoryArc(ctx context.Context, req models.GenerateStoryArcRequest) (*models.GeneratedStoryArc, error)
+	GenerateSessionRecap(ctx context.Context, memories []*models.SessionMemory) (*models.GeneratedRecap, error)
+	GenerateForeshadowing(ctx context.Context, req models.GenerateForeshadowingRequest, plotThread *models.PlotThread, storyArc *models.StoryArc) (*models.GeneratedForeshadowing, error)
+}

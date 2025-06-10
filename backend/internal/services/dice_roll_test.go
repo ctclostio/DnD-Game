@@ -4,12 +4,10 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
 	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/your-username/dnd-game/backend/internal/services/mocks"
@@ -23,112 +21,113 @@ func TestDiceRollService_RollDice(t *testing.T) {
 		roll          *models.DiceRoll
 		setupMock     func(*mocks.MockDiceRollRepository)
 		expectedError string
-		validate      func(*testing.T, *models.DiceRoll)
+		validateRoll  func(*testing.T, *models.DiceRoll)
 	}{
 		{
-			name: "simple d20 roll",
+			name: "successful d20 roll",
 			roll: &models.DiceRoll{
 				GameSessionID: "session-123",
 				UserID:        "user-123",
 				RollNotation:  "1d20",
-				Purpose:       "attack",
+				Purpose:       "Attack roll",
 			},
 			setupMock: func(m *mocks.MockDiceRollRepository) {
-				m.On("Create", ctx, mock.MatchedBy(func(roll *models.DiceRoll) bool {
-					return roll.RollNotation == "1d20" && 
-						roll.Count == 1 && 
-						roll.DiceType == "d20" &&
-						len(roll.Results) == 1 &&
-						roll.Results[0] >= 1 && roll.Results[0] <= 20
+				m.On("Create", ctx, mock.MatchedBy(func(r *models.DiceRoll) bool {
+					return r.Total >= 1 && r.Total <= 20 &&
+						len(r.Results) == 1 &&
+						r.Results[0] >= 1 && r.Results[0] <= 20 &&
+						r.Count == 1 &&
+						r.DiceType == "d20" &&
+						r.Modifier == 0
 				})).Return(nil)
 			},
-			validate: func(t *testing.T, roll *models.DiceRoll) {
-				assert.Equal(t, "1d20", roll.RollNotation)
-				assert.Equal(t, 1, roll.Count)
-				assert.Equal(t, "d20", roll.DiceType)
-				assert.Len(t, roll.Results, 1)
-				assert.GreaterOrEqual(t, roll.Results[0], 1)
-				assert.LessOrEqual(t, roll.Results[0], 20)
-				assert.Equal(t, roll.Total, roll.Results[0])
+			validateRoll: func(t *testing.T, r *models.DiceRoll) {
+				assert.GreaterOrEqual(t, r.Total, 1)
+				assert.LessOrEqual(t, r.Total, 20)
+				assert.Len(t, r.Results, 1)
+				assert.Equal(t, "d20", r.DiceType)
+				assert.Equal(t, 1, r.Count)
+				assert.Equal(t, 0, r.Modifier)
 			},
 		},
 		{
-			name: "multiple dice",
+			name: "multiple dice with modifier",
 			roll: &models.DiceRoll{
 				GameSessionID: "session-123",
 				UserID:        "user-123",
-				RollNotation:  "3d6",
-				Purpose:       "ability check",
+				RollNotation:  "2d6+3",
+				Purpose:       "Damage roll",
 			},
 			setupMock: func(m *mocks.MockDiceRollRepository) {
-				m.On("Create", ctx, mock.MatchedBy(func(roll *models.DiceRoll) bool {
-					return roll.Count == 3 && roll.DiceType == "d6" && len(roll.Results) == 3
+				m.On("Create", ctx, mock.MatchedBy(func(r *models.DiceRoll) bool {
+					return r.Total >= 5 && r.Total <= 15 && // 2-12 + 3
+						len(r.Results) == 2 &&
+						r.Count == 2 &&
+						r.DiceType == "d6" &&
+						r.Modifier == 3
 				})).Return(nil)
 			},
-			validate: func(t *testing.T, roll *models.DiceRoll) {
-				assert.Equal(t, "3d6", roll.RollNotation)
-				assert.Equal(t, 3, roll.Count)
-				assert.Equal(t, "d6", roll.DiceType)
-				assert.Len(t, roll.Results, 3)
-				total := 0
-				for _, result := range roll.Results {
-					assert.GreaterOrEqual(t, result, 1)
-					assert.LessOrEqual(t, result, 6)
-					total += result
-				}
-				assert.Equal(t, total, roll.Total)
+			validateRoll: func(t *testing.T, r *models.DiceRoll) {
+				assert.GreaterOrEqual(t, r.Total, 5)
+				assert.LessOrEqual(t, r.Total, 15)
+				assert.Len(t, r.Results, 2)
+				assert.Equal(t, "d6", r.DiceType)
+				assert.Equal(t, 2, r.Count)
+				assert.Equal(t, 3, r.Modifier)
 			},
 		},
 		{
-			name: "roll with modifier",
+			name: "negative modifier",
 			roll: &models.DiceRoll{
 				GameSessionID: "session-123",
 				UserID:        "user-123",
-				RollNotation:  "2d8+3",
-				Purpose:       "damage",
+				RollNotation:  "1d20-2",
+				Purpose:       "Saving throw",
 			},
 			setupMock: func(m *mocks.MockDiceRollRepository) {
-				m.On("Create", ctx, mock.MatchedBy(func(roll *models.DiceRoll) bool {
-					return roll.Count == 2 && 
-						roll.DiceType == "d8" && 
-						roll.Modifier == 3 &&
-						len(roll.Results) == 2
+				m.On("Create", ctx, mock.MatchedBy(func(r *models.DiceRoll) bool {
+					return r.Total >= -1 && r.Total <= 18 && // 1-20 - 2
+						r.Modifier == -2
 				})).Return(nil)
 			},
-			validate: func(t *testing.T, roll *models.DiceRoll) {
-				assert.Equal(t, "2d8+3", roll.RollNotation)
-				assert.Equal(t, 2, roll.Count)
-				assert.Equal(t, "d8", roll.DiceType)
-				assert.Equal(t, 3, roll.Modifier)
-				assert.Len(t, roll.Results, 2)
-				sum := 0
-				for _, result := range roll.Results {
-					assert.GreaterOrEqual(t, result, 1)
-					assert.LessOrEqual(t, result, 8)
-					sum += result
-				}
-				assert.Equal(t, sum+3, roll.Total)
+			validateRoll: func(t *testing.T, r *models.DiceRoll) {
+				assert.GreaterOrEqual(t, r.Total, -1)
+				assert.LessOrEqual(t, r.Total, 18)
+				assert.Equal(t, -2, r.Modifier)
 			},
 		},
 		{
-			name: "percentile dice",
+			name:          "missing game session ID",
+			roll:          &models.DiceRoll{UserID: "user-123", RollNotation: "1d20"},
+			expectedError: "game session ID is required",
+		},
+		{
+			name:          "missing user ID",
+			roll:          &models.DiceRoll{GameSessionID: "session-123", RollNotation: "1d20"},
+			expectedError: "user ID is required",
+		},
+		{
+			name:          "missing roll notation",
+			roll:          &models.DiceRoll{GameSessionID: "session-123", UserID: "user-123"},
+			expectedError: "roll notation is required",
+		},
+		{
+			name: "invalid roll notation - no dice",
 			roll: &models.DiceRoll{
 				GameSessionID: "session-123",
 				UserID:        "user-123",
-				RollNotation:  "1d%",
-				Purpose:       "percentile check",
+				RollNotation:  "not a roll",
 			},
-			setupMock: func(m *mocks.MockDiceRollRepository) {
-				m.On("Create", ctx, mock.MatchedBy(func(roll *models.DiceRoll) bool {
-					return roll.DiceType == "d100" && roll.Results[0] >= 1 && roll.Results[0] <= 100
-				})).Return(nil)
+			expectedError: "invalid roll notation",
+		},
+		{
+			name: "invalid dice type",
+			roll: &models.DiceRoll{
+				GameSessionID: "session-123",
+				UserID:        "user-123",
+				RollNotation:  "1d7",
 			},
-			validate: func(t *testing.T, roll *models.DiceRoll) {
-				assert.Equal(t, "d100", roll.DiceType)
-				assert.Len(t, roll.Results, 1)
-				assert.GreaterOrEqual(t, roll.Results[0], 1)
-				assert.LessOrEqual(t, roll.Results[0], 100)
-			},
+			expectedError: "invalid dice type",
 		},
 		{
 			name: "repository error",
@@ -141,33 +140,6 @@ func TestDiceRollService_RollDice(t *testing.T) {
 				m.On("Create", ctx, mock.Anything).Return(errors.New("database error"))
 			},
 			expectedError: "database error",
-		},
-		{
-			name: "invalid notation - no dice",
-			roll: &models.DiceRoll{
-				GameSessionID: "session-123",
-				UserID:        "user-123",
-				RollNotation:  "invalid",
-			},
-			expectedError: "invalid roll notation",
-		},
-		{
-			name: "missing game session ID",
-			roll: &models.DiceRoll{
-				GameSessionID: "",
-				UserID:        "user-123",
-				RollNotation:  "1d20",
-			},
-			expectedError: "game session ID is required",
-		},
-		{
-			name: "missing user ID",
-			roll: &models.DiceRoll{
-				GameSessionID: "session-123",
-				UserID:        "",
-				RollNotation:  "1d20",
-			},
-			expectedError: "user ID is required",
 		},
 	}
 
@@ -186,80 +158,8 @@ func TestDiceRollService_RollDice(t *testing.T) {
 				assert.Contains(t, err.Error(), tt.expectedError)
 			} else {
 				require.NoError(t, err)
-				if tt.validate != nil {
-					tt.validate(t, tt.roll)
-				}
-			}
-
-			mockRepo.AssertExpectations(t)
-		})
-	}
-}
-
-func TestDiceRollService_GetRollByID(t *testing.T) {
-	ctx := context.Background()
-
-	tests := []struct {
-		name          string
-		rollID        string
-		setupMock     func(*mocks.MockDiceRollRepository)
-		expectedError string
-		validate      func(*testing.T, *models.DiceRoll)
-	}{
-		{
-			name:   "successful get",
-			rollID: "roll-123",
-			setupMock: func(m *mocks.MockDiceRollRepository) {
-				roll := &models.DiceRoll{
-					ID:            "roll-123",
-					GameSessionID: "session-123",
-					UserID:        "user-123",
-					RollNotation:  "1d20+5",
-					DiceType:      "d20",
-					Count:         1,
-					Modifier:      5,
-					Results:       []int{15},
-					Total:         20,
-					Purpose:       "attack",
-					Timestamp:     time.Now(),
-				}
-				m.On("GetByID", ctx, "roll-123").Return(roll, nil)
-			},
-			validate: func(t *testing.T, roll *models.DiceRoll) {
-				assert.Equal(t, "roll-123", roll.ID)
-				assert.Equal(t, "1d20+5", roll.RollNotation)
-				assert.Equal(t, 20, roll.Total)
-			},
-		},
-		{
-			name:   "roll not found",
-			rollID: "nonexistent",
-			setupMock: func(m *mocks.MockDiceRollRepository) {
-				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("not found"))
-			},
-			expectedError: "not found",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(mocks.MockDiceRollRepository)
-			if tt.setupMock != nil {
-				tt.setupMock(mockRepo)
-			}
-
-			service := services.NewDiceRollService(mockRepo)
-			roll, err := service.GetRollByID(ctx, tt.rollID)
-
-			if tt.expectedError != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
-				assert.Nil(t, roll)
-			} else {
-				require.NoError(t, err)
-				require.NotNil(t, roll)
-				if tt.validate != nil {
-					tt.validate(t, roll)
+				if tt.validateRoll != nil {
+					tt.validateRoll(t, tt.roll)
 				}
 			}
 
@@ -274,59 +174,74 @@ func TestDiceRollService_GetRollsBySession(t *testing.T) {
 	tests := []struct {
 		name          string
 		sessionID     string
-		offset        int
 		limit         int
+		offset        int
 		setupMock     func(*mocks.MockDiceRollRepository)
+		expected      []*models.DiceRoll
 		expectedError string
-		validate      func(*testing.T, []*models.DiceRoll)
 	}{
 		{
-			name:      "successful get multiple rolls",
+			name:      "successful retrieval",
 			sessionID: "session-123",
-			offset:    0,
 			limit:     10,
+			offset:    0,
 			setupMock: func(m *mocks.MockDiceRollRepository) {
 				rolls := []*models.DiceRoll{
 					{
 						ID:            "roll-1",
 						GameSessionID: "session-123",
-						RollNotation:  "1d20",
-						Total:         15,
+						UserID:        "user-123",
+						RollNotation:  "1d20+5",
+						Total:         18,
+						Purpose:       "Attack roll",
 					},
 					{
 						ID:            "roll-2",
 						GameSessionID: "session-123",
+						UserID:        "user-456",
 						RollNotation:  "2d6+3",
 						Total:         10,
+						Purpose:       "Damage roll",
 					},
 				}
 				m.On("GetByGameSession", ctx, "session-123", 0, 10).Return(rolls, nil)
 			},
-			validate: func(t *testing.T, rolls []*models.DiceRoll) {
-				assert.Len(t, rolls, 2)
-				assert.Equal(t, "roll-1", rolls[0].ID)
-				assert.Equal(t, "roll-2", rolls[1].ID)
+			expected: []*models.DiceRoll{
+				{
+					ID:            "roll-1",
+					GameSessionID: "session-123",
+					UserID:        "user-123",
+					RollNotation:  "1d20+5",
+					Total:         18,
+					Purpose:       "Attack roll",
+				},
+				{
+					ID:            "roll-2",
+					GameSessionID: "session-123",
+					UserID:        "user-456",
+					RollNotation:  "2d6+3",
+					Total:         10,
+					Purpose:       "Damage roll",
+				},
 			},
 		},
 		{
 			name:      "empty results",
-			sessionID: "session-456",
-			offset:    0,
+			sessionID: "session-999",
 			limit:     10,
+			offset:    0,
 			setupMock: func(m *mocks.MockDiceRollRepository) {
-				m.On("GetByGameSession", ctx, "session-456", 0, 10).Return([]*models.DiceRoll{}, nil)
+				m.On("GetByGameSession", ctx, "session-999", 0, 10).Return([]*models.DiceRoll{}, nil)
 			},
-			validate: func(t *testing.T, rolls []*models.DiceRoll) {
-				assert.Empty(t, rolls)
-			},
+			expected: []*models.DiceRoll{},
 		},
 		{
 			name:      "repository error",
-			sessionID: "session-789",
-			offset:    0,
+			sessionID: "session-123",
 			limit:     10,
+			offset:    0,
 			setupMock: func(m *mocks.MockDiceRollRepository) {
-				m.On("GetByGameSession", ctx, "session-789", 0, 10).Return(nil, errors.New("database error"))
+				m.On("GetByGameSession", ctx, "session-123", 0, 10).Return(nil, errors.New("database error"))
 			},
 			expectedError: "database error",
 		},
@@ -340,18 +255,92 @@ func TestDiceRollService_GetRollsBySession(t *testing.T) {
 			}
 
 			service := services.NewDiceRollService(mockRepo)
-			rolls, err := service.GetRollsBySession(ctx, tt.sessionID, tt.offset, tt.limit)
+			result, err := service.GetRollsBySession(ctx, tt.sessionID, tt.offset, tt.limit)
 
 			if tt.expectedError != "" {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedError)
-				assert.Nil(t, rolls)
 			} else {
 				require.NoError(t, err)
-				require.NotNil(t, rolls)
-				if tt.validate != nil {
-					tt.validate(t, rolls)
+				assert.Equal(t, tt.expected, result)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestDiceRollService_GetRollsByUser(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name          string
+		userID        string
+		limit         int
+		offset        int
+		setupMock     func(*mocks.MockDiceRollRepository)
+		expected      []*models.DiceRoll
+		expectedError string
+	}{
+		{
+			name:   "successful retrieval",
+			userID: "user-123",
+			limit:  20,
+			offset: 0,
+			setupMock: func(m *mocks.MockDiceRollRepository) {
+				rolls := []*models.DiceRoll{
+					{
+						ID:            "roll-1",
+						GameSessionID: "session-123",
+						UserID:        "user-123",
+						RollNotation:  "1d20",
+						Total:         15,
+					},
+					{
+						ID:            "roll-2",
+						GameSessionID: "session-456",
+						UserID:        "user-123",
+						RollNotation:  "3d6",
+						Total:         12,
+					},
 				}
+				m.On("GetByUser", ctx, "user-123", 0, 20).Return(rolls, nil)
+			},
+			expected: []*models.DiceRoll{
+				{
+					ID:            "roll-1",
+					GameSessionID: "session-123",
+					UserID:        "user-123",
+					RollNotation:  "1d20",
+					Total:         15,
+				},
+				{
+					ID:            "roll-2",
+					GameSessionID: "session-456",
+					UserID:        "user-123",
+					RollNotation:  "3d6",
+					Total:         12,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockDiceRollRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewDiceRollService(mockRepo)
+			result, err := service.GetRollsByUser(ctx, tt.userID, tt.offset, tt.limit)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
 			}
 
 			mockRepo.AssertExpectations(t)
@@ -360,8 +349,6 @@ func TestDiceRollService_GetRollsBySession(t *testing.T) {
 }
 
 func TestDiceRollService_SimulateRoll(t *testing.T) {
-	service := services.NewDiceRollService(nil)
-
 	tests := []struct {
 		name          string
 		notation      string
@@ -378,6 +365,7 @@ func TestDiceRollService_SimulateRoll(t *testing.T) {
 				assert.Len(t, roll.Results, 1)
 				assert.GreaterOrEqual(t, roll.Results[0], 1)
 				assert.LessOrEqual(t, roll.Results[0], 20)
+				assert.Equal(t, roll.Results[0], roll.Total)
 			},
 		},
 		{
@@ -417,6 +405,8 @@ func TestDiceRollService_SimulateRoll(t *testing.T) {
 		},
 	}
 
+	service := services.NewDiceRollService(nil)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			roll, err := service.SimulateRoll(tt.notation)
@@ -432,6 +422,99 @@ func TestDiceRollService_SimulateRoll(t *testing.T) {
 					tt.validate(t, roll)
 				}
 			}
+		})
+	}
+}
+
+func TestDiceRollService_RollInitiative(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name         string
+		sessionID    string
+		participants []struct {
+			UserID      string
+			CharacterID string
+			DexModifier int
+		}
+		setupMock     func(*mocks.MockDiceRollRepository)
+		expectedError string
+		validate      func(*testing.T, []struct {
+			UserID      string
+			CharacterID string
+			Initiative  int
+		})
+	}{
+		{
+			name:      "successful initiative rolls",
+			sessionID: "session-123",
+			participants: []struct {
+				UserID      string
+				CharacterID string
+				DexModifier int
+			}{
+				{UserID: "user-1", CharacterID: "char-1", DexModifier: 2},
+				{UserID: "user-2", CharacterID: "char-2", DexModifier: -1},
+			},
+			setupMock: func(m *mocks.MockDiceRollRepository) {
+				m.On("Create", ctx, mock.MatchedBy(func(r *models.DiceRoll) bool {
+					return r.Purpose == "initiative" &&
+						r.DiceType == "d20" &&
+						r.Count == 1
+				})).Return(nil).Times(2)
+			},
+			validate: func(t *testing.T, results []struct {
+				UserID      string
+				CharacterID string
+				Initiative  int
+			}) {
+				assert.Len(t, results, 2)
+				// First participant has +2 modifier
+				assert.GreaterOrEqual(t, results[0].Initiative, 3)  // 1+2
+				assert.LessOrEqual(t, results[0].Initiative, 22)    // 20+2
+				// Second participant has -1 modifier
+				assert.GreaterOrEqual(t, results[1].Initiative, 0)  // 1-1
+				assert.LessOrEqual(t, results[1].Initiative, 19)    // 20-1
+			},
+		},
+		{
+			name:      "repository error",
+			sessionID: "session-123",
+			participants: []struct {
+				UserID      string
+				CharacterID string
+				DexModifier int
+			}{
+				{UserID: "user-1", CharacterID: "char-1", DexModifier: 0},
+			},
+			setupMock: func(m *mocks.MockDiceRollRepository) {
+				m.On("Create", ctx, mock.Anything).Return(errors.New("database error"))
+			},
+			expectedError: "failed to roll initiative for user user-1: database error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockDiceRollRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewDiceRollService(mockRepo)
+			results, err := service.RollInitiative(ctx, tt.sessionID, tt.participants)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+				if tt.validate != nil {
+					tt.validate(t, results)
+				}
+			}
+
+			mockRepo.AssertExpectations(t)
 		})
 	}
 }

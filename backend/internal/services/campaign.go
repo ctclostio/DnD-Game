@@ -14,13 +14,13 @@ import (
 type CampaignService struct {
 	campaignRepo   database.CampaignRepository
 	gameRepo       database.GameSessionRepository
-	aiManager      *AICampaignManager
+	aiManager      AICampaignManagerInterface
 }
 
 func NewCampaignService(
 	campaignRepo database.CampaignRepository,
 	gameRepo database.GameSessionRepository,
-	aiManager *AICampaignManager,
+	aiManager AICampaignManagerInterface,
 ) *CampaignService {
 	return &CampaignService{
 		campaignRepo: campaignRepo,

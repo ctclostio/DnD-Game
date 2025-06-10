@@ -2,8 +2,6 @@ package services
 
 import (
 	"context"
-	"database/sql"
-	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -12,180 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/services/mocks"
 )
 
-// Mock implementations for testing
-type MockCampaignRepository struct {
-	mock.Mock
-}
-
-func (m *MockCampaignRepository) CreateStoryArc(arc *models.StoryArc) error {
-	args := m.Called(arc)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) GetStoryArc(id uuid.UUID) (*models.StoryArc, error) {
-	args := m.Called(id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.StoryArc), args.Error(1)
-}
-
-func (m *MockCampaignRepository) GetStoryArcsBySession(sessionID uuid.UUID) ([]*models.StoryArc, error) {
-	args := m.Called(sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.StoryArc), args.Error(1)
-}
-
-func (m *MockCampaignRepository) UpdateStoryArc(id uuid.UUID, updates map[string]interface{}) error {
-	args := m.Called(id, updates)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) DeleteStoryArc(id uuid.UUID) error {
-	args := m.Called(id)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) CreateSessionMemory(memory *models.SessionMemory) error {
-	args := m.Called(memory)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) GetSessionMemory(id uuid.UUID) (*models.SessionMemory, error) {
-	args := m.Called(id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.SessionMemory), args.Error(1)
-}
-
-func (m *MockCampaignRepository) GetSessionMemories(sessionID uuid.UUID, limit int) ([]*models.SessionMemory, error) {
-	args := m.Called(sessionID, limit)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.SessionMemory), args.Error(1)
-}
-
-func (m *MockCampaignRepository) GetLatestSessionMemory(sessionID uuid.UUID) (*models.SessionMemory, error) {
-	args := m.Called(sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.SessionMemory), args.Error(1)
-}
-
-func (m *MockCampaignRepository) UpdateSessionMemory(id uuid.UUID, updates map[string]interface{}) error {
-	args := m.Called(id, updates)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) CreatePlotThread(thread *models.PlotThread) error {
-	args := m.Called(thread)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) GetPlotThread(id uuid.UUID) (*models.PlotThread, error) {
-	args := m.Called(id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.PlotThread), args.Error(1)
-}
-
-func (m *MockCampaignRepository) GetPlotThreadsBySession(sessionID uuid.UUID) ([]*models.PlotThread, error) {
-	args := m.Called(sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.PlotThread), args.Error(1)
-}
-
-func (m *MockCampaignRepository) GetActivePlotThreads(sessionID uuid.UUID) ([]*models.PlotThread, error) {
-	args := m.Called(sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.PlotThread), args.Error(1)
-}
-
-func (m *MockCampaignRepository) UpdatePlotThread(id uuid.UUID, updates map[string]interface{}) error {
-	args := m.Called(id, updates)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) DeletePlotThread(id uuid.UUID) error {
-	args := m.Called(id)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) CreateForeshadowingElement(element *models.ForeshadowingElement) error {
-	args := m.Called(element)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) GetForeshadowingElement(id uuid.UUID) (*models.ForeshadowingElement, error) {
-	args := m.Called(id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.ForeshadowingElement), args.Error(1)
-}
-
-func (m *MockCampaignRepository) GetUnrevealedForeshadowing(sessionID uuid.UUID) ([]*models.ForeshadowingElement, error) {
-	args := m.Called(sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.ForeshadowingElement), args.Error(1)
-}
-
-func (m *MockCampaignRepository) RevealForeshadowing(id uuid.UUID, sessionNumber int) error {
-	args := m.Called(id, sessionNumber)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) CreateTimelineEvent(event *models.CampaignTimeline) error {
-	args := m.Called(event)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) GetTimelineEvents(sessionID uuid.UUID, startDate, endDate time.Time) ([]*models.CampaignTimeline, error) {
-	args := m.Called(sessionID, startDate, endDate)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.CampaignTimeline), args.Error(1)
-}
-
-func (m *MockCampaignRepository) CreateOrUpdateNPCRelationship(relationship *models.NPCRelationship) error {
-	args := m.Called(relationship)
-	return args.Error(0)
-}
-
-func (m *MockCampaignRepository) GetNPCRelationships(sessionID uuid.UUID, npcID uuid.UUID) ([]*models.NPCRelationship, error) {
-	args := m.Called(sessionID, npcID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.NPCRelationship), args.Error(1)
-}
-
-func (m *MockCampaignRepository) UpdateRelationshipScore(sessionID, npcID, targetID uuid.UUID, scoreDelta int) error {
-	args := m.Called(sessionID, npcID, targetID, scoreDelta)
-	return args.Error(0)
-}
-
-// Mock Game Session Repository
-type MockGameSessionRepository struct {
-	mock.Mock
-}
-
-// Mock AI Campaign Manager
+// MockAICampaignManager is used for testing
 type MockAICampaignManager struct {
 	mock.Mock
 }
@@ -215,7 +43,7 @@ func (m *MockAICampaignManager) GenerateForeshadowing(ctx context.Context, req m
 }
 
 // Test helpers
-func createTestCampaignService(repo *MockCampaignRepository, gameRepo *MockGameSessionRepository, aiManager *MockAICampaignManager) *CampaignService {
+func createTestCampaignService(repo *mocks.MockCampaignRepository, gameRepo *mocks.MockGameSessionRepository, aiManager *MockAICampaignManager) *CampaignService {
 	return NewCampaignService(repo, gameRepo, aiManager)
 }
 
@@ -226,7 +54,7 @@ func TestCampaignService_CreateStoryArc(t *testing.T) {
 		name        string
 		sessionID   uuid.UUID
 		request     models.CreateStoryArcRequest
-		setupMocks  func(*MockCampaignRepository)
+		setupMocks  func(*mocks.MockCampaignRepository)
 		expectError bool
 		validate    func(*testing.T, *models.StoryArc)
 	}{
@@ -239,7 +67,7 @@ func TestCampaignService_CreateStoryArc(t *testing.T) {
 				ArcType:         "main",
 				ImportanceLevel: 8,
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreateStoryArc", mock.AnythingOfType("*models.StoryArc")).Return(nil)
 			},
 			expectError: false,
@@ -258,7 +86,7 @@ func TestCampaignService_CreateStoryArc(t *testing.T) {
 				Description: "A minor adventure",
 				ArcType:     "side",
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreateStoryArc", mock.AnythingOfType("*models.StoryArc")).Return(nil)
 			},
 			expectError: false,
@@ -272,7 +100,7 @@ func TestCampaignService_CreateStoryArc(t *testing.T) {
 			request: models.CreateStoryArcRequest{
 				Title: "Failed Arc",
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreateStoryArc", mock.AnythingOfType("*models.StoryArc")).
 					Return(errors.New("database error"))
 			},
@@ -287,7 +115,7 @@ func TestCampaignService_CreateStoryArc(t *testing.T) {
 				ArcType:     "main",
 				ParentArcID: func() *uuid.UUID { id := uuid.New(); return &id }(),
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreateStoryArc", mock.AnythingOfType("*models.StoryArc")).Return(nil)
 			},
 			expectError: false,
@@ -299,8 +127,8 @@ func TestCampaignService_CreateStoryArc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockCampaignRepository)
-			mockGameRepo := new(MockGameSessionRepository)
+			mockRepo := new(mocks.MockCampaignRepository)
+			mockGameRepo := new(mocks.MockGameSessionRepository)
 			mockAI := new(MockAICampaignManager)
 			
 			if tt.setupMocks != nil {
@@ -342,8 +170,8 @@ func TestCampaignService_GenerateStoryArc(t *testing.T) {
 			name:      "Successful Generation",
 			sessionID: uuid.New(),
 			request: models.GenerateStoryArcRequest{
-				Theme:      "Dark Fantasy",
-				Length:     "Medium",
+				Context:    "Dark Fantasy",
+				PlayerGoals: []string{"Find the artifact"},
 				Complexity: "High",
 			},
 			generatedArc: &models.GeneratedStoryArc{
@@ -358,7 +186,7 @@ func TestCampaignService_GenerateStoryArc(t *testing.T) {
 			name:      "AI Generation Error",
 			sessionID: uuid.New(),
 			request: models.GenerateStoryArcRequest{
-				Theme: "Epic",
+				Context: "Epic",
 			},
 			generateError: errors.New("AI service unavailable"),
 			expectError:   true,
@@ -377,8 +205,8 @@ func TestCampaignService_GenerateStoryArc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockCampaignRepository)
-			mockGameRepo := new(MockGameSessionRepository)
+			mockRepo := new(mocks.MockCampaignRepository)
+			mockGameRepo := new(mocks.MockGameSessionRepository)
 			mockAI := new(MockAICampaignManager)
 
 			mockAI.On("GenerateStoryArc", mock.Anything, tt.request).
@@ -423,13 +251,13 @@ func TestCampaignService_GetStoryArcs(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		setupMocks  func(*MockCampaignRepository)
+		setupMocks  func(*mocks.MockCampaignRepository)
 		expectError bool
 		expectCount int
 	}{
 		{
 			name: "Successful Retrieval",
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("GetStoryArcsBySession", sessionID).Return(mockArcs, nil)
 			},
 			expectError: false,
@@ -437,7 +265,7 @@ func TestCampaignService_GetStoryArcs(t *testing.T) {
 		},
 		{
 			name: "Repository Error",
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("GetStoryArcsBySession", sessionID).Return(nil, errors.New("database error"))
 			},
 			expectError: true,
@@ -445,7 +273,7 @@ func TestCampaignService_GetStoryArcs(t *testing.T) {
 		},
 		{
 			name: "Empty Result",
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("GetStoryArcsBySession", sessionID).Return([]*models.StoryArc{}, nil)
 			},
 			expectError: false,
@@ -455,8 +283,8 @@ func TestCampaignService_GetStoryArcs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockCampaignRepository)
-			mockGameRepo := new(MockGameSessionRepository)
+			mockRepo := new(mocks.MockCampaignRepository)
+			mockGameRepo := new(mocks.MockGameSessionRepository)
 			mockAI := new(MockAICampaignManager)
 
 			tt.setupMocks(mockRepo)
@@ -485,7 +313,7 @@ func TestCampaignService_UpdateStoryArc(t *testing.T) {
 	tests := []struct {
 		name        string
 		request     models.UpdateStoryArcRequest
-		setupMocks  func(*MockCampaignRepository)
+		setupMocks  func(*mocks.MockCampaignRepository)
 		expectError bool
 		validate    func(*testing.T, map[string]interface{})
 	}{
@@ -496,7 +324,7 @@ func TestCampaignService_UpdateStoryArc(t *testing.T) {
 				Status:          &completedStatus,
 				ImportanceLevel: &newImportance,
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("UpdateStoryArc", arcID, mock.MatchedBy(func(updates map[string]interface{}) bool {
 					return updates["title"] == newTitle &&
 						updates["status"] == completedStatus &&
@@ -511,7 +339,7 @@ func TestCampaignService_UpdateStoryArc(t *testing.T) {
 			request: models.UpdateStoryArcRequest{
 				Title: &newTitle,
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("UpdateStoryArc", arcID, mock.MatchedBy(func(updates map[string]interface{}) bool {
 					return updates["title"] == newTitle && len(updates) == 1
 				})).Return(nil)
@@ -523,7 +351,7 @@ func TestCampaignService_UpdateStoryArc(t *testing.T) {
 			request: models.UpdateStoryArcRequest{
 				Status: &completedStatus,
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("UpdateStoryArc", arcID, mock.MatchedBy(func(updates map[string]interface{}) bool {
 					_, hasResolvedAt := updates["resolved_at"]
 					return updates["status"] == completedStatus && hasResolvedAt
@@ -534,7 +362,7 @@ func TestCampaignService_UpdateStoryArc(t *testing.T) {
 		{
 			name:    "Repository Error",
 			request: models.UpdateStoryArcRequest{Title: &newTitle},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("UpdateStoryArc", arcID, mock.Anything).Return(errors.New("update failed"))
 			},
 			expectError: true,
@@ -543,8 +371,8 @@ func TestCampaignService_UpdateStoryArc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockCampaignRepository)
-			mockGameRepo := new(MockGameSessionRepository)
+			mockRepo := new(mocks.MockCampaignRepository)
+			mockGameRepo := new(mocks.MockGameSessionRepository)
 			mockAI := new(MockAICampaignManager)
 
 			tt.setupMocks(mockRepo)
@@ -572,7 +400,7 @@ func TestCampaignService_CreateSessionMemory(t *testing.T) {
 	tests := []struct {
 		name        string
 		request     models.CreateSessionMemoryRequest
-		setupMocks  func(*MockCampaignRepository)
+		setupMocks  func(*mocks.MockCampaignRepository)
 		expectError bool
 		validate    func(*testing.T, *models.SessionMemory)
 	}{
@@ -581,22 +409,18 @@ func TestCampaignService_CreateSessionMemory(t *testing.T) {
 			request: models.CreateSessionMemoryRequest{
 				SessionNumber: 5,
 				SessionDate:   sessionDate,
-				KeyEvents: []string{
-					"Party defeated the goblin king",
-					"Found the magical artifact",
+				KeyEvents: []models.KeyEvent{
+					{Description: "Party defeated the goblin king"},
+					{Description: "Found the magical artifact"},
 				},
-				NPCsEncountered: []models.NPCEncounter{
-					{NPCID: uuid.New(), Name: "Gandor the Wise"},
-				},
+				NPCsEncountered: []string{"Gandor the Wise"},
 				DecisionsMade: []models.Decision{
-					{Description: "Chose to spare the goblin king"},
+					{Choice: "Chose to spare the goblin king"},
 				},
-				ItemsAcquired: []models.ItemAcquired{
-					{ItemID: uuid.New(), Name: "Sword of Truth"},
-				},
+				ItemsAcquired: []string{"Sword of Truth"},
 				LocationsVisited: []string{"Goblin Cave", "Ancient Temple"},
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreateSessionMemory", mock.AnythingOfType("*models.SessionMemory")).Return(nil)
 			},
 			expectError: false,
@@ -611,9 +435,9 @@ func TestCampaignService_CreateSessionMemory(t *testing.T) {
 			request: models.CreateSessionMemoryRequest{
 				SessionNumber: 1,
 				SessionDate:   sessionDate,
-				KeyEvents:     []string{},
+				KeyEvents:     []models.KeyEvent{},
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreateSessionMemory", mock.AnythingOfType("*models.SessionMemory")).Return(nil)
 			},
 			expectError: false,
@@ -626,7 +450,7 @@ func TestCampaignService_CreateSessionMemory(t *testing.T) {
 			request: models.CreateSessionMemoryRequest{
 				SessionNumber: 1,
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreateSessionMemory", mock.AnythingOfType("*models.SessionMemory")).
 					Return(errors.New("database error"))
 			},
@@ -636,8 +460,8 @@ func TestCampaignService_CreateSessionMemory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockCampaignRepository)
-			mockGameRepo := new(MockGameSessionRepository)
+			mockRepo := new(mocks.MockCampaignRepository)
+			mockGameRepo := new(mocks.MockGameSessionRepository)
 			mockAI := new(MockAICampaignManager)
 
 			tt.setupMocks(mockRepo)
@@ -674,7 +498,7 @@ func TestCampaignService_GetSessionMemories(t *testing.T) {
 		name         string
 		limit        int
 		expectedCall int
-		setupMocks   func(*MockCampaignRepository)
+		setupMocks   func(*mocks.MockCampaignRepository)
 		expectError  bool
 		expectCount  int
 	}{
@@ -682,7 +506,7 @@ func TestCampaignService_GetSessionMemories(t *testing.T) {
 			name:         "With Specified Limit",
 			limit:        5,
 			expectedCall: 5,
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("GetSessionMemories", sessionID, 5).Return(mockMemories[:2], nil)
 			},
 			expectError: false,
@@ -692,7 +516,7 @@ func TestCampaignService_GetSessionMemories(t *testing.T) {
 			name:         "Default Limit",
 			limit:        0,
 			expectedCall: 10, // Default
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("GetSessionMemories", sessionID, 10).Return(mockMemories, nil)
 			},
 			expectError: false,
@@ -702,7 +526,7 @@ func TestCampaignService_GetSessionMemories(t *testing.T) {
 			name:         "Negative Limit Uses Default",
 			limit:        -5,
 			expectedCall: 10,
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("GetSessionMemories", sessionID, 10).Return(mockMemories, nil)
 			},
 			expectError: false,
@@ -712,7 +536,7 @@ func TestCampaignService_GetSessionMemories(t *testing.T) {
 			name:         "Repository Error",
 			limit:        10,
 			expectedCall: 10,
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("GetSessionMemories", sessionID, 10).Return(nil, errors.New("database error"))
 			},
 			expectError: true,
@@ -721,8 +545,8 @@ func TestCampaignService_GetSessionMemories(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockCampaignRepository)
-			mockGameRepo := new(MockGameSessionRepository)
+			mockRepo := new(mocks.MockCampaignRepository)
+			mockGameRepo := new(mocks.MockGameSessionRepository)
 			mockAI := new(MockAICampaignManager)
 
 			tt.setupMocks(mockRepo)
@@ -817,8 +641,8 @@ func TestCampaignService_GenerateRecap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockCampaignRepository)
-			mockGameRepo := new(MockGameSessionRepository)
+			mockRepo := new(mocks.MockCampaignRepository)
+			mockGameRepo := new(mocks.MockGameSessionRepository)
 			mockAI := new(MockAICampaignManager)
 
 			expectedLimit := tt.sessionCount
@@ -862,7 +686,7 @@ func TestCampaignService_CreatePlotThread(t *testing.T) {
 	tests := []struct {
 		name        string
 		thread      *models.PlotThread
-		setupMocks  func(*MockCampaignRepository)
+		setupMocks  func(*mocks.MockCampaignRepository)
 		expectError bool
 		validate    func(*testing.T, *models.PlotThread)
 	}{
@@ -874,7 +698,7 @@ func TestCampaignService_CreatePlotThread(t *testing.T) {
 				Status:       "active",
 				TensionLevel: 8,
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreatePlotThread", mock.AnythingOfType("*models.PlotThread")).Return(nil)
 			},
 			expectError: false,
@@ -891,7 +715,7 @@ func TestCampaignService_CreatePlotThread(t *testing.T) {
 				Title:       "Mystery Plot",
 				Description: "Something mysterious",
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreatePlotThread", mock.AnythingOfType("*models.PlotThread")).Return(nil)
 			},
 			expectError: false,
@@ -905,7 +729,7 @@ func TestCampaignService_CreatePlotThread(t *testing.T) {
 			thread: &models.PlotThread{
 				Title: "Failed Thread",
 			},
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreatePlotThread", mock.AnythingOfType("*models.PlotThread")).
 					Return(errors.New("database error"))
 			},
@@ -915,8 +739,8 @@ func TestCampaignService_CreatePlotThread(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockCampaignRepository)
-			mockGameRepo := new(MockGameSessionRepository)
+			mockRepo := new(mocks.MockCampaignRepository)
+			mockGameRepo := new(mocks.MockGameSessionRepository)
 			mockAI := new(MockAICampaignManager)
 
 			tt.setupMocks(mockRepo)
@@ -951,14 +775,14 @@ func TestCampaignService_GetPlotThreads(t *testing.T) {
 	tests := []struct {
 		name        string
 		activeOnly  bool
-		setupMocks  func(*MockCampaignRepository)
+		setupMocks  func(*mocks.MockCampaignRepository)
 		expectError bool
 		expectCount int
 	}{
 		{
 			name:       "Get Active Threads Only",
 			activeOnly: true,
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("GetActivePlotThreads", sessionID).Return(activeThreads, nil)
 			},
 			expectError: false,
@@ -967,7 +791,7 @@ func TestCampaignService_GetPlotThreads(t *testing.T) {
 		{
 			name:       "Get All Threads",
 			activeOnly: false,
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("GetPlotThreadsBySession", sessionID).Return(allThreads, nil)
 			},
 			expectError: false,
@@ -976,7 +800,7 @@ func TestCampaignService_GetPlotThreads(t *testing.T) {
 		{
 			name:       "Repository Error - Active",
 			activeOnly: true,
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("GetActivePlotThreads", sessionID).Return(nil, errors.New("database error"))
 			},
 			expectError: true,
@@ -984,7 +808,7 @@ func TestCampaignService_GetPlotThreads(t *testing.T) {
 		{
 			name:       "Repository Error - All",
 			activeOnly: false,
-			setupMocks: func(repo *MockCampaignRepository) {
+			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("GetPlotThreadsBySession", sessionID).Return(nil, errors.New("database error"))
 			},
 			expectError: true,
@@ -993,8 +817,8 @@ func TestCampaignService_GetPlotThreads(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockCampaignRepository)
-			mockGameRepo := new(MockGameSessionRepository)
+			mockRepo := new(mocks.MockCampaignRepository)
+			mockGameRepo := new(mocks.MockGameSessionRepository)
 			mockAI := new(MockAICampaignManager)
 
 			tt.setupMocks(mockRepo)
@@ -1017,8 +841,8 @@ func TestCampaignService_GetPlotThreads(t *testing.T) {
 // Benchmarks
 
 func BenchmarkCampaignService_CreateStoryArc(b *testing.B) {
-	mockRepo := new(MockCampaignRepository)
-	mockGameRepo := new(MockGameSessionRepository)
+	mockRepo := new(mocks.MockCampaignRepository)
+	mockGameRepo := new(mocks.MockGameSessionRepository)
 	mockAI := new(MockAICampaignManager)
 	
 	mockRepo.On("CreateStoryArc", mock.AnythingOfType("*models.StoryArc")).Return(nil)
@@ -1038,8 +862,8 @@ func BenchmarkCampaignService_CreateStoryArc(b *testing.B) {
 }
 
 func BenchmarkCampaignService_GenerateRecap(b *testing.B) {
-	mockRepo := new(MockCampaignRepository)
-	mockGameRepo := new(MockGameSessionRepository)
+	mockRepo := new(mocks.MockCampaignRepository)
+	mockGameRepo := new(mocks.MockGameSessionRepository)
 	mockAI := new(MockAICampaignManager)
 	
 	memories := []*models.SessionMemory{

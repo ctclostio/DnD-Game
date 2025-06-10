@@ -10,12 +10,13 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/internal/services/mocks"
 	"github.com/your-username/dnd-game/backend/internal/testutil"
 )
 
 func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 	t.Run("successful race creation with auto-approval", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -78,7 +79,7 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 	})
 
 	t.Run("successful race creation pending approval", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -135,7 +136,7 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 	})
 
 	t.Run("AI generation failure", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -161,7 +162,7 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 	})
 
 	t.Run("repository save failure", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -199,7 +200,7 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 
 func TestCustomRaceService_GetCustomRace(t *testing.T) {
 	t.Run("successful retrieval", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -226,7 +227,7 @@ func TestCustomRaceService_GetCustomRace(t *testing.T) {
 	})
 
 	t.Run("race not found", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -245,7 +246,7 @@ func TestCustomRaceService_GetCustomRace(t *testing.T) {
 	})
 
 	t.Run("database error", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -266,7 +267,7 @@ func TestCustomRaceService_GetCustomRace(t *testing.T) {
 
 func TestCustomRaceService_ApproveCustomRace(t *testing.T) {
 	t.Run("successful approval", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -297,7 +298,7 @@ func TestCustomRaceService_ApproveCustomRace(t *testing.T) {
 	})
 
 	t.Run("race not found", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -318,7 +319,7 @@ func TestCustomRaceService_ApproveCustomRace(t *testing.T) {
 
 func TestCustomRaceService_RejectCustomRace(t *testing.T) {
 	t.Run("successful rejection", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -350,7 +351,7 @@ func TestCustomRaceService_RejectCustomRace(t *testing.T) {
 
 func TestCustomRaceService_RequestRevision(t *testing.T) {
 	t.Run("successful revision request", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -380,7 +381,7 @@ func TestCustomRaceService_RequestRevision(t *testing.T) {
 
 func TestCustomRaceService_MakePublic(t *testing.T) {
 	t.Run("creator makes approved race public", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -409,7 +410,7 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 	})
 
 	t.Run("approver makes race public", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -440,7 +441,7 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 	})
 
 	t.Run("unauthorized user cannot make race public", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -468,7 +469,7 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 	})
 
 	t.Run("cannot make unapproved race public", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -497,7 +498,7 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 
 func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 	t.Run("creator can use their own race", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -522,7 +523,7 @@ func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 	})
 
 	t.Run("anyone can use public approved race", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -548,7 +549,7 @@ func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 	})
 
 	t.Run("cannot use private race of another user", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -575,7 +576,7 @@ func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 	})
 
 	t.Run("cannot use unapproved race", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -601,7 +602,7 @@ func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 	})
 
 	t.Run("race not found", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -622,7 +623,7 @@ func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 
 func TestCustomRaceService_GetCustomRaceStats(t *testing.T) {
 	t.Run("successful stats retrieval", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -669,7 +670,7 @@ func TestCustomRaceService_GetCustomRaceStats(t *testing.T) {
 
 func TestCustomRaceService_GetPendingApproval(t *testing.T) {
 	t.Run("retrieve pending races", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -694,7 +695,7 @@ func TestCustomRaceService_GetPendingApproval(t *testing.T) {
 
 func TestCustomRaceService_IncrementUsage(t *testing.T) {
 	t.Run("successful usage increment", func(t *testing.T) {
-		mockRepo := new(MockCustomRaceRepository)
+		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 		
 		service := NewCustomRaceService(mockRepo, mockAI)
@@ -711,8 +712,7 @@ func TestCustomRaceService_IncrementUsage(t *testing.T) {
 	})
 }
 
-// Using MockCustomRaceRepository from character_builder_test.go
-
+// MockAIRaceGeneratorService is a mock implementation for AI race generation
 type MockAIRaceGeneratorService struct {
 	mock.Mock
 }

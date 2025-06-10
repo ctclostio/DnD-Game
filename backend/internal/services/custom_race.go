@@ -13,11 +13,11 @@ import (
 // CustomRaceService handles custom race operations
 type CustomRaceService struct {
 	repo         database.CustomRaceRepository
-	aiGenerator  *AIRaceGeneratorService
+	aiGenerator  AIRaceGeneratorInterface
 }
 
 // NewCustomRaceService creates a new custom race service
-func NewCustomRaceService(repo database.CustomRaceRepository, aiGenerator *AIRaceGeneratorService) *CustomRaceService {
+func NewCustomRaceService(repo database.CustomRaceRepository, aiGenerator AIRaceGeneratorInterface) *CustomRaceService {
 	return &CustomRaceService{
 		repo:        repo,
 		aiGenerator: aiGenerator,

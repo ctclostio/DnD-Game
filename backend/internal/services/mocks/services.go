@@ -21,8 +21,8 @@ func (m *MockJWTManager) GenerateTokenPair(userID, username, email, role string)
 	return args.Get(0).(*auth.TokenPair), args.Error(1)
 }
 
-func (m *MockJWTManager) ValidateToken(tokenString string) (*auth.Claims, error) {
-	args := m.Called(tokenString)
+func (m *MockJWTManager) ValidateToken(tokenString string, expectedType auth.TokenType) (*auth.Claims, error) {
+	args := m.Called(tokenString, expectedType)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

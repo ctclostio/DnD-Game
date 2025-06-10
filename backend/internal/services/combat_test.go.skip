@@ -15,6 +15,22 @@ type MockCombatRepository struct {
 	mock.Mock
 }
 
+// Weapon represents a weapon for combat testing
+type Weapon struct {
+	Name       string
+	Damage     string
+	DamageType string
+	Properties []string
+}
+
+// Armor represents armor for combat testing
+type Armor struct {
+	Name        string
+	Type        string
+	BaseAC      int
+	MaxDexBonus int
+}
+
 // MockDiceRoller is a mock implementation of DiceRoller
 type MockDiceRoller struct {
 	mock.Mock
@@ -25,12 +41,24 @@ func (m *MockDiceRoller) Roll(dice string) (int, error) {
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockDiceRoller) RollWithDetails(dice string) (*models.RollDetails, error) {
+func (m *MockDiceRoller) RollWithDetails(dice string) (*DieRollResult, error) {
 	args := m.Called(dice)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*models.RollDetails), args.Error(1)
+	return args.Get(0).(*DieRollResult), args.Error(1)
+}
+
+// DieRollResult for test compatibility with dice roller
+type DieRollResult struct {
+	Dice     []DieResult `json:"dice"`
+	Modifier int         `json:"modifier"`
+	Total    int         `json:"total"`
+}
+
+type DieResult struct {
+	Sides  int `json:"sides"`
+	Result int `json:"result"`
 }
 
 func TestCombatService_InitiativeRoll(t *testing.T) {
@@ -44,9 +72,9 @@ func TestCombatService_InitiativeRoll(t *testing.T) {
 		{
 			name: "roll initiative for all combatants",
 			combatants: []models.Combatant{
-				{ID: "char-1", Name: "Fighter", Type: models.CombatantTypeCharacter, Initiative: 0},
-				{ID: "char-2", Name: "Wizard", Type: models.CombatantTypeCharacter, Initiative: 0},
-				{ID: "npc-1", Name: "Goblin", Type: models.CombatantTypeNPC, Initiative: 0},
+				{ID: "char-1", Name: "Fighter", Type: models.CombatantTypeCharacter, Initiative: 0, InitiativeRoll: 0},
+				{ID: "char-2", Name: "Wizard", Type: models.CombatantTypeCharacter, Initiative: 0, InitiativeRoll: 0},
+				{ID: "npc-1", Name: "Goblin", Type: models.CombatantTypeNPC, Initiative: 0, InitiativeRoll: 0},
 			},
 			setupMock: func(m *MockDiceRoller) {
 				// Fighter rolls 15 + 2 (DEX) = 17
@@ -66,8 +94,8 @@ func TestCombatService_InitiativeRoll(t *testing.T) {
 		{
 			name: "handle tied initiatives",
 			combatants: []models.Combatant{
-				{ID: "char-1", Name: "Fighter", Type: models.CombatantTypeCharacter, Initiative: 0},
-				{ID: "char-2", Name: "Wizard", Type: models.CombatantTypeCharacter, Initiative: 0},
+				{ID: "char-1", Name: "Fighter", Type: models.CombatantTypeCharacter, Initiative: 0, InitiativeRoll: 0},
+				{ID: "char-2", Name: "Wizard", Type: models.CombatantTypeCharacter, Initiative: 0, InitiativeRoll: 0},
 			},
 			setupMock: func(m *MockDiceRoller) {
 				// Both roll the same
@@ -103,7 +131,7 @@ func TestCombatService_InitiativeRoll(t *testing.T) {
 			// Check initiatives
 			for _, combatant := range result {
 				if expected, ok := tt.expectedInitiatives[combatant.ID]; ok {
-					assert.Equal(t, expected, combatant.Initiative)
+					assert.Equal(t, expected, combatant.InitiativeRoll)
 				}
 			}
 
@@ -117,7 +145,7 @@ func TestCombatService_Attack(t *testing.T) {
 		name          string
 		attacker      *models.Combatant
 		target        *models.Combatant
-		weapon        *models.Weapon
+		weapon        *Weapon
 		setupMock     func(*MockDiceRoller)
 		expectedHit   bool
 		expectedDamage int
@@ -128,9 +156,9 @@ func TestCombatService_Attack(t *testing.T) {
 			attacker: &models.Combatant{
 				ID:   "char-1",
 				Name: "Fighter",
-				Stats: models.CombatantStats{
-					Strength:  16,
-					Dexterity: 14,
+				Abilities: map[string]int{
+					"strength":  16,
+					"dexterity": 14,
 				},
 			},
 			target: &models.Combatant{
@@ -139,7 +167,7 @@ func TestCombatService_Attack(t *testing.T) {
 				AC: 15,
 				HP: 7,
 			},
-			weapon: &models.Weapon{
+			weapon: &Weapon{
 				Name:       "Longsword",
 				Damage:     "1d8",
 				DamageType: "slashing",
@@ -147,14 +175,14 @@ func TestCombatService_Attack(t *testing.T) {
 			},
 			setupMock: func(m *MockDiceRoller) {
 				// Attack roll: 1d20 + 3 (STR) + 2 (proficiency) = 18
-				m.On("RollWithDetails", "1d20+5").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 13}},
+				m.On("RollWithDetails", "1d20+5").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 20, Result: 13}},
 					Modifier: 5,
 					Total:    18,
 				}, nil)
 				// Damage roll: 1d8 + 3 (STR) = 8
-				m.On("RollWithDetails", "1d8+3").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 8, Result: 5}},
+				m.On("RollWithDetails", "1d8+3").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 8, Result: 5}},
 					Modifier: 3,
 					Total:    8,
 				}, nil)
@@ -167,9 +195,9 @@ func TestCombatService_Attack(t *testing.T) {
 			attacker: &models.Combatant{
 				ID:   "char-1",
 				Name: "Rogue",
-				Stats: models.CombatantStats{
-					Strength:  10,
-					Dexterity: 18,
+				Abilities: map[string]int{
+					"strength":  10,
+					"dexterity": 18,
 				},
 			},
 			target: &models.Combatant{
@@ -178,7 +206,7 @@ func TestCombatService_Attack(t *testing.T) {
 				AC: 13,
 				HP: 15,
 			},
-			weapon: &models.Weapon{
+			weapon: &Weapon{
 				Name:       "Dagger",
 				Damage:     "1d4",
 				DamageType: "piercing",
@@ -186,14 +214,14 @@ func TestCombatService_Attack(t *testing.T) {
 			},
 			setupMock: func(m *MockDiceRoller) {
 				// Natural 20!
-				m.On("RollWithDetails", "1d20+6").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 20}},
+				m.On("RollWithDetails", "1d20+6").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 20, Result: 20}},
 					Modifier: 6,
 					Total:    26,
 				}, nil)
 				// Critical damage: 2d4 + 4 = 10
-				m.On("RollWithDetails", "2d4+4").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 4, Result: 3}, {Sides: 4, Result: 3}},
+				m.On("RollWithDetails", "2d4+4").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 4, Result: 3}, {Sides: 4, Result: 3}},
 					Modifier: 4,
 					Total:    10,
 				}, nil)
@@ -206,9 +234,9 @@ func TestCombatService_Attack(t *testing.T) {
 			attacker: &models.Combatant{
 				ID:   "char-1",
 				Name: "Wizard",
-				Stats: models.CombatantStats{
-					Strength:  8,
-					Dexterity: 12,
+				Abilities: map[string]int{
+					"strength":  8,
+					"dexterity": 12,
 				},
 			},
 			target: &models.Combatant{
@@ -217,15 +245,15 @@ func TestCombatService_Attack(t *testing.T) {
 				AC: 18,
 				HP: 52,
 			},
-			weapon: &models.Weapon{
+			weapon: &Weapon{
 				Name:       "Staff",
 				Damage:     "1d6",
 				DamageType: "bludgeoning",
 			},
 			setupMock: func(m *MockDiceRoller) {
 				// Attack roll: too low
-				m.On("RollWithDetails", "1d20+1").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 10}},
+				m.On("RollWithDetails", "1d20+1").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 20, Result: 10}},
 					Modifier: 1,
 					Total:    11,
 				}, nil)
@@ -238,8 +266,8 @@ func TestCombatService_Attack(t *testing.T) {
 			attacker: &models.Combatant{
 				ID:   "char-1",
 				Name: "Fighter",
-				Stats: models.CombatantStats{
-					Strength: 16,
+				Abilities: map[string]int{
+					"strength": 16,
 				},
 			},
 			target: &models.Combatant{
@@ -247,14 +275,14 @@ func TestCombatService_Attack(t *testing.T) {
 				AC: 10,
 				HP: 5,
 			},
-			weapon: &models.Weapon{
+			weapon: &Weapon{
 				Name:   "Greatsword",
 				Damage: "2d6",
 			},
 			setupMock: func(m *MockDiceRoller) {
 				// Natural 1!
-				m.On("RollWithDetails", "1d20+5").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 1}},
+				m.On("RollWithDetails", "1d20+5").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 20, Result: 1}},
 					Modifier: 5,
 					Total:    6,
 				}, nil)
@@ -266,14 +294,14 @@ func TestCombatService_Attack(t *testing.T) {
 			name:          "nil attacker",
 			attacker:      nil,
 			target:        &models.Combatant{ID: "target"},
-			weapon:        &models.Weapon{},
+			weapon:        &Weapon{},
 			expectedError: "attacker cannot be nil",
 		},
 		{
 			name:          "nil target",
 			attacker:      &models.Combatant{ID: "attacker"},
 			target:        nil,
-			weapon:        &models.Weapon{},
+			weapon:        &Weapon{},
 			expectedError: "target cannot be nil",
 		},
 		{
@@ -324,14 +352,16 @@ func TestCombatService_SavingThrow(t *testing.T) {
 			name: "successful strength save",
 			character: &models.Character{
 				SavingThrows: models.SavingThrows{
-					Strength: 5,
+					Strength: models.SavingThrow{
+						Modifier: 5,
+					},
 				},
 			},
 			saveType: "strength",
 			dc:       15,
 			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20+5").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 12}},
+				m.On("RollWithDetails", "1d20+5").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 20, Result: 12}},
 					Modifier: 5,
 					Total:    17,
 				}, nil)
@@ -343,14 +373,16 @@ func TestCombatService_SavingThrow(t *testing.T) {
 			name: "failed dexterity save",
 			character: &models.Character{
 				SavingThrows: models.SavingThrows{
-					Dexterity: 2,
+					Dexterity: models.SavingThrow{
+						Modifier: 2,
+					},
 				},
 			},
 			saveType: "dexterity",
 			dc:       18,
 			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20+2").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 10}},
+				m.On("RollWithDetails", "1d20+2").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 20, Result: 10}},
 					Modifier: 2,
 					Total:    12,
 				}, nil)
@@ -362,14 +394,16 @@ func TestCombatService_SavingThrow(t *testing.T) {
 			name: "natural 20 auto success",
 			character: &models.Character{
 				SavingThrows: models.SavingThrows{
-					Wisdom: -2,
+					Wisdom: models.SavingThrow{
+						Modifier: -2,
+					},
 				},
 			},
 			saveType: "wisdom",
 			dc:       25,
 			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20-2").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 20}},
+				m.On("RollWithDetails", "1d20-2").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 20, Result: 20}},
 					Modifier: -2,
 					Total:    18,
 				}, nil)
@@ -381,14 +415,16 @@ func TestCombatService_SavingThrow(t *testing.T) {
 			name: "natural 1 auto fail",
 			character: &models.Character{
 				SavingThrows: models.SavingThrows{
-					Constitution: 8,
+					Constitution: models.SavingThrow{
+						Modifier: 8,
+					},
 				},
 			},
 			saveType: "constitution",
 			dc:       5,
 			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20+8").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 1}},
+				m.On("RollWithDetails", "1d20+8").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 20, Result: 1}},
 					Modifier: 8,
 					Total:    9,
 				}, nil)
@@ -450,15 +486,15 @@ func TestCombatService_SkillCheck(t *testing.T) {
 		{
 			name: "successful stealth check",
 			character: &models.Character{
-				Skills: models.Skills{
-					Stealth: 5,
+				Skills: []models.Skill{
+					{Name: "stealth", Modifier: 5},
 				},
 			},
 			skill: "stealth",
 			dc:    15,
 			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20+5").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 11}},
+				m.On("RollWithDetails", "1d20+5").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 20, Result: 11}},
 					Modifier: 5,
 					Total:    16,
 				}, nil)
@@ -469,15 +505,15 @@ func TestCombatService_SkillCheck(t *testing.T) {
 		{
 			name: "failed perception check",
 			character: &models.Character{
-				Skills: models.Skills{
-					Perception: 3,
+				Skills: []models.Skill{
+					{Name: "perception", Modifier: 3},
 				},
 			},
 			skill: "perception",
 			dc:    20,
 			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20+3").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 8}},
+				m.On("RollWithDetails", "1d20+3").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 20, Result: 8}},
 					Modifier: 3,
 					Total:    11,
 				}, nil)
@@ -488,15 +524,15 @@ func TestCombatService_SkillCheck(t *testing.T) {
 		{
 			name: "athletics check with negative modifier",
 			character: &models.Character{
-				Skills: models.Skills{
-					Athletics: -1,
+				Skills: []models.Skill{
+					{Name: "athletics", Modifier: -1},
 				},
 			},
 			skill: "athletics",
 			dc:    10,
 			setupMock: func(m *MockDiceRoller) {
-				m.On("RollWithDetails", "1d20-1").Return(&models.RollDetails{
-					Dice:     []models.DieResult{{Sides: 20, Result: 12}},
+				m.On("RollWithDetails", "1d20-1").Return(&DieRollResult{
+					Dice:     []DieResult{{Sides: 20, Result: 12}},
 					Modifier: -1,
 					Total:    11,
 				}, nil)
@@ -551,7 +587,7 @@ func TestCombatService_ApplyDamage(t *testing.T) {
 		damage           int
 		damageType       string
 		expectedHP       int
-		expectedStatus   string
+		expectedCondition string
 		expectedError    string
 	}{
 		{
@@ -565,7 +601,7 @@ func TestCombatService_ApplyDamage(t *testing.T) {
 			damage:         10,
 			damageType:     "slashing",
 			expectedHP:     35,
-			expectedStatus: "alive",
+			expectedCondition: "",
 		},
 		{
 			name: "damage reduces to 0",
@@ -578,7 +614,7 @@ func TestCombatService_ApplyDamage(t *testing.T) {
 			damage:         15,
 			damageType:     "fire",
 			expectedHP:     0,
-			expectedStatus: "unconscious",
+			expectedCondition: string(models.ConditionUnconscious),
 		},
 		{
 			name: "massive damage instant death",
@@ -591,7 +627,7 @@ func TestCombatService_ApplyDamage(t *testing.T) {
 			damage:         12, // More than max HP
 			damageType:     "bludgeoning",
 			expectedHP:     0,
-			expectedStatus: "dead",
+			expectedCondition: string(models.ConditionDead),
 		},
 		{
 			name: "resistance halves damage",
@@ -600,12 +636,12 @@ func TestCombatService_ApplyDamage(t *testing.T) {
 				Name:       "Barbarian",
 				HP:         50,
 				MaxHP:      50,
-				Resistances: []string{"slashing", "piercing", "bludgeoning"},
+				DamageResistances: []string{"slashing", "piercing", "bludgeoning"},
 			},
 			damage:         20,
 			damageType:     "slashing",
 			expectedHP:     40, // 20 / 2 = 10 damage taken
-			expectedStatus: "alive",
+			expectedCondition: "",
 		},
 		{
 			name: "vulnerability doubles damage",
@@ -614,12 +650,12 @@ func TestCombatService_ApplyDamage(t *testing.T) {
 				Name:            "Fire Elemental",
 				HP:              30,
 				MaxHP:           30,
-				Vulnerabilities: []string{"cold"},
+				DamageVulnerabilities: []string{"cold"},
 			},
 			damage:         10,
 			damageType:     "cold",
 			expectedHP:     10, // 10 * 2 = 20 damage taken
-			expectedStatus: "alive",
+			expectedCondition: "",
 		},
 		{
 			name: "immunity negates damage",
@@ -628,12 +664,12 @@ func TestCombatService_ApplyDamage(t *testing.T) {
 				Name:       "Ghost",
 				HP:         20,
 				MaxHP:      20,
-				Immunities: []string{"necrotic", "poison"},
+				DamageImmunities: []string{"necrotic", "poison"},
 			},
 			damage:         50,
 			damageType:     "necrotic",
 			expectedHP:     20, // No damage taken
-			expectedStatus: "alive",
+			expectedCondition: "",
 		},
 		{
 			name:          "nil target",
@@ -652,7 +688,7 @@ func TestCombatService_ApplyDamage(t *testing.T) {
 			damage:         -15,
 			damageType:     "healing",
 			expectedHP:     25,
-			expectedStatus: "alive",
+			expectedCondition: "",
 		},
 		{
 			name: "healing cannot exceed max HP",
@@ -664,7 +700,7 @@ func TestCombatService_ApplyDamage(t *testing.T) {
 			damage:         -10,
 			damageType:     "healing",
 			expectedHP:     30,
-			expectedStatus: "alive",
+			expectedCondition: "",
 		},
 	}
 
@@ -679,7 +715,7 @@ func TestCombatService_ApplyDamage(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expectedHP, tt.target.HP)
-				assert.Equal(t, tt.expectedStatus, tt.target.Status)
+				assert.Equal(t, tt.expectedCondition, tt.target.Condition)
 			}
 		})
 	}
@@ -689,14 +725,14 @@ func TestCombatService_CalculateAC(t *testing.T) {
 	tests := []struct {
 		name      string
 		character *models.Character
-		armor     *models.Armor
+		armor     *Armor
 		shield    bool
 		expected  int
 	}{
 		{
 			name: "no armor",
 			character: &models.Character{
-				AbilityScores: models.AbilityScores{
+				Attributes: models.Attributes{
 					Dexterity: 14,
 				},
 			},
@@ -707,11 +743,11 @@ func TestCombatService_CalculateAC(t *testing.T) {
 		{
 			name: "light armor",
 			character: &models.Character{
-				AbilityScores: models.AbilityScores{
+				Attributes: models.Attributes{
 					Dexterity: 16,
 				},
 			},
-			armor: &models.Armor{
+			armor: &Armor{
 				Name:     "Leather Armor",
 				Type:     "light",
 				BaseAC:   11,
@@ -723,11 +759,11 @@ func TestCombatService_CalculateAC(t *testing.T) {
 		{
 			name: "medium armor with dex cap",
 			character: &models.Character{
-				AbilityScores: models.AbilityScores{
+				Attributes: models.Attributes{
 					Dexterity: 18,
 				},
 			},
-			armor: &models.Armor{
+			armor: &Armor{
 				Name:     "Breastplate",
 				Type:     "medium",
 				BaseAC:   14,
@@ -739,11 +775,11 @@ func TestCombatService_CalculateAC(t *testing.T) {
 		{
 			name: "heavy armor ignores dex",
 			character: &models.Character{
-				AbilityScores: models.AbilityScores{
+				Attributes: models.Attributes{
 					Dexterity: 20,
 				},
 			},
-			armor: &models.Armor{
+			armor: &Armor{
 				Name:     "Plate Armor",
 				Type:     "heavy",
 				BaseAC:   18,
@@ -755,11 +791,11 @@ func TestCombatService_CalculateAC(t *testing.T) {
 		{
 			name: "armor with shield",
 			character: &models.Character{
-				AbilityScores: models.AbilityScores{
+				Attributes: models.Attributes{
 					Dexterity: 14,
 				},
 			},
-			armor: &models.Armor{
+			armor: &Armor{
 				Name:     "Chain Mail",
 				Type:     "heavy",
 				BaseAC:   16,
