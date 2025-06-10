@@ -2,12 +2,14 @@ package services
 
 import (
 	"errors"
+	"sync"
 	"time"
 	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type GameService struct {
+	mu       sync.RWMutex
 	sessions map[string]*models.GameSession
 	events   map[string][]*models.GameEvent
 }
@@ -24,6 +26,8 @@ func (s *GameService) CreateSession(session *models.GameSession) (*models.GameSe
 	session.Status = models.GameStatusActive
 	session.CreatedAt = time.Now()
 	
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.sessions[session.ID] = session
 	s.events[session.ID] = make([]*models.GameEvent, 0)
 	
@@ -31,6 +35,8 @@ func (s *GameService) CreateSession(session *models.GameSession) (*models.GameSe
 }
 
 func (s *GameService) GetSessionByID(id string) (*models.GameSession, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	session, exists := s.sessions[id]
 	if !exists {
 		return nil, errors.New("session not found")
@@ -39,7 +45,10 @@ func (s *GameService) GetSessionByID(id string) (*models.GameSession, error) {
 }
 
 func (s *GameService) AddPlayerToSession(sessionID, playerID string, player *models.Player) error {
+	s.mu.RLock()
 	_, exists := s.sessions[sessionID]
+	s.mu.RUnlock()
+	
 	if !exists {
 		return errors.New("session not found")
 	}
@@ -52,6 +61,9 @@ func (s *GameService) AddPlayerToSession(sessionID, playerID string, player *mod
 }
 
 func (s *GameService) RecordGameEvent(event *models.GameEvent) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	
 	if _, exists := s.sessions[event.SessionID]; !exists {
 		return errors.New("session not found")
 	}
@@ -64,6 +76,8 @@ func (s *GameService) RecordGameEvent(event *models.GameEvent) error {
 }
 
 func (s *GameService) GetSessionEvents(sessionID string) ([]*models.GameEvent, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	events, exists := s.events[sessionID]
 	if !exists {
 		return nil, errors.New("session not found")

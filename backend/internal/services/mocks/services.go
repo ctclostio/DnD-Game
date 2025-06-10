@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/your-username/dnd-game/backend/internal/auth"
+	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
@@ -223,4 +224,110 @@ func CreateTestGameSession(id, dmID, name string) *models.GameSession {
 		Description: "Test session",
 		Status:      models.GameStatusActive,
 	}
+}
+
+// MockDiceRollService is a mock implementation of DiceRollService
+type MockDiceRollService struct {
+	mock.Mock
+}
+
+func (m *MockDiceRollService) RollDice(ctx context.Context, roll *models.DiceRoll) error {
+	args := m.Called(ctx, roll)
+	return args.Error(0)
+}
+
+func (m *MockDiceRollService) SetGameSessionRepo(repo database.GameSessionRepository) {
+	m.Called(repo)
+}
+
+func (m *MockDiceRollService) GetRollByID(ctx context.Context, id string) (*models.DiceRoll, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.DiceRoll), args.Error(1)
+}
+
+func (m *MockDiceRollService) GetRollsBySession(ctx context.Context, sessionID string, offset, limit int) ([]*models.DiceRoll, error) {
+	args := m.Called(ctx, sessionID, offset, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.DiceRoll), args.Error(1)
+}
+
+func (m *MockDiceRollService) GetRollsByUser(ctx context.Context, userID string, offset, limit int) ([]*models.DiceRoll, error) {
+	args := m.Called(ctx, userID, offset, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.DiceRoll), args.Error(1)
+}
+
+func (m *MockDiceRollService) GetRollsBySessionAndUser(ctx context.Context, sessionID, userID string, offset, limit int) ([]*models.DiceRoll, error) {
+	args := m.Called(ctx, sessionID, userID, offset, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.DiceRoll), args.Error(1)
+}
+
+func (m *MockDiceRollService) DeleteRoll(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockDiceRollService) SimulateRoll(notation string) (*models.DiceRoll, error) {
+	args := m.Called(notation)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.DiceRoll), args.Error(1)
+}
+
+// MockAIDMAssistantService is a mock implementation of AIDMAssistantInterface
+type MockAIDMAssistantService struct {
+	mock.Mock
+}
+
+func (m *MockAIDMAssistantService) GenerateNPCDialogue(ctx context.Context, req models.NPCDialogueRequest) (string, error) {
+	args := m.Called(ctx, req)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockAIDMAssistantService) GenerateLocationDescription(ctx context.Context, req models.LocationDescriptionRequest) (*models.AILocation, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.AILocation), args.Error(1)
+}
+
+func (m *MockAIDMAssistantService) GenerateCombatNarration(ctx context.Context, req models.CombatNarrationRequest) (string, error) {
+	args := m.Called(ctx, req)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockAIDMAssistantService) GeneratePlotTwist(ctx context.Context, currentContext map[string]interface{}) (*models.AIStoryElement, error) {
+	args := m.Called(ctx, currentContext)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.AIStoryElement), args.Error(1)
+}
+
+func (m *MockAIDMAssistantService) GenerateEnvironmentalHazard(ctx context.Context, locationType string, difficulty int) (*models.AIEnvironmentalHazard, error) {
+	args := m.Called(ctx, locationType, difficulty)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.AIEnvironmentalHazard), args.Error(1)
+}
+
+func (m *MockAIDMAssistantService) GenerateNPC(ctx context.Context, role string, context map[string]interface{}) (*models.AINPC, error) {
+	args := m.Called(ctx, role, context)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.AINPC), args.Error(1)
 }

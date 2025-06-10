@@ -4,30 +4,29 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/testutil"
+	"github.com/your-username/dnd-game/backend/internal/services/mocks"
 )
 
 func TestDMAssistantService_ProcessRequest(t *testing.T) {
 	t.Run("successful NPC dialogue generation", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		userID := uuid.New()
 		sessionID := uuid.New()
 		
 		req := models.DMAssistantRequest{
 			Type:          models.RequestTypeNPCDialogue,
 			GameSessionID: sessionID.String(),
-			Context:       "Tavern conversation",
+			Context:       map[string]interface{}{"situation": "Tavern conversation"},
 			Parameters: map[string]interface{}{
 				"npcName":        "Bartender Bob",
 				"npcPersonality": []interface{}{"friendly", "gossipy"},
@@ -66,19 +65,19 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 	})
 
 	t.Run("successful location description generation", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		userID := uuid.New()
 		sessionID := uuid.New()
 		
 		req := models.DMAssistantRequest{
 			Type:          models.RequestTypeLocationDesc,
 			GameSessionID: sessionID.String(),
-			Context:       "Party entering new area",
+			Context:       map[string]interface{}{"situation": "Party entering new area"},
 			Parameters: map[string]interface{}{
 				"locationType":    "dungeon",
 				"locationName":    "The Forgotten Crypt",
@@ -94,7 +93,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 			Type:         "dungeon",
 			Description:  "The air is thick with decay...",
 			Atmosphere:   "eerie",
-			NPCs:         []uuid.UUID{},
+			NPCsPresent:  []uuid.UUID{},
 		}
 		
 		mockAI.On("GenerateLocationDescription", ctx, mock.MatchedBy(func(req models.LocationDescriptionRequest) bool {
@@ -126,19 +125,19 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 	})
 
 	t.Run("successful combat narration generation", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		userID := uuid.New()
 		sessionID := uuid.New()
 		
 		req := models.DMAssistantRequest{
 			Type:          models.RequestTypeCombatNarration,
 			GameSessionID: sessionID.String(),
-			Context:       "Epic battle",
+			Context:       map[string]interface{}{"situation": "Epic battle"},
 			Parameters: map[string]interface{}{
 				"attackerName":  "Aragorn",
 				"targetName":    "Orc Warrior",
@@ -182,19 +181,23 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 	})
 
 	t.Run("successful plot twist generation", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		userID := uuid.New()
 		sessionID := uuid.New()
+		
+		contextMap := map[string]interface{}{
+			"situation": "Party just defeated the villain",
+		}
 		
 		req := models.DMAssistantRequest{
 			Type:          models.RequestTypePlotTwist,
 			GameSessionID: sessionID.String(),
-			Context:       "Party just defeated the villain",
+			Context:       contextMap,
 		}
 		
 		expectedTwist := &models.AIStoryElement{
@@ -202,11 +205,10 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 			Type:        models.StoryElementPlotTwist,
 			Title:       "The True Puppet Master",
 			Description: "The villain was being controlled...",
-			Impact:      "major",
-			Tags:        []string{"betrayal", "revelation"},
+			ImpactLevel: models.ImpactLevelMajor,
 		}
 		
-		mockAI.On("GeneratePlotTwist", ctx, req.Context).Return(expectedTwist, nil)
+		mockAI.On("GeneratePlotTwist", ctx, contextMap).Return(expectedTwist, nil)
 		
 		mockRepo.On("SaveStoryElement", ctx, mock.MatchedBy(func(elem *models.AIStoryElement) bool {
 			return elem.GameSessionID == sessionID &&
@@ -230,12 +232,12 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 	})
 
 	t.Run("successful environmental hazard generation", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		userID := uuid.New()
 		sessionID := uuid.New()
 		locationID := uuid.New()
@@ -243,7 +245,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 		req := models.DMAssistantRequest{
 			Type:          models.RequestTypeEnvironmentalHazard,
 			GameSessionID: sessionID.String(),
-			Context:       "Dangerous dungeon room",
+			Context:       map[string]interface{}{"situation": "Dangerous dungeon room"},
 			Parameters: map[string]interface{}{
 				"locationType": "dungeon",
 				"difficulty":   float64(3),
@@ -252,15 +254,15 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 		}
 		
 		expectedHazard := &models.AIEnvironmentalHazard{
-			ID:          uuid.New(),
-			Name:        "Poison Dart Trap",
-			Type:        "trap",
-			Description: "Hidden pressure plates trigger poison darts",
-			Trigger:     "pressure",
-			Effect:      "2d4 poison damage, DC 15 CON save",
-			DC:          15,
-			Damage:      "2d4",
-			IsActive:    true,
+			ID:               uuid.New(),
+			Name:             "Poison Dart Trap",
+			Description:      "Hidden pressure plates trigger poison darts",
+			TriggerCondition: "pressure",
+			EffectDescription: "2d4 poison damage, DC 15 CON save",
+			DifficultyClass:  15,
+			DamageFormula:    "2d4",
+			IsTrap:           true,
+			IsActive:         true,
 		}
 		
 		mockAI.On("GenerateEnvironmentalHazard", ctx, "dungeon", 3).Return(expectedHazard, nil)
@@ -290,18 +292,18 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 	})
 
 	t.Run("invalid game session ID", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		userID := uuid.New()
 		
 		req := models.DMAssistantRequest{
 			Type:          models.RequestTypeNPCDialogue,
 			GameSessionID: "invalid-uuid",
-			Context:       "Test",
+			Context:       map[string]interface{}{},
 			Parameters:    map[string]interface{}{},
 		}
 		
@@ -312,19 +314,19 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 	})
 
 	t.Run("unknown request type", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		userID := uuid.New()
 		sessionID := uuid.New()
 		
 		req := models.DMAssistantRequest{
 			Type:          "unknown_type",
 			GameSessionID: sessionID.String(),
-			Context:       "Test",
+			Context:       map[string]interface{}{},
 			Parameters:    map[string]interface{}{},
 		}
 		
@@ -335,19 +337,19 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 	})
 
 	t.Run("missing required parameters", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		userID := uuid.New()
 		sessionID := uuid.New()
 		
 		req := models.DMAssistantRequest{
 			Type:          models.RequestTypeNPCDialogue,
 			GameSessionID: sessionID.String(),
-			Context:       "Test",
+			Context:       map[string]interface{}{},
 			Parameters:    map[string]interface{}{
 				// Missing required npcName
 			},
@@ -362,12 +364,12 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 
 func TestDMAssistantService_CreateNPC(t *testing.T) {
 	t.Run("successful NPC creation", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		sessionID := uuid.New()
 		userID := uuid.New()
 		role := "merchant"
@@ -377,12 +379,12 @@ func TestDMAssistantService_CreateNPC(t *testing.T) {
 		}
 		
 		expectedNPC := &models.AINPC{
-			ID:          uuid.New(),
-			Name:        "Thoran Ironforge",
-			Role:        role,
-			Description: "A gruff dwarven weaponsmith",
-			Personality: []string{"gruff", "honest", "skilled"},
-			Backstory:   "Former royal armorer...",
+			ID:                uuid.New(),
+			Name:              "Thoran Ironforge",
+			Occupation:        role,
+			Appearance:        "A gruff dwarven weaponsmith",
+			PersonalityTraits: []string{"gruff", "honest", "skilled"},
+			Motivations:       "Former royal armorer...",
 		}
 		
 		mockAI.On("GenerateNPC", ctx, role, context).Return(expectedNPC, nil)
@@ -407,12 +409,12 @@ func TestDMAssistantService_CreateNPC(t *testing.T) {
 	})
 
 	t.Run("AI generation failure", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		sessionID := uuid.New()
 		userID := uuid.New()
 		
@@ -429,12 +431,12 @@ func TestDMAssistantService_CreateNPC(t *testing.T) {
 	})
 
 	t.Run("repository save failure", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		sessionID := uuid.New()
 		userID := uuid.New()
 		
@@ -458,12 +460,12 @@ func TestDMAssistantService_CreateNPC(t *testing.T) {
 
 func TestDMAssistantService_UpdateNPCDialogue(t *testing.T) {
 	t.Run("successful dialogue update", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		npcID := uuid.New()
 		dialogue := "The dragon? Aye, I've seen it fly over the mountains."
 		context := "Player asking about dragon sightings"
@@ -483,12 +485,12 @@ func TestDMAssistantService_UpdateNPCDialogue(t *testing.T) {
 
 func TestDMAssistantService_GetUnusedStoryElements(t *testing.T) {
 	t.Run("retrieve unused story elements", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		sessionID := uuid.New()
 		
 		expectedElements := []*models.AIStoryElement{
@@ -499,7 +501,7 @@ func TestDMAssistantService_GetUnusedStoryElements(t *testing.T) {
 			},
 			{
 				ID:    uuid.New(),
-				Type:  models.StoryElementLoreReveal,
+				Type:  models.StoryElementRevelation,
 				Title: "Ancient Prophecy",
 			},
 		}
@@ -518,12 +520,12 @@ func TestDMAssistantService_GetUnusedStoryElements(t *testing.T) {
 
 func TestDMAssistantService_TriggerHazard(t *testing.T) {
 	t.Run("trigger environmental hazard", func(t *testing.T) {
-		mockRepo := new(MockDMAssistantRepository)
-		mockAI := new(MockAIDMAssistantService)
+		mockRepo := new(mocks.MockDMAssistantRepository)
+		mockAI := new(mocks.MockAIDMAssistantService)
 		
 		service := NewDMAssistantService(mockRepo, mockAI)
 		
-		ctx := testutil.TestContext()
+		ctx := context.Background()
 		hazardID := uuid.New()
 		
 		mockRepo.On("TriggerHazard", ctx, hazardID).Return(nil)
@@ -533,148 +535,4 @@ func TestDMAssistantService_TriggerHazard(t *testing.T) {
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
-}
-
-// Mock implementations
-type MockDMAssistantRepository struct {
-	mock.Mock
-}
-
-func (m *MockDMAssistantRepository) SaveHistory(ctx context.Context, history *models.DMAssistantHistory) error {
-	args := m.Called(ctx, history)
-	return args.Error(0)
-}
-
-func (m *MockDMAssistantRepository) SaveNPC(ctx context.Context, npc *models.AINPC) error {
-	args := m.Called(ctx, npc)
-	return args.Error(0)
-}
-
-func (m *MockDMAssistantRepository) GetNPCByID(ctx context.Context, id uuid.UUID) (*models.AINPC, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.AINPC), args.Error(1)
-}
-
-func (m *MockDMAssistantRepository) GetNPCsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AINPC, error) {
-	args := m.Called(ctx, sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.AINPC), args.Error(1)
-}
-
-func (m *MockDMAssistantRepository) AddNPCDialogue(ctx context.Context, npcID uuid.UUID, entry models.DialogueEntry) error {
-	args := m.Called(ctx, npcID, entry)
-	return args.Error(0)
-}
-
-func (m *MockDMAssistantRepository) SaveLocation(ctx context.Context, location *models.AILocation) error {
-	args := m.Called(ctx, location)
-	return args.Error(0)
-}
-
-func (m *MockDMAssistantRepository) GetLocationByID(ctx context.Context, id uuid.UUID) (*models.AILocation, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.AILocation), args.Error(1)
-}
-
-func (m *MockDMAssistantRepository) GetLocationsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AILocation, error) {
-	args := m.Called(ctx, sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.AILocation), args.Error(1)
-}
-
-func (m *MockDMAssistantRepository) SaveStoryElement(ctx context.Context, element *models.AIStoryElement) error {
-	args := m.Called(ctx, element)
-	return args.Error(0)
-}
-
-func (m *MockDMAssistantRepository) GetUnusedStoryElements(ctx context.Context, sessionID uuid.UUID) ([]*models.AIStoryElement, error) {
-	args := m.Called(ctx, sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.AIStoryElement), args.Error(1)
-}
-
-func (m *MockDMAssistantRepository) MarkStoryElementUsed(ctx context.Context, elementID uuid.UUID) error {
-	args := m.Called(ctx, elementID)
-	return args.Error(0)
-}
-
-func (m *MockDMAssistantRepository) SaveNarration(ctx context.Context, narration *models.AINarration) error {
-	args := m.Called(ctx, narration)
-	return args.Error(0)
-}
-
-func (m *MockDMAssistantRepository) SaveEnvironmentalHazard(ctx context.Context, hazard *models.AIEnvironmentalHazard) error {
-	args := m.Called(ctx, hazard)
-	return args.Error(0)
-}
-
-func (m *MockDMAssistantRepository) GetActiveHazardsByLocation(ctx context.Context, locationID uuid.UUID) ([]*models.AIEnvironmentalHazard, error) {
-	args := m.Called(ctx, locationID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.AIEnvironmentalHazard), args.Error(1)
-}
-
-func (m *MockDMAssistantRepository) TriggerHazard(ctx context.Context, hazardID uuid.UUID) error {
-	args := m.Called(ctx, hazardID)
-	return args.Error(0)
-}
-
-type MockAIDMAssistantService struct {
-	mock.Mock
-}
-
-func (m *MockAIDMAssistantService) GenerateNPCDialogue(ctx context.Context, req models.NPCDialogueRequest) (string, error) {
-	args := m.Called(ctx, req)
-	return args.String(0), args.Error(1)
-}
-
-func (m *MockAIDMAssistantService) GenerateLocationDescription(ctx context.Context, req models.LocationDescriptionRequest) (*models.AILocation, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.AILocation), args.Error(1)
-}
-
-func (m *MockAIDMAssistantService) GenerateCombatNarration(ctx context.Context, req models.CombatNarrationRequest) (string, error) {
-	args := m.Called(ctx, req)
-	return args.String(0), args.Error(1)
-}
-
-func (m *MockAIDMAssistantService) GeneratePlotTwist(ctx context.Context, context string) (*models.AIStoryElement, error) {
-	args := m.Called(ctx, context)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.AIStoryElement), args.Error(1)
-}
-
-func (m *MockAIDMAssistantService) GenerateEnvironmentalHazard(ctx context.Context, locationType string, difficulty int) (*models.AIEnvironmentalHazard, error) {
-	args := m.Called(ctx, locationType, difficulty)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.AIEnvironmentalHazard), args.Error(1)
-}
-
-func (m *MockAIDMAssistantService) GenerateNPC(ctx context.Context, role string, context map[string]interface{}) (*models.AINPC, error) {
-	args := m.Called(ctx, role, context)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.AINPC), args.Error(1)
 }

@@ -97,3 +97,13 @@ type AICampaignManagerInterface interface {
 	GenerateSessionRecap(ctx context.Context, memories []*models.SessionMemory) (*models.GeneratedRecap, error)
 	GenerateForeshadowing(ctx context.Context, req models.GenerateForeshadowingRequest, plotThread *models.PlotThread, storyArc *models.StoryArc) (*models.GeneratedForeshadowing, error)
 }
+
+// AIDMAssistantInterface defines the AI DM assistant contract
+type AIDMAssistantInterface interface {
+	GenerateNPCDialogue(ctx context.Context, req models.NPCDialogueRequest) (string, error)
+	GenerateLocationDescription(ctx context.Context, req models.LocationDescriptionRequest) (*models.AILocation, error)
+	GenerateCombatNarration(ctx context.Context, req models.CombatNarrationRequest) (string, error)
+	GeneratePlotTwist(ctx context.Context, currentContext map[string]interface{}) (*models.AIStoryElement, error)
+	GenerateEnvironmentalHazard(ctx context.Context, locationType string, difficulty int) (*models.AIEnvironmentalHazard, error)
+	GenerateNPC(ctx context.Context, role string, context map[string]interface{}) (*models.AINPC, error)
+}

@@ -637,3 +637,210 @@ func (m *MockCampaignRepository) UpdateRelationshipScore(sessionID, npcID, targe
 	args := m.Called(sessionID, npcID, targetID, scoreDelta)
 	return args.Error(0)
 }
+
+// MockRuleBuilderRepository is a mock implementation of database.RuleBuilderRepository
+type MockRuleBuilderRepository struct {
+	mock.Mock
+}
+
+func (m *MockRuleBuilderRepository) GetRuleTemplates(userID, category string, isPublic bool) ([]models.RuleTemplate, error) {
+	args := m.Called(userID, category, isPublic)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.RuleTemplate), args.Error(1)
+}
+
+func (m *MockRuleBuilderRepository) GetRuleTemplate(templateID string) (*models.RuleTemplate, error) {
+	args := m.Called(templateID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.RuleTemplate), args.Error(1)
+}
+
+func (m *MockRuleBuilderRepository) CreateRuleTemplate(template *models.RuleTemplate) error {
+	args := m.Called(template)
+	return args.Error(0)
+}
+
+func (m *MockRuleBuilderRepository) UpdateRuleTemplate(templateID string, updates map[string]interface{}) error {
+	args := m.Called(templateID, updates)
+	return args.Error(0)
+}
+
+func (m *MockRuleBuilderRepository) DeleteRuleTemplate(templateID string) error {
+	args := m.Called(templateID)
+	return args.Error(0)
+}
+
+func (m *MockRuleBuilderRepository) GetNodeTemplates() ([]models.NodeTemplate, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.NodeTemplate), args.Error(1)
+}
+
+func (m *MockRuleBuilderRepository) GetRuleInstance(instanceID string) (*models.RuleInstance, error) {
+	args := m.Called(instanceID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.RuleInstance), args.Error(1)
+}
+
+func (m *MockRuleBuilderRepository) DeactivateRuleInstance(instanceID string) error {
+	args := m.Called(instanceID)
+	return args.Error(0)
+}
+
+func (m *MockRuleBuilderRepository) CreateActiveRule(rule *models.ActiveRule) error {
+	args := m.Called(rule)
+	return args.Error(0)
+}
+
+func (m *MockRuleBuilderRepository) GetActiveRules(gameSessionID, characterID string) ([]models.ActiveRule, error) {
+	args := m.Called(gameSessionID, characterID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.ActiveRule), args.Error(1)
+}
+
+func (m *MockRuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, characterID string, limit int) ([]models.RuleExecution, error) {
+	args := m.Called(gameSessionID, characterID, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.RuleExecution), args.Error(1)
+}
+
+func (m *MockRuleBuilderRepository) IncrementUsageCount(templateID string) error {
+	args := m.Called(templateID)
+	return args.Error(0)
+}
+
+// MockDMAssistantRepository is a mock implementation of database.DMAssistantRepository
+type MockDMAssistantRepository struct {
+	mock.Mock
+}
+
+func (m *MockDMAssistantRepository) SaveHistory(ctx context.Context, history *models.DMAssistantHistory) error {
+	args := m.Called(ctx, history)
+	return args.Error(0)
+}
+
+func (m *MockDMAssistantRepository) SaveNPC(ctx context.Context, npc *models.AINPC) error {
+	args := m.Called(ctx, npc)
+	return args.Error(0)
+}
+
+func (m *MockDMAssistantRepository) GetNPCByID(ctx context.Context, id uuid.UUID) (*models.AINPC, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.AINPC), args.Error(1)
+}
+
+func (m *MockDMAssistantRepository) GetNPCsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AINPC, error) {
+	args := m.Called(ctx, sessionID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.AINPC), args.Error(1)
+}
+
+func (m *MockDMAssistantRepository) AddNPCDialogue(ctx context.Context, npcID uuid.UUID, entry models.DialogueEntry) error {
+	args := m.Called(ctx, npcID, entry)
+	return args.Error(0)
+}
+
+func (m *MockDMAssistantRepository) SaveLocation(ctx context.Context, location *models.AILocation) error {
+	args := m.Called(ctx, location)
+	return args.Error(0)
+}
+
+func (m *MockDMAssistantRepository) GetLocationByID(ctx context.Context, id uuid.UUID) (*models.AILocation, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.AILocation), args.Error(1)
+}
+
+func (m *MockDMAssistantRepository) GetLocationsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AILocation, error) {
+	args := m.Called(ctx, sessionID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.AILocation), args.Error(1)
+}
+
+func (m *MockDMAssistantRepository) SaveStoryElement(ctx context.Context, element *models.AIStoryElement) error {
+	args := m.Called(ctx, element)
+	return args.Error(0)
+}
+
+func (m *MockDMAssistantRepository) GetUnusedStoryElements(ctx context.Context, sessionID uuid.UUID) ([]*models.AIStoryElement, error) {
+	args := m.Called(ctx, sessionID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.AIStoryElement), args.Error(1)
+}
+
+func (m *MockDMAssistantRepository) MarkStoryElementUsed(ctx context.Context, elementID uuid.UUID) error {
+	args := m.Called(ctx, elementID)
+	return args.Error(0)
+}
+
+func (m *MockDMAssistantRepository) SaveNarration(ctx context.Context, narration *models.AINarration) error {
+	args := m.Called(ctx, narration)
+	return args.Error(0)
+}
+
+func (m *MockDMAssistantRepository) SaveEnvironmentalHazard(ctx context.Context, hazard *models.AIEnvironmentalHazard) error {
+	args := m.Called(ctx, hazard)
+	return args.Error(0)
+}
+
+func (m *MockDMAssistantRepository) GetActiveHazardsByLocation(ctx context.Context, locationID uuid.UUID) ([]*models.AIEnvironmentalHazard, error) {
+	args := m.Called(ctx, locationID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.AIEnvironmentalHazard), args.Error(1)
+}
+
+func (m *MockDMAssistantRepository) TriggerHazard(ctx context.Context, hazardID uuid.UUID) error {
+	args := m.Called(ctx, hazardID)
+	return args.Error(0)
+}
+
+func (m *MockDMAssistantRepository) GetHistoryBySession(ctx context.Context, sessionID uuid.UUID, limit int) ([]*models.DMAssistantHistory, error) {
+	args := m.Called(ctx, sessionID, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.DMAssistantHistory), args.Error(1)
+}
+
+func (m *MockDMAssistantRepository) UpdateNPC(ctx context.Context, npc *models.AINPC) error {
+	args := m.Called(ctx, npc)
+	return args.Error(0)
+}
+
+func (m *MockDMAssistantRepository) UpdateLocation(ctx context.Context, location *models.AILocation) error {
+	args := m.Called(ctx, location)
+	return args.Error(0)
+}
+
+func (m *MockDMAssistantRepository) GetNarrationsByType(ctx context.Context, sessionID uuid.UUID, narrationType string) ([]*models.AINarration, error) {
+	args := m.Called(ctx, sessionID, narrationType)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.AINarration), args.Error(1)
+}

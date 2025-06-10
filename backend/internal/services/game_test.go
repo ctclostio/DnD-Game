@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/testutil"
 )
 
 func TestGameService_CreateSession(t *testing.T) {
@@ -366,7 +365,7 @@ func TestGameService_GetSessionEvents(t *testing.T) {
 		// Verify order and data
 		for i, event := range events {
 			require.Equal(t, "test", event.Type)
-			require.Equal(t, float64(i), event.Data["index"])
+			require.Equal(t, i, event.Data["index"])
 		}
 	})
 

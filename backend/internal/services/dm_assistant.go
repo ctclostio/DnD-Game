@@ -13,11 +13,11 @@ import (
 // DMAssistantService handles DM assistance operations
 type DMAssistantService struct {
 	repo        database.DMAssistantRepository
-	aiAssistant *AIDMAssistantService
+	aiAssistant AIDMAssistantInterface
 }
 
 // NewDMAssistantService creates a new DM assistant service
-func NewDMAssistantService(repo database.DMAssistantRepository, aiAssistant *AIDMAssistantService) *DMAssistantService {
+func NewDMAssistantService(repo database.DMAssistantRepository, aiAssistant AIDMAssistantInterface) *DMAssistantService {
 	return &DMAssistantService{
 		repo:        repo,
 		aiAssistant: aiAssistant,

@@ -4,30 +4,23 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/pkg/dice"
+	"github.com/your-username/dnd-game/backend/internal/services/mocks"
 )
 
 // Using MockCombatAnalyticsRepository from combat_analytics_test.go
 
-type MockCharacterRepositoryForCombat struct {
-	mock.Mock
-}
-
-type MockNPCRepositoryForCombat struct {
-	mock.Mock
-}
-
 // Test helpers
-func createTestCombatAutomationService() (*CombatAutomationService, *MockCombatAnalyticsRepository, *MockCharacterRepositoryForCombat, *MockNPCRepositoryForCombat) {
+func createTestCombatAutomationService() (*CombatAutomationService, *MockCombatAnalyticsRepository, *mocks.MockCharacterRepository, *mocks.MockNPCRepository) {
 	mockCombatRepo := new(MockCombatAnalyticsRepository)
-	mockCharRepo := new(MockCharacterRepositoryForCombat)
-	mockNPCRepo := new(MockNPCRepositoryForCombat)
+	mockCharRepo := new(mocks.MockCharacterRepository)
+	mockNPCRepo := new(mocks.MockNPCRepository)
 	
 	service := NewCombatAutomationService(mockCombatRepo, mockCharRepo, mockNPCRepo)
 	return service, mockCombatRepo, mockCharRepo, mockNPCRepo
@@ -37,7 +30,7 @@ func createTestCharacters(count int, level int) []*models.Character {
 	chars := make([]*models.Character, count)
 	for i := 0; i < count; i++ {
 		chars[i] = &models.Character{
-			ID:    uuid.New(),
+			ID:    uuid.New().String(),
 			Name:  fmt.Sprintf("Character %d", i+1),
 			Level: level,
 			Attributes: models.Attributes{
@@ -74,7 +67,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 			request: models.AutoResolveRequest{
 				EncounterDifficulty: "easy",
 				EnemyTypes: []models.EnemyInfo{
-					{Type: "goblin", Count: 4, CR: "1/4"},
+					{Name: "goblin", Count: 4, CR: "1/4"},
 				},
 				TerrainType:  "open_field",
 				UseResources: true,
@@ -104,8 +97,8 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 			request: models.AutoResolveRequest{
 				EncounterDifficulty: "hard",
 				EnemyTypes: []models.EnemyInfo{
-					{Type: "orc", Count: 3, CR: "1/2"},
-					{Type: "ogre", Count: 1, CR: "2"},
+					{Name: "orc", Count: 3, CR: "1/2"},
+					{Name: "ogre", Count: 1, CR: "2"},
 				},
 				TerrainType:  "forest",
 				UseResources: true,
@@ -126,7 +119,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 			request: models.AutoResolveRequest{
 				EncounterDifficulty: "medium",
 				EnemyTypes: []models.EnemyInfo{
-					{Type: "skeleton", Count: 6, CR: "1/4"},
+					{Name: "skeleton", Count: 6, CR: "1/4"},
 				},
 				TerrainType:  "dungeon",
 				UseResources: false,
@@ -149,7 +142,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 			request: models.AutoResolveRequest{
 				EncounterDifficulty: "easy",
 				EnemyTypes: []models.EnemyInfo{
-					{Type: "rat", Count: 10, CR: "0"},
+					{Name: "rat", Count: 10, CR: "0"},
 				},
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
@@ -198,15 +191,16 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 		{
 			name: "Basic Initiative Roll",
 			request: models.SmartInitiativeRequest{
-				Combatants: []models.CombatantInfo{
+				CombatID:   uuid.New(),
+				Combatants: []models.InitiativeCombatant{
 					{
-						ID:                uuid.New(),
+						ID:                uuid.New().String(),
 						Type:              "character",
 						Name:              "Fighter",
 						DexterityModifier: 2,
 					},
 					{
-						ID:                uuid.New(),
+						ID:                uuid.New().String(),
 						Type:              "npc",
 						Name:              "Goblin",
 						DexterityModifier: 1,
@@ -229,9 +223,10 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 		{
 			name: "Initiative with Alert Feat",
 			request: models.SmartInitiativeRequest{
-				Combatants: []models.CombatantInfo{
+				CombatID:   uuid.New(),
+				Combatants: []models.InitiativeCombatant{
 					{
-						ID:                uuid.New(),
+						ID:                uuid.New().String(),
 						Type:              "character",
 						Name:              "Rogue",
 						DexterityModifier: 4,
@@ -239,7 +234,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 				},
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
-				combatantID := mock.AnythingOfType("uuid.UUID")
+				combatantID := mock.AnythingOfType("string")
 				rule := &models.SmartInitiativeRule{
 					BaseInitiativeBonus: 2,
 					AlertFeat:          true,
@@ -256,9 +251,10 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 		{
 			name: "Initiative with Advantage",
 			request: models.SmartInitiativeRequest{
-				Combatants: []models.CombatantInfo{
+				CombatID:   uuid.New(),
+				Combatants: []models.InitiativeCombatant{
 					{
-						ID:                uuid.New(),
+						ID:                uuid.New().String(),
 						Type:              "character",
 						Name:              "Barbarian",
 						DexterityModifier: 1,
@@ -281,9 +277,10 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 		{
 			name: "Special Priority Rules",
 			request: models.SmartInitiativeRequest{
-				Combatants: []models.CombatantInfo{
+				CombatID:   uuid.New(),
+				Combatants: []models.InitiativeCombatant{
 					{
-						ID:                uuid.New(),
+						ID:                uuid.New().String(),
 						Type:              "npc",
 						Name:              "Boss",
 						DexterityModifier: 3,
@@ -307,21 +304,22 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 		{
 			name: "Multiple Combatants with Mixed Rules",
 			request: models.SmartInitiativeRequest{
-				Combatants: []models.CombatantInfo{
+				CombatID:   uuid.New(),
+				Combatants: []models.InitiativeCombatant{
 					{
-						ID:                uuid.New(),
+						ID:                uuid.New().String(),
 						Type:              "character",
 						Name:              "Wizard",
 						DexterityModifier: 0,
 					},
 					{
-						ID:                uuid.New(),
+						ID:                uuid.New().String(),
 						Type:              "character",
 						Name:              "Ranger",
 						DexterityModifier: 3,
 					},
 					{
-						ID:                uuid.New(),
+						ID:                uuid.New().String(),
 						Type:              "npc",
 						Name:              "Orc",
 						DexterityModifier: -1,
@@ -379,11 +377,11 @@ func TestCombatAutomationService_BattleMapOperations(t *testing.T) {
 	mapID := uuid.New()
 	
 	battleMap := &models.BattleMap{
-		ID:            mapID,
-		GameSessionID: sessionID,
-		Name:          "Goblin Cave",
-		Width:         20,
-		Height:        15,
+		ID:                  mapID,
+		GameSessionID:       sessionID,
+		LocationDescription: "Goblin Cave",
+		GridSizeX:           20,
+		GridSizeY:           15,
 	}
 
 	t.Run("SaveBattleMap", func(t *testing.T) {
@@ -438,7 +436,7 @@ func TestCombatAutomationService_SetInitiativeRule(t *testing.T) {
 	rule := &models.SmartInitiativeRule{
 		ID:                    uuid.New(),
 		GameSessionID:         uuid.New(),
-		CombatantID:          uuid.New(),
+		EntityID:             uuid.New().String(),
 		BaseInitiativeBonus:   2,
 		AlertFeat:            true,
 		AdvantageOnInitiative: false,
@@ -571,30 +569,30 @@ func TestCombatAutomationService_CalculateEncounterCR(t *testing.T) {
 		{
 			name: "Single Enemy",
 			enemies: []models.EnemyInfo{
-				{Type: "goblin", Count: 1, CR: "1/4"},
+				{Name: "goblin", Count: 1, CR: "1/4"},
 			},
 			expected: 0.25,
 		},
 		{
 			name: "Multiple Same Enemy",
 			enemies: []models.EnemyInfo{
-				{Type: "goblin", Count: 4, CR: "1/4"},
+				{Name: "goblin", Count: 4, CR: "1/4"},
 			},
 			expected: 1.0,
 		},
 		{
 			name: "Multiple Enemy Types",
 			enemies: []models.EnemyInfo{
-				{Type: "goblin", Count: 2, CR: "1/4"},
-				{Type: "hobgoblin", Count: 1, CR: "1/2"},
+				{Name: "goblin", Count: 2, CR: "1/4"},
+				{Name: "hobgoblin", Count: 1, CR: "1/2"},
 			},
 			expected: 1.2, // (0.5 + 0.5) * 1.2 multiple enemy bonus
 		},
 		{
 			name: "High CR Enemies",
 			enemies: []models.EnemyInfo{
-				{Type: "dragon", Count: 1, CR: "20"},
-				{Type: "giant", Count: 2, CR: "10"},
+				{Name: "dragon", Count: 1, CR: "20"},
+				{Name: "giant", Count: 2, CR: "10"},
 			},
 			expected: 48.0, // (20 + 20) * 1.2
 		},
@@ -621,7 +619,7 @@ func BenchmarkCombatAutomationService_AutoResolveCombat(b *testing.B) {
 	request := models.AutoResolveRequest{
 		EncounterDifficulty: "medium",
 		EnemyTypes: []models.EnemyInfo{
-			{Type: "orc", Count: 5, CR: "1/2"},
+			{Name: "orc", Count: 5, CR: "1/2"},
 		},
 		TerrainType:  "forest",
 		UseResources: true,
@@ -641,13 +639,14 @@ func BenchmarkCombatAutomationService_SmartInitiative(b *testing.B) {
 	mockCombatRepo.On("GetInitiativeRule", sessionID, mock.Anything).Return(nil, nil)
 	
 	request := models.SmartInitiativeRequest{
-		Combatants: []models.CombatantInfo{
-			{ID: uuid.New(), Type: "character", Name: "Fighter", DexterityModifier: 2},
-			{ID: uuid.New(), Type: "character", Name: "Wizard", DexterityModifier: 1},
-			{ID: uuid.New(), Type: "character", Name: "Rogue", DexterityModifier: 4},
-			{ID: uuid.New(), Type: "character", Name: "Cleric", DexterityModifier: 0},
-			{ID: uuid.New(), Type: "npc", Name: "Goblin1", DexterityModifier: 2},
-			{ID: uuid.New(), Type: "npc", Name: "Goblin2", DexterityModifier: 2},
+		CombatID:   uuid.New(),
+		Combatants: []models.InitiativeCombatant{
+			{ID: uuid.New().String(), Type: "character", Name: "Fighter", DexterityModifier: 2},
+			{ID: uuid.New().String(), Type: "character", Name: "Wizard", DexterityModifier: 1},
+			{ID: uuid.New().String(), Type: "character", Name: "Rogue", DexterityModifier: 4},
+			{ID: uuid.New().String(), Type: "character", Name: "Cleric", DexterityModifier: 0},
+			{ID: uuid.New().String(), Type: "npc", Name: "Goblin1", DexterityModifier: 2},
+			{ID: uuid.New().String(), Type: "npc", Name: "Goblin2", DexterityModifier: 2},
 		},
 	}
 	

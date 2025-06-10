@@ -369,7 +369,12 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 	}
 	
 	// Add some variance
-	totalGold = totalGold + rand.Intn(totalGold/2) - totalGold/4
+	if totalGold > 0 {
+		variance := totalGold / 2
+		if variance > 0 {
+			totalGold = totalGold + rand.Intn(variance) - totalGold/4
+		}
+	}
 	
 	loot = append(loot, map[string]interface{}{
 		"type":     "currency",
