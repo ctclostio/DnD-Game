@@ -19,7 +19,8 @@ func TestInventoryRepository_CreateItem(t *testing.T) {
 	defer db.Close()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
-	repo := NewInventoryRepository(sqlxDB)
+	dbWrapper := &DB{DB: sqlxDB}
+	repo := NewInventoryRepository(dbWrapper)
 
 	t.Run("successful item creation", func(t *testing.T) {
 		item := &models.Item{
@@ -84,7 +85,8 @@ func TestInventoryRepository_GetItem(t *testing.T) {
 	defer db.Close()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
-	repo := NewInventoryRepository(sqlxDB)
+	dbWrapper := &DB{DB: sqlxDB}
+	repo := NewInventoryRepository(dbWrapper)
 
 	t.Run("successful retrieval", func(t *testing.T) {
 		expectedItem := &models.Item{
@@ -102,7 +104,7 @@ func TestInventoryRepository_GetItem(t *testing.T) {
 
 		propertiesJSON, _ := json.Marshal(expectedItem.Properties)
 		
-		mock.ExpectQuery(`SELECT id, name, type, rarity, weight, value, properties, requires_attunement, attunement_requirements, description, created_at, updated_at FROM items WHERE id = \$1`).
+		mock.ExpectQuery(`SELECT id, name, type, rarity, weight, value, properties, requires_attunement, attunement_requirements, description, created_at, updated_at FROM items WHERE id = \?`).
 			WithArgs("test-item-id").
 			WillReturnRows(sqlmock.NewRows([]string{
 				"id", "name", "type", "rarity", "weight", "value", "properties",
@@ -123,7 +125,7 @@ func TestInventoryRepository_GetItem(t *testing.T) {
 	})
 
 	t.Run("item not found", func(t *testing.T) {
-		mock.ExpectQuery(`SELECT id, name, type, rarity, weight, value, properties, requires_attunement, attunement_requirements, description, created_at, updated_at FROM items WHERE id = \$1`).
+		mock.ExpectQuery(`SELECT id, name, type, rarity, weight, value, properties, requires_attunement, attunement_requirements, description, created_at, updated_at FROM items WHERE id = \?`).
 			WithArgs("non-existent").
 			WillReturnError(sql.ErrNoRows)
 
@@ -140,7 +142,8 @@ func TestInventoryRepository_AddItemToInventory(t *testing.T) {
 	defer db.Close()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
-	repo := NewInventoryRepository(sqlxDB)
+	dbWrapper := &DB{DB: sqlxDB}
+	repo := NewInventoryRepository(dbWrapper)
 
 	t.Run("add new item to inventory", func(t *testing.T) {
 		characterID := "char-123"
@@ -157,8 +160,8 @@ func TestInventoryRepository_AddItemToInventory(t *testing.T) {
 		// Expect the weight update query from updateCharacterWeight
 		// Need to match the full query including WHERE clause
 		mock.ExpectExec(
-			`UPDATE characters SET current_weight = \(\s*SELECT COALESCE\(SUM\(i\.weight \* ci\.quantity\), 0\)\s*FROM character_inventory ci\s*JOIN items i ON ci\.item_id = i\.id\s*WHERE ci\.character_id = \$1\s*\)\s*WHERE id = \$1`,
-		).WithArgs(characterID).WillReturnResult(sqlmock.NewResult(0, 1))
+			`UPDATE characters SET current_weight = \(\s*SELECT COALESCE\(SUM\(i\.weight \* ci\.quantity\), 0\)\s*FROM character_inventory ci\s*JOIN items i ON ci\.item_id = i\.id\s*WHERE ci\.character_id = \?\s*\)\s*WHERE id = \?`,
+		).WithArgs(characterID, characterID).WillReturnResult(sqlmock.NewResult(0, 1))
 
 		err := repo.AddItemToInventory(characterID, itemID, quantity)
 		assert.NoError(t, err)
@@ -172,7 +175,8 @@ func TestInventoryRepository_GetCharacterInventory(t *testing.T) {
 	defer db.Close()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
-	repo := NewInventoryRepository(sqlxDB)
+	dbWrapper := &DB{DB: sqlxDB}
+	repo := NewInventoryRepository(dbWrapper)
 
 	t.Run("get character inventory with items", func(t *testing.T) {
 		characterID := "char-123"
@@ -209,7 +213,8 @@ func TestInventoryRepository_GetCharacterCurrency(t *testing.T) {
 	defer db.Close()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
-	repo := NewInventoryRepository(sqlxDB)
+	dbWrapper := &DB{DB: sqlxDB}
+	repo := NewInventoryRepository(dbWrapper)
 
 	t.Run("get existing currency", func(t *testing.T) {
 		characterID := "char-123"
@@ -224,7 +229,7 @@ func TestInventoryRepository_GetCharacterCurrency(t *testing.T) {
 			UpdatedAt:   time.Now(),
 		}
 
-		mock.ExpectQuery(`SELECT \* FROM character_currency WHERE character_id = \$1`).
+		mock.ExpectQuery(`SELECT \* FROM character_currency WHERE character_id = \?`).
 			WithArgs(characterID).
 			WillReturnRows(sqlmock.NewRows([]string{
 				"character_id", "copper", "silver", "electrum", "gold", "platinum",
@@ -246,7 +251,7 @@ func TestInventoryRepository_GetCharacterCurrency(t *testing.T) {
 	t.Run("no currency found - create default", func(t *testing.T) {
 		characterID := "char-456"
 
-		mock.ExpectQuery(`SELECT \* FROM character_currency WHERE character_id = \$1`).
+		mock.ExpectQuery(`SELECT \* FROM character_currency WHERE character_id = \?`).
 			WithArgs(characterID).
 			WillReturnError(sql.ErrNoRows)
 

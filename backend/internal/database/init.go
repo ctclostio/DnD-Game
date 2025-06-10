@@ -2,10 +2,10 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/your-username/dnd-game/backend/internal/config"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 // Initialize creates and initializes the database connection and repositories
@@ -34,7 +34,11 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 			break
 		}
 		
-		log.Printf("Failed to connect to database (attempt %d/%d): %v", i+1, maxRetries, err)
+		logger.Error().
+			Err(err).
+			Int("attempt", i+1).
+			Int("max_retries", maxRetries).
+			Msg("Failed to connect to database")
 		if i < maxRetries-1 {
 			time.Sleep(time.Duration(i+1) * time.Second)
 		}
@@ -44,7 +48,11 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 		return nil, nil, fmt.Errorf("failed to connect to database after %d attempts: %w", maxRetries, err)
 	}
 
-	log.Println("Successfully connected to database")
+	logger.Info().
+		Str("host", cfg.Database.Host).
+		Int("port", cfg.Database.Port).
+		Str("database", cfg.Database.DatabaseName).
+		Msg("Successfully connected to database")
 
 	// Run migrations
 	if err := RunMigrations(db); err != nil {
@@ -52,7 +60,8 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 		return nil, nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 
-	log.Println("Database migrations completed successfully")
+	logger.Info().
+		Msg("Database migrations completed successfully")
 
 	// Create repositories
 	repos := &Repositories{

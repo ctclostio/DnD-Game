@@ -6,6 +6,7 @@ import (
 
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/database"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 // RefreshTokenService handles refresh token operations
@@ -84,8 +85,9 @@ func (s *RefreshTokenService) StartCleanupTask(interval time.Duration) {
 	go func() {
 		for range ticker.C {
 			if err := s.CleanupExpired(); err != nil {
-				// Log error in production
-				// fmt.Printf("Failed to cleanup expired tokens: %v\n", err)
+				logger.Error().
+					Err(err).
+					Msg("Failed to cleanup expired tokens")
 			}
 		}
 	}()

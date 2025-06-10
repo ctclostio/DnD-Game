@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -9,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/middleware"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 var allowedOrigins []string
@@ -68,12 +68,20 @@ type AuthMessage struct {
 
 func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Log the connection attempt
-	log.Printf("WebSocket connection attempt from origin: %s", r.Header.Get("Origin"))
+	logger.Info().
+		Str("origin", r.Header.Get("Origin")).
+		Str("remote_addr", r.RemoteAddr).
+		Str("user_agent", r.Header.Get("User-Agent")).
+		Msg("WebSocket connection attempt")
 
 	// Upgrade connection first
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("WebSocket upgrade error: %v", err)
+		logger.Error().
+			Err(err).
+			Str("origin", r.Header.Get("Origin")).
+			Str("remote_addr", r.RemoteAddr).
+			Msg("WebSocket upgrade error")
 		return
 	}
 
@@ -97,7 +105,9 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	if err := conn.WriteJSON(authRequest); err != nil {
-		log.Printf("Failed to send auth request: %v", err)
+		logger.Error().
+			Err(err).
+			Msg("Failed to send auth request")
 		conn.Close()
 		return
 	}
@@ -105,7 +115,9 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Wait for authentication message
 	var authMsg AuthMessage
 	if err := conn.ReadJSON(&authMsg); err != nil {
-		log.Printf("Failed to read auth message: %v", err)
+		logger.Error().
+			Err(err).
+			Msg("Failed to read auth message")
 		conn.WriteJSON(map[string]string{
 			"type":  "error",
 			"error": "Authentication failed",
@@ -126,7 +138,8 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	// Validate token
 	if jwtManager == nil {
-		log.Println("JWT manager not initialized")
+		logger.Error().
+			Msg("JWT manager not initialized")
 		conn.WriteJSON(map[string]string{
 			"type":  "error",
 			"error": "Internal server error",
@@ -137,7 +150,10 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := jwtManager.ValidateToken(authMsg.Token, auth.AccessToken)
 	if err != nil {
-		log.Printf("Token validation failed: %v", err)
+		logger.Warn().
+			Err(err).
+			Str("remote_addr", r.RemoteAddr).
+			Msg("Token validation failed")
 		conn.WriteJSON(map[string]string{
 			"type":  "error",
 			"error": "Invalid token",
