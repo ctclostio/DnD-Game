@@ -17,9 +17,12 @@ type GameSession struct {
 	DMID        string                 `json:"dmId" db:"dm_user_id"`
 	Name        string                 `json:"name" db:"name"`
 	Description string                 `json:"description" db:"description"`
+	Code        string                 `json:"code" db:"code"`
+	IsActive    bool                   `json:"isActive" db:"is_active"`
 	Status      GameStatus             `json:"status" db:"status"`
 	State       map[string]interface{} `json:"state" db:"session_state"`
 	CreatedAt   time.Time              `json:"createdAt" db:"created_at"`
+	UpdatedAt   time.Time              `json:"updatedAt" db:"updated_at"`
 	StartedAt   *time.Time             `json:"startedAt,omitempty" db:"started_at"`
 	EndedAt     *time.Time             `json:"endedAt,omitempty" db:"ended_at"`
 }

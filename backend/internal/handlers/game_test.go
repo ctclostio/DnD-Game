@@ -401,15 +401,17 @@ func TestGameHandler_SessionLifecycle(t *testing.T) {
 		assert.Equal(t, models.GameStatusPending, session.Status)
 		
 		// 2. Player joins
+		charID := uuid.New().String()
 		participant := &models.GameParticipant{
 			SessionID:   sessionID,
 			UserID:      playerID,
-			CharacterID: uuid.New().String(),
+			CharacterID: &charID,
 			JoinedAt:    time.Now(),
 		}
 		
 		assert.Equal(t, sessionID, participant.SessionID)
-		assert.NotEmpty(t, participant.CharacterID)
+		assert.NotNil(t, participant.CharacterID)
+		assert.NotEmpty(t, *participant.CharacterID)
 		
 		// 3. Start session
 		session.Status = models.GameStatusActive
