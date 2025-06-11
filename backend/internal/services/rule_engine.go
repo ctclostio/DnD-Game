@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/google/uuid"
 )
 
 // RuleEngine handles compilation and execution of visual logic rules
@@ -29,13 +29,13 @@ type NodeExecutor interface {
 
 // ExecutionState tracks the state during rule execution
 type ExecutionState struct {
-	Variables      map[string]interface{}
-	ExecutedNodes  []string
-	StartTime      time.Time
-	CurrentEntity  interface{} // The entity executing the rule
-	Context        map[string]interface{}
-	Errors         []string
-	ExecutionPath  []ExecutionStep
+	Variables     map[string]interface{}
+	ExecutedNodes []string
+	StartTime     time.Time
+	CurrentEntity interface{} // The entity executing the rule
+	Context       map[string]interface{}
+	Errors        []string
+	ExecutionPath []ExecutionStep
 }
 
 // ExecutionStep records a step in the execution path for debugging
@@ -157,7 +157,7 @@ func (re *RuleEngine) ExecuteRule(ctx context.Context, compiled *CompiledRule, i
 		// Execute the node
 		stepStart := time.Now()
 		outputs, err := re.executeNode(ctx, node, inputs, state)
-		
+
 		step := ExecutionStep{
 			NodeID:    node.ID,
 			NodeType:  node.Type,
@@ -254,7 +254,7 @@ func (re *RuleEngine) buildExecutionOrder(graph *models.LogicGraph) ([]string, e
 
 	// Topological sort using Kahn's algorithm
 	queue := []string{}
-	
+
 	// Start with nodes that have no incoming connections
 	for nodeID, degree := range inDegree {
 		if degree == 0 {
@@ -372,7 +372,7 @@ func (re *RuleEngine) hasCyclesDFS(nodeID string, graph *models.LogicGraph, visi
 
 func (re *RuleEngine) gatherNodeInputs(node *models.LogicNode, graph *models.LogicGraph, state *ExecutionState) (map[string]interface{}, bool) {
 	inputs := make(map[string]interface{})
-	
+
 	// Find all connections to this node
 	for _, conn := range graph.Connections {
 		if conn.ToNodeID == node.ID {
@@ -479,7 +479,7 @@ func (e *RandomExecutor) Execute(ctx context.Context, node *models.LogicNode, in
 		// Random number between min and max
 		min, _ := node.Properties["min"].(float64)
 		max, _ := node.Properties["max"].(float64)
-		
+
 		if max <= min {
 			return nil, fmt.Errorf("max must be greater than min")
 		}
@@ -497,7 +497,7 @@ func (e *RandomExecutor) Execute(ctx context.Context, node *models.LogicNode, in
 	}
 
 	return map[string]interface{}{
-		"result": result,
+		"result":  result,
 		"details": details,
 	}, nil
 }
@@ -506,7 +506,7 @@ func (e *RandomExecutor) parseDiceNotation(notation string) (int, map[string]int
 	// Simple dice notation parser (e.g., "2d6+3")
 	re := regexp.MustCompile(`(\d+)d(\d+)([+-]\d+)?`)
 	matches := re.FindStringSubmatch(notation)
-	
+
 	if len(matches) < 3 {
 		return 0, nil, fmt.Errorf("invalid dice notation: %s", notation)
 	}
@@ -514,20 +514,20 @@ func (e *RandomExecutor) parseDiceNotation(notation string) (int, map[string]int
 	count, _ := strconv.Atoi(matches[1])
 	sides, _ := strconv.Atoi(matches[2])
 	modifier := 0
-	
+
 	if len(matches) > 3 && matches[3] != "" {
 		modifier, _ = strconv.Atoi(matches[3])
 	}
 
 	total := 0
 	rolls := []int{}
-	
+
 	for i := 0; i < count; i++ {
 		roll := rand.Intn(sides) + 1
 		rolls = append(rolls, roll)
 		total += roll
 	}
-	
+
 	total += modifier
 
 	details := map[string]interface{}{
@@ -549,7 +549,7 @@ func (e *ConditionCheckExecutor) Execute(ctx context.Context, node *models.Logic
 	}
 
 	outputs := make(map[string]interface{})
-	
+
 	if condition {
 		outputs["true"] = true
 	} else {
@@ -609,41 +609,49 @@ func toFloat64(v interface{}) float64 {
 
 // Placeholder implementations for other executors
 type ActionTriggerExecutor struct{}
+
 func (e *ActionTriggerExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"trigger": true}, nil
 }
 
 type DamageTriggerExecutor struct{}
+
 func (e *DamageTriggerExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"trigger": true, "damage_amount": 0}, nil
 }
 
 type TimeTriggerExecutor struct{}
+
 func (e *TimeTriggerExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"trigger": true}, nil
 }
 
 type RollCheckExecutor struct{ diceRoller *DiceRollService }
+
 func (e *RollCheckExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"success": true, "roll_total": 15}, nil
 }
 
 type DamageActionExecutor struct{}
+
 func (e *DamageActionExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"out": true}, nil
 }
 
 type HealActionExecutor struct{}
+
 func (e *HealActionExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"out": true}, nil
 }
 
 type EffectActionExecutor struct{}
+
 func (e *EffectActionExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"out": true}, nil
 }
 
 type ResourceActionExecutor struct{}
+
 func (e *ResourceActionExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"out": true}, nil
 }
@@ -666,23 +674,23 @@ func (re *RuleEngine) CreateRuleTemplate(template *models.RuleTemplate) (*models
 	if template.ID == "" {
 		template.ID = uuid.New().String()
 	}
-	
+
 	// Set timestamps
 	now := time.Now()
 	template.CreatedAt = now
 	template.UpdatedAt = now
-	
+
 	// Validate and compile the template
 	_, err := re.CompileRule(template)
 	if err != nil {
 		return nil, fmt.Errorf("invalid rule template: %w", err)
 	}
-	
+
 	// Save to repository
 	if err := re.repository.CreateRuleTemplate(template); err != nil {
 		return nil, err
 	}
-	
+
 	return template, nil
 }
 
@@ -692,7 +700,7 @@ func (re *RuleEngine) UpdateRuleTemplate(templateID string, updates map[string]i
 	if err := re.repository.UpdateRuleTemplate(templateID, updates); err != nil {
 		return nil, err
 	}
-	
+
 	// Return updated template
 	return re.repository.GetRuleTemplate(templateID)
 }
@@ -715,11 +723,11 @@ func (re *RuleEngine) ValidateRule(graph models.LogicGraph) (*ValidationResult, 
 		Errors:   []string{},
 		Warnings: []string{},
 	}
-	
+
 	if err != nil {
 		result.Errors = append(result.Errors, err.Error())
 	}
-	
+
 	return result, nil
 }
 
@@ -739,13 +747,13 @@ func (re *RuleEngine) ActivateRule(templateID, gameSessionID, characterID string
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Compile the rule
 	compiled, err := re.CompileRule(template)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	activeRule := &models.ActiveRule{
 		ID:            uuid.New().String(),
 		TemplateID:    templateID,
@@ -757,14 +765,14 @@ func (re *RuleEngine) ActivateRule(templateID, gameSessionID, characterID string
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
-	
+
 	if err := re.repository.CreateActiveRule(activeRule); err != nil {
 		return nil, err
 	}
-	
+
 	// Increment usage count
 	re.repository.IncrementUsageCount(templateID)
-	
+
 	return activeRule, nil
 }
 
@@ -772,7 +780,6 @@ func (re *RuleEngine) ActivateRule(templateID, gameSessionID, characterID string
 func (re *RuleEngine) GetActiveRules(gameSessionID, characterID string) ([]models.ActiveRule, error) {
 	return re.repository.GetActiveRules(gameSessionID, characterID)
 }
-
 
 // GetRuleExecutionHistory gets rule execution history
 func (re *RuleEngine) GetRuleExecutionHistory(gameSessionID, characterID string, limit int) ([]models.RuleExecution, error) {

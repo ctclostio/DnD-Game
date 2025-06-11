@@ -237,11 +237,11 @@ func validatePassword(password string) error {
 	if len(password) < 8 {
 		return fmt.Errorf("password must be at least 8 characters long")
 	}
-	
+
 	hasUpper := false
 	hasLower := false
 	hasNumber := false
-	
+
 	for _, char := range password {
 		switch {
 		case char >= 'A' && char <= 'Z':
@@ -252,7 +252,7 @@ func validatePassword(password string) error {
 			hasNumber = true
 		}
 	}
-	
+
 	if !hasUpper {
 		return fmt.Errorf("password must contain at least one uppercase letter")
 	}
@@ -262,6 +262,6 @@ func validatePassword(password string) error {
 	if !hasNumber {
 		return fmt.Errorf("password must contain at least one number")
 	}
-	
+
 	return nil
 }

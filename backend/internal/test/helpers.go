@@ -17,7 +17,7 @@ func NewMockDB(t *testing.T) (*database.DB, sqlmock.Sqlmock, func()) {
 	require.NoError(t, err)
 
 	sqlxDB := sqlx.NewDb(mockDB, "postgres")
-	
+
 	db := &database.DB{
 		DB: sqlxDB,
 	}

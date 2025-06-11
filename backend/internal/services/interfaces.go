@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"time"
-	
+
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/models"
 )
@@ -73,16 +73,16 @@ type BaseEvent struct {
 	EventData interface{} `json:"data"`
 }
 
-func (e BaseEvent) Type() string      { return e.EventType }
+func (e BaseEvent) Type() string         { return e.EventType }
 func (e BaseEvent) Timestamp() time.Time { return e.EventTime }
-func (e BaseEvent) Data() interface{} { return e.EventData }
+func (e BaseEvent) Data() interface{}    { return e.EventData }
 
 // Common event types
 const (
-	EventCombatStarted   = "combat.started"
-	EventCombatEnded     = "combat.ended"
-	EventCharacterLeveled = "character.leveled"
-	EventQuestCompleted  = "quest.completed"
+	EventCombatStarted          = "combat.started"
+	EventCombatEnded            = "combat.ended"
+	EventCharacterLeveled       = "character.leveled"
+	EventQuestCompleted         = "quest.completed"
 	EventFactionRelationChanged = "faction.relation.changed"
 )
 

@@ -31,14 +31,14 @@ func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repo
 	// Connect to database with retry logic
 	var db *DB
 	var err error
-	
+
 	maxRetries := 5
 	for i := 0; i < maxRetries; i++ {
 		db, err = NewConnection(dbConfig)
 		if err == nil {
 			break
 		}
-		
+
 		if log != nil {
 			log.Error().
 				Err(err).
@@ -50,7 +50,7 @@ func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repo
 			time.Sleep(time.Duration(i+1) * time.Second)
 		}
 	}
-	
+
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to connect to database after %d attempts: %w", maxRetries, err)
 	}
@@ -73,7 +73,7 @@ func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repo
 		log.Info().
 			Msg("Database migrations completed successfully")
 	}
-	
+
 	// Set logger on database connection if provided
 	if log != nil {
 		db.SetLogger(log)

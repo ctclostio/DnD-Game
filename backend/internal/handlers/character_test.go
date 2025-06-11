@@ -22,7 +22,7 @@ func createAuthContext(userID, username, email, role string) context.Context {
 		Username: username,
 		Email:    email,
 		Role:     role,
-		Type: auth.AccessToken,
+		Type:     auth.AccessToken,
 	}
 	return context.WithValue(context.Background(), auth.UserContextKey, claims)
 }
@@ -119,7 +119,7 @@ func TestCharacterHandler_RequestValidation(t *testing.T) {
 				var decoded map[string]interface{}
 				err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 				assert.NoError(t, err)
-				
+
 				// Validate character creation requirements
 				if tt.method == http.MethodPost && tt.path == "/api/characters" {
 					if tt.expectedStatus == http.StatusBadRequest {
@@ -127,7 +127,7 @@ func TestCharacterHandler_RequestValidation(t *testing.T) {
 						if _, ok := decoded["name"]; !ok && tt.name == "invalid character creation - missing name" {
 							assert.True(t, true, "Name is correctly missing")
 						}
-						
+
 						// Check for invalid ability scores
 						if abilities, ok := decoded["abilities"].(map[string]interface{}); ok {
 							if str, ok := abilities["strength"].(float64); ok && str > 20 {
@@ -192,7 +192,7 @@ func TestCharacterHandler_UpdateCharacter(t *testing.T) {
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPut, "/api/characters/"+tt.characterID, bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
-			
+
 			// Add route vars
 			req = mux.SetURLVars(req, map[string]string{"id": tt.characterID})
 
@@ -265,7 +265,7 @@ func TestCharacterHandler_SpellSlots(t *testing.T) {
 			} else {
 				path = "/api/characters/" + characterID + "/rest"
 			}
-			
+
 			req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 			req = mux.SetURLVars(req, map[string]string{"id": characterID})
@@ -322,7 +322,7 @@ func TestCharacterHandler_CustomClass(t *testing.T) {
 
 	t.Run("list custom classes", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/characters/custom-classes?includeUnapproved=true", nil)
-		
+
 		// Add auth context
 		ctx := createAuthContext(userID, "testuser", "test@example.com", "player")
 		req = req.WithContext(ctx)

@@ -42,7 +42,7 @@ Current Situation: %s
 Player Said/Did: %s
 Previous Context: %s
 
-Generate an appropriate response from this NPC.`, 
+Generate an appropriate response from this NPC.`,
 		req.NPCName,
 		strings.Join(req.NPCPersonality, ", "),
 		req.DialogueStyle,
@@ -111,12 +111,12 @@ Make it immersive and interactive.`,
 
 	// Parse the JSON response
 	var locationData struct {
-		Description          string         `json:"description"`
-		Atmosphere           string         `json:"atmosphere"`
-		NotableFeatures      []string       `json:"notableFeatures"`
-		AvailableActions     []string       `json:"availableActions"`
+		Description          string                `json:"description"`
+		Atmosphere           string                `json:"atmosphere"`
+		NotableFeatures      []string              `json:"notableFeatures"`
+		AvailableActions     []string              `json:"availableActions"`
 		SecretsAndHidden     []models.SecretDetail `json:"secretsAndHidden"`
-		EnvironmentalEffects string         `json:"environmentalEffects"`
+		EnvironmentalEffects string                `json:"environmentalEffects"`
 	}
 
 	if err := json.Unmarshal([]byte(response), &locationData); err != nil {
@@ -304,7 +304,7 @@ Make it thematically appropriate and mechanically interesting.`, locationType, d
 	// Extract DC and damage formula from mechanical effects
 	dc := 12 // default
 	damageFormula := "1d6"
-	
+
 	if dcVal, ok := hazardData.MechanicalEffects["difficultyClass"].(float64); ok {
 		dc = int(dcVal)
 	}

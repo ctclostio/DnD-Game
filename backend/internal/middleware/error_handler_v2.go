@@ -31,8 +31,8 @@ func ErrorHandlerV2(log *logger.LoggerV2) func(http.Handler) http.Handler {
 			// Create a custom response writer to capture panic
 			rw := &panicCapturingResponseWriter{
 				ResponseWriter: w,
-				log:           log,
-				requestID:     requestID,
+				log:            log,
+				requestID:      requestID,
 			}
 
 			// Defer panic recovery

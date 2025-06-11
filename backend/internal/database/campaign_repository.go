@@ -403,7 +403,7 @@ func (r *campaignRepository) CreateOrUpdateNPCRelationship(relationship *models.
 			updated_at = ?
 		WHERE id = ?`
 	updateQuery = r.db.Rebind(updateQuery)
-	_, err = r.db.Exec(updateQuery, 
+	_, err = r.db.Exec(updateQuery,
 		relationship.RelationshipType,
 		relationship.RelationshipScore,
 		relationship.LastInteractionSession,

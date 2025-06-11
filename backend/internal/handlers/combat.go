@@ -14,7 +14,6 @@ import (
 	"github.com/your-username/dnd-game/backend/pkg/response"
 )
 
-
 func (h *Handlers) StartCombat(w http.ResponseWriter, r *http.Request) {
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -23,8 +22,8 @@ func (h *Handlers) StartCombat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		GameSessionID string              `json:"gameSessionId"`
-		Combatants    []models.Combatant  `json:"combatants"`
+		GameSessionID string             `json:"gameSessionId"`
+		Combatants    []models.Combatant `json:"combatants"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -430,18 +429,18 @@ func (h *Handlers) broadcastCombatUpdate(gameSessionID string, update models.Com
 		RoomID: gameSessionID,
 		Data:   nil,
 	}
-	
+
 	data, err := json.Marshal(update)
 	if err != nil {
 		return
 	}
-	
+
 	message.Data = data
-	
+
 	msgBytes, err := json.Marshal(message)
 	if err != nil {
 		return
 	}
-	
+
 	h.websocketHub.Broadcast(msgBytes)
 }

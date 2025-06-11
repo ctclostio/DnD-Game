@@ -23,11 +23,11 @@ func SetupTestDB(t *testing.T) *sqlx.DB {
 	// Use shared cache mode for better concurrency support
 	db, err := sqlx.Open("sqlite3", ":memory:?cache=shared&mode=rwc")
 	require.NoError(t, err)
-	
+
 	// Set connection pool settings for better concurrency
 	db.SetMaxOpenConns(1) // SQLite can only have one writer at a time
 	db.SetMaxIdleConns(1)
-	
+
 	// Enable foreign keys
 	_, err = db.Exec("PRAGMA foreign_keys = ON")
 	require.NoError(t, err)

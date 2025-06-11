@@ -33,13 +33,13 @@ func TestInventoryRepository_CreateItem(t *testing.T) {
 			Properties:  models.ItemProperties{"damage": "1d8", "type": "slashing"},
 			Description: "A standard longsword",
 		}
-		
+
 		mock.ExpectExec(
 			`INSERT INTO items \(id, name, type, rarity, weight, value, properties, 
 				requires_attunement, attunement_requirements, description, created_at, updated_at\)`,
 		).WithArgs(
 			item.ID, item.Name, item.Type, item.Rarity, item.Weight,
-			item.Value, sqlmock.AnyArg(), item.RequiresAttunement, 
+			item.Value, sqlmock.AnyArg(), item.RequiresAttunement,
 			item.AttunementRequirements, item.Description, sqlmock.AnyArg(), sqlmock.AnyArg(),
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -64,7 +64,7 @@ func TestInventoryRepository_CreateItem(t *testing.T) {
 			},
 			Description: "A magical sword wreathed in flames",
 		}
-		
+
 		mock.ExpectExec(
 			`INSERT INTO items`,
 		).WithArgs(
@@ -103,7 +103,7 @@ func TestInventoryRepository_GetItem(t *testing.T) {
 		}
 
 		propertiesJSON, _ := json.Marshal(expectedItem.Properties)
-		
+
 		mock.ExpectQuery(`SELECT id, name, type, rarity, weight, value, properties, requires_attunement, attunement_requirements, description, created_at, updated_at FROM items WHERE id = \?`).
 			WithArgs("test-item-id").
 			WillReturnRows(sqlmock.NewRows([]string{
@@ -180,7 +180,7 @@ func TestInventoryRepository_GetCharacterInventory(t *testing.T) {
 
 	t.Run("get character inventory with items", func(t *testing.T) {
 		characterID := "char-123"
-		
+
 		// Mock the query that joins character_inventory with items
 		rows := sqlmock.NewRows([]string{
 			"id", "character_id", "item_id", "quantity", "equipped", "attuned",

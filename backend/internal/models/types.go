@@ -77,13 +77,13 @@ type RuleAction struct {
 
 // DiceRollResult represents the result of a dice roll
 type DiceRollResult struct {
-	Total     int    `json:"total"`
-	Rolls     []int  `json:"rolls"`
-	Modifier  int    `json:"modifier"`
-	Notation  string `json:"notation"`
-	Purpose   string `json:"purpose,omitempty"`
-	Critical  bool   `json:"critical"`
-	Fumble    bool   `json:"fumble"`
+	Total    int    `json:"total"`
+	Rolls    []int  `json:"rolls"`
+	Modifier int    `json:"modifier"`
+	Notation string `json:"notation"`
+	Purpose  string `json:"purpose,omitempty"`
+	Critical bool   `json:"critical"`
+	Fumble   bool   `json:"fumble"`
 }
 
 // PerspectiveSource represents the source of a narrative perspective
@@ -100,15 +100,15 @@ type PerspectiveSource struct {
 
 // FactionDecision represents a decision made by a faction
 type FactionDecision struct {
-	ID            string                 `json:"id" db:"id"`
-	FactionID     string                 `json:"faction_id" db:"faction_id"`
-	DecisionType  string                 `json:"decision_type" db:"decision_type"`
-	Context       map[string]interface{} `json:"context" db:"context"`
-	Options       []DecisionOption       `json:"options" db:"options"`
-	ChosenOption  *DecisionOption        `json:"chosen_option,omitempty" db:"chosen_option"`
-	Reasoning     string                 `json:"reasoning" db:"reasoning"`
-	Confidence    float64                `json:"confidence" db:"confidence"`
-	Timestamp     int64                  `json:"timestamp" db:"timestamp"`
+	ID           string                 `json:"id" db:"id"`
+	FactionID    string                 `json:"faction_id" db:"faction_id"`
+	DecisionType string                 `json:"decision_type" db:"decision_type"`
+	Context      map[string]interface{} `json:"context" db:"context"`
+	Options      []DecisionOption       `json:"options" db:"options"`
+	ChosenOption *DecisionOption        `json:"chosen_option,omitempty" db:"chosen_option"`
+	Reasoning    string                 `json:"reasoning" db:"reasoning"`
+	Confidence   float64                `json:"confidence" db:"confidence"`
+	Timestamp    int64                  `json:"timestamp" db:"timestamp"`
 }
 
 // DecisionOption represents a possible choice in a faction decision
@@ -133,11 +133,11 @@ type FactionDecisionResult struct {
 
 // PlayerInteraction represents a player's interaction with the game world
 type PlayerInteraction struct {
-	ID          string                 `json:"id"`
-	PlayerID    string                 `json:"player_id"`
-	Type        string                 `json:"type"`
-	Target      string                 `json:"target"`
-	Action      string                 `json:"action"`
-	Context     map[string]interface{} `json:"context"`
-	Timestamp   int64                  `json:"timestamp"`
+	ID        string                 `json:"id"`
+	PlayerID  string                 `json:"player_id"`
+	Type      string                 `json:"type"`
+	Target    string                 `json:"target"`
+	Action    string                 `json:"action"`
+	Context   map[string]interface{} `json:"context"`
+	Timestamp int64                  `json:"timestamp"`
 }

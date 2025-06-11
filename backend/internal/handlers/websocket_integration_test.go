@@ -38,14 +38,14 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 	email := "ws_user@example.com"
 	password := "password123"
 	userID := testCtx.CreateTestUser(username, email, password)
-	
+
 	// Get the user from DB for the user object
 	user, err := testCtx.Repos.Users.GetByID(context.Background(), userID)
 	require.NoError(t, err)
 
 	// Create game session
 	sessionID := testCtx.CreateTestGameSession(userID, "ws_game", "WSGAME01")
-	
+
 	// Get the session from DB
 	session, err := testCtx.Repos.GameSessions.GetByID(context.Background(), sessionID)
 	require.NoError(t, err)
@@ -177,7 +177,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		user2ID := testCtx.CreateTestUser("ws_user2", "ws_user2@example.com", "password123")
 		_, err = testCtx.Repos.Users.GetByID(context.Background(), user2ID)
 		require.NoError(t, err)
-		
+
 		tokenPair2, err := testCtx.JWTManager.GenerateTokenPair(user2ID, "ws_user2", "ws_user2@example.com", "player")
 		require.NoError(t, err)
 		token2 := tokenPair2.AccessToken
@@ -415,7 +415,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 			username := fmt.Sprintf("concurrent_user_%d", i)
 			email := fmt.Sprintf("concurrent_user_%d@example.com", i)
 			uid := testCtx.CreateTestUser(username, email, "password123")
-			
+
 			tp, err := testCtx.JWTManager.GenerateTokenPair(uid, username, email, "player")
 			require.NoError(t, err)
 			tokens[i] = tp.AccessToken

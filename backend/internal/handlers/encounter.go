@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/your-username/dnd-game/backend/pkg/response"
-	"github.com/gorilla/mux"
 )
 
 // GenerateEncounter creates a new AI-generated encounter

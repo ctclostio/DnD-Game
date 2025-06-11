@@ -41,7 +41,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 
 	// Create handlers and setup routes
 	h := handlers.NewHandlers(svc, nil)
-	
+
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
 
@@ -84,7 +84,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 		assert.NotEmpty(t, authData["access_token"])
 		assert.NotEmpty(t, authData["refresh_token"])
 		assert.NotNil(t, authData["user"])
-		
+
 		// Verify user in database
 		var count int
 		err = ctx.SQLXDB.Get(&count, "SELECT COUNT(*) FROM users WHERE username = ?", testUser.Username)
@@ -99,15 +99,15 @@ func TestAuthFlow_Integration(t *testing.T) {
 			Email:    "duplicate@example.com",
 			Password: "SecurePass123!",
 		}
-		
+
 		body, _ := json.Marshal(duplicateUser)
 		req := httptest.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(body))
 		req.Header.Set("Content-Type", "application/json")
-		
+
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 		require.Equal(t, http.StatusCreated, w.Code)
-		
+
 		// Try to register the same username again
 		body, _ = json.Marshal(duplicateUser)
 		req = httptest.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(body))
@@ -355,7 +355,7 @@ func TestPasswordValidation_Integration(t *testing.T) {
 	}
 
 	h := handlers.NewHandlers(svc, nil)
-	
+
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
 	api.Use(middleware.LoggingMiddleware(log))
@@ -420,7 +420,7 @@ func TestPasswordValidation_Integration(t *testing.T) {
 				// Print the actual response for debugging
 				body := w.Body.String()
 				t.Logf("Response body: %s", body)
-				
+
 				// For 500 errors, the middleware returns a different format
 				if w.Code == http.StatusInternalServerError {
 					var errResp map[string]interface{}
@@ -447,7 +447,7 @@ func TestPasswordValidation_Integration(t *testing.T) {
 
 func TestRateLimiting_Integration(t *testing.T) {
 	t.Skip("Rate limiting not yet implemented")
-	
+
 	// This test would verify that:
 	// 1. Multiple rapid login attempts are rate limited
 	// 2. Rate limit resets after time window

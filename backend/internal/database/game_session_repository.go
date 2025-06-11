@@ -26,19 +26,19 @@ func (r *gameSessionRepository) Create(ctx context.Context, session *models.Game
 	if session.ID == "" {
 		session.ID = fmt.Sprintf("session-%s-%d", session.Code, time.Now().UnixNano())
 	}
-	
+
 	// Set timestamps
 	now := time.Now()
 	session.CreatedAt = now
 	session.UpdatedAt = now
-	
+
 	// Convert state to JSON string for storage
 	stateJSON := "{}"
 	if session.State != nil && len(session.State) > 0 {
 		// In production, handle JSON marshaling properly
 		stateJSON = "{}"
 	}
-	
+
 	query := `
 		INSERT INTO game_sessions (
 			id, name, description, dm_user_id, code, is_active, 
@@ -47,13 +47,13 @@ func (r *gameSessionRepository) Create(ctx context.Context, session *models.Game
 		)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	_, err := r.db.ExecContext(ctx, r.db.Rebind(query), 
-		session.ID, session.Name, session.Description, session.DMID, 
-		session.Code, session.IsActive, string(session.Status), 
+	_, err := r.db.ExecContext(ctx, r.db.Rebind(query),
+		session.ID, session.Name, session.Description, session.DMID,
+		session.Code, session.IsActive, string(session.Status),
 		stateJSON, session.MaxPlayers, session.IsPublic,
 		session.RequiresInvite, session.AllowedCharacterLevel,
 		session.CreatedAt, session.UpdatedAt)
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to create game session: %w", err)
 	}
@@ -65,7 +65,7 @@ func (r *gameSessionRepository) Create(ctx context.Context, session *models.Game
 func (r *gameSessionRepository) GetByID(ctx context.Context, id string) (*models.GameSession, error) {
 	var session models.GameSession
 	var stateJSON string
-	
+
 	query := `
 		SELECT id, name, description, dm_user_id, code, is_active,
 		       status, session_state, max_players, is_public, requires_invite,
@@ -77,9 +77,9 @@ func (r *gameSessionRepository) GetByID(ctx context.Context, id string) (*models
 		&session.ID, &session.Name, &session.Description, &session.DMID,
 		&session.Code, &session.IsActive, &session.Status, &stateJSON,
 		&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
-		&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt, 
+		&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt,
 		&session.StartedAt, &session.EndedAt)
-	
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("game session not found")
@@ -115,24 +115,24 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 		return nil, fmt.Errorf("failed to get game sessions by dm user id: %w", err)
 	}
 	defer rows.Close()
-	
+
 	for rows.Next() {
 		var session models.GameSession
 		var stateJSON string
-		
+
 		err := rows.Scan(
 			&session.ID, &session.Name, &session.Description, &session.DMID,
 			&session.Code, &session.IsActive, &session.Status, &stateJSON,
 			&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
-			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt, 
+			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt,
 			&session.StartedAt, &session.EndedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan game session: %w", err)
 		}
-		
+
 		// Initialize state
 		session.State = make(map[string]interface{})
-		
+
 		sessions = append(sessions, &session)
 	}
 
@@ -156,24 +156,24 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 		return nil, fmt.Errorf("failed to get game sessions by participant user id: %w", err)
 	}
 	defer rows.Close()
-	
+
 	for rows.Next() {
 		var session models.GameSession
 		var stateJSON string
-		
+
 		err := rows.Scan(
 			&session.ID, &session.Name, &session.Description, &session.DMID,
 			&session.Code, &session.IsActive, &session.Status, &stateJSON,
 			&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
-			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt, 
+			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt,
 			&session.StartedAt, &session.EndedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan game session: %w", err)
 		}
-		
+
 		// Initialize state
 		session.State = make(map[string]interface{})
-		
+
 		sessions = append(sessions, &session)
 	}
 
@@ -189,7 +189,7 @@ func (r *gameSessionRepository) Update(ctx context.Context, session *models.Game
 		    updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?`
 
-	_, err := r.db.ExecContextRebind(ctx, query, 
+	_, err := r.db.ExecContextRebind(ctx, query,
 		session.Name, session.Description, session.Status, session.IsActive,
 		session.MaxPlayers, session.IsPublic, session.RequiresInvite,
 		session.AllowedCharacterLevel, session.ID)
@@ -206,7 +206,7 @@ func (r *gameSessionRepository) Update(ctx context.Context, session *models.Game
 // Delete deletes a game session
 func (r *gameSessionRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM game_sessions WHERE id = ?`
-	
+
 	result, err := r.db.ExecContextRebind(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete game session: %w", err)
@@ -244,20 +244,20 @@ func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]
 	for rows.Next() {
 		var session models.GameSession
 		var stateJSON string
-		
+
 		err := rows.Scan(
 			&session.ID, &session.Name, &session.Description, &session.DMID,
 			&session.Code, &session.IsActive, &session.Status, &stateJSON,
 			&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
-			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt, 
+			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt,
 			&session.StartedAt, &session.EndedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan game session: %w", err)
 		}
-		
+
 		// Initialize state
 		session.State = make(map[string]interface{})
-		
+
 		sessions = append(sessions, &session)
 	}
 
@@ -268,7 +268,7 @@ func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]
 func (r *gameSessionRepository) AddParticipant(ctx context.Context, sessionID, userID string, characterID *string) error {
 	// Generate an ID for the participant
 	participantID := fmt.Sprintf("participant-%s-%s-%d", userID, sessionID, time.Now().UnixNano())
-	
+
 	query := `
 		INSERT INTO game_participants (id, session_id, user_id, character_id, is_online)
 		VALUES (?, ?, ?, ?, ?)`
@@ -326,7 +326,7 @@ func (r *gameSessionRepository) GetParticipants(ctx context.Context, sessionID s
 	var participants []*models.GameParticipant
 	for rows.Next() {
 		var p models.GameParticipant
-		
+
 		err := rows.Scan(
 			&p.SessionID, &p.UserID, &p.CharacterID, &p.IsOnline, &p.JoinedAt)
 		if err != nil {

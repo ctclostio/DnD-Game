@@ -1,9 +1,9 @@
 package mocks
 
 import (
-	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 // MockDiceRollRepository is a mock implementation of DiceRollRepository

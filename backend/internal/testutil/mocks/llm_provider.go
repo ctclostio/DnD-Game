@@ -15,7 +15,7 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 	if m.ResponseFunc != nil {
 		return m.ResponseFunc(ctx, systemPrompt, prompt)
 	}
-	
+
 	// Default responses for common AI requests
 	if m.Responses != nil {
 		for key, response := range m.Responses {
@@ -24,7 +24,7 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 			}
 		}
 	}
-	
+
 	// Default mock responses based on content
 	switch {
 	case contains(prompt, "race") || contains(systemPrompt, "race"):
@@ -76,7 +76,7 @@ func findSubstring(str, substr string) bool {
 
 func mockRaceResponse() string {
 	race := map[string]interface{}{
-		"name": "Shadowkin",
+		"name":        "Shadowkin",
 		"description": "A mysterious race from the shadow realm",
 		"traits": []map[string]interface{}{
 			{"name": "Darkvision", "description": "You can see in darkness"},
@@ -84,9 +84,9 @@ func mockRaceResponse() string {
 		},
 		"abilityScoreIncrease": map[string]int{
 			"dexterity": 2,
-			"charisma": 1,
+			"charisma":  1,
 		},
-		"size": "Medium",
+		"size":  "Medium",
 		"speed": 30,
 	}
 	data, _ := json.Marshal(race)
@@ -95,15 +95,15 @@ func mockRaceResponse() string {
 
 func mockClassResponse() string {
 	class := map[string]interface{}{
-		"name": "Shadowblade",
-		"description": "A warrior who channels shadow magic",
-		"hitDice": "1d10",
+		"name":           "Shadowblade",
+		"description":    "A warrior who channels shadow magic",
+		"hitDice":        "1d10",
 		"primaryAbility": "Dexterity",
-		"savingThrows": []string{"Dexterity", "Intelligence"},
+		"savingThrows":   []string{"Dexterity", "Intelligence"},
 		"features": []map[string]interface{}{
 			{
-				"name": "Shadow Strike",
-				"level": 1,
+				"name":        "Shadow Strike",
+				"level":       1,
 				"description": "Infuse your attacks with shadow energy",
 			},
 		},
@@ -114,12 +114,12 @@ func mockClassResponse() string {
 
 func mockNPCResponse() string {
 	npc := map[string]interface{}{
-		"name": "Eldrin the Wise",
-		"race": "Elf",
-		"class": "Wizard",
-		"level": 10,
+		"name":        "Eldrin the Wise",
+		"race":        "Elf",
+		"class":       "Wizard",
+		"level":       10,
 		"personality": "Scholarly and mysterious",
-		"motivation": "Seeks ancient knowledge",
+		"motivation":  "Seeks ancient knowledge",
 		"description": "An elderly elf with piercing blue eyes",
 	}
 	data, _ := json.Marshal(npc)
@@ -128,11 +128,11 @@ func mockNPCResponse() string {
 
 func mockLocationResponse() string {
 	location := map[string]interface{}{
-		"name": "The Whispering Woods",
-		"type": "forest",
-		"description": "Ancient trees whose leaves seem to whisper secrets",
-		"atmosphere": "Mysterious and foreboding",
-		"pointsOfInterest": []string{"Ancient shrine", "Hidden grove"},
+		"name":                "The Whispering Woods",
+		"type":                "forest",
+		"description":         "Ancient trees whose leaves seem to whisper secrets",
+		"atmosphere":          "Mysterious and foreboding",
+		"pointsOfInterest":    []string{"Ancient shrine", "Hidden grove"},
 		"potentialEncounters": []string{"Forest spirits", "Lost travelers"},
 	}
 	data, _ := json.Marshal(location)
@@ -141,13 +141,13 @@ func mockLocationResponse() string {
 
 func mockHazardResponse() string {
 	hazard := map[string]interface{}{
-		"name": "Poisonous Mist",
-		"type": "environmental",
+		"name":        "Poisonous Mist",
+		"type":        "environmental",
 		"description": "A thick, green mist that burns the lungs",
-		"difficulty": 15,
+		"difficulty":  15,
 		"savingThrow": "Constitution",
-		"damage": "2d6 poison",
-		"effect": "Poisoned condition for 1 hour on failed save",
+		"damage":      "2d6 poison",
+		"effect":      "Poisoned condition for 1 hour on failed save",
 	}
 	data, _ := json.Marshal(hazard)
 	return string(data)
@@ -155,16 +155,16 @@ func mockHazardResponse() string {
 
 func mockStoryArcResponse() string {
 	arc := map[string]interface{}{
-		"title": "The Shadow's Return",
+		"title":       "The Shadow's Return",
 		"description": "An ancient evil stirs in the depths",
 		"acts": []map[string]interface{}{
 			{
-				"number": 1,
-				"title": "Strange Omens",
+				"number":      1,
+				"title":       "Strange Omens",
 				"description": "Mysterious events plague the land",
 			},
 		},
-		"themes": []string{"corruption", "redemption"},
+		"themes":    []string{"corruption", "redemption"},
 		"majorNPCs": []string{"The Shadow Lord", "The Oracle"},
 	}
 	data, _ := json.Marshal(arc)
@@ -173,14 +173,14 @@ func mockStoryArcResponse() string {
 
 func mockSettlementResponse() string {
 	settlement := map[string]interface{}{
-		"name": "Riverside Haven",
-		"type": "town",
-		"population": 2500,
-		"description": "A peaceful town by the river",
-		"leadership": "Mayor Aldric",
+		"name":             "Riverside Haven",
+		"type":             "town",
+		"population":       2500,
+		"description":      "A peaceful town by the river",
+		"leadership":       "Mayor Aldric",
 		"notableLocations": []string{"The Rusty Anchor Inn", "Temple of Light"},
-		"economy": "Trade and fishing",
-		"currentEvents": []string{"Harvest festival approaching"},
+		"economy":          "Trade and fishing",
+		"currentEvents":    []string{"Harvest festival approaching"},
 	}
 	data, _ := json.Marshal(settlement)
 	return string(data)
@@ -196,7 +196,7 @@ func mockRecapResponse() string {
 		},
 		"characterMoments": map[string]string{
 			"Thorin": "Showed great bravery in battle",
-			"Elara": "Solved the ancient puzzle",
+			"Elara":  "Solved the ancient puzzle",
 		},
 		"cliffhanger": "As you exit, you notice shadowy figures watching from afar...",
 	}

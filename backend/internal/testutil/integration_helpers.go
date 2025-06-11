@@ -80,9 +80,9 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 		RuleBuilder:     database.NewRuleBuilderRepository(db),
 	}
 
-	// Create world building repositories  
+	// Create world building repositories
 	repos.WorldBuilding = database.NewWorldBuildingRepository(db)
-	repos.Narrative = database.NewNarrativeRepository(sqlxDB) 
+	repos.Narrative = database.NewNarrativeRepository(sqlxDB)
 	_ = database.NewEmergentWorldRepository(db) // emergentWorldRepo - can be used if needed
 
 	// Create test config
@@ -178,7 +178,6 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 	}, cleanup
 }
 
-
 // AuthenticatedRequest creates an authenticated HTTP request
 func (ctx *IntegrationTestContext) AuthenticatedRequest(method, url string, body interface{}, userID string) *http.Request {
 	var bodyReader *bytes.Reader
@@ -226,12 +225,12 @@ func (ctx *IntegrationTestContext) DecodeResponseData(w *httptest.ResponseRecord
 	err := json.NewDecoder(w.Body).Decode(&resp)
 	require.NoError(ctx.T, err, "Failed to decode response wrapper: %s", w.Body.String())
 	require.True(ctx.T, resp.Success, "Expected success response, got error: %v", resp.Error)
-	
+
 	// Marshal the data back to JSON then unmarshal into the target type
 	// This handles the case where resp.Data is a map[string]interface{}
 	dataBytes, err := json.Marshal(resp.Data)
 	require.NoError(ctx.T, err, "Failed to marshal response data")
-	
+
 	err = json.Unmarshal(dataBytes, v)
 	require.NoError(ctx.T, err, "Failed to unmarshal response data into target type")
 }
@@ -279,11 +278,11 @@ func (ctx *IntegrationTestContext) CreateTestGameSession(dmUserID, name, code st
 	query := `INSERT INTO game_sessions (id, name, description, dm_user_id, code, is_active) VALUES (?, ?, ?, ?, ?, ?)`
 	_, err := ctx.SQLXDB.Exec(ctx.SQLXDB.Rebind(query), sessionID, name, "Test session", dmUserID, code, true)
 	require.NoError(ctx.T, err)
-	
+
 	// Update max_players if the column exists
 	updateQuery := `UPDATE game_sessions SET max_players = 6 WHERE id = ?`
 	ctx.SQLXDB.Exec(ctx.SQLXDB.Rebind(updateQuery), sessionID)
-	
+
 	return sessionID
 }
 

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 	"time"
-	
+
 	"github.com/gorilla/websocket"
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/middleware"
@@ -19,7 +19,7 @@ func init() {
 		"http://localhost:3000",
 		"http://localhost:8080",
 	}
-	
+
 	// Add production origin from environment
 	if prodOrigin := os.Getenv("PRODUCTION_ORIGIN"); prodOrigin != "" {
 		allowedOrigins = append(allowedOrigins, prodOrigin)
@@ -29,12 +29,12 @@ func init() {
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		
+
 		// In development, also allow empty origin
 		if os.Getenv("GO_ENV") == "development" && origin == "" {
 			return true
 		}
-		
+
 		return middleware.ValidateOrigin(allowedOrigins, origin)
 	},
 	// Enable compression
@@ -103,7 +103,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		"type":    "auth_required",
 		"message": "Please authenticate",
 	}
-	
+
 	if err := conn.WriteJSON(authRequest); err != nil {
 		logger.Error().
 			Err(err).

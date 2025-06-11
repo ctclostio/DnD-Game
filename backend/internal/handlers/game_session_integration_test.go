@@ -21,19 +21,19 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
 			// Create handlers with all dependencies
 			h, _ := SetupTestHandlers(t, testCtx)
-			
+
 			// Setup auth middleware
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
-			
+
 			// API routes
 			api := router.PathPrefix("/api/v1").Subrouter()
-			
+
 			// Auth routes (needed for authentication)
 			api.HandleFunc("/auth/register", h.Register).Methods("POST")
 			api.HandleFunc("/auth/login", h.Login).Methods("POST")
 			api.HandleFunc("/auth/logout", authMiddleware.Authenticate(h.Logout)).Methods("POST")
 			api.HandleFunc("/auth/me", authMiddleware.Authenticate(h.GetCurrentUser)).Methods("GET")
-			
+
 			// Game session routes
 			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
 			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.GetUserGameSessions)).Methods("GET")
@@ -47,7 +47,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 
 	// Create test users
 	dmUserID := ctx.CreateTestUser("dm", "dm@example.com", "password123")
-	player1ID := ctx.CreateTestUser("player1", "player1@example.com", "password123") 
+	player1ID := ctx.CreateTestUser("player1", "player1@example.com", "password123")
 	player2ID := ctx.CreateTestUser("player2", "player2@example.com", "password123")
 	player3ID := ctx.CreateTestUser("player3", "player3@example.com", "password123")
 
@@ -65,7 +65,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	}
 	w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions", createReq, dmUserID)
 	require.Equal(t, http.StatusCreated, w.Code)
-	
+
 	resp := ctx.AssertSuccessResponse(w)
 	sessionData, ok := resp.Data.(map[string]interface{})
 	require.True(t, ok, "Expected data to be a map")
@@ -90,7 +90,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		resp := ctx.AssertSuccessResponse(w)
 		sessionData, ok := resp.Data.(map[string]interface{})
 		require.True(t, ok, "Expected data to be a map")
-		
+
 		assert.Equal(t, sessionID, sessionData["id"])
 		assert.Equal(t, "The Fellowship Campaign", sessionData["name"])
 		assert.Equal(t, dmUserID, sessionData["dmId"])
@@ -99,7 +99,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	t.Run("Get Game Session - Non-participant Forbidden", func(t *testing.T) {
 		w := ctx.MakeAuthenticatedRequest("GET", "/api/v1/sessions/"+sessionID, nil, player1ID)
 		assert.Equal(t, http.StatusForbidden, w.Code)
-		
+
 		var resp response.Response
 		ctx.DecodeResponse(w, &resp)
 		assert.Contains(t, resp.Error.Message, "don't have access")
@@ -122,7 +122,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		resp := ctx.AssertSuccessResponse(w)
 		sessions, ok := resp.Data.([]interface{})
 		require.True(t, ok, "Expected data to be an array")
-		
+
 		// Should see at least the session we created
 		found := false
 		for _, s := range sessions {
@@ -156,8 +156,8 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 
 		// Verify we can find the participant with the correct session_id
 		var count int
-		err := ctx.SQLXDB.Get(&count, 
-			"SELECT COUNT(*) FROM game_participants WHERE session_id = ? AND user_id = ?", 
+		err := ctx.SQLXDB.Get(&count,
+			"SELECT COUNT(*) FROM game_participants WHERE session_id = ? AND user_id = ?",
 			sessionID, player1ID)
 		require.NoError(t, err)
 		require.Equal(t, 1, count, "Player should be in the session")
@@ -204,7 +204,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		joinReq := map[string]interface{}{}
 
 		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/join", joinReq, player3ID)
-		
+
 		// Depending on implementation, this might be allowed (spectator mode) or forbidden
 		// Adjust based on your actual implementation
 		if w.Code == http.StatusBadRequest {
@@ -246,12 +246,12 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		}
 
 		w := ctx.MakeAuthenticatedRequest("PUT", "/api/v1/sessions/"+sessionID, updateReq, dmUserID)
-		
+
 		// Check if update endpoint exists
 		if w.Code == http.StatusNotFound {
 			t.Skip("Update endpoint not implemented")
 		}
-		
+
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Verify update
@@ -270,7 +270,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		}
 
 		w := ctx.MakeAuthenticatedRequest("PUT", "/api/v1/sessions/"+sessionID, updateReq, player1ID)
-		
+
 		// Should be forbidden or not found
 		assert.Contains(t, []int{http.StatusForbidden, http.StatusNotFound}, w.Code)
 	})
@@ -290,7 +290,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		// Try to end/deactivate the session
 		// This might be a DELETE or a PUT to set is_active=false
 		w = ctx.MakeAuthenticatedRequest("DELETE", "/api/v1/sessions/"+tempSession.ID, nil, dmUserID)
-		
+
 		if w.Code == http.StatusNotFound {
 			// Try updating is_active instead
 			updateReq := map[string]interface{}{
@@ -318,15 +318,15 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 			// Create handlers
 			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
-			
+
 			// API routes
 			api := router.PathPrefix("/api/v1").Subrouter()
-			
+
 			// Game session routes
 			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
 			api.HandleFunc("/sessions/{id}", authMiddleware.Authenticate(h.GetGameSession)).Methods("GET")
 			api.HandleFunc("/sessions/{id}/join", authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
-			
+
 			// WebSocket route (using websocket package handler)
 			ws.SetJWTManager(testCtx.JWTManager)
 			api.HandleFunc("/ws", ws.HandleWebSocket).Methods("GET")
@@ -338,7 +338,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 	dmID := ctx.CreateTestUser("wsdm", "wsdm@example.com", "password123")
 	playerID := ctx.CreateTestUser("wsplayer", "wsplayer@example.com", "password123")
 	charID := ctx.CreateTestCharacter(playerID, "WSHero")
-	
+
 	// Create session
 	createReq := map[string]interface{}{
 		"name":        "WebSocket Test Session",
@@ -361,7 +361,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 
 		// Check initial online status (should be false)
 		var isOnline bool
-		err := ctx.SQLXDB.Get(&isOnline, 
+		err := ctx.SQLXDB.Get(&isOnline,
 			"SELECT is_online FROM game_participants WHERE session_id = ? AND user_id = ?",
 			session.ID, playerID)
 		require.NoError(t, err)
@@ -394,7 +394,7 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix("/api/v1").Subrouter()
-			
+
 			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
 			api.HandleFunc("/sessions/{id}", authMiddleware.Authenticate(h.GetGameSession)).Methods("GET")
 			api.HandleFunc("/sessions/{id}/join", authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
@@ -446,7 +446,7 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 		}
 
 		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions", createReq, hackerID)
-		
+
 		// The service should generate a unique code, not use the provided one
 		// Or it should reject if code is provided and duplicate
 		if w.Code == http.StatusCreated {
@@ -459,7 +459,7 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 	t.Run("Cannot Use Another User's Character", func(t *testing.T) {
 		// Create a character for player
 		playerCharID := ctx.CreateTestCharacter(playerID, "PlayerChar")
-		
+
 		// Hacker tries to join with player's character
 		joinReq := map[string]interface{}{
 			"character_id": playerCharID,
@@ -470,13 +470,13 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 		require.NoError(t, err)
 
 		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+session1ID+"/join", joinReq, hackerID)
-		
+
 		// Debug response
 		t.Logf("Join response: status=%d, body=%s", w.Code, w.Body.String())
-		
+
 		// Should be rejected
 		assert.NotEqual(t, http.StatusOK, w.Code)
-		
+
 		// Verify hacker is not in participants
 		testutil.AssertRowNotExists(t, ctx.SQLXDB, "game_participants", "user_id", hackerID)
 	})
@@ -488,14 +488,14 @@ func TestGameSessionConcurrency_Integration(t *testing.T) {
 			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix("/api/v1").Subrouter()
-			
+
 			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
 			api.HandleFunc("/sessions/{id}/join", authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
 			api.HandleFunc("/sessions/{id}/leave", authMiddleware.Authenticate(h.LeaveGameSession)).Methods("POST")
 		},
 	})
 	defer cleanup()
-	
+
 	// Verify database is properly set up
 	var tableCount int
 	err := ctx.SQLXDB.Get(&tableCount, "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='game_sessions'")
@@ -503,7 +503,7 @@ func TestGameSessionConcurrency_Integration(t *testing.T) {
 	require.Equal(t, 1, tableCount, "game_sessions table should exist")
 
 	dmID := ctx.CreateTestUser("concdm", "concdm@example.com", "password123")
-	
+
 	// Create multiple players
 	var playerIDs []string
 	var charIDs []string

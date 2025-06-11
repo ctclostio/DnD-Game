@@ -71,7 +71,7 @@ func (h *Handlers) GetCustomRace(w http.ResponseWriter, r *http.Request) {
 
 	// Convert userID to UUID for comparison
 	userUUID, _ := uuid.Parse(userID)
-	
+
 	// Check if user has permission to view this race
 	if customRace.CreatedBy != userUUID && !customRace.IsPublic && customRace.ApprovalStatus != models.ApprovalStatusApproved {
 		// Check if user is DM

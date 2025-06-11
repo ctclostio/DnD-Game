@@ -12,8 +12,8 @@ import (
 
 // CustomRaceService handles custom race operations
 type CustomRaceService struct {
-	repo         database.CustomRaceRepository
-	aiGenerator  AIRaceGeneratorInterface
+	repo        database.CustomRaceRepository
+	aiGenerator AIRaceGeneratorInterface
 }
 
 // NewCustomRaceService creates a new custom race service
@@ -200,20 +200,20 @@ func (s *CustomRaceService) ValidateCustomRaceForCharacter(ctx context.Context, 
 
 	// Check if the user can use this race
 	canUse := false
-	
+
 	// Creator can always use their own race
 	if race.CreatedBy == userID {
 		canUse = true
 	}
-	
+
 	// Anyone can use public, approved races
 	if race.IsPublic && race.ApprovalStatus == models.ApprovalStatusApproved {
 		canUse = true
 	}
-	
+
 	// Check if specifically approved for this user (future enhancement)
 	// This could be extended to allow DMs to approve races for specific players
-	
+
 	if !canUse {
 		return fmt.Errorf("you don't have permission to use this custom race")
 	}

@@ -55,13 +55,12 @@ func NewHandlers(svc *services.Services, hub *websocket.Hub) *Handlers {
 // HealthCheck handles health check requests
 func (h *Handlers) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
-		"status": "healthy",
+		"status":  "healthy",
 		"service": "dnd-game-backend",
 	}
-	
+
 	response.JSON(w, r, http.StatusOK, data)
 }
-
 
 // Combat automation methods (stubs for now)
 func (h *Handlers) AutomateCombat(w http.ResponseWriter, r *http.Request) {

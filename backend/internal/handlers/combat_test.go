@@ -74,13 +74,13 @@ func TestCombatHandler_ProcessAction(t *testing.T) {
 				"damageType": "slashing",
 			},
 		}
-		
+
 		body, err := json.Marshal(actionRequest)
 		assert.NoError(t, err)
-		
+
 		req := httptest.NewRequest(http.MethodPost, "/api/combat/test-combat-id/action", bytes.NewReader(body))
 		req = mux.SetURLVars(req, map[string]string{"id": "test-combat-id"})
-		
+
 		// Verify request can be parsed
 		var parsed struct {
 			ActionType string                 `json:"actionType"`
@@ -167,10 +167,10 @@ func TestCombatHandler_RequestValidation(t *testing.T) {
 
 			// Parse and validate request body
 			var reqData struct {
-				GameSessionID string              `json:"gameSessionId"`
-				Combatants    []models.Combatant  `json:"combatants"`
+				GameSessionID string             `json:"gameSessionId"`
+				Combatants    []models.Combatant `json:"combatants"`
 			}
-			
+
 			err = json.NewDecoder(req.Body).Decode(&reqData)
 			if err != nil && !tt.shouldError {
 				t.Errorf("unexpected error decoding request: %v", err)
@@ -227,9 +227,9 @@ func TestCombatActionTypes(t *testing.T) {
 			// Verify action type structure
 			assert.NotEmpty(t, at.actionType)
 			assert.NotEmpty(t, at.required)
-			
+
 			// Log expected structure for documentation
-			t.Logf("Action type '%s' requires: %v, optional: %v", 
+			t.Logf("Action type '%s' requires: %v, optional: %v",
 				at.actionType, at.required, at.optional)
 		})
 	}

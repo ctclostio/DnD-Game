@@ -94,7 +94,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 		require.Equal(t, 8, class.HitDie)
 		require.Equal(t, "Dexterity", class.PrimaryAbility)
 		require.Len(t, class.ClassFeatures, 3)
-		
+
 		mockLLM.AssertExpectations(t)
 	})
 
@@ -117,7 +117,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, class)
 		require.Contains(t, err.Error(), "failed to generate class")
-		
+
 		mockLLM.AssertExpectations(t)
 	})
 
@@ -140,7 +140,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, class)
 		require.Contains(t, err.Error(), "failed to parse class response")
-		
+
 		mockLLM.AssertExpectations(t)
 	})
 
@@ -183,7 +183,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, class)
 		require.Contains(t, err.Error(), "class validation failed")
-		
+
 		mockLLM.AssertExpectations(t)
 	})
 }

@@ -17,39 +17,39 @@ func (h *Handlers) GetCharacters(w http.ResponseWriter, r *http.Request) {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	characters, err := h.characterService.GetAllCharacters(r.Context(), userID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
-	
+
 	response.JSON(w, r, http.StatusOK, characters)
 }
 
 func (h *Handlers) GetCharacter(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	
+
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	character, err := h.characterService.GetCharacterByID(r.Context(), id)
 	if err != nil {
 		response.NotFound(w, r, err.Error())
 		return
 	}
-	
+
 	// Verify the character belongs to the authenticated user
 	if character.UserID != userID {
 		response.Forbidden(w, r, "You don't have permission to access this character")
 		return
 	}
-	
+
 	response.JSON(w, r, http.StatusOK, character)
 }
 
@@ -59,7 +59,7 @@ func (h *Handlers) CreateCharacter(w http.ResponseWriter, r *http.Request) {
 		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
-	
+
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
@@ -67,90 +67,90 @@ func (h *Handlers) CreateCharacter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	character.UserID = userID
-	
+
 	if err := h.characterService.CreateCharacter(r.Context(), &character); err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
-	
+
 	response.JSON(w, r, http.StatusCreated, character)
 }
 
 func (h *Handlers) UpdateCharacter(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	
+
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	// Verify ownership before update
 	existing, err := h.characterService.GetCharacterByID(r.Context(), id)
 	if err != nil {
 		response.NotFound(w, r, "Character not found")
 		return
 	}
-	
+
 	if existing.UserID != userID {
 		response.Forbidden(w, r, "You don't have permission to update this character")
 		return
 	}
-	
+
 	var character models.Character
 	if err := json.NewDecoder(r.Body).Decode(&character); err != nil {
 		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
-	
+
 	character.ID = id
 	character.UserID = userID // Ensure user can't change ownership
-	
+
 	if err := h.characterService.UpdateCharacter(r.Context(), &character); err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
-	
+
 	// Fetch updated character
 	updated, err := h.characterService.GetCharacterByID(r.Context(), id)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
-	
+
 	response.JSON(w, r, http.StatusOK, updated)
 }
 
 func (h *Handlers) DeleteCharacter(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	
+
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	// Verify ownership before delete
 	character, err := h.characterService.GetCharacterByID(r.Context(), id)
 	if err != nil {
 		response.NotFound(w, r, "Character not found")
 		return
 	}
-	
+
 	if character.UserID != userID {
 		response.Forbidden(w, r, "You don't have permission to delete this character")
 		return
 	}
-	
+
 	if err := h.characterService.DeleteCharacter(r.Context(), id); err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
-	
+
 	response.JSON(w, r, http.StatusNoContent, nil)
 }
 
@@ -234,7 +234,7 @@ func (h *Handlers) GetCustomClasses(w http.ResponseWriter, r *http.Request) {
 	}
 
 	includeUnapproved := r.URL.Query().Get("includeUnapproved") == "true"
-	
+
 	classes, err := h.characterService.GetUserCustomClasses(r.Context(), userID, includeUnapproved)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -311,12 +311,12 @@ func (h *Handlers) AddExperience(w http.ResponseWriter, r *http.Request) {
 
 	// Calculate XP needed for next level
 	xpForNext := h.characterService.GetXPForNextLevel(char.Level)
-	
+
 	resp := map[string]interface{}{
-		"character":    char,
-		"xpForNext":    xpForNext,
-		"xpProgress":   char.ExperiencePoints,
-		"leveledUp":    false, // We could track this in the service
+		"character":  char,
+		"xpForNext":  xpForNext,
+		"xpProgress": char.ExperiencePoints,
+		"leveledUp":  false, // We could track this in the service
 	}
 
 	response.JSON(w, r, http.StatusOK, resp)

@@ -172,7 +172,7 @@ func (h *InventoryHandler) UpdateCharacterCurrency(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if err := h.inventoryService.UpdateCharacterCurrency(characterID, req.Copper, req.Silver, 
+	if err := h.inventoryService.UpdateCharacterCurrency(characterID, req.Copper, req.Silver,
 		req.Electrum, req.Gold, req.Platinum); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

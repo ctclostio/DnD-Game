@@ -397,13 +397,13 @@ func (h *CharacterHandlerV2) RegisterRoutesV2(r *mux.Router) {
 // Request/Response types
 
 type CreateCharacterRequest struct {
-	Name             string            `json:"name"`
-	Race             string            `json:"race"`
-	Class            string            `json:"class"`
-	Level            int               `json:"level"`
-	Background       string            `json:"background"`
-	Alignment        string            `json:"alignment"`
-	Attributes       models.Attributes `json:"attributes"`
+	Name       string            `json:"name"`
+	Race       string            `json:"race"`
+	Class      string            `json:"class"`
+	Level      int               `json:"level"`
+	Background string            `json:"background"`
+	Alignment  string            `json:"alignment"`
+	Attributes models.Attributes `json:"attributes"`
 }
 
 type UpdateCharacterRequest struct {

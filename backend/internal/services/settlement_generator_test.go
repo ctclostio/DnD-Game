@@ -466,12 +466,12 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 
 		for _, tt := range tests {
 			result := service.getNPCRoles(tt.settlementType)
-			
+
 			// Check base roles are included
 			for _, role := range baseRoles {
 				require.Contains(t, result, role)
 			}
-			
+
 			// Check specific roles are included
 			for _, role := range tt.expectedRoles {
 				require.Contains(t, result, role)
@@ -502,12 +502,12 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 
 		for _, tt := range tests {
 			result := service.getShopTypes(tt.settlementType)
-			
+
 			// Check base shops are included
 			for _, shop := range baseShops {
 				require.Contains(t, result, shop)
 			}
-			
+
 			// Check specific shops are included
 			for _, shop := range tt.expectedShops {
 				require.Contains(t, result, shop)

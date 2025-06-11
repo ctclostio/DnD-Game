@@ -11,7 +11,7 @@ import (
 
 func TestNewValidationError(t *testing.T) {
 	err := NewValidationError("Invalid input")
-	
+
 	assert.Equal(t, ErrorTypeValidation, err.Type)
 	assert.Equal(t, "Invalid input", err.Message)
 	assert.Equal(t, http.StatusBadRequest, err.StatusCode)
@@ -20,7 +20,7 @@ func TestNewValidationError(t *testing.T) {
 
 func TestNewAuthenticationError(t *testing.T) {
 	err := NewAuthenticationError("Invalid token")
-	
+
 	assert.Equal(t, ErrorTypeAuthentication, err.Type)
 	assert.Equal(t, "Invalid token", err.Message)
 	assert.Equal(t, http.StatusUnauthorized, err.StatusCode)
@@ -28,7 +28,7 @@ func TestNewAuthenticationError(t *testing.T) {
 
 func TestNewAuthorizationError(t *testing.T) {
 	err := NewAuthorizationError("Access denied")
-	
+
 	assert.Equal(t, ErrorTypeAuthorization, err.Type)
 	assert.Equal(t, "Access denied", err.Message)
 	assert.Equal(t, http.StatusForbidden, err.StatusCode)
@@ -36,7 +36,7 @@ func TestNewAuthorizationError(t *testing.T) {
 
 func TestNewNotFoundError(t *testing.T) {
 	err := NewNotFoundError("User")
-	
+
 	assert.Equal(t, ErrorTypeNotFound, err.Type)
 	assert.Equal(t, "User not found", err.Message)
 	assert.Equal(t, http.StatusNotFound, err.StatusCode)
@@ -45,7 +45,7 @@ func TestNewNotFoundError(t *testing.T) {
 func TestNewInternalError(t *testing.T) {
 	originalErr := assert.AnError
 	err := NewInternalError("Something went wrong", originalErr)
-	
+
 	assert.Equal(t, ErrorTypeInternal, err.Type)
 	assert.Equal(t, "Something went wrong", err.Message)
 	assert.Equal(t, http.StatusInternalServerError, err.StatusCode)
@@ -55,28 +55,28 @@ func TestNewInternalError(t *testing.T) {
 func TestAppError_WithDetails(t *testing.T) {
 	err := NewValidationError("Validation failed")
 	details := map[string]interface{}{
-		"field": "email",
+		"field":  "email",
 		"reason": "invalid format",
 	}
-	
+
 	err.WithDetails(details)
-	
+
 	assert.Equal(t, details, err.Details)
 }
 
 func TestAppError_WithCode(t *testing.T) {
 	err := NewNotFoundError("Resource")
 	err.WithCode("RESOURCE_404")
-	
+
 	assert.Equal(t, "RESOURCE_404", err.Code)
 }
 
 func TestAppError_WithInternal(t *testing.T) {
 	err := NewBadRequestError("Bad request")
 	internalErr := assert.AnError
-	
+
 	err.WithInternal(internalErr)
-	
+
 	assert.Equal(t, internalErr, err.Internal)
 }
 
@@ -97,7 +97,7 @@ func TestAppError_Error(t *testing.T) {
 			expected: "INTERNAL_ERROR: Database error (internal: assert.AnError general error for testing)",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.expected, tt.err.Error())
@@ -112,12 +112,12 @@ func TestAppError_ToJSON(t *testing.T) {
 			"field": "email",
 			"value": "invalid",
 		})
-	
+
 	jsonBytes := err.ToJSON()
-	
+
 	var result map[string]interface{}
 	require.NoError(t, json.Unmarshal(jsonBytes, &result))
-	
+
 	assert.Equal(t, string(ErrorTypeValidation), result["type"])
 	assert.Equal(t, "Invalid input", result["message"])
 	assert.Equal(t, "VAL001", result["code"])
@@ -127,7 +127,7 @@ func TestAppError_ToJSON(t *testing.T) {
 func TestIsAppError(t *testing.T) {
 	appErr := NewValidationError("test")
 	normalErr := assert.AnError
-	
+
 	assert.True(t, IsAppError(appErr))
 	assert.False(t, IsAppError(normalErr))
 }
@@ -154,7 +154,7 @@ func TestGetAppError(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := GetAppError(tt.input)
@@ -167,17 +167,17 @@ func TestGetAppError(t *testing.T) {
 
 func TestValidationErrors(t *testing.T) {
 	ve := &ValidationErrors{}
-	
+
 	// Test adding errors
 	ve.Add("email", "is required")
 	ve.Add("email", "must be valid format")
 	ve.Add("password", "is too short")
-	
+
 	assert.True(t, ve.HasErrors())
 	assert.Len(t, ve.Errors, 2)
 	assert.Len(t, ve.Errors["email"], 2)
 	assert.Len(t, ve.Errors["password"], 1)
-	
+
 	// Test error string
 	errStr := ve.Error()
 	assert.Contains(t, errStr, "email")
@@ -186,27 +186,27 @@ func TestValidationErrors(t *testing.T) {
 
 func TestValidationErrors_ToAppError(t *testing.T) {
 	ve := &ValidationErrors{}
-	
+
 	// Test with no errors
 	assert.Nil(t, ve.ToAppError())
-	
+
 	// Test with errors
 	ve.Add("name", "is required")
 	ve.Add("age", "must be positive")
-	
+
 	appErr := ve.ToAppError()
 	require.NotNil(t, appErr)
-	
+
 	assert.Equal(t, ErrorTypeValidation, appErr.Type)
 	assert.Equal(t, "Validation failed", appErr.Message)
 	assert.Equal(t, http.StatusBadRequest, appErr.StatusCode)
 	assert.NotNil(t, appErr.Details)
-	
+
 	// Check details
 	nameErrors, ok := appErr.Details["name"].([]string)
 	require.True(t, ok)
 	assert.Contains(t, nameErrors, "is required")
-	
+
 	ageErrors, ok := appErr.Details["age"].([]string)
 	require.True(t, ok)
 	assert.Contains(t, ageErrors, "must be positive")
@@ -222,7 +222,7 @@ func TestGetErrorMessage(t *testing.T) {
 		{ErrCodeCharacterNotFound, "Character not found"},
 		{ErrorCode("UNKNOWN"), "Unknown error"},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(string(tt.code), func(t *testing.T) {
 			assert.Equal(t, tt.expected, GetErrorMessage(tt.code))

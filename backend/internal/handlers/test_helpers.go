@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"testing"
-	
+
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/config"
 	"github.com/your-username/dnd-game/backend/internal/database"
@@ -16,38 +16,38 @@ import (
 func createTestServices(t *testing.T, repos *database.Repositories, jwtManager *auth.JWTManager, cfg *config.Config, log *logger.LoggerV2) *services.Services {
 	// Create mock LLM provider
 	llmProvider := &services.MockLLMProvider{}
-	
+
 	// Create services
 	userService := services.NewUserService(repos.Users)
 	refreshTokenService := services.NewRefreshTokenService(repos.RefreshTokens, jwtManager)
-	
+
 	// Create AI services with enhanced logger
 	aiConfig := &services.AIConfig{Enabled: cfg.AI.Provider != "mock"}
 	aiBattleMapGen := services.NewAIBattleMapGenerator(llmProvider, aiConfig, log)
 	aiCampaignManager := services.NewAICampaignManager(llmProvider, aiConfig, log)
-	
+
 	// Create event bus with logger
 	_ = services.NewEventBus(log) // eventBus - can be used if needed
-	
+
 	// Combat services
 	combatService := services.NewCombatService()
 	combatAutomationService := services.NewCombatAutomationService(repos.CombatAnalytics, repos.Characters, repos.NPCs)
 	combatAnalyticsService := services.NewCombatAnalyticsService(repos.CombatAnalytics, combatService)
-	
+
 	// World building services
 	settlementGenerator := services.NewSettlementGeneratorService(llmProvider, repos.WorldBuilding)
 	factionSystem := services.NewFactionSystemService(llmProvider, repos.WorldBuilding)
 	worldEventEngine := services.NewWorldEventEngineService(llmProvider, repos.WorldBuilding, factionSystem)
 	economicSimulator := services.NewEconomicSimulatorService(repos.WorldBuilding)
-	
+
 	// Rule engine services
 	diceRollService := services.NewDiceRollService(repos.DiceRolls)
 	ruleEngine := services.NewRuleEngine(repos.RuleBuilder, diceRollService)
-	
+
 	// Create game session service with character repository
 	gameSessionService := services.NewGameSessionService(repos.GameSessions)
 	gameSessionService.SetCharacterRepository(repos.Characters)
-	
+
 	// Create service container
 	return &services.Services{
 		Users:              userService,
@@ -86,10 +86,10 @@ func SetupTestHandlers(t *testing.T, testCtx *testutil.IntegrationTestContext) (
 	// Create WebSocket hub
 	hub := websocket.NewHub()
 	go hub.Run()
-	
+
 	// Set JWT manager for WebSocket authentication
 	websocket.SetJWTManager(testCtx.JWTManager)
-	
+
 	// Create services if not already provided
 	var svc *services.Services
 	if testCtx.Services != nil {
@@ -104,9 +104,9 @@ func SetupTestHandlers(t *testing.T, testCtx *testutil.IntegrationTestContext) (
 		svc = createTestServices(t, testCtx.Repos, testCtx.JWTManager, testCtx.Config, testCtx.Logger)
 		testCtx.Services = svc
 	}
-	
+
 	// Create handlers
 	h := NewHandlers(svc, hub)
-	
+
 	return h, hub
 }

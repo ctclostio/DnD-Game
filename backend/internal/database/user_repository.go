@@ -29,13 +29,13 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 		user.CreatedAt = time.Now()
 		user.UpdatedAt = time.Now()
 		user.Role = "player" // Default role
-		
+
 		query := `
 			INSERT INTO users (id, username, email, password_hash, role, created_at, updated_at)
 			VALUES (?, ?, ?, ?, ?, ?, ?)`
-		
-		_, err := r.db.ExecContextRebind(ctx, query, 
-			user.ID, user.Username, user.Email, user.PasswordHash, user.Role, 
+
+		_, err := r.db.ExecContextRebind(ctx, query,
+			user.ID, user.Username, user.Email, user.PasswordHash, user.Role,
 			user.CreatedAt, user.UpdatedAt)
 		if err != nil {
 			// Check for constraint violations
@@ -51,7 +51,7 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 		}
 		return nil
 	}
-	
+
 	// PostgreSQL version with RETURNING clause
 	query := `
 		INSERT INTO users (username, email, password_hash)
@@ -159,7 +159,7 @@ func (r *userRepository) Update(ctx context.Context, user *models.User) error {
 // Delete deletes a user
 func (r *userRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM users WHERE id = ?`
-	
+
 	result, err := r.db.ExecContextRebind(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)

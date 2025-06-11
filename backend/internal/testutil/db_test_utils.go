@@ -33,7 +33,7 @@ func NewMockDBWithStruct(t *testing.T) *MockDBWithStruct {
 	require.NoError(t, err)
 
 	sqlxDB := sqlx.NewDb(db, "postgres")
-	
+
 	return &MockDBWithStruct{
 		DB:   sqlxDB,
 		Mock: mock,
@@ -82,10 +82,10 @@ func NewQueryBuilder(mock sqlmock.Sqlmock) *QueryBuilder {
 // ExpectUserByID expects a query for user by ID
 func (q *QueryBuilder) ExpectUserByID(userID int64, user *models.User) {
 	query := `SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = $1`
-	
+
 	rows := sqlmock.NewRows([]string{"id", "username", "email", "password_hash", "created_at", "updated_at"}).
 		AddRow(user.ID, user.Username, user.Email, user.PasswordHash, user.CreatedAt, user.UpdatedAt)
-	
+
 	q.mock.ExpectQuery(query).
 		WithArgs(userID).
 		WillReturnRows(rows)
@@ -94,10 +94,10 @@ func (q *QueryBuilder) ExpectUserByID(userID int64, user *models.User) {
 // ExpectUserByUsername expects a query for user by username
 func (q *QueryBuilder) ExpectUserByUsername(username string, user *models.User) {
 	query := `SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = $1`
-	
+
 	rows := sqlmock.NewRows([]string{"id", "username", "email", "password_hash", "created_at", "updated_at"}).
 		AddRow(user.ID, user.Username, user.Email, user.PasswordHash, user.CreatedAt, user.UpdatedAt)
-	
+
 	q.mock.ExpectQuery(query).
 		WithArgs(username).
 		WillReturnRows(rows)
@@ -106,9 +106,9 @@ func (q *QueryBuilder) ExpectUserByUsername(username string, user *models.User) 
 // ExpectCharacterByID expects a query for character by ID
 func (q *QueryBuilder) ExpectCharacterByID(charID int64, char *models.Character) {
 	query := `SELECT * FROM characters WHERE id = $1`
-	
+
 	rows := sqlmock.NewRows([]string{
-		"id", "user_id", "name", "race", "class", "level", 
+		"id", "user_id", "name", "race", "class", "level",
 		"experience_points", "hit_points", "max_hit_points",
 		"armor_class", "initiative", "speed", "abilities",
 		"skills", "proficiencies", "equipment", "spells",
@@ -120,7 +120,7 @@ func (q *QueryBuilder) ExpectCharacterByID(charID int64, char *models.Character)
 		char.Skills, char.Proficiencies, char.Equipment, char.Spells,
 		char.CreatedAt, char.UpdatedAt,
 	)
-	
+
 	q.mock.ExpectQuery(query).
 		WithArgs(charID).
 		WillReturnRows(rows)
@@ -129,10 +129,10 @@ func (q *QueryBuilder) ExpectCharacterByID(charID int64, char *models.Character)
 // ExpectInsertUser expects an insert user query
 func (q *QueryBuilder) ExpectInsertUser(user *models.User) {
 	query := `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, created_at, updated_at`
-	
+
 	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at"}).
 		AddRow(user.ID, user.CreatedAt, user.UpdatedAt)
-	
+
 	q.mock.ExpectQuery(query).
 		WithArgs(user.Username, user.Email, user.PasswordHash).
 		WillReturnRows(rows)
@@ -141,7 +141,7 @@ func (q *QueryBuilder) ExpectInsertUser(user *models.User) {
 // ExpectUpdateCharacterHP expects an update character HP query
 func (q *QueryBuilder) ExpectUpdateCharacterHP(charID int64, hp int) {
 	query := `UPDATE characters SET hit_points = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $1`
-	
+
 	q.mock.ExpectExec(query).
 		WithArgs(charID, hp).
 		WillReturnResult(sqlmock.NewResult(0, 1))
@@ -156,10 +156,10 @@ func (q *QueryBuilder) ExpectNotFound(query string, args ...interface{}) {
 
 // DBTestCase represents a database test case
 type DBTestCase struct {
-	Name    string
-	Setup   func(mock sqlmock.Sqlmock)
-	Run     func(db *sqlx.DB) error
-	Assert  func(t *testing.T, err error)
+	Name   string
+	Setup  func(mock sqlmock.Sqlmock)
+	Run    func(db *sqlx.DB) error
+	Assert func(t *testing.T, err error)
 }
 
 // RunDBTestCases runs multiple database test cases
@@ -220,7 +220,7 @@ type DBFixtures struct {
 // LoadTestFixtures loads standard test fixtures
 func LoadTestFixtures() *DBFixtures {
 	now := time.Now()
-	
+
 	return &DBFixtures{
 		Users: []*User{
 			{
@@ -285,16 +285,16 @@ func AssertTimestampsEqual(t *testing.T, expected, actual time.Time, message str
 	if diff < 0 {
 		diff = -diff
 	}
-	require.True(t, diff < tolerance, 
-		"%s: expected %v, got %v (diff: %v)", 
+	require.True(t, diff < tolerance,
+		"%s: expected %v, got %v (diff: %v)",
 		message, expected, actual, diff)
 }
 
 // TestRepository provides a base for repository tests
 type TestRepository struct {
-	t      *testing.T
-	db     *sqlx.DB
-	mock   sqlmock.Sqlmock
+	t    *testing.T
+	db   *sqlx.DB
+	mock sqlmock.Sqlmock
 }
 
 // NewTestRepository creates a new test repository

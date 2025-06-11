@@ -15,8 +15,8 @@ import (
 )
 
 type CampaignHandler struct {
-	campaignService  *services.CampaignService
-	gameService      *services.GameSessionService
+	campaignService *services.CampaignService
+	gameService     *services.GameSessionService
 }
 
 func NewCampaignHandler(campaignService *services.CampaignService, gameService *services.GameSessionService) *CampaignHandler {
@@ -35,7 +35,7 @@ func (h *CampaignHandler) CreateStoryArc(w http.ResponseWriter, r *http.Request)
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -77,7 +77,7 @@ func (h *CampaignHandler) GenerateStoryArc(w http.ResponseWriter, r *http.Reques
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -114,7 +114,7 @@ func (h *CampaignHandler) GenerateStoryArc(w http.ResponseWriter, r *http.Reques
 
 func (h *CampaignHandler) GetStoryArcs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -138,7 +138,7 @@ func (h *CampaignHandler) UpdateStoryArc(w http.ResponseWriter, r *http.Request)
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -187,7 +187,7 @@ func (h *CampaignHandler) CreateSessionMemory(w http.ResponseWriter, r *http.Req
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -224,7 +224,7 @@ func (h *CampaignHandler) CreateSessionMemory(w http.ResponseWriter, r *http.Req
 
 func (h *CampaignHandler) GetSessionMemories(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -250,7 +250,7 @@ func (h *CampaignHandler) GetSessionMemories(w http.ResponseWriter, r *http.Requ
 
 func (h *CampaignHandler) GenerateRecap(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -282,7 +282,7 @@ func (h *CampaignHandler) CreatePlotThread(w http.ResponseWriter, r *http.Reques
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -318,7 +318,7 @@ func (h *CampaignHandler) CreatePlotThread(w http.ResponseWriter, r *http.Reques
 
 func (h *CampaignHandler) GetPlotThreads(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -346,7 +346,7 @@ func (h *CampaignHandler) GenerateForeshadowing(w http.ResponseWriter, r *http.R
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -388,7 +388,7 @@ func (h *CampaignHandler) GetUnrevealedForeshadowing(w http.ResponseWriter, r *h
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -424,7 +424,7 @@ func (h *CampaignHandler) RevealForeshadowing(w http.ResponseWriter, r *http.Req
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	elementID, err := uuid.Parse(vars["elementId"])
 	if err != nil {
@@ -476,7 +476,7 @@ func (h *CampaignHandler) AddTimelineEvent(w http.ResponseWriter, r *http.Reques
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -531,7 +531,7 @@ func (h *CampaignHandler) AddTimelineEvent(w http.ResponseWriter, r *http.Reques
 
 func (h *CampaignHandler) GetTimeline(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -574,7 +574,7 @@ func (h *CampaignHandler) UpdateNPCRelationship(w http.ResponseWriter, r *http.R
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -612,7 +612,7 @@ func (h *CampaignHandler) UpdateNPCRelationship(w http.ResponseWriter, r *http.R
 
 func (h *CampaignHandler) GetNPCRelationships(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {

@@ -81,27 +81,27 @@ func (db *DB) logQuery(ctx context.Context, query string, args []interface{}, er
 	if db.logger == nil {
 		return
 	}
-	
+
 	log := db.logger.WithContext(ctx)
-	
+
 	// Truncate query for logging
 	const maxQueryLength = 200
 	truncatedQuery := query
 	if len(query) > maxQueryLength {
 		truncatedQuery = query[:maxQueryLength] + "..."
 	}
-	
+
 	event := log.Debug().
 		Str("query", truncatedQuery).
 		Dur("duration", duration).
 		Int64("duration_ms", duration.Milliseconds()).
 		Int("args_count", len(args))
-	
+
 	// Add first few args for debugging (be careful not to log sensitive data)
 	if len(args) > 0 && len(args) <= 3 {
 		event = event.Interface("args", args)
 	}
-	
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			event.Msg("Database query returned no rows")

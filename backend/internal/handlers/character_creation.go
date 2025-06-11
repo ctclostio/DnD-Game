@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/google/uuid"
 )
 
 type CharacterCreationHandler struct {
-	characterService     *services.CharacterService
-	characterBuilder     *services.CharacterBuilder
-	aiCharService        *services.AICharacterService
-	customRaceService    *services.CustomRaceService
+	characterService  *services.CharacterService
+	characterBuilder  *services.CharacterBuilder
+	aiCharService     *services.AICharacterService
+	customRaceService *services.CustomRaceService
 }
 
 func NewCharacterCreationHandler(cs *services.CharacterService, crs *services.CustomRaceService, llmProvider services.LLMProvider) *CharacterCreationHandler {
@@ -61,7 +61,7 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 						})
 					}
 				}
-				
+
 				// Get public custom races
 				publicRaces, err := h.customRaceService.GetPublicCustomRaces(r.Context())
 				if err == nil {
@@ -76,7 +76,7 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 						})
 					}
 				}
-				
+
 				options["customRaces"] = customRaceOptions
 			}
 		}
@@ -149,7 +149,7 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 			return
 		}
 		params["customRaceStats"] = raceStats
-		
+
 		// Increment usage counter
 		go h.customRaceService.IncrementUsage(r.Context(), customRaceUUID)
 	}
@@ -269,9 +269,9 @@ func (h *CharacterCreationHandler) ValidateCharacter(w http.ResponseWriter, r *h
 
 	// Perform validation
 	errors := h.validateCharacterBuild(&character)
-	
+
 	response := map[string]interface{}{
-		"valid": len(errors) == 0,
+		"valid":  len(errors) == 0,
 		"errors": errors,
 	}
 

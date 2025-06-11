@@ -124,7 +124,7 @@ func (c *Client) ReadPump() {
 
 func (c *Client) WritePump() {
 	defer c.conn.Close()
-	
+
 	for {
 		select {
 		case message, ok := <-c.send:

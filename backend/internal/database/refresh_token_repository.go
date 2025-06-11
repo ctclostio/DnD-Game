@@ -13,13 +13,13 @@ import (
 
 // RefreshToken represents a refresh token in the database
 type RefreshToken struct {
-	ID         string         `db:"id"`
-	UserID     string         `db:"user_id"`
-	TokenHash  string         `db:"token_hash"`
-	TokenID    string         `db:"token_id"`
-	ExpiresAt  time.Time      `db:"expires_at"`
-	CreatedAt  time.Time      `db:"created_at"`
-	RevokedAt  sql.NullTime  `db:"revoked_at"`
+	ID        string       `db:"id"`
+	UserID    string       `db:"user_id"`
+	TokenHash string       `db:"token_hash"`
+	TokenID   string       `db:"token_id"`
+	ExpiresAt time.Time    `db:"expires_at"`
+	CreatedAt time.Time    `db:"created_at"`
+	RevokedAt sql.NullTime `db:"revoked_at"`
 }
 
 // refreshTokenRepository handles refresh token database operations
@@ -37,7 +37,7 @@ func (r *refreshTokenRepository) Create(userID, tokenID string, token string, ex
 	// For SQLite compatibility, generate ID and timestamps
 	id := uuid.New().String()
 	createdAt := time.Now()
-	
+
 	query := `
 		INSERT INTO refresh_tokens (id, user_id, token_hash, token_id, expires_at, created_at)
 		VALUES (?, ?, ?, ?, ?, ?)
@@ -128,7 +128,7 @@ func (r *refreshTokenRepository) CleanupExpired() error {
 		WHERE expires_at < CURRENT_TIMESTAMP
 		   OR revoked_at < datetime('now', '-30 days')
 	`
-	
+
 	// For PostgreSQL, use the original query
 	if r.db.DriverName() == "postgres" {
 		query = `
@@ -137,7 +137,7 @@ func (r *refreshTokenRepository) CleanupExpired() error {
 			   OR revoked_at < CURRENT_TIMESTAMP - INTERVAL '30 days'
 		`
 	}
-	
+
 	query = r.db.Rebind(query)
 
 	_, err := r.db.Exec(query)

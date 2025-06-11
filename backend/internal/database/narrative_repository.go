@@ -747,7 +747,6 @@ func (r *NarrativeRepository) CreatePersonalizedNarrative(narrative *models.Pers
 	return nil
 }
 
-
 // Add NarrativeThread model if not in models package
 type NarrativeThread struct {
 	ID                  string                 `json:"id" db:"id"`

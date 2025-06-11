@@ -26,13 +26,13 @@ func RecoveryMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 						Str("remote_ip", getClientIP(r)).
 						Str("user_agent", r.UserAgent()).
 						Msg("Panic recovered")
-					
+
 					// Send error response
 					appErr := errors.NewInternalError("Internal server error", nil)
 					response.Error(w, r, appErr)
 				}
 			}()
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -52,7 +52,7 @@ func RecoveryWithConfigNew(config RecoveryConfigNew) func(http.Handler) http.Han
 	if config.StackSize == 0 {
 		config.StackSize = 4 << 10 // 4KB
 	}
-	
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
@@ -61,7 +61,7 @@ func RecoveryWithConfigNew(config RecoveryConfigNew) func(http.Handler) http.Han
 					stack := make([]byte, config.StackSize)
 					length := runtime.Stack(stack, config.PrintStack)
 					stack = stack[:length]
-					
+
 					// Create log entry
 					logEvent := config.Logger.WithContext(r.Context()).
 						Error().
@@ -70,14 +70,14 @@ func RecoveryWithConfigNew(config RecoveryConfigNew) func(http.Handler) http.Han
 						Str("path", r.URL.Path).
 						Str("remote_ip", getClientIP(r)).
 						Str("user_agent", r.UserAgent())
-					
+
 					if config.PrintStack {
 						logEvent = logEvent.Str("stack_trace", string(stack))
 					}
-					
+
 					// Log the panic
 					logEvent.Msg("Panic recovered")
-					
+
 					// Handle the error
 					if config.ErrorHandler != nil {
 						config.ErrorHandler(w, r, err, config.Logger.WithContext(r.Context()))
@@ -88,7 +88,7 @@ func RecoveryWithConfigNew(config RecoveryConfigNew) func(http.Handler) http.Han
 					}
 				}
 			}()
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}

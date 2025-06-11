@@ -65,4 +65,3 @@ type TokenPair struct {
 	RefreshToken string `json:"refresh_token"`
 	ExpiresIn    int64  `json:"expires_in"` // seconds until access token expires
 }
-

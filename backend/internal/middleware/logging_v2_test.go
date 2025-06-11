@@ -27,15 +27,15 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify context has IDs
 		ctx := r.Context()
-		
+
 		// Get IDs from context using logger functions
 		reqID := logger.GetRequestIDFromContext(ctx)
 		corrID := logger.GetCorrelationIDFromContext(ctx)
-		
+
 		// Write them to response for verification
 		w.Header().Set("X-Context-Request-ID", reqID)
 		w.Header().Set("X-Context-Correlation-ID", corrID)
-		
+
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
@@ -88,20 +88,20 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 			if tt.correlationID != "" {
 				req.Header.Set("X-Correlation-ID", tt.correlationID)
 			}
-			
+
 			// Create response recorder
 			rr := httptest.NewRecorder()
-			
+
 			// Serve request
 			wrappedHandler.ServeHTTP(rr, req)
-			
+
 			// Check response headers
 			respReqID := rr.Header().Get("X-Request-ID")
 			respCorrID := rr.Header().Get("X-Correlation-ID")
-			
+
 			assert.NotEmpty(t, respReqID, "Response should have X-Request-ID")
 			assert.NotEmpty(t, respCorrID, "Response should have X-Correlation-ID")
-			
+
 			if tt.requestID != "" {
 				assert.Equal(t, tt.requestID, respReqID)
 			}
@@ -111,11 +111,11 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 			if tt.checkCorrIDEquals {
 				assert.Equal(t, respReqID, respCorrID, "Correlation ID should equal Request ID when not provided")
 			}
-			
+
 			// Verify context propagation
 			ctxReqID := rr.Header().Get("X-Context-Request-ID")
 			ctxCorrID := rr.Header().Get("X-Context-Correlation-ID")
-			
+
 			assert.Equal(t, respReqID, ctxReqID, "Context should have same request ID as response")
 			assert.Equal(t, respCorrID, ctxCorrID, "Context should have same correlation ID as response")
 		})
@@ -129,17 +129,17 @@ func TestRequestContextMiddleware(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
-	
+
 	// Apply middleware
 	wrappedHandler := middleware.RequestContextMiddleware(handler)
-	
+
 	// Basic test to ensure middleware doesn't break
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("X-Session-ID", "session-123")
 	req.Header.Set("X-Character-ID", "char-789")
-	
+
 	rr := httptest.NewRecorder()
 	wrappedHandler.ServeHTTP(rr, req)
-	
+
 	assert.Equal(t, http.StatusOK, rr.Code)
 }

@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/gorilla/mux"
 )
 
 // NarrativeHandlers manages narrative-related HTTP endpoints
@@ -107,7 +107,7 @@ func (h *NarrativeHandlers) GetNarrativeProfile(w http.ResponseWriter, r *http.R
 			PlayStyle:       "balanced",
 			Analytics:       make(map[string]interface{}),
 		}
-		
+
 		if err := h.narrativeRepo.CreateNarrativeProfile(profile); err != nil {
 			http.Error(w, "Failed to create profile", http.StatusInternalServerError)
 			return
@@ -305,7 +305,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
 		return
 	}
-	
+
 	isParticipant := false
 	for _, p := range participants {
 		if p.UserID == claims.UserID {
@@ -313,7 +313,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 			break
 		}
 	}
-	
+
 	if !isParticipant {
 		http.Error(w, "Not a participant in this session", http.StatusForbidden)
 		return
@@ -350,7 +350,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 			EmotionalWeight: 0.5, // Default weight
 			Tags:            []string{action.ActionType, action.TargetType},
 		}
-		
+
 		updatedProfile, err := h.narrativeEngine.ProfileService.AnalyzePlayerDecision(r.Context(), profile, decision)
 		if err == nil {
 			h.narrativeRepo.UpdateNarrativeProfile(updatedProfile)
@@ -374,7 +374,7 @@ func (h *NarrativeHandlers) GetPendingConsequences(w http.ResponseWriter, r *htt
 		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
 		return
 	}
-	
+
 	isParticipant := false
 	for _, p := range participants {
 		if p.UserID == claims.UserID {
@@ -382,7 +382,7 @@ func (h *NarrativeHandlers) GetPendingConsequences(w http.ResponseWriter, r *htt
 			break
 		}
 	}
-	
+
 	if !isParticipant {
 		http.Error(w, "Not a participant in this session", http.StatusForbidden)
 		return
@@ -418,7 +418,7 @@ func (h *NarrativeHandlers) TriggerConsequence(w http.ResponseWriter, r *http.Re
 		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
 		return
 	}
-	
+
 	isDM := false
 	for _, p := range participants {
 		if p.UserID == claims.UserID && p.Role == models.ParticipantRoleDM {
@@ -426,7 +426,7 @@ func (h *NarrativeHandlers) TriggerConsequence(w http.ResponseWriter, r *http.Re
 			break
 		}
 	}
-	
+
 	if !isDM {
 		http.Error(w, "Only DM can trigger consequences", http.StatusForbidden)
 		return
@@ -459,7 +459,7 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 			http.Error(w, "Failed to get participants", http.StatusInternalServerError)
 			return
 		}
-		
+
 		isDM := false
 		for _, p := range participants {
 			if p.UserID == claims.UserID && p.Role == models.ParticipantRoleDM {
@@ -467,7 +467,7 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 				break
 			}
 		}
-		
+
 		if !isDM {
 			http.Error(w, "Only DM can create world events", http.StatusForbidden)
 			return
@@ -666,7 +666,7 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
 		return
 	}
-	
+
 	isDM := false
 	for _, p := range participants {
 		if p.UserID == claims.UserID && p.Role == models.ParticipantRoleDM {
@@ -674,7 +674,7 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 			break
 		}
 	}
-	
+
 	if !isDM {
 		http.Error(w, "Only DM can generate perspectives", http.StatusForbidden)
 		return
@@ -794,7 +794,7 @@ func (h *NarrativeHandlers) CreateThread(w http.ResponseWriter, r *http.Request)
 			http.Error(w, "Failed to get participants", http.StatusInternalServerError)
 			return
 		}
-		
+
 		isDM := false
 		for _, p := range participants {
 			if p.UserID == claims.UserID && p.Role == models.ParticipantRoleDM {
@@ -802,7 +802,7 @@ func (h *NarrativeHandlers) CreateThread(w http.ResponseWriter, r *http.Request)
 				break
 			}
 		}
-		
+
 		if !isDM {
 			http.Error(w, "Only DM can create narrative threads", http.StatusForbidden)
 			return
@@ -824,7 +824,7 @@ func (h *NarrativeHandlers) CreateThread(w http.ResponseWriter, r *http.Request)
 func (h *NarrativeHandlers) buildWorldState(ctx context.Context, sessionID string) map[string]interface{} {
 	// Build world state from various sources
 	worldState := make(map[string]interface{})
-	
+
 	// Add session info
 	session, err := h.gameRepo.GetByID(ctx, sessionID)
 	if err == nil {
@@ -870,10 +870,10 @@ func (h *NarrativeHandlers) getRelevantPerspectiveSources(event models.Narrative
 
 	// Add a neutral historian perspective
 	sources = append(sources, models.PerspectiveSource{
-		ID:   "historian",
-		Type: "historical",
-		Name: "Scholar of the Realm",
-		Background: "An impartial observer recording events for posterity",
+		ID:          "historian",
+		Type:        "historical",
+		Name:        "Scholar of the Realm",
+		Background:  "An impartial observer recording events for posterity",
 		Motivations: []string{"accuracy", "completeness", "context"},
 	})
 

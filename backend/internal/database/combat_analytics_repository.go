@@ -311,7 +311,7 @@ func (r *combatAnalyticsRepository) CreateOrUpdateInitiativeRule(rule *models.Sm
 	checkQuery := `SELECT id FROM smart_initiative_rules WHERE game_session_id = ? AND entity_id = ?`
 	checkQuery = r.db.Rebind(checkQuery)
 	err := r.db.QueryRow(checkQuery, rule.GameSessionID, rule.EntityID).Scan(&existingID)
-	
+
 	if err == sql.ErrNoRows {
 		// Insert new rule
 		if rule.ID == uuid.Nil {
@@ -319,14 +319,14 @@ func (r *combatAnalyticsRepository) CreateOrUpdateInitiativeRule(rule *models.Sm
 		}
 		rule.CreatedAt = time.Now()
 		rule.UpdatedAt = time.Now()
-		
+
 		insertQuery := `
 			INSERT INTO smart_initiative_rules (
 				id, game_session_id, entity_id, entity_type,
 				base_initiative_bonus, advantage_on_initiative,
 				alert_feat, special_rules, created_at, updated_at
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-		
+
 		insertQuery = r.db.Rebind(insertQuery)
 		_, err = r.db.Exec(insertQuery,
 			rule.ID,
@@ -343,7 +343,7 @@ func (r *combatAnalyticsRepository) CreateOrUpdateInitiativeRule(rule *models.Sm
 	} else if err != nil {
 		return err
 	}
-	
+
 	// Update existing rule
 	rule.UpdatedAt = time.Now()
 	updateQuery := `
@@ -355,7 +355,7 @@ func (r *combatAnalyticsRepository) CreateOrUpdateInitiativeRule(rule *models.Sm
 			special_rules = ?,
 			updated_at = ?
 		WHERE game_session_id = ? AND entity_id = ?`
-	
+
 	updateQuery = r.db.Rebind(updateQuery)
 	_, err = r.db.Exec(updateQuery,
 		rule.EntityType,

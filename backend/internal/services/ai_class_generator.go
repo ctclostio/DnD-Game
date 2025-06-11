@@ -12,8 +12,8 @@ import (
 type CustomClassRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Role        string `json:"role"` // e.g., "tank", "healer", "damage dealer", "support"
-	Style       string `json:"style"` // "balanced", "flavorful", "powerful"
+	Role        string `json:"role"`               // e.g., "tank", "healer", "damage dealer", "support"
+	Style       string `json:"style"`              // "balanced", "flavorful", "powerful"
 	Features    string `json:"features,omitempty"` // Optional desired features
 }
 
@@ -29,7 +29,7 @@ func NewAIClassGenerator(provider LLMProvider) *AIClassGenerator {
 
 func (g *AIClassGenerator) GenerateCustomClass(ctx context.Context, req CustomClassRequest) (*models.CustomClass, error) {
 	prompt := g.buildClassPrompt(req)
-	
+
 	systemPrompt := `You are a D&D 5th Edition expert game designer creating balanced, interesting custom classes.
 Your responses must be valid JSON matching the specified format exactly. Do not include any additional text or explanation outside the JSON.`
 
@@ -154,38 +154,38 @@ func (g *AIClassGenerator) parseClassResponse(response string) (*models.CustomCl
 	if jsonStart == -1 || jsonEnd == -1 {
 		return nil, fmt.Errorf("no valid JSON found in response")
 	}
-	
+
 	jsonStr := response[jsonStart : jsonEnd+1]
-	
+
 	var classData struct {
-		Name                     string `json:"name"`
-		Description              string `json:"description"`
-		HitDie                   int    `json:"hitDie"`
-		PrimaryAbility           string `json:"primaryAbility"`
-		SavingThrowProficiencies []string `json:"savingThrowProficiencies"`
-		SkillProficiencies       []string `json:"skillProficiencies"`
-		SkillChoices             int    `json:"skillChoices"`
-		ArmorProficiencies       []string `json:"armorProficiencies"`
-		WeaponProficiencies      []string `json:"weaponProficiencies"`
-		ToolProficiencies        []string `json:"toolProficiencies"`
-		StartingEquipment        string `json:"startingEquipment"`
+		Name                     string                `json:"name"`
+		Description              string                `json:"description"`
+		HitDie                   int                   `json:"hitDie"`
+		PrimaryAbility           string                `json:"primaryAbility"`
+		SavingThrowProficiencies []string              `json:"savingThrowProficiencies"`
+		SkillProficiencies       []string              `json:"skillProficiencies"`
+		SkillChoices             int                   `json:"skillChoices"`
+		ArmorProficiencies       []string              `json:"armorProficiencies"`
+		WeaponProficiencies      []string              `json:"weaponProficiencies"`
+		ToolProficiencies        []string              `json:"toolProficiencies"`
+		StartingEquipment        string                `json:"startingEquipment"`
 		ClassFeatures            []models.ClassFeature `json:"classFeatures"`
-		SubclassName             string `json:"subclassName"`
-		SubclassLevel            int    `json:"subclassLevel"`
-		Subclasses               []models.Subclass `json:"subclasses"`
-		SpellcastingAbility      string `json:"spellcastingAbility,omitempty"`
-		SpellList                []string `json:"spellList,omitempty"`
-		CantripsKnownProgression []int `json:"cantripsKnownProgression,omitempty"`
-		SpellsKnownProgression   []int `json:"spellsKnownProgression,omitempty"`
-		RitualCasting            bool   `json:"ritualCasting"`
-		SpellcastingFocus        string `json:"spellcastingFocus,omitempty"`
-		DMNotes                  string `json:"dmNotes"`
+		SubclassName             string                `json:"subclassName"`
+		SubclassLevel            int                   `json:"subclassLevel"`
+		Subclasses               []models.Subclass     `json:"subclasses"`
+		SpellcastingAbility      string                `json:"spellcastingAbility,omitempty"`
+		SpellList                []string              `json:"spellList,omitempty"`
+		CantripsKnownProgression []int                 `json:"cantripsKnownProgression,omitempty"`
+		SpellsKnownProgression   []int                 `json:"spellsKnownProgression,omitempty"`
+		RitualCasting            bool                  `json:"ritualCasting"`
+		SpellcastingFocus        string                `json:"spellcastingFocus,omitempty"`
+		DMNotes                  string                `json:"dmNotes"`
 	}
-	
+
 	if err := json.Unmarshal([]byte(jsonStr), &classData); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON: %w", err)
 	}
-	
+
 	// Convert to models.CustomClass
 	customClass := &models.CustomClass{
 		Name:                     classData.Name,
@@ -211,12 +211,12 @@ func (g *AIClassGenerator) parseClassResponse(response string) (*models.CustomCl
 		SpellcastingFocus:        classData.SpellcastingFocus,
 		DMNotes:                  classData.DMNotes,
 	}
-	
+
 	// Generate spell slots progression for spellcasters
 	if customClass.SpellcastingAbility != "" {
 		customClass.SpellSlotsProgression = g.generateSpellSlotProgression(customClass)
 	}
-	
+
 	return customClass, nil
 }
 
@@ -245,7 +245,7 @@ func (g *AIClassGenerator) generateSpellSlotProgression(class *models.CustomClas
 		"19": []int{4, 3, 3, 3, 3, 2, 1, 1, 1},
 		"20": []int{4, 3, 3, 3, 3, 2, 2, 1, 1},
 	}
-	
+
 	return fullCasterProgression
 }
 
@@ -255,7 +255,7 @@ func (g *AIClassGenerator) validateClass(class *models.CustomClass) error {
 	if !validHitDice[class.HitDie] {
 		return fmt.Errorf("invalid hit die: %d", class.HitDie)
 	}
-	
+
 	// Validate primary ability
 	validAbilities := map[string]bool{
 		"Strength": true, "Dexterity": true, "Constitution": true,
@@ -264,17 +264,17 @@ func (g *AIClassGenerator) validateClass(class *models.CustomClass) error {
 	if !validAbilities[class.PrimaryAbility] {
 		return fmt.Errorf("invalid primary ability: %s", class.PrimaryAbility)
 	}
-	
+
 	// Validate saving throws (should have exactly 2)
 	if len(class.SavingThrowProficiencies) != 2 {
 		return fmt.Errorf("classes must have exactly 2 saving throw proficiencies")
 	}
-	
+
 	// Validate skill choices
 	if class.SkillChoices < 2 || class.SkillChoices > 4 {
 		class.SkillChoices = 2 // Default to 2 if out of range
 	}
-	
+
 	// Ensure there are features for at least levels 1-3
 	hasLevel1Feature := false
 	for _, feature := range class.ClassFeatures {
@@ -286,24 +286,24 @@ func (g *AIClassGenerator) validateClass(class *models.CustomClass) error {
 	if !hasLevel1Feature {
 		return fmt.Errorf("class must have at least one level 1 feature")
 	}
-	
+
 	return nil
 }
 
 func (g *AIClassGenerator) calculateBalanceScore(class *models.CustomClass) int {
 	score := 5 // Start with average score
-	
+
 	// Hit die scoring
 	hitDieScores := map[int]int{6: -2, 8: 0, 10: 1, 12: 2}
 	score += hitDieScores[class.HitDie]
-	
+
 	// Armor proficiency scoring
 	if containsInClassGen(class.ArmorProficiencies, "Heavy armor") {
 		score += 2
 	} else if containsInClassGen(class.ArmorProficiencies, "Medium armor") {
 		score += 1
 	}
-	
+
 	// Spellcasting scoring
 	if class.SpellcastingAbility != "" {
 		score += 2 // Spellcasters are generally more versatile
@@ -311,7 +311,7 @@ func (g *AIClassGenerator) calculateBalanceScore(class *models.CustomClass) int 
 			score += 1
 		}
 	}
-	
+
 	// Feature count scoring
 	level5Features := 0
 	for _, feature := range class.ClassFeatures {
@@ -324,19 +324,19 @@ func (g *AIClassGenerator) calculateBalanceScore(class *models.CustomClass) int 
 	} else if level5Features < 3 {
 		score -= 1 // Few early features
 	}
-	
+
 	// Skill choices scoring
 	if class.SkillChoices >= 4 {
 		score += 1
 	}
-	
+
 	// Cap the score between 1 and 10
 	if score < 1 {
 		score = 1
 	} else if score > 10 {
 		score = 10
 	}
-	
+
 	return score
 }
 

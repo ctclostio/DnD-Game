@@ -16,9 +16,9 @@ func TestCharacterBuilder_BuildCharacter(t *testing.T) {
 	// Create a temp directory for test data
 	tmpDir := t.TempDir()
 	setupTestData(t, tmpDir)
-	
+
 	builder := NewCharacterBuilder(tmpDir)
-	
+
 	t.Run("successful character creation with standard race and class", func(t *testing.T) {
 		// Test data
 		params := map[string]interface{}{
@@ -36,10 +36,10 @@ func TestCharacterBuilder_BuildCharacter(t *testing.T) {
 				"charisma":     12,
 			},
 		}
-		
+
 		// Execute
 		char, err := builder.BuildCharacter(params)
-		
+
 		// Assert
 		require.NoError(t, err)
 		require.NotNil(t, char)
@@ -47,12 +47,12 @@ func TestCharacterBuilder_BuildCharacter(t *testing.T) {
 		assert.Equal(t, "human", char.Race)
 		assert.Equal(t, "fighter", char.Class)
 		assert.Equal(t, 1, char.Level)
-		
+
 		// Verify racial bonuses applied (Human gets +1 to all)
 		assert.Equal(t, 17, char.Attributes.Strength)
 		assert.Equal(t, 15, char.Attributes.Dexterity)
 		assert.Equal(t, 16, char.Attributes.Constitution)
-		
+
 		// Verify HP calculation (10 base + 3 CON modifier)
 		assert.Equal(t, 13, char.MaxHitPoints)
 		assert.Equal(t, 13, char.HitPoints)
@@ -74,17 +74,17 @@ func TestCharacterBuilder_BuildCharacter(t *testing.T) {
 				"charisma":     10,
 			},
 		}
-		
+
 		char, err := builder.BuildCharacter(params)
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, char)
-		
+
 		// Verify wizard-specific features
 		assert.NotEmpty(t, char.Spells.SpellSlots)
 		assert.Equal(t, 2, char.Spells.SpellSlots[0].Total) // Level 1 spell slots
 		assert.Equal(t, "Intelligence", char.Spells.SpellcastingAbility)
-		
+
 		// Verify spell save DC and attack bonus
 		intMod := builder.calculateModifier(char.Attributes.Intelligence)
 		expectedDC := 8 + char.ProficiencyBonus + intMod
@@ -126,17 +126,17 @@ func TestCharacterBuilder_BuildCharacter(t *testing.T) {
 				"charisma":     14,
 			},
 		}
-		
+
 		char, err := builder.BuildCharacter(params)
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, char)
 		assert.Equal(t, "Dragonkin", char.Race)
 		assert.Equal(t, &customRaceID, char.CustomRaceID)
-		
+
 		// Verify custom racial bonuses applied
-		assert.Equal(t, 16, char.Attributes.Strength)  // 14 + 2
-		assert.Equal(t, 15, char.Attributes.Charisma)  // 14 + 1
+		assert.Equal(t, 16, char.Attributes.Strength) // 14 + 2
+		assert.Equal(t, 15, char.Attributes.Charisma) // 14 + 1
 	})
 
 }
@@ -144,32 +144,32 @@ func TestCharacterBuilder_BuildCharacter(t *testing.T) {
 func TestCharacterBuilder_GetAvailableOptions(t *testing.T) {
 	tmpDir := t.TempDir()
 	setupTestData(t, tmpDir)
-	
+
 	builder := NewCharacterBuilder(tmpDir)
-	
+
 	options, err := builder.GetAvailableOptions()
 	require.NoError(t, err)
 	require.NotNil(t, options)
-	
+
 	// Check that all required fields are present
 	races, ok := options["races"].([]string)
 	require.True(t, ok)
 	assert.Contains(t, races, "human")
 	assert.Contains(t, races, "elf")
 	assert.Contains(t, races, "dwarf")
-	
+
 	classes, ok := options["classes"].([]string)
 	require.True(t, ok)
 	assert.Contains(t, classes, "fighter")
 	assert.Contains(t, classes, "wizard")
 	assert.Contains(t, classes, "cleric")
-	
+
 	backgrounds, ok := options["backgrounds"].([]string)
 	require.True(t, ok)
 	assert.Contains(t, backgrounds, "soldier")
 	assert.Contains(t, backgrounds, "sage")
 	assert.Contains(t, backgrounds, "noble")
-	
+
 	methods, ok := options["abilityScoreMethods"].([]string)
 	require.True(t, ok)
 	assert.Contains(t, methods, "standard_array")
@@ -180,43 +180,43 @@ func TestCharacterBuilder_GetAvailableOptions(t *testing.T) {
 
 func TestCharacterBuilder_RollAbilityScores(t *testing.T) {
 	builder := &CharacterBuilder{}
-	
+
 	t.Run("standard array", func(t *testing.T) {
 		scores, err := builder.RollAbilityScores("standard_array")
 		require.NoError(t, err)
-		
+
 		// Check that standard array values are present
 		expectedValues := []int{15, 14, 13, 12, 10, 8}
 		var actualValues []int
 		for _, ability := range []string{"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"} {
 			actualValues = append(actualValues, scores[ability])
 		}
-		
+
 		// Sort to compare (order doesn't matter for standard array)
 		assert.ElementsMatch(t, expectedValues, actualValues)
 	})
-	
+
 	t.Run("roll 4d6", func(t *testing.T) {
 		scores, err := builder.RollAbilityScores("roll_4d6")
 		require.NoError(t, err)
-		
+
 		// Check that all abilities have valid scores (3-18)
 		for ability, score := range scores {
 			assert.GreaterOrEqual(t, score, 3, "Ability %s should be at least 3", ability)
 			assert.LessOrEqual(t, score, 18, "Ability %s should be at most 18", ability)
 		}
 	})
-	
+
 	t.Run("point buy", func(t *testing.T) {
 		scores, err := builder.RollAbilityScores("point_buy")
 		require.NoError(t, err)
-		
+
 		// Check that all abilities start at 8
 		for _, score := range scores {
 			assert.Equal(t, 8, score)
 		}
 	})
-	
+
 	t.Run("invalid method", func(t *testing.T) {
 		_, err := builder.RollAbilityScores("invalid_method")
 		assert.Error(t, err)
@@ -281,7 +281,7 @@ func TestInitializeSpellSlots(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := InitializeSpellSlots(tt.class, tt.level)
@@ -292,20 +292,20 @@ func TestInitializeSpellSlots(t *testing.T) {
 
 func TestCharacterBuilder_CalculateModifier(t *testing.T) {
 	builder := &CharacterBuilder{}
-	
+
 	tests := []struct {
 		score    int
 		expected int
 	}{
-		{1, -4},  // (1-10)/2 = -9/2 = -4 (truncates towards zero)
+		{1, -4}, // (1-10)/2 = -9/2 = -4 (truncates towards zero)
 		{2, -4},
-		{3, -3},  // (3-10)/2 = -7/2 = -3
+		{3, -3}, // (3-10)/2 = -7/2 = -3
 		{4, -3},
-		{5, -2},  // (5-10)/2 = -5/2 = -2
+		{5, -2}, // (5-10)/2 = -5/2 = -2
 		{6, -2},
-		{7, -1},  // (7-10)/2 = -3/2 = -1
+		{7, -1}, // (7-10)/2 = -3/2 = -1
 		{8, -1},
-		{9, 0},   // (9-10)/2 = -1/2 = 0
+		{9, 0}, // (9-10)/2 = -1/2 = 0
 		{10, 0},
 		{11, 0},
 		{12, 1},
@@ -318,7 +318,7 @@ func TestCharacterBuilder_CalculateModifier(t *testing.T) {
 		{19, 4},
 		{20, 5},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("score %d", tt.score), func(t *testing.T) {
 			result := builder.calculateModifier(tt.score)
@@ -329,7 +329,7 @@ func TestCharacterBuilder_CalculateModifier(t *testing.T) {
 
 func TestCharacterBuilder_CalculateProficiencyBonus(t *testing.T) {
 	builder := &CharacterBuilder{}
-	
+
 	tests := []struct {
 		level    int
 		expected int
@@ -355,7 +355,7 @@ func TestCharacterBuilder_CalculateProficiencyBonus(t *testing.T) {
 		{19, 6},
 		{20, 6},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("level %d", tt.level), func(t *testing.T) {
 			result := builder.calculateProficiencyBonus(tt.level)
@@ -371,7 +371,7 @@ func setupTestData(t *testing.T, dir string) {
 		err := os.MkdirAll(filepath.Join(dir, subdir), 0755)
 		require.NoError(t, err)
 	}
-	
+
 	// Create minimal test data files
 	raceData := map[string]interface{}{
 		"human": map[string]interface{}{
@@ -390,30 +390,30 @@ func setupTestData(t *testing.T, dir string) {
 			"traits":    []map[string]interface{}{},
 		},
 		"elf": map[string]interface{}{
-			"name": "Elf",
+			"name":                 "Elf",
 			"abilityScoreIncrease": map[string]int{"dexterity": 2},
-			"size":      "Medium",
-			"speed":     30,
-			"languages": []string{"Common", "Elvish"},
-			"traits":    []map[string]interface{}{},
+			"size":                 "Medium",
+			"speed":                30,
+			"languages":            []string{"Common", "Elvish"},
+			"traits":               []map[string]interface{}{},
 		},
 		"dwarf": map[string]interface{}{
-			"name": "Dwarf",
+			"name":                 "Dwarf",
 			"abilityScoreIncrease": map[string]int{"constitution": 2},
-			"size":      "Medium",
-			"speed":     25,
-			"languages": []string{"Common", "Dwarvish"},
-			"traits":    []map[string]interface{}{},
+			"size":                 "Medium",
+			"speed":                25,
+			"languages":            []string{"Common", "Dwarvish"},
+			"traits":               []map[string]interface{}{},
 		},
 	}
-	
+
 	for name, data := range raceData {
 		file := filepath.Join(dir, "races", name+".json")
 		content, _ := json.MarshalIndent(data, "", "  ")
 		err := os.WriteFile(file, content, 0644)
 		require.NoError(t, err)
 	}
-	
+
 	classData := map[string]interface{}{
 		"fighter": map[string]interface{}{
 			"name":                     "Fighter",
@@ -457,14 +457,14 @@ func setupTestData(t *testing.T, dir string) {
 			"features":                 map[string]interface{}{},
 		},
 	}
-	
+
 	for name, data := range classData {
 		file := filepath.Join(dir, "classes", name+".json")
 		content, _ := json.MarshalIndent(data, "", "  ")
 		err := os.WriteFile(file, content, 0644)
 		require.NoError(t, err)
 	}
-	
+
 	backgroundData := map[string]interface{}{
 		"soldier": map[string]interface{}{
 			"name":               "Soldier",
@@ -491,7 +491,7 @@ func setupTestData(t *testing.T, dir string) {
 			"feature":            map[string]interface{}{},
 		},
 	}
-	
+
 	for name, data := range backgroundData {
 		file := filepath.Join(dir, "backgrounds", name+".json")
 		content, _ := json.MarshalIndent(data, "", "  ")

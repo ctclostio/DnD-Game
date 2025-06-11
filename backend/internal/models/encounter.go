@@ -62,8 +62,8 @@ type EncounterEnemy struct {
 	Flaw              string                 `json:"flaw" db:"flaw"`
 	Tactics           string                 `json:"tactics" db:"tactics"`
 	MoraleThreshold   int                    `json:"moraleThreshold" db:"morale_threshold"`
-	InitialPosition   *GridPosition              `json:"initialPosition,omitempty" db:"initial_position"`
-	CurrentPosition   *GridPosition              `json:"currentPosition,omitempty" db:"current_position"`
+	InitialPosition   *GridPosition          `json:"initialPosition,omitempty" db:"initial_position"`
+	CurrentPosition   *GridPosition          `json:"currentPosition,omitempty" db:"current_position"`
 	Conditions        []string               `json:"conditions" db:"conditions"`
 	IsAlive           bool                   `json:"isAlive" db:"is_alive"`
 	Fled              bool                   `json:"fled" db:"fled"`
@@ -73,20 +73,20 @@ type EncounterEnemy struct {
 
 // TacticalInfo contains AI-generated tactical suggestions
 type TacticalInfo struct {
-	GeneralStrategy   string              `json:"generalStrategy"`
-	PriorityTargets   []string            `json:"priorityTargets"`
-	Positioning       string              `json:"positioning"`
-	CombatPhases      []CombatPhase       `json:"combatPhases"`
-	RetreatConditions string              `json:"retreatConditions"`
-	SpecialTactics    map[string]string   `json:"specialTactics"`
+	GeneralStrategy   string            `json:"generalStrategy"`
+	PriorityTargets   []string          `json:"priorityTargets"`
+	Positioning       string            `json:"positioning"`
+	CombatPhases      []CombatPhase     `json:"combatPhases"`
+	RetreatConditions string            `json:"retreatConditions"`
+	SpecialTactics    map[string]string `json:"specialTactics"`
 }
 
 // CombatPhase represents different phases of combat with different tactics
 type CombatPhase struct {
-	Name         string   `json:"name"`
-	Trigger      string   `json:"trigger"`
-	Tactics      string   `json:"tactics"`
-	Abilities    []string `json:"abilities"`
+	Name      string   `json:"name"`
+	Trigger   string   `json:"trigger"`
+	Tactics   string   `json:"tactics"`
+	Abilities []string `json:"abilities"`
 }
 
 // EnvironmentalHazard represents a hazard in the encounter
@@ -126,22 +126,22 @@ type ScalingOptions struct {
 
 // ScalingAdjustment represents how to adjust an encounter
 type ScalingAdjustment struct {
-	AddEnemies      []string `json:"addEnemies,omitempty"`
-	RemoveEnemies   []string `json:"removeEnemies,omitempty"`
-	HPModifier      int      `json:"hpModifier,omitempty"`
-	DamageModifier  int      `json:"damageModifier,omitempty"`
-	AddHazards      []string `json:"addHazards,omitempty"`
-	AddTerrain      []string `json:"addTerrain,omitempty"`
-	AddObjectives   []string `json:"addObjectives,omitempty"`
+	AddEnemies     []string `json:"addEnemies,omitempty"`
+	RemoveEnemies  []string `json:"removeEnemies,omitempty"`
+	HPModifier     int      `json:"hpModifier,omitempty"`
+	DamageModifier int      `json:"damageModifier,omitempty"`
+	AddHazards     []string `json:"addHazards,omitempty"`
+	AddTerrain     []string `json:"addTerrain,omitempty"`
+	AddObjectives  []string `json:"addObjectives,omitempty"`
 }
 
 // ReinforcementWave for mid-combat additions
 type ReinforcementWave struct {
-	Round       int              `json:"round"`
-	Trigger     string           `json:"trigger"`
-	Enemies     []EncounterEnemy `json:"enemies"`
-	Entrance    string           `json:"entrance"`
-	Announcement string          `json:"announcement"`
+	Round        int              `json:"round"`
+	Trigger      string           `json:"trigger"`
+	Enemies      []EncounterEnemy `json:"enemies"`
+	Entrance     string           `json:"entrance"`
+	Announcement string           `json:"announcement"`
 }
 
 // EscapeRoute for tactical retreats
@@ -215,34 +215,34 @@ type EncounterEvent struct {
 
 // EncounterTemplate for reusable encounters
 type EncounterTemplate struct {
-	ID                   string                 `json:"id" db:"id"`
-	CreatedBy            *string                `json:"createdBy,omitempty" db:"created_by"`
-	Name                 string                 `json:"name" db:"name"`
-	Description          string                 `json:"description" db:"description"`
-	Tags                 []string               `json:"tags" db:"tags"`
-	EncounterType        string                 `json:"encounterType" db:"encounter_type"`
-	MinLevel             int                    `json:"minLevel" db:"min_level"`
-	MaxLevel             int                    `json:"maxLevel" db:"max_level"`
-	EnvironmentTypes     []string               `json:"environmentTypes" db:"environment_types"`
-	EnemyGroups          []EnemyGroup           `json:"enemyGroups" db:"enemy_groups"`
-	ScalingFormula       map[string]interface{} `json:"scalingFormula" db:"scaling_formula"`
-	TacticalNotes        string                 `json:"tacticalNotes" db:"tactical_notes"`
+	ID                    string                 `json:"id" db:"id"`
+	CreatedBy             *string                `json:"createdBy,omitempty" db:"created_by"`
+	Name                  string                 `json:"name" db:"name"`
+	Description           string                 `json:"description" db:"description"`
+	Tags                  []string               `json:"tags" db:"tags"`
+	EncounterType         string                 `json:"encounterType" db:"encounter_type"`
+	MinLevel              int                    `json:"minLevel" db:"min_level"`
+	MaxLevel              int                    `json:"maxLevel" db:"max_level"`
+	EnvironmentTypes      []string               `json:"environmentTypes" db:"environment_types"`
+	EnemyGroups           []EnemyGroup           `json:"enemyGroups" db:"enemy_groups"`
+	ScalingFormula        map[string]interface{} `json:"scalingFormula" db:"scaling_formula"`
+	TacticalNotes         string                 `json:"tacticalNotes" db:"tactical_notes"`
 	EnvironmentalFeatures map[string]interface{} `json:"environmentalFeatures" db:"environmental_features"`
-	ObjectiveOptions     []ObjectiveOption      `json:"objectiveOptions" db:"objective_options"`
-	IsPublic             bool                   `json:"isPublic" db:"is_public"`
-	TimesUsed            int                    `json:"timesUsed" db:"times_used"`
-	Rating               float64                `json:"rating" db:"rating"`
-	CreatedAt            time.Time              `json:"createdAt" db:"created_at"`
-	UpdatedAt            time.Time              `json:"updatedAt" db:"updated_at"`
+	ObjectiveOptions      []ObjectiveOption      `json:"objectiveOptions" db:"objective_options"`
+	IsPublic              bool                   `json:"isPublic" db:"is_public"`
+	TimesUsed             int                    `json:"timesUsed" db:"times_used"`
+	Rating                float64                `json:"rating" db:"rating"`
+	CreatedAt             time.Time              `json:"createdAt" db:"created_at"`
+	UpdatedAt             time.Time              `json:"updatedAt" db:"updated_at"`
 }
 
 // EnemyGroup for templates
 type EnemyGroup struct {
-	Name         string  `json:"name"`
-	MinQuantity  int     `json:"minQuantity"`
-	MaxQuantity  int     `json:"maxQuantity"`
-	Role         string  `json:"role"`
-	ScalingNotes string  `json:"scalingNotes"`
+	Name         string `json:"name"`
+	MinQuantity  int    `json:"minQuantity"`
+	MaxQuantity  int    `json:"maxQuantity"`
+	Role         string `json:"role"`
+	ScalingNotes string `json:"scalingNotes"`
 }
 
 // ObjectiveOption for templates

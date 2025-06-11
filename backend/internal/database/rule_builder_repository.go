@@ -222,7 +222,7 @@ func (r *RuleBuilderRepository) UpdateRuleTemplate(templateID string, updates ma
 
 	for key, value := range updates {
 		query += fmt.Sprintf(", %s = ?", key)
-		
+
 		// Handle JSON fields
 		switch key {
 		case "logic_graph", "parameters", "conditional_modifiers", "tags":
@@ -489,7 +489,7 @@ func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, character
 	}
 
 	query += " ORDER BY executed_at DESC"
-	
+
 	if limit > 0 {
 		query += " LIMIT ?"
 		args = append(args, limit)
@@ -632,4 +632,3 @@ func (r *RuleBuilderRepository) DeactivateRuleInstance(instanceID string) error 
 	_, err := r.db.ExecRebind(query, time.Now(), instanceID)
 	return err
 }
-

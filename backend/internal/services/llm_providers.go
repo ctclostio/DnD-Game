@@ -64,8 +64,8 @@ func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, prompt string, 
 			{"role": "system", "content": systemPrompt},
 			{"role": "user", "content": prompt},
 		},
-		"temperature":    0.7,
-		"max_tokens":     2000,
+		"temperature":     0.7,
+		"max_tokens":      2000,
 		"response_format": map[string]string{"type": "json_object"},
 	}
 
@@ -285,7 +285,7 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 	if m.Error != nil {
 		return "", m.Error
 	}
-	
+
 	// Return a sample balanced race for testing
 	if m.Response == "" {
 		return `{
@@ -311,7 +311,7 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 			"balanceExplanation": "This race is well-balanced with defensive abilities offset by no offensive bonuses. The telepathy is limited in range and the construct traits are mainly flavor."
 		}`, nil
 	}
-	
+
 	return m.Response, nil
 }
 
@@ -325,7 +325,7 @@ func NewLLMProvider(config AIConfig) LLMProvider {
 	if !config.Enabled {
 		return &MockLLMProvider{}
 	}
-	
+
 	switch config.Provider {
 	case "openai":
 		return NewOpenAIProvider(config.APIKey, config.Model)

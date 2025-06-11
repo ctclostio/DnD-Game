@@ -17,38 +17,38 @@ type WorldBuildingRepository interface {
 	CreateSettlement(settlement *models.Settlement) error
 	GetSettlement(id uuid.UUID) (*models.Settlement, error)
 	GetSettlementsByGameSession(gameSessionID uuid.UUID) ([]*models.Settlement, error)
-	
+
 	// NPC operations
 	CreateSettlementNPC(npc *models.SettlementNPC) error
 	GetSettlementNPCs(settlementID uuid.UUID) ([]models.SettlementNPC, error)
-	
+
 	// Shop operations
 	CreateSettlementShop(shop *models.SettlementShop) error
 	GetSettlementShops(settlementID uuid.UUID) ([]models.SettlementShop, error)
-	
+
 	// Faction operations
 	CreateFaction(faction *models.Faction) error
 	GetFaction(id uuid.UUID) (*models.Faction, error)
 	GetFactionsByGameSession(gameSessionID uuid.UUID) ([]*models.Faction, error)
 	UpdateFactionRelationship(faction1ID, faction2ID uuid.UUID, standing int, relationType string) error
-	
+
 	// World Event operations
 	CreateWorldEvent(event *models.WorldEvent) error
 	GetActiveWorldEvents(gameSessionID uuid.UUID) ([]*models.WorldEvent, error)
 	ProgressWorldEvent(eventID uuid.UUID) error
-	
+
 	// Market operations
 	CreateOrUpdateMarket(market *models.Market) error
 	GetMarketBySettlement(settlementID uuid.UUID) (*models.Market, error)
-	
+
 	// Trade Route operations
 	CreateTradeRoute(route *models.TradeRoute) error
 	GetTradeRoutesBySettlement(settlementID uuid.UUID) ([]*models.TradeRoute, error)
-	
+
 	// Ancient Site operations
 	CreateAncientSite(site *models.AncientSite) error
 	GetAncientSitesByGameSession(gameSessionID uuid.UUID) ([]*models.AncientSite, error)
-	
+
 	// Economic simulation
 	SimulateEconomicChanges(gameSessionID uuid.UUID) error
 }
@@ -174,12 +174,12 @@ Respond in JSON format:
 	}
 
 	var generatedData struct {
-		Name             string      `json:"name"`
-		Description      string      `json:"description"`
-		History          string      `json:"history"`
-		GovernmentType   string      `json:"governmentType"`
-		Alignment        string      `json:"alignment"`
-		AgeCategory      string      `json:"ageCategory"`
+		Name             string `json:"name"`
+		Description      string `json:"description"`
+		History          string `json:"history"`
+		GovernmentType   string `json:"governmentType"`
+		Alignment        string `json:"alignment"`
+		AgeCategory      string `json:"ageCategory"`
 		NotableLocations []struct {
 			Name        string `json:"name"`
 			Description string `json:"description"`
@@ -498,10 +498,10 @@ func (s *SettlementGeneratorService) calculatePopulation(settlementType models.S
 
 	base := basePopulation[settlementType]
 	multiplier := sizeMultiplier[size]
-	
+
 	// Add some randomness
-	variance := rand.Float64() * 0.4 + 0.8 // 0.8 to 1.2
-	
+	variance := rand.Float64()*0.4 + 0.8 // 0.8 to 1.2
+
 	return int(float64(base) * multiplier * variance)
 }
 
@@ -538,30 +538,30 @@ func (s *SettlementGeneratorService) calculateWealthLevel(settlementType models.
 		models.SettlementMetropolis: 9,
 		models.SettlementRuins:      1,
 	}
-	
+
 	wealth := baseWealth[settlementType]
 	// Larger populations tend to be wealthier
 	if population > 10000 {
 		wealth++
 	}
-	
+
 	// Add some randomness
 	wealth += rand.Intn(3) - 1 // -1 to +1
-	
+
 	if wealth < 1 {
 		wealth = 1
 	}
 	if wealth > 10 {
 		wealth = 10
 	}
-	
+
 	return wealth
 }
 
 func (s *SettlementGeneratorService) inferTerrainType(region string) string {
 	// Simple inference based on region name
 	region = strings.ToLower(region)
-	
+
 	switch {
 	case strings.Contains(region, "mountain"):
 		return "mountainous"
@@ -582,7 +582,7 @@ func (s *SettlementGeneratorService) inferTerrainType(region string) string {
 
 func (s *SettlementGeneratorService) inferClimate(region string) string {
 	region = strings.ToLower(region)
-	
+
 	switch {
 	case strings.Contains(region, "north"):
 		return "cold"
@@ -599,7 +599,7 @@ func (s *SettlementGeneratorService) inferClimate(region string) string {
 
 func (s *SettlementGeneratorService) getNPCRoles(settlementType models.SettlementType) []string {
 	baseRoles := []string{"merchant", "guard", "innkeeper", "blacksmith", "priest"}
-	
+
 	additionalRoles := map[models.SettlementType][]string{
 		models.SettlementHamlet:     {"farmer", "hunter"},
 		models.SettlementVillage:    {"healer", "elder", "miller"},
@@ -608,13 +608,13 @@ func (s *SettlementGeneratorService) getNPCRoles(settlementType models.Settlemen
 		models.SettlementMetropolis: {"archmage", "high priest", "crime lord", "diplomat"},
 		models.SettlementRuins:      {"hermit", "scavenger", "mad prophet"},
 	}
-	
+
 	return append(baseRoles, additionalRoles[settlementType]...)
 }
 
 func (s *SettlementGeneratorService) getShopTypes(settlementType models.SettlementType) []string {
 	baseShops := []string{"general", "tavern"}
-	
+
 	additionalShops := map[models.SettlementType][]string{
 		models.SettlementHamlet:     {},
 		models.SettlementVillage:    {"weaponsmith", "inn"},
@@ -623,17 +623,17 @@ func (s *SettlementGeneratorService) getShopTypes(settlementType models.Settleme
 		models.SettlementMetropolis: {"enchanter", "artificer", "grand bazaar", "auction house"},
 		models.SettlementRuins:      {},
 	}
-	
+
 	return append(baseShops, additionalShops[settlementType]...)
 }
 
 func (s *SettlementGeneratorService) generateMarketConditions(settlement *models.Settlement) *models.Market {
 	market := &models.Market{
-		SettlementID:        settlement.ID,
-		FoodPriceModifier:   1.0,
-		CommonGoodsModifier: 1.0,
-		WeaponsArmorModifier: 1.0,
-		MagicalItemsModifier: 1.0,
+		SettlementID:             settlement.ID,
+		FoodPriceModifier:        1.0,
+		CommonGoodsModifier:      1.0,
+		WeaponsArmorModifier:     1.0,
+		MagicalItemsModifier:     1.0,
 		AncientArtifactsModifier: 2.0,
 	}
 
@@ -679,16 +679,16 @@ func (s *SettlementGeneratorService) generateMarketConditions(settlement *models
 func (s *SettlementGeneratorService) generateProceduralNPC(settlement *models.Settlement, role string) *models.SettlementNPC {
 	names := []string{"Aldric", "Mira", "Thorne", "Elara", "Grimm", "Lyssa", "Darius", "Nyx"}
 	races := []string{"human", "dwarf", "elf", "halfling", "tiefling", "half-orc"}
-	
+
 	npc := &models.SettlementNPC{
-		SettlementID: settlement.ID,
-		Name:         names[rand.Intn(len(names))],
-		Race:         races[rand.Intn(len(races))],
-		Class:        "commoner",
-		Level:        rand.Intn(5) + 1,
-		Role:         role,
-		Occupation:   role,
-		AncientKnowledge: rand.Float32() < 0.1,
+		SettlementID:      settlement.ID,
+		Name:              names[rand.Intn(len(names))],
+		Race:              races[rand.Intn(len(races))],
+		Class:             "commoner",
+		Level:             rand.Intn(5) + 1,
+		Role:              role,
+		Occupation:        role,
+		AncientKnowledge:  rand.Float32() < 0.1,
 		CorruptionTouched: settlement.CorruptionLevel > 5 && rand.Float32() < 0.2,
 	}
 
@@ -729,12 +729,12 @@ func (s *SettlementGeneratorService) generateProceduralShop(settlement *models.S
 	}
 
 	shop := &models.SettlementShop{
-		SettlementID:  settlement.ID,
-		Name:          fmt.Sprintf("%s %s", prefixes[rand.Intn(len(prefixes))], shopSuffixes[rand.Intn(len(shopSuffixes))]),
-		Type:          shopType,
-		QualityLevel:  rand.Intn(5) + 3,
-		PriceModifier: 0.9 + rand.Float64()*0.3,
-		BlackMarket:   settlement.CorruptionLevel > 6 && rand.Float32() < 0.3,
+		SettlementID:     settlement.ID,
+		Name:             fmt.Sprintf("%s %s", prefixes[rand.Intn(len(prefixes))], shopSuffixes[rand.Intn(len(shopSuffixes))]),
+		Type:             shopType,
+		QualityLevel:     rand.Intn(5) + 3,
+		PriceModifier:    0.9 + rand.Float64()*0.3,
+		BlackMarket:      settlement.CorruptionLevel > 6 && rand.Float32() < 0.3,
 		AncientArtifacts: settlement.AncientRuinsNearby && rand.Float32() < 0.4,
 	}
 

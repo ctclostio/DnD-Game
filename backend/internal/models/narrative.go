@@ -19,12 +19,12 @@ type NarrativeProfile struct {
 
 // StoryPreferences defines what kinds of stories resonate with a player
 type StoryPreferences struct {
-	Themes          []string  `json:"themes"`           // "redemption", "revenge", "discovery", etc.
-	Tone            []string  `json:"tone"`             // "dark", "heroic", "comedic", "tragic"
-	Complexity      int       `json:"complexity"`       // 1-5 scale
-	MoralAlignment  string    `json:"moral_alignment"`  // How they typically resolve moral dilemmas
-	PacingPreference string   `json:"pacing"`          // "fast", "moderate", "slow-burn"
-	CombatNarrative float64   `json:"combat_narrative"` // 0-1, how much combat vs roleplay
+	Themes           []string `json:"themes"`           // "redemption", "revenge", "discovery", etc.
+	Tone             []string `json:"tone"`             // "dark", "heroic", "comedic", "tragic"
+	Complexity       int      `json:"complexity"`       // 1-5 scale
+	MoralAlignment   string   `json:"moral_alignment"`  // How they typically resolve moral dilemmas
+	PacingPreference string   `json:"pacing"`           // "fast", "moderate", "slow-burn"
+	CombatNarrative  float64  `json:"combat_narrative"` // 0-1, how much combat vs roleplay
 }
 
 // DecisionRecord tracks a significant player decision
@@ -54,23 +54,23 @@ type BackstoryElement struct {
 
 // PersonalizedNarrative represents a story event tailored to a specific player
 type PersonalizedNarrative struct {
-	ID                 string                   `json:"id"`
-	BaseEventID        string                   `json:"base_event_id"`
-	CharacterID        string                   `json:"character_id"`
-	PersonalizedHooks  []NarrativeHook          `json:"personalized_hooks"`
-	BackstoryCallbacks []BackstoryIntegration   `json:"backstory_callbacks"`
-	EmotionalResonance float64                  `json:"emotional_resonance"`
-	PredictedImpact    []PredictedImpact        `json:"predicted_impact"`
-	Metadata           map[string]interface{}   `json:"metadata"`
-	GeneratedAt        time.Time                `json:"generated_at"`
+	ID                 string                 `json:"id"`
+	BaseEventID        string                 `json:"base_event_id"`
+	CharacterID        string                 `json:"character_id"`
+	PersonalizedHooks  []NarrativeHook        `json:"personalized_hooks"`
+	BackstoryCallbacks []BackstoryIntegration `json:"backstory_callbacks"`
+	EmotionalResonance float64                `json:"emotional_resonance"`
+	PredictedImpact    []PredictedImpact      `json:"predicted_impact"`
+	Metadata           map[string]interface{} `json:"metadata"`
+	GeneratedAt        time.Time              `json:"generated_at"`
 }
 
 // NarrativeHook is a story element designed to engage a specific player
 type NarrativeHook struct {
-	Type        string `json:"type"` // "moral_dilemma", "personal_connection", "mystery", "challenge"
-	Content     string `json:"content"`
-	Relevance   float64 `json:"relevance"` // How well this matches player preferences
-	BackstoryID string `json:"backstory_id,omitempty"` // If this hooks into backstory
+	Type        string  `json:"type"` // "moral_dilemma", "personal_connection", "mystery", "challenge"
+	Content     string  `json:"content"`
+	Relevance   float64 `json:"relevance"`              // How well this matches player preferences
+	BackstoryID string  `json:"backstory_id,omitempty"` // If this hooks into backstory
 }
 
 // BackstoryIntegration shows how a backstory element is woven into current events
@@ -91,39 +91,39 @@ type PredictedImpact struct {
 
 // ConsequenceEvent represents a ripple effect from a player action
 type ConsequenceEvent struct {
-	ID               string                 `json:"id" db:"id"`
-	TriggerActionID  string                 `json:"trigger_action_id" db:"trigger_action_id"`
-	TriggerType      string                 `json:"trigger_type" db:"trigger_type"`
-	Description      string                 `json:"description" db:"description"`
-	Severity         int                    `json:"severity" db:"severity"` // 1-10 scale
-	Delay            string                 `json:"delay" db:"delay"` // "immediate", "short", "medium", "long"
-	ActualTriggerTime *time.Time            `json:"actual_trigger_time,omitempty" db:"actual_trigger_time"`
-	AffectedEntities []AffectedEntity       `json:"affected_entities" db:"affected_entities"`
-	CascadeEffects   []CascadeEffect        `json:"cascade_effects" db:"cascade_effects"`
-	Status           string                 `json:"status" db:"status"` // "pending", "triggered", "resolved", "prevented"
-	CreatedAt        time.Time              `json:"created_at" db:"created_at"`
-	Metadata         map[string]interface{} `json:"metadata" db:"metadata"`
+	ID                string                 `json:"id" db:"id"`
+	TriggerActionID   string                 `json:"trigger_action_id" db:"trigger_action_id"`
+	TriggerType       string                 `json:"trigger_type" db:"trigger_type"`
+	Description       string                 `json:"description" db:"description"`
+	Severity          int                    `json:"severity" db:"severity"` // 1-10 scale
+	Delay             string                 `json:"delay" db:"delay"`       // "immediate", "short", "medium", "long"
+	ActualTriggerTime *time.Time             `json:"actual_trigger_time,omitempty" db:"actual_trigger_time"`
+	AffectedEntities  []AffectedEntity       `json:"affected_entities" db:"affected_entities"`
+	CascadeEffects    []CascadeEffect        `json:"cascade_effects" db:"cascade_effects"`
+	Status            string                 `json:"status" db:"status"` // "pending", "triggered", "resolved", "prevented"
+	CreatedAt         time.Time              `json:"created_at" db:"created_at"`
+	Metadata          map[string]interface{} `json:"metadata" db:"metadata"`
 }
 
 // AffectedEntity represents something impacted by a consequence
 type AffectedEntity struct {
-	EntityType   string                 `json:"entity_type"` // "npc", "faction", "location", "economy", "reputation"
-	EntityID     string                 `json:"entity_id"`
-	EntityName   string                 `json:"entity_name"`
-	ImpactType   string                 `json:"impact_type"`
-	ImpactSeverity int                  `json:"impact_severity"`
-	Description  string                 `json:"description"`
-	Metadata     map[string]interface{} `json:"metadata"`
+	EntityType     string                 `json:"entity_type"` // "npc", "faction", "location", "economy", "reputation"
+	EntityID       string                 `json:"entity_id"`
+	EntityName     string                 `json:"entity_name"`
+	ImpactType     string                 `json:"impact_type"`
+	ImpactSeverity int                    `json:"impact_severity"`
+	Description    string                 `json:"description"`
+	Metadata       map[string]interface{} `json:"metadata"`
 }
 
 // CascadeEffect represents secondary consequences
 type CascadeEffect struct {
-	ID          string    `json:"id"`
-	Type        string    `json:"type"`
-	Description string    `json:"description"`
-	Probability float64   `json:"probability"`
-	Timeline    string    `json:"timeline"`
-	Triggered   bool      `json:"triggered"`
+	ID          string     `json:"id"`
+	Type        string     `json:"type"`
+	Description string     `json:"description"`
+	Probability float64    `json:"probability"`
+	Timeline    string     `json:"timeline"`
+	Triggered   bool       `json:"triggered"`
 	TriggerTime *time.Time `json:"trigger_time,omitempty"`
 }
 
@@ -132,10 +132,10 @@ type PerspectiveNarrative struct {
 	ID              string                 `json:"id" db:"id"`
 	EventID         string                 `json:"event_id" db:"event_id"`
 	PerspectiveType string                 `json:"perspective_type" db:"perspective_type"` // "npc", "faction", "deity", "historical"
-	SourceID        string                 `json:"source_id" db:"source_id"` // ID of NPC/faction/etc
+	SourceID        string                 `json:"source_id" db:"source_id"`               // ID of NPC/faction/etc
 	SourceName      string                 `json:"source_name" db:"source_name"`
 	Narrative       string                 `json:"narrative" db:"narrative"`
-	Bias            string                 `json:"bias" db:"bias"` // "positive", "negative", "neutral", "conflicted"
+	Bias            string                 `json:"bias" db:"bias"`               // "positive", "negative", "neutral", "conflicted"
 	TruthLevel      float64                `json:"truth_level" db:"truth_level"` // 0-1, how accurate this perspective is
 	HiddenDetails   []string               `json:"hidden_details" db:"hidden_details"`
 	Contradictions  []Contradiction        `json:"contradictions" db:"contradictions"`
@@ -155,20 +155,20 @@ type Contradiction struct {
 
 // NarrativeEvent represents a significant event in the game world from a narrative perspective
 type NarrativeEvent struct {
-	ID                string                   `json:"id" db:"id"`
-	Type              string                   `json:"type" db:"type"`
-	Name              string                   `json:"name" db:"name"`
-	Description       string                   `json:"description" db:"description"`
-	Location          string                   `json:"location" db:"location"`
-	Timestamp         time.Time                `json:"timestamp" db:"timestamp"`
-	Participants      []string                 `json:"participants" db:"participants"`
-	Witnesses         []string                 `json:"witnesses" db:"witnesses"`
-	ImmediateEffects  []string                 `json:"immediate_effects" db:"immediate_effects"`
-	PotentialRipples  []ConsequenceEvent       `json:"potential_ripples"`
-	Perspectives      []PerspectiveNarrative   `json:"perspectives"`
-	PlayerInvolvement map[string]string        `json:"player_involvement" db:"player_involvement"`
-	Status            string                   `json:"status" db:"status"`
-	Metadata          map[string]interface{}   `json:"metadata" db:"metadata"`
+	ID                string                 `json:"id" db:"id"`
+	Type              string                 `json:"type" db:"type"`
+	Name              string                 `json:"name" db:"name"`
+	Description       string                 `json:"description" db:"description"`
+	Location          string                 `json:"location" db:"location"`
+	Timestamp         time.Time              `json:"timestamp" db:"timestamp"`
+	Participants      []string               `json:"participants" db:"participants"`
+	Witnesses         []string               `json:"witnesses" db:"witnesses"`
+	ImmediateEffects  []string               `json:"immediate_effects" db:"immediate_effects"`
+	PotentialRipples  []ConsequenceEvent     `json:"potential_ripples"`
+	Perspectives      []PerspectiveNarrative `json:"perspectives"`
+	PlayerInvolvement map[string]string      `json:"player_involvement" db:"player_involvement"`
+	Status            string                 `json:"status" db:"status"`
+	Metadata          map[string]interface{} `json:"metadata" db:"metadata"`
 }
 
 // NarrativeMemory stores the AI's understanding of ongoing narratives

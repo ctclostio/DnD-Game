@@ -39,7 +39,7 @@ func deprecatedRespondWithJSON(w http.ResponseWriter, status int, data interface
 func deprecatedRespondWithError(w http.ResponseWriter, status int, message string) {
 	// Create a minimal request with empty context for backward compatibility
 	r, _ := http.NewRequest("", "", nil)
-	
+
 	switch status {
 	case http.StatusBadRequest:
 		response.BadRequest(w, r, message)

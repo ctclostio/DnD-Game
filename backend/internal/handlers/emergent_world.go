@@ -16,12 +16,12 @@ import (
 
 // EmergentWorldHandlers manages handlers for the emergent world system
 type EmergentWorldHandlers struct {
-	livingEcosystem      *services.LivingEcosystemService
-	factionPersonality   *services.FactionPersonalityService
-	proceduralCulture    *services.ProceduralCultureService
-	worldRepo            *database.EmergentWorldRepository
-	gameService          *services.GameSessionService
-	factionRepo          *database.WorldBuildingRepository
+	livingEcosystem    *services.LivingEcosystemService
+	factionPersonality *services.FactionPersonalityService
+	proceduralCulture  *services.ProceduralCultureService
+	worldRepo          *database.EmergentWorldRepository
+	gameService        *services.GameSessionService
+	factionRepo        *database.WorldBuildingRepository
 }
 
 // NewEmergentWorldHandlers creates new emergent world handlers
@@ -432,17 +432,17 @@ func (h *EmergentWorldHandlers) TriggerWorldEvent(w http.ResponseWriter, r *http
 
 	// Convert WorldEvent to EmergentWorldEvent for creation
 	emergentEvent := &models.EmergentWorldEvent{
-		ID:          event.ID.String(),
-		SessionID:   sessionID,
-		EventType:   string(event.Type),
-		Title:       event.Name,
-		Description: event.Description,
-		Impact:      make(map[string]interface{}),
+		ID:               event.ID.String(),
+		SessionID:        sessionID,
+		EventType:        string(event.Type),
+		Title:            event.Name,
+		Description:      event.Description,
+		Impact:           make(map[string]interface{}),
 		AffectedEntities: []string{},
-		IsPlayerVisible: true,
-		OccurredAt:  event.CreatedAt,
+		IsPlayerVisible:  true,
+		OccurredAt:       event.CreatedAt,
 	}
-	
+
 	if err := h.worldRepo.CreateWorldEvent(emergentEvent); err != nil {
 		response.InternalServerError(w, r, err)
 		return

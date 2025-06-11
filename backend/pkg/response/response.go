@@ -80,11 +80,11 @@ func JSONWithMeta(w http.ResponseWriter, r *http.Request, status int, data inter
 // Error sends an error response
 func Error(w http.ResponseWriter, r *http.Request, err error) {
 	appErr := errors.GetAppError(err)
-	
+
 	// Log the error with context
 	log := logger.GetLogger()
 	requestID := getRequestID(r)
-	
+
 	// Log at appropriate level
 	switch appErr.StatusCode {
 	case http.StatusInternalServerError, http.StatusServiceUnavailable:
@@ -220,7 +220,7 @@ func appErrorToErrorInfo(appErr *errors.AppError) *ErrorInfo {
 func sendJSON(w http.ResponseWriter, status int, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	
+
 	if err := json.NewEncoder(w).Encode(v); err != nil {
 		logger.GetLogger().Error().Err(err).Msg("Failed to encode JSON response")
 	}

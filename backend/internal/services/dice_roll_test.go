@@ -470,11 +470,11 @@ func TestDiceRollService_RollInitiative(t *testing.T) {
 			}) {
 				assert.Len(t, results, 2)
 				// First participant has +2 modifier
-				assert.GreaterOrEqual(t, results[0].Initiative, 3)  // 1+2
-				assert.LessOrEqual(t, results[0].Initiative, 22)    // 20+2
+				assert.GreaterOrEqual(t, results[0].Initiative, 3) // 1+2
+				assert.LessOrEqual(t, results[0].Initiative, 22)   // 20+2
 				// Second participant has -1 modifier
-				assert.GreaterOrEqual(t, results[1].Initiative, 0)  // 1-1
-				assert.LessOrEqual(t, results[1].Initiative, 19)    // 20-1
+				assert.GreaterOrEqual(t, results[1].Initiative, 0) // 1-1
+				assert.LessOrEqual(t, results[1].Initiative, 19)   // 20-1
 			},
 		},
 		{

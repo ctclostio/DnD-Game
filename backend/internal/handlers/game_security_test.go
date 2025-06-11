@@ -109,8 +109,8 @@ func TestGameSessionSecurity(t *testing.T) {
 				expectedStatus: http.StatusOK,
 			},
 			{
-				name:        "Cannot join full session",
-				userID:      "another_user",
+				name:   "Cannot join full session",
+				userID: "another_user",
 				setupFunc: func() {
 					// Fill the session to capacity
 					session.MaxPlayers = 2 // DM + 1 player
@@ -137,10 +137,10 @@ func TestGameSessionSecurity(t *testing.T) {
 				req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
 				// Create user claims and add to context
 				claims := &auth.Claims{
-					UserID: tt.userID,
+					UserID:   tt.userID,
 					Username: "testuser",
-					Email: "test@example.com",
-					Role: "player",
+					Email:    "test@example.com",
+					Role:     "player",
 				}
 				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 				req = mux.SetURLVars(req, map[string]string{"id": session.ID})
@@ -203,10 +203,10 @@ func TestGameSessionSecurity(t *testing.T) {
 				req := httptest.NewRequest("GET", "/api/v1/game/sessions/"+tt.sessionID, nil)
 				// Create user claims and add to context
 				claims := &auth.Claims{
-					UserID: tt.userID,
+					UserID:   tt.userID,
 					Username: "testuser",
-					Email: "test@example.com",
-					Role: "player",
+					Email:    "test@example.com",
+					Role:     "player",
 				}
 				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 				req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
@@ -303,10 +303,10 @@ func TestGameSessionSecurity(t *testing.T) {
 		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+inactiveSession.ID+"/join", nil)
 		// Create user claims and add to context
 		claims := &auth.Claims{
-			UserID: player1.ID,
+			UserID:   player1.ID,
 			Username: "testuser",
-			Email: "test@example.com",
-			Role: "player",
+			Email:    "test@example.com",
+			Role:     "player",
 		}
 		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 		req = mux.SetURLVars(req, map[string]string{"id": inactiveSession.ID})
@@ -332,10 +332,10 @@ func TestGameSessionSecurity(t *testing.T) {
 		req = httptest.NewRequest("POST", "/api/v1/game/sessions/"+completedSession.ID+"/join", nil)
 		// Create user claims and add to context
 		claims2 := &auth.Claims{
-			UserID: player1.ID,
+			UserID:   player1.ID,
 			Username: "testuser",
-			Email: "test@example.com",
-			Role: "player",
+			Email:    "test@example.com",
+			Role:     "player",
 		}
 		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims2))
 		req = mux.SetURLVars(req, map[string]string{"id": completedSession.ID})

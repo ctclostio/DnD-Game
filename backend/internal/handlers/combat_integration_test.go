@@ -51,10 +51,10 @@ func TestCombatFlow_Integration(t *testing.T) {
 	// Create WebSocket hub for combat broadcasts
 	hub := websocket.NewHub()
 	go hub.Run()
-	
+
 	// Create handlers and setup routes
 	h := handlers.NewHandlers(svc, hub)
-	
+
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
 
@@ -76,7 +76,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 
 	// Create characters
 	pcID := ctx.CreateTestCharacter(playerID, "Aragorn")
-	
+
 	// Update character stats for combat
 	_, err = ctx.SQLXDB.Exec(`
 		UPDATE characters 
@@ -90,7 +90,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 
 	// Create game session
 	sessionID := ctx.CreateTestGameSession(dmID, "Combat Test Session", "COMBAT01")
-	
+
 	// Verify session exists
 	var sessionCount int
 	err = ctx.SQLXDB.Get(&sessionCount, "SELECT COUNT(*) FROM game_sessions WHERE id = ?", sessionID)
@@ -106,7 +106,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 		HitPoints:    7,
 		MaxHitPoints: 7,
 		ArmorClass:   13,
-		Abilities: []models.NPCAbility{},
+		Abilities:    []models.NPCAbility{},
 		Attributes: models.Attributes{
 			Strength:     8,
 			Dexterity:    14,
@@ -117,17 +117,17 @@ func TestCombatFlow_Integration(t *testing.T) {
 		},
 		Actions: []models.NPCAction{
 			{
-				Name:       "Scimitar",
-				Type:       "attack",
-				AttackBonus:  4,
-				Damage: "1d6+2",
-				DamageType: "slashing",
+				Name:        "Scimitar",
+				Type:        "attack",
+				AttackBonus: 4,
+				Damage:      "1d6+2",
+				DamageType:  "slashing",
 			},
 		},
 	}
 	goblin.GameSessionID = sessionID
 	goblin.CreatedBy = dmID // Set the DM as the creator
-	
+
 	err = ctx.Repos.NPCs.Create(context.Background(), goblin)
 	require.NoError(t, err)
 
@@ -139,8 +139,8 @@ func TestCombatFlow_Integration(t *testing.T) {
 
 	t.Run("Start Combat", func(t *testing.T) {
 		startReq := struct {
-			GameSessionID string              `json:"gameSessionId"`
-			Combatants    []models.Combatant  `json:"combatants"`
+			GameSessionID string             `json:"gameSessionId"`
+			Combatants    []models.Combatant `json:"combatants"`
 		}{
 			GameSessionID: sessionID,
 			Combatants: []models.Combatant{
@@ -183,7 +183,6 @@ func TestCombatFlow_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, resp.Success)
 
-
 		combatData, ok := resp.Data.(map[string]interface{})
 		require.True(t, ok, "Expected resp.Data to be map[string]interface{}, got %T", resp.Data)
 		combatID = combatData["id"].(string)
@@ -194,7 +193,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 		combatants, ok := combatData["combatants"].([]interface{})
 		require.True(t, ok)
 		assert.Len(t, combatants, 2)
-		
+
 		// Check turn order array instead
 		turnOrder, ok := combatData["turnOrder"].([]interface{})
 		require.True(t, ok)
@@ -226,9 +225,9 @@ func TestCombatFlow_Integration(t *testing.T) {
 	t.Run("Execute Attack Action", func(t *testing.T) {
 		// Aragorn attacks the goblin
 		actionReq := models.CombatRequest{
-			ActorID:  pcID,
-			Action:   models.ActionTypeAttack,
-			TargetID: goblin.ID,
+			ActorID:     pcID,
+			Action:      models.ActionTypeAttack,
+			TargetID:    goblin.ID,
 			Description: "Aragorn attacks with Longsword",
 		}
 
@@ -253,21 +252,21 @@ func TestCombatFlow_Integration(t *testing.T) {
 		require.True(t, ok)
 		assert.Equal(t, pcID, actionData["actorId"])
 		assert.Equal(t, "attack", actionData["actionType"])
-		
+
 		// Get updated combat state
 		req2 := httptest.NewRequest("GET", "/api/v1/combat/"+combatID, nil)
 		req2.Header.Set("Authorization", "Bearer "+playerToken.AccessToken)
 		req2 = mux.SetURLVars(req2, map[string]string{"combatId": combatID})
 		w2 := httptest.NewRecorder()
 		router.ServeHTTP(w2, req2)
-		
+
 		var combatResp response.Response
 		err = json.NewDecoder(w2.Body).Decode(&combatResp)
 		require.NoError(t, err)
-		
+
 		combatData, ok := combatResp.Data.(map[string]interface{})
 		require.True(t, ok)
-		
+
 		// Should have advanced turn
 		assert.Equal(t, float64(1), combatData["currentTurn"])
 
@@ -315,18 +314,18 @@ func TestCombatFlow_Integration(t *testing.T) {
 		actionData, ok := resp.Data.(map[string]interface{})
 		require.True(t, ok)
 		assert.Equal(t, "endTurn", actionData["actionType"])
-		
+
 		// Get updated combat state to verify round advancement
 		req2 := httptest.NewRequest("GET", "/api/v1/combat/"+combatID, nil)
 		req2.Header.Set("Authorization", "Bearer "+dmToken.AccessToken)
 		req2 = mux.SetURLVars(req2, map[string]string{"combatId": combatID})
 		w2 := httptest.NewRecorder()
 		router.ServeHTTP(w2, req2)
-		
+
 		var combatResp response.Response
 		err2 := json.NewDecoder(w2.Body).Decode(&combatResp)
 		require.NoError(t, err2)
-		
+
 		combatData, ok := combatResp.Data.(map[string]interface{})
 		require.True(t, ok)
 		assert.Equal(t, float64(2), combatData["round"])
@@ -378,7 +377,7 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 	}
 
 	h := handlers.NewHandlers(svc, nil)
-	
+
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
 	api.Use(middleware.LoggingMiddleware(log))
@@ -401,8 +400,8 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 
 	t.Run("Non-DM Cannot Start Combat", func(t *testing.T) {
 		startReq := struct {
-			GameSessionID string              `json:"gameSessionId"`
-			Combatants    []models.Combatant  `json:"combatants"`
+			GameSessionID string             `json:"gameSessionId"`
+			Combatants    []models.Combatant `json:"combatants"`
 		}{
 			GameSessionID: sessionID,
 			Combatants: []models.Combatant{
@@ -438,8 +437,8 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 		otherDMToken, _ := ctx.JWTManager.GenerateTokenPair(otherDMID, "other_dm", "other_dm@test.com", "dm")
 
 		startReq := struct {
-			GameSessionID string              `json:"gameSessionId"`
-			Combatants    []models.Combatant  `json:"combatants"`
+			GameSessionID string             `json:"gameSessionId"`
+			Combatants    []models.Combatant `json:"combatants"`
 		}{
 			GameSessionID: sessionID, // Session belongs to dmID, not otherDMID
 			Combatants: []models.Combatant{
@@ -484,6 +483,6 @@ func TestCombatConditions_Integration(t *testing.T) {
 	// - Status effects (poisoned, stunned, etc.)
 	// - Healing
 	// - Area of effect attacks
-	
+
 	t.Skip("Advanced combat conditions not yet implemented")
 }

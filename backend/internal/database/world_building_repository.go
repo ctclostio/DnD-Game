@@ -777,7 +777,7 @@ func (r *WorldBuildingRepository) GetAncientSitesByGameSession(gameSessionID uui
 func (r *WorldBuildingRepository) SimulateEconomicChanges(gameSessionID uuid.UUID) error {
 	// This would be called periodically to update market conditions
 	// based on active world events, trade route disruptions, etc.
-	
+
 	// Get all active events that have economic impacts
 	query := `
 		SELECT id, economic_impacts 
@@ -794,7 +794,7 @@ func (r *WorldBuildingRepository) SimulateEconomicChanges(gameSessionID uuid.UUI
 	for rows.Next() {
 		var eventID uuid.UUID
 		var economicImpacts []byte
-		
+
 		if err := rows.Scan(&eventID, &economicImpacts); err != nil {
 			continue
 		}

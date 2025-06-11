@@ -86,12 +86,12 @@ func NewCharacterBuilder() *CharacterBuilder {
 				Wisdom:       14,
 				Charisma:     12,
 			},
-			Skills:         []models.Skill{{Name: "Arcana", Modifier: 5, Proficiency: true}, {Name: "Investigation", Modifier: 5, Proficiency: true}},
-			Proficiencies:  models.Proficiencies{Languages: []string{"Common"}, Tools: []string{}, Weapons: []string{"Simple Weapons"}, Armor: []string{"Light Armor"}},
-			Equipment:      []models.Item{},
-			Spells:         models.SpellData{},
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
+			Skills:        []models.Skill{{Name: "Arcana", Modifier: 5, Proficiency: true}, {Name: "Investigation", Modifier: 5, Proficiency: true}},
+			Proficiencies: models.Proficiencies{Languages: []string{"Common"}, Tools: []string{}, Weapons: []string{"Simple Weapons"}, Armor: []string{"Light Armor"}},
+			Equipment:     []models.Item{},
+			Spells:        models.SpellData{},
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
 		},
 	}
 }
@@ -194,17 +194,17 @@ type CombatBuilder struct {
 func NewCombatBuilder() *CombatBuilder {
 	return &CombatBuilder{
 		combat: models.Combat{
-			ID:              "combat-1",
-			GameSessionID:   "session-1",
-			Name:            "Test Combat",
-			Round:           1,
-			CurrentTurn:     0,
-			Combatants:      []models.Combatant{},
-			TurnOrder:       []string{},
-			ActiveEffects:   []models.CombatEffect{},
-			IsActive:        true,
-			CreatedAt:       time.Now(),
-			UpdatedAt:       time.Now(),
+			ID:            "combat-1",
+			GameSessionID: "session-1",
+			Name:          "Test Combat",
+			Round:         1,
+			CurrentTurn:   0,
+			Combatants:    []models.Combatant{},
+			TurnOrder:     []string{},
+			ActiveEffects: []models.CombatEffect{},
+			IsActive:      true,
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
 		},
 	}
 }
@@ -248,15 +248,15 @@ type CombatantBuilder struct {
 func NewCombatantBuilder() *CombatantBuilder {
 	return &CombatantBuilder{
 		participant: models.Combatant{
-			ID:           "participant-1",
-			Name:         "Fighter",
-			Type:         "character",
-			Initiative:   15,
-			HP:           20,
-			MaxHP:        20,
-			AC:           16,
-			Conditions:   []models.Condition{},
-			CharacterID:  "1",
+			ID:          "participant-1",
+			Name:        "Fighter",
+			Type:        "character",
+			Initiative:  15,
+			HP:          20,
+			MaxHP:       20,
+			AC:          16,
+			Conditions:  []models.Condition{},
+			CharacterID: "1",
 		},
 	}
 }
@@ -350,14 +350,14 @@ type InventoryItemBuilder struct {
 func NewInventoryItemBuilder() *InventoryItemBuilder {
 	return &InventoryItemBuilder{
 		item: models.InventoryItem{
-			ID:          "1",
-			CharacterID: "1",
-			ItemID:      "item-1",
-			Quantity:    1,
-			Equipped:    true,
-			Attuned:     false,
+			ID:               "1",
+			CharacterID:      "1",
+			ItemID:           "item-1",
+			Quantity:         1,
+			Equipped:         true,
+			Attuned:          false,
 			CustomProperties: models.ItemProperties{},
-			Notes:       "",
+			Notes:            "",
 			Item: &models.Item{
 				ID:     "item-1",
 				Name:   "Longsword",
@@ -375,8 +375,8 @@ func NewInventoryItemBuilder() *InventoryItemBuilder {
 				CreatedAt:          time.Now(),
 				UpdatedAt:          time.Now(),
 			},
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
 	}
 }
@@ -404,7 +404,7 @@ func (b *InventoryItemBuilder) AsArmor(ac int) *InventoryItemBuilder {
 	if b.item.Item != nil {
 		b.item.Item.Type = models.ItemTypeArmor
 		b.item.Item.Properties = models.ItemProperties{
-			"armorClass": ac,
+			"armorClass":          ac,
 			"stealthDisadvantage": false,
 		}
 	}

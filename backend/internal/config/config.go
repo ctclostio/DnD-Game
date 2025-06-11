@@ -45,10 +45,10 @@ type RedisConfig struct {
 
 // AuthConfig holds authentication-related configuration
 type AuthConfig struct {
-	JWTSecret              string
-	AccessTokenDuration    time.Duration
-	RefreshTokenDuration   time.Duration
-	BcryptCost             int
+	JWTSecret            string
+	AccessTokenDuration  time.Duration
+	RefreshTokenDuration time.Duration
+	BcryptCost           int
 }
 
 // AIConfig holds AI/LLM-related configuration

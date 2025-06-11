@@ -40,11 +40,11 @@ func TestAIDMAssistantService_GenerateNPCDialogue(t *testing.T) {
 		{
 			name: "successful tavern keeper dialogue",
 			request: models.NPCDialogueRequest{
-				NPCName:        "Gareth the Barkeep",
-				NPCPersonality: []string{"gruff", "protective of locals", "secretly helpful"},
-				DialogueStyle:  "Working class, uses simple words, occasional grunt",
-				Situation:      "Late evening in a busy tavern",
-				PlayerInput:    "Do you know anything about the strange disappearances?",
+				NPCName:         "Gareth the Barkeep",
+				NPCPersonality:  []string{"gruff", "protective of locals", "secretly helpful"},
+				DialogueStyle:   "Working class, uses simple words, occasional grunt",
+				Situation:       "Late evening in a busy tavern",
+				PlayerInput:     "Do you know anything about the strange disappearances?",
 				PreviousContext: "First time meeting",
 			},
 			mockResponse: `"*grunts* Aye, folk been vanishin' alright. Started 'bout two weeks back, always near the old mill. But you didn't hear that from me, understand?"`,

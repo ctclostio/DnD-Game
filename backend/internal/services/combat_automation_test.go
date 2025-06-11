@@ -21,7 +21,7 @@ func createTestCombatAutomationService() (*CombatAutomationService, *MockCombatA
 	mockCombatRepo := new(MockCombatAnalyticsRepository)
 	mockCharRepo := new(mocks.MockCharacterRepository)
 	mockNPCRepo := new(mocks.MockNPCRepository)
-	
+
 	service := NewCombatAutomationService(mockCombatRepo, mockCharRepo, mockNPCRepo)
 	return service, mockCombatRepo, mockCharRepo, mockNPCRepo
 }
@@ -56,10 +56,10 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 	characters := createTestCharacters(4, 5)
 
 	tests := []struct {
-		name         string
-		request      models.AutoResolveRequest
-		setupMocks   func(*MockCombatAnalyticsRepository)
-		expectError  bool
+		name           string
+		request        models.AutoResolveRequest
+		setupMocks     func(*MockCombatAnalyticsRepository)
+		expectError    bool
 		validateResult func(*testing.T, *models.AutoCombatResolution)
 	}{
 		{
@@ -84,7 +84,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 				assert.Equal(t, "quick", result.ResolutionType)
 				assert.True(t, result.ExperienceAwarded > 0)
 				assert.NotEmpty(t, result.NarrativeSummary)
-				
+
 				// Check that resources were used
 				var resources map[string]interface{}
 				err := json.Unmarshal([]byte(result.PartyResourcesUsed), &resources)
@@ -156,7 +156,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			service, mockCombatRepo, _, _ := createTestCombatAutomationService()
-			
+
 			if tt.setupMocks != nil {
 				tt.setupMocks(mockCombatRepo)
 			}
@@ -181,17 +181,17 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 	sessionID := uuid.New()
 
 	tests := []struct {
-		name           string
-		request        models.SmartInitiativeRequest
+		name            string
+		request         models.SmartInitiativeRequest
 		initiativeRules map[uuid.UUID]*models.SmartInitiativeRule
-		setupMocks     func(*MockCombatAnalyticsRepository)
-		expectError    bool
-		validateResult func(*testing.T, []models.InitiativeEntry)
+		setupMocks      func(*MockCombatAnalyticsRepository)
+		expectError     bool
+		validateResult  func(*testing.T, []models.InitiativeEntry)
 	}{
 		{
 			name: "Basic Initiative Roll",
 			request: models.SmartInitiativeRequest{
-				CombatID:   uuid.New(),
+				CombatID: uuid.New(),
 				Combatants: []models.InitiativeCombatant{
 					{
 						ID:                uuid.New().String(),
@@ -223,7 +223,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 		{
 			name: "Initiative with Alert Feat",
 			request: models.SmartInitiativeRequest{
-				CombatID:   uuid.New(),
+				CombatID: uuid.New(),
 				Combatants: []models.InitiativeCombatant{
 					{
 						ID:                uuid.New().String(),
@@ -237,7 +237,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 				combatantID := mock.AnythingOfType("string")
 				rule := &models.SmartInitiativeRule{
 					BaseInitiativeBonus: 2,
-					AlertFeat:          true,
+					AlertFeat:           true,
 				}
 				repo.On("GetInitiativeRule", sessionID, combatantID).Return(rule, nil)
 			},
@@ -251,7 +251,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 		{
 			name: "Initiative with Advantage",
 			request: models.SmartInitiativeRequest{
-				CombatID:   uuid.New(),
+				CombatID: uuid.New(),
 				Combatants: []models.InitiativeCombatant{
 					{
 						ID:                uuid.New().String(),
@@ -277,7 +277,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 		{
 			name: "Special Priority Rules",
 			request: models.SmartInitiativeRequest{
-				CombatID:   uuid.New(),
+				CombatID: uuid.New(),
 				Combatants: []models.InitiativeCombatant{
 					{
 						ID:                uuid.New().String(),
@@ -304,7 +304,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 		{
 			name: "Multiple Combatants with Mixed Rules",
 			request: models.SmartInitiativeRequest{
-				CombatID:   uuid.New(),
+				CombatID: uuid.New(),
 				Combatants: []models.InitiativeCombatant{
 					{
 						ID:                uuid.New().String(),
@@ -329,11 +329,11 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
 				// First combatant has no special rules
 				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(nil, nil).Once()
-				
+
 				// Second combatant has alert feat
 				rule := &models.SmartInitiativeRule{AlertFeat: true}
 				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(rule, nil).Once()
-				
+
 				// Third combatant has no special rules
 				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(nil, nil).Once()
 			},
@@ -351,7 +351,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			service, mockCombatRepo, _, _ := createTestCombatAutomationService()
-			
+
 			if tt.setupMocks != nil {
 				tt.setupMocks(mockCombatRepo)
 			}
@@ -375,7 +375,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 func TestCombatAutomationService_BattleMapOperations(t *testing.T) {
 	sessionID := uuid.New()
 	mapID := uuid.New()
-	
+
 	battleMap := &models.BattleMap{
 		ID:                  mapID,
 		GameSessionID:       sessionID,
@@ -386,48 +386,48 @@ func TestCombatAutomationService_BattleMapOperations(t *testing.T) {
 
 	t.Run("SaveBattleMap", func(t *testing.T) {
 		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
-		
+
 		mockCombatRepo.On("CreateBattleMap", battleMap).Return(nil)
-		
+
 		err := service.SaveBattleMap(context.Background(), battleMap)
 		assert.NoError(t, err)
-		
+
 		mockCombatRepo.AssertExpectations(t)
 	})
 
 	t.Run("SaveBattleMap_Error", func(t *testing.T) {
 		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
-		
+
 		mockCombatRepo.On("CreateBattleMap", battleMap).Return(errors.New("database error"))
-		
+
 		err := service.SaveBattleMap(context.Background(), battleMap)
 		assert.Error(t, err)
-		
+
 		mockCombatRepo.AssertExpectations(t)
 	})
 
 	t.Run("GetBattleMap", func(t *testing.T) {
 		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
-		
+
 		mockCombatRepo.On("GetBattleMap", mapID).Return(battleMap, nil)
-		
+
 		result, err := service.GetBattleMap(context.Background(), mapID)
 		assert.NoError(t, err)
 		assert.Equal(t, battleMap, result)
-		
+
 		mockCombatRepo.AssertExpectations(t)
 	})
 
 	t.Run("GetBattleMapsBySession", func(t *testing.T) {
 		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
-		
+
 		maps := []*models.BattleMap{battleMap}
 		mockCombatRepo.On("GetBattleMapsBySession", sessionID).Return(maps, nil)
-		
+
 		result, err := service.GetBattleMapsBySession(context.Background(), sessionID)
 		assert.NoError(t, err)
 		assert.Equal(t, maps, result)
-		
+
 		mockCombatRepo.AssertExpectations(t)
 	})
 }
@@ -436,31 +436,31 @@ func TestCombatAutomationService_SetInitiativeRule(t *testing.T) {
 	rule := &models.SmartInitiativeRule{
 		ID:                    uuid.New(),
 		GameSessionID:         uuid.New(),
-		EntityID:             uuid.New().String(),
+		EntityID:              uuid.New().String(),
 		BaseInitiativeBonus:   2,
-		AlertFeat:            true,
+		AlertFeat:             true,
 		AdvantageOnInitiative: false,
 	}
 
 	t.Run("Success", func(t *testing.T) {
 		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
-		
+
 		mockCombatRepo.On("CreateOrUpdateInitiativeRule", rule).Return(nil)
-		
+
 		err := service.SetInitiativeRule(context.Background(), rule)
 		assert.NoError(t, err)
-		
+
 		mockCombatRepo.AssertExpectations(t)
 	})
 
 	t.Run("Error", func(t *testing.T) {
 		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
-		
+
 		mockCombatRepo.On("CreateOrUpdateInitiativeRule", rule).Return(errors.New("database error"))
-		
+
 		err := service.SetInitiativeRule(context.Background(), rule)
 		assert.Error(t, err)
-		
+
 		mockCombatRepo.AssertExpectations(t)
 	})
 }
@@ -476,13 +476,13 @@ func TestCombatAutomationService_GetAutoResolutionsBySession(t *testing.T) {
 	}
 
 	service, mockCombatRepo, _, _ := createTestCombatAutomationService()
-	
+
 	mockCombatRepo.On("GetAutoCombatResolutionsBySession", sessionID).Return(resolutions, nil)
-	
+
 	result, err := service.GetAutoResolutionsBySession(context.Background(), sessionID)
 	assert.NoError(t, err)
 	assert.Equal(t, resolutions, result)
-	
+
 	mockCombatRepo.AssertExpectations(t)
 }
 
@@ -612,10 +612,10 @@ func BenchmarkCombatAutomationService_AutoResolveCombat(b *testing.B) {
 	service, mockCombatRepo, _, _ := createTestCombatAutomationService()
 	sessionID := uuid.New()
 	characters := createTestCharacters(4, 5)
-	
+
 	mockCombatRepo.On("CreateAutoCombatResolution", mock.AnythingOfType("*models.AutoCombatResolution")).
 		Return(nil)
-	
+
 	request := models.AutoResolveRequest{
 		EncounterDifficulty: "medium",
 		EnemyTypes: []models.EnemyInfo{
@@ -624,7 +624,7 @@ func BenchmarkCombatAutomationService_AutoResolveCombat(b *testing.B) {
 		TerrainType:  "forest",
 		UseResources: true,
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = service.AutoResolveCombat(context.Background(), sessionID, characters, request)
@@ -634,12 +634,12 @@ func BenchmarkCombatAutomationService_AutoResolveCombat(b *testing.B) {
 func BenchmarkCombatAutomationService_SmartInitiative(b *testing.B) {
 	service, mockCombatRepo, _, _ := createTestCombatAutomationService()
 	sessionID := uuid.New()
-	
+
 	// Setup mocks to return quickly
 	mockCombatRepo.On("GetInitiativeRule", sessionID, mock.Anything).Return(nil, nil)
-	
+
 	request := models.SmartInitiativeRequest{
-		CombatID:   uuid.New(),
+		CombatID: uuid.New(),
 		Combatants: []models.InitiativeCombatant{
 			{ID: uuid.New().String(), Type: "character", Name: "Fighter", DexterityModifier: 2},
 			{ID: uuid.New().String(), Type: "character", Name: "Wizard", DexterityModifier: 1},
@@ -649,7 +649,7 @@ func BenchmarkCombatAutomationService_SmartInitiative(b *testing.B) {
 			{ID: uuid.New().String(), Type: "npc", Name: "Goblin2", DexterityModifier: 2},
 		},
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = service.SmartInitiative(context.Background(), sessionID, request)

@@ -6,40 +6,40 @@ import (
 
 // RuleTemplate represents a reusable rule pattern created through the visual builder
 type RuleTemplate struct {
-	ID                   string                   `json:"id" db:"id"`
-	Name                 string                   `json:"name" db:"name"`
-	Description          string                   `json:"description" db:"description"`
-	Category             string                   `json:"category" db:"category"` // spell, ability, item, environmental, condition
-	Complexity           int                      `json:"complexity" db:"complexity"` // 1-5 scale
-	CreatedByID          string                   `json:"created_by_id" db:"created_by"`
-	IsPublic             bool                     `json:"is_public" db:"is_public"`
-	Version              int                      `json:"version" db:"version"`
-	LogicGraph           LogicGraph               `json:"logic_graph" db:"logic_graph"`
-	Parameters           []RuleParameter          `json:"parameters" db:"parameters"`
-	BalanceMetrics       BalanceMetrics           `json:"balance_metrics" db:"balance_metrics"`
-	ConditionalRules     []ConditionalRule        `json:"conditional_rules" db:"conditional_rules"`
-	ConditionalModifiers []ConditionalModifier    `json:"conditional_modifiers" db:"conditional_modifiers"`
-	Tags                 []string                 `json:"tags" db:"tags"`
-	UsageCount           int                      `json:"usage_count" db:"usage_count"`
-	AverageRating        float64                  `json:"average_rating" db:"average_rating"`
-	ApprovalStatus       string                   `json:"approval_status" db:"approval_status"`
-	Metadata             map[string]interface{}   `json:"metadata" db:"metadata"`
-	CreatedAt            time.Time                `json:"created_at" db:"created_at"`
-	UpdatedAt            time.Time                `json:"updated_at" db:"updated_at"`
+	ID                   string                 `json:"id" db:"id"`
+	Name                 string                 `json:"name" db:"name"`
+	Description          string                 `json:"description" db:"description"`
+	Category             string                 `json:"category" db:"category"`     // spell, ability, item, environmental, condition
+	Complexity           int                    `json:"complexity" db:"complexity"` // 1-5 scale
+	CreatedByID          string                 `json:"created_by_id" db:"created_by"`
+	IsPublic             bool                   `json:"is_public" db:"is_public"`
+	Version              int                    `json:"version" db:"version"`
+	LogicGraph           LogicGraph             `json:"logic_graph" db:"logic_graph"`
+	Parameters           []RuleParameter        `json:"parameters" db:"parameters"`
+	BalanceMetrics       BalanceMetrics         `json:"balance_metrics" db:"balance_metrics"`
+	ConditionalRules     []ConditionalRule      `json:"conditional_rules" db:"conditional_rules"`
+	ConditionalModifiers []ConditionalModifier  `json:"conditional_modifiers" db:"conditional_modifiers"`
+	Tags                 []string               `json:"tags" db:"tags"`
+	UsageCount           int                    `json:"usage_count" db:"usage_count"`
+	AverageRating        float64                `json:"average_rating" db:"average_rating"`
+	ApprovalStatus       string                 `json:"approval_status" db:"approval_status"`
+	Metadata             map[string]interface{} `json:"metadata" db:"metadata"`
+	CreatedAt            time.Time              `json:"created_at" db:"created_at"`
+	UpdatedAt            time.Time              `json:"updated_at" db:"updated_at"`
 }
 
 // LogicGraph represents the visual node-based logic structure
 type LogicGraph struct {
-	Nodes       []LogicNode       `json:"nodes"`
-	Connections []NodeConnection  `json:"connections"`
-	StartNodeID string            `json:"start_node_id"`
+	Nodes       []LogicNode         `json:"nodes"`
+	Connections []NodeConnection    `json:"connections"`
+	StartNodeID string              `json:"start_node_id"`
 	Variables   map[string]Variable `json:"variables"`
 }
 
 // LogicNode represents a single node in the visual logic builder
 type LogicNode struct {
 	ID         string                 `json:"id"`
-	Type       string                 `json:"type"` // trigger, condition, action, effect, calculation, variable
+	Type       string                 `json:"type"`    // trigger, condition, action, effect, calculation, variable
 	SubType    string                 `json:"subtype"` // specific node functionality
 	Position   EditorPosition         `json:"position"`
 	Properties map[string]interface{} `json:"properties"`
@@ -58,12 +58,12 @@ type NodePort struct {
 
 // NodeConnection represents a connection between two nodes
 type NodeConnection struct {
-	ID           string `json:"id"`
-	FromNodeID   string `json:"from_node_id"`
-	FromPortID   string `json:"from_port_id"`
-	ToNodeID     string `json:"to_node_id"`
-	ToPortID     string `json:"to_port_id"`
-	DataMapping  string `json:"data_mapping"` // How data transforms between nodes
+	ID          string `json:"id"`
+	FromNodeID  string `json:"from_node_id"`
+	FromPortID  string `json:"from_port_id"`
+	ToNodeID    string `json:"to_node_id"`
+	ToPortID    string `json:"to_port_id"`
+	DataMapping string `json:"data_mapping"` // How data transforms between nodes
 }
 
 // EditorPosition represents x,y coordinates in the visual editor
@@ -102,25 +102,25 @@ type Constraints struct {
 
 // BalanceMetrics contains AI-analyzed balance information
 type BalanceMetrics struct {
-	PowerLevel          float64                  `json:"power_level"` // 0-10 scale
-	ActionEconomy       float64                  `json:"action_economy"` // How many actions it requires/grants
-	ResourceCost        float64                  `json:"resource_cost"` // Spell slots, HP, etc.
-	ExpectedDamage      DamageExpectation        `json:"expected_damage"`
-	UtilityScore        float64                  `json:"utility_score"`
-	SynergyPotential    float64                  `json:"synergy_potential"`
-	SimulationResults   []SimulationResult       `json:"simulation_results"`
-	BalanceSuggestions  []BalanceSuggestion      `json:"balance_suggestions"`
-	MetaImpactPrediction MetaImpactPrediction    `json:"meta_impact_prediction"`
+	PowerLevel           float64              `json:"power_level"`    // 0-10 scale
+	ActionEconomy        float64              `json:"action_economy"` // How many actions it requires/grants
+	ResourceCost         float64              `json:"resource_cost"`  // Spell slots, HP, etc.
+	ExpectedDamage       DamageExpectation    `json:"expected_damage"`
+	UtilityScore         float64              `json:"utility_score"`
+	SynergyPotential     float64              `json:"synergy_potential"`
+	SimulationResults    []SimulationResult   `json:"simulation_results"`
+	BalanceSuggestions   []BalanceSuggestion  `json:"balance_suggestions"`
+	MetaImpactPrediction MetaImpactPrediction `json:"meta_impact_prediction"`
 }
 
 // DamageExpectation represents predicted damage output
 type DamageExpectation struct {
-	MinDamage       float64            `json:"min_damage"`
-	MaxDamage       float64            `json:"max_damage"`
-	AverageDamage   float64            `json:"average_damage"`
-	DamagePerRound  float64            `json:"damage_per_round"`
-	DamageTypes     map[string]float64 `json:"damage_types"`
-	TargetCount     float64            `json:"target_count"`
+	MinDamage      float64            `json:"min_damage"`
+	MaxDamage      float64            `json:"max_damage"`
+	AverageDamage  float64            `json:"average_damage"`
+	DamagePerRound float64            `json:"damage_per_round"`
+	DamageTypes    map[string]float64 `json:"damage_types"`
+	TargetCount    float64            `json:"target_count"`
 }
 
 // SimulationResult represents the outcome of a balance simulation
@@ -135,39 +135,39 @@ type SimulationResult struct {
 
 // BalanceSuggestion represents an AI-generated balance adjustment
 type BalanceSuggestion struct {
-	Type        string  `json:"type"` // nerf, buff, rework, restriction
-	Target      string  `json:"target"` // What aspect to change
-	Suggestion  string  `json:"suggestion"`
-	Impact      float64 `json:"impact"` // Expected power level change
-	Reasoning   string  `json:"reasoning"`
-	Priority    string  `json:"priority"` // high, medium, low
+	Type       string  `json:"type"`   // nerf, buff, rework, restriction
+	Target     string  `json:"target"` // What aspect to change
+	Suggestion string  `json:"suggestion"`
+	Impact     float64 `json:"impact"` // Expected power level change
+	Reasoning  string  `json:"reasoning"`
+	Priority   string  `json:"priority"` // high, medium, low
 }
 
 // MetaImpactPrediction predicts how this rule will affect the game meta
 type MetaImpactPrediction struct {
-	PopularityScore     float64          `json:"popularity_score"`
-	ComboBreaker        bool             `json:"combo_breaker"`
-	EnablesCombos       []string         `json:"enables_combos"`
-	CounteredBy         []string         `json:"countered_by"`
-	Counters            []string         `json:"counters"`
-	ExpectedUsageRate   float64          `json:"expected_usage_rate"`
-	MetaShiftPotential  float64          `json:"meta_shift_potential"`
+	PopularityScore    float64  `json:"popularity_score"`
+	ComboBreaker       bool     `json:"combo_breaker"`
+	EnablesCombos      []string `json:"enables_combos"`
+	CounteredBy        []string `json:"countered_by"`
+	Counters           []string `json:"counters"`
+	ExpectedUsageRate  float64  `json:"expected_usage_rate"`
+	MetaShiftPotential float64  `json:"meta_shift_potential"`
 }
 
 // ConditionalRule represents a rule that applies under specific conditions
 type ConditionalRule struct {
-	ID               string              `json:"id"`
-	Name             string              `json:"name"`
-	ConditionType    string              `json:"condition_type"` // plane, emotion, backstory, environment
-	Conditions       []RuleCondition     `json:"conditions"`
-	ModifiedLogic    *LogicGraph         `json:"modified_logic"` // Optional override logic
+	ID                 string                 `json:"id"`
+	Name               string                 `json:"name"`
+	ConditionType      string                 `json:"condition_type"` // plane, emotion, backstory, environment
+	Conditions         []RuleCondition        `json:"conditions"`
+	ModifiedLogic      *LogicGraph            `json:"modified_logic"` // Optional override logic
 	ParameterOverrides map[string]interface{} `json:"parameter_overrides"`
-	Description      string              `json:"description"`
+	Description        string                 `json:"description"`
 }
 
 // RuleCondition represents a single condition that must be met
 type RuleCondition struct {
-	Type       string      `json:"type"` // location, character_state, time, narrative
+	Type       string      `json:"type"`     // location, character_state, time, narrative
 	Operator   string      `json:"operator"` // equals, contains, greater_than, etc.
 	Value      interface{} `json:"value"`
 	Contextual bool        `json:"contextual"` // If true, value is evaluated at runtime
@@ -193,36 +193,36 @@ type RuleInstance struct {
 // NodeType constants
 const (
 	// Trigger nodes - what starts the rule
-	NodeTypeTriggerAction      = "trigger_action"
-	NodeTypeTriggerTime        = "trigger_time"
-	NodeTypeTriggerCondition   = "trigger_condition"
-	NodeTypeTriggerDamage      = "trigger_damage"
-	NodeTypeTriggerMovement    = "trigger_movement"
-	
+	NodeTypeTriggerAction    = "trigger_action"
+	NodeTypeTriggerTime      = "trigger_time"
+	NodeTypeTriggerCondition = "trigger_condition"
+	NodeTypeTriggerDamage    = "trigger_damage"
+	NodeTypeTriggerMovement  = "trigger_movement"
+
 	// Condition nodes - decision making
-	NodeTypeConditionCheck     = "condition_check"
-	NodeTypeConditionCompare   = "condition_compare"
-	NodeTypeConditionRoll      = "condition_roll"
-	NodeTypeConditionState     = "condition_state"
-	
+	NodeTypeConditionCheck   = "condition_check"
+	NodeTypeConditionCompare = "condition_compare"
+	NodeTypeConditionRoll    = "condition_roll"
+	NodeTypeConditionState   = "condition_state"
+
 	// Action nodes - what happens
-	NodeTypeActionDamage       = "action_damage"
-	NodeTypeActionHeal         = "action_heal"
-	NodeTypeActionEffect       = "action_effect"
-	NodeTypeActionMove         = "action_move"
-	NodeTypeActionResource     = "action_resource"
-	NodeTypeActionRoll         = "action_roll"
-	
+	NodeTypeActionDamage   = "action_damage"
+	NodeTypeActionHeal     = "action_heal"
+	NodeTypeActionEffect   = "action_effect"
+	NodeTypeActionMove     = "action_move"
+	NodeTypeActionResource = "action_resource"
+	NodeTypeActionRoll     = "action_roll"
+
 	// Calculation nodes - math and logic
-	NodeTypeCalcMath          = "calc_math"
-	NodeTypeCalcRandom        = "calc_random"
-	NodeTypeCalcAggregate     = "calc_aggregate"
-	
+	NodeTypeCalcMath      = "calc_math"
+	NodeTypeCalcRandom    = "calc_random"
+	NodeTypeCalcAggregate = "calc_aggregate"
+
 	// Flow control
-	NodeTypeFlowSplit         = "flow_split"
-	NodeTypeFlowMerge         = "flow_merge"
-	NodeTypeFlowLoop          = "flow_loop"
-	NodeTypeFlowDelay         = "flow_delay"
+	NodeTypeFlowSplit = "flow_split"
+	NodeTypeFlowMerge = "flow_merge"
+	NodeTypeFlowLoop  = "flow_loop"
+	NodeTypeFlowDelay = "flow_delay"
 )
 
 // ConditionType constants for Conditional Reality System

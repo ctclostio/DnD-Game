@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"golang.org/x/crypto/bcrypt"
 	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
@@ -194,4 +194,3 @@ func (s *UserService) GetByUsername(ctx context.Context, username string) (*mode
 func (s *UserService) GetByID(ctx context.Context, id string) (*models.User, error) {
 	return s.GetUserByID(ctx, id)
 }
-

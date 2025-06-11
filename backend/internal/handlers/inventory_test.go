@@ -89,7 +89,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 				var decoded map[string]interface{}
 				err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 				assert.NoError(t, err)
-				
+
 				// Validate quantity if present
 				if qty, ok := decoded["quantity"].(float64); ok {
 					if qty < 0 && tt.expectedError == "quantity must be positive" {
@@ -136,7 +136,7 @@ func TestInventoryHandler_EquipItems(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create request
-			req := httptest.NewRequest(http.MethodPost, 
+			req := httptest.NewRequest(http.MethodPost,
 				"/api/characters/"+characterID+"/inventory/"+itemID+"/"+tt.action, nil)
 			req = mux.SetURLVars(req, map[string]string{
 				"characterId": characterID,
@@ -208,7 +208,7 @@ func TestInventoryHandler_Currency(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create request
 			body, _ := json.Marshal(tt.body)
-			req := httptest.NewRequest(http.MethodPost, 
+			req := httptest.NewRequest(http.MethodPost,
 				"/api/characters/"+characterID+"/currency", bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 			req = mux.SetURLVars(req, map[string]string{"characterId": characterID})
@@ -224,11 +224,11 @@ func TestInventoryHandler_Currency(t *testing.T) {
 			var decoded map[string]interface{}
 			err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 			assert.NoError(t, err)
-			
+
 			if tt.validateBody != nil {
 				tt.validateBody(t, decoded)
 			}
-			
+
 			// Check for negative currency
 			if copper, ok := decoded["copper"].(float64); ok && copper < 0 {
 				assert.Equal(t, http.StatusBadRequest, tt.expectedStatus)
@@ -272,7 +272,7 @@ func TestInventoryHandler_ItemTypes(t *testing.T) {
 				Value:  7500,
 			},
 			properties: map[string]interface{}{
-				"armorClass":         16,
+				"armorClass":          16,
 				"stealthDisadvantage": true,
 				"strengthRequirement": 13,
 			},
@@ -304,7 +304,7 @@ func TestInventoryHandler_ItemTypes(t *testing.T) {
 				RequiresAttunement: true,
 			},
 			properties: map[string]interface{}{
-				"acBonus":         1,
+				"acBonus":          1,
 				"savingThrowBonus": 1,
 			},
 		},
@@ -318,12 +318,12 @@ func TestInventoryHandler_ItemTypes(t *testing.T) {
 			assert.NotEmpty(t, tt.item.Type)
 			assert.NotEmpty(t, tt.item.Rarity)
 			assert.Greater(t, tt.item.Value, 0)
-			
+
 			// For magic items, check attunement
 			if tt.item.Type == models.ItemTypeMagic && tt.item.RequiresAttunement {
 				assert.True(t, tt.item.RequiresAttunement)
 			}
-			
+
 			// Verify properties structure
 			if tt.properties != nil {
 				assert.NotEmpty(t, tt.properties)
@@ -367,15 +367,15 @@ func TestInventoryHandler_WeightCalculation(t *testing.T) {
 				quantity: 10,
 			},
 		}
-		
+
 		totalWeight := 0.0
 		for _, i := range items {
 			totalWeight += i.item.Weight * float64(i.quantity)
 		}
-		
+
 		// Expected: 3 + 55 + (2*5) + (1*10) = 78
 		assert.Equal(t, 78.0, totalWeight)
-		
+
 		// Check encumbrance (assuming STR 15 = 225 lbs capacity)
 		carryCapacity := 15 * 15.0 // STR score * 15
 		assert.Less(t, totalWeight, carryCapacity)
@@ -419,11 +419,11 @@ func TestInventoryHandler_CurrencyConversion(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			total := tt.currency.TotalInCopper()
 			assert.Equal(t, tt.totalCopper, total)
-			
+
 			// Test affordability
 			canAfford := tt.currency.CanAfford(tt.totalCopper)
 			assert.True(t, canAfford, "Should be able to afford exact amount")
-			
+
 			cantAfford := tt.currency.CanAfford(tt.totalCopper + 1)
 			assert.False(t, cantAfford, "Should not be able to afford more than total")
 		})

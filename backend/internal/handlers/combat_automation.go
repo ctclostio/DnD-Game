@@ -46,7 +46,7 @@ func (h *CombatAutomationHandler) AutoResolveCombat(w http.ResponseWriter, r *ht
 		response.Unauthorized(w, r, "")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -112,7 +112,7 @@ func (h *CombatAutomationHandler) SmartInitiative(w http.ResponseWriter, r *http
 		response.Unauthorized(w, r, "")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -168,7 +168,7 @@ func (h *CombatAutomationHandler) GenerateBattleMap(w http.ResponseWriter, r *ht
 		response.Unauthorized(w, r, "")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -214,7 +214,7 @@ func (h *CombatAutomationHandler) GenerateBattleMap(w http.ResponseWriter, r *ht
 // GetCombatAnalytics retrieves combat analytics report
 func (h *CombatAutomationHandler) GetCombatAnalytics(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	vars := mux.Vars(r)
 	combatID, err := uuid.Parse(vars["combatId"])
 	if err != nil {
@@ -238,7 +238,7 @@ func (h *CombatAutomationHandler) GetCombatAnalytics(w http.ResponseWriter, r *h
 
 	// Build full report
 	report := models.CombatAnalyticsReport{
-		Analytics: analytics,
+		Analytics:        analytics,
 		CombatantReports: h.buildCombatantReports(combatantAnalytics),
 	}
 
@@ -248,7 +248,7 @@ func (h *CombatAutomationHandler) GetCombatAnalytics(w http.ResponseWriter, r *h
 // GetSessionCombatHistory retrieves combat history for a session
 func (h *CombatAutomationHandler) GetSessionCombatHistory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -271,9 +271,9 @@ func (h *CombatAutomationHandler) GetSessionCombatHistory(w http.ResponseWriter,
 	}
 
 	result := map[string]interface{}{
-		"combat_analytics":   analytics,
-		"auto_resolutions":   resolutions,
-		"total_combats":      len(analytics) + len(resolutions),
+		"combat_analytics": analytics,
+		"auto_resolutions": resolutions,
+		"total_combats":    len(analytics) + len(resolutions),
 	}
 
 	response.JSON(w, r, http.StatusOK, result)
@@ -282,7 +282,7 @@ func (h *CombatAutomationHandler) GetSessionCombatHistory(w http.ResponseWriter,
 // GetBattleMaps retrieves battle maps for a session
 func (h *CombatAutomationHandler) GetBattleMaps(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -302,7 +302,7 @@ func (h *CombatAutomationHandler) GetBattleMaps(w http.ResponseWriter, r *http.R
 // GetBattleMap retrieves a specific battle map
 func (h *CombatAutomationHandler) GetBattleMap(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	vars := mux.Vars(r)
 	mapID, err := uuid.Parse(vars["mapId"])
 	if err != nil {
@@ -327,7 +327,7 @@ func (h *CombatAutomationHandler) SetInitiativeRules(w http.ResponseWriter, r *h
 		response.Unauthorized(w, r, "")
 		return
 	}
-	
+
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
@@ -366,7 +366,7 @@ func (h *CombatAutomationHandler) SetInitiativeRules(w http.ResponseWriter, r *h
 
 func (h *CombatAutomationHandler) buildCombatantReports(analytics []*models.CombatantAnalytics) []*models.CombatantReport {
 	reports := make([]*models.CombatantReport, len(analytics))
-	
+
 	for i, a := range analytics {
 		reports[i] = &models.CombatantReport{
 			Analytics:         a,
@@ -374,13 +374,13 @@ func (h *CombatAutomationHandler) buildCombatantReports(analytics []*models.Comb
 			Highlights:        h.generateHighlights(a),
 		}
 	}
-	
+
 	return reports
 }
 
 func (h *CombatAutomationHandler) ratePerformance(stats *models.CombatantAnalytics) string {
 	score := 0
-	
+
 	if stats.AttacksMade > 0 {
 		hitRate := float64(stats.AttacksHit) / float64(stats.AttacksMade)
 		if hitRate > 0.75 {
@@ -389,15 +389,15 @@ func (h *CombatAutomationHandler) ratePerformance(stats *models.CombatantAnalyti
 			score += 2
 		}
 	}
-	
+
 	if stats.FinalHP > 0 {
 		score += 2
 	}
-	
+
 	if stats.DamageDealt > stats.DamageTaken*2 {
 		score += 2
 	}
-	
+
 	if score >= 6 {
 		return "excellent"
 	} else if score >= 4 {
@@ -410,21 +410,21 @@ func (h *CombatAutomationHandler) ratePerformance(stats *models.CombatantAnalyti
 
 func (h *CombatAutomationHandler) generateHighlights(stats *models.CombatantAnalytics) []string {
 	highlights := []string{}
-	
+
 	if stats.AttacksMade > 0 {
 		hitRate := float64(stats.AttacksHit) / float64(stats.AttacksMade)
 		if hitRate > 0.75 {
 			highlights = append(highlights, fmt.Sprintf("%.0f%% hit rate", hitRate*100))
 		}
 	}
-	
+
 	if stats.CriticalHits > 1 {
 		highlights = append(highlights, fmt.Sprintf("%d critical hits", stats.CriticalHits))
 	}
-	
+
 	if stats.DamageDealt > 50 {
 		highlights = append(highlights, fmt.Sprintf("%d damage dealt", stats.DamageDealt))
 	}
-	
+
 	return highlights
 }

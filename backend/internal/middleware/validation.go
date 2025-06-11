@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/your-username/dnd-game/backend/pkg/validation"
 	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/your-username/dnd-game/backend/pkg/validation"
 )
 
 // ValidationMiddleware provides request validation
@@ -30,7 +30,7 @@ func (vm *ValidationMiddleware) Validate(targetStruct interface{}) func(http.Han
 					return
 				}
 			}
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
-	
+
 	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/your-username/dnd-game/backend/internal/services/mocks"
@@ -43,8 +43,8 @@ func TestUserService_Register(t *testing.T) {
 					return u.Username == "testuser" &&
 						u.Email == "test@example.com" &&
 						u.PasswordHash != "" &&
-						u.ID == "" &&  // ID should be empty, repository will set it
-						u.Role == ""    // Role should be empty, repository will set it
+						u.ID == "" && // ID should be empty, repository will set it
+						u.Role == "" // Role should be empty, repository will set it
 				})).Return(nil).Run(func(args mock.Arguments) {
 					// Simulate repository setting the ID and role
 					user := args.Get(1).(*models.User)
@@ -59,7 +59,7 @@ func TestUserService_Register(t *testing.T) {
 				assert.Equal(t, "player", user.Role)
 				assert.NotEmpty(t, user.PasswordHash)
 				assert.NotEqual(t, "SecurePass123!", user.PasswordHash) // Should be hashed
-				
+
 				// Verify password was hashed correctly
 				err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte("SecurePass123!"))
 				assert.NoError(t, err)
@@ -171,7 +171,7 @@ func TestUserService_Register(t *testing.T) {
 
 func TestUserService_Login(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Create a test password and hash
 	testPassword := "SecurePass123!"
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(testPassword), bcrypt.DefaultCost)
@@ -354,7 +354,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 				}
 				m.On("GetByID", ctx, "user-123").Return(existingUser, nil)
 				m.On("Update", ctx, mock.MatchedBy(func(u *models.User) bool {
-					return u.ID == "user-123" && 
+					return u.ID == "user-123" &&
 						u.Username == "newusername" &&
 						u.Email == "newemail@example.com" &&
 						u.PasswordHash == "hashedpassword" // Password preserved
@@ -423,7 +423,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 
 func TestUserService_ChangePassword(t *testing.T) {
 	ctx := context.Background()
-	
+
 	oldPassword := "OldPass123!"
 	oldHash, _ := bcrypt.GenerateFromPassword([]byte(oldPassword), bcrypt.DefaultCost)
 

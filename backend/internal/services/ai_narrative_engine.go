@@ -16,11 +16,11 @@ import (
 
 // NarrativeEngine orchestrates the AI-powered dynamic storytelling system
 type NarrativeEngine struct {
-	llm              LLMProvider
-	cfg              *config.Config
-	ProfileService   *PlayerProfileService
+	llm               LLMProvider
+	cfg               *config.Config
+	ProfileService    *PlayerProfileService
 	ConsequenceEngine *ConsequenceEngine
-	PerspectiveGen   *PerspectiveGenerator
+	PerspectiveGen    *PerspectiveGenerator
 }
 
 // PlayerProfileService manages player narrative preferences and patterns
@@ -45,17 +45,17 @@ type PerspectiveGenerator struct {
 func NewNarrativeEngine(cfg *config.Config) (*NarrativeEngine, error) {
 	llm := NewLLMProvider(AIConfig{
 		Provider: cfg.AI.Provider,
-		APIKey: cfg.AI.APIKey,
-		Model: cfg.AI.Model,
-		Enabled: cfg.AI.Enabled,
+		APIKey:   cfg.AI.APIKey,
+		Model:    cfg.AI.Model,
+		Enabled:  cfg.AI.Enabled,
 	})
 
 	return &NarrativeEngine{
-		llm: llm,
-		cfg: cfg,
-		ProfileService: &PlayerProfileService{llm: llm, cfg: cfg},
+		llm:               llm,
+		cfg:               cfg,
+		ProfileService:    &PlayerProfileService{llm: llm, cfg: cfg},
 		ConsequenceEngine: &ConsequenceEngine{llm: llm, cfg: cfg},
-		PerspectiveGen: &PerspectiveGenerator{llm: llm, cfg: cfg},
+		PerspectiveGen:    &PerspectiveGenerator{llm: llm, cfg: cfg},
 	}, nil
 }
 
@@ -108,11 +108,11 @@ Provide analysis in JSON format with:
 
 	// Parse AI response and update profile
 	var analysis struct {
-		UpdatedThemes     []string `json:"updated_themes"`
-		UpdatedTone       []string `json:"updated_tone"`
-		MoralTendency     string   `json:"moral_tendency"`
+		UpdatedThemes      []string `json:"updated_themes"`
+		UpdatedTone        []string `json:"updated_tone"`
+		MoralTendency      string   `json:"moral_tendency"`
 		EngagementTriggers []string `json:"engagement_triggers"`
-		PlayStyleUpdate   string   `json:"play_style_update"`
+		PlayStyleUpdate    string   `json:"play_style_update"`
 	}
 
 	if err := json.Unmarshal([]byte(response), &analysis); err == nil {
@@ -120,7 +120,7 @@ Provide analysis in JSON format with:
 		profile.Preferences.Themes = mergeUnique(profile.Preferences.Themes, analysis.UpdatedThemes)
 		profile.Preferences.Tone = mergeUnique(profile.Preferences.Tone, analysis.UpdatedTone)
 		profile.Preferences.MoralAlignment = analysis.MoralTendency
-		
+
 		if analysis.PlayStyleUpdate != "" {
 			profile.PlayStyle = analysis.PlayStyleUpdate
 		}
@@ -154,7 +154,7 @@ func (ne *NarrativeEngine) GeneratePersonalizedNarrative(ctx context.Context, ba
 
 	// Select relevant backstory elements
 	relevantBackstory := ne.selectRelevantBackstory(backstory, baseEvent)
-	
+
 	prompt := fmt.Sprintf(`Create a personalized narrative for this player based on their profile and the current event:
 
 Base Event:
@@ -206,7 +206,7 @@ Provide the narrative in JSON format with:
 
 	var narrativeData struct {
 		PersonalizedDescription string `json:"personalized_description"`
-		NarrativeHooks []struct {
+		NarrativeHooks          []struct {
 			Type        string  `json:"type"`
 			Content     string  `json:"content"`
 			Relevance   float64 `json:"relevance"`
@@ -218,9 +218,9 @@ Provide the narrative in JSON format with:
 			NarrativeText      string `json:"narrative_text"`
 			Subtlety           int    `json:"subtlety"`
 		} `json:"backstory_callbacks"`
-		MoralChoices []string `json:"moral_choices"`
-		EmotionalResonance float64 `json:"emotional_resonance"`
-		PredictedEngagement float64 `json:"predicted_engagement"`
+		MoralChoices        []string `json:"moral_choices"`
+		EmotionalResonance  float64  `json:"emotional_resonance"`
+		PredictedEngagement float64  `json:"predicted_engagement"`
 	}
 
 	if err := json.Unmarshal([]byte(response), &narrativeData); err != nil {
@@ -236,8 +236,8 @@ Provide the narrative in JSON format with:
 		GeneratedAt:        time.Now(),
 		Metadata: map[string]interface{}{
 			"personalized_description": narrativeData.PersonalizedDescription,
-			"moral_choices": narrativeData.MoralChoices,
-			"predicted_engagement": narrativeData.PredictedEngagement,
+			"moral_choices":            narrativeData.MoralChoices,
+			"predicted_engagement":     narrativeData.PredictedEngagement,
 		},
 	}
 
@@ -331,10 +331,10 @@ Provide consequences in JSON format as an array of:
 	}
 
 	var consequenceData []struct {
-		Description string `json:"description"`
-		TriggerType string `json:"trigger_type"`
-		Severity    int    `json:"severity"`
-		Delay       string `json:"delay"`
+		Description      string `json:"description"`
+		TriggerType      string `json:"trigger_type"`
+		Severity         int    `json:"severity"`
+		Delay            string `json:"delay"`
 		AffectedEntities []struct {
 			EntityType     string `json:"entity_type"`
 			EntityID       string `json:"entity_id"`
@@ -428,7 +428,7 @@ func (pg *PerspectiveGenerator) GenerateMultiplePerspectives(ctx context.Context
 	}
 
 	perspectives := make([]models.PerspectiveNarrative, 0, len(sources))
-	
+
 	for _, source := range sources {
 		prompt := fmt.Sprintf(`Generate a perspective on this event from a specific viewpoint:
 
@@ -520,9 +520,9 @@ Provide the perspective in JSON format:
 			HiddenDetails:   append(perspectiveData.OmittedDetails, perspectiveData.HiddenAgenda),
 			CreatedAt:       time.Now(),
 			CulturalContext: map[string]interface{}{
-				"filters":        perspectiveData.CulturalFilters,
-				"emphasized":     perspectiveData.EmphasizedDetails,
-				"misunderstood":  perspectiveData.Misinterpretations,
+				"filters":       perspectiveData.CulturalFilters,
+				"emphasized":    perspectiveData.EmphasizedDetails,
+				"misunderstood": perspectiveData.Misinterpretations,
 			},
 		}
 
@@ -540,16 +540,16 @@ Provide the perspective in JSON format:
 func (ne *NarrativeEngine) selectRelevantBackstory(backstory []models.BackstoryElement, event models.NarrativeEvent) []models.BackstoryElement {
 	// Select up to 3 most relevant backstory elements based on tags and type
 	relevant := make([]models.BackstoryElement, 0)
-	
+
 	for _, element := range backstory {
 		if element.Used && element.UsageCount > 2 {
 			continue // Don't overuse elements
 		}
-		
+
 		// Check relevance based on event type and tags
 		relevanceScore := 0.0
 		eventTags := extractEventTags(event)
-		
+
 		for _, tag := range element.Tags {
 			for _, eventTag := range eventTags {
 				if strings.Contains(strings.ToLower(tag), strings.ToLower(eventTag)) {
@@ -557,22 +557,22 @@ func (ne *NarrativeEngine) selectRelevantBackstory(backstory []models.BackstoryE
 				}
 			}
 		}
-		
+
 		if relevanceScore > 0 {
 			element.Weight = relevanceScore
 			relevant = append(relevant, element)
 		}
 	}
-	
+
 	// Sort by relevance and take top 3
 	sort.Slice(relevant, func(i, j int) bool {
 		return relevant[i].Weight > relevant[j].Weight
 	})
-	
+
 	if len(relevant) > 3 {
 		relevant = relevant[:3]
 	}
-	
+
 	return relevant
 }
 
@@ -585,7 +585,7 @@ func (ne *NarrativeEngine) calculatePredictedImpacts(profile *models.NarrativePr
 			Magnitude:   resonance * 0.8,
 		},
 	}
-	
+
 	// Add more impacts based on profile
 	if profile.PlayStyle == "combat-focused" && resonance > 0.6 {
 		impacts = append(impacts, models.PredictedImpact{
@@ -595,7 +595,7 @@ func (ne *NarrativeEngine) calculatePredictedImpacts(profile *models.NarrativePr
 			Magnitude:   0.5,
 		})
 	}
-	
+
 	if len(profile.Preferences.Themes) > 0 && resonance > 0.7 {
 		impacts = append(impacts, models.PredictedImpact{
 			Type:        "story_progression",
@@ -604,7 +604,7 @@ func (ne *NarrativeEngine) calculatePredictedImpacts(profile *models.NarrativePr
 			Magnitude:   0.9,
 		})
 	}
-	
+
 	return impacts
 }
 
@@ -634,7 +634,7 @@ func mergeUnique(existing, new []string) []string {
 	for _, item := range existing {
 		seen[item] = true
 	}
-	
+
 	result := append([]string{}, existing...)
 	for _, item := range new {
 		if !seen[item] {
@@ -642,7 +642,7 @@ func mergeUnique(existing, new []string) []string {
 			seen[item] = true
 		}
 	}
-	
+
 	return result
 }
 
@@ -650,12 +650,12 @@ func formatBackstoryElements(elements []models.BackstoryElement) string {
 	if len(elements) == 0 {
 		return "No relevant backstory elements"
 	}
-	
+
 	var formatted []string
 	for _, element := range elements {
 		formatted = append(formatted, fmt.Sprintf("- [%s] %s (Weight: %.2f)", element.Type, element.Content, element.Weight))
 	}
-	
+
 	return strings.Join(formatted, "\n")
 }
 
@@ -669,12 +669,12 @@ func extractEventTags(event models.NarrativeEvent) []string {
 	// Extract relevant tags from event for matching
 	tags := []string{event.Type}
 	tags = append(tags, strings.Fields(event.Name)...)
-	
+
 	// Add location-based tags
 	if event.Location != "" {
 		tags = append(tags, strings.Fields(event.Location)...)
 	}
-	
+
 	return tags
 }
 
@@ -685,7 +685,7 @@ func getDelayPriority(delay string) int {
 		"medium":    3,
 		"long":      4,
 	}
-	
+
 	if priority, ok := priorities[delay]; ok {
 		return priority
 	}
@@ -695,7 +695,7 @@ func getDelayPriority(delay string) int {
 // PerspectiveSource represents an entity that can have a perspective
 type PerspectiveSource struct {
 	ID              string
-	Type            string   // "npc", "faction", "deity", "historical"
+	Type            string // "npc", "faction", "deity", "historical"
 	Name            string
 	Background      string
 	Motivations     []string

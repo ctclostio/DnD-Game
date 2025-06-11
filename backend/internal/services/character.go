@@ -11,10 +11,10 @@ import (
 )
 
 type CharacterService struct {
-	repo              database.CharacterRepository
-	customClassRepo   *database.CustomClassRepository
-	classGenerator    *AIClassGenerator
-	llmProvider       LLMProvider
+	repo            database.CharacterRepository
+	customClassRepo *database.CustomClassRepository
+	classGenerator  *AIClassGenerator
+	llmProvider     LLMProvider
 }
 
 func NewCharacterService(repo database.CharacterRepository, customClassRepo *database.CustomClassRepository, llmProvider LLMProvider) *CharacterService {
@@ -53,7 +53,7 @@ func (s *CharacterService) CreateCharacter(ctx context.Context, char *models.Cha
 	if char.Class == "" {
 		return fmt.Errorf("character class is required")
 	}
-	
+
 	// Set default values
 	if char.Level == 0 {
 		char.Level = 1
@@ -62,30 +62,30 @@ func (s *CharacterService) CreateCharacter(ctx context.Context, char *models.Cha
 		char.MaxHitPoints = 10 + getModifier(char.Attributes.Constitution)
 	}
 	char.HitPoints = char.MaxHitPoints
-	
+
 	// Set default armor class if not provided
 	if char.ArmorClass == 0 {
 		char.ArmorClass = 10 + getModifier(char.Attributes.Dexterity)
 	}
-	
+
 	// Set default speed if not provided
 	if char.Speed == 0 {
 		char.Speed = 30 // Default speed in feet
 	}
-	
+
 	// Set carry capacity based on strength
 	char.CarryCapacity = CalculateCarryCapacity(char.Attributes.Strength)
-	
+
 	// Set default attunement slots
 	if char.AttunementSlotsMax == 0 {
 		char.AttunementSlotsMax = 3
 	}
-	
+
 	// Generate ID if not provided
 	if char.ID == "" {
 		char.ID = uuid.New().String()
 	}
-	
+
 	return s.repo.Create(ctx, char)
 }
 
@@ -94,13 +94,13 @@ func (s *CharacterService) UpdateCharacter(ctx context.Context, char *models.Cha
 	if char.ID == "" {
 		return fmt.Errorf("character ID is required")
 	}
-	
+
 	// Check if character exists
 	existing, err := s.repo.GetByID(ctx, char.ID)
 	if err != nil {
 		return fmt.Errorf("character not found: %w", err)
 	}
-	
+
 	// Merge updates with existing data to support partial updates
 	if char.Name != "" {
 		existing.Name = char.Name
@@ -130,13 +130,13 @@ func (s *CharacterService) UpdateCharacter(ctx context.Context, char *models.Cha
 		existing.Speed = char.Speed
 	}
 	// Update attributes if provided
-	if char.Attributes.Strength > 0 || char.Attributes.Dexterity > 0 || 
-	   char.Attributes.Constitution > 0 || char.Attributes.Intelligence > 0 || 
-	   char.Attributes.Wisdom > 0 || char.Attributes.Charisma > 0 {
+	if char.Attributes.Strength > 0 || char.Attributes.Dexterity > 0 ||
+		char.Attributes.Constitution > 0 || char.Attributes.Intelligence > 0 ||
+		char.Attributes.Wisdom > 0 || char.Attributes.Charisma > 0 {
 		existing.Attributes = char.Attributes
 	}
 	// Update other fields similarly...
-	
+
 	return s.repo.Update(ctx, existing)
 }
 
@@ -158,25 +158,25 @@ func CalculateCarryCapacity(strength int) float64 {
 func (s *CharacterService) CalculateHitPoints(class string, level int, constitution int) int {
 	// Base hit points by class (simplified)
 	baseHP := map[string]int{
-		"fighter":  10,
-		"wizard":   6,
-		"rogue":    8,
-		"cleric":   8,
-		"ranger":   10,
-		"paladin":  10,
+		"fighter":   10,
+		"wizard":    6,
+		"rogue":     8,
+		"cleric":    8,
+		"ranger":    10,
+		"paladin":   10,
 		"barbarian": 12,
-		"bard":     8,
-		"druid":    8,
-		"monk":     8,
-		"sorcerer": 6,
-		"warlock":  8,
+		"bard":      8,
+		"druid":     8,
+		"monk":      8,
+		"sorcerer":  6,
+		"warlock":   8,
 	}
-	
+
 	base, ok := baseHP[class]
 	if !ok {
 		base = 8 // Default
 	}
-	
+
 	conMod := getModifier(constitution)
 	// First level gets full hit die + con mod
 	// Additional levels get average hit die + con mod
@@ -184,7 +184,7 @@ func (s *CharacterService) CalculateHitPoints(class string, level int, constitut
 	if level > 1 {
 		hitPoints += (level - 1) * ((base/2 + 1) + conMod)
 	}
-	
+
 	return hitPoints
 }
 
@@ -350,7 +350,7 @@ func (s *CharacterService) AddExperience(ctx context.Context, characterID string
 	}
 
 	char.ExperiencePoints += xp
-	
+
 	// Check for level up
 	newLevel := s.calculateLevelFromXP(char.ExperiencePoints)
 	if newLevel > char.Level {
@@ -442,7 +442,7 @@ func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitP
 	if err != nil {
 		return nil, fmt.Errorf("failed to get character: %w", err)
 	}
-	
+
 	newLevel := char.Level + 1
 	oldLevel := char.Level
 	char.Level = newLevel
@@ -460,7 +460,7 @@ func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitP
 	// Update spell slots for spellcasters
 	if char.Spells.SpellcastingAbility != "" {
 		char.Spells.SpellSlots = s.InitializeSpellSlots(char.Class, char.Level)
-		
+
 		// Update spell save DC and attack bonus
 		abilityMod := s.getSpellcastingAbilityModifier(char)
 		char.Spells.SpellSaveDC = 8 + char.ProficiencyBonus + abilityMod
@@ -476,7 +476,7 @@ func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitP
 	// Apply hit point increase
 	char.MaxHitPoints += hitPointIncrease
 	char.HitPoints += hitPointIncrease
-	
+
 	// Apply attribute increase if specified
 	if attributeIncrease != "" {
 		switch attributeIncrease {
@@ -494,12 +494,12 @@ func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitP
 			char.Attributes.Charisma++
 		}
 	}
-	
+
 	// Update the character
 	if err := s.UpdateCharacter(ctx, char); err != nil {
 		return nil, err
 	}
-	
+
 	return char, nil
 }
 

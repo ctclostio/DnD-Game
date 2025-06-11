@@ -106,7 +106,7 @@ func TestGameHandler_CreateGameSession(t *testing.T) {
 			} else {
 				body, _ = json.Marshal(tt.body)
 			}
-			
+
 			req := httptest.NewRequest(http.MethodPost, "/api/sessions", bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 
@@ -125,7 +125,7 @@ func TestGameHandler_CreateGameSession(t *testing.T) {
 				var decoded map[string]interface{}
 				err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 				assert.NoError(t, err)
-				
+
 				// Validate required fields
 				if _, ok := decoded["name"]; !ok && tt.expectedError == "session name is required" {
 					assert.True(t, true, "Name is correctly missing")
@@ -239,7 +239,7 @@ func TestGameHandler_JoinGameSession(t *testing.T) {
 			var decoded map[string]interface{}
 			err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 			assert.NoError(t, err)
-			
+
 			// Validate character ID if provided
 			if charID, ok := decoded["characterId"].(string); ok && tt.expectedError == "Invalid character ID format" {
 				_, err := uuid.Parse(charID)
@@ -298,7 +298,7 @@ func TestGameHandler_UpdatePlayerStatus(t *testing.T) {
 			var decoded map[string]interface{}
 			err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 			assert.NoError(t, err)
-			
+
 			// Check for required field
 			_, hasStatus := decoded["isOnline"]
 			if tt.expectedStatus == http.StatusBadRequest {
@@ -368,7 +368,7 @@ func TestGameHandler_SessionValidation(t *testing.T) {
 			if len(tt.session.Name) > 255 && tt.shouldError {
 				assert.Contains(t, tt.errorMsg, "must be less than 255 characters")
 			}
-			if tt.session.Status != "" && 
+			if tt.session.Status != "" &&
 				tt.session.Status != models.GameStatusPending &&
 				tt.session.Status != models.GameStatusActive &&
 				tt.session.Status != models.GameStatusPaused &&
@@ -386,7 +386,7 @@ func TestGameHandler_SessionLifecycle(t *testing.T) {
 		sessionID := uuid.New().String()
 		dmID := uuid.New().String()
 		playerID := uuid.New().String()
-		
+
 		// 1. Create session
 		session := &models.GameSession{
 			ID:          sessionID,
@@ -396,10 +396,10 @@ func TestGameHandler_SessionLifecycle(t *testing.T) {
 			Status:      models.GameStatusPending,
 			CreatedAt:   time.Now(),
 		}
-		
+
 		assert.NotEmpty(t, session.ID)
 		assert.Equal(t, models.GameStatusPending, session.Status)
-		
+
 		// 2. Player joins
 		charID := uuid.New().String()
 		participant := &models.GameParticipant{
@@ -408,22 +408,22 @@ func TestGameHandler_SessionLifecycle(t *testing.T) {
 			CharacterID: &charID,
 			JoinedAt:    time.Now(),
 		}
-		
+
 		assert.Equal(t, sessionID, participant.SessionID)
 		assert.NotNil(t, participant.CharacterID)
 		assert.NotEmpty(t, *participant.CharacterID)
-		
+
 		// 3. Start session
 		session.Status = models.GameStatusActive
 		session.StartedAt = &[]time.Time{time.Now()}[0]
-		
+
 		assert.Equal(t, models.GameStatusActive, session.Status)
 		assert.NotNil(t, session.StartedAt)
-		
+
 		// 4. End session
 		session.Status = models.GameStatusCompleted
 		session.EndedAt = &[]time.Time{time.Now()}[0]
-		
+
 		assert.Equal(t, models.GameStatusCompleted, session.Status)
 		assert.NotNil(t, session.EndedAt)
 	})

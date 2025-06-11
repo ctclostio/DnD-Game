@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	
+
 	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/your-username/dnd-game/backend/internal/services/mocks"
@@ -110,7 +110,7 @@ func TestCharacterService_CreateCharacter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCharRepo := new(mocks.MockCharacterRepository)
 			mockLLM := new(mocks.MockLLMProvider)
-			
+
 			if tt.setupMock != nil {
 				tt.setupMock(mockCharRepo, mockLLM)
 			}
@@ -224,7 +224,7 @@ func TestCharacterService_UpdateCharacter(t *testing.T) {
 				// Get existing character
 				existing := mocks.CreateTestCharacter("char-123", "user-123", "Aragorn", "Human", "Ranger")
 				m.On("GetByID", ctx, "char-123").Return(existing, nil)
-				
+
 				// Update with merged data - using mock.Anything to avoid complex matching
 				m.On("Update", ctx, mock.Anything).Return(nil)
 			},
@@ -372,7 +372,7 @@ func TestCharacterService_AddExperience(t *testing.T) {
 					},
 				}
 				charRepo.On("GetByID", ctx, "char-123").Return(char, nil)
-				
+
 				// XP increases but no level up (need 300 for level 2)
 				charRepo.On("Update", ctx, mock.Anything).Return(nil)
 			},
@@ -395,7 +395,7 @@ func TestCharacterService_AddExperience(t *testing.T) {
 				}
 				// Mock GetByID to return character for all calls (AddExperience and LevelUp need it)
 				charRepo.On("GetByID", ctx, "char-123").Return(char, nil)
-				
+
 				// Update will be called after level up
 				charRepo.On("Update", ctx, mock.Anything).Return(nil)
 			},
@@ -415,7 +415,7 @@ func TestCharacterService_AddExperience(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCharRepo := new(mocks.MockCharacterRepository)
 			mockLLM := new(mocks.MockLLMProvider)
-			
+
 			if tt.setupMock != nil {
 				tt.setupMock(mockCharRepo, mockLLM)
 			}
@@ -497,7 +497,7 @@ func TestCharacterService_InitializeSpellSlots(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			service := services.NewCharacterService(nil, nil, nil)
 			slots := service.InitializeSpellSlots(tt.class, tt.level)
-			
+
 			assert.Equal(t, tt.expected, slots)
 		})
 	}
@@ -528,7 +528,7 @@ func TestCharacterService_UseSpellSlot(t *testing.T) {
 					},
 				}
 				m.On("GetByID", ctx, "char-123").Return(char, nil)
-				
+
 				// Verify slot was decremented
 				m.On("Update", ctx, mock.Anything).Return(nil)
 			},

@@ -135,7 +135,7 @@ var (
 func Init(cfg Config) {
 	loggerMutex.Lock()
 	defer loggerMutex.Unlock()
-	
+
 	defaultLogger = New(cfg)
 	// Set global logger for zerolog
 	log.Logger = *defaultLogger.Logger
@@ -145,7 +145,7 @@ func Init(cfg Config) {
 func GetLogger() *Logger {
 	loggerMutex.Lock()
 	defer loggerMutex.Unlock()
-	
+
 	if defaultLogger == nil {
 		// Initialize with default config if not set
 		defaultLogger = New(Config{

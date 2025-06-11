@@ -29,12 +29,12 @@ func (eb *InMemoryEventBus) Publish(ctx context.Context, event Event) error {
 	eb.mu.RLock()
 	handlers, exists := eb.handlers[event.Type()]
 	eb.mu.RUnlock()
-	
+
 	if !exists || len(handlers) == 0 {
 		// No handlers registered for this event type
 		return nil
 	}
-	
+
 	// Execute handlers asynchronously
 	for _, handler := range handlers {
 		go func(h EventHandler) {
@@ -42,14 +42,14 @@ func (eb *InMemoryEventBus) Publish(ctx context.Context, event Event) error {
 				if r := recover(); r != nil {
 					if eb.logger != nil {
 						eb.logger.WithContext(ctx).
-								Error().
-								Interface("panic", r).
-								Str("event_type", event.Type()).
-								Msg("Event handler panic")
+							Error().
+							Interface("panic", r).
+							Str("event_type", event.Type()).
+							Msg("Event handler panic")
 					}
 				}
 			}()
-			
+
 			if err := h(ctx, event); err != nil {
 				if eb.logger != nil {
 					eb.logger.WithContext(ctx).
@@ -61,7 +61,7 @@ func (eb *InMemoryEventBus) Publish(ctx context.Context, event Event) error {
 			}
 		}(handler)
 	}
-	
+
 	return nil
 }
 
@@ -70,10 +70,10 @@ func (eb *InMemoryEventBus) Subscribe(eventType string, handler EventHandler) er
 	if handler == nil {
 		return fmt.Errorf("handler cannot be nil")
 	}
-	
+
 	eb.mu.Lock()
 	defer eb.mu.Unlock()
-	
+
 	eb.handlers[eventType] = append(eb.handlers[eventType], handler)
 	return nil
 }
@@ -115,8 +115,8 @@ type CharacterLeveledEvent struct {
 // FactionRelationChangedEvent is emitted when faction relationships change
 type FactionRelationChangedEvent struct {
 	BaseEvent
-	Faction1ID   string  `json:"faction1_id"`
-	Faction2ID   string  `json:"faction2_id"`
-	OldRelation  float64 `json:"old_relation"`
-	NewRelation  float64 `json:"new_relation"`
+	Faction1ID  string  `json:"faction1_id"`
+	Faction2ID  string  `json:"faction2_id"`
+	OldRelation float64 `json:"old_relation"`
+	NewRelation float64 `json:"new_relation"`
 }

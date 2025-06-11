@@ -163,7 +163,7 @@ func (s *CombatService) processAttack(combat *models.Combat, actor *models.Comba
 
 		// Apply damage
 		totalDamage := s.engine.ApplyDamage(target, damage)
-		
+
 		// Check for concentration
 		if target.IsConcentrating && totalDamage > 0 {
 			concRoll, success, err := s.engine.ConcentrationCheck(target, totalDamage)
@@ -187,7 +187,7 @@ func (s *CombatService) processAttack(combat *models.Combat, actor *models.Comba
 func (s *CombatService) processMovement(combat *models.Combat, actor *models.Combatant, request models.CombatRequest, action *models.CombatAction) error {
 	// Calculate distance
 	distance := 5 // Example: each square is 5 feet
-	
+
 	err := s.engine.UseMovement(actor, distance)
 	if err != nil {
 		return err
@@ -204,7 +204,7 @@ func (s *CombatService) processDeathSave(combat *models.Combat, actor *models.Co
 	}
 
 	action.Rolls = append(action.Rolls, *roll)
-	
+
 	if roll.Critical {
 		action.Description = fmt.Sprintf("%s rolls a natural 20 on death save and regains consciousness with 1 HP!", actor.Name)
 	} else if actor.DeathSaves.IsStable {

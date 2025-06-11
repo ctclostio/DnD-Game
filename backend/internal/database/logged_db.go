@@ -26,21 +26,21 @@ func NewLoggedDB(db *DB, logger *logger.LoggerV2) *LoggedDB {
 // logQuery logs a database query with timing and context
 func (ldb *LoggedDB) logQuery(ctx context.Context, query string, args []interface{}, err error, duration time.Duration) {
 	log := ldb.logger.WithContext(ctx)
-	
+
 	// Truncate query for logging
 	truncatedQuery := truncateQuery(query)
-	
+
 	event := log.Debug().
 		Str("query", truncatedQuery).
 		Dur("duration", duration).
 		Int64("duration_ms", duration.Milliseconds()).
 		Int("args_count", len(args))
-	
+
 	// Add first few args for debugging (be careful not to log sensitive data)
 	if len(args) > 0 && len(args) <= 3 {
 		event = event.Interface("args", args)
 	}
-	
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			event.Msg("Database query returned no rows")
@@ -121,12 +121,12 @@ func (ldb *LoggedDB) QueryContextRebind(ctx context.Context, query string, args 
 func (ldb *LoggedDB) WithTx(fn func(*sqlx.Tx) error) error {
 	start := time.Now()
 	ctx := context.Background()
-	
+
 	log := ldb.logger.WithContext(ctx)
 	log.Debug().Msg("Beginning database transaction")
-	
+
 	err := ldb.DB.WithTx(fn)
-	
+
 	duration := time.Since(start)
 	if err != nil {
 		log.Error().
@@ -138,23 +138,23 @@ func (ldb *LoggedDB) WithTx(fn func(*sqlx.Tx) error) error {
 			Dur("duration", duration).
 			Msg("Database transaction committed")
 	}
-	
+
 	return err
 }
 
 // WithTxContext executes a function within a database transaction with context and logging
 func (ldb *LoggedDB) WithTxContext(ctx context.Context, fn func(*sqlx.Tx) error) error {
 	start := time.Now()
-	
+
 	log := ldb.logger.WithContext(ctx)
 	log.Debug().Msg("Beginning database transaction")
-	
+
 	tx, err := ldb.DB.BeginTxx(ctx, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to begin transaction")
 		return err
 	}
-	
+
 	if err := fn(tx); err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {
 			log.Error().
@@ -169,7 +169,7 @@ func (ldb *LoggedDB) WithTxContext(ctx context.Context, fn func(*sqlx.Tx) error)
 			Msg("Database transaction rolled back")
 		return err
 	}
-	
+
 	if err := tx.Commit(); err != nil {
 		log.Error().
 			Err(err).
@@ -177,11 +177,11 @@ func (ldb *LoggedDB) WithTxContext(ctx context.Context, fn func(*sqlx.Tx) error)
 			Msg("Failed to commit transaction")
 		return err
 	}
-	
+
 	log.Debug().
 		Dur("duration", time.Since(start)).
 		Msg("Database transaction committed")
-	
+
 	return nil
 }
 

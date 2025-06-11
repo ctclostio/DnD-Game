@@ -297,7 +297,7 @@ func (s *EconomicSimulatorService) applyEventEffects(market *models.Market, sett
 			market.WeaponsArmorModifier *= 1.2 // Increased demand for protection
 		case models.EventAncientAwakening:
 			// Ancient events increase demand for magical protection
-			market.MagicalItemsModifier *= 0.8 // Cheaper due to desperation
+			market.MagicalItemsModifier *= 0.8     // Cheaper due to desperation
 			market.AncientArtifactsModifier *= 1.5 // But artifacts are riskier
 		}
 	}
@@ -408,13 +408,13 @@ func (s *EconomicSimulatorService) updateTradeRoutes(ctx context.Context, gameSe
 func (s *EconomicSimulatorService) checkForEconomicCrisis(settlements []*models.Settlement) bool {
 	// Check if overall economic conditions warrant a crisis event
 	depressionCount := 0
-	
+
 	for _, settlement := range settlements {
 		market, err := s.worldRepo.GetMarketBySettlement(settlement.ID)
 		if err != nil {
 			continue
 		}
-		
+
 		if market.EconomicDepression {
 			depressionCount++
 		}
@@ -427,13 +427,13 @@ func (s *EconomicSimulatorService) checkForEconomicCrisis(settlements []*models.
 func (s *EconomicSimulatorService) checkForEconomicBoom(settlements []*models.Settlement) bool {
 	// Check if overall economic conditions warrant a boom event
 	boomCount := 0
-	
+
 	for _, settlement := range settlements {
 		market, err := s.worldRepo.GetMarketBySettlement(settlement.ID)
 		if err != nil {
 			continue
 		}
-		
+
 		if market.EconomicBoom {
 			boomCount++
 		}
@@ -458,9 +458,9 @@ func (s *EconomicSimulatorService) calculateDistance(start, end *models.Settleme
 
 	dx := float64(endCoords["x"] - startCoords["x"])
 	dy := float64(endCoords["y"] - startCoords["y"])
-	
+
 	distance := int(math.Sqrt(dx*dx + dy*dy))
-	
+
 	// Convert to travel days (roughly 20 miles per day)
 	travelDays := distance / 20
 	if travelDays < 1 {
@@ -504,7 +504,7 @@ func (s *EconomicSimulatorService) determineRouteType(start, end *models.Settlem
 	if start.TerrainType == "coastal" || end.TerrainType == "coastal" {
 		return "sea"
 	}
-	
+
 	if start.TerrainType == "mountainous" && end.TerrainType == "mountainous" {
 		return "mountain pass"
 	}

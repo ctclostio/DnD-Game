@@ -43,7 +43,7 @@ func (s *NPCService) CreateNPC(ctx context.Context, npc *models.NPC) error {
 
 	// Calculate proficiency bonus based on CR
 	npc.Attributes = s.ensureValidAttributes(npc.Attributes)
-	
+
 	// Calculate saving throws if not provided
 	if !s.hasSavingThrows(npc.SavingThrows) {
 		npc.SavingThrows = s.calculateSavingThrows(npc)
@@ -205,7 +205,7 @@ func (s *NPCService) hasSavingThrows(st models.SavingThrows) bool {
 func (s *NPCService) calculateSavingThrows(npc *models.NPC) models.SavingThrows {
 	// TODO: Add proficiency bonus when implementing proficient saves
 	// profBonus := s.getProficiencyBonusFromCR(npc.ChallengeRating)
-	
+
 	return models.SavingThrows{
 		Strength: models.SavingThrow{
 			Modifier:    s.getAbilityModifier(npc.Attributes.Strength),

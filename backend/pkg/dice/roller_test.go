@@ -174,7 +174,7 @@ func TestRoller_RollDisadvantage(t *testing.T) {
 // Test that advantage tends to produce higher results than disadvantage
 func TestRoller_AdvantageVsDisadvantage(t *testing.T) {
 	roller := NewRoller()
-	
+
 	advantageSum := 0
 	disadvantageSum := 0
 	rolls := 100
@@ -182,7 +182,7 @@ func TestRoller_AdvantageVsDisadvantage(t *testing.T) {
 	for i := 0; i < rolls; i++ {
 		adv, _ := roller.RollAdvantage()
 		dis, _ := roller.RollDisadvantage()
-		
+
 		advantageSum += adv.Total
 		disadvantageSum += dis.Total
 	}
@@ -195,10 +195,10 @@ func TestRoller_AdvantageVsDisadvantage(t *testing.T) {
 // Test for distribution (basic check)
 func TestRoller_Distribution(t *testing.T) {
 	t.Skip("Skipping distribution test in short mode")
-	
+
 	roller := NewRoller()
 	counts := make(map[int]int)
-	
+
 	// Roll a d6 many times
 	rolls := 6000
 	for i := 0; i < rolls; i++ {

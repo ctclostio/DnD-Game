@@ -252,11 +252,11 @@ func TestWorldEventEngineService_GenerateWorldEvent(t *testing.T) {
 
 		// Mock LLM response
 		aiEvent := map[string]interface{}{
-			"name":        "The Great Plague",
-			"description": "A mysterious disease spreads across the land",
-			"cause":       "Ancient curse awakened",
-			"severity":    "major",
-			"duration":    "3 months",
+			"name":            "The Great Plague",
+			"description":     "A mysterious disease spreads across the land",
+			"cause":           "Ancient curse awakened",
+			"severity":        "major",
+			"duration":        "3 months",
 			"affectedRegions": []string{"Northern Kingdoms", "Eastern Provinces"},
 			"affectedSettlements": map[string]string{
 				"Winterhold": "severe",
@@ -278,8 +278,8 @@ func TestWorldEventEngineService_GenerateWorldEvent(t *testing.T) {
 				"trade":      -30,
 				"population": -15,
 			},
-			"ancientCause":      true,
-			"prophecyRelated":   true,
+			"ancientCause":    true,
+			"prophecyRelated": true,
 			"partyOpportunities": []string{
 				"Find the cure",
 				"Discover the source",
@@ -291,7 +291,7 @@ func TestWorldEventEngineService_GenerateWorldEvent(t *testing.T) {
 		mockLLM.Response = string(aiResponse)
 
 		mockRepo.On("CreateWorldEvent", mock.AnythingOfType("*models.WorldEvent")).Return(nil)
-		
+
 		// Mock market operations for applyEventEffects
 		mockRepo.On("GetMarketBySettlement", mock.AnythingOfType("uuid.UUID")).Return(nil, nil).Maybe()
 		mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType("*models.Market")).Return(nil).Maybe()
@@ -504,7 +504,7 @@ func TestWorldEventEngineService_NotifyPartyOfEvent(t *testing.T) {
 		}
 
 		eventID := uuid.New()
-		
+
 		service := NewWorldEventEngineService(mockLLM, mockRepo, mockFaction)
 
 		// The method is a stub that just returns nil
@@ -557,15 +557,15 @@ func TestWorldEventEngineService_shouldEventProgress(t *testing.T) {
 
 	// Since shouldEventProgress uses random values, we'll test it multiple times
 	// and check for expected behavior patterns
-	
+
 	t.Run("minor event progression", func(t *testing.T) {
 		event := &models.WorldEvent{
-			IsActive:   true,
-			IsResolved: false,
-			Severity:   models.SeverityMinor,
+			IsActive:     true,
+			IsResolved:   false,
+			Severity:     models.SeverityMinor,
 			AncientCause: false,
 		}
-		
+
 		// Run multiple times to get a sense of the probability
 		progressCount := 0
 		runs := 100
@@ -574,21 +574,21 @@ func TestWorldEventEngineService_shouldEventProgress(t *testing.T) {
 				progressCount++
 			}
 		}
-		
+
 		// Should progress roughly 30% of the time (±15% for test stability)
 		progressRate := float64(progressCount) / float64(runs)
-		require.True(t, progressRate >= 0.15 && progressRate <= 0.45, 
+		require.True(t, progressRate >= 0.15 && progressRate <= 0.45,
 			"Expected progress rate around 30%%, got %.2f%%", progressRate*100)
 	})
-	
+
 	t.Run("major event progression", func(t *testing.T) {
 		event := &models.WorldEvent{
-			IsActive:   true,
-			IsResolved: false,
-			Severity:   models.SeverityMajor,
+			IsActive:     true,
+			IsResolved:   false,
+			Severity:     models.SeverityMajor,
 			AncientCause: false,
 		}
-		
+
 		// Run multiple times to get a sense of the probability
 		progressCount := 0
 		runs := 100
@@ -597,21 +597,21 @@ func TestWorldEventEngineService_shouldEventProgress(t *testing.T) {
 				progressCount++
 			}
 		}
-		
+
 		// Should progress roughly 50% of the time (±15% for test stability)
 		progressRate := float64(progressCount) / float64(runs)
-		require.True(t, progressRate >= 0.35 && progressRate <= 0.65, 
+		require.True(t, progressRate >= 0.35 && progressRate <= 0.65,
 			"Expected progress rate around 50%%, got %.2f%%", progressRate*100)
 	})
-	
+
 	t.Run("ancient major event progression", func(t *testing.T) {
 		event := &models.WorldEvent{
-			IsActive:   true,
-			IsResolved: false,
-			Severity:   models.SeverityMajor,
+			IsActive:     true,
+			IsResolved:   false,
+			Severity:     models.SeverityMajor,
 			AncientCause: true,
 		}
-		
+
 		// Run multiple times to get a sense of the probability
 		progressCount := 0
 		runs := 100
@@ -620,10 +620,10 @@ func TestWorldEventEngineService_shouldEventProgress(t *testing.T) {
 				progressCount++
 			}
 		}
-		
+
 		// Should progress roughly 70% of the time (50% + 20%) (±15% for test stability)
 		progressRate := float64(progressCount) / float64(runs)
-		require.True(t, progressRate >= 0.55 && progressRate <= 0.85, 
+		require.True(t, progressRate >= 0.55 && progressRate <= 0.85,
 			"Expected progress rate around 70%%, got %.2f%%", progressRate*100)
 	})
 }
@@ -633,19 +633,19 @@ func TestWorldEventEngineService_determineAffectedSettlements(t *testing.T) {
 
 	settlements := []*models.Settlement{
 		{
-			ID:       uuid.New(),
-			Name:     "Northern City",
-			Region:   "North",
+			ID:     uuid.New(),
+			Name:   "Northern City",
+			Region: "North",
 		},
 		{
-			ID:       uuid.New(),
-			Name:     "Eastern Town",
-			Region:   "East",
+			ID:     uuid.New(),
+			Name:   "Eastern Town",
+			Region: "East",
 		},
 		{
-			ID:       uuid.New(),
-			Name:     "Southern Village",
-			Region:   "South",
+			ID:     uuid.New(),
+			Name:   "Southern Village",
+			Region: "South",
 		},
 	}
 
@@ -892,9 +892,9 @@ func BenchmarkWorldEventEngineService_determineAffectedSettlements(b *testing.B)
 	settlements := make([]*models.Settlement, 100)
 	for i := 0; i < 100; i++ {
 		settlements[i] = &models.Settlement{
-			ID:       uuid.New(),
-			Name:     "Settlement",
-			Region:   "North",
+			ID:     uuid.New(),
+			Name:   "Settlement",
+			Region: "North",
 		}
 	}
 

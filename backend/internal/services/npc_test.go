@@ -17,13 +17,13 @@ func TestNPCService_CreateNPC(t *testing.T) {
 		service := NewNPCService(mockRepo)
 
 		npc := &models.NPC{
-			Name:          "Goblin Warrior",
-			GameSessionID: "session-1",
-			Type:          "Humanoid",
-			Size:          "Small",
-			MaxHitPoints:  15,
-			HitPoints:     15,
-			ArmorClass:    13,
+			Name:            "Goblin Warrior",
+			GameSessionID:   "session-1",
+			Type:            "Humanoid",
+			Size:            "Small",
+			MaxHitPoints:    15,
+			HitPoints:       15,
+			ArmorClass:      13,
 			ChallengeRating: 0.25,
 			Attributes: models.Attributes{
 				Strength:     8,
@@ -165,7 +165,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 			GameSessionID: "session-1",
 			MaxHitPoints:  5,
 			Attributes: models.Attributes{
-				Strength:     0, // Invalid, should be set to 10
+				Strength:     0,  // Invalid, should be set to 10
 				Dexterity:    -1, // Invalid, should be set to 10
 				Constitution: 8,
 				Intelligence: 10,
@@ -272,10 +272,10 @@ func TestNPCService_ApplyDamage(t *testing.T) {
 		service := NewNPCService(mockRepo)
 
 		npc := &models.NPC{
-			ID:               "npc-1",
-			Name:             "Orc",
-			HitPoints:        42,
-			MaxHitPoints:     42,
+			ID:                "npc-1",
+			Name:              "Orc",
+			HitPoints:         42,
+			MaxHitPoints:      42,
 			DamageResistances: []string{},
 			DamageImmunities:  []string{},
 		}
@@ -320,10 +320,10 @@ func TestNPCService_ApplyDamage(t *testing.T) {
 		service := NewNPCService(mockRepo)
 
 		npc := &models.NPC{
-			ID:               "npc-1",
-			Name:             "Fire Elemental",
-			HitPoints:        102,
-			MaxHitPoints:     102,
+			ID:                "npc-1",
+			Name:              "Fire Elemental",
+			HitPoints:         102,
+			MaxHitPoints:      102,
 			DamageResistances: []string{},
 			DamageImmunities:  []string{"fire", "poison"},
 		}
@@ -505,10 +505,10 @@ func TestNPCService_CreateFromTemplate(t *testing.T) {
 			MaxHitPoints:  21,
 		}
 
-		mockRepo.On("CreateFromTemplate", 
-			mock.Anything, 
-			"template-goblin-boss", 
-			"session-1", 
+		mockRepo.On("CreateFromTemplate",
+			mock.Anything,
+			"template-goblin-boss",
+			"session-1",
 			"user-1",
 		).Return(expectedNPC, nil)
 
@@ -528,8 +528,8 @@ func TestNPCService_GetAbilityModifier(t *testing.T) {
 		score    int
 		expected int
 	}{
-		{1, -4},  // (1-10)/2 = -9/2 = -4 (rounds towards zero)
-		{3, -3},  // (3-10)/2 = -7/2 = -3 (rounds towards zero)
+		{1, -4}, // (1-10)/2 = -9/2 = -4 (rounds towards zero)
+		{3, -3}, // (3-10)/2 = -7/2 = -3 (rounds towards zero)
 		{6, -2},
 		{8, -1},
 		{10, 0},

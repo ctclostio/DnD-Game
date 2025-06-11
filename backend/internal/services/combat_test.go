@@ -12,7 +12,7 @@ import (
 func TestCombatService_BasicOperations(t *testing.T) {
 	service := NewCombatService()
 	ctx := context.Background()
-	
+
 	t.Run("start and retrieve combat", func(t *testing.T) {
 		gameSessionID := uuid.New().String()
 		combatants := []models.Combatant{
@@ -37,7 +37,7 @@ func TestCombatService_BasicOperations(t *testing.T) {
 				AC:             15,
 			},
 		}
-		
+
 		// Start combat
 		combat, err := service.StartCombat(ctx, gameSessionID, combatants)
 		assert.NoError(t, err)
@@ -45,14 +45,14 @@ func TestCombatService_BasicOperations(t *testing.T) {
 		assert.NotEmpty(t, combat.ID)
 		assert.Equal(t, gameSessionID, combat.GameSessionID)
 		assert.True(t, combat.IsActive)
-		
+
 		// Retrieve combat
 		retrieved, err := service.GetCombat(ctx, combat.ID)
 		assert.NoError(t, err)
 		assert.NotNil(t, retrieved)
 		assert.Equal(t, combat.ID, retrieved.ID)
 	})
-	
+
 	t.Run("get combat by session", func(t *testing.T) {
 		gameSessionID := uuid.New().String()
 		combatants := []models.Combatant{
@@ -65,18 +65,18 @@ func TestCombatService_BasicOperations(t *testing.T) {
 				AC:    15,
 			},
 		}
-		
+
 		// Start combat
 		combat, err := service.StartCombat(ctx, gameSessionID, combatants)
 		assert.NoError(t, err)
-		
+
 		// Get by session
 		found, err := service.GetCombatBySession(ctx, gameSessionID)
 		assert.NoError(t, err)
 		assert.NotNil(t, found)
 		assert.Equal(t, combat.ID, found.ID)
 	})
-	
+
 	t.Run("get non-existent combat", func(t *testing.T) {
 		_, err := service.GetCombat(ctx, uuid.New().String())
 		assert.Error(t, err)
@@ -87,7 +87,7 @@ func TestCombatService_BasicOperations(t *testing.T) {
 func TestCombatService_TurnManagement(t *testing.T) {
 	service := NewCombatService()
 	ctx := context.Background()
-	
+
 	// Setup combat
 	gameSessionID := uuid.New().String()
 	combatants := []models.Combatant{
@@ -110,10 +110,10 @@ func TestCombatService_TurnManagement(t *testing.T) {
 			MaxHP:          30,
 		},
 	}
-	
+
 	combat, err := service.StartCombat(ctx, gameSessionID, combatants)
 	assert.NoError(t, err)
-	
+
 	t.Run("next turn progression", func(t *testing.T) {
 		// Get next turn
 		combatant, err := service.NextTurn(ctx, combat.ID)
@@ -129,12 +129,12 @@ func TestCombatService_TurnManagement(t *testing.T) {
 func TestCombatService_CombatActions(t *testing.T) {
 	service := NewCombatService()
 	ctx := context.Background()
-	
+
 	// Setup combat
 	gameSessionID := uuid.New().String()
 	fighterID := uuid.New().String()
 	goblinID := uuid.New().String()
-	
+
 	combatants := []models.Combatant{
 		{
 			ID:             fighterID,
@@ -157,10 +157,10 @@ func TestCombatService_CombatActions(t *testing.T) {
 			AC:             15,
 		},
 	}
-	
+
 	combat, err := service.StartCombat(ctx, gameSessionID, combatants)
 	assert.NoError(t, err)
-	
+
 	t.Run("process combat action", func(t *testing.T) {
 		request := models.CombatRequest{
 			ActorID:     fighterID,
@@ -168,7 +168,7 @@ func TestCombatService_CombatActions(t *testing.T) {
 			TargetID:    goblinID,
 			Description: "Fighter attacks Goblin",
 		}
-		
+
 		// Try to process action
 		action, err := service.ProcessAction(ctx, combat.ID, request)
 		// The actual implementation might handle this differently
@@ -189,14 +189,14 @@ func TestCombatModels_Validation(t *testing.T) {
 			MaxHP: 45,
 			AC:    16,
 		}
-		
+
 		// Basic validations
 		assert.NotEmpty(t, validCombatant.ID)
 		assert.NotEmpty(t, validCombatant.Name)
 		assert.Greater(t, validCombatant.HP, -1)
 		assert.Greater(t, validCombatant.AC, 0)
 	})
-	
+
 	t.Run("combat request validation", func(t *testing.T) {
 		validRequest := models.CombatRequest{
 			ActorID:     uuid.New().String(),
@@ -204,10 +204,10 @@ func TestCombatModels_Validation(t *testing.T) {
 			TargetID:    uuid.New().String(),
 			Description: "Attack description",
 		}
-		
+
 		assert.NotEmpty(t, validRequest.ActorID)
 		assert.NotEmpty(t, validRequest.Action)
-		
+
 		// Test different action types
 		actionTypes := []models.ActionType{
 			models.ActionTypeAttack,
@@ -222,12 +222,12 @@ func TestCombatModels_Validation(t *testing.T) {
 			models.ActionTypeCastSpell,
 			models.ActionTypeUseItem,
 		}
-		
+
 		for _, actionType := range actionTypes {
 			assert.NotEmpty(t, string(actionType))
 		}
 	})
-	
+
 	t.Run("damage types", func(t *testing.T) {
 		damageTypes := []models.DamageType{
 			models.DamageTypeSlashing,
@@ -244,7 +244,7 @@ func TestCombatModels_Validation(t *testing.T) {
 			models.DamageTypeForce,
 			models.DamageTypeThunder,
 		}
-		
+
 		for _, damageType := range damageTypes {
 			assert.NotEmpty(t, string(damageType))
 		}
@@ -259,12 +259,12 @@ func TestCombatService_CombatState(t *testing.T) {
 			models.CombatStatusPaused,
 			models.CombatStatusCompleted,
 		}
-		
+
 		for _, status := range validStatuses {
 			assert.NotEmpty(t, string(status))
 		}
 	})
-	
+
 	t.Run("death saves", func(t *testing.T) {
 		deathSaves := models.DeathSaves{
 			Successes: 0,
@@ -272,24 +272,24 @@ func TestCombatService_CombatState(t *testing.T) {
 			IsStable:  false,
 			IsDead:    false,
 		}
-		
+
 		// Test death save progression
 		assert.Equal(t, 0, deathSaves.Successes)
 		assert.Equal(t, 0, deathSaves.Failures)
 		assert.False(t, deathSaves.IsStable)
 		assert.False(t, deathSaves.IsDead)
-		
+
 		// Test stabilized
 		deathSaves.Successes = 3
 		deathSaves.IsStable = true
 		assert.True(t, deathSaves.IsStable)
-		
+
 		// Test death
 		deathSaves.Failures = 3
 		deathSaves.IsDead = true
 		assert.True(t, deathSaves.IsDead)
 	})
-	
+
 	t.Run("conditions", func(t *testing.T) {
 		// Test common conditions
 		conditions := []string{
@@ -309,7 +309,7 @@ func TestCombatService_CombatState(t *testing.T) {
 			"stunned",
 			"unconscious",
 		}
-		
+
 		for _, condition := range conditions {
 			assert.NotEmpty(t, condition)
 		}
@@ -322,14 +322,14 @@ func TestCombatService_Positions(t *testing.T) {
 			X: 10,
 			Y: 15,
 		}
-		
+
 		assert.Equal(t, 10, position.X)
 		assert.Equal(t, 15, position.Y)
-		
+
 		// Test movement
 		newX := position.X + 5
 		newY := position.Y - 5
-		
+
 		assert.Equal(t, 15, newX)
 		assert.Equal(t, 10, newY)
 	})

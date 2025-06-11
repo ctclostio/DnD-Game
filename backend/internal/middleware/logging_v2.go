@@ -180,7 +180,7 @@ func NewDatabaseQueryLogger(log *logger.LoggerV2) *DatabaseQueryLogger {
 
 func (d *DatabaseQueryLogger) LogQuery(ctx context.Context, query string, args []interface{}, duration time.Duration, err error) {
 	log := d.log.WithContext(ctx)
-	
+
 	event := log.Logger.Debug().
 		Str("query", truncateQuery(query)).
 		Dur("duration", duration).
@@ -200,7 +200,7 @@ func getClientIPV2(r *http.Request) string {
 	if ip := r.Header.Get("CF-Connecting-IP"); ip != "" {
 		return ip
 	}
-	
+
 	// Check X-Forwarded-For
 	if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
 		// Take the first IP if there are multiple
@@ -209,12 +209,12 @@ func getClientIPV2(r *http.Request) string {
 		}
 		return forwarded
 	}
-	
+
 	// Check X-Real-IP
 	if realIP := r.Header.Get("X-Real-IP"); realIP != "" {
 		return realIP
 	}
-	
+
 	// Fall back to RemoteAddr
 	if idx := strings.LastIndex(r.RemoteAddr, ":"); idx != -1 {
 		return r.RemoteAddr[:idx]
@@ -226,13 +226,13 @@ func sanitizeQuery(query string) string {
 	if query == "" {
 		return ""
 	}
-	
+
 	// Remove sensitive parameters
 	sensitiveParams := []string{"password", "token", "secret", "api_key", "access_token", "refresh_token"}
-	
+
 	params := strings.Split(query, "&")
 	sanitized := make([]string, 0, len(params))
-	
+
 	for _, param := range params {
 		parts := strings.SplitN(param, "=", 2)
 		if len(parts) == 2 {
@@ -253,7 +253,7 @@ func sanitizeQuery(query string) string {
 			sanitized = append(sanitized, param)
 		}
 	}
-	
+
 	return strings.Join(sanitized, "&")
 }
 
@@ -263,7 +263,7 @@ func truncateQuery(query string) string {
 	query = strings.ReplaceAll(query, "\n", " ")
 	query = strings.ReplaceAll(query, "\t", " ")
 	query = strings.Join(strings.Fields(query), " ")
-	
+
 	if len(query) > maxLength {
 		return query[:maxLength] + "..."
 	}

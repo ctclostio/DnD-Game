@@ -32,7 +32,7 @@ func (a *AssertHelpers) AssertCharacterValid(char *models.Character) {
 	require.LessOrEqual(a.t, char.HitPoints, char.MaxHitPoints)
 	require.Greater(a.t, char.MaxHitPoints, 0)
 	require.GreaterOrEqual(a.t, char.ArmorClass, 0)
-	
+
 	// Validate ability scores
 	a.AssertAbilityScoresValid(char.Attributes)
 }
@@ -47,7 +47,7 @@ func (a *AssertHelpers) AssertAbilityScoresValid(attributes models.Attributes) {
 		attributes.Wisdom,
 		attributes.Charisma,
 	}
-	
+
 	for _, score := range scores {
 		require.GreaterOrEqual(a.t, score, 1, "Ability score must be at least 1")
 		require.LessOrEqual(a.t, score, 30, "Ability score cannot exceed 30")
@@ -60,12 +60,12 @@ func (a *AssertHelpers) AssertDiceRollValid(roll *models.DiceRoll) {
 	require.NotEmpty(a.t, roll.RollNotation)
 	require.NotEmpty(a.t, roll.Purpose)
 	require.Greater(a.t, len(roll.Results), 0)
-	
+
 	// Validate each individual roll
 	for _, r := range roll.Results {
 		require.Greater(a.t, r, 0, "Dice roll must be positive")
 	}
-	
+
 	// Validate result matches rolls + modifiers
 	sum := 0
 	for _, r := range roll.Results {
@@ -80,12 +80,12 @@ func (a *AssertHelpers) AssertCombatValid(combat *models.Combat) {
 	require.Greater(a.t, combat.Round, 0)
 	require.GreaterOrEqual(a.t, combat.CurrentTurn, 0)
 	require.Less(a.t, combat.CurrentTurn, len(combat.TurnOrder))
-	
+
 	// Validate turn order
 	for i, combatantID := range combat.TurnOrder {
 		require.NotEmpty(a.t, combatantID, "Turn order entry %d must have combatant ID", i)
 	}
-	
+
 	// Validate combatants
 	for i, combatant := range combat.Combatants {
 		require.NotEmpty(a.t, combatant.ID, "Combatant %d must have ID", i)
@@ -93,13 +93,13 @@ func (a *AssertHelpers) AssertCombatValid(combat *models.Combat) {
 		require.GreaterOrEqual(a.t, combatant.HP, 0)
 		require.LessOrEqual(a.t, combatant.HP, combatant.MaxHP)
 	}
-	
+
 	// Ensure turn order contains valid combatant IDs
 	combatantIDMap := make(map[string]bool)
 	for _, combatant := range combat.Combatants {
 		combatantIDMap[combatant.ID] = true
 	}
-	
+
 	for _, id := range combat.TurnOrder {
 		require.True(a.t, combatantIDMap[id], "Turn order contains invalid combatant ID: %s", id)
 	}
@@ -114,7 +114,7 @@ func (a *AssertHelpers) AssertInventoryItemValid(item *models.InventoryItem) {
 	require.Greater(a.t, item.Quantity, 0)
 	require.GreaterOrEqual(a.t, item.Item.Weight, 0.0)
 	require.GreaterOrEqual(a.t, item.Item.Value, 0)
-	
+
 	// Validate type-specific properties
 	switch item.Item.Type {
 	case models.ItemTypeWeapon:
@@ -131,12 +131,12 @@ func (a *AssertHelpers) AssertWeaponPropertiesValid(props map[string]interface{}
 	damage, ok := props["damage"].(string)
 	require.True(a.t, ok, "Weapon must have damage property")
 	require.NotEmpty(a.t, damage)
-	
+
 	damageType, ok := props["damageType"].(string)
 	require.True(a.t, ok, "Weapon must have damage type")
 	require.Contains(a.t, []string{
-		"slashing", "piercing", "bludgeoning", 
-		"fire", "cold", "lightning", "acid", 
+		"slashing", "piercing", "bludgeoning",
+		"fire", "cold", "lightning", "acid",
 		"poison", "psychic", "necrotic", "radiant",
 	}, damageType)
 }
@@ -168,7 +168,7 @@ func (a *AssertHelpers) AssertSpellSlotsValid(slots []models.SpellSlot) {
 		require.GreaterOrEqual(a.t, slot.Remaining, 0)
 		require.LessOrEqual(a.t, slot.Remaining, slot.Total)
 		require.GreaterOrEqual(a.t, slot.Total, 0)
-		
+
 		// Validate spell level
 		require.GreaterOrEqual(a.t, slot.Level, 1)
 		require.LessOrEqual(a.t, slot.Level, 9)
@@ -191,10 +191,10 @@ func (a *AssertHelpers) AssertWithinDuration(expected, actual time.Time, delta t
 func (a *AssertHelpers) AssertJSONEqual(expected, actual interface{}) {
 	expectedJSON, err := json.Marshal(expected)
 	require.NoError(a.t, err)
-	
+
 	actualJSON, err := json.Marshal(actual)
 	require.NoError(a.t, err)
-	
+
 	require.JSONEq(a.t, string(expectedJSON), string(actualJSON))
 }
 
@@ -219,7 +219,7 @@ func (d *DiceRollAssertions) AssertAdvantageRoll(rolls []int, result int) {
 	require.Len(d.t, rolls, 2)
 	d.AssertD20Roll(rolls[0])
 	d.AssertD20Roll(rolls[1])
-	
+
 	expected := rolls[0]
 	if rolls[1] > expected {
 		expected = rolls[1]
@@ -232,7 +232,7 @@ func (d *DiceRollAssertions) AssertDisadvantageRoll(rolls []int, result int) {
 	require.Len(d.t, rolls, 2)
 	d.AssertD20Roll(rolls[0])
 	d.AssertD20Roll(rolls[1])
-	
+
 	expected := rolls[0]
 	if rolls[1] < expected {
 		expected = rolls[1]
@@ -261,12 +261,12 @@ func (c *CombatAssertions) AssertDamageApplied(
 	} else if hasVulnerability {
 		expectedDamage = damage * 2
 	}
-	
+
 	expectedHP := originalHP - expectedDamage
 	if expectedHP < 0 {
 		expectedHP = 0
 	}
-	
+
 	require.Equal(c.t, expectedHP, currentHP)
 }
 
@@ -281,7 +281,7 @@ func (c *CombatAssertions) AssertConditionApplied(
 // AssertInitiativeOrder asserts combat order is correct
 func (c *CombatAssertions) AssertInitiativeOrder(combatants []models.Combatant) {
 	require.Greater(c.t, len(combatants), 0)
-	
+
 	for i := 1; i < len(combatants); i++ {
 		assert.GreaterOrEqual(c.t,
 			combatants[i-1].Initiative,

@@ -80,17 +80,17 @@ func TestDiceHandler_RollDice(t *testing.T) {
 
 			// For this test, we'll just verify the request structure
 			// A full test would need the handler with all dependencies
-			
+
 			// Verify we can decode the request
 			var decoded DiceRollRequest
 			err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 			assert.NoError(t, err)
-			
+
 			// Basic validation that would be done by handler
 			if decoded.GameSessionID == "" && tt.expectedError == "Game session ID is required" {
 				assert.Empty(t, decoded.GameSessionID)
 			}
-			
+
 			if decoded.RollNotation == "invalid" && tt.expectedError == "Invalid dice notation" {
 				// In real handler, this would be validated by dice parser
 				assert.Equal(t, "invalid", decoded.RollNotation)
@@ -175,7 +175,7 @@ func TestDiceNotationValidation(t *testing.T) {
 		"3d6+2d4",
 		"1d12+1d6+5",
 		"d20+d4-2",
-		"4d6k3", // keep highest 3
+		"4d6k3",   // keep highest 3
 		"2d20kl1", // keep lowest 1
 		"d100",
 		"d%", // percentile dice
@@ -188,10 +188,10 @@ func TestDiceNotationValidation(t *testing.T) {
 		"d",
 		"20d",
 		"d20d",
-		"1+d20", // modifier must come after dice
-		"d20+", // missing modifier
-		"d0", // invalid die size
-		"d1", // invalid die size
+		"1+d20",   // modifier must come after dice
+		"d20+",    // missing modifier
+		"d0",      // invalid die size
+		"d1",      // invalid die size
 		"1d20+1d", // incomplete notation
 	}
 

@@ -153,8 +153,8 @@ func (s *InventoryService) UpdateCharacterCurrency(characterID string, copper, s
 	currency.Gold += gold
 	currency.Platinum += platinum
 
-	if currency.Copper < 0 || currency.Silver < 0 || currency.Electrum < 0 || 
-	   currency.Gold < 0 || currency.Platinum < 0 {
+	if currency.Copper < 0 || currency.Silver < 0 || currency.Electrum < 0 ||
+		currency.Gold < 0 || currency.Platinum < 0 {
 		return fmt.Errorf("insufficient funds")
 	}
 
@@ -212,16 +212,16 @@ func (s *InventoryService) SellItem(characterID, itemID string, quantity int) er
 	}
 
 	total := currency.TotalInCopper() + salePrice
-	
+
 	currency.Platinum = total / 1000
 	total %= 1000
-	
+
 	currency.Gold = total / 100
 	total %= 100
-	
+
 	currency.Electrum = total / 50
 	total %= 50
-	
+
 	currency.Silver = total / 10
 	currency.Copper = total % 10
 

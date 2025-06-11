@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/google/uuid"
+	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 // ConditionalRealitySystem manages context-aware rule modifications
@@ -240,7 +240,7 @@ func (crs *ConditionalRealitySystem) evaluateCharacterStateCondition(condition m
 func (crs *ConditionalRealitySystem) evaluateTimeCondition(condition models.RuleCondition) bool {
 	// Check time-based conditions
 	now := time.Now()
-	
+
 	switch condition.Operator {
 	case "hour_of_day":
 		expectedHour, ok := condition.Value.(int)
@@ -431,9 +431,9 @@ func (crs *ConditionalRealitySystem) getEmotionModifiers(emotion string, intensi
 			ConditionType: models.ConditionTypeEmotion,
 			Modifications: ModificationSet{
 				ParameterOverrides: map[string]interface{}{
-					"damage_bonus":     intensity * 2,
-					"ac_penalty":       intensity,
-					"critical_chance":  0.05 * intensity,
+					"damage_bonus":    intensity * 2,
+					"ac_penalty":      intensity,
+					"critical_chance": 0.05 * intensity,
 				},
 				Description: fmt.Sprintf("Rage (intensity %.1f) affects combat", intensity),
 			},
@@ -474,7 +474,7 @@ func (crs *ConditionalRealitySystem) applyModifier(template *models.RuleTemplate
 	for nodePattern, overrides := range modifier.Modifications.NodeOverrides {
 		for i := range template.LogicGraph.Nodes {
 			node := &template.LogicGraph.Nodes[i]
-			
+
 			// Check if node matches pattern
 			if nodePattern == "*" || strings.Contains(node.Type, nodePattern) {
 				// Apply property overrides

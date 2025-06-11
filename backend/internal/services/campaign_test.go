@@ -130,7 +130,7 @@ func TestCampaignService_CreateStoryArc(t *testing.T) {
 			mockRepo := new(mocks.MockCampaignRepository)
 			mockGameRepo := new(mocks.MockGameSessionRepository)
 			mockAI := new(MockAICampaignManager)
-			
+
 			if tt.setupMocks != nil {
 				tt.setupMocks(mockRepo)
 			}
@@ -170,9 +170,9 @@ func TestCampaignService_GenerateStoryArc(t *testing.T) {
 			name:      "Successful Generation",
 			sessionID: uuid.New(),
 			request: models.GenerateStoryArcRequest{
-				Context:    "Dark Fantasy",
+				Context:     "Dark Fantasy",
 				PlayerGoals: []string{"Find the artifact"},
-				Complexity: "High",
+				Complexity:  "High",
 			},
 			generatedArc: &models.GeneratedStoryArc{
 				Title:           "The Shadow's Curse",
@@ -417,7 +417,7 @@ func TestCampaignService_CreateSessionMemory(t *testing.T) {
 				DecisionsMade: []models.Decision{
 					{Choice: "Chose to spare the goblin king"},
 				},
-				ItemsAcquired: []string{"Sword of Truth"},
+				ItemsAcquired:    []string{"Sword of Truth"},
 				LocationsVisited: []string{"Goblin Cave", "Ancient Temple"},
 			},
 			setupMocks: func(repo *mocks.MockCampaignRepository) {
@@ -631,11 +631,11 @@ func TestCampaignService_GenerateRecap(t *testing.T) {
 			expectError:  true,
 		},
 		{
-			name:        "AI Error",
+			name:         "AI Error",
 			sessionCount: 3,
-			memories:    mockMemories,
-			aiError:     errors.New("AI service error"),
-			expectError: true,
+			memories:     mockMemories,
+			aiError:      errors.New("AI service error"),
+			expectError:  true,
 		},
 	}
 
@@ -720,8 +720,8 @@ func TestCampaignService_CreatePlotThread(t *testing.T) {
 			},
 			expectError: false,
 			validate: func(t *testing.T, thread *models.PlotThread) {
-				assert.Equal(t, "active", thread.Status)      // Default
-				assert.Equal(t, 5, thread.TensionLevel)        // Default
+				assert.Equal(t, "active", thread.Status) // Default
+				assert.Equal(t, 5, thread.TensionLevel)  // Default
 			},
 		},
 		{
@@ -844,9 +844,9 @@ func BenchmarkCampaignService_CreateStoryArc(b *testing.B) {
 	mockRepo := new(mocks.MockCampaignRepository)
 	mockGameRepo := new(mocks.MockGameSessionRepository)
 	mockAI := new(MockAICampaignManager)
-	
+
 	mockRepo.On("CreateStoryArc", mock.AnythingOfType("*models.StoryArc")).Return(nil)
-	
+
 	service := createTestCampaignService(mockRepo, mockGameRepo, mockAI)
 	sessionID := uuid.New()
 	request := models.CreateStoryArcRequest{
@@ -854,7 +854,7 @@ func BenchmarkCampaignService_CreateStoryArc(b *testing.B) {
 		Description: "A test story arc",
 		ArcType:     "main",
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = service.CreateStoryArc(context.Background(), sessionID, request)
@@ -865,20 +865,20 @@ func BenchmarkCampaignService_GenerateRecap(b *testing.B) {
 	mockRepo := new(mocks.MockCampaignRepository)
 	mockGameRepo := new(mocks.MockGameSessionRepository)
 	mockAI := new(MockAICampaignManager)
-	
+
 	memories := []*models.SessionMemory{
 		{ID: uuid.New(), SessionNumber: 1},
 		{ID: uuid.New(), SessionNumber: 2},
 	}
-	
+
 	mockRepo.On("GetSessionMemories", mock.Anything, 3).Return(memories, nil)
 	mockAI.On("GenerateSessionRecap", mock.Anything, memories).Return(&models.GeneratedRecap{
 		Summary: "Test recap",
 	}, nil)
-	
+
 	service := createTestCampaignService(mockRepo, mockGameRepo, mockAI)
 	sessionID := uuid.New()
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = service.GenerateRecap(context.Background(), sessionID, 3)

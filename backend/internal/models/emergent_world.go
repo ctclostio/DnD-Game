@@ -125,10 +125,10 @@ type CultureLanguage struct {
 
 // LanguageIdiom represents a cultural expression
 type LanguageIdiom struct {
-	Expression  string `json:"expression"`
-	Meaning     string `json:"meaning"`
-	Context     string `json:"context"`
-	Formality   string `json:"formality"`
+	Expression string `json:"expression"`
+	Meaning    string `json:"meaning"`
+	Context    string `json:"context"`
+	Formality  string `json:"formality"`
 }
 
 // CultureCustom represents a cultural practice or tradition
@@ -165,18 +165,18 @@ type ArtSymbol struct {
 
 // CultureBeliefSystem represents religious/philosophical beliefs
 type CultureBeliefSystem struct {
-	Name          string                 `json:"name"`
-	Type          string                 `json:"type"` // monotheistic, polytheistic, animistic, philosophical
-	Deities       []CultureDeity         `json:"deities"`
-	CoreBeliefs   []string               `json:"core_beliefs"`
-	Practices     []ReligiousPractice    `json:"practices"`
-	HolyDays      []HolyDay              `json:"holy_days"`
-	Afterlife     string                 `json:"afterlife"`
-	CreationMyth  string                 `json:"creation_myth"`
-	MoralCode     map[string]string      `json:"moral_code"`
-	SacredTexts   []string               `json:"sacred_texts"`
-	ClergyRanks   []string               `json:"clergy_ranks"`
-	Miracles      map[string]interface{} `json:"miracles"`
+	Name         string                 `json:"name"`
+	Type         string                 `json:"type"` // monotheistic, polytheistic, animistic, philosophical
+	Deities      []CultureDeity         `json:"deities"`
+	CoreBeliefs  []string               `json:"core_beliefs"`
+	Practices    []ReligiousPractice    `json:"practices"`
+	HolyDays     []HolyDay              `json:"holy_days"`
+	Afterlife    string                 `json:"afterlife"`
+	CreationMyth string                 `json:"creation_myth"`
+	MoralCode    map[string]string      `json:"moral_code"`
+	SacredTexts  []string               `json:"sacred_texts"`
+	ClergyRanks  []string               `json:"clergy_ranks"`
+	Miracles     map[string]interface{} `json:"miracles"`
 }
 
 // CultureDeity represents a deity in the belief system
@@ -213,22 +213,22 @@ type HolyDay struct {
 
 // ArchitectureStyle represents building preferences
 type ArchitectureStyle struct {
-	Name              string   `json:"name"`
-	Materials         []string `json:"materials"`
-	CommonFeatures    []string `json:"common_features"`
+	Name              string                   `json:"name"`
+	Materials         []string                 `json:"materials"`
+	CommonFeatures    []string                 `json:"common_features"`
 	BuildingTypes     map[string]BuildingStyle `json:"building_types"`
-	DefensiveElements []string `json:"defensive_elements"`
-	Decorations       []string `json:"decorations"`
-	TypicalLayout     string   `json:"typical_layout"`
+	DefensiveElements []string                 `json:"defensive_elements"`
+	Decorations       []string                 `json:"decorations"`
+	TypicalLayout     string                   `json:"typical_layout"`
 }
 
 // BuildingStyle represents specific building characteristics
 type BuildingStyle struct {
-	Purpose      string   `json:"purpose"`
-	Size         string   `json:"size"`
-	Features     []string `json:"features"`
-	Materials    []string `json:"materials"`
-	Inhabitants  string   `json:"inhabitants"`
+	Purpose     string   `json:"purpose"`
+	Size        string   `json:"size"`
+	Features    []string `json:"features"`
+	Materials   []string `json:"materials"`
+	Inhabitants string   `json:"inhabitants"`
 }
 
 // CuisineElement represents food culture
@@ -287,14 +287,14 @@ type NamingConventions struct {
 
 // SocialStructure represents societal organization
 type SocialStructure struct {
-	Type          string              `json:"type"` // caste, class, egalitarian, etc.
-	Classes       []SocialClass       `json:"classes"`
-	Mobility      string              `json:"mobility"` // rigid, limited, fluid
-	Leadership    string              `json:"leadership"`
-	FamilyUnit    string              `json:"family_unit"`
-	GenderRoles   map[string]string   `json:"gender_roles"`
-	AgeRoles      map[string]string   `json:"age_roles"`
-	Outsiders     string              `json:"outsiders"` // How strangers are treated
+	Type        string            `json:"type"` // caste, class, egalitarian, etc.
+	Classes     []SocialClass     `json:"classes"`
+	Mobility    string            `json:"mobility"` // rigid, limited, fluid
+	Leadership  string            `json:"leadership"`
+	FamilyUnit  string            `json:"family_unit"`
+	GenderRoles map[string]string `json:"gender_roles"`
+	AgeRoles    map[string]string `json:"age_roles"`
+	Outsiders   string            `json:"outsiders"` // How strangers are treated
 }
 
 // SocialClass represents a social stratum
@@ -323,12 +323,12 @@ type EmergentWorldEvent struct {
 
 // EventConsequence represents the outcome of a world event
 type EventConsequence struct {
-	Type        string                 `json:"type"`
-	Target      string                 `json:"target"`
-	Effect      string                 `json:"effect"`
-	Magnitude   float64                `json:"magnitude"`
-	Duration    string                 `json:"duration"`
-	Parameters  map[string]interface{} `json:"parameters"`
+	Type       string                 `json:"type"`
+	Target     string                 `json:"target"`
+	Effect     string                 `json:"effect"`
+	Magnitude  float64                `json:"magnitude"`
+	Duration   string                 `json:"duration"`
+	Parameters map[string]interface{} `json:"parameters"`
 }
 
 // SimulationLog tracks world simulation activities
