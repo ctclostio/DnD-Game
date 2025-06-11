@@ -5,7 +5,6 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
-    'plugin:@reduxjs/toolkit/recommended',
   ],
   plugins: ['@typescript-eslint', 'react', 'react-hooks'],
   parserOptions: {
