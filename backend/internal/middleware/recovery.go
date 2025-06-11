@@ -2,23 +2,28 @@ package middleware
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"runtime"
 	"runtime/debug"
+
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 // Recovery middleware recovers from panics and returns a 500 error
-func Recovery(logger *log.Logger) func(http.Handler) http.Handler {
+func Recovery(log *logger.LoggerV2) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
-					// Log the error and stack trace
-					if logger != nil {
-						logger.Printf("Panic recovered: %v\n%s", err, debug.Stack())
-					} else {
-						log.Printf("Panic recovered: %v\n%s", err, debug.Stack())
+					// Log the error with context and stack trace
+					if log != nil {
+						log.WithContext(r.Context()).
+							Error().
+							Interface("panic", err).
+							Str("method", r.Method).
+							Str("path", r.URL.Path).
+							Str("stack_trace", string(debug.Stack())).
+							Msg("Panic recovered in HTTP handler")
 					}
 					
 					// Return 500 Internal Server Error
@@ -35,9 +40,9 @@ func Recovery(logger *log.Logger) func(http.Handler) http.Handler {
 	}
 }
 
-// RecoveryWithConfig allows custom error handling
+// RecoveryConfig allows custom error handling
 type RecoveryConfig struct {
-	Logger        *log.Logger
+	Logger        *logger.LoggerV2
 	PrintStack    bool
 	StackSize     int
 	ErrorHandler  func(w http.ResponseWriter, r *http.Request, err interface{})
@@ -59,10 +64,18 @@ func RecoveryWithConfig(config RecoveryConfig) func(http.Handler) http.Handler {
 					length := runtime.Stack(stack, config.PrintStack)
 					stack = stack[:length]
 					
-					// Log the error
+					// Log the error with structured logging
 					if config.Logger != nil {
-						config.Logger.Printf("Panic recovered: %v\nRequest: %s %s\nStack trace:\n%s", 
-							err, r.Method, r.URL.Path, stack)
+						config.Logger.WithContext(r.Context()).
+							Error().
+							Interface("panic", err).
+							Str("method", r.Method).
+							Str("path", r.URL.Path).
+							Str("remote_addr", r.RemoteAddr).
+							Str("user_agent", r.UserAgent()).
+							Str("stack_trace", string(stack)).
+							Bool("full_stack", config.PrintStack).
+							Msg("Panic recovered in HTTP handler")
 					}
 					
 					// Handle the error

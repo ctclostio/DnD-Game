@@ -41,8 +41,8 @@ func (acm *AICampaignManager) GenerateStoryArc(ctx context.Context, req models.G
 		acm.logger.WithContext(ctx).
 				Error().
 				Err(err).
-				Str("campaign_id", req.CampaignID).
-				Int("session_count", len(req.RecentSessions)).
+				Str("arc_type", req.ArcType).
+				Str("complexity", req.Complexity).
 				Msg("Error generating AI story arc")
 		return acm.generateDefaultStoryArc(req), nil
 	}
@@ -74,7 +74,7 @@ func (acm *AICampaignManager) GenerateSessionRecap(ctx context.Context, memories
 		acm.logger.WithContext(ctx).
 				Error().
 				Err(err).
-				Str("session_id", req.SessionID).
+				Int("memory_count", len(memories)).
 				Msg("Error generating AI session recap")
 		return acm.generateDefaultRecap(memories), nil
 	}
@@ -106,7 +106,8 @@ func (acm *AICampaignManager) GenerateForeshadowing(ctx context.Context, req mod
 		acm.logger.WithContext(ctx).
 				Error().
 				Err(err).
-				Str("session_id", req.SessionID).
+				Str("element_type", req.ElementType).
+				Int("subtlety_level", req.SubtletyLevel).
 				Msg("Error generating AI foreshadowing")
 		return acm.generateDefaultForeshadowing(req), nil
 	}
@@ -138,7 +139,7 @@ func (acm *AICampaignManager) AnalyzeSessionForMemory(ctx context.Context, event
 		acm.logger.WithContext(ctx).
 				Error().
 				Err(err).
-				Str("session_id", req.SessionID).
+				Int("event_count", len(events)).
 				Msg("Error analyzing AI session")
 		return acm.createBasicSessionMemory(events), nil
 	}

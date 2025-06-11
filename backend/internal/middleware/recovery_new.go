@@ -7,30 +7,29 @@ import (
 
 	"github.com/your-username/dnd-game/backend/pkg/errors"
 	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/your-username/dnd-game/backend/pkg/response"
 )
 
 // RecoveryMiddleware returns a middleware that recovers from panics
-func RecoveryMiddleware(log *logger.Logger) func(http.Handler) http.Handler {
+func RecoveryMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
 					// Log the panic with structured logging
 					log.WithContext(r.Context()).
-						WithFields(map[string]interface{}{
-							"panic":       err,
-							"stack_trace": string(debug.Stack()),
-							"method":      r.Method,
-							"path":        r.URL.Path,
-							"remote_ip":   getClientIP(r),
-							"user_agent":  r.UserAgent(),
-						}).
 						Error().
+						Interface("panic", err).
+						Str("stack_trace", string(debug.Stack())).
+						Str("method", r.Method).
+						Str("path", r.URL.Path).
+						Str("remote_ip", getClientIP(r)).
+						Str("user_agent", r.UserAgent()).
 						Msg("Panic recovered")
 					
 					// Send error response
 					appErr := errors.NewInternalError("Internal server error", nil)
-					SendError(w, appErr, log.WithContext(r.Context()))
+					response.Error(w, r, appErr)
 				}
 			}()
 			
@@ -41,10 +40,10 @@ func RecoveryMiddleware(log *logger.Logger) func(http.Handler) http.Handler {
 
 // RecoveryWithConfigNew allows custom error handling with structured logging
 type RecoveryConfigNew struct {
-	Logger       *logger.Logger
+	Logger       *logger.LoggerV2
 	PrintStack   bool
 	StackSize    int
-	ErrorHandler func(w http.ResponseWriter, r *http.Request, err interface{}, log *logger.Logger)
+	ErrorHandler func(w http.ResponseWriter, r *http.Request, err interface{}, log *logger.LoggerV2)
 }
 
 // RecoveryWithConfigNew creates a recovery middleware with custom configuration
@@ -64,21 +63,20 @@ func RecoveryWithConfigNew(config RecoveryConfigNew) func(http.Handler) http.Han
 					stack = stack[:length]
 					
 					// Create log entry
-					logEntry := config.Logger.WithContext(r.Context()).
-						WithFields(map[string]interface{}{
-							"panic":      err,
-							"method":     r.Method,
-							"path":       r.URL.Path,
-							"remote_ip":  getClientIP(r),
-							"user_agent": r.UserAgent(),
-						})
+					logEvent := config.Logger.WithContext(r.Context()).
+						Error().
+						Interface("panic", err).
+						Str("method", r.Method).
+						Str("path", r.URL.Path).
+						Str("remote_ip", getClientIP(r)).
+						Str("user_agent", r.UserAgent())
 					
 					if config.PrintStack {
-						logEntry = logEntry.WithField("stack_trace", string(stack))
+						logEvent = logEvent.Str("stack_trace", string(stack))
 					}
 					
 					// Log the panic
-					logEntry.Error().Msg("Panic recovered")
+					logEvent.Msg("Panic recovered")
 					
 					// Handle the error
 					if config.ErrorHandler != nil {
@@ -86,7 +84,7 @@ func RecoveryWithConfigNew(config RecoveryConfigNew) func(http.Handler) http.Han
 					} else {
 						// Default error handling
 						appErr := errors.NewInternalError("Internal server error", nil)
-						SendError(w, appErr, config.Logger.WithContext(r.Context()))
+						response.Error(w, r, appErr)
 					}
 				}
 			}()
