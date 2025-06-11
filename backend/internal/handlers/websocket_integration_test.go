@@ -59,7 +59,7 @@ func (c *WebSocketTestClient) Close() error {
 func TestWebSocketConnection_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
-			h := NewHandlers(testCtx.Services, testCtx.WSHub)
+			h, _ := setupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix("/api/v1").Subrouter()
 			
@@ -295,7 +295,7 @@ func TestWebSocketConnection_Integration(t *testing.T) {
 func TestWebSocketMessageBroadcast_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
-			h := NewHandlers(testCtx.Services, testCtx.WSHub)
+			h, _ := setupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix("/api/v1").Subrouter()
 			
@@ -430,7 +430,7 @@ func TestWebSocketMessageBroadcast_Integration(t *testing.T) {
 func TestWebSocketReconnection_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
-			h := NewHandlers(testCtx.Services, testCtx.WSHub)
+			h, _ := setupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix("/api/v1").Subrouter()
 			
@@ -497,7 +497,7 @@ func TestWebSocketReconnection_Integration(t *testing.T) {
 func TestWebSocketRoomIsolation_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
-			h := NewHandlers(testCtx.Services, testCtx.WSHub)
+			h, _ := setupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix("/api/v1").Subrouter()
 			

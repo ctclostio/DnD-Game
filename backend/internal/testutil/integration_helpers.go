@@ -15,8 +15,6 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/auth"
 	"github.com/your-username/dnd-game/backend/internal/config"
 	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/your-username/dnd-game/backend/internal/websocket"
 	"github.com/your-username/dnd-game/backend/pkg/logger"
 	"github.com/your-username/dnd-game/backend/pkg/response"
 )
@@ -27,10 +25,10 @@ type IntegrationTestContext struct {
 	DB         *database.DB
 	SQLXDB     *sqlx.DB
 	Repos      *database.Repositories
-	Services   *services.Services
+	Services   interface{} // Avoid import cycle - will be *services.Services
 	Router     *mux.Router
 	JWTManager *auth.JWTManager
-	WSHub      *websocket.Hub
+	WSHub      interface{} // Avoid import cycle - will be *websocket.Hub
 	Logger     *logger.LoggerV2
 	Config     *config.Config
 }
@@ -40,7 +38,7 @@ type IntegrationTestOptions struct {
 	SkipAuth      bool
 	SkipWebSocket bool
 	CustomRoutes  func(*mux.Router, *IntegrationTestContext)
-	MockLLM       services.LLMProvider
+	MockLLM       interface{} // Will be LLMProvider
 }
 
 // SetupIntegrationTest creates a complete test environment
@@ -82,9 +80,9 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 		RuleBuilder:     database.NewRuleBuilderRepository(db),
 	}
 
-	// Create world building repositories
-	worldBuildingRepo := database.NewWorldBuildingRepository(db)
-	_ = database.NewNarrativeRepository(sqlxDB) // narrativeRepo - can be used if needed
+	// Create world building repositories  
+	repos.WorldBuilding = database.NewWorldBuildingRepository(db)
+	repos.Narrative = database.NewNarrativeRepository(sqlxDB) 
 	_ = database.NewEmergentWorldRepository(db) // emergentWorldRepo - can be used if needed
 
 	// Create test config
@@ -119,78 +117,14 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 		cfg.Auth.RefreshTokenDuration,
 	)
 
-	// LLM Provider
-	var llmProvider services.LLMProvider
-	if options.MockLLM != nil {
-		llmProvider = options.MockLLM
-	} else {
-		llmProvider = &services.MockLLMProvider{}
-	}
+	// Services will be created by the test if needed
+	// This avoids import cycles with the services package
 
-	// Create services
-	userService := services.NewUserService(repos.Users)
-	refreshTokenService := services.NewRefreshTokenService(repos.RefreshTokens, jwtManager)
-	
-	// Create AI services with enhanced logger
-	aiConfig := &services.AIConfig{Enabled: cfg.AI.Provider != "mock"}
-	aiBattleMapGen := services.NewAIBattleMapGenerator(llmProvider, aiConfig, log)
-	aiCampaignManager := services.NewAICampaignManager(llmProvider, aiConfig, log)
-	
-	// Create event bus with logger
-	_ = services.NewEventBus(log) // eventBus - can be used if needed
-	
-	// Combat services
-	combatService := services.NewCombatService()
-	combatAutomationService := services.NewCombatAutomationService(repos.CombatAnalytics, repos.Characters, repos.NPCs)
-	combatAnalyticsService := services.NewCombatAnalyticsService(repos.CombatAnalytics, combatService)
-	
-	// World building services
-	settlementGenerator := services.NewSettlementGeneratorService(llmProvider, worldBuildingRepo)
-	factionSystem := services.NewFactionSystemService(llmProvider, worldBuildingRepo)
-	worldEventEngine := services.NewWorldEventEngineService(llmProvider, worldBuildingRepo, factionSystem)
-	economicSimulator := services.NewEconomicSimulatorService(worldBuildingRepo)
-	
-	// Rule engine services
-	diceRollService := services.NewDiceRollService(repos.DiceRolls)
-	ruleEngine := services.NewRuleEngine(repos.RuleBuilder, diceRollService)
-	
-	// Create service container
-	svc := &services.Services{
-		Users:              userService,
-		Characters:         services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
-		GameSessions:       services.NewGameSessionService(repos.GameSessions),
-		DiceRolls:          diceRollService,
-		Combat:             combatService,
-		NPCs:               services.NewNPCService(repos.NPCs),
-		Inventory:          services.NewInventoryService(repos.Inventory, repos.Characters),
-		CustomRaces:        services.NewCustomRaceService(repos.CustomRaces, services.NewAIRaceGeneratorService(llmProvider)),
-		DMAssistant:        services.NewDMAssistantService(repos.DMAssistant, services.NewAIDMAssistantService(llmProvider)),
-		Encounters:         services.NewEncounterService(repos.Encounters, services.NewAIEncounterBuilder(llmProvider), combatService),
-		Campaign:           services.NewCampaignService(repos.Campaign, repos.GameSessions, aiCampaignManager),
-		CombatAutomation:   combatAutomationService,
-		CombatAnalytics:    combatAnalyticsService,
-		SettlementGen:      settlementGenerator,
-		FactionSystem:      factionSystem,
-		WorldEventEngine:   worldEventEngine,
-		EconomicSim:        economicSimulator,
-		RuleEngine:         ruleEngine,
-		BalanceAnalyzer:    services.NewAIBalanceAnalyzer(cfg, llmProvider, ruleEngine, combatService),
-		ConditionalReality: services.NewConditionalRealitySystem(ruleEngine),
-		JWTManager:         jwtManager,
-		RefreshTokens:      refreshTokenService,
-		Config:             cfg,
-		NarrativeEngine:    nil, // Can be set up if needed for specific tests
-		WorldBuilding:      worldBuildingRepo,
-		RuleBuilder:        repos.RuleBuilder,
-		AICampaignManager:  aiCampaignManager,
-		BattleMapGen:       aiBattleMapGen,
-	}
-
-	// WebSocket hub
-	var hub *websocket.Hub
+	// WebSocket hub - create without importing websocket package to avoid cycle
+	var hub interface{}
 	if !options.SkipWebSocket {
-		hub = websocket.NewHub()
-		go hub.Run()
+		// Hub will be created in the test that needs it
+		hub = nil
 	}
 
 	// Setup router
@@ -213,7 +147,7 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 			DB:         db,
 			SQLXDB:     sqlxDB,
 			Repos:      repos,
-			Services:   svc,
+			Services:   nil, // Will be set by test if needed
 			Router:     router,
 			JWTManager: jwtManager,
 			WSHub:      hub,
@@ -235,7 +169,7 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 		DB:         db,
 		SQLXDB:     sqlxDB,
 		Repos:      repos,
-		Services:   svc,
+		Services:   nil, // Will be set by test if needed
 		Router:     router,
 		JWTManager: jwtManager,
 		WSHub:      hub,

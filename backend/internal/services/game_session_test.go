@@ -15,6 +15,11 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/services/mocks"
 )
 
+// Helper function to get string pointer
+func stringPtr(s string) *string {
+	return &s
+}
+
 func TestGameSessionService_CreateSession(t *testing.T) {
 	ctx := context.Background()
 
@@ -501,7 +506,7 @@ func TestGameSessionService_GetSessionParticipants(t *testing.T) {
 					{
 						SessionID:   "session-123",
 						UserID:      "player-123",
-						CharacterID: "char-123",
+						CharacterID: stringPtr("char-123"),
 						Role:        models.ParticipantRolePlayer,
 						IsOnline:    false,
 						JoinedAt:    time.Now(),

@@ -19,8 +19,8 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	// Setup with custom routes
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
-			// Create handlers
-			h := NewHandlers(testCtx.Services, testCtx.WSHub)
+			// Create handlers with all dependencies
+			h, _ := setupTestHandlers(t, testCtx)
 			
 			// Setup auth middleware
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
@@ -315,7 +315,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
 			// Create handlers
-			h := NewHandlers(testCtx.Services, testCtx.WSHub)
+			h, _ := setupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			
 			// API routes
@@ -389,7 +389,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 func TestGameSessionSecurity_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
-			h := NewHandlers(testCtx.Services, testCtx.WSHub)
+			h, _ := setupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix("/api/v1").Subrouter()
 			
@@ -480,7 +480,7 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 func TestGameSessionConcurrency_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
-			h := NewHandlers(testCtx.Services, testCtx.WSHub)
+			h, _ := setupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix("/api/v1").Subrouter()
 			
