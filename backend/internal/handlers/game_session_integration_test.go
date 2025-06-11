@@ -284,7 +284,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		require.Equal(t, http.StatusCreated, w.Code)
 
 		var tempSession models.GameSession
-		ctx.DecodeResponse(w, &tempSession)
+		ctx.DecodeResponseData(w, &tempSession)
 
 		// Try to end/deactivate the session
 		// This might be a DELETE or a PUT to set is_active=false
@@ -347,7 +347,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 	require.Equal(t, http.StatusCreated, w.Code)
 
 	var session models.GameSession
-	ctx.DecodeResponse(w, &session)
+	ctx.DecodeResponseData(w, &session)
 
 	t.Run("Player Online Status", func(t *testing.T) {
 		// Join session
@@ -375,7 +375,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var sessionResp map[string]interface{}
-		ctx.DecodeResponse(w, &sessionResp)
+		ctx.DecodeResponseData(w, &sessionResp)
 
 		// Check if participants are included
 		if participants, ok := sessionResp["participants"]; ok {
@@ -449,7 +449,7 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 		// Or it should reject if code is provided and duplicate
 		if w.Code == http.StatusCreated {
 			var session models.GameSession
-			ctx.DecodeResponse(w, &session)
+			ctx.DecodeResponseData(w, &session)
 			assert.NotEqual(t, "SEC001", session.Code, "Should not allow duplicate codes")
 		}
 	})

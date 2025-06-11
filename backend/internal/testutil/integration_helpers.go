@@ -220,6 +220,22 @@ func (ctx *IntegrationTestContext) DecodeResponse(w *httptest.ResponseRecorder, 
 	require.NoError(ctx.T, err, "Failed to decode response: %s", w.Body.String())
 }
 
+// DecodeResponseData decodes the data field from a wrapped response into the provided interface
+func (ctx *IntegrationTestContext) DecodeResponseData(w *httptest.ResponseRecorder, v interface{}) {
+	var resp response.Response
+	err := json.NewDecoder(w.Body).Decode(&resp)
+	require.NoError(ctx.T, err, "Failed to decode response wrapper: %s", w.Body.String())
+	require.True(ctx.T, resp.Success, "Expected success response, got error: %v", resp.Error)
+	
+	// Marshal the data back to JSON then unmarshal into the target type
+	// This handles the case where resp.Data is a map[string]interface{}
+	dataBytes, err := json.Marshal(resp.Data)
+	require.NoError(ctx.T, err, "Failed to marshal response data")
+	
+	err = json.Unmarshal(dataBytes, v)
+	require.NoError(ctx.T, err, "Failed to unmarshal response data into target type")
+}
+
 // AssertSuccessResponse asserts that the response is successful
 func (ctx *IntegrationTestContext) AssertSuccessResponse(w *httptest.ResponseRecorder) response.Response {
 	var resp response.Response

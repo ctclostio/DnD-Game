@@ -20,15 +20,33 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/your-username/dnd-game/backend/internal/testutil"
 	"github.com/your-username/dnd-game/backend/internal/websocket"
+	"github.com/your-username/dnd-game/backend/pkg/response"
 )
 
 type testContext struct {
+	t          *testing.T
 	handlers   *Handlers
 	router     *mux.Router
 	db         *database.DB
 	repos      *database.Repositories
 	jwtManager *auth.JWTManager
 	services   *services.Services
+}
+
+// DecodeResponseData decodes the data field from a wrapped response
+func (ctx *testContext) DecodeResponseData(w *httptest.ResponseRecorder, v interface{}) {
+	t := ctx.t
+	var resp response.Response
+	err := json.NewDecoder(w.Body).Decode(&resp)
+	require.NoError(t, err, "Failed to decode response wrapper: %s", w.Body.String())
+	require.True(t, resp.Success, "Expected success response, got error: %v", resp.Error)
+	
+	// Marshal the data back to JSON then unmarshal into the target type
+	dataBytes, err := json.Marshal(resp.Data)
+	require.NoError(t, err, "Failed to marshal response data")
+	
+	err = json.Unmarshal(dataBytes, v)
+	require.NoError(t, err, "Failed to unmarshal response data into target type")
 }
 
 func setupIntegrationTest(t *testing.T) (*testContext, func()) {
@@ -117,6 +135,7 @@ func setupIntegrationTest(t *testing.T) (*testContext, func()) {
 	}
 
 	return &testContext{
+		t:          t,
 		handlers:   handlers,
 		router:     router,
 		db:         db,
@@ -181,8 +200,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, w.Code)
 
 		var createdChar models.Character
-		err := json.NewDecoder(w.Body).Decode(&createdChar)
-		require.NoError(t, err)
+		ctx.DecodeResponseData(w, &createdChar)
 		assert.NotEmpty(t, createdChar.ID)
 		assert.Equal(t, "Aragorn", createdChar.Name)
 		assert.Equal(t, userID, createdChar.UserID)
@@ -210,8 +228,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var characters []models.Character
-		err := json.NewDecoder(w.Body).Decode(&characters)
-		require.NoError(t, err)
+		ctx.DecodeResponseData(w, &characters)
 		assert.Len(t, characters, 2)
 		
 		names := []string{characters[0].Name, characters[1].Name}
@@ -233,8 +250,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var character models.Character
-		err = json.NewDecoder(w.Body).Decode(&character)
-		require.NoError(t, err)
+		ctx.DecodeResponseData(w, &character)
 		assert.Equal(t, "Aragorn", character.Name)
 		assert.Equal(t, "Human", character.Race)
 		assert.Equal(t, "Ranger", character.Class)
@@ -327,8 +343,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var characters []models.Character
-		err := json.NewDecoder(w.Body).Decode(&characters)
-		require.NoError(t, err)
+		ctx.DecodeResponseData(w, &characters)
 		
 		// Should only see own character (Strider), not Gimli
 		// Note: May see multiple characters if previous tests created some
@@ -387,8 +402,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var inventory []models.InventoryItem
-		err := json.NewDecoder(w.Body).Decode(&inventory)
-		require.NoError(t, err)
+		ctx.DecodeResponseData(w, &inventory)
 		assert.Len(t, inventory, 1)
 		assert.Equal(t, "Longsword", inventory[0].Item.Name)
 	})
