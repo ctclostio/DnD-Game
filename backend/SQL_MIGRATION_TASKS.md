@@ -41,8 +41,8 @@ The following repositories still use PostgreSQL syntax and need updating:
    - [ ] Test combat analytics functionality
 
 3. **custom_class_repository.go** (7 queries)
-   - [ ] Update parameter placeholders
-   - [ ] Verify custom class creation/retrieval
+   - [x] Update parameter placeholders
+   - [x] Verify custom class creation/retrieval
 
 4. **custom_race_repository.go** (17 queries)
    - [ ] Update parameter placeholders

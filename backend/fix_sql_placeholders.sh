@@ -7,8 +7,11 @@ echo "Finding repository files with PostgreSQL parameter syntax..."
 echo "================================================="
 
 # Find all repository files using $1, $2, etc. syntax
-for file in /home/gooner/GithubContributions/ctclostio/DnD-Game/backend/internal/database/*_repository.go; do
-    if grep -q '\$[0-9]' "$file"; then
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || echo "$SCRIPT_DIR")"
+
+for file in "$REPO_ROOT"/backend/internal/database/*_repository.go; do
+    if [ -f "$file" ] && grep -q '\$[0-9]' "$file"; then
         basename=$(basename "$file")
         count=$(grep -c '\$[0-9]' "$file")
         echo "$basename: $count queries with PostgreSQL syntax"
@@ -18,7 +21,7 @@ done
 echo ""
 echo "Files that need updating:"
 echo "========================"
-grep -l '\$[0-9]' /home/gooner/GithubContributions/ctclostio/DnD-Game/backend/internal/database/*_repository.go | xargs -I {} basename {}
+grep -l '\$[0-9]' "$REPO_ROOT"/backend/internal/database/*_repository.go 2>/dev/null | xargs -I {} basename {}
 
 echo ""
 echo "To fix a file:"
