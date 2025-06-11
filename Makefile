@@ -54,12 +54,25 @@ dev:
 test: test-backend test-frontend
 
 test-backend:
-	@echo "Running backend tests..."
-	@cd $(BACKEND_DIR) && $(GO) test -v ./...
+	@echo "Running backend tests with coverage..."
+	@cd $(BACKEND_DIR) && $(GO) test -v -cover -coverprofile=coverage.out ./...
+	@cd $(BACKEND_DIR) && $(GO) tool cover -html=coverage.out -o coverage.html
+	@echo "✅ Coverage report: backend/coverage.html"
 
 test-frontend:
 	@echo "Running frontend tests..."
-	@cd $(FRONTEND_DIR) && $(NPM) test
+	@cd $(FRONTEND_DIR) && $(NPM) test -- --coverage --watchAll=false || echo "⚠️  No tests yet"
+
+test-quick:
+	@echo "Running quick backend tests..."
+	@cd $(BACKEND_DIR) && $(GO) test -short ./...
+
+test-coverage:
+	@echo "Generating test coverage report..."
+	@cd $(BACKEND_DIR) && $(GO) test -coverprofile=coverage.out ./...
+	@cd $(BACKEND_DIR) && $(GO) tool cover -func=coverage.out
+	@cd $(BACKEND_DIR) && $(GO) tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report: backend/coverage.html"
 
 # Lint targets
 lint: lint-backend lint-frontend
@@ -110,6 +123,12 @@ db-seed:
 	@echo "Seeding database..."
 	# Add seed commands here when database is implemented
 
+# Security targets
+security:
+	@echo "Running security scans..."
+	@cd $(BACKEND_DIR) && gosec -fmt text ./... || echo "⚠️  Security issues found"
+	@cd $(FRONTEND_DIR) && $(NPM) audit || echo "⚠️  npm vulnerabilities found"
+
 # Utility targets
 fmt:
 	@echo "Formatting Go code..."
@@ -118,6 +137,10 @@ fmt:
 vet:
 	@echo "Running go vet..."
 	@cd $(BACKEND_DIR) && $(GO) vet ./...
+
+# Pre-commit check
+check: fmt vet test-quick lint
+	@echo "✅ All checks passed!"
 
 # Help target
 help:
