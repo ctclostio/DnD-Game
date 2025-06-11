@@ -187,7 +187,7 @@ func (s *GameSessionService) JoinSession(ctx context.Context, sessionID, userID 
 	}
 	
 	// Security check: Session capacity
-	if currentPlayerCount >= session.MaxPlayers-1 { // -1 because DM doesn't count
+	if session.MaxPlayers > 0 && currentPlayerCount >= session.MaxPlayers-1 { // -1 because DM doesn't count
 		return fmt.Errorf("session is full (max %d players)", session.MaxPlayers-1)
 	}
 	

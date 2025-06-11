@@ -20,7 +20,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
 			// Create handlers with all dependencies
-			h, _ := setupTestHandlers(t, testCtx)
+			h, _ := SetupTestHandlers(t, testCtx)
 			
 			// Setup auth middleware
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
@@ -61,6 +61,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	createReq := map[string]interface{}{
 		"name":        "The Fellowship Campaign",
 		"description": "A journey to destroy the One Ring",
+		"max_players": 6,
 	}
 	w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions", createReq, dmUserID)
 	require.Equal(t, http.StatusCreated, w.Code)
@@ -315,7 +316,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
 			// Create handlers
-			h, _ := setupTestHandlers(t, testCtx)
+			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			
 			// API routes
@@ -342,6 +343,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 	createReq := map[string]interface{}{
 		"name":        "WebSocket Test Session",
 		"description": "Testing real-time features",
+		"max_players": 6,
 	}
 	w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions", createReq, dmID)
 	require.Equal(t, http.StatusCreated, w.Code)
@@ -389,7 +391,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 func TestGameSessionSecurity_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
-			h, _ := setupTestHandlers(t, testCtx)
+			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix("/api/v1").Subrouter()
 			
@@ -469,6 +471,9 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 
 		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+session1ID+"/join", joinReq, hackerID)
 		
+		// Debug response
+		t.Logf("Join response: status=%d, body=%s", w.Code, w.Body.String())
+		
 		// Should be rejected
 		assert.NotEqual(t, http.StatusOK, w.Code)
 		
@@ -480,7 +485,7 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 func TestGameSessionConcurrency_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
-			h, _ := setupTestHandlers(t, testCtx)
+			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix("/api/v1").Subrouter()
 			
@@ -490,6 +495,12 @@ func TestGameSessionConcurrency_Integration(t *testing.T) {
 		},
 	})
 	defer cleanup()
+	
+	// Verify database is properly set up
+	var tableCount int
+	err := ctx.SQLXDB.Get(&tableCount, "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='game_sessions'")
+	require.NoError(t, err)
+	require.Equal(t, 1, tableCount, "game_sessions table should exist")
 
 	dmID := ctx.CreateTestUser("concdm", "concdm@example.com", "password123")
 	

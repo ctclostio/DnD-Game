@@ -142,7 +142,7 @@ func ErrorWithCode(w http.ResponseWriter, r *http.Request, code errors.ErrorCode
 	case errors.ErrCodeUserExists, errors.ErrCodeDuplicateEntry:
 		errType = errors.ErrorTypeConflict
 		statusCode = http.StatusConflict
-	case errors.ErrCodeValidationFailed, errors.ErrCodeInvalidInput, errors.ErrCodeMissingRequired:
+	case errors.ErrCodeValidationFailed, errors.ErrCodeInvalidInput, errors.ErrCodeMissingRequired, errors.ErrCodeInvalidPassword, errors.ErrCodeInvalidFormat, errors.ErrCodeOutOfRange:
 		errType = errors.ErrorTypeValidation
 		statusCode = http.StatusBadRequest
 	case errors.ErrCodeRateLimitExceeded, errors.ErrCodeAIRateLimitExceeded:

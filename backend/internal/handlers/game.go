@@ -92,16 +92,43 @@ func (h *Handlers) UpdateGameSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var session models.GameSession
-	if err := json.NewDecoder(r.Body).Decode(&session); err != nil {
+	// Decode into a map to handle partial updates
+	var updateData map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&updateData); err != nil {
 		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
-	session.ID = id
-	session.DMID = claims.UserID // Ensure DM can't be changed
-	
-	if err := h.gameService.UpdateSession(r.Context(), &session); err != nil {
+	// Apply only the fields that were provided
+	if name, ok := updateData["name"].(string); ok {
+		existing.Name = name
+	}
+	if desc, ok := updateData["description"].(string); ok {
+		existing.Description = desc
+	}
+	// Check both snake_case and camelCase for compatibility
+	if isActive, ok := updateData["is_active"].(bool); ok {
+		existing.IsActive = isActive
+	} else if isActive, ok := updateData["isActive"].(bool); ok {
+		existing.IsActive = isActive
+	}
+	if maxPlayers, ok := updateData["max_players"].(float64); ok {
+		existing.MaxPlayers = int(maxPlayers)
+	} else if maxPlayers, ok := updateData["maxPlayers"].(float64); ok {
+		existing.MaxPlayers = int(maxPlayers)
+	}
+	if isPublic, ok := updateData["is_public"].(bool); ok {
+		existing.IsPublic = isPublic
+	} else if isPublic, ok := updateData["isPublic"].(bool); ok {
+		existing.IsPublic = isPublic
+	}
+	if requiresInvite, ok := updateData["requires_invite"].(bool); ok {
+		existing.RequiresInvite = requiresInvite
+	} else if requiresInvite, ok := updateData["requiresInvite"].(bool); ok {
+		existing.RequiresInvite = requiresInvite
+	}
+
+	if err := h.gameService.UpdateSession(r.Context(), existing); err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}

@@ -44,11 +44,15 @@ func createTestServices(t *testing.T, repos *database.Repositories, jwtManager *
 	diceRollService := services.NewDiceRollService(repos.DiceRolls)
 	ruleEngine := services.NewRuleEngine(repos.RuleBuilder, diceRollService)
 	
+	// Create game session service with character repository
+	gameSessionService := services.NewGameSessionService(repos.GameSessions)
+	gameSessionService.SetCharacterRepository(repos.Characters)
+	
 	// Create service container
 	return &services.Services{
 		Users:              userService,
 		Characters:         services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
-		GameSessions:       services.NewGameSessionService(repos.GameSessions),
+		GameSessions:       gameSessionService,
 		DiceRolls:          diceRollService,
 		Combat:             combatService,
 		NPCs:               services.NewNPCService(repos.NPCs),
@@ -77,8 +81,8 @@ func createTestServices(t *testing.T, repos *database.Repositories, jwtManager *
 	}
 }
 
-// setupTestHandlers sets up handlers with all dependencies for integration testing
-func setupTestHandlers(t *testing.T, testCtx *testutil.IntegrationTestContext) (*Handlers, *websocket.Hub) {
+// SetupTestHandlers sets up handlers with all dependencies for integration testing
+func SetupTestHandlers(t *testing.T, testCtx *testutil.IntegrationTestContext) (*Handlers, *websocket.Hub) {
 	// Create WebSocket hub
 	hub := websocket.NewHub()
 	go hub.Run()

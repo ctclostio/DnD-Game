@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -42,7 +43,7 @@ func (h *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate password strength
-	if len(req.Password) < 8 {
+	if err := validatePassword(req.Password); err != nil {
 		response.ErrorWithCode(w, r, errors.ErrCodeInvalidPassword)
 		return
 	}
@@ -229,4 +230,38 @@ func (h *Handlers) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, r, http.StatusOK, user)
+}
+
+// validatePassword checks if the password meets security requirements
+func validatePassword(password string) error {
+	if len(password) < 8 {
+		return fmt.Errorf("password must be at least 8 characters long")
+	}
+	
+	hasUpper := false
+	hasLower := false
+	hasNumber := false
+	
+	for _, char := range password {
+		switch {
+		case char >= 'A' && char <= 'Z':
+			hasUpper = true
+		case char >= 'a' && char <= 'z':
+			hasLower = true
+		case char >= '0' && char <= '9':
+			hasNumber = true
+		}
+	}
+	
+	if !hasUpper {
+		return fmt.Errorf("password must contain at least one uppercase letter")
+	}
+	if !hasLower {
+		return fmt.Errorf("password must contain at least one lowercase letter")
+	}
+	if !hasNumber {
+		return fmt.Errorf("password must contain at least one number")
+	}
+	
+	return nil
 }
