@@ -103,12 +103,12 @@ func TestUserRepository_GetByID(t *testing.T) {
 		rows := sqlmock.NewRows([]string{
 			"id", "username", "email", "password_hash", "created_at", "updated_at",
 		}).AddRow(
-			expectedUser.ID, expectedUser.Username, expectedUser.Email, 
+			expectedUser.ID, expectedUser.Username, expectedUser.Email,
 			expectedUser.PasswordHash, expectedUser.CreatedAt, expectedUser.UpdatedAt,
 		)
 
 		mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = \?`,
+			`SELECT id, username, email, password_hash, COALESCE\(role, 'player'\) as role, created_at, updated_at FROM users WHERE id = \?`,
 		).WithArgs("user-42").WillReturnRows(rows)
 
 		user, err := repo.GetByID(context.Background(), "user-42")
@@ -121,7 +121,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 
 	t.Run("user not found", func(t *testing.T) {
 		mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = \?`,
+			`SELECT id, username, email, password_hash, COALESCE\(role, 'player'\) as role, created_at, updated_at FROM users WHERE id = \?`,
 		).WithArgs("non-existent").WillReturnError(sql.ErrNoRows)
 
 		user, err := repo.GetByID(context.Background(), "non-existent")
@@ -159,7 +159,7 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 		)
 
 		mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = \?`,
+			`SELECT id, username, email, password_hash, COALESCE\(role, 'player'\) as role, created_at, updated_at FROM users WHERE username = \?`,
 		).WithArgs("aragorn").WillReturnRows(rows)
 
 		user, err := repo.GetByUsername(context.Background(), "aragorn")
@@ -171,7 +171,7 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 
 	t.Run("user not found", func(t *testing.T) {
 		mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username = \?`,
+			`SELECT id, username, email, password_hash, COALESCE\(role, 'player'\) as role, created_at, updated_at FROM users WHERE username = \?`,
 		).WithArgs("nonexistent").WillReturnError(sql.ErrNoRows)
 
 		user, err := repo.GetByUsername(context.Background(), "nonexistent")
@@ -209,7 +209,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 		)
 
 		mock.ExpectQuery(
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE email = \?`,
+			`SELECT id, username, email, password_hash, COALESCE\(role, 'player'\) as role, created_at, updated_at FROM users WHERE email = \?`,
 		).WithArgs("test@example.com").WillReturnRows(rows)
 
 		user, err := repo.GetByEmail(context.Background(), "test@example.com")

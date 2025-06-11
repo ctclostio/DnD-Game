@@ -14,8 +14,9 @@ import (
 type contextKey string
 
 const (
-	RequestIDKey contextKey = "request_id"
-	UserIDKey    contextKey = "user_id"
+	RequestIDKey     contextKey = "request_id"
+	CorrelationIDKey contextKey = "correlation_id"
+	UserIDKey        contextKey = "user_id"
 )
 
 // Logger wraps zerolog logger with additional functionality
@@ -70,6 +71,11 @@ func (l *Logger) WithContext(ctx context.Context) *Logger {
 		zl = zl.Str("request_id", requestID)
 	}
 
+	// Add correlation ID if present
+	if corrID, ok := ctx.Value(CorrelationIDKey).(string); ok && corrID != "" {
+		zl = zl.Str("correlation_id", corrID)
+	}
+
 	// Add user ID if present
 	if userID, ok := ctx.Value(UserIDKey).(string); ok && userID != "" {
 		zl = zl.Str("user_id", userID)
@@ -82,6 +88,12 @@ func (l *Logger) WithContext(ctx context.Context) *Logger {
 // WithRequestID adds request ID to logger
 func (l *Logger) WithRequestID(requestID string) *Logger {
 	logger := l.Logger.With().Str("request_id", requestID).Logger()
+	return &Logger{&logger}
+}
+
+// WithCorrelationID adds correlation ID to logger
+func (l *Logger) WithCorrelationID(correlationID string) *Logger {
+	logger := l.Logger.With().Str("correlation_id", correlationID).Logger()
 	return &Logger{&logger}
 }
 
@@ -176,4 +188,22 @@ func Fatal() *zerolog.Event {
 // WithContext returns a logger with context
 func WithContext(ctx context.Context) *Logger {
 	return GetLogger().WithContext(ctx)
+}
+
+// ContextWithRequestID adds request ID to context
+func ContextWithRequestID(ctx context.Context, requestID string) context.Context {
+	return context.WithValue(ctx, RequestIDKey, requestID)
+}
+
+// ContextWithCorrelationID adds correlation ID to context
+func ContextWithCorrelationID(ctx context.Context, correlationID string) context.Context {
+	return context.WithValue(ctx, CorrelationIDKey, correlationID)
+}
+
+// GetCorrelationIDFromContext retrieves correlation ID from context
+func GetCorrelationIDFromContext(ctx context.Context) string {
+	if id, ok := ctx.Value(CorrelationIDKey).(string); ok {
+		return id
+	}
+	return ""
 }
