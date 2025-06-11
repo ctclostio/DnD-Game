@@ -148,11 +148,16 @@ func main() {
 	balanceAnalyzer := services.NewAIBalanceAnalyzer(cfg, llmProvider, ruleEngine, combatService)
 	conditionalReality := services.NewConditionalRealitySystem(ruleEngine)
 
+	// Create game session service with security dependencies
+	gameSessionService := services.NewGameSessionService(repos.GameSessions)
+	gameSessionService.SetCharacterRepository(repos.Characters)
+	gameSessionService.SetUserRepository(repos.Users)
+
 	// Aggregate all services
 	svc := &services.Services{
 		Users:              services.NewUserService(repos.Users),
 		Characters:         services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
-		GameSessions:       services.NewGameSessionService(repos.GameSessions),
+		GameSessions:       gameSessionService,
 		DiceRolls:          diceRollService,
 		Combat:             combatService,
 		NPCs:               services.NewNPCService(repos.NPCs),

@@ -179,3 +179,100 @@ func (h *Handlers) GetUserGameSessions(w http.ResponseWriter, r *http.Request) {
 
 	response.JSON(w, r, http.StatusOK, sessions)
 }
+
+// GetActiveSessions returns all active game sessions (public or user is participant)
+func (h *Handlers) GetActiveSessions(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from auth context
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "Unauthorized")
+		return
+	}
+
+	// Get all sessions where user is participant
+	sessions, err := h.gameService.GetSessionsByPlayer(r.Context(), userID)
+	if err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	// Filter for active sessions only
+	activeSessions := make([]*models.GameSession, 0)
+	for _, session := range sessions {
+		if session.IsActive && session.Status != models.GameStatusCompleted {
+			activeSessions = append(activeSessions, session)
+		}
+	}
+
+	response.JSON(w, r, http.StatusOK, activeSessions)
+}
+
+// GetSessionPlayers returns all players in a game session
+func (h *Handlers) GetSessionPlayers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	sessionID := vars["id"]
+
+	// Get user ID from auth context
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "Unauthorized")
+		return
+	}
+
+	// Verify user is in the session
+	if err := h.gameService.ValidateUserInSession(r.Context(), sessionID, userID); err != nil {
+		response.Forbidden(w, r, "You are not a participant in this session")
+		return
+	}
+
+	// Get all participants
+	participants, err := h.gameService.GetSessionParticipants(r.Context(), sessionID)
+	if err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, participants)
+}
+
+// KickPlayer removes a player from the game session (DM only)
+func (h *Handlers) KickPlayer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	sessionID := vars["id"]
+	playerID := vars["playerId"]
+
+	// Get user claims from auth context (DM role is enforced by middleware)
+	claims, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "Unauthorized")
+		return
+	}
+
+	// Verify the session exists and user is the DM
+	session, err := h.gameService.GetSession(r.Context(), sessionID)
+	if err != nil {
+		response.NotFound(w, r, "Game session not found")
+		return
+	}
+
+	if session.DMID != claims.UserID {
+		response.Forbidden(w, r, "Only the DM can kick players")
+		return
+	}
+
+	// Prevent DM from kicking themselves
+	if playerID == claims.UserID {
+		response.BadRequest(w, r, "DM cannot kick themselves")
+		return
+	}
+
+	// Remove the player
+	if err := h.gameService.KickPlayer(r.Context(), sessionID, playerID); err != nil {
+		response.BadRequest(w, r, err.Error())
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, map[string]string{
+		"message": "Player kicked successfully",
+	})
+}
