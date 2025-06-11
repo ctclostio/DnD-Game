@@ -243,6 +243,8 @@ func TestGlobalLoggerFunctions(t *testing.T) {
 	writer := zerolog.SyncWriter(&buf)
 	zl := zerolog.New(writer).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	defaultLogger = &Logger{&zl}
+	// Ensure global log level allows debug messages
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
 	tests := []struct {
 		name    string
@@ -301,6 +303,7 @@ func TestWithContext_Global(t *testing.T) {
 	writer := zerolog.SyncWriter(&buf)
 	zl := zerolog.New(writer).With().Timestamp().Logger().Level(zerolog.InfoLevel)
 	defaultLogger = &Logger{&zl}
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, RequestIDKey, "global-request-id")
@@ -323,6 +326,7 @@ func TestLogger_ChainedOperations(t *testing.T) {
 	logger := &Logger{
 		Logger: &zl,
 	}
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
 	// Test chaining multiple operations
 	logger.
@@ -368,6 +372,7 @@ func TestLogger_NilError(t *testing.T) {
 	logger := &Logger{
 		Logger: &zl,
 	}
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
 	// Test with nil error - WithError should handle nil gracefully
 	errorLogger := logger.WithError(nil)
