@@ -166,30 +166,7 @@ func (h *Handlers) GenerateNPCDialogue(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Game session methods (stubs for now)
-func (h *Handlers) GetActiveSessions(w http.ResponseWriter, r *http.Request) {
-	response.Error(w, r, &errors.AppError{
-		Type:       errors.ErrorTypeInternal,
-		Message:    "Get active sessions not implemented",
-		StatusCode: http.StatusNotImplemented,
-	})
-}
-
-func (h *Handlers) GetSessionPlayers(w http.ResponseWriter, r *http.Request) {
-	response.Error(w, r, &errors.AppError{
-		Type:       errors.ErrorTypeInternal,
-		Message:    "Get session players not implemented",
-		StatusCode: http.StatusNotImplemented,
-	})
-}
-
-func (h *Handlers) KickPlayer(w http.ResponseWriter, r *http.Request) {
-	response.Error(w, r, &errors.AppError{
-		Type:       errors.ErrorTypeInternal,
-		Message:    "Kick player not implemented",
-		StatusCode: http.StatusNotImplemented,
-	})
-}
+// Game session methods are implemented in game.go
 
 // Narrative methods (stubs for now)
 func (h *Handlers) GetStoryThreads(w http.ResponseWriter, r *http.Request) {

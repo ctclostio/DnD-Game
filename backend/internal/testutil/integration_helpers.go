@@ -279,6 +279,11 @@ func (ctx *IntegrationTestContext) CreateTestGameSession(dmUserID, name, code st
 	query := `INSERT INTO game_sessions (id, name, description, dm_user_id, code, is_active) VALUES (?, ?, ?, ?, ?, ?)`
 	_, err := ctx.SQLXDB.Exec(ctx.SQLXDB.Rebind(query), sessionID, name, "Test session", dmUserID, code, true)
 	require.NoError(ctx.T, err)
+	
+	// Update max_players if the column exists
+	updateQuery := `UPDATE game_sessions SET max_players = 6 WHERE id = ?`
+	ctx.SQLXDB.Exec(ctx.SQLXDB.Rebind(updateQuery), sessionID)
+	
 	return sessionID
 }
 

@@ -44,7 +44,10 @@ func (ce *CombatEngine) StartCombat(gameSessionID string, combatants []models.Co
 			combatants[i].InitiativeRoll = roll
 			combatants[i].Initiative = total
 		}
-		combatants[i].ID = uuid.New().String()
+		// Only generate ID if not provided
+		if combatants[i].ID == "" {
+			combatants[i].ID = uuid.New().String()
+		}
 		
 		// Reset action economy
 		combatants[i].Actions = 1

@@ -16,18 +16,17 @@ import (
 	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/your-username/dnd-game/backend/internal/testutil"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 func TestGameSessionSecurity(t *testing.T) {
 	// Setup test context
 	ctx := context.Background()
-	testCtx := testutil.SetupIntegrationTest(t)
-	defer testCtx.Cleanup()
+	testCtx, cleanup := testutil.SetupIntegrationTest(t)
+	defer cleanup()
 
-	// Create logger
-	log, err := logger.NewV2(logger.DefaultConfig())
-	require.NoError(t, err)
+	// Create logger (not used in these tests)
+	// log, err := logger.NewV2(logger.DefaultConfig())
+	// require.NoError(t, err)
 
 	// Create services with repositories
 	gameService := services.NewGameSessionService(testCtx.Repos.GameSessions)
@@ -64,7 +63,7 @@ func TestGameSessionSecurity(t *testing.T) {
 		RequiresInvite:        true,
 		AllowedCharacterLevel: 5,
 	}
-	err = svc.GameSessions.CreateSession(ctx, session)
+	err := svc.GameSessions.CreateSession(ctx, session)
 	require.NoError(t, err)
 
 	t.Run("JoinSession_Security", func(t *testing.T) {
@@ -136,7 +135,14 @@ func TestGameSessionSecurity(t *testing.T) {
 				jsonBody, _ := json.Marshal(body)
 
 				req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
-				req = req.WithContext(auth.ContextWithUserID(req.Context(), tt.userID))
+				// Create user claims and add to context
+				claims := &auth.Claims{
+					UserID: tt.userID,
+					Username: "testuser",
+					Email: "test@example.com",
+					Role: "player",
+				}
+				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 				req = mux.SetURLVars(req, map[string]string{"id": session.ID})
 
 				// Execute request
@@ -195,7 +201,14 @@ func TestGameSessionSecurity(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				req := httptest.NewRequest("GET", "/api/v1/game/sessions/"+tt.sessionID, nil)
-				req = req.WithContext(auth.ContextWithUserID(req.Context(), tt.userID))
+				// Create user claims and add to context
+				claims := &auth.Claims{
+					UserID: tt.userID,
+					Username: "testuser",
+					Email: "test@example.com",
+					Role: "player",
+				}
+				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 				req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
 
 				rr := httptest.NewRecorder()
@@ -256,7 +269,7 @@ func TestGameSessionSecurity(t *testing.T) {
 					Email:    "test@example.com",
 					Role:     "dm",
 				}
-				req = req.WithContext(auth.ContextWithClaims(req.Context(), claims))
+				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 				req = mux.SetURLVars(req, map[string]string{
 					"id":       session.ID,
 					"playerId": tt.playerToKick,
@@ -288,7 +301,14 @@ func TestGameSessionSecurity(t *testing.T) {
 
 		// Try to join inactive session
 		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+inactiveSession.ID+"/join", nil)
-		req = req.WithContext(auth.ContextWithUserID(req.Context(), player1.ID))
+		// Create user claims and add to context
+		claims := &auth.Claims{
+			UserID: player1.ID,
+			Username: "testuser",
+			Email: "test@example.com",
+			Role: "player",
+		}
+		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 		req = mux.SetURLVars(req, map[string]string{"id": inactiveSession.ID})
 
 		rr := httptest.NewRecorder()
@@ -310,7 +330,14 @@ func TestGameSessionSecurity(t *testing.T) {
 
 		// Try to join completed session
 		req = httptest.NewRequest("POST", "/api/v1/game/sessions/"+completedSession.ID+"/join", nil)
-		req = req.WithContext(auth.ContextWithUserID(req.Context(), player1.ID))
+		// Create user claims and add to context
+		claims2 := &auth.Claims{
+			UserID: player1.ID,
+			Username: "testuser",
+			Email: "test@example.com",
+			Role: "player",
+		}
+		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims2))
 		req = mux.SetURLVars(req, map[string]string{"id": completedSession.ID})
 
 		rr = httptest.NewRecorder()

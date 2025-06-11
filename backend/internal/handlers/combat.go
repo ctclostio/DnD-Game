@@ -63,7 +63,7 @@ func (h *Handlers) StartCombat(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) GetCombat(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	combatID := vars["id"]
+	combatID := vars["combatId"]
 
 	combat, err := h.combatService.GetCombat(r.Context(), combatID)
 	if err != nil {
@@ -94,7 +94,7 @@ func (h *Handlers) NextTurn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vars := mux.Vars(r)
-	combatID := vars["id"]
+	combatID := vars["combatId"]
 
 	combat, err := h.combatService.GetCombat(r.Context(), combatID)
 	if err != nil {
@@ -143,7 +143,7 @@ func (h *Handlers) ProcessCombatAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vars := mux.Vars(r)
-	combatID := vars["id"]
+	combatID := vars["combatId"]
 
 	var request models.CombatRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -190,7 +190,7 @@ func (h *Handlers) EndCombat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vars := mux.Vars(r)
-	combatID := vars["id"]
+	combatID := vars["combatId"]
 
 	combat, err := h.combatService.GetCombat(r.Context(), combatID)
 	if err != nil {
@@ -231,7 +231,7 @@ func (h *Handlers) MakeSavingThrow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vars := mux.Vars(r)
-	combatID := vars["id"]
+	combatID := vars["combatId"]
 	combatantID := vars["combatantId"]
 
 	var req struct {
@@ -279,7 +279,7 @@ func (h *Handlers) ApplyDamage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vars := mux.Vars(r)
-	combatID := vars["id"]
+	combatID := vars["combatId"]
 	combatantID := vars["combatantId"]
 
 	var req struct {
@@ -339,7 +339,7 @@ func (h *Handlers) HealCombatant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vars := mux.Vars(r)
-	combatID := vars["id"]
+	combatID := vars["combatId"]
 	combatantID := vars["combatantId"]
 
 	var req struct {

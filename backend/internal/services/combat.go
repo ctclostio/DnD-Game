@@ -103,12 +103,20 @@ func (s *CombatService) ProcessAction(ctx context.Context, combatID string, requ
 		err = s.processDash(combat, actor, action)
 	case models.ActionTypeDodge:
 		err = s.processDodge(combat, actor, action)
+	case models.ActionTypeEndTurn:
+		// End turn just creates the action, turn will advance below
+		action.Description = fmt.Sprintf("%s ends their turn", actor.Name)
 	default:
 		err = fmt.Errorf("unsupported action type: %s", request.Action)
 	}
 
 	if err != nil {
 		return nil, err
+	}
+
+	// Auto-advance turn after most actions (except reactions and some special cases)
+	if request.Action != models.ActionTypeReaction && request.Action != models.ActionTypeConcentration {
+		s.engine.NextTurn(combat)
 	}
 
 	return action, nil

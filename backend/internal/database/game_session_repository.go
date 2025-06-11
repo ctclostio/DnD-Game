@@ -42,14 +42,17 @@ func (r *gameSessionRepository) Create(ctx context.Context, session *models.Game
 	query := `
 		INSERT INTO game_sessions (
 			id, name, description, dm_user_id, code, is_active, 
-			status, session_state, created_at, updated_at
+			status, session_state, max_players, is_public, 
+			requires_invite, allowed_character_level, created_at, updated_at
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	_, err := r.db.ExecContext(ctx, r.db.Rebind(query), 
 		session.ID, session.Name, session.Description, session.DMID, 
 		session.Code, session.IsActive, string(session.Status), 
-		stateJSON, session.CreatedAt, session.UpdatedAt)
+		stateJSON, session.MaxPlayers, session.IsPublic,
+		session.RequiresInvite, session.AllowedCharacterLevel,
+		session.CreatedAt, session.UpdatedAt)
 	
 	if err != nil {
 		return fmt.Errorf("failed to create game session: %w", err)
@@ -65,14 +68,17 @@ func (r *gameSessionRepository) GetByID(ctx context.Context, id string) (*models
 	
 	query := `
 		SELECT id, name, description, dm_user_id, code, is_active,
-		       status, session_state, created_at, updated_at, started_at, ended_at
+		       status, session_state, max_players, is_public, requires_invite,
+		       allowed_character_level, created_at, updated_at, started_at, ended_at
 		FROM game_sessions
 		WHERE id = ?`
 
 	err := r.db.QueryRowContext(ctx, r.db.Rebind(query), id).Scan(
 		&session.ID, &session.Name, &session.Description, &session.DMID,
 		&session.Code, &session.IsActive, &session.Status, &stateJSON,
-		&session.CreatedAt, &session.UpdatedAt, &session.StartedAt, &session.EndedAt)
+		&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
+		&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt, 
+		&session.StartedAt, &session.EndedAt)
 	
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -97,7 +103,8 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 	var sessions []*models.GameSession
 	query := `
 		SELECT id, name, description, dm_user_id, code, is_active,
-		       status, session_state, created_at, updated_at, started_at, ended_at
+		       status, session_state, max_players, is_public, requires_invite,
+		       allowed_character_level, created_at, updated_at, started_at, ended_at
 		FROM game_sessions
 		WHERE dm_user_id = ?
 		ORDER BY created_at DESC`
@@ -116,7 +123,9 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 		err := rows.Scan(
 			&session.ID, &session.Name, &session.Description, &session.DMID,
 			&session.Code, &session.IsActive, &session.Status, &stateJSON,
-			&session.CreatedAt, &session.UpdatedAt, &session.StartedAt, &session.EndedAt)
+			&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
+			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt, 
+			&session.StartedAt, &session.EndedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan game session: %w", err)
 		}
@@ -135,7 +144,8 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 	var sessions []*models.GameSession
 	query := `
 		SELECT DISTINCT gs.id, gs.name, gs.description, gs.dm_user_id, gs.code, gs.is_active,
-		       gs.status, gs.session_state, gs.created_at, gs.updated_at, gs.started_at, gs.ended_at
+		       gs.status, gs.session_state, gs.max_players, gs.is_public, gs.requires_invite,
+		       gs.allowed_character_level, gs.created_at, gs.updated_at, gs.started_at, gs.ended_at
 		FROM game_sessions gs
 		LEFT JOIN game_participants gp ON gs.id = gp.session_id
 		WHERE gp.user_id = ? OR gs.dm_user_id = ?
@@ -154,7 +164,9 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 		err := rows.Scan(
 			&session.ID, &session.Name, &session.Description, &session.DMID,
 			&session.Code, &session.IsActive, &session.Status, &stateJSON,
-			&session.CreatedAt, &session.UpdatedAt, &session.StartedAt, &session.EndedAt)
+			&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
+			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt, 
+			&session.StartedAt, &session.EndedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan game session: %w", err)
 		}
@@ -172,10 +184,15 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 func (r *gameSessionRepository) Update(ctx context.Context, session *models.GameSession) error {
 	query := `
 		UPDATE game_sessions
-		SET name = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+		SET name = ?, description = ?, status = ?, is_active = ?, max_players = ?, 
+		    is_public = ?, requires_invite = ?, allowed_character_level = ?,
+		    updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?`
 
-	_, err := r.db.ExecContextRebind(ctx, query, session.Name, session.Status, session.ID)
+	_, err := r.db.ExecContextRebind(ctx, query, 
+		session.Name, session.Description, session.Status, session.IsActive,
+		session.MaxPlayers, session.IsPublic, session.RequiresInvite,
+		session.AllowedCharacterLevel, session.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("game session not found")
@@ -211,14 +228,37 @@ func (r *gameSessionRepository) Delete(ctx context.Context, id string) error {
 func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]*models.GameSession, error) {
 	var sessions []*models.GameSession
 	query := `
-		SELECT id, name, dm_user_id, status, created_at, updated_at
+		SELECT id, name, description, dm_user_id, code, is_active,
+		       status, session_state, max_players, is_public, requires_invite,
+		       allowed_character_level, created_at, updated_at, started_at, ended_at
 		FROM game_sessions
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?`
 
-	err := r.db.SelectContext(ctx, &sessions, r.db.Rebind(query), limit, offset)
+	rows, err := r.db.QueryContext(ctx, r.db.Rebind(query), limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list game sessions: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var session models.GameSession
+		var stateJSON string
+		
+		err := rows.Scan(
+			&session.ID, &session.Name, &session.Description, &session.DMID,
+			&session.Code, &session.IsActive, &session.Status, &stateJSON,
+			&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
+			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt, 
+			&session.StartedAt, &session.EndedAt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan game session: %w", err)
+		}
+		
+		// Initialize state
+		session.State = make(map[string]interface{})
+		
+		sessions = append(sessions, &session)
 	}
 
 	return sessions, nil

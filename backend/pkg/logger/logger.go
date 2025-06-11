@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -113,10 +114,16 @@ func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
 }
 
 // Global logger instance
-var defaultLogger *Logger
+var (
+	defaultLogger *Logger
+	loggerMutex   sync.Mutex
+)
 
 // Init initializes the global logger
 func Init(cfg Config) {
+	loggerMutex.Lock()
+	defer loggerMutex.Unlock()
+	
 	defaultLogger = New(cfg)
 	// Set global logger for zerolog
 	log.Logger = *defaultLogger.Logger
@@ -124,12 +131,17 @@ func Init(cfg Config) {
 
 // GetLogger returns the global logger instance
 func GetLogger() *Logger {
+	loggerMutex.Lock()
+	defer loggerMutex.Unlock()
+	
 	if defaultLogger == nil {
 		// Initialize with default config if not set
-		Init(Config{
+		defaultLogger = New(Config{
 			Level:  "info",
 			Pretty: false,
 		})
+		// Set global logger for zerolog
+		log.Logger = *defaultLogger.Logger
 	}
 	return defaultLogger
 }

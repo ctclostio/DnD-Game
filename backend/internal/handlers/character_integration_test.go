@@ -399,10 +399,17 @@ func TestInventoryAPI_Integration(t *testing.T) {
 
 		ctx.router.ServeHTTP(w, req)
 
+		// Debug the response if it fails
+		if w.Code != http.StatusOK {
+			t.Logf("Get inventory response: status=%d, body=%s", w.Code, w.Body.String())
+		}
+
 		assert.Equal(t, http.StatusOK, w.Code)
 
+		// The inventory handler doesn't use response wrapper, decode directly
 		var inventory []models.InventoryItem
-		ctx.DecodeResponseData(w, &inventory)
+		err := json.NewDecoder(w.Body).Decode(&inventory)
+		require.NoError(t, err)
 		assert.Len(t, inventory, 1)
 		assert.Equal(t, "Longsword", inventory[0].Item.Name)
 	})
