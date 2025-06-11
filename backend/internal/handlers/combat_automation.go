@@ -81,8 +81,8 @@ func (h *CombatAutomationHandler) AutoResolveCombat(w http.ResponseWriter, r *ht
 
 	var characters []*models.Character
 	for _, p := range participants {
-		if p.CharacterID != "" {
-			char, err := h.characterService.GetCharacterByID(ctx, p.CharacterID)
+		if p.CharacterID != nil && *p.CharacterID != "" {
+			char, err := h.characterService.GetCharacterByID(ctx, *p.CharacterID)
 			if err == nil {
 				characters = append(characters, char)
 			}

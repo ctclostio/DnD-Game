@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/models"
@@ -13,9 +15,22 @@ type GameSessionService struct {
 }
 
 func NewGameSessionService(repo database.GameSessionRepository) *GameSessionService {
+	// Seed random number generator
+	rand.Seed(time.Now().UnixNano())
+	
 	return &GameSessionService{
 		repo: repo,
 	}
+}
+
+// generateSessionCode generates a unique 6-character alphanumeric code
+func (s *GameSessionService) generateSessionCode() string {
+	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	code := make([]byte, 6)
+	for i := range code {
+		code[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(code)
 }
 
 // CreateSession creates a new game session
@@ -31,6 +46,21 @@ func (s *GameSessionService) CreateSession(ctx context.Context, session *models.
 	// Set default status
 	if session.Status == "" {
 		session.Status = models.GameStatusActive
+	}
+	
+	// Generate unique code if not provided
+	if session.Code == "" {
+		// Generate codes until we find a unique one
+		// In production, you'd check against the database
+		session.Code = s.generateSessionCode()
+	}
+	
+	// Set IsActive to true by default
+	session.IsActive = true
+	
+	// Initialize empty state if nil
+	if session.State == nil {
+		session.State = make(map[string]interface{})
 	}
 	
 	// Create session

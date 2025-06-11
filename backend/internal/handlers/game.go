@@ -121,7 +121,7 @@ func (h *Handlers) JoinGameSession(w http.ResponseWriter, r *http.Request) {
 	sessionID := vars["id"]
 
 	var req struct {
-		CharacterID *string `json:"characterId,omitempty"`
+		CharacterID *string `json:"character_id,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, r, "Invalid request body")

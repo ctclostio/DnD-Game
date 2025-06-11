@@ -128,6 +128,10 @@ func SetupTestDB(t *testing.T) *sqlx.DB {
 		dm_user_id TEXT NOT NULL REFERENCES users(id),
 		code TEXT UNIQUE NOT NULL,
 		is_active BOOLEAN DEFAULT TRUE,
+		status TEXT NOT NULL DEFAULT 'active',
+		session_state TEXT DEFAULT '{}',
+		started_at TIMESTAMP,
+		ended_at TIMESTAMP,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);

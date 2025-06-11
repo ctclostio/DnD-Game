@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -139,4 +140,18 @@ func (m *MockDB) Ping() error {
 		return m.PingFunc()
 	}
 	return nil
+}
+
+// RandomString generates a random string of specified length
+func RandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	
+	// Seed the random number generator
+	rand.Seed(time.Now().UnixNano())
+	
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }
