@@ -3,23 +3,24 @@ package services
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 	"time"
+
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 // InMemoryEventBus is a simple in-memory event bus implementation
 type InMemoryEventBus struct {
 	handlers map[string][]EventHandler
 	mu       sync.RWMutex
-	logger   *log.Logger
+	logger   *logger.LoggerV2
 }
 
 // NewEventBus creates a new event bus
-func NewEventBus(logger *log.Logger) EventBus {
+func NewEventBus(log *logger.LoggerV2) EventBus {
 	return &InMemoryEventBus{
 		handlers: make(map[string][]EventHandler),
-		logger:   logger,
+		logger:   log,
 	}
 }
 
@@ -40,14 +41,22 @@ func (eb *InMemoryEventBus) Publish(ctx context.Context, event Event) error {
 			defer func() {
 				if r := recover(); r != nil {
 					if eb.logger != nil {
-						eb.logger.Printf("Event handler panic: %v", r)
+						eb.logger.WithContext(ctx).
+								Error().
+								Interface("panic", r).
+								Str("event_type", event.Type()).
+								Msg("Event handler panic")
 					}
 				}
 			}()
 			
 			if err := h(ctx, event); err != nil {
 				if eb.logger != nil {
-					eb.logger.Printf("Event handler error for %s: %v", event.Type(), err)
+					eb.logger.WithContext(ctx).
+						Error().
+						Err(err).
+						Str("event_type", event.Type()).
+						Msg("Event handler error")
 				}
 			}
 		}(handler)

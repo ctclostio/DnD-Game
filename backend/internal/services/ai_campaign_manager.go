@@ -4,23 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 type AICampaignManager struct {
 	llmProvider LLMProvider
 	config      *AIConfig
+	logger      *logger.LoggerV2
 }
 
-func NewAICampaignManager(provider LLMProvider, config *AIConfig) *AICampaignManager {
+func NewAICampaignManager(provider LLMProvider, config *AIConfig, log *logger.LoggerV2) *AICampaignManager {
 	return &AICampaignManager{
 		llmProvider: provider,
 		config:      config,
+		logger:      log,
 	}
 }
 
@@ -36,13 +38,21 @@ func (acm *AICampaignManager) GenerateStoryArc(ctx context.Context, req models.G
 
 	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
-		log.Printf("Error generating story arc: %v", err)
+		acm.logger.WithContext(ctx).
+				Error().
+				Err(err).
+				Str("campaign_id", req.CampaignID).
+				Int("session_count", len(req.RecentSessions)).
+				Msg("Error generating AI story arc")
 		return acm.generateDefaultStoryArc(req), nil
 	}
 
 	var arc models.GeneratedStoryArc
 	if err := json.Unmarshal([]byte(response), &arc); err != nil {
-		log.Printf("Error parsing story arc response: %v", err)
+		acm.logger.WithContext(ctx).
+				Error().
+				Err(err).
+				Msg("Error parsing AI story arc response")
 		return acm.generateDefaultStoryArc(req), nil
 	}
 
@@ -61,13 +71,20 @@ func (acm *AICampaignManager) GenerateSessionRecap(ctx context.Context, memories
 
 	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
-		log.Printf("Error generating recap: %v", err)
+		acm.logger.WithContext(ctx).
+				Error().
+				Err(err).
+				Str("session_id", req.SessionID).
+				Msg("Error generating AI session recap")
 		return acm.generateDefaultRecap(memories), nil
 	}
 
 	var recap models.GeneratedRecap
 	if err := json.Unmarshal([]byte(response), &recap); err != nil {
-		log.Printf("Error parsing recap response: %v", err)
+		acm.logger.WithContext(ctx).
+				Error().
+				Err(err).
+				Msg("Error parsing AI recap response")
 		return acm.generateDefaultRecap(memories), nil
 	}
 
@@ -86,13 +103,20 @@ func (acm *AICampaignManager) GenerateForeshadowing(ctx context.Context, req mod
 
 	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
-		log.Printf("Error generating foreshadowing: %v", err)
+		acm.logger.WithContext(ctx).
+				Error().
+				Err(err).
+				Str("session_id", req.SessionID).
+				Msg("Error generating AI foreshadowing")
 		return acm.generateDefaultForeshadowing(req), nil
 	}
 
 	var foreshadowing models.GeneratedForeshadowing
 	if err := json.Unmarshal([]byte(response), &foreshadowing); err != nil {
-		log.Printf("Error parsing foreshadowing response: %v", err)
+		acm.logger.WithContext(ctx).
+				Error().
+				Err(err).
+				Msg("Error parsing AI foreshadowing response")
 		return acm.generateDefaultForeshadowing(req), nil
 	}
 
@@ -111,13 +135,20 @@ func (acm *AICampaignManager) AnalyzeSessionForMemory(ctx context.Context, event
 
 	response, err := acm.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
-		log.Printf("Error analyzing session: %v", err)
+		acm.logger.WithContext(ctx).
+				Error().
+				Err(err).
+				Str("session_id", req.SessionID).
+				Msg("Error analyzing AI session")
 		return acm.createBasicSessionMemory(events), nil
 	}
 
 	var memory models.SessionMemory
 	if err := json.Unmarshal([]byte(response), &memory); err != nil {
-		log.Printf("Error parsing session analysis: %v", err)
+		acm.logger.WithContext(ctx).
+				Error().
+				Err(err).
+				Msg("Error parsing AI session analysis")
 		return acm.createBasicSessionMemory(events), nil
 	}
 
