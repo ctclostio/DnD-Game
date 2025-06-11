@@ -67,9 +67,9 @@ func main() {
 		Bool("ai_enabled", cfg.AI.Provider != "mock").
 		Msg("Configuration loaded successfully")
 
-	// Initialize database
+	// Initialize database with logging
 	log.Info().Msg("Initializing database connection")
-	db, repos, err := database.Initialize(cfg)
+	db, repos, err := database.InitializeWithLogging(cfg, log)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize database")
 	}

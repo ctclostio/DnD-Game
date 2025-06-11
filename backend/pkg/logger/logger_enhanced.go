@@ -344,3 +344,11 @@ func GetUserIDFromContext(ctx context.Context) string {
 	}
 	return ""
 }
+
+// GetCorrelationIDFromContext retrieves correlation ID from context
+func GetCorrelationIDFromContext(ctx context.Context) string {
+	if id, ok := ctx.Value(CorrelationIDKey).(string); ok {
+		return id
+	}
+	return ""
+}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/your-username/dnd-game/backend/pkg/logger"
 )
 
 // Config holds the database configuration
@@ -27,6 +28,7 @@ type Config struct {
 type DB struct {
 	*sqlx.DB
 	config Config
+	logger *logger.LoggerV2
 }
 
 // StdDB returns the underlying *sql.DB
@@ -65,7 +67,50 @@ func NewConnection(cfg Config) (*DB, error) {
 	return &DB{
 		DB:     db,
 		config: cfg,
+		logger: nil,
 	}, nil
+}
+
+// SetLogger sets the logger for the database connection
+func (db *DB) SetLogger(logger *logger.LoggerV2) {
+	db.logger = logger
+}
+
+// logQuery logs a database query with timing and context
+func (db *DB) logQuery(ctx context.Context, query string, args []interface{}, err error, duration time.Duration) {
+	if db.logger == nil {
+		return
+	}
+	
+	log := db.logger.WithContext(ctx)
+	
+	// Truncate query for logging
+	const maxQueryLength = 200
+	truncatedQuery := query
+	if len(query) > maxQueryLength {
+		truncatedQuery = query[:maxQueryLength] + "..."
+	}
+	
+	event := log.Debug().
+		Str("query", truncatedQuery).
+		Dur("duration", duration).
+		Int64("duration_ms", duration.Milliseconds()).
+		Int("args_count", len(args))
+	
+	// Add first few args for debugging (be careful not to log sensitive data)
+	if len(args) > 0 && len(args) <= 3 {
+		event = event.Interface("args", args)
+	}
+	
+	if err != nil {
+		if err == sql.ErrNoRows {
+			event.Msg("Database query returned no rows")
+		} else {
+			event.Err(err).Msg("Database query failed")
+		}
+	} else {
+		event.Msg("Database query executed")
+	}
 }
 
 // Close closes the database connection
@@ -101,11 +146,23 @@ func (db *DB) GetDB() *sqlx.DB {
 
 // QueryRowContext executes a query with context that is expected to return at most one row
 func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	if db.logger != nil {
+		start := time.Now()
+		row := db.DB.QueryRowContext(ctx, query, args...)
+		db.logQuery(ctx, query, args, nil, time.Since(start))
+		return row
+	}
 	return db.DB.QueryRowContext(ctx, query, args...)
 }
 
 // ExecContext executes a query with context without returning any rows
 func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	if db.logger != nil {
+		start := time.Now()
+		result, err := db.DB.ExecContext(ctx, query, args...)
+		db.logQuery(ctx, query, args, err, time.Since(start))
+		return result, err
+	}
 	return db.DB.ExecContext(ctx, query, args...)
 }
 
@@ -157,15 +214,36 @@ func (db *DB) QueryRowRebind(query string, args ...interface{}) *sql.Row {
 
 // ExecContextRebind executes a query with context after rebinding placeholders
 func (db *DB) ExecContextRebind(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	return db.DB.ExecContext(ctx, db.Rebind(query), args...)
+	reboundQuery := db.Rebind(query)
+	if db.logger != nil {
+		start := time.Now()
+		result, err := db.DB.ExecContext(ctx, reboundQuery, args...)
+		db.logQuery(ctx, query, args, err, time.Since(start))
+		return result, err
+	}
+	return db.DB.ExecContext(ctx, reboundQuery, args...)
 }
 
 // QueryRowContextRebind executes a query with context after rebinding placeholders
 func (db *DB) QueryRowContextRebind(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	return db.DB.QueryRowContext(ctx, db.Rebind(query), args...)
+	reboundQuery := db.Rebind(query)
+	if db.logger != nil {
+		start := time.Now()
+		row := db.DB.QueryRowContext(ctx, reboundQuery, args...)
+		db.logQuery(ctx, query, args, nil, time.Since(start))
+		return row
+	}
+	return db.DB.QueryRowContext(ctx, reboundQuery, args...)
 }
 
 // QueryContextRebind executes a query with context after rebinding placeholders
 func (db *DB) QueryContextRebind(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	return db.DB.QueryContext(ctx, db.Rebind(query), args...)
+	reboundQuery := db.Rebind(query)
+	if db.logger != nil {
+		start := time.Now()
+		rows, err := db.DB.QueryContext(ctx, reboundQuery, args...)
+		db.logQuery(ctx, query, args, err, time.Since(start))
+		return rows, err
+	}
+	return db.DB.QueryContext(ctx, reboundQuery, args...)
 }

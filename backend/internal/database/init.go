@@ -10,6 +10,11 @@ import (
 
 // Initialize creates and initializes the database connection and repositories
 func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
+	return InitializeWithLogging(cfg, nil)
+}
+
+// InitializeWithLogging creates and initializes the database connection and repositories with optional logging
+func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repositories, error) {
 	// Create database configuration
 	dbConfig := Config{
 		Host:         cfg.Database.Host,
@@ -34,11 +39,13 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 			break
 		}
 		
-		logger.Error().
-			Err(err).
-			Int("attempt", i+1).
-			Int("max_retries", maxRetries).
-			Msg("Failed to connect to database")
+		if log != nil {
+			log.Error().
+				Err(err).
+				Int("attempt", i+1).
+				Int("max_retries", maxRetries).
+				Msg("Failed to connect to database")
+		}
 		if i < maxRetries-1 {
 			time.Sleep(time.Duration(i+1) * time.Second)
 		}
@@ -48,11 +55,13 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 		return nil, nil, fmt.Errorf("failed to connect to database after %d attempts: %w", maxRetries, err)
 	}
 
-	logger.Info().
-		Str("host", cfg.Database.Host).
-		Int("port", cfg.Database.Port).
-		Str("database", cfg.Database.DatabaseName).
-		Msg("Successfully connected to database")
+	if log != nil {
+		log.Info().
+			Str("host", cfg.Database.Host).
+			Int("port", cfg.Database.Port).
+			Str("database", cfg.Database.DatabaseName).
+			Msg("Successfully connected to database")
+	}
 
 	// Run migrations
 	if err := RunMigrations(db); err != nil {
@@ -60,8 +69,15 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 		return nil, nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 
-	logger.Info().
-		Msg("Database migrations completed successfully")
+	if log != nil {
+		log.Info().
+			Msg("Database migrations completed successfully")
+	}
+	
+	// Set logger on database connection if provided
+	if log != nil {
+		db.SetLogger(log)
+	}
 
 	// Create repositories
 	repos := &Repositories{
