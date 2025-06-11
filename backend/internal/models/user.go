@@ -34,7 +34,7 @@ const (
 type GameParticipant struct {
 	SessionID     string          `json:"sessionId" db:"game_session_id"`
 	UserID        string          `json:"userId" db:"user_id"`
-	CharacterID   string          `json:"characterId" db:"character_id"`
+	CharacterID   *string         `json:"characterId" db:"character_id"`
 	Role          ParticipantRole `json:"role" db:"role"`
 	IsOnline      bool            `json:"isOnline" db:"is_online"`
 	JoinedAt      time.Time       `json:"joinedAt" db:"joined_at"`

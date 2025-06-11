@@ -110,8 +110,8 @@ func main() {
 	aiRaceGenerator := services.NewAIRaceGeneratorService(llmProvider)
 	aiDMAssistant := services.NewAIDMAssistantService(llmProvider)
 	aiEncounterBuilder := services.NewAIEncounterBuilder(llmProvider)
-	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"})
-	aiBattleMapGenerator := services.NewAIBattleMapGenerator(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"})
+	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"}, log)
+	aiBattleMapGenerator := services.NewAIBattleMapGenerator(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"}, log)
 
 	// Create services
 	log.Info().Msg("Initializing core services")
@@ -194,9 +194,9 @@ func main() {
 	
 	// Add middleware
 	r.Use(middleware.RequestIDMiddleware)
-	r.Use(middleware.LoggingMiddleware(log))
-	// TODO: Create LoggerV2 version of ErrorHandlerV2
-	// r.Use(middleware.ErrorHandlerV2(log))
+	r.Use(middleware.RequestContextMiddleware) // Add context enrichment
+	r.Use(middleware.LoggingMiddleware(log))   // This now uses the V2 version
+	r.Use(middleware.ErrorHandlerV2(log))      // Enable error handler with LoggerV2
 	// TODO: Create LoggerV2 version of RecoveryMiddleware
 	// r.Use(middleware.RecoveryMiddleware(log))
 	isDevelopment := cfg.Server.Environment == "development"

@@ -15,12 +15,14 @@ import (
 type AIBattleMapGenerator struct {
 	llmProvider LLMProvider
 	config      *AIConfig
+	logger      *logger.LoggerV2
 }
 
-func NewAIBattleMapGenerator(provider LLMProvider, config *AIConfig) *AIBattleMapGenerator {
+func NewAIBattleMapGenerator(provider LLMProvider, config *AIConfig, log *logger.LoggerV2) *AIBattleMapGenerator {
 	return &AIBattleMapGenerator{
 		llmProvider: provider,
 		config:      config,
+		logger:      log,
 	}
 }
 
@@ -39,19 +41,22 @@ func (abmg *AIBattleMapGenerator) GenerateBattleMap(ctx context.Context, req mod
 
 	response, err := abmg.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
-		logger.WithContext(ctx).
-			WithError(err).
+		abmg.logger.WithContext(ctx).
 			Error().
-			Msg("Error generating battle map")
+			Err(err).
+			Str("location", req.LocationDescription).
+			Str("map_type", req.MapType).
+			Msg("Error generating AI battle map")
 		return abmg.generateDefaultBattleMap(req), nil
 	}
 
 	var generatedMap GeneratedBattleMap
 	if err := json.Unmarshal([]byte(response), &generatedMap); err != nil {
-		logger.WithContext(ctx).
-			WithError(err).
+		abmg.logger.WithContext(ctx).
 			Error().
-			Msg("Error parsing battle map response")
+			Err(err).
+			Str("response_length", fmt.Sprintf("%d", len(response))).
+			Msg("Error parsing AI battle map response")
 		return abmg.generateDefaultBattleMap(req), nil
 	}
 
