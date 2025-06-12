@@ -1,5 +1,4 @@
-# golangci-lint v2.x configuration
-version: "2"
+# golangci-lint configuration
 run:
   timeout: 5m
   tests: true
@@ -40,7 +39,6 @@ linters:
     - rowserrcheck
     - staticcheck
     - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - unused
