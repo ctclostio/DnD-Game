@@ -410,7 +410,7 @@ Respond in JSON format:
 	response, err := s.llmProvider.GenerateCompletion(ctx, userPrompt, systemPrompt)
 	if err != nil {
 		// Fallback to procedural generation
-		return s.generateProceduralShop(settlement, shopType), nil
+		return s.generateProceduralShop(settlement, shopType)
 	}
 
 	var shopData struct {
