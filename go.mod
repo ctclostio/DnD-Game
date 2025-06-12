@@ -6,6 +6,7 @@ toolchain go1.24.3
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
+	github.com/automerge/automerge-go v0.0.0-20241030180337-6fb4f2d08244
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-playground/validator/v10 v10.20.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
