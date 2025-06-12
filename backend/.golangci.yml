@@ -45,7 +45,6 @@ linters:
     - goheader
     - nestif
     - revive
-    - shadow  # Enable shadow linter instead of govet.check-shadowing
 
   disable:
     - depguard
