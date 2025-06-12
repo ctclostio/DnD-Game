@@ -49,8 +49,17 @@ process {
         }
     }
 
+    $repoRoot = try {
+        git rev-parse --show-toplevel | ForEach-Object { $_.Trim() }
+    }
+    catch {
+        Write-Error "Failed to determine git repository root. Please run this script from within a git repository."
+        return
+    }
+
     # Use 'git ls-files' as the most reliable way to get all tracked files.
-    $files = git ls-files | ForEach-Object { Get-Item -Path $_ }
+    # Files are listed relative to the repo root, so we join paths to get full paths.
+    $files = git ls-files | ForEach-Object { Get-Item -LiteralPath (Join-Path -Path $repoRoot -ChildPath $_) }
 
     foreach ($file in $files) {
         # Skip directories, excluded file types, and files git considers binary
