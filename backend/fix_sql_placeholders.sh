@@ -25,7 +25,7 @@ grep -l '\$[0-9]' "$REPO_ROOT"/backend/internal/database/*_repository.go 2>/dev/
 
 echo ""
 echo "To fix a file:"
-echo "1. Replace $1, $2, etc. with ?"
+echo "1. Replace \$1, \$2, etc. with ?"
 echo "2. For sqlx.DB repos: Add 'query = r.db.Rebind(query)' before execution"
 echo "3. For DB wrapper repos: Use QueryRowContextRebind, ExecContextRebind methods"
 echo ""

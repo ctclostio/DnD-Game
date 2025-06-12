@@ -45,8 +45,8 @@ The following repositories still use PostgreSQL syntax and need updating:
    - [x] Verify custom class creation/retrieval
 
 4. **custom_race_repository.go** (17 queries)
-   - [ ] Update parameter placeholders
-   - [ ] Test custom race functionality
+   - [x] Update parameter placeholders
+   - [x] Test custom race functionality
 
 5. **dm_assistant_repository.go** (35 queries) ⚠️ Large file
    - [ ] Update parameter placeholders
