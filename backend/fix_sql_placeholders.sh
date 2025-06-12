@@ -10,13 +10,20 @@ echo "================================================="
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || echo "$SCRIPT_DIR")"
 
+found=0
 for file in "$REPO_ROOT"/backend/internal/database/*_repository.go; do
     if [ -f "$file" ] && grep -q '\$[0-9]' "$file"; then
         basename=$(basename "$file")
         count=$(grep -c '\$[0-9]' "$file")
         echo "$basename: $count queries with PostgreSQL syntax"
+        found=1
     fi
 done
+
+if [ "$found" -eq 0 ]; then
+    echo "No repositories require placeholder updates."
+    exit 0
+fi
 
 echo ""
 echo "Files that need updating:"

@@ -29,16 +29,16 @@ We've implemented a database-agnostic SQL solution to ensure compatibility betwe
 
 ### High Priority - Repository Updates
 
-The following repositories still use PostgreSQL syntax and need updating:
+All repository migrations completed June 12, 2025:
 
 1. **campaign_repository.go** (20 queries)
-   - [ ] Update all `$1, $2` placeholders to `?`
-   - [ ] Add rebind calls before query execution
-   - [ ] Update corresponding test file
+   - [x] Update all `$1, $2` placeholders to `?`
+   - [x] Add rebind calls before query execution
+   - [x] Update corresponding test file
 
 2. **combat_analytics_repository.go** (12 queries)
-   - [ ] Update parameter placeholders
-   - [ ] Test combat analytics functionality
+   - [x] Update parameter placeholders
+   - [x] Test combat analytics functionality
 
 3. **custom_class_repository.go** (7 queries)
    - [x] Update parameter placeholders
@@ -49,33 +49,33 @@ The following repositories still use PostgreSQL syntax and need updating:
    - [x] Test custom race functionality
 
 5. **dm_assistant_repository.go** (35 queries) ⚠️ Large file
-   - [ ] Update parameter placeholders
-   - [ ] May need to be done in sections
-   - [ ] Critical for DM tools functionality
+   - [x] Update parameter placeholders
+   - [x] May need to be done in sections
+   - [x] Critical for DM tools functionality
 
 6. **emergent_world_repository.go** (35 queries) ⚠️ Large file
-   - [ ] Update parameter placeholders
-   - [ ] Complex queries may need careful testing
+   - [x] Update parameter placeholders
+   - [x] Complex queries may need careful testing
 
 7. **encounter_repository.go** (19 queries)
-   - [ ] Update parameter placeholders
-   - [ ] Test encounter builder functionality
+   - [x] Update parameter placeholders
+   - [x] Test encounter builder functionality
 
 8. **narrative_repository.go** (23 queries)
-   - [ ] Update parameter placeholders
-   - [ ] Verify narrative engine queries
+   - [x] Update parameter placeholders
+   - [x] Verify narrative engine queries
 
 9. **npc_repository.go** (17 queries)
-   - [ ] Update parameter placeholders
-   - [ ] Test NPC management
+   - [x] Update parameter placeholders
+   - [x] Test NPC management
 
 10. **rule_builder_repository.go** (12 queries)
-    - [ ] Update parameter placeholders
-    - [ ] Verify rule builder functionality
+    - [x] Update parameter placeholders
+    - [x] Verify rule builder functionality
 
 11. **world_building_repository.go** (35 queries) ⚠️ Large file
-    - [ ] Update parameter placeholders
-    - [ ] Complex world generation queries
+    - [x] Update parameter placeholders
+    - [x] Complex world generation queries
 
 ### Medium Priority - Test Restoration
 
