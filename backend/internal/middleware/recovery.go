@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // Recovery middleware recovers from panics and returns a 500 error

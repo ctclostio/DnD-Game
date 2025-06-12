@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/config"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // Initialize creates and initializes the database connection and repositories

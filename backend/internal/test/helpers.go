@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 
-	"github.com/your-username/dnd-game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
 )
 
 // NewMockDB creates a mock database for testing

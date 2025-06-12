@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // NarrativeRepository handles all narrative-related database operations

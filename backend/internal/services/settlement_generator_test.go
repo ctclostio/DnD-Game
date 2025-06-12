@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
 // Mock implementation of WorldBuildingRepository

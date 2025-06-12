@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/middleware"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 func TestLoggingMiddleware_CorrelationID(t *testing.T) {

@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/your-username/dnd-game/backend/internal/handlers"
+	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 )
 
 // RegisterInventoryRoutes registers all inventory-related routes

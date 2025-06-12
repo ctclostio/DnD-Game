@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/pkg/dice"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/dice"
 )
 
 type CombatAutomationService struct {

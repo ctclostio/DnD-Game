@@ -12,11 +12,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/config"
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // IntegrationTestContext contains all dependencies for integration testing

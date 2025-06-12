@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/your-username/dnd-game/backend/pkg/logger"
-	"github.com/your-username/dnd-game/backend/pkg/validation"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/pkg/validation"
 )
 
 // ValidationMiddleware provides request validation

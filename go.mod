@@ -1,4 +1,4 @@
-module github.com/your-username/dnd-game
+module github.com/ctclostio/DnD-Game
 
 go 1.23.0
 

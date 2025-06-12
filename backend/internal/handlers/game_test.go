@@ -13,8 +13,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // MockGameSessionService is a mock implementation of the game session service

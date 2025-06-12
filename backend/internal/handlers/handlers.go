@@ -3,11 +3,11 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/your-username/dnd-game/backend/internal/websocket"
-	"github.com/your-username/dnd-game/backend/pkg/errors"
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // Handlers holds all HTTP handlers

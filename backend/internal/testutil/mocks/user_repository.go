@@ -3,7 +3,7 @@ package mocks
 import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // MockUserRepository is a mock implementation of UserRepository

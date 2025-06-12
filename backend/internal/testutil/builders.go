@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // Builder interface for all test builders

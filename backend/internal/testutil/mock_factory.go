@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/mock"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // MockFactory creates mock objects for testing

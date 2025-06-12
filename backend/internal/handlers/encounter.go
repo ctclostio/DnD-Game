@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // GenerateEncounter creates a new AI-generated encounter

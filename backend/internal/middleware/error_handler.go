@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/your-username/dnd-game/backend/pkg/errors"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // ErrorHandler middleware handles errors in a consistent way

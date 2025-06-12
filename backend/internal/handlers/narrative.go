@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/services"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
 )
 
 // NarrativeHandlers manages narrative-related HTTP endpoints

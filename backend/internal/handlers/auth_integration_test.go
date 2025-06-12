@@ -10,14 +10,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/handlers"
-	"github.com/your-username/dnd-game/backend/internal/middleware"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/your-username/dnd-game/backend/internal/testutil"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
+	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 func TestAuthFlow_Integration(t *testing.T) {

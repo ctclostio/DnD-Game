@@ -3,11 +3,11 @@ package handlers
 import (
 	"context"
 
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/your-username/dnd-game/backend/internal/websocket"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // HandlersV2 holds all HTTP handlers with logging support

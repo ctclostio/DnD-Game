@@ -6,10 +6,10 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // Rule Template Handlers
@@ -199,8 +199,7 @@ func (h *Handlers) ValidateRuleTemplate(w http.ResponseWriter, r *http.Request) 
 
 		executionResult, err = h.ruleEngine.ExecuteRule(r.Context(), compiled, testInstance, testTrigger)
 		if err != nil {
-			// Log the error but don't fail validation - test execution errors are included in result
-			h.logger.Error("Failed to execute test scenario", "error", err)
+			// Test execution errors are included in result - don't fail validation
 		}
 	}
 

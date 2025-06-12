@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
 )
 

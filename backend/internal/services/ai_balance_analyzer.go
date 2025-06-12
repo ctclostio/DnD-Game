@@ -7,8 +7,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/your-username/dnd-game/backend/internal/config"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // AIBalanceAnalyzer uses AI to analyze and balance custom rules

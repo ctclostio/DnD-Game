@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/your-username/dnd-game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 )
 
 // Validator wraps the go-playground validator

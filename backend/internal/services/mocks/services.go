@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/stretchr/testify/mock"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // MockJWTManager is a mock implementation of auth.JWTManager

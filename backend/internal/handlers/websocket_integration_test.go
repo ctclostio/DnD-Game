@@ -15,9 +15,9 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/handlers"
-	"github.com/your-username/dnd-game/backend/internal/testutil"
-	ws "github.com/your-username/dnd-game/backend/internal/websocket"
+	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	ws "github.com/ctclostio/DnD-Game/backend/internal/websocket"
 )
 
 func TestWebSocketHandlerIntegration(t *testing.T) {

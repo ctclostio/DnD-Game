@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/your-username/dnd-game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 )
 
 // ErrorHandlerGin returns a Gin middleware for handling errors

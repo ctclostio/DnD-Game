@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // InMemoryEventBus is a simple in-memory event bus implementation

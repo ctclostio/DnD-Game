@@ -10,15 +10,15 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/config"
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/handlers"
-	"github.com/your-username/dnd-game/backend/internal/middleware"
-	"github.com/your-username/dnd-game/backend/internal/routes"
-	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/your-username/dnd-game/backend/internal/websocket"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
+	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
+	"github.com/ctclostio/DnD-Game/backend/internal/routes"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 func main() {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/game"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/game"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type CombatService struct {

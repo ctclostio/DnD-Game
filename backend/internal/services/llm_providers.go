@@ -236,7 +236,7 @@ func (p *OpenRouterProvider) GenerateCompletion(ctx context.Context, prompt stri
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+p.apiKey)
-	req.Header.Set("HTTP-Referer", "https://github.com/your-username/dnd-game")
+	req.Header.Set("HTTP-Referer", "https://github.com/ctclostio/DnD-Game")
 	req.Header.Set("X-Title", "D&D Custom Race Generator")
 
 	resp, err := p.httpClient.Do(req)

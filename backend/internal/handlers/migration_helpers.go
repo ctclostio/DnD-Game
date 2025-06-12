@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // DEPRECATED: These functions are kept for backward compatibility during migration

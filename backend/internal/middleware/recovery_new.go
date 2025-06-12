@@ -5,9 +5,9 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	"github.com/your-username/dnd-game/backend/pkg/errors"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // RecoveryMiddleware returns a middleware that recovers from panics

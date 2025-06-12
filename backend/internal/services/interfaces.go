@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // Service interfaces to prevent circular dependencies

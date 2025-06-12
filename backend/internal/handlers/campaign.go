@@ -8,10 +8,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 type CampaignHandler struct {
@@ -547,7 +548,7 @@ func (h *CampaignHandler) GetTimeline(w http.ResponseWriter, r *http.Request) {
 	if startStr != "" {
 		parsedStart, err := time.Parse(time.RFC3339, startStr)
 		if err != nil {
-			h.middleware.HandleError(w, errors.NewBadRequestError("invalid start date format", err))
+			response.ErrorWithCode(w, r, errors.ErrCodeInvalidFormat, "invalid start date format")
 			return
 		}
 		startDate = parsedStart
@@ -558,7 +559,7 @@ func (h *CampaignHandler) GetTimeline(w http.ResponseWriter, r *http.Request) {
 	if endStr != "" {
 		parsedEnd, err := time.Parse(time.RFC3339, endStr)
 		if err != nil {
-			h.middleware.HandleError(w, errors.NewBadRequestError("invalid end date format", err))
+			response.ErrorWithCode(w, r, errors.ErrCodeInvalidFormat, "invalid end date format")
 			return
 		}
 		endDate = parsedEnd

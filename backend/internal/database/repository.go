@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // UserRepository defines the interface for user data operations

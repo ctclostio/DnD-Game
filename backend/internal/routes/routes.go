@@ -2,9 +2,9 @@ package routes
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/handlers"
-	"github.com/your-username/dnd-game/backend/internal/middleware"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
+	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 )
 
 // Config holds all dependencies needed for route registration

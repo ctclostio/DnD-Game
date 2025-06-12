@@ -8,11 +8,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/testutil"
-	ws "github.com/your-username/dnd-game/backend/internal/websocket"
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	ws "github.com/ctclostio/DnD-Game/backend/internal/websocket"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 func TestGameSessionLifecycle_Integration(t *testing.T) {

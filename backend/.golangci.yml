@@ -11,7 +11,6 @@ linters:
     - dogsled
     - dupl
     - errcheck
-    - exportloopref
     - exhaustive
     - gochecknoinits
     - goconst
@@ -81,7 +80,7 @@ linters-settings:
   gocyclo:
     min-complexity: 15
   goimports:
-    local-prefixes: github.com/your-username/dnd-game
+    local-prefixes: github.com/ctclostio/DnD-Game
   mnd:
     checks:
       - argument

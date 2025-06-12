@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // EmergentWorldRepository handles database operations for the emergent world system
