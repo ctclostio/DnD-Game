@@ -4,12 +4,6 @@ run:
   tests: true
   build-tags:
     - integration
-  skip-dirs:
-    - vendor
-    - node_modules
-  skip-files:
-    - ".*_mock.go"
-    - ".*_gen.go"
 
 linters:
   enable:
@@ -25,7 +19,7 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - gomnd
+    - mnd
     - goprintffuncname
     - gosec
     - gosimple
@@ -89,7 +83,7 @@ linters-settings:
     min-complexity: 15
   goimports:
     local-prefixes: github.com/your-username/dnd-game
-  gomnd:
+  mnd:
     checks:
       - argument
       - case
@@ -105,8 +99,6 @@ linters-settings:
       - 'test'
     ignored-functions:
       - 'strconv.ParseInt'
-  govet:
-    # check-shadowing removed - use shadow linter instead
   lll:
     line-length: 140
   misspell:
@@ -147,10 +139,16 @@ linters-settings:
       - name: redefines-builtin-id
 
 issues:
+  exclude-dirs:
+    - vendor
+    - node_modules
+  exclude-files:
+    - ".*_mock.go"
+    - ".*_gen.go"
   exclude-rules:
     - path: _test\.go
       linters:
-        - gomnd
+        - mnd
         - goconst
         - gosec
         - noctx
