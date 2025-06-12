@@ -69,7 +69,11 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		header.Set("Origin", "http://localhost:3000")
 		conn, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
-		defer conn.Close()
+		defer func() {
+			if err := conn.Close(); err != nil {
+				t.Logf("Failed to close WebSocket connection: %v", err)
+			}
+		}()
 
 		// Read auth required message
 		var authReq map[string]string
@@ -107,7 +111,11 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		header.Set("Origin", "http://localhost:3000")
 		conn, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
-		defer conn.Close()
+		defer func() {
+			if err := conn.Close(); err != nil {
+				t.Logf("Failed to close WebSocket connection: %v", err)
+			}
+		}()
 
 		// Read auth required message
 		var authReq map[string]string
@@ -144,7 +152,11 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		header.Set("Origin", "http://localhost:3000")
 		conn, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
-		defer conn.Close()
+		defer func() {
+			if err := conn.Close(); err != nil {
+				t.Logf("Failed to close WebSocket connection: %v", err)
+			}
+		}()
 
 		// Read auth required message
 		var authReq map[string]string
@@ -475,7 +487,9 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		// Close all connections
 		for _, conn := range connections {
 			if conn != nil {
-				conn.Close()
+				if err := conn.Close(); err != nil {
+					t.Logf("Failed to close WebSocket connection: %v", err)
+				}
 			}
 		}
 	})

@@ -137,7 +137,10 @@ func (h *Handlers) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
 	// TODO: Implement session lookup if needed
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GetCharacterChecks returns available checks for a character
@@ -166,7 +169,10 @@ func (h *Handlers) GetCharacterChecks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handlers) getAbilityModifier(character *models.Character, ability string) int {

@@ -545,13 +545,23 @@ func (h *CampaignHandler) GetTimeline(w http.ResponseWriter, r *http.Request) {
 
 	var startDate, endDate time.Time
 	if startStr != "" {
-		startDate, _ = time.Parse(time.RFC3339, startStr)
+		parsedStart, err := time.Parse(time.RFC3339, startStr)
+		if err != nil {
+			h.middleware.HandleError(w, errors.NewBadRequestError("invalid start date format", err))
+			return
+		}
+		startDate = parsedStart
 	} else {
 		startDate = time.Now().AddDate(-1, 0, 0) // Default to 1 year ago
 	}
 
 	if endStr != "" {
-		endDate, _ = time.Parse(time.RFC3339, endStr)
+		parsedEnd, err := time.Parse(time.RFC3339, endStr)
+		if err != nil {
+			h.middleware.HandleError(w, errors.NewBadRequestError("invalid end date format", err))
+			return
+		}
+		endDate = parsedEnd
 	} else {
 		endDate = time.Now().AddDate(0, 0, 1) // Default to tomorrow
 	}

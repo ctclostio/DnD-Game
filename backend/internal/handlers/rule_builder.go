@@ -197,7 +197,11 @@ func (h *Handlers) ValidateRuleTemplate(w http.ResponseWriter, r *http.Request) 
 			Properties: validateRequest.TestScenario,
 		}
 
-		executionResult, _ = h.ruleEngine.ExecuteRule(r.Context(), compiled, testInstance, testTrigger)
+		executionResult, err = h.ruleEngine.ExecuteRule(r.Context(), compiled, testInstance, testTrigger)
+		if err != nil {
+			// Log the error but don't fail validation - test execution errors are included in result
+			h.logger.Error("Failed to execute test scenario", "error", err)
+		}
 	}
 
 	resp := map[string]interface{}{
@@ -451,7 +455,10 @@ func (h *Handlers) ExportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	case "json":
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Content-Disposition", "attachment; filename="+template.Name+".json")
-		json.NewEncoder(w).Encode(template)
+		if err := json.NewEncoder(w).Encode(template); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
 	default:
 		response.BadRequest(w, r, "Unsupported export format")
 	}

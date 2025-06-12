@@ -427,7 +427,12 @@ func (h *EmergentWorldHandlers) TriggerWorldEvent(w http.ResponseWriter, r *http
 		return
 	}
 
-	event.GameSessionID, _ = uuid.Parse(sessionID)
+	parsedSessionID, err := uuid.Parse(sessionID)
+	if err != nil {
+		response.BadRequest(w, r, "Invalid session ID format")
+		return
+	}
+	event.GameSessionID = parsedSessionID
 	event.ID = uuid.New()
 
 	// Convert WorldEvent to EmergentWorldEvent for creation

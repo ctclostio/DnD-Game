@@ -115,7 +115,10 @@ func (h *NarrativeHandlers) GetNarrativeProfile(w http.ResponseWriter, r *http.R
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(profile)
+	if err := json.NewEncoder(w).Encode(profile); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // CreateNarrativeProfile creates a new narrative profile
@@ -148,7 +151,10 @@ func (h *NarrativeHandlers) CreateNarrativeProfile(w http.ResponseWriter, r *htt
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(profile)
+	if err := json.NewEncoder(w).Encode(profile); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // UpdateNarrativeProfile updates an existing narrative profile
@@ -214,7 +220,10 @@ func (h *NarrativeHandlers) UpdateNarrativeProfile(w http.ResponseWriter, r *htt
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(profile)
+	if err := json.NewEncoder(w).Encode(profile); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GetBackstoryElements retrieves backstory elements for a character
@@ -242,7 +251,10 @@ func (h *NarrativeHandlers) GetBackstoryElements(w http.ResponseWriter, r *http.
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(elements)
+	if err := json.NewEncoder(w).Encode(elements); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // CreateBackstoryElement creates a new backstory element
@@ -274,7 +286,10 @@ func (h *NarrativeHandlers) CreateBackstoryElement(w http.ResponseWriter, r *htt
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(element)
+	if err := json.NewEncoder(w).Encode(element); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // RecordPlayerAction records a significant player action
@@ -359,7 +374,10 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(action)
+	if err := json.NewEncoder(w).Encode(action); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GetPendingConsequences retrieves consequences ready to trigger
@@ -395,7 +413,10 @@ func (h *NarrativeHandlers) GetPendingConsequences(w http.ResponseWriter, r *htt
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(consequences)
+	if err := json.NewEncoder(w).Encode(consequences); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // TriggerConsequence triggers a specific consequence
@@ -439,7 +460,10 @@ func (h *NarrativeHandlers) TriggerConsequence(w http.ResponseWriter, r *http.Re
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "triggered"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "triggered"}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // CreateWorldEvent creates a new world event
@@ -493,7 +517,10 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(event)
+	if err := json.NewEncoder(w).Encode(event); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GetWorldEvent retrieves a specific world event
@@ -508,7 +535,10 @@ func (h *NarrativeHandlers) GetWorldEvent(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(event)
+	if err := json.NewEncoder(w).Encode(event); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GetEventPerspectives retrieves all perspectives for an event
@@ -523,7 +553,10 @@ func (h *NarrativeHandlers) GetEventPerspectives(w http.ResponseWriter, r *http.
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(perspectives)
+	if err := json.NewEncoder(w).Encode(perspectives); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // PersonalizeEvent creates a personalized version of an event for a character
@@ -583,7 +616,10 @@ func (h *NarrativeHandlers) PersonalizeEvent(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(narrative)
+	if err := json.NewEncoder(w).Encode(narrative); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GeneratePersonalizedStory generates a new personalized story
@@ -642,7 +678,10 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(narrative)
+	if err := json.NewEncoder(w).Encode(narrative); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GenerateMultiplePerspectives generates perspectives for an event
@@ -702,7 +741,10 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(perspectives)
+	if err := json.NewEncoder(w).Encode(perspectives); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GetCharacterMemories retrieves narrative memories for a character
@@ -730,7 +772,10 @@ func (h *NarrativeHandlers) GetCharacterMemories(w http.ResponseWriter, r *http.
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(memories)
+	if err := json.NewEncoder(w).Encode(memories); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // CreateMemory creates a new narrative memory
@@ -762,7 +807,10 @@ func (h *NarrativeHandlers) CreateMemory(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(memory)
+	if err := json.NewEncoder(w).Encode(memory); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GetActiveThreads retrieves active narrative threads
@@ -774,7 +822,10 @@ func (h *NarrativeHandlers) GetActiveThreads(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(threads)
+	if err := json.NewEncoder(w).Encode(threads); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // CreateThread creates a new narrative thread
@@ -816,7 +867,10 @@ func (h *NarrativeHandlers) CreateThread(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(thread)
+	if err := json.NewEncoder(w).Encode(thread); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Helper functions

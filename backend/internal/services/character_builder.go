@@ -59,18 +59,18 @@ func validateFileName(name string) error {
 	if name == "" {
 		return errors.New("name cannot be empty")
 	}
-	
+
 	// Check for path traversal attempts
 	if strings.Contains(name, "..") || strings.Contains(name, "/") || strings.Contains(name, "\\") {
 		return errors.New("invalid characters in name")
 	}
-	
+
 	// Only allow alphanumeric, dash, and underscore
 	validName := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 	if !validName.MatchString(name) {
 		return errors.New("name contains invalid characters")
 	}
-	
+
 	return nil
 }
 
@@ -435,7 +435,7 @@ func (cb *CharacterBuilder) loadRaceData(race string) (*RaceData, error) {
 	if err := validateFileName(race); err != nil {
 		return nil, fmt.Errorf("invalid race name: %w", err)
 	}
-	
+
 	data, err := os.ReadFile(filepath.Join(cb.dataPath, "races", race+".json"))
 	if err != nil {
 		return nil, err
@@ -454,7 +454,7 @@ func (cb *CharacterBuilder) loadClassData(class string) (*ClassData, error) {
 	if err := validateFileName(class); err != nil {
 		return nil, fmt.Errorf("invalid class name: %w", err)
 	}
-	
+
 	data, err := os.ReadFile(filepath.Join(cb.dataPath, "classes", class+".json"))
 	if err != nil {
 		return nil, err
@@ -473,7 +473,7 @@ func (cb *CharacterBuilder) loadBackgroundData(background string) (*BackgroundDa
 	if err := validateFileName(background); err != nil {
 		return nil, fmt.Errorf("invalid background name: %w", err)
 	}
-	
+
 	data, err := os.ReadFile(filepath.Join(cb.dataPath, "backgrounds", background+".json"))
 	if err != nil {
 		return nil, err

@@ -86,7 +86,10 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 	options["aiEnabled"] = h.aiCharService.IsEnabled()
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(options)
+	if err := json.NewEncoder(w).Encode(options); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // CreateCharacter handles standard D&D character creation
@@ -171,7 +174,10 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(character)
+	if err := json.NewEncoder(w).Encode(character); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // CreateCustomCharacter handles AI-assisted custom character creation
@@ -232,7 +238,10 @@ func (h *CharacterCreationHandler) CreateCustomCharacter(w http.ResponseWriter, 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(character)
+	if err := json.NewEncoder(w).Encode(character); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // RollAbilityScores generates ability scores using specified method
@@ -253,10 +262,13 @@ func (h *CharacterCreationHandler) RollAbilityScores(w http.ResponseWriter, r *h
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"scores": scores,
 		"method": req.Method,
-	})
+	}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // ValidateCharacter validates a character build
@@ -276,7 +288,10 @@ func (h *CharacterCreationHandler) ValidateCharacter(w http.ResponseWriter, r *h
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *CharacterCreationHandler) validateCharacterBuild(character *models.Character) []string {

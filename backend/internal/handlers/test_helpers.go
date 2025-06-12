@@ -27,7 +27,8 @@ func createTestServices(t *testing.T, repos *database.Repositories, jwtManager *
 	aiCampaignManager := services.NewAICampaignManager(llmProvider, aiConfig, log)
 
 	// Create event bus with logger
-	_ = services.NewEventBus(log) // eventBus - can be used if needed
+	eventBus := services.NewEventBus(log) // eventBus - can be used if needed
+	_ = eventBus // Mark as intentionally unused for now
 
 	// Combat services
 	combatService := services.NewCombatService()
