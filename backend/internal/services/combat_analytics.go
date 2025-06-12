@@ -38,7 +38,6 @@ func (cas *CombatAnalyticsService) FinalizeCombatAnalytics(
 	combat *models.Combat,
 	sessionID uuid.UUID,
 ) (*models.CombatAnalyticsReport, error) {
-
 	// Get all combat actions
 	// Convert Combat.ID string to uuid.UUID
 	combatUUID, err := uuid.Parse(combat.ID)
@@ -97,7 +96,6 @@ func (cas *CombatAnalyticsService) calculateCombatAnalytics(
 	actions []*models.CombatActionLog,
 	combatUUID uuid.UUID,
 ) *models.CombatAnalytics {
-
 	// Calculate total damage and healing
 	totalDamage := 0
 	totalHealing := 0

@@ -100,10 +100,7 @@ func (s *SettlementGeneratorService) GenerateSettlement(ctx context.Context, gam
 	// Generate shops
 	shopCount := s.calculateShopCount(settlement.Type)
 	for i := 0; i < shopCount; i++ {
-		shop, err := s.generateShop(ctx, settlement)
-		if err != nil {
-			continue
-		}
+		shop := s.generateShop(ctx, settlement)
 		if err := s.worldRepo.CreateSettlementShop(shop); err == nil {
 			settlement.Shops = append(settlement.Shops, *shop)
 		}
@@ -374,7 +371,7 @@ Respond in JSON format:
 	return npc, nil
 }
 
-func (s *SettlementGeneratorService) generateShop(ctx context.Context, settlement *models.Settlement) (*models.SettlementShop, error) {
+func (s *SettlementGeneratorService) generateShop(ctx context.Context, settlement *models.Settlement) *models.SettlementShop {
 	// Determine shop type based on settlement
 	shopTypes := s.getShopTypes(settlement.Type)
 	shopType := shopTypes[rand.Intn(len(shopTypes))]
@@ -428,7 +425,7 @@ Respond in JSON format:
 	}
 
 	if err := json.Unmarshal([]byte(response), &shopData); err != nil {
-		return s.generateProceduralShop(settlement, shopType), nil
+		return s.generateProceduralShop(settlement, shopType)
 	}
 
 	shop := &models.SettlementShop{
@@ -458,7 +455,7 @@ Respond in JSON format:
 	shop.FactionDiscount = models.JSONB("{}")
 	shop.OperatingHours = models.JSONB(`{"open": "dawn", "close": "dusk"}`)
 
-	return shop, nil
+	return shop
 }
 
 // Helper functions

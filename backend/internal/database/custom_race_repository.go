@@ -395,7 +395,6 @@ func scanCustomRaces(rows *sql.Rows) ([]*models.CustomRace, error) {
 
 func unmarshalRaceJSON(race *models.CustomRace, abilityScores, traits, languages,
 	resistances, immunities, skillProf, toolProf, weaponProf, armorProf []byte) error {
-
 	if err := json.Unmarshal(abilityScores, &race.AbilityScoreIncreases); err != nil {
 		return fmt.Errorf("failed to unmarshal ability scores: %w", err)
 	}
