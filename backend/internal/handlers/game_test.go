@@ -168,11 +168,12 @@ func TestGameHandler_GetGameSession(t *testing.T) {
 
 			// Add auth context if userID is provided
 			if tt.userID != "" {
-				ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
-					UserID: tt.userID,
-					Type:   auth.AccessToken,
-				})
-				// req = req.WithContext(ctx) // Not used in this test
+				// Context would be added by auth middleware in real handler
+				// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
+				// 	UserID: tt.userID,
+				// 	Type:   auth.AccessToken,
+				// })
+				// req = req.WithContext(ctx)
 			}
 
 			// Verify session ID is properly extracted
@@ -229,11 +230,12 @@ func TestGameHandler_JoinGameSession(t *testing.T) {
 
 			// Add auth context
 			if tt.userID != "" {
-				ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
-					UserID: tt.userID,
-					Type:   auth.AccessToken,
-				})
-				// req = req.WithContext(ctx) // Not used in this test
+				// Context would be added by auth middleware in real handler
+				// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
+				// 	UserID: tt.userID,
+				// 	Type:   auth.AccessToken,
+				// })
+				// req = req.WithContext(ctx)
 			}
 
 			// Verify request structure

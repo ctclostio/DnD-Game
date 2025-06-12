@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -11,13 +10,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 func TestInventoryHandler_ManageInventory(t *testing.T) {
 	characterID := uuid.New().String()
-	userID := uuid.New().String()
 
 	tests := []struct {
 		name           string
@@ -105,7 +102,6 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 func TestInventoryHandler_EquipItems(t *testing.T) {
 	characterID := uuid.New().String()
 	itemID := uuid.New().String()
-	userID := uuid.New().String()
 
 	tests := []struct {
 		name           string
@@ -162,7 +158,6 @@ func TestInventoryHandler_EquipItems(t *testing.T) {
 
 func TestInventoryHandler_Currency(t *testing.T) {
 	characterID := uuid.New().String()
-	userID := uuid.New().String()
 
 	tests := []struct {
 		name           string
