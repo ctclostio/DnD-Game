@@ -304,7 +304,7 @@ Respond in JSON format:
 	response, err := s.llmProvider.GenerateCompletion(ctx, userPrompt, systemPrompt)
 	if err != nil {
 		// Fallback to procedural generation
-		return s.generateProceduralNPC(settlement, role), nil
+		return s.generateProceduralNPC(settlement, role)
 	}
 
 	var npcData struct {
@@ -325,7 +325,7 @@ Respond in JSON format:
 	}
 
 	if err := json.Unmarshal([]byte(response), &npcData); err != nil {
-		return s.generateProceduralNPC(settlement, role), nil
+		return s.generateProceduralNPC(settlement, role)
 	}
 
 	npc := &models.SettlementNPC{

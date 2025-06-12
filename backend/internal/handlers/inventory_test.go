@@ -78,11 +78,12 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 			req = mux.SetURLVars(req, map[string]string{"characterId": characterID})
 
 			// Add auth context
-			ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
-				UserID: userID,
-				Type:   auth.AccessToken,
-			})
-			// req = req.WithContext(ctx) // Not used in this test
+			// Context would be added by auth middleware in real handler
+			// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
+			// 	UserID: userID,
+			// 	Type:   auth.AccessToken,
+			// })
+			// req = req.WithContext(ctx)
 
 			// For this test, verify request structure
 			if tt.body != nil {
@@ -144,11 +145,12 @@ func TestInventoryHandler_EquipItems(t *testing.T) {
 			})
 
 			// Add auth context
-			ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
-				UserID: userID,
-				Type:   auth.AccessToken,
-			})
-			// req = req.WithContext(ctx) // Not used in this test
+			// Context would be added by auth middleware in real handler
+			// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
+			// 	UserID: userID,
+			// 	Type:   auth.AccessToken,
+			// })
+			// req = req.WithContext(ctx)
 
 			// Verify route variables are set
 			vars := mux.Vars(req)
@@ -214,11 +216,12 @@ func TestInventoryHandler_Currency(t *testing.T) {
 			req = mux.SetURLVars(req, map[string]string{"characterId": characterID})
 
 			// Add auth context
-			ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
-				UserID: userID,
-				Type:   auth.AccessToken,
-			})
-			// req = req.WithContext(ctx) // Not used in this test
+			// Context would be added by auth middleware in real handler
+			// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
+			// 	UserID: userID,
+			// 	Type:   auth.AccessToken,
+			// })
+			// req = req.WithContext(ctx)
 
 			// Verify request structure
 			var decoded map[string]interface{}
