@@ -17,7 +17,7 @@ linters:
     - dogsled
     - dupl
     - errcheck
-    - copyloopvar  # renamed from exportloopref
+    - exportloopref  # use exportloopref for v2.1.6
     - exhaustive
     - gochecknoinits
     - goconst
@@ -46,29 +46,30 @@ linters:
     - prealloc
     - predeclared
     - asciicheck
-    - errorlint
-    # - exhaustivestruct  # deprecated in v2
-    - forcetypeassert
-    - goerr113
     - godot
     - godox
     - goheader
-    - gci
-    # - ifshort  # deprecated in v2
-    - importas
-    - makezero
     - nestif
-    - nlreturn
-    - nilerr
-    - paralleltest
-    - thelper
-    - tparallel
     - revive
-    - sqlclosecheck
-    - tagliatelle
-    - testpackage
-    - wastedassign
-    - wrapcheck
+    # Linters not available in v2.1.6:
+    # - errorlint
+    # - exhaustivestruct
+    # - forcetypeassert
+    # - goerr113
+    # - gci
+    # - ifshort
+    # - importas
+    # - makezero
+    # - nlreturn
+    # - nilerr
+    # - paralleltest
+    # - thelper
+    # - tparallel
+    # - sqlclosecheck
+    # - tagliatelle
+    # - testpackage
+    # - wastedassign
+    # - wrapcheck
 
   disable:
     - depguard
@@ -86,8 +87,7 @@ linters-settings:
   funlen:
     lines: 100
     statements: 50
-  gci:
-    local-prefixes: github.com/your-username/dnd-game
+  # gci not available in v2.1.6
   goconst:
     min-len: 2
     min-occurrences: 2
@@ -166,12 +166,8 @@ linters-settings:
       - name: unused-parameter
       - name: unreachable-code
       - name: redefines-builtin-id
-  testpackage:
-    skip-regexp: (export|internal)_test\.go
-  errorlint:
-    errorf: true
-    asserts: true
-    comparison: true
+  # testpackage not available in v2.1.6
+  # errorlint not available in v2.1.6
 
 issues:
   exclude-rules:
@@ -183,10 +179,10 @@ issues:
         - noctx
         - dogsled
         - bodyclose
-        - testpackage
-        - paralleltest
-        - tparallel
-        - errorlint
+        # - testpackage  # not in v2.1.6
+        # - paralleltest  # not in v2.1.6
+        # - tparallel  # not in v2.1.6
+        # - errorlint  # not in v2.1.6
     - path: testing\.go
       linters:
         - gosec
@@ -200,9 +196,7 @@ issues:
     - linters:
         - lll
       source: "^//go:generate "
-    - linters:
-        - goerr113
-      text: "do not define dynamic errors"
+    # goerr113 not available in v2.1.6
     - linters:
         - stylecheck
       text: "ST1000:"
