@@ -33,12 +33,33 @@ begin {
 }
 
 process {
+    # Helper function to check if Git considers a file to be binary.
+    function IsGitBinary($filePath) {
+        try {
+            $attributes = git check-attr text -- $filePath
+            if ($attributes -like "*: text: unset") {
+                return $true
+            }
+            return $false
+        }
+        catch {
+            # If git command fails, fall back to false.
+            Write-Warning "Could not run 'git check-attr' on '$($filePath)'. Assuming text file."
+            return $false
+        }
+    }
+
     # Use 'git ls-files' as the most reliable way to get all tracked files.
     $files = git ls-files | ForEach-Object { Get-Item -Path $_ }
 
     foreach ($file in $files) {
-        # Skip directories and excluded file types
+        # Skip directories, excluded file types, and files git considers binary
         if ($file.PSIsContainer -or $excludedExtensions -contains $file.Extension) {
+            continue
+        }
+
+        if (IsGitBinary($file.FullName)) {
+            Write-Verbose "Skipping binary file identified by git: $($file.FullName)"
             continue
         }
 
