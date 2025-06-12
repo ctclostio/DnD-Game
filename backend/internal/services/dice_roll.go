@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type DiceRollService struct {
@@ -41,30 +41,30 @@ func (s *DiceRollService) RollDice(ctx context.Context, roll *models.DiceRoll) e
 	if roll.RollNotation == "" {
 		return fmt.Errorf("roll notation is required")
 	}
-	
+
 	// Parse roll notation
 	count, diceType, modifier, err := parseRollNotation(roll.RollNotation)
 	if err != nil {
 		return fmt.Errorf("invalid roll notation: %w", err)
 	}
-	
+
 	roll.Count = count
 	roll.DiceType = diceType
 	roll.Modifier = modifier
-	
+
 	// Perform the rolls
 	roll.Results = make([]int, count)
 	roll.Total = modifier
-	
+
 	rand.Seed(time.Now().UnixNano())
 	diceMax := getDiceMax(diceType)
-	
+
 	for i := 0; i < count; i++ {
 		result := rand.Intn(diceMax) + 1
 		roll.Results[i] = result
 		roll.Total += result
 	}
-	
+
 	// Save to database
 	return s.repo.Create(ctx, roll)
 }
@@ -101,7 +101,7 @@ func (s *DiceRollService) SimulateRoll(notation string) (*models.DiceRoll, error
 	if err != nil {
 		return nil, err
 	}
-	
+
 	roll := &models.DiceRoll{
 		RollNotation: notation,
 		Count:        count,
@@ -110,17 +110,17 @@ func (s *DiceRollService) SimulateRoll(notation string) (*models.DiceRoll, error
 		Results:      make([]int, count),
 		Total:        modifier,
 	}
-	
+
 	// Perform the rolls
 	rand.Seed(time.Now().UnixNano())
 	diceMax := getDiceMax(diceType)
-	
+
 	for i := 0; i < count; i++ {
 		result := rand.Intn(diceMax) + 1
 		roll.Results[i] = result
 		roll.Total += result
 	}
-	
+
 	return roll, nil
 }
 
@@ -129,11 +129,11 @@ func parseRollNotation(notation string) (count int, diceType string, modifier in
 	// Regular expression to match dice notation
 	re := regexp.MustCompile(`^(\d+)?d(\d+|%)([+-]\d+)?$`)
 	matches := re.FindStringSubmatch(strings.ToLower(notation))
-	
+
 	if len(matches) == 0 {
 		return 0, "", 0, fmt.Errorf("invalid dice notation format")
 	}
-	
+
 	// Parse count (default to 1 if not specified)
 	if matches[1] == "" {
 		count = 1
@@ -143,7 +143,7 @@ func parseRollNotation(notation string) (count int, diceType string, modifier in
 			return 0, "", 0, fmt.Errorf("invalid dice count")
 		}
 	}
-	
+
 	// Parse dice type
 	if matches[2] == "%" {
 		diceType = "d100"
@@ -152,16 +152,16 @@ func parseRollNotation(notation string) (count int, diceType string, modifier in
 		if err != nil {
 			return 0, "", 0, fmt.Errorf("invalid dice type")
 		}
-		
+
 		// Validate dice type
 		validDice := map[int]bool{4: true, 6: true, 8: true, 10: true, 12: true, 20: true, 100: true}
 		if !validDice[diceNum] {
 			return 0, "", 0, fmt.Errorf("invalid dice type: d%d", diceNum)
 		}
-		
+
 		diceType = fmt.Sprintf("d%d", diceNum)
 	}
-	
+
 	// Parse modifier
 	if matches[3] != "" {
 		modifier, err = strconv.Atoi(matches[3])
@@ -169,7 +169,7 @@ func parseRollNotation(notation string) (count int, diceType string, modifier in
 			return 0, "", 0, fmt.Errorf("invalid modifier")
 		}
 	}
-	
+
 	return count, diceType, modifier, nil
 }
 
@@ -197,9 +197,9 @@ func getDiceMax(diceType string) int {
 
 // RollInitiative rolls initiative for multiple participants
 func (s *DiceRollService) RollInitiative(ctx context.Context, sessionID string, participants []struct {
-	UserID       string
-	CharacterID  string
-	DexModifier  int
+	UserID      string
+	CharacterID string
+	DexModifier int
 }) ([]struct {
 	UserID      string
 	CharacterID string
@@ -210,7 +210,7 @@ func (s *DiceRollService) RollInitiative(ctx context.Context, sessionID string, 
 		CharacterID string
 		Initiative  int
 	}, len(participants))
-	
+
 	for i, p := range participants {
 		// Roll 1d20 + dexterity modifier
 		rollNotation := "1d20"
@@ -219,7 +219,7 @@ func (s *DiceRollService) RollInitiative(ctx context.Context, sessionID string, 
 		} else if p.DexModifier < 0 {
 			rollNotation = fmt.Sprintf("1d20%d", p.DexModifier) // negative already has the minus sign
 		}
-		
+
 		roll := &models.DiceRoll{
 			GameSessionID: sessionID,
 			UserID:        p.UserID,
@@ -229,11 +229,11 @@ func (s *DiceRollService) RollInitiative(ctx context.Context, sessionID string, 
 			Purpose:       "initiative",
 			RollNotation:  rollNotation,
 		}
-		
+
 		if err := s.RollDice(ctx, roll); err != nil {
 			return nil, fmt.Errorf("failed to roll initiative for user %s: %w", p.UserID, err)
 		}
-		
+
 		results[i] = struct {
 			UserID      string
 			CharacterID string
@@ -244,6 +244,6 @@ func (s *DiceRollService) RollInitiative(ctx context.Context, sessionID string, 
 			Initiative:  roll.Total,
 		}
 	}
-	
+
 	return results, nil
 }

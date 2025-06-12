@@ -2,14 +2,16 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type CharacterBuilder struct {
@@ -17,39 +19,59 @@ type CharacterBuilder struct {
 }
 
 type RaceData struct {
-	Name             string                 `json:"name"`
-	AbilityIncreases map[string]int         `json:"abilityScoreIncrease"`
-	Size             string                 `json:"size"`
-	Speed            int                    `json:"speed"`
-	Languages        []string               `json:"languages"`
+	Name             string                   `json:"name"`
+	AbilityIncreases map[string]int           `json:"abilityScoreIncrease"`
+	Size             string                   `json:"size"`
+	Speed            int                      `json:"speed"`
+	Languages        []string                 `json:"languages"`
 	Traits           []map[string]interface{} `json:"traits"`
-	Subraces         []SubraceData          `json:"subraces"`
+	Subraces         []SubraceData            `json:"subraces"`
 }
 
 type SubraceData struct {
-	Name             string                 `json:"name"`
-	AbilityIncreases map[string]int         `json:"abilityScoreIncrease"`
+	Name             string                   `json:"name"`
+	AbilityIncreases map[string]int           `json:"abilityScoreIncrease"`
 	Traits           []map[string]interface{} `json:"traits"`
 }
 
 type ClassData struct {
-	Name                     string                 `json:"name"`
-	HitDice                  string                 `json:"hitDice"`
-	PrimaryAbility           string                 `json:"primaryAbility"`
-	SavingThrowProficiencies []string               `json:"savingThrowProficiencies"`
-	SkillChoices             map[string]interface{} `json:"skillChoices"`
-	Features                 map[string]interface{} `json:"features"`
-	Spellcasting             map[string]interface{} `json:"spellcasting"`
+	Name                     string                   `json:"name"`
+	HitDice                  string                   `json:"hitDice"`
+	PrimaryAbility           string                   `json:"primaryAbility"`
+	SavingThrowProficiencies []string                 `json:"savingThrowProficiencies"`
+	SkillChoices             map[string]interface{}   `json:"skillChoices"`
+	Features                 map[string]interface{}   `json:"features"`
+	Spellcasting             map[string]interface{}   `json:"spellcasting"`
 	Subclasses               []map[string]interface{} `json:"subclasses"`
 }
 
 type BackgroundData struct {
-	Name                string                 `json:"name"`
-	SkillProficiencies  []string               `json:"skillProficiencies"`
-	Languages           int                    `json:"languages"`
-	ToolProficiencies   []string               `json:"toolProficiencies"`
-	Equipment           []string               `json:"equipment"`
-	Feature             map[string]interface{} `json:"feature"`
+	Name               string                 `json:"name"`
+	SkillProficiencies []string               `json:"skillProficiencies"`
+	Languages          int                    `json:"languages"`
+	ToolProficiencies  []string               `json:"toolProficiencies"`
+	Equipment          []string               `json:"equipment"`
+	Feature            map[string]interface{} `json:"feature"`
+}
+
+// validateFileName validates a filename to prevent path traversal attacks
+func validateFileName(name string) error {
+	if name == "" {
+		return errors.New("name cannot be empty")
+	}
+
+	// Check for path traversal attempts
+	if strings.Contains(name, "..") || strings.Contains(name, "/") || strings.Contains(name, "\\") {
+		return errors.New("invalid characters in name")
+	}
+
+	// Only allow alphanumeric, dash, and underscore
+	validName := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+	if !validName.MatchString(name) {
+		return errors.New("name contains invalid characters")
+	}
+
+	return nil
 }
 
 func NewCharacterBuilder(dataPath string) *CharacterBuilder {
@@ -298,7 +320,7 @@ func (cb *CharacterBuilder) calculateSkills(character *models.Character) []model
 func (cb *CharacterBuilder) applyClassFeatures(character *models.Character, classData *ClassData) {
 	// Parse hit dice
 	character.HitDice = classData.HitDice
-	
+
 	// Calculate HP (max at level 1)
 	var baseHP int
 	switch classData.HitDice {
@@ -319,16 +341,16 @@ func (cb *CharacterBuilder) applyClassFeatures(character *models.Character, clas
 		// Extract spellcasting ability
 		if ability, ok := classData.Spellcasting["ability"].(string); ok {
 			character.Spells.SpellcastingAbility = ability
-			
+
 			// Calculate spell save DC and attack bonus
 			abilityMod := cb.getAbilityModifier(character, ability)
 			character.Spells.SpellSaveDC = 8 + character.ProficiencyBonus + abilityMod
 			character.Spells.SpellAttackBonus = character.ProficiencyBonus + abilityMod
 		}
-		
+
 		// Initialize spell slots directly
 		character.Spells.SpellSlots = InitializeSpellSlots(character.Class, character.Level)
-		
+
 		// Set cantrips known if applicable
 		if cantripsKnown, ok := classData.Spellcasting["cantripsKnown"].([]interface{}); ok {
 			for _, levelData := range cantripsKnown {
@@ -350,14 +372,14 @@ func (cb *CharacterBuilder) applyClassFeatures(character *models.Character, clas
 func (cb *CharacterBuilder) applyRacialFeatures(character *models.Character, raceData *RaceData, subrace string) {
 	// Apply racial traits
 	character.Proficiencies.Languages = append(character.Proficiencies.Languages, raceData.Languages...)
-	
+
 	// TODO: Apply other racial features
 }
 
 func (cb *CharacterBuilder) applyBackground(character *models.Character, backgroundData *BackgroundData) {
 	// Apply background proficiencies
 	// TODO: Add skill proficiencies from background
-	
+
 	// TODO: Apply other background features
 }
 
@@ -409,6 +431,11 @@ func (cb *CharacterBuilder) loadBackgrounds() ([]string, error) {
 }
 
 func (cb *CharacterBuilder) loadRaceData(race string) (*RaceData, error) {
+	// Validate input to prevent path traversal
+	if err := validateFileName(race); err != nil {
+		return nil, fmt.Errorf("invalid race name: %w", err)
+	}
+
 	data, err := os.ReadFile(filepath.Join(cb.dataPath, "races", race+".json"))
 	if err != nil {
 		return nil, err
@@ -423,6 +450,11 @@ func (cb *CharacterBuilder) loadRaceData(race string) (*RaceData, error) {
 }
 
 func (cb *CharacterBuilder) loadClassData(class string) (*ClassData, error) {
+	// Validate input to prevent path traversal
+	if err := validateFileName(class); err != nil {
+		return nil, fmt.Errorf("invalid class name: %w", err)
+	}
+
 	data, err := os.ReadFile(filepath.Join(cb.dataPath, "classes", class+".json"))
 	if err != nil {
 		return nil, err
@@ -437,6 +469,11 @@ func (cb *CharacterBuilder) loadClassData(class string) (*ClassData, error) {
 }
 
 func (cb *CharacterBuilder) loadBackgroundData(background string) (*BackgroundData, error) {
+	// Validate input to prevent path traversal
+	if err := validateFileName(background); err != nil {
+		return nil, fmt.Errorf("invalid background name: %w", err)
+	}
+
 	data, err := os.ReadFile(filepath.Join(cb.dataPath, "backgrounds", background+".json"))
 	if err != nil {
 		return nil, err

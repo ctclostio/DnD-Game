@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // AIRaceGeneratorService handles AI-powered custom race generation
@@ -107,8 +107,8 @@ func (s *AIRaceGeneratorService) buildUserPrompt(request models.CustomRaceReques
 Name: %s
 Description: %s
 
-Generate a complete, balanced race following the system prompt guidelines. Ensure it's thematically consistent with the description while maintaining game balance.`, 
-		request.Name, 
+Generate a complete, balanced race following the system prompt guidelines. Ensure it's thematically consistent with the description while maintaining game balance.`,
+		request.Name,
 		request.Description)
 }
 
@@ -119,7 +119,7 @@ func (s *AIRaceGeneratorService) validateGeneratedRace(race *models.CustomRaceGe
 		"strength": true, "dexterity": true, "constitution": true,
 		"intelligence": true, "wisdom": true, "charisma": true,
 	}
-	
+
 	for ability, increase := range race.AbilityScoreIncreases {
 		if !validAbilities[strings.ToLower(ability)] {
 			return fmt.Errorf("invalid ability score: %s", ability)
@@ -129,7 +129,7 @@ func (s *AIRaceGeneratorService) validateGeneratedRace(race *models.CustomRaceGe
 		}
 		totalASI += increase
 	}
-	
+
 	if totalASI < 1 || totalASI > 6 {
 		return fmt.Errorf("total ability score increases (%d) outside acceptable range (1-6)", totalASI)
 	}
@@ -178,7 +178,7 @@ func (s *AIRaceGeneratorService) validateGeneratedRace(race *models.CustomRaceGe
 			return fmt.Errorf("invalid damage resistance type: %s", resistance)
 		}
 	}
-	
+
 	for _, immunity := range race.Immunities {
 		if !isValidDamageType(immunity) {
 			return fmt.Errorf("invalid damage immunity type: %s", immunity)

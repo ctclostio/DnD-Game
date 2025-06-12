@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // Basic compilation test to ensure the service compiles correctly
 func TestEncounterService_Compilation(t *testing.T) {
 	// This test just ensures that the EncounterService struct and its methods compile correctly
 	var _ *EncounterService
-	
+
 	// Test that EncounterRequest struct exists
 	req := EncounterRequest{
 		PartyLevel:    5,
@@ -37,7 +37,7 @@ func TestEncounterModels(t *testing.T) {
 	}
 	assert.Equal(t, "Test Encounter", encounter.Name)
 	assert.Equal(t, "combat", encounter.EncounterType)
-	
+
 	// Test EncounterEnemy model
 	enemy := models.EncounterEnemy{
 		Name:            "Goblin",
@@ -50,7 +50,7 @@ func TestEncounterModels(t *testing.T) {
 	assert.Equal(t, "Goblin", enemy.Name)
 	assert.Equal(t, 0.25, enemy.ChallengeRating)
 	assert.Equal(t, 4, enemy.Quantity)
-	
+
 	// Test Action model
 	action := models.Action{
 		Name:        "Scimitar",
@@ -59,14 +59,14 @@ func TestEncounterModels(t *testing.T) {
 	}
 	assert.Equal(t, "Scimitar", action.Name)
 	assert.Equal(t, 4, action.AttackBonus)
-	
+
 	// Test Ability model
 	ability := models.Ability{
 		Name:        "Nimble Escape",
 		Description: "The goblin can take the Disengage or Hide action as a bonus action on each of its turns.",
 	}
 	assert.Equal(t, "Nimble Escape", ability.Name)
-	
+
 	// Test ScalingOptions
 	scalingOptions := &models.ScalingOptions{
 		Easy: models.ScalingAdjustment{
@@ -88,7 +88,7 @@ func TestEncounterModels(t *testing.T) {
 	}
 	assert.Equal(t, -2, scalingOptions.Easy.HPModifier)
 	assert.Equal(t, 5, scalingOptions.Hard.HPModifier)
-	
+
 	// Test EncounterObjective
 	objective := &models.EncounterObjective{
 		Type:        "defeat_all",
@@ -98,7 +98,7 @@ func TestEncounterModels(t *testing.T) {
 	}
 	assert.Equal(t, "defeat_all", objective.Type)
 	assert.Equal(t, 200, objective.XPReward)
-	
+
 	// Test EncounterEvent
 	event := &models.EncounterEvent{
 		RoundNumber: 1,
@@ -141,12 +141,12 @@ func TestEncounterRequest_Validation(t *testing.T) {
 			valid: true,
 		},
 		{
-			name: "Empty Request",
+			name:    "Empty Request",
 			request: EncounterRequest{},
-			valid: false,
+			valid:   false,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Basic validation
@@ -163,8 +163,8 @@ func TestEncounterRequest_Validation(t *testing.T) {
 // Test difficulty scaling logic
 func TestDifficultyScaling(t *testing.T) {
 	testCases := []struct {
-		difficulty string
-		hpModifier int
+		difficulty  string
+		hpModifier  int
 		dmgModifier int
 	}{
 		{"easy", -2, -1},
@@ -172,14 +172,14 @@ func TestDifficultyScaling(t *testing.T) {
 		{"hard", 5, 2},
 		{"deadly", 10, 3},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.difficulty, func(t *testing.T) {
 			scaling := models.ScalingAdjustment{
 				HPModifier:     tc.hpModifier,
 				DamageModifier: tc.dmgModifier,
 			}
-			
+
 			// Test HP modification
 			baseHP := 10
 			modifiedHP := baseHP + scaling.HPModifier
@@ -190,7 +190,7 @@ func TestDifficultyScaling(t *testing.T) {
 			} else {
 				assert.Equal(t, modifiedHP, baseHP)
 			}
-			
+
 			// Ensure HP never goes below 1
 			if modifiedHP < 1 {
 				modifiedHP = 1
@@ -209,7 +209,7 @@ func TestEncounterStatusTransitions(t *testing.T) {
 		"failed":    {},
 		"cancelled": {},
 	}
-	
+
 	for fromStatus, toStatuses := range validTransitions {
 		t.Run(fromStatus, func(t *testing.T) {
 			// Test valid transitions
@@ -217,7 +217,7 @@ func TestEncounterStatusTransitions(t *testing.T) {
 				// In a real implementation, you'd have a method to validate transitions
 				assert.Contains(t, toStatuses, toStatus)
 			}
-			
+
 			// Test that completed/failed/cancelled are terminal states
 			if fromStatus == "completed" || fromStatus == "failed" || fromStatus == "cancelled" {
 				assert.Empty(t, toStatuses)
@@ -236,7 +236,7 @@ func TestEnvironmentalHazard(t *testing.T) {
 		SaveDC:      15,
 		Damage:      "2d6",
 	}
-	
+
 	assert.Equal(t, "Falling Rocks", hazard.Name)
 	assert.Equal(t, 15, hazard.SaveDC)
 	assert.Equal(t, "2d6", hazard.Damage)
@@ -250,7 +250,7 @@ func TestTerrainFeature(t *testing.T) {
 		Effect:      "Movement costs double",
 		Location:    "Eastern half of the room",
 	}
-	
+
 	assert.Equal(t, "Difficult Terrain", terrain.Name)
 	assert.Equal(t, "Movement costs double", terrain.Effect)
 }
@@ -264,7 +264,7 @@ func TestSolutionOptions(t *testing.T) {
 		DC:           15,
 		Consequences: "They demand payment or a favor",
 	}
-	
+
 	assert.Equal(t, "Negotiation", solution.Method)
 	assert.Equal(t, 15, solution.DC)
 	assert.Len(t, solution.Requirements, 2)
@@ -284,7 +284,7 @@ func TestReinforcementWave(t *testing.T) {
 		Entrance:     "Through the northern door",
 		Announcement: "You hear footsteps approaching from the north!",
 	}
-	
+
 	assert.Equal(t, 3, wave.Round)
 	assert.Len(t, wave.Enemies, 1)
 	assert.Equal(t, 2, wave.Enemies[0].Quantity)
@@ -304,7 +304,7 @@ func TestEscapeRoute(t *testing.T) {
 			Consequence: "Take 2d6 falling damage, but escape pursuit",
 		},
 	}
-	
+
 	assert.Len(t, routes, 2)
 	assert.Equal(t, "Easy", routes[0].Difficulty)
 	assert.Equal(t, "Medium", routes[1].Difficulty)
@@ -330,7 +330,7 @@ func TestTacticalInfo(t *testing.T) {
 		},
 		RetreatConditions: "When reduced to 25% of original force",
 	}
-	
+
 	assert.Equal(t, "Goblins use hit-and-run tactics", tactics.GeneralStrategy)
 	assert.Len(t, tactics.PriorityTargets, 2)
 	assert.Len(t, tactics.CombatPhases, 2)
@@ -345,14 +345,14 @@ func TestEncounterValidation(t *testing.T) {
 			assert.Contains(t, validDifficulties, diff)
 		}
 	})
-	
+
 	t.Run("Valid Encounter Types", func(t *testing.T) {
 		validTypes := []string{"combat", "social", "exploration", "puzzle", "hybrid"}
 		for _, encType := range validTypes {
 			assert.Contains(t, validTypes, encType)
 		}
 	})
-	
+
 	t.Run("Valid Statuses", func(t *testing.T) {
 		validStatuses := []string{"planned", "active", "completed", "failed", "cancelled"}
 		for _, status := range validStatuses {
@@ -365,21 +365,21 @@ func TestEncounterValidation(t *testing.T) {
 func TestXPCalculation(t *testing.T) {
 	// Test party size multipliers
 	partySizeMultipliers := map[int]float64{
-		1: 1.5,   // Solo
-		2: 1.5,   // Pair
-		3: 1.0,   // Small party
-		4: 1.0,   // Standard party
-		5: 1.0,   // Standard party
-		6: 0.75,  // Large party
-		7: 0.75,  // Large party
-		8: 0.5,   // Very large party
+		1: 1.5,  // Solo
+		2: 1.5,  // Pair
+		3: 1.0,  // Small party
+		4: 1.0,  // Standard party
+		5: 1.0,  // Standard party
+		6: 0.75, // Large party
+		7: 0.75, // Large party
+		8: 0.5,  // Very large party
 	}
-	
+
 	for size, multiplier := range partySizeMultipliers {
 		t.Run(fmt.Sprintf("Party Size %d", size), func(t *testing.T) {
 			baseXP := 1000
 			adjustedXP := int(float64(baseXP) * multiplier)
-			
+
 			if size <= 2 {
 				assert.Greater(t, adjustedXP, baseXP, "Smaller parties should have harder encounters")
 			} else if size >= 6 {

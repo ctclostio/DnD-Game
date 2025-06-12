@@ -11,7 +11,7 @@ type User struct {
 	Username     string    `json:"username" db:"username"`
 	Email        string    `json:"email" db:"email"`
 	PasswordHash string    `json:"-" db:"password_hash"` // Never expose password hash in JSON
-	Role         string    `json:"role" db:"role"`        // "player" or "dm"
+	Role         string    `json:"role" db:"role"`       // "player" or "dm"
 	CreatedAt    time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt    time.Time `json:"updatedAt" db:"updated_at"`
 }
@@ -32,14 +32,14 @@ const (
 
 // GameParticipant represents a user participating in a game session
 type GameParticipant struct {
-	SessionID     string          `json:"sessionId" db:"game_session_id"`
-	UserID        string          `json:"userId" db:"user_id"`
-	CharacterID   string          `json:"characterId" db:"character_id"`
-	Role          ParticipantRole `json:"role" db:"role"`
-	IsOnline      bool            `json:"isOnline" db:"is_online"`
-	JoinedAt      time.Time       `json:"joinedAt" db:"joined_at"`
-	User          *User           `json:"user,omitempty"`
-	Character     *Character      `json:"character,omitempty"`
+	SessionID   string          `json:"sessionId" db:"game_session_id"`
+	UserID      string          `json:"userId" db:"user_id"`
+	CharacterID *string         `json:"characterId" db:"character_id"`
+	Role        ParticipantRole `json:"role" db:"role"`
+	IsOnline    bool            `json:"isOnline" db:"is_online"`
+	JoinedAt    time.Time       `json:"joinedAt" db:"joined_at"`
+	User        *User           `json:"user,omitempty"`
+	Character   *Character      `json:"character,omitempty"`
 }
 
 // LoginRequest represents a login request

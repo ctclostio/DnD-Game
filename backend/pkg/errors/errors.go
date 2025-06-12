@@ -180,7 +180,7 @@ func (v *ValidationErrors) Error() string {
 	if len(v.Errors) == 0 {
 		return "validation errors"
 	}
-	
+
 	// Create a simple string representation of the errors
 	var messages []string
 	for field, errs := range v.Errors {
@@ -188,11 +188,11 @@ func (v *ValidationErrors) Error() string {
 			messages = append(messages, fmt.Sprintf("%s: %s", field, err))
 		}
 	}
-	
+
 	if len(messages) == 1 {
 		return messages[0]
 	}
-	
+
 	return fmt.Sprintf("validation errors: %v", messages)
 }
 
@@ -214,11 +214,11 @@ func (v *ValidationErrors) ToAppError() *AppError {
 	if !v.HasErrors() {
 		return nil
 	}
-	
+
 	details := make(map[string]interface{})
 	for field, messages := range v.Errors {
 		details[field] = messages
 	}
-	
+
 	return NewValidationError("Validation failed").WithDetails(details)
 }

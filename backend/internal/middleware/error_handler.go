@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/your-username/dnd-game/backend/pkg/errors"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // ErrorHandler middleware handles errors in a consistent way
@@ -47,26 +47,26 @@ func (w *errorHandlerResponseWriter) handlePanic(rec interface{}, r *http.Reques
 	// Send error response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusInternalServerError)
-	
+
 	response := map[string]interface{}{
 		"type":    errors.ErrorTypeInternal,
 		"message": "Internal server error",
 	}
-	
+
 	json.NewEncoder(w).Encode(response)
 }
 
 // SendError sends an error response
 func SendError(w http.ResponseWriter, err error, log *logger.Logger) {
 	appErr := errors.GetAppError(err)
-	
+
 	// Log the error
 	logEntry := log.WithError(appErr.Internal).
 		WithFields(map[string]interface{}{
 			"error_type": appErr.Type,
 			"error_code": appErr.Code,
 		})
-	
+
 	// Log at appropriate level
 	switch appErr.StatusCode {
 	case http.StatusInternalServerError, http.StatusServiceUnavailable:
@@ -76,25 +76,25 @@ func SendError(w http.ResponseWriter, err error, log *logger.Logger) {
 	default:
 		logEntry.Info().Msg(appErr.Message)
 	}
-	
+
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(appErr.StatusCode)
-	
+
 	// Prepare response (don't expose internal error details)
 	response := map[string]interface{}{
 		"type":    appErr.Type,
 		"message": appErr.Message,
 	}
-	
+
 	if appErr.Code != "" {
 		response["code"] = appErr.Code
 	}
-	
+
 	if appErr.Details != nil {
 		response["details"] = appErr.Details
 	}
-	
+
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -102,7 +102,7 @@ func SendError(w http.ResponseWriter, err error, log *logger.Logger) {
 func SendSuccess(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	
+
 	if data != nil {
 		json.NewEncoder(w).Encode(data)
 	}

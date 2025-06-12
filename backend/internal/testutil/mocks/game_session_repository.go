@@ -1,9 +1,9 @@
 package mocks
 
 import (
-	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // MockGameSessionRepository is a mock implementation of GameSessionRepository

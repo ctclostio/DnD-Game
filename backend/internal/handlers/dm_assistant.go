@@ -6,8 +6,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // ProcessDMAssistantRequest handles real-time DM assistant requests
@@ -15,14 +16,14 @@ func (h *Handlers) ProcessDMAssistantRequest(w http.ResponseWriter, r *http.Requ
 	// Get user ID from context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "")
 		return
 	}
 
 	// Parse request
 	var req models.DMAssistantRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
@@ -38,21 +39,21 @@ func (h *Handlers) ProcessDMAssistantRequest(w http.ResponseWriter, r *http.Requ
 	}
 
 	if !validTypes[req.Type] {
-		respondWithError(w, http.StatusBadRequest, "Invalid request type")
+		response.BadRequest(w, r, "Invalid request type")
 		return
 	}
 
 	// Convert userID to UUID
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		response.BadRequest(w, r, "Invalid user ID")
 		return
 	}
 
 	// Process the request
 	result, err := h.dmAssistantService.ProcessRequest(r.Context(), userUUID, req)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
@@ -63,7 +64,7 @@ func (h *Handlers) ProcessDMAssistantRequest(w http.ResponseWriter, r *http.Requ
 		// In future, this would upgrade to WebSocket for streaming
 	}
 
-	respondWithJSON(w, http.StatusOK, result)
+	response.JSON(w, r, http.StatusOK, result)
 }
 
 // GetDMAssistantNPCs retrieves NPCs for a game session
@@ -71,7 +72,7 @@ func (h *Handlers) GetDMAssistantNPCs(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	_, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "")
 		return
 	}
 
@@ -79,18 +80,18 @@ func (h *Handlers) GetDMAssistantNPCs(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		response.BadRequest(w, r, "Invalid session ID")
 		return
 	}
 
 	// Get NPCs
 	npcs, err := h.dmAssistantService.GetNPCsBySession(r.Context(), sessionID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, npcs)
+	response.JSON(w, r, http.StatusOK, npcs)
 }
 
 // GetDMAssistantNPC retrieves a specific NPC
@@ -98,7 +99,7 @@ func (h *Handlers) GetDMAssistantNPC(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	_, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "")
 		return
 	}
 
@@ -106,18 +107,18 @@ func (h *Handlers) GetDMAssistantNPC(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	npcID, err := uuid.Parse(vars["id"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid NPC ID")
+		response.BadRequest(w, r, "Invalid NPC ID")
 		return
 	}
 
 	// Get NPC
 	npc, err := h.dmAssistantService.GetNPCByID(r.Context(), npcID)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "NPC not found")
+		response.NotFound(w, r, "NPC")
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, npc)
+	response.JSON(w, r, http.StatusOK, npc)
 }
 
 // CreateDMAssistantNPC creates a new AI-generated NPC
@@ -125,7 +126,7 @@ func (h *Handlers) CreateDMAssistantNPC(w http.ResponseWriter, r *http.Request) 
 	// Get user ID from context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "")
 		return
 	}
 
@@ -137,31 +138,31 @@ func (h *Handlers) CreateDMAssistantNPC(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	sessionID, err := uuid.Parse(req.SessionID)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		response.BadRequest(w, r, "Invalid session ID")
 		return
 	}
 
 	// Convert userID to UUID
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		response.BadRequest(w, r, "Invalid user ID")
 		return
 	}
 
 	// Create NPC
 	npc, err := h.dmAssistantService.CreateNPC(r.Context(), sessionID, userUUID, req.Role, req.Context)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, npc)
+	response.JSON(w, r, http.StatusCreated, npc)
 }
 
 // GetDMAssistantLocations retrieves locations for a game session
@@ -169,7 +170,7 @@ func (h *Handlers) GetDMAssistantLocations(w http.ResponseWriter, r *http.Reques
 	// Get user ID from context
 	_, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "")
 		return
 	}
 
@@ -177,18 +178,18 @@ func (h *Handlers) GetDMAssistantLocations(w http.ResponseWriter, r *http.Reques
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		response.BadRequest(w, r, "Invalid session ID")
 		return
 	}
 
 	// Get locations
 	locations, err := h.dmAssistantService.GetLocationsBySession(r.Context(), sessionID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, locations)
+	response.JSON(w, r, http.StatusOK, locations)
 }
 
 // GetDMAssistantLocation retrieves a specific location
@@ -196,7 +197,7 @@ func (h *Handlers) GetDMAssistantLocation(w http.ResponseWriter, r *http.Request
 	// Get user ID from context
 	_, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "")
 		return
 	}
 
@@ -204,18 +205,18 @@ func (h *Handlers) GetDMAssistantLocation(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	locationID, err := uuid.Parse(vars["id"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid location ID")
+		response.BadRequest(w, r, "Invalid location ID")
 		return
 	}
 
 	// Get location
 	location, err := h.dmAssistantService.GetLocationByID(r.Context(), locationID)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Location not found")
+		response.NotFound(w, r, "Location")
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, location)
+	response.JSON(w, r, http.StatusOK, location)
 }
 
 // GetDMAssistantStoryElements retrieves unused story elements for a session
@@ -223,7 +224,7 @@ func (h *Handlers) GetDMAssistantStoryElements(w http.ResponseWriter, r *http.Re
 	// Get user ID from context
 	_, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "")
 		return
 	}
 
@@ -231,18 +232,18 @@ func (h *Handlers) GetDMAssistantStoryElements(w http.ResponseWriter, r *http.Re
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid session ID")
+		response.BadRequest(w, r, "Invalid session ID")
 		return
 	}
 
 	// Get story elements
 	elements, err := h.dmAssistantService.GetUnusedStoryElements(r.Context(), sessionID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, elements)
+	response.JSON(w, r, http.StatusOK, elements)
 }
 
 // MarkStoryElementUsed marks a story element as used
@@ -250,7 +251,7 @@ func (h *Handlers) MarkStoryElementUsed(w http.ResponseWriter, r *http.Request) 
 	// Get user ID from context
 	_, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "")
 		return
 	}
 
@@ -258,17 +259,17 @@ func (h *Handlers) MarkStoryElementUsed(w http.ResponseWriter, r *http.Request) 
 	vars := mux.Vars(r)
 	elementID, err := uuid.Parse(vars["id"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid element ID")
+		response.BadRequest(w, r, "Invalid element ID")
 		return
 	}
 
 	// Mark as used
 	if err := h.dmAssistantService.MarkStoryElementUsed(r.Context(), elementID); err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, map[string]string{"status": "marked as used"})
+	response.JSON(w, r, http.StatusOK, map[string]string{"status": "marked as used"})
 }
 
 // GetDMAssistantHazards retrieves environmental hazards for a location
@@ -276,7 +277,7 @@ func (h *Handlers) GetDMAssistantHazards(w http.ResponseWriter, r *http.Request)
 	// Get user ID from context
 	_, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "")
 		return
 	}
 
@@ -284,18 +285,18 @@ func (h *Handlers) GetDMAssistantHazards(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	locationID, err := uuid.Parse(vars["locationId"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid location ID")
+		response.BadRequest(w, r, "Invalid location ID")
 		return
 	}
 
 	// Get hazards
 	hazards, err := h.dmAssistantService.GetActiveHazards(r.Context(), locationID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, hazards)
+	response.JSON(w, r, http.StatusOK, hazards)
 }
 
 // TriggerHazard marks a hazard as triggered
@@ -303,7 +304,7 @@ func (h *Handlers) TriggerHazard(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context
 	_, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "")
 		return
 	}
 
@@ -311,17 +312,17 @@ func (h *Handlers) TriggerHazard(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	hazardID, err := uuid.Parse(vars["id"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid hazard ID")
+		response.BadRequest(w, r, "Invalid hazard ID")
 		return
 	}
 
 	// Trigger hazard
 	if err := h.dmAssistantService.TriggerHazard(r.Context(), hazardID); err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, map[string]string{"status": "triggered"})
+	response.JSON(w, r, http.StatusOK, map[string]string{"status": "triggered"})
 }
 
 // handleStreamingDMAssistant handles WebSocket streaming for DM assistant
@@ -331,9 +332,9 @@ func (h *Handlers) handleStreamingDMAssistant(w http.ResponseWriter, r *http.Req
 	// For now, we'll just return the non-streaming response
 	result, err := h.dmAssistantService.ProcessRequest(r.Context(), userID, req)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, result)
+	response.JSON(w, r, http.StatusOK, result)
 }

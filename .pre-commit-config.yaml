@@ -1,0 +1,35 @@
+# Pre-commit hooks - run tests before committing
+# Install with: pip install pre-commit && pre-commit install
+
+repos:
+  - repo: local
+    hooks:
+      - id: backend-tests
+        name: Backend Tests
+        entry: bash -c 'cd backend && go test ./... -short'
+        language: system
+        pass_filenames: false
+        files: ^backend/.*\.go$
+
+      - id: go-fmt
+        name: Go Formatting
+        entry: bash -c 'cd backend && gofmt -l . | grep . && exit 1 || exit 0'
+        language: system
+        pass_filenames: false
+        files: ^backend/.*\.go$
+
+      - id: frontend-lint
+        name: Frontend Lint
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        pass_filenames: false
+        files: ^frontend/.*\.(js|jsx|ts|tsx)$
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']

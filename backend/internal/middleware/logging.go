@@ -1,12 +1,11 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // RequestLogger middleware logs all HTTP requests
@@ -21,18 +20,26 @@ func RequestLogger(log *logger.Logger) func(http.Handler) http.Handler {
 				requestID = uuid.New().String()
 			}
 
-			// Add request ID to context
-			ctx := context.WithValue(r.Context(), logger.RequestIDKey, requestID)
+			// Add request ID and correlation ID to context
+			ctx := logger.ContextWithRequestID(r.Context(), requestID)
+
+			correlationID := r.Header.Get("X-Correlation-ID")
+			if correlationID == "" {
+				correlationID = requestID
+			}
+			ctx = logger.ContextWithCorrelationID(ctx, correlationID)
 			r = r.WithContext(ctx)
 
 			// Create a response writer wrapper to capture status code
 			rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 
-			// Add request ID to response header
+			// Add IDs to response header
 			w.Header().Set("X-Request-ID", requestID)
+			w.Header().Set("X-Correlation-ID", correlationID)
 
 			// Log request start
 			log.WithRequestID(requestID).
+				WithCorrelationID(correlationID).
 				WithFields(map[string]interface{}{
 					"method":     r.Method,
 					"path":       r.URL.Path,
@@ -49,12 +56,13 @@ func RequestLogger(log *logger.Logger) func(http.Handler) http.Handler {
 			// Log request completion
 			duration := time.Since(start)
 			log.WithRequestID(requestID).
+				WithCorrelationID(correlationID).
 				WithFields(map[string]interface{}{
-					"method":       r.Method,
-					"path":         r.URL.Path,
-					"status":       rw.statusCode,
-					"duration_ms":  duration.Milliseconds(),
-					"bytes_sent":   rw.bytesWritten,
+					"method":      r.Method,
+					"path":        r.URL.Path,
+					"status":      rw.statusCode,
+					"duration_ms": duration.Milliseconds(),
+					"bytes_sent":  rw.bytesWritten,
 				}).
 				Info().
 				Msg("Request completed")
@@ -90,7 +98,7 @@ func CorrelationID(next http.Handler) http.Handler {
 		}
 
 		// Add to context
-		ctx := context.WithValue(r.Context(), "correlation_id", correlationID)
+		ctx := logger.ContextWithCorrelationID(r.Context(), correlationID)
 		r = r.WithContext(ctx)
 
 		// Add to response header
@@ -136,9 +144,9 @@ func ErrorLogger(log *logger.Logger) func(http.Handler) http.Handler {
 // errorResponseWriter logs errors when status code >= 400
 type errorResponseWriter struct {
 	http.ResponseWriter
-	log          *logger.Logger
-	wroteHeader  bool
-	statusCode   int
+	log         *logger.Logger
+	wroteHeader bool
+	statusCode  int
 }
 
 func (w *errorResponseWriter) WriteHeader(code int) {

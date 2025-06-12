@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type npcRepository struct {
@@ -51,13 +51,19 @@ func (r *npcRepository) Create(ctx context.Context, npc *models.NPC) error {
 			?, ?, ?, ?, ?
 		)`
 
+	// Convert arrays to JSON for SQLite compatibility
+	damageResistancesJSON, _ := json.Marshal(npc.DamageResistances)
+	damageImmunitiesJSON, _ := json.Marshal(npc.DamageImmunities)
+	conditionImmunitiesJSON, _ := json.Marshal(npc.ConditionImmunities)
+	languagesJSON, _ := json.Marshal(npc.Languages)
+
 	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query,
 		npc.ID, npc.GameSessionID, npc.Name, npc.Type, npc.Size, npc.Alignment,
 		npc.ArmorClass, npc.HitPoints, npc.MaxHitPoints, speedJSON,
 		attributesJSON, savingThrowsJSON, skillsJSON,
-		npc.DamageResistances, npc.DamageImmunities, npc.ConditionImmunities,
-		sensesJSON, npc.Languages, npc.ChallengeRating, npc.ExperiencePoints,
+		damageResistancesJSON, damageImmunitiesJSON, conditionImmunitiesJSON,
+		sensesJSON, languagesJSON, npc.ChallengeRating, npc.ExperiencePoints,
 		abilitiesJSON, actionsJSON, npc.LegendaryActions, npc.IsTemplate, npc.CreatedBy,
 	)
 
@@ -80,26 +86,19 @@ func (r *npcRepository) GetByID(ctx context.Context, id string) (*models.NPC, er
 	var npc models.NPC
 	var speedJSON, attributesJSON, savingThrowsJSON, skillsJSON []byte
 	var sensesJSON, abilitiesJSON, actionsJSON []byte
+	var damageResistancesJSON, damageImmunitiesJSON, conditionImmunitiesJSON, languagesJSON []byte
 
-	err := r.db.GetContext(ctx, &struct {
-		*models.NPC
-		Speed        []byte `db:"speed"`
-		Attributes   []byte `db:"attributes"`
-		SavingThrows []byte `db:"saving_throws"`
-		Skills       []byte `db:"skills"`
-		Senses       []byte `db:"senses"`
-		Abilities    []byte `db:"abilities"`
-		Actions      []byte `db:"actions"`
-	}{
-		NPC:          &npc,
-		Speed:        speedJSON,
-		Attributes:   attributesJSON,
-		SavingThrows: savingThrowsJSON,
-		Skills:       skillsJSON,
-		Senses:       sensesJSON,
-		Abilities:    abilitiesJSON,
-		Actions:      actionsJSON,
-	}, r.db.Rebind(query), id)
+	query = r.db.Rebind(query)
+	row := r.db.QueryRowContext(ctx, query, id)
+	err := row.Scan(
+		&npc.ID, &npc.GameSessionID, &npc.Name, &npc.Type, &npc.Size, &npc.Alignment,
+		&npc.ArmorClass, &npc.HitPoints, &npc.MaxHitPoints, &speedJSON,
+		&attributesJSON, &savingThrowsJSON, &skillsJSON,
+		&damageResistancesJSON, &damageImmunitiesJSON, &conditionImmunitiesJSON,
+		&sensesJSON, &languagesJSON, &npc.ChallengeRating, &npc.ExperiencePoints,
+		&abilitiesJSON, &actionsJSON, &npc.LegendaryActions, &npc.IsTemplate, &npc.CreatedBy,
+		&npc.CreatedAt, &npc.UpdatedAt,
+	)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -116,6 +115,12 @@ func (r *npcRepository) GetByID(ctx context.Context, id string) (*models.NPC, er
 	json.Unmarshal(sensesJSON, &npc.Senses)
 	json.Unmarshal(abilitiesJSON, &npc.Abilities)
 	json.Unmarshal(actionsJSON, &npc.Actions)
+
+	// Unmarshal array fields stored as JSON
+	json.Unmarshal(damageResistancesJSON, &npc.DamageResistances)
+	json.Unmarshal(damageImmunitiesJSON, &npc.DamageImmunities)
+	json.Unmarshal(conditionImmunitiesJSON, &npc.ConditionImmunities)
+	json.Unmarshal(languagesJSON, &npc.Languages)
 
 	return &npc, nil
 }
@@ -173,13 +178,19 @@ func (r *npcRepository) Update(ctx context.Context, npc *models.NPC) error {
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?`
 
+	// Convert arrays to JSON for SQLite compatibility
+	damageResistancesJSON, _ := json.Marshal(npc.DamageResistances)
+	damageImmunitiesJSON, _ := json.Marshal(npc.DamageImmunities)
+	conditionImmunitiesJSON, _ := json.Marshal(npc.ConditionImmunities)
+	languagesJSON, _ := json.Marshal(npc.Languages)
+
 	query = r.db.Rebind(query)
 	_, err := r.db.ExecContext(ctx, query,
 		npc.Name, npc.Type, npc.Size, npc.Alignment,
 		npc.ArmorClass, npc.HitPoints, npc.MaxHitPoints, speedJSON,
 		attributesJSON, savingThrowsJSON, skillsJSON,
-		npc.DamageResistances, npc.DamageImmunities, npc.ConditionImmunities,
-		sensesJSON, npc.Languages, npc.ChallengeRating, npc.ExperiencePoints,
+		damageResistancesJSON, damageImmunitiesJSON, conditionImmunitiesJSON,
+		sensesJSON, languagesJSON, npc.ChallengeRating, npc.ExperiencePoints,
 		abilitiesJSON, actionsJSON, npc.LegendaryActions, npc.ID,
 	)
 
@@ -308,13 +319,43 @@ func (r *npcRepository) GetTemplateByID(ctx context.Context, id string) (*models
 		WHERE id = ?`
 
 	var template models.NPCTemplate
-	err := r.db.GetContext(ctx, &template, r.db.Rebind(query), id)
+	var speedJSON, attributesJSON, savingThrowsJSON, skillsJSON []byte
+	var sensesJSON, abilitiesJSON, actionsJSON []byte
+	var damageResistancesJSON, damageImmunitiesJSON, conditionImmunitiesJSON, languagesJSON []byte
+
+	query = r.db.Rebind(query)
+	row := r.db.QueryRowContext(ctx, query, id)
+	err := row.Scan(
+		&template.ID, &template.Name, &template.Source, &template.Type, &template.Size, &template.Alignment,
+		&template.ArmorClass, &template.HitDice, &speedJSON,
+		&attributesJSON, &savingThrowsJSON, &skillsJSON,
+		&damageResistancesJSON, &damageImmunitiesJSON, &conditionImmunitiesJSON,
+		&sensesJSON, &languagesJSON, &template.ChallengeRating,
+		&abilitiesJSON, &actionsJSON, &template.LegendaryActions,
+		&template.CreatedAt,
+	)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("template not found")
 		}
 		return nil, err
 	}
+
+	// Unmarshal JSON fields
+	json.Unmarshal(speedJSON, &template.Speed)
+	json.Unmarshal(attributesJSON, &template.Attributes)
+	json.Unmarshal(savingThrowsJSON, &template.SavingThrows)
+	json.Unmarshal(skillsJSON, &template.Skills)
+	json.Unmarshal(sensesJSON, &template.Senses)
+	json.Unmarshal(abilitiesJSON, &template.Abilities)
+	json.Unmarshal(actionsJSON, &template.Actions)
+
+	// Unmarshal array fields stored as JSON
+	json.Unmarshal(damageResistancesJSON, &template.DamageResistances)
+	json.Unmarshal(damageImmunitiesJSON, &template.DamageImmunities)
+	json.Unmarshal(conditionImmunitiesJSON, &template.ConditionImmunities)
+	json.Unmarshal(languagesJSON, &template.Languages)
 
 	return &template, nil
 }
@@ -373,13 +414,14 @@ func (r *npcRepository) scanNPC(scanner interface{ Scan(...interface{}) error })
 	var npc models.NPC
 	var speedJSON, attributesJSON, savingThrowsJSON, skillsJSON []byte
 	var sensesJSON, abilitiesJSON, actionsJSON []byte
+	var damageResistancesJSON, damageImmunitiesJSON, conditionImmunitiesJSON, languagesJSON []byte
 
 	err := scanner.Scan(
 		&npc.ID, &npc.GameSessionID, &npc.Name, &npc.Type, &npc.Size, &npc.Alignment,
 		&npc.ArmorClass, &npc.HitPoints, &npc.MaxHitPoints, &speedJSON,
 		&attributesJSON, &savingThrowsJSON, &skillsJSON,
-		&npc.DamageResistances, &npc.DamageImmunities, &npc.ConditionImmunities,
-		&sensesJSON, &npc.Languages, &npc.ChallengeRating, &npc.ExperiencePoints,
+		&damageResistancesJSON, &damageImmunitiesJSON, &conditionImmunitiesJSON,
+		&sensesJSON, &languagesJSON, &npc.ChallengeRating, &npc.ExperiencePoints,
 		&abilitiesJSON, &actionsJSON, &npc.LegendaryActions, &npc.IsTemplate, &npc.CreatedBy,
 		&npc.CreatedAt, &npc.UpdatedAt,
 	)
@@ -397,6 +439,12 @@ func (r *npcRepository) scanNPC(scanner interface{ Scan(...interface{}) error })
 	json.Unmarshal(abilitiesJSON, &npc.Abilities)
 	json.Unmarshal(actionsJSON, &npc.Actions)
 
+	// Unmarshal array fields stored as JSON
+	json.Unmarshal(damageResistancesJSON, &npc.DamageResistances)
+	json.Unmarshal(damageImmunitiesJSON, &npc.DamageImmunities)
+	json.Unmarshal(conditionImmunitiesJSON, &npc.ConditionImmunities)
+	json.Unmarshal(languagesJSON, &npc.Languages)
+
 	return &npc, nil
 }
 
@@ -404,13 +452,14 @@ func (r *npcRepository) scanNPCTemplate(scanner interface{ Scan(...interface{}) 
 	var template models.NPCTemplate
 	var speedJSON, attributesJSON, savingThrowsJSON, skillsJSON []byte
 	var sensesJSON, abilitiesJSON, actionsJSON []byte
+	var damageResistancesJSON, damageImmunitiesJSON, conditionImmunitiesJSON, languagesJSON []byte
 
 	err := scanner.Scan(
 		&template.ID, &template.Name, &template.Source, &template.Type, &template.Size, &template.Alignment,
 		&template.ArmorClass, &template.HitDice, &speedJSON,
 		&attributesJSON, &savingThrowsJSON, &skillsJSON,
-		&template.DamageResistances, &template.DamageImmunities, &template.ConditionImmunities,
-		&sensesJSON, &template.Languages, &template.ChallengeRating,
+		&damageResistancesJSON, &damageImmunitiesJSON, &conditionImmunitiesJSON,
+		&sensesJSON, &languagesJSON, &template.ChallengeRating,
 		&abilitiesJSON, &actionsJSON, &template.LegendaryActions,
 		&template.CreatedAt,
 	)
@@ -428,46 +477,52 @@ func (r *npcRepository) scanNPCTemplate(scanner interface{ Scan(...interface{}) 
 	json.Unmarshal(abilitiesJSON, &template.Abilities)
 	json.Unmarshal(actionsJSON, &template.Actions)
 
+	// Unmarshal array fields stored as JSON
+	json.Unmarshal(damageResistancesJSON, &template.DamageResistances)
+	json.Unmarshal(damageImmunitiesJSON, &template.DamageImmunities)
+	json.Unmarshal(conditionImmunitiesJSON, &template.ConditionImmunities)
+	json.Unmarshal(languagesJSON, &template.Languages)
+
 	return &template, nil
 }
 
 func (r *npcRepository) calculateXPFromCR(cr float64) int {
 	// D&D 5e XP by Challenge Rating
 	xpByCR := map[float64]int{
-		0:    10,
+		0:     10,
 		0.125: 25,
-		0.25: 50,
-		0.5:  100,
-		1:    200,
-		2:    450,
-		3:    700,
-		4:    1100,
-		5:    1800,
-		6:    2300,
-		7:    2900,
-		8:    3900,
-		9:    5000,
-		10:   5900,
-		11:   7200,
-		12:   8400,
-		13:   10000,
-		14:   11500,
-		15:   13000,
-		16:   15000,
-		17:   18000,
-		18:   20000,
-		19:   22000,
-		20:   25000,
-		21:   33000,
-		22:   41000,
-		23:   50000,
-		24:   62000,
-		25:   75000,
-		26:   90000,
-		27:   105000,
-		28:   120000,
-		29:   135000,
-		30:   155000,
+		0.25:  50,
+		0.5:   100,
+		1:     200,
+		2:     450,
+		3:     700,
+		4:     1100,
+		5:     1800,
+		6:     2300,
+		7:     2900,
+		8:     3900,
+		9:     5000,
+		10:    5900,
+		11:    7200,
+		12:    8400,
+		13:    10000,
+		14:    11500,
+		15:    13000,
+		16:    15000,
+		17:    18000,
+		18:    20000,
+		19:    22000,
+		20:    25000,
+		21:    33000,
+		22:    41000,
+		23:    50000,
+		24:    62000,
+		25:    75000,
+		26:    90000,
+		27:    105000,
+		28:    120000,
+		29:    135000,
+		30:    155000,
 	}
 
 	if xp, ok := xpByCR[cr]; ok {

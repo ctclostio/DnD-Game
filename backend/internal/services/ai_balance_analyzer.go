@@ -7,16 +7,16 @@ import (
 	"math"
 	"strings"
 
-	"github.com/your-username/dnd-game/backend/internal/config"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // AIBalanceAnalyzer uses AI to analyze and balance custom rules
 type AIBalanceAnalyzer struct {
-	llm          LLMProvider
-	ruleEngine   *RuleEngine
-	combatSim    *CombatSimulator
-	cfg          *config.Config
+	llm        LLMProvider
+	ruleEngine *RuleEngine
+	combatSim  *CombatSimulator
+	cfg        *config.Config
 }
 
 // CombatSimulator runs combat simulations for balance testing
@@ -153,7 +153,7 @@ func (ba *AIBalanceAnalyzer) calculateDamageExpectation(template *models.RuleTem
 		if node.Type == models.NodeTypeActionDamage {
 			dice, _ := node.Properties["damage_dice"].(string)
 			damageType, _ := node.Properties["damage_type"].(string)
-			
+
 			// Parse dice notation to get average damage
 			avgDamage := ba.calculateAverageDiceRoll(dice)
 			expectation.DamageTypes[damageType] += avgDamage
@@ -291,7 +291,7 @@ func (ba *AIBalanceAnalyzer) predictMetaImpact(ctx context.Context, template *mo
 	// Calculate popularity and usage predictions
 	prediction.PopularityScore = ba.calculatePopularityScore(template, simResults)
 	prediction.ExpectedUsageRate = prediction.PopularityScore * 0.8
-	
+
 	// Meta shift potential based on power and uniqueness
 	uniqueness := ba.calculateUniqueness(template)
 	prediction.MetaShiftPotential = (template.BalanceMetrics.PowerLevel/10 + uniqueness) / 2
@@ -411,7 +411,7 @@ func (ba *AIBalanceAnalyzer) calculateResourceCost(template *models.RuleTemplate
 		if node.Type == models.NodeTypeActionResource {
 			amount, _ := node.Properties["amount"].(float64)
 			resourceType, _ := node.Properties["resource"].(string)
-			
+
 			switch resourceType {
 			case "hit_points":
 				cost += amount / 50 // Normalize HP cost
@@ -590,13 +590,13 @@ func (ba *AIBalanceAnalyzer) hasCounterspellProperties(template *models.RuleTemp
 func (ba *AIBalanceAnalyzer) calculatePopularityScore(template *models.RuleTemplate, simResults []models.SimulationResult) float64 {
 	// Base popularity on power, fun factor, and ease of use
 	power := template.BalanceMetrics.PowerLevel / 10
-	
+
 	// Fun factor based on variety of effects
 	funFactor := float64(len(template.LogicGraph.Nodes)) / 20
-	
+
 	// Ease of use (fewer parameters = easier)
 	easeOfUse := 1.0 - (float64(len(template.Parameters)) / 10)
-	
+
 	return (power*0.4 + funFactor*0.3 + easeOfUse*0.3) * 10
 }
 
@@ -606,7 +606,7 @@ func (ba *AIBalanceAnalyzer) calculateUniqueness(template *models.RuleTemplate) 
 	for _, node := range template.LogicGraph.Nodes {
 		nodeTypes[node.Type]++
 	}
-	
+
 	// More variety = more unique
 	return math.Min(float64(len(nodeTypes))/5, 1.0)
 }
@@ -656,17 +656,17 @@ func (ba *AIBalanceAnalyzer) runSingleSimulation(ctx context.Context, template *
 	// Placeholder for actual simulation
 	// In a real implementation, this would create mock combat scenarios
 	// and test the rule's effectiveness
-	
+
 	outcome := map[string]interface{}{
 		"damage_dealt":     15.5,
 		"actions_used":     1,
 		"resources_spent":  1,
 		"targets_affected": 1,
 	}
-	
+
 	success := true
 	edgeCase := ""
-	
+
 	return outcome, success, edgeCase
 }
 
@@ -674,12 +674,12 @@ func (ba *AIBalanceAnalyzer) calculateAverageOutcome(outcomes []map[string]inter
 	if len(outcomes) == 0 {
 		return map[string]interface{}{}
 	}
-	
+
 	// Calculate averages for numeric values
 	avgOutcome := make(map[string]interface{})
 	totals := make(map[string]float64)
 	counts := make(map[string]int)
-	
+
 	for _, outcome := range outcomes {
 		for key, value := range outcome {
 			if num, ok := value.(float64); ok {
@@ -688,27 +688,27 @@ func (ba *AIBalanceAnalyzer) calculateAverageOutcome(outcomes []map[string]inter
 			}
 		}
 	}
-	
+
 	for key, total := range totals {
 		if count := counts[key]; count > 0 {
 			avgOutcome[key] = total / float64(count)
 		}
 	}
-	
+
 	return avgOutcome
 }
 
 func (ba *AIBalanceAnalyzer) compareToBaseline(template *models.RuleTemplate, scenario SimulationScenario, outcome map[string]interface{}) float64 {
 	// Compare to baseline abilities at this level
 	// This would normally reference a database of baseline abilities
-	
+
 	baselineDamage := float64(scenario.Level) * 5.0 // Simplified baseline
 	actualDamage, _ := outcome["damage_dealt"].(float64)
-	
+
 	// Score from 0-10 based on comparison
 	ratio := actualDamage / baselineDamage
-	score := math.Min(ratio * 5, 10)
-	
+	score := math.Min(ratio*5, 10)
+
 	return score
 }
 

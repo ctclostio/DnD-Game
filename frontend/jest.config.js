@@ -26,6 +26,11 @@ module.exports = {
     }]
   },
   
+  // Transform ignore patterns
+  transformIgnorePatterns: [
+    'node_modules/(?!(react-router|react-router-dom)/)'
+  ],
+  
   // Test match patterns
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.(js|jsx|ts|tsx)',

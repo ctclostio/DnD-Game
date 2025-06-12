@@ -8,9 +8,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // FactionPersonalityService manages AI-driven faction personalities
@@ -144,22 +144,22 @@ func (fps *FactionPersonalityService) generatePersonalityTraits(faction *models.
 // generateFactionValues creates core values
 func (fps *FactionPersonalityService) generateFactionValues(faction *models.Faction) map[string]float64 {
 	values := map[string]float64{
-		"honor":       rand.Float64(),
-		"wealth":      rand.Float64(),
-		"knowledge":   rand.Float64(),
-		"power":       rand.Float64(),
-		"freedom":     rand.Float64(),
-		"order":       rand.Float64(),
-		"tradition":   rand.Float64(),
-		"innovation":  rand.Float64(),
-		"faith":       rand.Float64(),
-		"nature":      rand.Float64(),
-		"justice":     rand.Float64(),
-		"loyalty":     rand.Float64(),
+		"honor":        rand.Float64(),
+		"wealth":       rand.Float64(),
+		"knowledge":    rand.Float64(),
+		"power":        rand.Float64(),
+		"freedom":      rand.Float64(),
+		"order":        rand.Float64(),
+		"tradition":    rand.Float64(),
+		"innovation":   rand.Float64(),
+		"faith":        rand.Float64(),
+		"nature":       rand.Float64(),
+		"justice":      rand.Float64(),
+		"loyalty":      rand.Float64(),
 		"independence": rand.Float64(),
-		"unity":       rand.Float64(),
-		"glory":       rand.Float64(),
-		"survival":    rand.Float64(),
+		"unity":        rand.Float64(),
+		"glory":        rand.Float64(),
+		"survival":     rand.Float64(),
 	}
 
 	// Ensure some values are prioritized
@@ -179,16 +179,16 @@ func (fps *FactionPersonalityService) generateFactionValues(faction *models.Fact
 // generateDecisionWeights creates weights for different decision factors
 func (fps *FactionPersonalityService) generateDecisionWeights(traits, values map[string]float64) map[string]float64 {
 	weights := map[string]float64{
-		"economic_benefit":    values["wealth"] * 0.5 + traits["mercantile"] * 0.5,
-		"military_advantage":  values["power"] * 0.5 + traits["militaristic"] * 0.5,
-		"diplomatic_gain":     traits["diplomatic"] * 0.7 + values["unity"] * 0.3,
-		"territorial_gain":    traits["expansionist"] * 0.8 + values["power"] * 0.2,
-		"cultural_impact":     values["tradition"] * 0.5 + values["innovation"] * 0.5,
-		"religious_alignment": values["faith"] * 0.8 + traits["religious"] * 0.2,
-		"knowledge_gain":      values["knowledge"] * 0.7 + traits["scholarly"] * 0.3,
-		"security_increase":   values["survival"] * 0.6 + values["order"] * 0.4,
-		"reputation_change":   values["honor"] * 0.6 + values["glory"] * 0.4,
-		"alliance_strength":   values["loyalty"] * 0.5 + traits["diplomatic"] * 0.5,
+		"economic_benefit":    values["wealth"]*0.5 + traits["mercantile"]*0.5,
+		"military_advantage":  values["power"]*0.5 + traits["militaristic"]*0.5,
+		"diplomatic_gain":     traits["diplomatic"]*0.7 + values["unity"]*0.3,
+		"territorial_gain":    traits["expansionist"]*0.8 + values["power"]*0.2,
+		"cultural_impact":     values["tradition"]*0.5 + values["innovation"]*0.5,
+		"religious_alignment": values["faith"]*0.8 + traits["religious"]*0.2,
+		"knowledge_gain":      values["knowledge"]*0.7 + traits["scholarly"]*0.3,
+		"security_increase":   values["survival"]*0.6 + values["order"]*0.4,
+		"reputation_change":   values["honor"]*0.6 + values["glory"]*0.4,
+		"alliance_strength":   values["loyalty"]*0.5 + traits["diplomatic"]*0.5,
 	}
 
 	// Normalize weights
@@ -246,14 +246,14 @@ func (fps *FactionPersonalityService) calculateEventImpact(personality *models.F
 
 	// Base impact from event type
 	impactMap := map[string]float64{
-		"faction_interaction":  0.5,
-		"political_milestone":  0.7,
-		"economic_event":       0.4,
-		"military_conflict":    0.8,
-		"diplomatic_success":   0.6,
-		"cultural_shift":       0.3,
-		"natural_disaster":     0.5,
-		"player_action":        0.9,
+		"faction_interaction": 0.5,
+		"political_milestone": 0.7,
+		"economic_event":      0.4,
+		"military_conflict":   0.8,
+		"diplomatic_success":  0.6,
+		"cultural_shift":      0.3,
+		"natural_disaster":    0.5,
+		"player_action":       0.9,
 	}
 
 	if baseImpact, ok := impactMap[string(event.Type)]; ok {
@@ -285,7 +285,7 @@ func (fps *FactionPersonalityService) MakeFactionDecision(ctx context.Context, f
 	if err != nil {
 		return nil, fmt.Errorf("invalid faction ID: %w", err)
 	}
-	
+
 	faction, err := fps.factionRepo.GetFaction(factionUUID)
 	if err != nil {
 		return nil, err
@@ -353,14 +353,14 @@ Provide a JSON response with:
 
 	// Record decision as memory
 	decisionMemory := models.FactionMemory{
-		ID:          uuid.New().String(),
-		EventType:   "strategic_decision",
-		Description: fmt.Sprintf("Chose: %s - %s", aiDecision["chosen_option"], aiDecision["reasoning"]),
-		Impact:      0.5,
+		ID:           uuid.New().String(),
+		EventType:    "strategic_decision",
+		Description:  fmt.Sprintf("Chose: %s - %s", aiDecision["chosen_option"], aiDecision["reasoning"]),
+		Impact:       0.5,
 		Participants: []string{factionID},
-		Context:     map[string]interface{}{"decision": decision, "result": aiDecision},
-		Timestamp:   time.Now(),
-		Decay:       0.9,
+		Context:      map[string]interface{}{"decision": decision, "result": aiDecision},
+		Timestamp:    time.Now(),
+		Decay:        0.9,
 	}
 	personality.Memories = append(personality.Memories, decisionMemory)
 	fps.worldRepo.UpdateFactionPersonality(personality)
@@ -373,7 +373,7 @@ Provide a JSON response with:
 	if r, ok := aiDecision["reasoning"].(string); ok {
 		reasoning = r
 	}
-	
+
 	return &models.FactionDecisionResult{
 		DecisionID:    decision.ID,
 		Success:       true,
@@ -517,7 +517,7 @@ func (fps *FactionPersonalityService) LearnFromInteraction(ctx context.Context, 
 	if outcomeVal, ok := interaction.Context["outcome"].(string); ok {
 		outcome = outcomeVal
 	}
-	
+
 	interactions, _ := personality.LearningData["player_interactions"].([]interface{})
 	interactions = append(interactions, map[string]interface{}{
 		"type":      interaction.Type,
@@ -560,11 +560,11 @@ func (fps *FactionPersonalityService) pruneMemories(memories []models.FactionMem
 
 	// Keep last 50 and top 50 by impact
 	recent := memories[len(memories)-50:]
-	
+
 	// Sort remaining by impact (simplified)
 	remaining := memories[:len(memories)-50]
 	// Would implement proper sorting here
-	
+
 	combined := append(remaining[:50], recent...)
 	return combined
 }
@@ -579,12 +579,12 @@ func (fps *FactionPersonalityService) updateLearningFromMemory(personality *mode
 	// Track event outcomes
 	eventOutcomes, _ := patterns[memory.EventType].([]float64)
 	eventOutcomes = append(eventOutcomes, memory.Impact)
-	
+
 	// Keep last 20 outcomes per event type
 	if len(eventOutcomes) > 20 {
 		eventOutcomes = eventOutcomes[len(eventOutcomes)-20:]
 	}
-	
+
 	patterns[memory.EventType] = eventOutcomes
 	personality.LearningData["event_patterns"] = patterns
 }
@@ -629,16 +629,16 @@ func (fps *FactionPersonalityService) makeDefaultDecision(personality *models.Fa
 		Consequences: []string{fmt.Sprintf("Chose option: %s", bestOption)},
 		ImpactMetrics: map[string]interface{}{
 			"chosen_option": bestOption,
-			"reasoning": "Chose option that best aligns with faction values and goals",
-			"confidence": 0.7,
+			"reasoning":     "Chose option that best aligns with faction values and goals",
+			"confidence":    0.7,
 		},
-		NextActions:  []string{},
+		NextActions: []string{},
 	}
 }
 
 func (fps *FactionPersonalityService) parseRelationshipImpacts(impacts interface{}) map[string]float64 {
 	result := make(map[string]float64)
-	
+
 	if impactMap, ok := impacts.(map[string]interface{}); ok {
 		for k, v := range impactMap {
 			if val, ok := v.(float64); ok {
@@ -646,19 +646,19 @@ func (fps *FactionPersonalityService) parseRelationshipImpacts(impacts interface
 			}
 		}
 	}
-	
+
 	return result
 }
 
 // Additional types for decision making
 
 type FactionDecision struct {
-	ID               string            `json:"id"`
-	Type             string            `json:"type"`
-	Context          string            `json:"context"`
-	Options          []DecisionOption  `json:"options"`
-	InvolvedEntities []string          `json:"involved_entities"`
-	Deadline         *time.Time        `json:"deadline,omitempty"`
+	ID               string           `json:"id"`
+	Type             string           `json:"type"`
+	Context          string           `json:"context"`
+	Options          []DecisionOption `json:"options"`
+	InvolvedEntities []string         `json:"involved_entities"`
+	Deadline         *time.Time       `json:"deadline,omitempty"`
 }
 
 type DecisionOption struct {
@@ -678,7 +678,7 @@ type FactionDecisionResult struct {
 }
 
 type PlayerInteraction struct {
-	Type    string `json:"type"`
-	Outcome string `json:"outcome"`
+	Type    string                 `json:"type"`
+	Outcome string                 `json:"outcome"`
 	Details map[string]interface{} `json:"details"`
 }

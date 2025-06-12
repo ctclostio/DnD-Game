@@ -38,11 +38,11 @@ func TestLoad(t *testing.T) {
 	t.Run("loads default configuration", func(t *testing.T) {
 		cfg, err := Load()
 		require.NoError(t, err)
-		
+
 		// Check default values
 		assert.Equal(t, "8080", cfg.Server.Port)
 		assert.Equal(t, "development", cfg.Server.Environment)
-		
+
 		assert.Equal(t, "localhost", cfg.Database.Host)
 		assert.Equal(t, 5432, cfg.Database.Port)
 		assert.Equal(t, "dndgame", cfg.Database.User)
@@ -52,17 +52,17 @@ func TestLoad(t *testing.T) {
 		assert.Equal(t, 25, cfg.Database.MaxOpenConns)
 		assert.Equal(t, 25, cfg.Database.MaxIdleConns)
 		assert.Equal(t, 5*time.Minute, cfg.Database.MaxLifetime)
-		
+
 		assert.Equal(t, "localhost", cfg.Redis.Host)
 		assert.Equal(t, 6379, cfg.Redis.Port)
 		assert.Equal(t, "", cfg.Redis.Password)
 		assert.Equal(t, 0, cfg.Redis.DB)
-		
+
 		assert.Equal(t, "", cfg.Auth.JWTSecret) // No default for JWT secret
 		assert.Equal(t, 15*time.Minute, cfg.Auth.AccessTokenDuration)
 		assert.Equal(t, 7*24*time.Hour, cfg.Auth.RefreshTokenDuration)
 		assert.Equal(t, 10, cfg.Auth.BcryptCost)
-		
+
 		assert.Equal(t, "mock", cfg.AI.Provider)
 		assert.Equal(t, "", cfg.AI.APIKey)
 		assert.Equal(t, "gpt-4-turbo-preview", cfg.AI.Model)
@@ -92,10 +92,10 @@ func TestLoad(t *testing.T) {
 		os.Setenv("AI_PROVIDER", "openai")
 		os.Setenv("AI_API_KEY", "test-api-key")
 		os.Setenv("AI_MODEL", "gpt-4")
-		
+
 		cfg, err := Load()
 		require.NoError(t, err)
-		
+
 		assert.Equal(t, "3000", cfg.Server.Port)
 		assert.Equal(t, "production", cfg.Server.Environment)
 		assert.Equal(t, "test-host", cfg.Database.Host)
@@ -122,7 +122,7 @@ func TestLoad(t *testing.T) {
 
 	t.Run("handles invalid port", func(t *testing.T) {
 		os.Setenv("DB_PORT", "invalid")
-		
+
 		cfg, err := Load()
 		require.NoError(t, err)
 		// Should fall back to default
@@ -131,7 +131,7 @@ func TestLoad(t *testing.T) {
 
 	t.Run("handles invalid duration", func(t *testing.T) {
 		os.Setenv("ACCESS_TOKEN_DURATION", "invalid")
-		
+
 		cfg, err := Load()
 		require.NoError(t, err)
 		// Should fall back to default

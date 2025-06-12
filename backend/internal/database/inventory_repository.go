@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type inventoryRepository struct {
@@ -38,7 +38,7 @@ func (r *inventoryRepository) CreateItem(item *models.Item) error {
 func (r *inventoryRepository) GetItem(itemID string) (*models.Item, error) {
 	var item models.Item
 	var attunementReq, description sql.NullString
-	
+
 	query := `
 		SELECT id, name, type, rarity, weight, value, properties, 
 			requires_attunement, attunement_requirements, description, created_at, updated_at
@@ -55,7 +55,7 @@ func (r *inventoryRepository) GetItem(itemID string) (*models.Item, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Handle nullable fields
 	if attunementReq.Valid {
 		item.AttunementRequirements = attunementReq.String
@@ -63,7 +63,7 @@ func (r *inventoryRepository) GetItem(itemID string) (*models.Item, error) {
 	if description.Valid {
 		item.Description = description.String
 	}
-	
+
 	return &item, nil
 }
 
@@ -73,19 +73,19 @@ func (r *inventoryRepository) GetItemsByType(itemType models.ItemType) ([]*model
 			requires_attunement, attunement_requirements, description, created_at, updated_at
 		FROM items WHERE type = ? ORDER BY name
 	`
-	
+
 	query = r.db.Rebind(query)
 	rows, err := r.db.Query(query, itemType)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var items []*models.Item
 	for rows.Next() {
 		var item models.Item
 		var attunementReq, description sql.NullString
-		
+
 		err := rows.Scan(
 			&item.ID, &item.Name, &item.Type, &item.Rarity, &item.Weight, &item.Value,
 			&item.Properties, &item.RequiresAttunement, &attunementReq, &description,
@@ -94,7 +94,7 @@ func (r *inventoryRepository) GetItemsByType(itemType models.ItemType) ([]*model
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Handle nullable fields
 		if attunementReq.Valid {
 			item.AttunementRequirements = attunementReq.String
@@ -102,17 +102,17 @@ func (r *inventoryRepository) GetItemsByType(itemType models.ItemType) ([]*model
 		if description.Valid {
 			item.Description = description.String
 		}
-		
+
 		items = append(items, &item)
 	}
-	
+
 	return items, nil
 }
 
 func (r *inventoryRepository) AddItemToInventory(characterID, itemID string, quantity int) error {
 	id := uuid.New().String()
 	now := time.Now()
-	
+
 	// SQLite requires different syntax for upsert
 	query := `
 		INSERT INTO character_inventory (id, character_id, item_id, quantity, created_at, updated_at)
@@ -126,7 +126,7 @@ func (r *inventoryRepository) AddItemToInventory(characterID, itemID string, qua
 	if err != nil {
 		return err
 	}
-	
+
 	return r.updateCharacterWeight(characterID)
 }
 
@@ -178,7 +178,7 @@ func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*mode
 		WHERE ci.character_id = ?
 		ORDER BY i.name
 	`
-	
+
 	query = r.db.Rebind(query)
 	rows, err := r.db.Query(query, characterID)
 	if err != nil {
@@ -191,7 +191,7 @@ func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*mode
 		var inv models.InventoryItem
 		var item models.Item
 		var invNotes, attunementReq, description sql.NullString
-		
+
 		err := rows.Scan(
 			&inv.ID, &inv.CharacterID, &inv.ItemID, &inv.Quantity,
 			&inv.Equipped, &inv.Attuned, &inv.CustomProperties, &invNotes,
@@ -204,7 +204,7 @@ func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*mode
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Handle nullable fields
 		if invNotes.Valid {
 			inv.Notes = invNotes.String
@@ -215,11 +215,11 @@ func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*mode
 		if description.Valid {
 			item.Description = description.String
 		}
-		
+
 		inv.Item = &item
 		items = append(items, &inv)
 	}
-	
+
 	return items, nil
 }
 
@@ -232,16 +232,16 @@ func (r *inventoryRepository) EquipItem(characterID, itemID string, equip bool) 
 	if err != nil {
 		return err
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return err
 	}
-	
+
 	if rowsAffected == 0 {
 		return fmt.Errorf("no inventory item found for character %s and item %s", characterID, itemID)
 	}
-	
+
 	return nil
 }
 
@@ -259,7 +259,7 @@ func (r *inventoryRepository) AttuneItem(characterID, itemID string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	query = `SELECT attunement_slots_max FROM characters WHERE id = ?`
 	query = r.db.Rebind(query)
 	err = tx.Get(&maxSlots, query, characterID)
@@ -391,7 +391,7 @@ func (r *inventoryRepository) GetCharacterWeight(characterID string) (*models.In
 	if err != nil {
 		return nil, err
 	}
-	
+
 	weight.UpdateEncumbrance()
 	return &weight, nil
 }

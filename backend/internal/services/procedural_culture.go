@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // ProceduralCultureService generates unique cultures with AI
@@ -870,7 +870,7 @@ type CulturalResponse struct {
 func (pcs *ProceduralCultureService) generateCultureName(params CultureGenParameters) string {
 	prefixes := []string{"Zar", "Keth", "Mor", "Val", "Syl", "Dra", "Ith", "Nar", "Bel", "Tor"}
 	suffixes := []string{"ani", "ari", "eshi", "ovan", "ukai", "enti", "ashi", "orim", "ethi", "alor"}
-	
+
 	return prefixes[rand.Intn(len(prefixes))] + suffixes[rand.Intn(len(suffixes))]
 }
 
@@ -894,24 +894,24 @@ func (pcs *ProceduralCultureService) generateDefaultFoundation(name string) *Cul
 func (pcs *ProceduralCultureService) generatePhonemes(cultureName string) []string {
 	consonants := []string{"p", "t", "k", "b", "d", "g", "m", "n", "l", "r", "s", "sh", "z", "zh", "h", "w", "y"}
 	vowels := []string{"a", "e", "i", "o", "u", "ai", "ei", "ou"}
-	
+
 	// Select subset based on culture name hash
 	hash := 0
 	for _, r := range cultureName {
 		hash += int(r)
 	}
-	
+
 	selectedConsonants := []string{}
 	selectedVowels := []string{}
-	
+
 	for i := 0; i < 8+hash%4; i++ {
 		selectedConsonants = append(selectedConsonants, consonants[(hash+i)%len(consonants)])
 	}
-	
+
 	for i := 0; i < 3+hash%2; i++ {
 		selectedVowels = append(selectedVowels, vowels[(hash+i)%len(vowels)])
 	}
-	
+
 	return append(selectedConsonants, selectedVowels...)
 }
 
@@ -923,7 +923,7 @@ func (pcs *ProceduralCultureService) generateWritingSystem() string {
 func (pcs *ProceduralCultureService) generateDefaultWords(phonemes []string) map[string]string {
 	words := make(map[string]string)
 	basicWords := []string{"hello", "goodbye", "yes", "no", "friend", "enemy", "honor", "home"}
-	
+
 	for _, word := range basicWords {
 		// Generate pseudo-word from phonemes
 		length := 2 + rand.Intn(3)
@@ -933,22 +933,22 @@ func (pcs *ProceduralCultureService) generateDefaultWords(phonemes []string) map
 		}
 		words[word] = generated
 	}
-	
+
 	return words
 }
 
 func (pcs *ProceduralCultureService) getMaterialsForEnvironment(environment string) []string {
 	materialMap := map[string][]string{
-		"forest":    {"wood", "thatch", "bark", "rope"},
-		"mountain":  {"stone", "slate", "iron", "copper"},
-		"desert":    {"sandstone", "adobe", "canvas", "glass"},
-		"coastal":   {"driftwood", "coral", "shells", "rope"},
-		"plains":    {"sod", "timber", "hide", "bone"},
-		"swamp":     {"reeds", "mud brick", "wood", "vines"},
-		"tundra":    {"ice", "stone", "hide", "bone"},
-		"volcanic":  {"obsidian", "basalt", "pumice", "metal"},
+		"forest":   {"wood", "thatch", "bark", "rope"},
+		"mountain": {"stone", "slate", "iron", "copper"},
+		"desert":   {"sandstone", "adobe", "canvas", "glass"},
+		"coastal":  {"driftwood", "coral", "shells", "rope"},
+		"plains":   {"sod", "timber", "hide", "bone"},
+		"swamp":    {"reeds", "mud brick", "wood", "vines"},
+		"tundra":   {"ice", "stone", "hide", "bone"},
+		"volcanic": {"obsidian", "basalt", "pumice", "metal"},
 	}
-	
+
 	if materials, ok := materialMap[strings.ToLower(environment)]; ok {
 		return materials
 	}
@@ -962,7 +962,7 @@ func (pcs *ProceduralCultureService) generateClergyRanks(beliefType string) []st
 		"animistic":     {"Seeker", "Spirit Walker", "Shaman", "Elder Shaman", "Spirit Master"},
 		"philosophical": {"Student", "Scholar", "Master", "Sage", "Enlightened One"},
 	}
-	
+
 	if ranks, ok := rankMap[beliefType]; ok {
 		return ranks
 	}
@@ -982,7 +982,7 @@ func (pcs *ProceduralCultureService) generateAlignment() string {
 func (pcs *ProceduralCultureService) generateHolyDays(cultureName string, deities []models.CultureDeity) []models.HolyDay {
 	holyDays := []models.HolyDay{}
 	seasons := []string{"Spring Equinox", "Summer Solstice", "Autumn Equinox", "Winter Solstice"}
-	
+
 	// Seasonal celebrations
 	for i, season := range seasons {
 		holyDays = append(holyDays, models.HolyDay{
@@ -993,12 +993,12 @@ func (pcs *ProceduralCultureService) generateHolyDays(cultureName string, deitie
 			Restrictions: []string{},
 			Traditions:   []string{"Bonfires", "Ritual cleansing", "Community feast"},
 		})
-		
+
 		if i < len(deities) {
 			holyDays[i].Name = fmt.Sprintf("Festival of %s", deities[i].Name)
 		}
 	}
-	
+
 	return holyDays
 }
 
@@ -1011,7 +1011,7 @@ func (pcs *ProceduralCultureService) generateDefaultGreeting(context, cultureNam
 		"farewell": "Until paths cross again",
 		"blessing": "Walk in harmony",
 	}
-	
+
 	if greeting, ok := greetingMap[context]; ok {
 		return greeting
 	}
@@ -1020,9 +1020,9 @@ func (pcs *ProceduralCultureService) generateDefaultGreeting(context, cultureNam
 
 func (pcs *ProceduralCultureService) generateBuildingTypes(cultureName string, architecture models.ArchitectureStyle) map[string]models.BuildingStyle {
 	buildingTypes := make(map[string]models.BuildingStyle)
-	
+
 	types := []string{"dwelling", "temple", "market", "fortress", "hall"}
-	
+
 	for _, buildingType := range types {
 		building := models.BuildingStyle{
 			Purpose:     buildingType,
@@ -1030,7 +1030,7 @@ func (pcs *ProceduralCultureService) generateBuildingTypes(cultureName string, a
 			Features:    []string{},
 			Inhabitants: pcs.getBuildingInhabitants(buildingType),
 		}
-		
+
 		switch buildingType {
 		case "dwelling":
 			building.Size = "small"
@@ -1048,10 +1048,10 @@ func (pcs *ProceduralCultureService) generateBuildingTypes(cultureName string, a
 			building.Size = "large"
 			building.Features = []string{"great hearth", "high ceiling", "gathering space"}
 		}
-		
+
 		buildingTypes[buildingType] = building
 	}
-	
+
 	return buildingTypes
 }
 
@@ -1063,7 +1063,7 @@ func (pcs *ProceduralCultureService) getBuildingInhabitants(buildingType string)
 		"fortress": "soldiers",
 		"hall":     "nobles",
 	}
-	
+
 	if inhab, ok := inhabitants[buildingType]; ok {
 		return inhab
 	}
@@ -1079,7 +1079,7 @@ func (pcs *ProceduralCultureService) getIngredientsForEnvironment(environment st
 		"plains":   {"grains", "beef", "vegetables", "dairy", "herbs", "wild game"},
 		"swamp":    {"rice", "fish", "waterfowl", "tubers", "greens", "spices"},
 	}
-	
+
 	if ingredients, ok := ingredientMap[strings.ToLower(environment)]; ok {
 		return ingredients
 	}
@@ -1089,12 +1089,12 @@ func (pcs *ProceduralCultureService) getIngredientsForEnvironment(environment st
 func (pcs *ProceduralCultureService) generateMusicalScales() []string {
 	scales := []string{"pentatonic", "heptatonic", "chromatic", "modal", "microtonal"}
 	selected := []string{}
-	
+
 	numScales := 1 + rand.Intn(3)
 	for i := 0; i < numScales; i++ {
 		selected = append(selected, scales[rand.Intn(len(scales))])
 	}
-	
+
 	return selected
 }
 
@@ -1117,7 +1117,7 @@ func (pcs *ProceduralCultureService) getClothingMaterials(environment string) []
 		"plains":   {"leather", "wool", "cotton", "hide"},
 		"swamp":    {"reeds", "cotton", "leather", "fiber"},
 	}
-	
+
 	if materials, ok := materialMap[strings.ToLower(environment)]; ok {
 		return materials
 	}
@@ -1129,54 +1129,54 @@ func (pcs *ProceduralCultureService) generateColorPalette(cultureName string) []
 		"crimson", "azure", "emerald", "gold", "silver", "obsidian",
 		"ivory", "amber", "violet", "turquoise", "ochre", "indigo",
 	}
-	
+
 	// Select 4-6 colors
 	numColors := 4 + rand.Intn(3)
 	selected := []string{}
-	
+
 	for i := 0; i < numColors; i++ {
 		color := allColors[rand.Intn(len(allColors))]
 		if !containsInCulture(selected, color) {
 			selected = append(selected, color)
 		}
 	}
-	
+
 	return selected
 }
 
 func (pcs *ProceduralCultureService) generateJewelry(cultureName string, foundation *CultureFoundation) []string {
 	jewelry := []string{}
 	types := []string{"rings", "necklaces", "bracelets", "earrings", "brooches", "circlets", "anklets"}
-	
+
 	// Select based on values
 	numTypes := 3 + rand.Intn(3)
 	for i := 0; i < numTypes; i++ {
 		jewelry = append(jewelry, types[rand.Intn(len(types))])
 	}
-	
+
 	return jewelry
 }
 
 func (pcs *ProceduralCultureService) getLanguagePatterns(cultureName string) []string {
 	// Simple pattern generation based on culture name
 	patterns := []string{}
-	
+
 	if strings.Contains(cultureName, "ar") {
 		patterns = append(patterns, "flowing sounds")
 	}
 	if strings.Contains(cultureName, "k") || strings.Contains(cultureName, "th") {
 		patterns = append(patterns, "harsh consonants")
 	}
-	
+
 	patterns = append(patterns, "compound words", "suffix-based")
-	
+
 	return patterns
 }
 
 func (pcs *ProceduralCultureService) generateGenderRoles(cultureName string, foundation *CultureFoundation) map[string]string {
 	// Generate based on cultural values
 	roles := make(map[string]string)
-	
+
 	if foundation.Values["tradition"] > 0.7 {
 		roles["masculine"] = "warriors and leaders"
 		roles["feminine"] = "healers and keepers of lore"
@@ -1186,7 +1186,7 @@ func (pcs *ProceduralCultureService) generateGenderRoles(cultureName string, fou
 	} else {
 		roles["various"] = "roles determined by clan and calling"
 	}
-	
+
 	return roles
 }
 
@@ -1204,7 +1204,7 @@ func (pcs *ProceduralCultureService) evaluateCulturalResponse(culture *models.Pr
 	response := CulturalResponse{
 		AffectedAspect: "values",
 	}
-	
+
 	// Calculate acceptance based on cultural values and action approach
 	if action.Approach == "respectful" {
 		response.Acceptance = 0.6 + rand.Float64()*0.3
@@ -1216,9 +1216,9 @@ func (pcs *ProceduralCultureService) evaluateCulturalResponse(culture *models.Pr
 		response.Acceptance = 0.3 + rand.Float64()*0.3
 		response.Resistance = 0.3 + rand.Float64()*0.3
 	}
-	
+
 	response.Impact = (response.Acceptance - response.Resistance) * action.Magnitude
-	
+
 	// Determine affected aspect
 	switch action.Type {
 	case "trade":
@@ -1230,14 +1230,14 @@ func (pcs *ProceduralCultureService) evaluateCulturalResponse(culture *models.Pr
 	case "influence":
 		response.AffectedAspect = action.Target
 	}
-	
+
 	return response
 }
 
 func (pcs *ProceduralCultureService) adjustCulturalValues(culture *models.ProceduralCulture, action PlayerCulturalAction, response CulturalResponse) {
 	// Adjust values based on player influence
 	impactMagnitude := response.Impact * 0.1 // Max 10% change
-	
+
 	// Example: trade might increase value of wealth
 	if action.Type == "trade" {
 		culture.Values["wealth"] = math.Min(1.0, culture.Values["wealth"]+impactMagnitude)
@@ -1280,14 +1280,14 @@ func (pcs *ProceduralCultureService) generateCulturalResponseEvent(ctx context.C
 		"conflict":  "cultural_resistance",
 		"influence": "cultural_evolution",
 	}
-	
+
 	return &models.EmergentWorldEvent{
-		ID:          uuid.New().String(),
-		SessionID:   culture.Metadata["session_id"].(string),
-		EventType:   "cultural_response",
-		Title:       fmt.Sprintf("%s Responds to Outside Influence", culture.Name),
-		Description: fmt.Sprintf("The %s culture has %s in response to %s", 
-			culture.Name, 
+		ID:        uuid.New().String(),
+		SessionID: culture.Metadata["session_id"].(string),
+		EventType: "cultural_response",
+		Title:     fmt.Sprintf("%s Responds to Outside Influence", culture.Name),
+		Description: fmt.Sprintf("The %s culture has %s in response to %s",
+			culture.Name,
 			pcs.getResponseDescription(response),
 			action.Description),
 		Impact: map[string]interface{}{

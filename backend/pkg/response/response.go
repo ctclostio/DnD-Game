@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/pkg/errors"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // Response represents a standard API response
@@ -80,11 +80,11 @@ func JSONWithMeta(w http.ResponseWriter, r *http.Request, status int, data inter
 // Error sends an error response
 func Error(w http.ResponseWriter, r *http.Request, err error) {
 	appErr := errors.GetAppError(err)
-	
+
 	// Log the error with context
 	log := logger.GetLogger()
 	requestID := getRequestID(r)
-	
+
 	// Log at appropriate level
 	switch appErr.StatusCode {
 	case http.StatusInternalServerError, http.StatusServiceUnavailable:
@@ -142,7 +142,7 @@ func ErrorWithCode(w http.ResponseWriter, r *http.Request, code errors.ErrorCode
 	case errors.ErrCodeUserExists, errors.ErrCodeDuplicateEntry:
 		errType = errors.ErrorTypeConflict
 		statusCode = http.StatusConflict
-	case errors.ErrCodeValidationFailed, errors.ErrCodeInvalidInput, errors.ErrCodeMissingRequired:
+	case errors.ErrCodeValidationFailed, errors.ErrCodeInvalidInput, errors.ErrCodeMissingRequired, errors.ErrCodeInvalidPassword, errors.ErrCodeInvalidFormat, errors.ErrCodeOutOfRange:
 		errType = errors.ErrorTypeValidation
 		statusCode = http.StatusBadRequest
 	case errors.ErrCodeRateLimitExceeded, errors.ErrCodeAIRateLimitExceeded:
@@ -220,7 +220,7 @@ func appErrorToErrorInfo(appErr *errors.AppError) *ErrorInfo {
 func sendJSON(w http.ResponseWriter, status int, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	
+
 	if err := json.NewEncoder(w).Encode(v); err != nil {
 		logger.GetLogger().Error().Err(err).Msg("Failed to encode JSON response")
 	}

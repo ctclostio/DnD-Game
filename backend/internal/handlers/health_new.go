@@ -9,11 +9,11 @@ import (
 
 // HealthResponse represents the health check response
 type HealthResponse struct {
-	Status    string                 `json:"status"`
-	Timestamp string                 `json:"timestamp"`
-	Version   string                 `json:"version"`
-	Uptime    string                 `json:"uptime"`
-	Service   string                 `json:"service"`
+	Status    string                       `json:"status"`
+	Timestamp string                       `json:"timestamp"`
+	Version   string                       `json:"version"`
+	Uptime    string                       `json:"uptime"`
+	Service   string                       `json:"service"`
 	Checks    map[string]HealthCheckResult `json:"checks,omitempty"`
 }
 
@@ -65,7 +65,10 @@ func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // LivenessProbe is used by orchestrators to check if the service should be restarted
@@ -80,10 +83,13 @@ func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) LivenessProbe(w http.ResponseWriter, r *http.Request) {
 	// Basic liveness check - if we can respond, we're alive
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"status": "alive",
+	if err := json.NewEncoder(w).Encode(map[string]string{
+		"status":    "alive",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
-	})
+	}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // ReadinessProbe checks if the service is ready to accept traffic
@@ -102,19 +108,19 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 	// TODO: Check database connection if available
 	// This would require adding a GetDB() method to repositories or passing DB separately
 	/*
-	if db, ok := h.repositories.(*sql.DB); ok && db != nil {
-		if err := db.Ping(); err != nil {
-			checks["database"] = HealthCheckResult{
-				Status:  "unhealthy",
-				Message: "Database connection failed",
-			}
-			allHealthy = false
-		} else {
-			checks["database"] = HealthCheckResult{
-				Status: "healthy",
+		if db, ok := h.repositories.(*sql.DB); ok && db != nil {
+			if err := db.Ping(); err != nil {
+				checks["database"] = HealthCheckResult{
+					Status:  "unhealthy",
+					Message: "Database connection failed",
+				}
+				allHealthy = false
+			} else {
+				checks["database"] = HealthCheckResult{
+					Status: "healthy",
+				}
 			}
 		}
-	}
 	*/
 
 	// Check if we have required services
@@ -158,7 +164,10 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // DetailedHealth provides detailed health information including system metrics
@@ -178,7 +187,7 @@ func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 	// Check database if available
 	// TODO: Add database health check when repository interface supports it
 	checks["database"] = HealthCheckResult{
-		Status: "healthy",
+		Status:  "healthy",
 		Message: "Database check not implemented",
 	}
 
@@ -216,15 +225,21 @@ func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Standalone HealthCheckV2 function for backward compatibility
 func HealthCheckV2(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"status": "healthy",
-		"service": "dnd-game-api",
+	if err := json.NewEncoder(w).Encode(map[string]string{
+		"status":    "healthy",
+		"service":   "dnd-game-api",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
-	})
+	}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }

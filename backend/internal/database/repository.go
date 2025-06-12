@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // UserRepository defines the interface for user data operations
@@ -37,7 +37,7 @@ type GameSessionRepository interface {
 	Update(ctx context.Context, session *models.GameSession) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, offset, limit int) ([]*models.GameSession, error)
-	
+
 	// Participant management
 	AddParticipant(ctx context.Context, sessionID, userID string, characterID *string) error
 	RemoveParticipant(ctx context.Context, sessionID, userID string) error
@@ -61,7 +61,7 @@ type InventoryRepository interface {
 	CreateItem(item *models.Item) error
 	GetItem(itemID string) (*models.Item, error)
 	GetItemsByType(itemType models.ItemType) ([]*models.Item, error)
-	
+
 	// Inventory operations
 	AddItemToInventory(characterID, itemID string, quantity int) error
 	RemoveItemFromInventory(characterID, itemID string, quantity int) error
@@ -69,12 +69,12 @@ type InventoryRepository interface {
 	EquipItem(characterID, itemID string, equip bool) error
 	AttuneItem(characterID, itemID string) error
 	UnattuneItem(characterID, itemID string) error
-	
+
 	// Currency operations
 	GetCharacterCurrency(characterID string) (*models.Currency, error)
 	CreateCharacterCurrency(currency *models.Currency) error
 	UpdateCharacterCurrency(currency *models.Currency) error
-	
+
 	// Weight operations
 	GetCharacterWeight(characterID string) (*models.InventoryWeight, error)
 }
@@ -96,7 +96,7 @@ type NPCRepository interface {
 	Update(ctx context.Context, npc *models.NPC) error
 	Delete(ctx context.Context, id string) error
 	Search(ctx context.Context, filter models.NPCSearchFilter) ([]*models.NPC, error)
-	
+
 	// Template operations
 	GetTemplates(ctx context.Context) ([]*models.NPCTemplate, error)
 	GetTemplateByID(ctx context.Context, id string) (*models.NPCTemplate, error)
@@ -105,20 +105,20 @@ type NPCRepository interface {
 
 // Repositories aggregates all repository interfaces
 type Repositories struct {
-	Users            UserRepository
-	Characters       CharacterRepository
-	GameSessions     GameSessionRepository
-	DiceRolls        DiceRollRepository
-	NPCs             NPCRepository
-	Inventory        InventoryRepository
-	RefreshTokens    RefreshTokenRepository
-	CustomRaces      CustomRaceRepository
-	CustomClasses    *CustomClassRepository
-	DMAssistant      DMAssistantRepository
-	Encounters       *EncounterRepository
-	Campaign         CampaignRepository
-	CombatAnalytics  CombatAnalyticsRepository
-	WorldBuilding    *WorldBuildingRepository
-	Narrative        *NarrativeRepository
-	RuleBuilder      *RuleBuilderRepository
+	Users           UserRepository
+	Characters      CharacterRepository
+	GameSessions    GameSessionRepository
+	DiceRolls       DiceRollRepository
+	NPCs            NPCRepository
+	Inventory       InventoryRepository
+	RefreshTokens   RefreshTokenRepository
+	CustomRaces     CustomRaceRepository
+	CustomClasses   *CustomClassRepository
+	DMAssistant     DMAssistantRepository
+	Encounters      *EncounterRepository
+	Campaign        CampaignRepository
+	CombatAnalytics CombatAnalyticsRepository
+	WorldBuilding   *WorldBuildingRepository
+	Narrative       *NarrativeRepository
+	RuleBuilder     *RuleBuilderRepository
 }

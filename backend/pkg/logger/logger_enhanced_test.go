@@ -16,7 +16,7 @@ import (
 
 func TestDefaultConfig(t *testing.T) {
 	cfg := DefaultConfig()
-	
+
 	assert.Equal(t, "info", cfg.Level)
 	assert.False(t, cfg.Pretty)
 	assert.Equal(t, time.RFC3339Nano, cfg.TimeFormat)
@@ -56,11 +56,11 @@ func TestNewV2(t *testing.T) {
 			},
 			verify: func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer) {
 				logger.Info().Msg("test")
-				
+
 				var logEntry map[string]interface{}
 				lines := strings.Split(strings.TrimSpace(logOutput.String()), "\n")
 				require.NoError(t, json.Unmarshal([]byte(lines[0]), &logEntry))
-				
+
 				assert.Equal(t, "test-service", logEntry["service"])
 				assert.Equal(t, "test", logEntry["env"])
 				assert.Equal(t, "1.0.0", logEntry["version"])
@@ -102,20 +102,20 @@ func TestNewV2(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
-			
+
 			// Override output for testing
 			if tt.config.Output == "" || tt.config.Output == "stdout" {
 				tt.config.Output = "stdout"
 			}
-			
+
 			logger, err := NewV2(tt.config)
 			if tt.wantError {
 				assert.Error(t, err)
 				return
 			}
-			
+
 			require.NoError(t, err)
-			
+
 			// Replace logger output with buffer for testing
 			level, _ := zerolog.ParseLevel(tt.config.Level)
 			if level == zerolog.NoLevel {
@@ -132,7 +132,7 @@ func TestNewV2(t *testing.T) {
 				zl = zl.With().Interface(k, v).Logger()
 			}
 			logger.Logger = &zl
-			
+
 			tt.verify(t, logger, &buf)
 		})
 	}
@@ -208,13 +208,13 @@ func TestLoggerV2_WithGameContext(t *testing.T) {
 
 func TestLoggerV2_LogHTTPRequest(t *testing.T) {
 	tests := []struct {
-		name         string
-		method       string
-		path         string
-		statusCode   int
-		duration     time.Duration
-		fields       map[string]interface{}
-		expectedMsg  string
+		name        string
+		method      string
+		path        string
+		statusCode  int
+		duration    time.Duration
+		fields      map[string]interface{}
+		expectedMsg string
 	}{
 		{
 			name:        "successful request",
@@ -453,7 +453,7 @@ func TestLoggerV2_LogWebSocketEvent(t *testing.T) {
 	assert.Equal(t, "dice_roll", logEntry["event_type"])
 	assert.Equal(t, "client-123", logEntry["client_id"])
 	assert.Equal(t, "WebSocket event", logEntry["message"])
-	
+
 	data := logEntry["data"].(map[string]interface{})
 	assert.Equal(t, "roll_dice", data["action"])
 	assert.Equal(t, float64(18), data["result"])
@@ -617,7 +617,7 @@ func BenchmarkLoggerV2_LogHTTPRequest(b *testing.B) {
 
 func BenchmarkLoggerV2_WithContext(b *testing.B) {
 	logger, _ := NewV2(DefaultConfig())
-	
+
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, RequestIDKey, "bench-req")
 	ctx = context.WithValue(ctx, UserIDKey, "bench-user")

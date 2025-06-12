@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/lib/pq"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type CustomClassRepository struct {

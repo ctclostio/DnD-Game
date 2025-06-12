@@ -7,14 +7,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type CampaignService struct {
-	campaignRepo   database.CampaignRepository
-	gameRepo       database.GameSessionRepository
-	aiManager      AICampaignManagerInterface
+	campaignRepo database.CampaignRepository
+	gameRepo     database.GameSessionRepository
+	aiManager    AICampaignManagerInterface
 }
 
 func NewCampaignService(
@@ -92,7 +92,7 @@ func (cs *CampaignService) GetStoryArcs(ctx context.Context, sessionID uuid.UUID
 
 func (cs *CampaignService) UpdateStoryArc(ctx context.Context, arcID uuid.UUID, req models.UpdateStoryArcRequest) error {
 	updates := make(map[string]interface{})
-	
+
 	if req.Title != nil {
 		updates["title"] = *req.Title
 	}
@@ -175,7 +175,7 @@ func (cs *CampaignService) GenerateRecap(ctx context.Context, sessionID uuid.UUI
 
 	if len(memories) == 0 {
 		return &models.GeneratedRecap{
-			Summary: "This is the beginning of your adventure...",
+			Summary:   "This is the beginning of your adventure...",
 			KeyEvents: []string{"The party gathers for the first time"},
 		}, nil
 	}
@@ -276,7 +276,7 @@ func (cs *CampaignService) RevealForeshadowing(ctx context.Context, elementID uu
 func (cs *CampaignService) AddTimelineEvent(ctx context.Context, event *models.CampaignTimeline) error {
 	event.ID = uuid.New()
 	event.CreatedAt = time.Now()
-	
+
 	if event.ImpactLevel == 0 {
 		event.ImpactLevel = 5
 	}
@@ -294,7 +294,7 @@ func (cs *CampaignService) UpdateNPCRelationship(ctx context.Context, relationsh
 	relationship.ID = uuid.New()
 	relationship.CreatedAt = time.Now()
 	relationship.UpdatedAt = time.Now()
-	
+
 	return cs.campaignRepo.CreateOrUpdateNPCRelationship(relationship)
 }
 
@@ -310,26 +310,26 @@ func (cs *CampaignService) AdjustRelationshipScore(ctx context.Context, sessionI
 
 func (cs *CampaignService) generateRecapFromEvents(req models.CreateSessionMemoryRequest) string {
 	recap := fmt.Sprintf("In session %d, the party ", req.SessionNumber)
-	
+
 	if len(req.KeyEvents) > 0 {
 		recap += "experienced significant events. "
 	}
-	
+
 	if len(req.NPCsEncountered) > 0 {
 		recap += fmt.Sprintf("They encountered %d NPCs. ", len(req.NPCsEncountered))
 	}
-	
+
 	if len(req.DecisionsMade) > 0 {
 		recap += "Important decisions were made that will shape future events. "
 	}
-	
+
 	if len(req.ItemsAcquired) > 0 {
 		recap += fmt.Sprintf("The party acquired %d new items. ", len(req.ItemsAcquired))
 	}
-	
+
 	if len(req.LocationsVisited) > 0 {
 		recap += fmt.Sprintf("They explored %d locations. ", len(req.LocationsVisited))
 	}
-	
+
 	return recap
 }

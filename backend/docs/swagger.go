@@ -11,7 +11,7 @@ import (
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
-// @contact.url https://github.com/your-username/dnd-game/issues
+// @contact.url https://github.com/ctclostio/DnD-Game/issues
 // @contact.email support@dndgame.com
 
 // @license.name MIT
@@ -64,7 +64,7 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "contact": {
             "name": "API Support",
-            "url": "https://github.com/your-username/dnd-game/issues",
+            "url": "https://github.com/ctclostio/DnD-Game/issues",
             "email": "support@dndgame.com"
         },
         "license": {

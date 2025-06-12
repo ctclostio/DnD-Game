@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/pkg/dice"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/dice"
 )
 
 type CombatEngine struct {
@@ -44,8 +44,11 @@ func (ce *CombatEngine) StartCombat(gameSessionID string, combatants []models.Co
 			combatants[i].InitiativeRoll = roll
 			combatants[i].Initiative = total
 		}
-		combatants[i].ID = uuid.New().String()
-		
+		// Only generate ID if not provided
+		if combatants[i].ID == "" {
+			combatants[i].ID = uuid.New().String()
+		}
+
 		// Reset action economy
 		combatants[i].Actions = 1
 		combatants[i].BonusActions = 1
@@ -90,7 +93,7 @@ func (ce *CombatEngine) NextTurn(combat *models.Combat) (*models.Combatant, bool
 
 	// Increment turn
 	combat.CurrentTurn++
-	
+
 	// Check if we need to start a new round
 	if combat.CurrentTurn >= len(combat.TurnOrder) {
 		combat.CurrentTurn = 0
@@ -106,12 +109,12 @@ func (ce *CombatEngine) NextTurn(combat *models.Combat) (*models.Combatant, bool
 			if combat.Combatants[i].HP <= 0 && !combat.Combatants[i].DeathSaves.IsStable {
 				return ce.NextTurn(combat)
 			}
-			
+
 			// Reset action economy for the combatant
 			combat.Combatants[i].Actions = 1
 			combat.Combatants[i].BonusActions = 1
 			combat.Combatants[i].Movement = combat.Combatants[i].Speed
-			
+
 			return &combat.Combatants[i], true
 		}
 	}
@@ -317,12 +320,12 @@ func (ce *CombatEngine) DeathSavingThrow(combatant *models.Combatant) (*models.R
 	}
 
 	roll := &models.Roll{
-		Type:       models.RollTypeDeathSave,
-		Dice:       "1d20",
-		Modifier:   0,
-		Result:     result.Total,
-		Individual: result.Dice,
-		Critical:   result.Dice[0] == 20,
+		Type:         models.RollTypeDeathSave,
+		Dice:         "1d20",
+		Modifier:     0,
+		Result:       result.Total,
+		Individual:   result.Dice,
+		Critical:     result.Dice[0] == 20,
 		CriticalMiss: result.Dice[0] == 1,
 	}
 
@@ -357,29 +360,29 @@ func (ce *CombatEngine) DeathSavingThrow(combatant *models.Combatant) (*models.R
 // Action Economy
 func (ce *CombatEngine) UseAction(combatant *models.Combatant, actionType models.ActionType) error {
 	switch actionType {
-	case models.ActionTypeAttack, models.ActionTypeCast, models.ActionTypeDash, 
-	     models.ActionTypeDodge, models.ActionTypeHelp, models.ActionTypeHide, 
-	     models.ActionTypeReady, models.ActionTypeSearch, models.ActionTypeUseItem:
+	case models.ActionTypeAttack, models.ActionTypeCast, models.ActionTypeDash,
+		models.ActionTypeDodge, models.ActionTypeHelp, models.ActionTypeHide,
+		models.ActionTypeReady, models.ActionTypeSearch, models.ActionTypeUseItem:
 		if combatant.Actions <= 0 {
 			return fmt.Errorf("no actions remaining")
 		}
 		combatant.Actions--
-		
+
 	case models.ActionTypeBonusAction:
 		if combatant.BonusActions <= 0 {
 			return fmt.Errorf("no bonus actions remaining")
 		}
 		combatant.BonusActions--
-		
+
 	case models.ActionTypeReaction:
 		if combatant.Reactions <= 0 {
 			return fmt.Errorf("no reactions remaining")
 		}
 		combatant.Reactions--
-		
+
 	case models.ActionTypeMove:
 		// Movement is tracked separately
-		
+
 	default:
 		// Free actions don't consume resources
 	}

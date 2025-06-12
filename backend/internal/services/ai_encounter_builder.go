@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type EncounterRequest struct {
@@ -33,10 +33,10 @@ func NewAIEncounterBuilder(provider LLMProvider) *AIEncounterBuilder {
 func (b *AIEncounterBuilder) GenerateEncounter(ctx context.Context, req EncounterRequest) (*models.Encounter, error) {
 	// Calculate XP budget based on party
 	xpBudget := b.calculateXPBudget(req.PartyLevel, req.PartySize, req.Difficulty)
-	
+
 	// Build prompt for AI
 	prompt := b.buildEncounterPrompt(req, xpBudget)
-	
+
 	systemPrompt := `You are a D&D 5th Edition encounter designer creating balanced, engaging encounters.
 Your responses must be valid JSON matching the specified format exactly. Do not include any additional text or explanation outside the JSON.`
 
@@ -274,21 +274,21 @@ func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.En
 	if jsonStart == -1 || jsonEnd == -1 {
 		return nil, fmt.Errorf("no valid JSON found in response")
 	}
-	
+
 	jsonStr := response[jsonStart : jsonEnd+1]
-	
+
 	// Parse into intermediate structure
 	var data map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON: %w", err)
 	}
-	
+
 	// Build encounter model
 	encounter := &models.Encounter{
 		Name:        getString(data, "name"),
 		Description: getString(data, "description"),
 	}
-	
+
 	// Parse enemies
 	if enemies, ok := data["enemies"].([]interface{}); ok {
 		for _, enemy := range enemies {
@@ -298,7 +298,7 @@ func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.En
 			}
 		}
 	}
-	
+
 	// Parse environmental features
 	if features, ok := data["environmentalFeatures"].([]interface{}); ok {
 		for _, feature := range features {
@@ -307,7 +307,7 @@ func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.En
 			}
 		}
 	}
-	
+
 	// Parse environmental hazards
 	if hazards, ok := data["environmentalHazards"].([]interface{}); ok {
 		for _, hazard := range hazards {
@@ -324,24 +324,24 @@ func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.En
 			}
 		}
 	}
-	
+
 	// Parse tactical info
 	if tactical, ok := data["tacticalInfo"].(map[string]interface{}); ok {
 		encounter.EnemyTactics = b.parseTacticalInfo(tactical)
 	}
-	
+
 	// Parse non-combat options
 	if nonCombat, ok := data["nonCombatOptions"].(map[string]interface{}); ok {
 		encounter.SocialSolutions = b.parseSolutions(nonCombat["social"])
 		encounter.StealthOptions = b.parseSolutions(nonCombat["stealth"])
 		encounter.EnvironmentalSolutions = b.parseSolutions(nonCombat["environmental"])
 	}
-	
+
 	// Parse reinforcements
 	if reinforcements, ok := data["reinforcements"].([]interface{}); ok {
 		encounter.ReinforcementWaves = b.parseReinforcements(reinforcements)
 	}
-	
+
 	// Parse escape routes
 	if escapes, ok := data["escapeRoutes"].([]interface{}); ok {
 		for _, escape := range escapes {
@@ -356,7 +356,7 @@ func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.En
 			}
 		}
 	}
-	
+
 	// Parse narrative hooks
 	if hooks, ok := data["narrativeHooks"].([]interface{}); ok {
 		for _, hook := range hooks {
@@ -365,12 +365,12 @@ func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.En
 			}
 		}
 	}
-	
+
 	// Parse scaling options
 	if scaling, ok := data["scalingOptions"].(map[string]interface{}); ok {
 		encounter.ScalingOptions = b.parseScalingOptions(scaling)
 	}
-	
+
 	return encounter, nil
 }
 
@@ -390,7 +390,7 @@ func (b *AIEncounterBuilder) parseEnemy(data map[string]interface{}) models.Enco
 		IsAlive:         true,
 		MoraleThreshold: 50, // Default
 	}
-	
+
 	// Parse personality traits
 	if traits, ok := data["personalityTraits"].([]interface{}); ok {
 		for _, trait := range traits {
@@ -399,7 +399,7 @@ func (b *AIEncounterBuilder) parseEnemy(data map[string]interface{}) models.Enco
 			}
 		}
 	}
-	
+
 	// Parse abilities
 	if abilities, ok := data["abilities"].([]interface{}); ok {
 		for _, ability := range abilities {
@@ -413,24 +413,24 @@ func (b *AIEncounterBuilder) parseEnemy(data map[string]interface{}) models.Enco
 			}
 		}
 	}
-	
+
 	// Parse actions
 	if actions, ok := data["actions"].([]interface{}); ok {
 		for _, action := range actions {
 			if actionMap, ok := action.(map[string]interface{}); ok {
 				act := models.Action{
-					Name:         getString(actionMap, "name"),
-					Description:  getString(actionMap, "description"),
-					AttackBonus:  getInt(actionMap, "attackBonus"),
-					Damage:       getString(actionMap, "damage"),
-					SaveDC:       getInt(actionMap, "saveDC"),
-					SaveType:     getString(actionMap, "saveType"),
+					Name:        getString(actionMap, "name"),
+					Description: getString(actionMap, "description"),
+					AttackBonus: getInt(actionMap, "attackBonus"),
+					Damage:      getString(actionMap, "damage"),
+					SaveDC:      getInt(actionMap, "saveDC"),
+					SaveType:    getString(actionMap, "saveType"),
 				}
 				enemy.Actions = append(enemy.Actions, act)
 			}
 		}
 	}
-	
+
 	return enemy
 }
 
@@ -441,7 +441,7 @@ func (b *AIEncounterBuilder) parseTacticalInfo(data map[string]interface{}) *mod
 		RetreatConditions: getString(data, "retreatConditions"),
 		SpecialTactics:    make(map[string]string),
 	}
-	
+
 	// Parse priority targets
 	if targets, ok := data["priorityTargets"].([]interface{}); ok {
 		for _, target := range targets {
@@ -450,7 +450,7 @@ func (b *AIEncounterBuilder) parseTacticalInfo(data map[string]interface{}) *mod
 			}
 		}
 	}
-	
+
 	// Parse combat phases
 	if phases, ok := data["combatPhases"].([]interface{}); ok {
 		for _, phase := range phases {
@@ -464,13 +464,13 @@ func (b *AIEncounterBuilder) parseTacticalInfo(data map[string]interface{}) *mod
 			}
 		}
 	}
-	
+
 	return tactical
 }
 
 func (b *AIEncounterBuilder) parseSolutions(data interface{}) []models.Solution {
 	var solutions []models.Solution
-	
+
 	if solutionList, ok := data.([]interface{}); ok {
 		for _, solution := range solutionList {
 			if solutionMap, ok := solution.(map[string]interface{}); ok {
@@ -480,7 +480,7 @@ func (b *AIEncounterBuilder) parseSolutions(data interface{}) []models.Solution 
 					DC:           getInt(solutionMap, "dc"),
 					Consequences: getString(solutionMap, "consequences"),
 				}
-				
+
 				// Parse requirements
 				if reqs, ok := solutionMap["requirements"].([]interface{}); ok {
 					for _, req := range reqs {
@@ -489,18 +489,18 @@ func (b *AIEncounterBuilder) parseSolutions(data interface{}) []models.Solution 
 						}
 					}
 				}
-				
+
 				solutions = append(solutions, sol)
 			}
 		}
 	}
-	
+
 	return solutions
 }
 
 func (b *AIEncounterBuilder) parseReinforcements(data []interface{}) []models.ReinforcementWave {
 	var waves []models.ReinforcementWave
-	
+
 	for _, wave := range data {
 		if waveMap, ok := wave.(map[string]interface{}); ok {
 			reinforcement := models.ReinforcementWave{
@@ -508,7 +508,7 @@ func (b *AIEncounterBuilder) parseReinforcements(data []interface{}) []models.Re
 				Trigger:      getString(waveMap, "trigger"),
 				Announcement: getString(waveMap, "announcement"),
 			}
-			
+
 			// Parse reinforcement enemies
 			if enemies, ok := waveMap["enemies"].([]interface{}); ok {
 				for _, enemy := range enemies {
@@ -523,25 +523,25 @@ func (b *AIEncounterBuilder) parseReinforcements(data []interface{}) []models.Re
 					}
 				}
 			}
-			
+
 			waves = append(waves, reinforcement)
 		}
 	}
-	
+
 	return waves
 }
 
 func (b *AIEncounterBuilder) parseScalingOptions(data map[string]interface{}) *models.ScalingOptions {
 	options := &models.ScalingOptions{}
-	
+
 	if easier, ok := data["easier"].(map[string]interface{}); ok {
 		options.Easy = b.parseScalingAdjustment(easier)
 	}
-	
+
 	if harder, ok := data["harder"].(map[string]interface{}); ok {
 		options.Hard = b.parseScalingAdjustment(harder)
 	}
-	
+
 	// Generate medium and deadly based on easy/hard
 	options.Medium = models.ScalingAdjustment{} // No changes for medium
 	options.Deadly = models.ScalingAdjustment{
@@ -550,7 +550,7 @@ func (b *AIEncounterBuilder) parseScalingOptions(data map[string]interface{}) *m
 		AddEnemies:     append(options.Hard.AddEnemies, options.Hard.AddEnemies...),
 		AddHazards:     options.Hard.AddHazards,
 	}
-	
+
 	return options
 }
 
@@ -559,14 +559,14 @@ func (b *AIEncounterBuilder) parseScalingAdjustment(data map[string]interface{})
 		HPModifier:     getInt(data, "hpModifier"),
 		DamageModifier: getInt(data, "damageModifier"),
 	}
-	
+
 	// Parse arrays
 	adj.AddEnemies = parseStringArray(data, "addEnemies")
 	adj.RemoveEnemies = parseStringArray(data, "removeEnemies")
 	adj.AddHazards = parseStringArray(data, "addHazards")
 	adj.AddTerrain = parseStringArray(data, "addTerrain")
 	adj.AddObjectives = parseStringArray(data, "addObjectives")
-	
+
 	return adj
 }
 
@@ -594,19 +594,19 @@ func (b *AIEncounterBuilder) calculateXPBudget(level, size int, difficulty strin
 		19: {2400, 4900, 7300, 10900},
 		20: {2800, 5700, 8500, 12700},
 	}
-	
+
 	difficultyIndex := map[string]int{
 		"easy":   0,
 		"medium": 1,
 		"hard":   2,
 		"deadly": 3,
 	}
-	
+
 	idx := difficultyIndex[difficulty]
 	if idx == 0 && difficulty != "easy" {
 		idx = 1 // Default to medium
 	}
-	
+
 	threshold := thresholds[level][idx]
 	return threshold * size
 }
@@ -639,19 +639,19 @@ func (b *AIEncounterBuilder) calculateEncounterXP(encounter *models.Encounter) {
 		19:    22000,
 		20:    25000,
 	}
-	
+
 	totalXP := 0
 	enemyCount := 0
-	
+
 	for _, enemy := range encounter.Enemies {
 		if xp, ok := crToXP[enemy.ChallengeRating]; ok {
 			totalXP += xp * enemy.Quantity
 			enemyCount += enemy.Quantity
 		}
 	}
-	
+
 	encounter.TotalXP = totalXP
-	
+
 	// Calculate adjusted XP based on enemy count
 	multiplier := 1.0
 	switch {
@@ -668,14 +668,14 @@ func (b *AIEncounterBuilder) calculateEncounterXP(encounter *models.Encounter) {
 	case enemyCount >= 15:
 		multiplier = 4.0
 	}
-	
+
 	// Adjust multiplier for party size
 	if encounter.PartySize < 3 {
 		multiplier *= 1.5
 	} else if encounter.PartySize > 5 {
 		multiplier *= 0.5
 	}
-	
+
 	encounter.AdjustedXP = int(float64(totalXP) * multiplier)
 }
 
@@ -686,7 +686,7 @@ func (b *AIEncounterBuilder) enhanceEncounterForParty(encounter *models.Encounte
 	encounter.NarrativeContext = req.NarrativeContext
 	encounter.EncounterType = req.EncounterType
 	encounter.Difficulty = req.Difficulty
-	
+
 	// Store party composition
 	composition := make(map[string]interface{})
 	classCounts := make(map[string]int)
@@ -696,7 +696,7 @@ func (b *AIEncounterBuilder) enhanceEncounterForParty(encounter *models.Encounte
 	composition["classes"] = classCounts
 	composition["totalSize"] = req.PartySize
 	encounter.PartyComposition = composition
-	
+
 	// Calculate average CR for the encounter
 	totalCR := 0.0
 	enemyCount := 0
@@ -707,7 +707,7 @@ func (b *AIEncounterBuilder) enhanceEncounterForParty(encounter *models.Encounte
 	if enemyCount > 0 {
 		encounter.ChallengeRating = totalCR / float64(enemyCount)
 	}
-	
+
 	// Add party-specific tactical considerations
 	b.addPartySpecificTactics(encounter, req.PartyComposition)
 }
@@ -718,12 +718,12 @@ func (b *AIEncounterBuilder) addPartySpecificTactics(encounter *models.Encounter
 			SpecialTactics: make(map[string]string),
 		}
 	}
-	
+
 	// Add tactics based on party composition
 	hasHealer := false
 	hasCaster := false
 	hasTank := false
-	
+
 	for _, class := range classes {
 		switch class {
 		case "cleric", "druid", "bard":
@@ -734,7 +734,7 @@ func (b *AIEncounterBuilder) addPartySpecificTactics(encounter *models.Encounter
 			hasTank = true
 		}
 	}
-	
+
 	if hasHealer {
 		encounter.EnemyTactics.SpecialTactics["vs_healer"] = "Focus fire on the healer when they're exposed"
 	}
@@ -748,7 +748,7 @@ func (b *AIEncounterBuilder) addPartySpecificTactics(encounter *models.Encounter
 
 func (b *AIEncounterBuilder) GenerateTacticalSuggestion(ctx context.Context, encounter *models.Encounter, situation string) (string, error) {
 	systemPrompt := "You are a D&D tactical advisor providing concise, actionable tactical suggestions for combat encounters."
-	
+
 	prompt := fmt.Sprintf(`Provide a specific tactical suggestion for the enemies in this situation:
 
 Encounter: %s
@@ -762,12 +762,12 @@ Provide a brief (2-3 sentences) tactical suggestion for what the enemies should 
 		len(encounter.Enemies),
 		encounter.EnemyTactics.GeneralStrategy,
 	)
-	
+
 	response, err := b.llmProvider.GenerateCompletion(ctx, prompt, systemPrompt)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate tactical suggestion: %w", err)
 	}
-	
+
 	return strings.TrimSpace(response), nil
 }
 

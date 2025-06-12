@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // characterRepository implements CharacterRepository interface
@@ -26,7 +26,7 @@ func (r *characterRepository) Create(ctx context.Context, character *models.Char
 	if character.ID == "" {
 		character.ID = uuid.New().String()
 	}
-	
+
 	// Convert complex types to JSON
 	attributesJSON, err := json.Marshal(character.Attributes)
 	if err != nil {
@@ -109,7 +109,7 @@ func (r *characterRepository) GetByID(ctx context.Context, id string) (*models.C
 	if err := json.Unmarshal(spellsJSON, &character.Spells); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal spells: %w", err)
 	}
-	
+
 	// Initialize fields that might not be in the database
 	// Note: We don't need to check if SavingThrows is empty since it only contains basic types
 	// Initialize empty slices and maps
@@ -228,12 +228,12 @@ func (r *characterRepository) Update(ctx context.Context, character *models.Char
 	if err != nil {
 		return fmt.Errorf("failed to update character: %w", err)
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("failed to get rows affected: %w", err)
 	}
-	
+
 	if rowsAffected == 0 {
 		return fmt.Errorf("character not found")
 	}
@@ -244,7 +244,7 @@ func (r *characterRepository) Update(ctx context.Context, character *models.Char
 // Delete deletes a character
 func (r *characterRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM characters WHERE id = ?`
-	
+
 	result, err := r.db.ExecContextRebind(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete character: %w", err)

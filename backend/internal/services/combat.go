@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/game"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/game"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type CombatService struct {
@@ -103,12 +103,20 @@ func (s *CombatService) ProcessAction(ctx context.Context, combatID string, requ
 		err = s.processDash(combat, actor, action)
 	case models.ActionTypeDodge:
 		err = s.processDodge(combat, actor, action)
+	case models.ActionTypeEndTurn:
+		// End turn just creates the action, turn will advance below
+		action.Description = fmt.Sprintf("%s ends their turn", actor.Name)
 	default:
 		err = fmt.Errorf("unsupported action type: %s", request.Action)
 	}
 
 	if err != nil {
 		return nil, err
+	}
+
+	// Auto-advance turn after most actions (except reactions and some special cases)
+	if request.Action != models.ActionTypeReaction && request.Action != models.ActionTypeConcentration {
+		s.engine.NextTurn(combat)
 	}
 
 	return action, nil
@@ -155,7 +163,7 @@ func (s *CombatService) processAttack(combat *models.Combat, actor *models.Comba
 
 		// Apply damage
 		totalDamage := s.engine.ApplyDamage(target, damage)
-		
+
 		// Check for concentration
 		if target.IsConcentrating && totalDamage > 0 {
 			concRoll, success, err := s.engine.ConcentrationCheck(target, totalDamage)
@@ -179,7 +187,7 @@ func (s *CombatService) processAttack(combat *models.Combat, actor *models.Comba
 func (s *CombatService) processMovement(combat *models.Combat, actor *models.Combatant, request models.CombatRequest, action *models.CombatAction) error {
 	// Calculate distance
 	distance := 5 // Example: each square is 5 feet
-	
+
 	err := s.engine.UseMovement(actor, distance)
 	if err != nil {
 		return err
@@ -196,7 +204,7 @@ func (s *CombatService) processDeathSave(combat *models.Combat, actor *models.Co
 	}
 
 	action.Rolls = append(action.Rolls, *roll)
-	
+
 	if roll.Critical {
 		action.Description = fmt.Sprintf("%s rolls a natural 20 on death save and regains consciousness with 1 HP!", actor.Name)
 	} else if actor.DeathSaves.IsStable {

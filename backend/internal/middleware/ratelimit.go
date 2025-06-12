@@ -31,10 +31,10 @@ func NewRateLimiter(rate int, window time.Duration) *RateLimiter {
 		rate:     rate,
 		window:   window,
 	}
-	
+
 	// Start cleanup goroutine
 	go rl.cleanupVisitors()
-	
+
 	return rl
 }
 
@@ -42,7 +42,7 @@ func NewRateLimiter(rate int, window time.Duration) *RateLimiter {
 func (rl *RateLimiter) cleanupVisitors() {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		rl.mu.Lock()
 		for ip, v := range rl.visitors {
@@ -58,7 +58,7 @@ func (rl *RateLimiter) cleanupVisitors() {
 func (rl *RateLimiter) getVisitor(ip string) *visitor {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	
+
 	v, exists := rl.visitors[ip]
 	if !exists {
 		v = &visitor{
@@ -67,19 +67,19 @@ func (rl *RateLimiter) getVisitor(ip string) *visitor {
 		}
 		rl.visitors[ip] = v
 	}
-	
+
 	return v
 }
 
 // isAllowed checks if a request from the given IP is allowed
 func (rl *RateLimiter) isAllowed(ip string) bool {
 	v := rl.getVisitor(ip)
-	
+
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	
+
 	now := time.Now()
-	
+
 	// Check if visitor is blocked
 	if v.blocked {
 		// Check if block period has expired (exponential backoff)
@@ -90,23 +90,23 @@ func (rl *RateLimiter) isAllowed(ip string) bool {
 		v.blocked = false
 		v.count = 0
 	}
-	
+
 	// Reset count if window has passed
 	if now.Sub(v.lastSeen) > rl.window {
 		v.count = 0
 		v.lastSeen = now
 	}
-	
+
 	// Increment count
 	v.count++
-	
+
 	// Check if limit exceeded
 	if v.count > rl.rate {
 		v.blocked = true
 		v.blockTime = now
 		return false
 	}
-	
+
 	v.lastSeen = now
 	return true
 }
@@ -116,7 +116,7 @@ func (rl *RateLimiter) Middleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ip := getIP(r)
-			
+
 			if !rl.isAllowed(ip) {
 				w.Header().Set("Content-Type", "application/json")
 				w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", rl.rate))
@@ -126,7 +126,7 @@ func (rl *RateLimiter) Middleware() func(http.Handler) http.Handler {
 				fmt.Fprintf(w, `{"error":"Rate limit exceeded. Please try again later."}`)
 				return
 			}
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -142,20 +142,20 @@ func getIP(r *http.Request) string {
 			return ip.String()
 		}
 	}
-	
+
 	// Check X-Real-IP header
 	if realIP := r.Header.Get("X-Real-IP"); realIP != "" {
 		if ip := net.ParseIP(realIP); ip != nil {
 			return ip.String()
 		}
 	}
-	
+
 	// Fall back to RemoteAddr
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		return r.RemoteAddr
 	}
-	
+
 	return ip
 }
 

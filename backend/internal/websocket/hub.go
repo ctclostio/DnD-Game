@@ -2,8 +2,8 @@ package websocket
 
 import (
 	"encoding/json"
-	"log"
 	"github.com/gorilla/websocket"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 type Hub struct {
@@ -54,7 +54,12 @@ func (h *Hub) Run() {
 				}
 				h.rooms[client.roomID][client] = true
 			}
-			log.Printf("Client %s connected to room %s", client.id, client.roomID)
+			logger.Info().
+				Str("client_id", client.id).
+				Str("username", client.username).
+				Str("room_id", client.roomID).
+				Str("role", client.role).
+				Msg("Client connected to room")
 
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
@@ -63,13 +68,19 @@ func (h *Hub) Run() {
 					delete(h.rooms[client.roomID], client)
 				}
 				close(client.send)
-				log.Printf("Client %s disconnected from room %s", client.id, client.roomID)
+				logger.Info().
+					Str("client_id", client.id).
+					Str("username", client.username).
+					Str("room_id", client.roomID).
+					Msg("Client disconnected from room")
 			}
 
 		case message := <-h.broadcast:
 			var msg Message
 			if err := json.Unmarshal(message, &msg); err != nil {
-				log.Printf("Error unmarshaling message: %v", err)
+				logger.Error().
+					Err(err).
+					Msg("Error unmarshaling message")
 				continue
 			}
 
@@ -99,7 +110,11 @@ func (c *Client) ReadPump() {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				logger.Error().
+					Err(err).
+					Str("client_id", c.id).
+					Str("room_id", c.roomID).
+					Msg("WebSocket read error")
 			}
 			break
 		}
@@ -109,7 +124,7 @@ func (c *Client) ReadPump() {
 
 func (c *Client) WritePump() {
 	defer c.conn.Close()
-	
+
 	for {
 		select {
 		case message, ok := <-c.send:

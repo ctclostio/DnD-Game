@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 type DiceRollRequest struct {
@@ -22,26 +23,26 @@ type DiceRollResponse struct {
 func (h *Handlers) RollDice(w http.ResponseWriter, r *http.Request) {
 	var req DiceRollRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
+		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
 	// Validate game session ID
 	if req.GameSessionID == "" {
-		sendErrorResponse(w, http.StatusBadRequest, "Game session ID is required")
+		response.BadRequest(w, r, "Game session ID is required")
 		return
 	}
 
 	// Validate user is in the game session
 	if err := h.gameService.ValidateUserInSession(r.Context(), req.GameSessionID, userID); err != nil {
-		sendErrorResponse(w, http.StatusForbidden, "User is not a participant in this game session")
+		response.Forbidden(w, r, "User is not a participant in this game session")
 		return
 	}
 
@@ -54,16 +55,16 @@ func (h *Handlers) RollDice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.diceService.RollDice(r.Context(), roll); err != nil {
-		sendErrorResponse(w, http.StatusBadRequest, err.Error())
+		response.BadRequest(w, r, err.Error())
 		return
 	}
 
-	response := DiceRollResponse{
+	resp := DiceRollResponse{
 		Roll:    roll,
 		Success: true,
 	}
 
-	sendJSONResponse(w, http.StatusOK, response)
+	response.JSON(w, r, http.StatusOK, resp)
 }
 
 func (h *Handlers) GetDiceRolls(w http.ResponseWriter, r *http.Request) {
@@ -86,14 +87,14 @@ func (h *Handlers) GetDiceRolls(w http.ResponseWriter, r *http.Request) {
 	} else if userID != "" {
 		rolls, err = h.diceService.GetRollsByUser(r.Context(), userID, offset, limit)
 	} else {
-		sendErrorResponse(w, http.StatusBadRequest, "Either game_session_id or user_id is required")
+		response.BadRequest(w, r, "Either game_session_id or user_id is required")
 		return
 	}
 
 	if err != nil {
-		sendErrorResponse(w, http.StatusInternalServerError, err.Error())
+		response.InternalServerError(w, r, err)
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, rolls)
+	response.JSON(w, r, http.StatusOK, rolls)
 }

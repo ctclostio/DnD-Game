@@ -16,10 +16,25 @@ import gameSessionReducer, {
   clearSessions,
 } from '../gameSessionSlice';
 import { GameSession, CombatParticipant } from '../../../types/game';
-import * as api from '../../../services/api';
+import apiService from '../../../services/api';
 
 // Mock the API module
-jest.mock('../../../services/api');
+jest.mock('../../../services/api', () => ({
+  __esModule: true,
+  default: {
+    getGameSessions: jest.fn(),
+    createGameSession: jest.fn(),
+    joinGameSession: jest.fn(),
+    leaveGameSession: jest.fn(),
+    updateGameSession: jest.fn(),
+  },
+  // Also export individual functions for backward compatibility
+  getGameSessions: jest.fn(),
+  createGameSession: jest.fn(),
+  joinGameSession: jest.fn(),
+  leaveGameSession: jest.fn(),
+  updateGameSession: jest.fn(),
+}));
 
 describe('gameSessionSlice', () => {
   let store: ReturnType<typeof configureStore>;
@@ -94,7 +109,7 @@ describe('gameSessionSlice', () => {
         createMockSession('session-2', 'Adventure 2'),
       ];
       
-      (api.getGameSessions as jest.Mock).mockResolvedValue(mockSessions);
+      (apiService.getGameSessions as jest.Mock).mockResolvedValue(mockSessions);
 
       await store.dispatch(fetchSessions());
 
@@ -108,7 +123,7 @@ describe('gameSessionSlice', () => {
 
     it('should handle fetch sessions failure', async () => {
       const errorMessage = 'Network error';
-      (api.getGameSessions as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (apiService.getGameSessions as jest.Mock).mockRejectedValue(new Error(errorMessage));
 
       await store.dispatch(fetchSessions());
 
@@ -119,7 +134,7 @@ describe('gameSessionSlice', () => {
     });
 
     it('should set loading state while fetching', () => {
-      (api.getGameSessions as jest.Mock).mockImplementation(
+      (apiService.getGameSessions as jest.Mock).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -136,7 +151,7 @@ describe('gameSessionSlice', () => {
       const sessionData = { name: 'New Adventure', campaignId: 'campaign-1' };
       const mockSession = createMockSession('session-3', 'New Adventure');
       
-      (api.createGameSession as jest.Mock).mockResolvedValue(mockSession);
+      (apiService.createGameSession as jest.Mock).mockResolvedValue(mockSession);
 
       await store.dispatch(createSession(sessionData));
 
@@ -151,7 +166,7 @@ describe('gameSessionSlice', () => {
       const sessionData = { name: 'New Adventure' };
       const errorMessage = 'Failed to create session';
       
-      (api.createGameSession as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (apiService.createGameSession as jest.Mock).mockRejectedValue(new Error(errorMessage));
 
       await store.dispatch(createSession(sessionData));
 
@@ -166,7 +181,7 @@ describe('gameSessionSlice', () => {
     it('should join an existing session', async () => {
       const mockSession = createMockSession('session-1', 'Adventure 1');
       
-      (api.joinGameSession as jest.Mock).mockResolvedValue(mockSession);
+      (apiService.joinGameSession as jest.Mock).mockResolvedValue(mockSession);
 
       await store.dispatch(joinSession('session-1'));
 
@@ -187,7 +202,7 @@ describe('gameSessionSlice', () => {
         playerIds: [...initialSession.playerIds, 'player-3'],
       };
       
-      (api.joinGameSession as jest.Mock).mockResolvedValue(updatedSession);
+      (apiService.joinGameSession as jest.Mock).mockResolvedValue(updatedSession);
 
       await store.dispatch(joinSession('session-1'));
 
@@ -198,7 +213,7 @@ describe('gameSessionSlice', () => {
     it('should handle join session failure', async () => {
       const errorMessage = 'Session full';
       
-      (api.joinGameSession as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (apiService.joinGameSession as jest.Mock).mockRejectedValue(new Error(errorMessage));
 
       await store.dispatch(joinSession('session-1'));
 
@@ -211,12 +226,12 @@ describe('gameSessionSlice', () => {
   describe('leaveSession', () => {
     beforeEach(async () => {
       const mockSession = createMockSession('session-1', 'Adventure 1');
-      (api.joinGameSession as jest.Mock).mockResolvedValue(mockSession);
+      (apiService.joinGameSession as jest.Mock).mockResolvedValue(mockSession);
       await store.dispatch(joinSession('session-1'));
     });
 
     it('should leave current session', async () => {
-      (api.leaveGameSession as jest.Mock).mockResolvedValue(undefined);
+      (apiService.leaveGameSession as jest.Mock).mockResolvedValue(undefined);
 
       await store.dispatch(leaveSession('session-1'));
 
@@ -226,7 +241,7 @@ describe('gameSessionSlice', () => {
     });
 
     it('should not change current session if leaving different session', async () => {
-      (api.leaveGameSession as jest.Mock).mockResolvedValue(undefined);
+      (apiService.leaveGameSession as jest.Mock).mockResolvedValue(undefined);
 
       await store.dispatch(leaveSession('session-2'));
 
@@ -237,7 +252,7 @@ describe('gameSessionSlice', () => {
     it('should handle leave session failure', async () => {
       const errorMessage = 'Cannot leave session';
       
-      (api.leaveGameSession as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (apiService.leaveGameSession as jest.Mock).mockRejectedValue(new Error(errorMessage));
 
       await store.dispatch(leaveSession('session-1'));
 
@@ -260,7 +275,7 @@ describe('gameSessionSlice', () => {
         ...updates,
       };
       
-      (api.updateGameSession as jest.Mock).mockResolvedValue(updatedSession);
+      (apiService.updateGameSession as jest.Mock).mockResolvedValue(updatedSession);
 
       await store.dispatch(updateSession({ sessionId: 'session-1', updates }));
 
@@ -272,7 +287,7 @@ describe('gameSessionSlice', () => {
       const updates = { sessionNotes: 'Updated notes' };
       const errorMessage = 'Update failed';
       
-      (api.updateGameSession as jest.Mock).mockRejectedValue(new Error(errorMessage));
+      (apiService.updateGameSession as jest.Mock).mockRejectedValue(new Error(errorMessage));
 
       await store.dispatch(updateSession({ sessionId: 'session-1', updates }));
 
@@ -282,11 +297,15 @@ describe('gameSessionSlice', () => {
   });
 
   describe('sync actions', () => {
-    beforeEach(() => {
-      const session1 = createMockSession('session-1', 'Adventure 1');
-      const session2 = createMockSession('session-2', 'Adventure 2');
-      store.dispatch(sessionUpdated(session1));
-      store.dispatch(sessionUpdated(session2));
+    beforeEach(async () => {
+      // First, we need to populate the store with sessions
+      const mockSessions = [
+        createMockSession('session-1', 'Adventure 1'),
+        createMockSession('session-2', 'Adventure 2'),
+      ];
+      
+      (apiService.getGameSessions as jest.Mock).mockResolvedValue(mockSessions);
+      await store.dispatch(fetchSessions());
     });
 
     describe('sessionUpdated', () => {
@@ -443,11 +462,31 @@ describe('gameSessionSlice', () => {
   });
 
   describe('complex scenarios', () => {
+    it('should properly handle playerJoined action', async () => {
+      // First create a session
+      const mockSession = createMockSession('test-session', 'Test Session');
+      (apiService.createGameSession as jest.Mock).mockResolvedValue(mockSession);
+      
+      await store.dispatch(createSession({ name: 'Test Session' }));
+      
+      // Check initial state
+      let state = store.getState().gameSession;
+      expect(state.sessions.entities['test-session']).toBeDefined();
+      expect(state.sessions.entities['test-session'].playerIds).toEqual(['player-1', 'player-2']);
+      
+      // Add a player
+      store.dispatch(playerJoined({ sessionId: 'test-session', playerId: 'new-player' }));
+      
+      // Check updated state
+      state = store.getState().gameSession;
+      expect(state.sessions.entities['test-session'].playerIds).toEqual(['player-1', 'player-2', 'new-player']);
+    });
+
     it('should handle complete session lifecycle', async () => {
       // Create session
       const sessionData = { name: 'Epic Campaign' };
       const mockSession = createMockSession('session-1', 'Epic Campaign');
-      (api.createGameSession as jest.Mock).mockResolvedValue(mockSession);
+      (apiService.createGameSession as jest.Mock).mockResolvedValue(mockSession);
       
       await store.dispatch(createSession(sessionData));
 
@@ -462,11 +501,13 @@ describe('gameSessionSlice', () => {
       store.dispatch(combatStarted({ sessionId: 'session-1', participants }));
 
       // Update session
+      // Get current session state to preserve playerIds changes
+      const currentSessionState = store.getState().gameSession.sessions.entities['session-1'];
       const updatedSession = {
-        ...mockSession,
+        ...currentSessionState,
         sessionNotes: 'Combat in progress',
       };
-      (api.updateGameSession as jest.Mock).mockResolvedValue(updatedSession);
+      (apiService.updateGameSession as jest.Mock).mockResolvedValue(updatedSession);
       await store.dispatch(updateSession({ 
         sessionId: 'session-1', 
         updates: { sessionNotes: 'Combat in progress' } 
@@ -482,6 +523,7 @@ describe('gameSessionSlice', () => {
       const state = store.getState().gameSession;
       const session = state.sessions.entities['session-1'];
       
+      expect(session).toBeDefined();
       expect(session.playerIds).toContain('player-3');
       expect(session.playerIds).not.toContain('player-2');
       expect(session.combatActive).toBe(false);
@@ -495,11 +537,11 @@ describe('gameSessionSlice', () => {
         createMockSession('session-3', 'Campaign 3'),
       ];
 
-      (api.getGameSessions as jest.Mock).mockResolvedValue(sessions);
+      (apiService.getGameSessions as jest.Mock).mockResolvedValue(sessions);
       await store.dispatch(fetchSessions());
 
       // Join one session
-      (api.joinGameSession as jest.Mock).mockResolvedValue(sessions[1]);
+      (apiService.joinGameSession as jest.Mock).mockResolvedValue(sessions[1]);
       await store.dispatch(joinSession('session-2'));
 
       // Update different sessions

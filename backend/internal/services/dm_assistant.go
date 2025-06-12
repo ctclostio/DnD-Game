@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // DMAssistantService handles DM assistance operations
@@ -51,12 +52,12 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 			return nil, err
 		}
 		prompt = fmt.Sprintf("NPC: %s, Player: %s", npcReq.NPCName, npcReq.PlayerInput)
-		
+
 		dialogue, err := s.aiAssistant.GenerateNPCDialogue(ctx, *npcReq)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		historyEntry.Response = dialogue
 		result = map[string]string{"dialogue": dialogue}
 
@@ -66,20 +67,20 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 			return nil, err
 		}
 		prompt = fmt.Sprintf("Location: %s (%s)", locReq.LocationName, locReq.LocationType)
-		
+
 		location, err := s.aiAssistant.GenerateLocationDescription(ctx, *locReq)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		location.GameSessionID = gameSessionID
 		location.CreatedBy = userID
-		
+
 		// Save to database
 		if err := s.repo.SaveLocation(ctx, location); err != nil {
 			return nil, fmt.Errorf("failed to save location: %w", err)
 		}
-		
+
 		historyEntry.Response = location.Description
 		result = location
 
@@ -89,12 +90,12 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 			return nil, err
 		}
 		prompt = fmt.Sprintf("Combat: %s vs %s", combatReq.AttackerName, combatReq.TargetName)
-		
+
 		narration, err := s.aiAssistant.GenerateCombatNarration(ctx, *combatReq)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Save narration for reuse
 		narrationEntry := &models.AINarration{
 			ID:            uuid.New(),
@@ -105,11 +106,11 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 			CreatedBy:     userID,
 			CreatedAt:     time.Now(),
 		}
-		
+
 		if err := s.repo.SaveNarration(ctx, narrationEntry); err != nil {
 			return nil, fmt.Errorf("failed to save narration: %w", err)
 		}
-		
+
 		historyEntry.Response = narration
 		result = map[string]string{"narration": narration}
 
@@ -118,15 +119,15 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 		if err != nil {
 			return nil, err
 		}
-		
+
 		plotTwist.GameSessionID = gameSessionID
 		plotTwist.CreatedBy = userID
 		plotTwist.CreatedAt = time.Now()
-		
+
 		if err := s.repo.SaveStoryElement(ctx, plotTwist); err != nil {
 			return nil, fmt.Errorf("failed to save plot twist: %w", err)
 		}
-		
+
 		prompt = "Generate plot twist"
 		historyEntry.Response = plotTwist.Description
 		result = plotTwist
@@ -134,25 +135,25 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 	case models.RequestTypeEnvironmentalHazard:
 		locationType, _ := req.Parameters["locationType"].(string)
 		difficulty, _ := req.Parameters["difficulty"].(float64)
-		
+
 		hazard, err := s.aiAssistant.GenerateEnvironmentalHazard(ctx, locationType, int(difficulty))
 		if err != nil {
 			return nil, err
 		}
-		
+
 		hazard.GameSessionID = gameSessionID
 		hazard.CreatedBy = userID
 		hazard.CreatedAt = time.Now()
-		
+
 		if locationID, ok := req.Parameters["locationId"].(string); ok {
 			locID, _ := uuid.Parse(locationID)
 			hazard.LocationID = &locID
 		}
-		
+
 		if err := s.repo.SaveEnvironmentalHazard(ctx, hazard); err != nil {
 			return nil, fmt.Errorf("failed to save hazard: %w", err)
 		}
-		
+
 		prompt = fmt.Sprintf("Hazard for %s (difficulty %d)", locationType, int(difficulty))
 		historyEntry.Response = hazard.Description
 		result = hazard
@@ -165,7 +166,7 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 	historyEntry.Prompt = prompt
 	if err := s.repo.SaveHistory(ctx, historyEntry); err != nil {
 		// Log error but don't fail the request
-		fmt.Printf("Failed to save history: %v\n", err)
+		logger.WithContext(ctx).WithError(err).Error().Msg("Failed to save history")
 	}
 
 	return result, nil
@@ -215,13 +216,13 @@ func (s *DMAssistantService) TriggerHazard(ctx context.Context, hazardID uuid.UU
 
 func (s *DMAssistantService) parseNPCDialogueRequest(params map[string]interface{}) (*models.NPCDialogueRequest, error) {
 	req := &models.NPCDialogueRequest{}
-	
+
 	if name, ok := params["npcName"].(string); ok {
 		req.NPCName = name
 	} else {
 		return nil, fmt.Errorf("npcName is required")
 	}
-	
+
 	if personality, ok := params["npcPersonality"].([]interface{}); ok {
 		for _, trait := range personality {
 			if t, ok := trait.(string); ok {
@@ -229,29 +230,29 @@ func (s *DMAssistantService) parseNPCDialogueRequest(params map[string]interface
 			}
 		}
 	}
-	
+
 	req.DialogueStyle, _ = params["dialogueStyle"].(string)
 	req.Situation, _ = params["situation"].(string)
 	req.PlayerInput, _ = params["playerInput"].(string)
 	req.PreviousContext, _ = params["previousContext"].(string)
-	
+
 	return req, nil
 }
 
 func (s *DMAssistantService) parseLocationRequest(params map[string]interface{}) (*models.LocationDescriptionRequest, error) {
 	req := &models.LocationDescriptionRequest{}
-	
+
 	if locType, ok := params["locationType"].(string); ok {
 		req.LocationType = locType
 	} else {
 		return nil, fmt.Errorf("locationType is required")
 	}
-	
+
 	req.LocationName, _ = params["locationName"].(string)
 	req.Atmosphere, _ = params["atmosphere"].(string)
 	req.TimeOfDay, _ = params["timeOfDay"].(string)
 	req.Weather, _ = params["weather"].(string)
-	
+
 	if features, ok := params["specialFeatures"].([]interface{}); ok {
 		for _, feature := range features {
 			if f, ok := feature.(string); ok {
@@ -259,32 +260,32 @@ func (s *DMAssistantService) parseLocationRequest(params map[string]interface{})
 			}
 		}
 	}
-	
+
 	return req, nil
 }
 
 func (s *DMAssistantService) parseCombatRequest(params map[string]interface{}) (*models.CombatNarrationRequest, error) {
 	req := &models.CombatNarrationRequest{}
-	
+
 	req.AttackerName, _ = params["attackerName"].(string)
 	req.TargetName, _ = params["targetName"].(string)
 	req.ActionType, _ = params["actionType"].(string)
 	req.WeaponOrSpell, _ = params["weaponOrSpell"].(string)
-	
+
 	if damage, ok := params["damage"].(float64); ok {
 		req.Damage = int(damage)
 	}
-	
+
 	req.IsHit, _ = params["isHit"].(bool)
 	req.IsCritical, _ = params["isCritical"].(bool)
-	
+
 	if hp, ok := params["targetHP"].(float64); ok {
 		req.TargetHP = int(hp)
 	}
 	if maxHP, ok := params["targetMaxHP"].(float64); ok {
 		req.TargetMaxHP = int(maxHP)
 	}
-	
+
 	return req, nil
 }
 

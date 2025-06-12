@@ -4,21 +4,21 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type EncounterService struct {
-	repo            *database.EncounterRepository
+	repo             *database.EncounterRepository
 	encounterBuilder *AIEncounterBuilder
-	combatService   *CombatService
+	combatService    *CombatService
 }
 
 func NewEncounterService(repo *database.EncounterRepository, builder *AIEncounterBuilder, combat *CombatService) *EncounterService {
 	return &EncounterService{
-		repo:            repo,
+		repo:             repo,
 		encounterBuilder: builder,
-		combatService:   combat,
+		combatService:    combat,
 	}
 }
 
@@ -297,7 +297,7 @@ func (s *EncounterService) CheckObjectives(ctx context.Context, encounterID stri
 			// Check if protected NPC is still alive
 			// This would need NPC tracking
 
-		// Add more objective types as needed
+			// Add more objective types as needed
 		}
 
 		if completed {
@@ -343,10 +343,10 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 	// Create optional objectives for non-combat resolution
 	if encounter.EncounterType == "combat" && len(encounter.SocialSolutions) > 0 {
 		bonusObjective := &models.EncounterObjective{
-			EncounterID: encounter.ID,
-			Type:        "custom",
-			Description: "Resolve the encounter without violence",
-			XPReward:    encounter.TotalXP / 4,
+			EncounterID:  encounter.ID,
+			Type:         "custom",
+			Description:  "Resolve the encounter without violence",
+			XPReward:     encounter.TotalXP / 4,
 			StoryRewards: []string{"Peaceful resolution bonus"},
 		}
 		s.repo.CreateObjective(bonusObjective)

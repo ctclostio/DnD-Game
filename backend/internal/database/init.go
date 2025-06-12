@@ -2,14 +2,19 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // Initialize creates and initializes the database connection and repositories
 func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
+	return InitializeWithLogging(cfg, nil)
+}
+
+// InitializeWithLogging creates and initializes the database connection and repositories with optional logging
+func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repositories, error) {
 	// Create database configuration
 	dbConfig := Config{
 		Host:         cfg.Database.Host,
@@ -26,25 +31,37 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 	// Connect to database with retry logic
 	var db *DB
 	var err error
-	
+
 	maxRetries := 5
 	for i := 0; i < maxRetries; i++ {
 		db, err = NewConnection(dbConfig)
 		if err == nil {
 			break
 		}
-		
-		log.Printf("Failed to connect to database (attempt %d/%d): %v", i+1, maxRetries, err)
+
+		if log != nil {
+			log.Error().
+				Err(err).
+				Int("attempt", i+1).
+				Int("max_retries", maxRetries).
+				Msg("Failed to connect to database")
+		}
 		if i < maxRetries-1 {
 			time.Sleep(time.Duration(i+1) * time.Second)
 		}
 	}
-	
+
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to connect to database after %d attempts: %w", maxRetries, err)
 	}
 
-	log.Println("Successfully connected to database")
+	if log != nil {
+		log.Info().
+			Str("host", cfg.Database.Host).
+			Int("port", cfg.Database.Port).
+			Str("database", cfg.Database.DatabaseName).
+			Msg("Successfully connected to database")
+	}
 
 	// Run migrations
 	if err := RunMigrations(db); err != nil {
@@ -52,7 +69,15 @@ func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 		return nil, nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 
-	log.Println("Database migrations completed successfully")
+	if log != nil {
+		log.Info().
+			Msg("Database migrations completed successfully")
+	}
+
+	// Set logger on database connection if provided
+	if log != nil {
+		db.SetLogger(log)
+	}
 
 	// Create repositories
 	repos := &Repositories{

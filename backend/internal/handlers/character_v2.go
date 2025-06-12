@@ -6,10 +6,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/your-username/dnd-game/backend/internal/middleware"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/pkg/errors"
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // CharacterHandlerV2 demonstrates the new standardized error handling
@@ -397,13 +397,13 @@ func (h *CharacterHandlerV2) RegisterRoutesV2(r *mux.Router) {
 // Request/Response types
 
 type CreateCharacterRequest struct {
-	Name             string            `json:"name"`
-	Race             string            `json:"race"`
-	Class            string            `json:"class"`
-	Level            int               `json:"level"`
-	Background       string            `json:"background"`
-	Alignment        string            `json:"alignment"`
-	Attributes       models.Attributes `json:"attributes"`
+	Name       string            `json:"name"`
+	Race       string            `json:"race"`
+	Class      string            `json:"class"`
+	Level      int               `json:"level"`
+	Background string            `json:"background"`
+	Alignment  string            `json:"alignment"`
+	Attributes models.Attributes `json:"attributes"`
 }
 
 type UpdateCharacterRequest struct {

@@ -84,7 +84,7 @@ func TestValidateToken(t *testing.T) {
 	t.Run("expired token", func(t *testing.T) {
 		// Create manager with very short duration
 		shortManager := NewJWTManager("test-secret", 1*time.Millisecond, 1*time.Millisecond)
-		
+
 		tokenPair, err := shortManager.GenerateTokenPair("user-123", "testuser", "test@example.com", "player")
 		require.NoError(t, err)
 
@@ -250,7 +250,7 @@ func TestNewClaims(t *testing.T) {
 	assert.NotNil(t, claims.RegisteredClaims.ExpiresAt)
 	assert.NotNil(t, claims.RegisteredClaims.IssuedAt)
 	assert.NotNil(t, claims.RegisteredClaims.NotBefore)
-	
+
 	// Check expiration is set correctly
 	expectedExpiry := time.Now().Add(duration)
 	actualExpiry := claims.RegisteredClaims.ExpiresAt.Time

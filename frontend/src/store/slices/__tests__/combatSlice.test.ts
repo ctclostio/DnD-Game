@@ -483,10 +483,7 @@ describe('combatSlice', () => {
       store.dispatch(executeCombatAction(action));
 
       const pendingState = store.getState().combat;
-      expect(pendingState.pendingAction).toEqual({
-        type: 'ATTACK',
-        data: action,
-      });
+      expect(pendingState.pendingAction).toEqual(action);
     });
   });
 

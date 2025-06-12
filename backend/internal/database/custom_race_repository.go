@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // CustomRaceRepository defines the interface for custom race database operations
@@ -116,15 +116,15 @@ func (r *customRaceRepository) Create(ctx context.Context, race *models.CustomRa
 func (r *customRaceRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.CustomRace, error) {
 	var race models.CustomRace
 	var (
-		abilityScoresJSON   []byte
-		traitsJSON          []byte
-		languagesJSON       []byte
-		resistancesJSON     []byte
-		immunitiesJSON      []byte
-		skillProfJSON       []byte
-		toolProfJSON        []byte
-		weaponProfJSON      []byte
-		armorProfJSON       []byte
+		abilityScoresJSON []byte
+		traitsJSON        []byte
+		languagesJSON     []byte
+		resistancesJSON   []byte
+		immunitiesJSON    []byte
+		skillProfJSON     []byte
+		toolProfJSON      []byte
+		weaponProfJSON    []byte
+		armorProfJSON     []byte
 	)
 
 	query := `
@@ -353,15 +353,15 @@ func scanCustomRaces(rows *sql.Rows) ([]*models.CustomRace, error) {
 	for rows.Next() {
 		var race models.CustomRace
 		var (
-			abilityScoresJSON   []byte
-			traitsJSON          []byte
-			languagesJSON       []byte
-			resistancesJSON     []byte
-			immunitiesJSON      []byte
-			skillProfJSON       []byte
-			toolProfJSON        []byte
-			weaponProfJSON      []byte
-			armorProfJSON       []byte
+			abilityScoresJSON []byte
+			traitsJSON        []byte
+			languagesJSON     []byte
+			resistancesJSON   []byte
+			immunitiesJSON    []byte
+			skillProfJSON     []byte
+			toolProfJSON      []byte
+			weaponProfJSON    []byte
+			armorProfJSON     []byte
 		)
 
 		err := rows.Scan(

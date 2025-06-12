@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
 )
 
 type CharacterCreationHandler struct {
-	characterService     *services.CharacterService
-	characterBuilder     *services.CharacterBuilder
-	aiCharService        *services.AICharacterService
-	customRaceService    *services.CustomRaceService
+	characterService  *services.CharacterService
+	characterBuilder  *services.CharacterBuilder
+	aiCharService     *services.AICharacterService
+	customRaceService *services.CustomRaceService
 }
 
 func NewCharacterCreationHandler(cs *services.CharacterService, crs *services.CustomRaceService, llmProvider services.LLMProvider) *CharacterCreationHandler {
@@ -61,7 +61,7 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 						})
 					}
 				}
-				
+
 				// Get public custom races
 				publicRaces, err := h.customRaceService.GetPublicCustomRaces(r.Context())
 				if err == nil {
@@ -76,7 +76,7 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 						})
 					}
 				}
-				
+
 				options["customRaces"] = customRaceOptions
 			}
 		}
@@ -86,7 +86,10 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 	options["aiEnabled"] = h.aiCharService.IsEnabled()
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(options)
+	if err := json.NewEncoder(w).Encode(options); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // CreateCharacter handles standard D&D character creation
@@ -149,7 +152,7 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 			return
 		}
 		params["customRaceStats"] = raceStats
-		
+
 		// Increment usage counter
 		go h.customRaceService.IncrementUsage(r.Context(), customRaceUUID)
 	}
@@ -171,7 +174,10 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(character)
+	if err := json.NewEncoder(w).Encode(character); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // CreateCustomCharacter handles AI-assisted custom character creation
@@ -232,7 +238,10 @@ func (h *CharacterCreationHandler) CreateCustomCharacter(w http.ResponseWriter, 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(character)
+	if err := json.NewEncoder(w).Encode(character); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // RollAbilityScores generates ability scores using specified method
@@ -253,10 +262,13 @@ func (h *CharacterCreationHandler) RollAbilityScores(w http.ResponseWriter, r *h
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"scores": scores,
 		"method": req.Method,
-	})
+	}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // ValidateCharacter validates a character build
@@ -269,14 +281,17 @@ func (h *CharacterCreationHandler) ValidateCharacter(w http.ResponseWriter, r *h
 
 	// Perform validation
 	errors := h.validateCharacterBuild(&character)
-	
+
 	response := map[string]interface{}{
-		"valid": len(errors) == 0,
+		"valid":  len(errors) == 0,
 		"errors": errors,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *CharacterCreationHandler) validateCharacterBuild(character *models.Character) []string {

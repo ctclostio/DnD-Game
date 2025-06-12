@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 func TestNewAICharacterService(t *testing.T) {
@@ -86,11 +86,11 @@ func TestAICharacterService_GenerateCustomCharacter(t *testing.T) {
 	}`
 
 	tests := []struct {
-		name             string
-		request          CustomCharacterRequest
-		mockResponse     string
-		mockError        error
-		expectError      bool
+		name              string
+		request           CustomCharacterRequest
+		mockResponse      string
+		mockError         error
+		expectError       bool
 		validateCharacter func(t *testing.T, char *models.Character)
 	}{
 		{
@@ -113,7 +113,7 @@ func TestAICharacterService_GenerateCustomCharacter(t *testing.T) {
 				assert.Equal(t, 5, char.Level)
 				assert.Equal(t, 18, char.Attributes.Intelligence)
 				assert.Equal(t, 3, char.ProficiencyBonus) // Level 5 = +3
-				assert.Equal(t, 3, char.Initiative) // DEX 16 = +3
+				assert.Equal(t, 3, char.Initiative)       // DEX 16 = +3
 			},
 		},
 		{
@@ -162,12 +162,12 @@ func TestAICharacterService_GenerateCustomCharacter(t *testing.T) {
 
 func TestAICharacterService_GenerateCustomCharacter_Disabled(t *testing.T) {
 	service := NewAICharacterService(nil)
-	
+
 	_, err := service.GenerateCustomCharacter(CustomCharacterRequest{
 		Name:    "Test",
 		Concept: "Test concept",
 	})
-	
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "AI character generation is not enabled")
 }
@@ -266,7 +266,7 @@ func TestAICharacterService_ValidateCustomContent(t *testing.T) {
 
 func TestAICharacterService_ValidateCustomContent_Disabled(t *testing.T) {
 	service := NewAICharacterService(nil)
-	
+
 	// Should skip validation when AI is disabled
 	err := service.ValidateCustomContent(&models.Character{Name: "Test"})
 	assert.NoError(t, err)
@@ -316,13 +316,13 @@ func TestAICharacterService_GenerateFallbackCharacter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			service := NewAICharacterService(nil) // No LLM provider
-			
+
 			character, err := service.GenerateFallbackCharacter(tt.request)
-			
+
 			assert.NoError(t, err)
 			assert.NotNil(t, character)
 			tt.validateCharacter(t, character)
-			
+
 			// Verify resources contain concept
 			assert.Equal(t, tt.request.Concept, character.Resources["concept"])
 			assert.Equal(t, true, character.Resources["custom"])
@@ -332,13 +332,13 @@ func TestAICharacterService_GenerateFallbackCharacter(t *testing.T) {
 
 func TestAICharacterService_CalculateModifier(t *testing.T) {
 	service := NewAICharacterService(nil)
-	
+
 	tests := []struct {
 		score    int
 		expected int
 	}{
-		{1, -4},  // (1-10)/2 = -9/2 = -4 (integer division)
-		{3, -3},  // (3-10)/2 = -7/2 = -3
+		{1, -4}, // (1-10)/2 = -9/2 = -4 (integer division)
+		{3, -3}, // (3-10)/2 = -7/2 = -3
 		{8, -1},
 		{10, 0},
 		{11, 0},
@@ -362,7 +362,7 @@ func TestAICharacterService_CalculateModifier(t *testing.T) {
 
 func TestAICharacterService_GetHitDiceValue(t *testing.T) {
 	service := NewAICharacterService(nil)
-	
+
 	tests := []struct {
 		hitDice  string
 		expected int
@@ -371,8 +371,8 @@ func TestAICharacterService_GetHitDiceValue(t *testing.T) {
 		{"1d8", 8},
 		{"1d10", 10},
 		{"1d12", 12},
-		{"2d6", 8},  // Invalid format, defaults to 8
-		{"", 8},      // Empty, defaults to 8
+		{"2d6", 8},     // Invalid format, defaults to 8
+		{"", 8},        // Empty, defaults to 8
 		{"invalid", 8}, // Invalid, defaults to 8
 	}
 

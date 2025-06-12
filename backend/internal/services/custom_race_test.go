@@ -9,26 +9,26 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/services/mocks"
-	"github.com/your-username/dnd-game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
 func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 	t.Run("successful race creation with auto-approval", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		userID := uuid.New()
-		
+
 		request := models.CustomRaceRequest{
 			Name:        "Shadow Elf",
 			Description: "Elves touched by shadow magic, dwelling in twilight realms",
 		}
-		
+
 		generatedRace := &models.CustomRaceGenerationResult{
 			Name:        "Shadow Elf",
 			Description: "Elves touched by shadow magic, with pale skin and dark eyes",
@@ -48,15 +48,15 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 					Description: "Disadvantage on attack rolls and Perception checks in direct sunlight",
 				},
 			},
-			Languages:      []string{"Common", "Elvish"},
-			Darkvision:     120,
-			Resistances:    []string{"necrotic"},
-			BalanceScore:   6,
+			Languages:          []string{"Common", "Elvish"},
+			Darkvision:         120,
+			Resistances:        []string{"necrotic"},
+			BalanceScore:       6,
 			BalanceExplanation: "Strong darkvision and teleportation balanced by sunlight weakness",
 		}
-		
+
 		mockAI.On("GenerateCustomRace", ctx, request).Return(generatedRace, nil)
-		
+
 		mockRepo.On("Create", ctx, mock.MatchedBy(func(race *models.CustomRace) bool {
 			return race.Name == "Shadow Elf" &&
 				race.ApprovalStatus == models.ApprovalStatusApproved && // Auto-approved due to balance score <= 7
@@ -65,9 +65,9 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 				!race.IsPublic &&
 				race.BalanceScore != nil && *race.BalanceScore == 6
 		})).Return(nil)
-		
+
 		result, err := service.CreateCustomRace(ctx, userID, request)
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Equal(t, "Shadow Elf", result.Name)
@@ -81,17 +81,17 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 	t.Run("successful race creation pending approval", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		userID := uuid.New()
-		
+
 		request := models.CustomRaceRequest{
 			Name:        "Godborn",
 			Description: "Descendants of deities with immense power",
 		}
-		
+
 		generatedRace := &models.CustomRaceGenerationResult{
 			Name:        "Godborn",
 			Description: "Mortals with divine heritage, bearing marks of their celestial lineage",
@@ -111,22 +111,22 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 					Description: "Advantage on all saving throws",
 				},
 			},
-			Languages:       []string{"Common", "Celestial", "Primordial"},
-			Immunities:      []string{"poison"},
-			BalanceScore:    9, // Too powerful, needs approval
+			Languages:          []string{"Common", "Celestial", "Primordial"},
+			Immunities:         []string{"poison"},
+			BalanceScore:       9, // Too powerful, needs approval
 			BalanceExplanation: "Extremely powerful abilities requiring DM oversight",
 		}
-		
+
 		mockAI.On("GenerateCustomRace", ctx, request).Return(generatedRace, nil)
-		
+
 		mockRepo.On("Create", ctx, mock.MatchedBy(func(race *models.CustomRace) bool {
 			return race.Name == "Godborn" &&
 				race.ApprovalStatus == models.ApprovalStatusPending && // Pending due to high balance score
 				race.ApprovalNotes == nil // No auto-approval notes
 		})).Return(nil)
-		
+
 		result, err := service.CreateCustomRace(ctx, userID, request)
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Equal(t, models.ApprovalStatusPending, result.ApprovalStatus)
@@ -138,22 +138,22 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 	t.Run("AI generation failure", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		userID := uuid.New()
-		
+
 		request := models.CustomRaceRequest{
 			Name:        "Test Race",
 			Description: "Test description",
 		}
-		
+
 		mockAI.On("GenerateCustomRace", ctx, request).
 			Return(nil, errors.New("AI service unavailable"))
-		
+
 		result, err := service.CreateCustomRace(ctx, userID, request)
-		
+
 		require.Error(t, err)
 		require.Nil(t, result)
 		require.Contains(t, err.Error(), "failed to generate custom race")
@@ -164,17 +164,17 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 	t.Run("repository save failure", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		userID := uuid.New()
-		
+
 		request := models.CustomRaceRequest{
 			Name:        "Test Race",
 			Description: "Test description",
 		}
-		
+
 		generatedRace := &models.CustomRaceGenerationResult{
 			Name:         "Test Race",
 			Description:  "Generated description",
@@ -184,12 +184,12 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 			Languages:    []string{"Common"},
 			BalanceScore: 5,
 		}
-		
+
 		mockAI.On("GenerateCustomRace", ctx, request).Return(generatedRace, nil)
 		mockRepo.On("Create", ctx, mock.Anything).Return(errors.New("database error"))
-		
+
 		result, err := service.CreateCustomRace(ctx, userID, request)
-		
+
 		require.Error(t, err)
 		require.Nil(t, result)
 		require.Contains(t, err.Error(), "failed to save custom race")
@@ -202,12 +202,12 @@ func TestCustomRaceService_GetCustomRace(t *testing.T) {
 	t.Run("successful retrieval", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
-		
+
 		expectedRace := &models.CustomRace{
 			ID:   raceID,
 			Name: "Shadow Elf",
@@ -215,11 +215,11 @@ func TestCustomRaceService_GetCustomRace(t *testing.T) {
 				"dexterity": 2,
 			},
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(expectedRace, nil)
-		
+
 		result, err := service.GetCustomRace(ctx, raceID)
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Equal(t, expectedRace, result)
@@ -229,16 +229,16 @@ func TestCustomRaceService_GetCustomRace(t *testing.T) {
 	t.Run("race not found", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(nil, sql.ErrNoRows)
-		
+
 		result, err := service.GetCustomRace(ctx, raceID)
-		
+
 		require.Error(t, err)
 		require.Nil(t, result)
 		require.Contains(t, err.Error(), "custom race not found")
@@ -248,16 +248,16 @@ func TestCustomRaceService_GetCustomRace(t *testing.T) {
 	t.Run("database error", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(nil, errors.New("database error"))
-		
+
 		result, err := service.GetCustomRace(ctx, raceID)
-		
+
 		require.Error(t, err)
 		require.Nil(t, result)
 		require.Contains(t, err.Error(), "failed to get custom race")
@@ -269,20 +269,20 @@ func TestCustomRaceService_ApproveCustomRace(t *testing.T) {
 	t.Run("successful approval", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		approverID := uuid.New()
 		notes := "Well-balanced race, approved for play"
-		
+
 		existingRace := &models.CustomRace{
 			ID:             raceID,
 			Name:           "Shadow Elf",
 			ApprovalStatus: models.ApprovalStatusPending,
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(existingRace, nil)
 		mockRepo.On("Update", ctx, mock.MatchedBy(func(race *models.CustomRace) bool {
 			return race.ID == raceID &&
@@ -290,9 +290,9 @@ func TestCustomRaceService_ApproveCustomRace(t *testing.T) {
 				race.ApprovedBy != nil && *race.ApprovedBy == approverID &&
 				race.ApprovalNotes != nil && *race.ApprovalNotes == notes
 		})).Return(nil)
-		
+
 		err := service.ApproveCustomRace(ctx, raceID, approverID, notes)
-		
+
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
@@ -300,17 +300,17 @@ func TestCustomRaceService_ApproveCustomRace(t *testing.T) {
 	t.Run("race not found", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		approverID := uuid.New()
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(nil, errors.New("not found"))
-		
+
 		err := service.ApproveCustomRace(ctx, raceID, approverID, "notes")
-		
+
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "failed to get custom race")
 		mockRepo.AssertExpectations(t)
@@ -321,29 +321,29 @@ func TestCustomRaceService_RejectCustomRace(t *testing.T) {
 	t.Run("successful rejection", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		approverID := uuid.New()
 		notes := "Too powerful, breaks game balance"
-		
+
 		existingRace := &models.CustomRace{
 			ID:             raceID,
 			Name:           "Godborn",
 			ApprovalStatus: models.ApprovalStatusPending,
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(existingRace, nil)
 		mockRepo.On("Update", ctx, mock.MatchedBy(func(race *models.CustomRace) bool {
 			return race.ApprovalStatus == models.ApprovalStatusRejected &&
 				race.ApprovedBy != nil && *race.ApprovedBy == approverID &&
 				race.ApprovalNotes != nil && *race.ApprovalNotes == notes
 		})).Return(nil)
-		
+
 		err := service.RejectCustomRace(ctx, raceID, approverID, notes)
-		
+
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
@@ -353,27 +353,27 @@ func TestCustomRaceService_RequestRevision(t *testing.T) {
 	t.Run("successful revision request", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		approverID := uuid.New()
 		notes := "Reduce the power of Divine Resistance trait"
-		
+
 		existingRace := &models.CustomRace{
 			ID:             raceID,
 			Name:           "Godborn",
 			ApprovalStatus: models.ApprovalStatusPending,
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(existingRace, nil)
 		mockRepo.On("Update", ctx, mock.MatchedBy(func(race *models.CustomRace) bool {
 			return race.ApprovalStatus == models.ApprovalStatusRevisionNeeded
 		})).Return(nil)
-		
+
 		err := service.RequestRevision(ctx, raceID, approverID, notes)
-		
+
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
@@ -383,13 +383,13 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 	t.Run("creator makes approved race public", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		userID := uuid.New()
-		
+
 		existingRace := &models.CustomRace{
 			ID:             raceID,
 			Name:           "Shadow Elf",
@@ -397,14 +397,14 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 			ApprovalStatus: models.ApprovalStatusApproved,
 			IsPublic:       false,
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(existingRace, nil)
 		mockRepo.On("Update", ctx, mock.MatchedBy(func(race *models.CustomRace) bool {
 			return race.IsPublic == true
 		})).Return(nil)
-		
+
 		err := service.MakePublic(ctx, raceID, userID)
-		
+
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
@@ -412,14 +412,14 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 	t.Run("approver makes race public", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		creatorID := uuid.New()
 		approverID := uuid.New()
-		
+
 		existingRace := &models.CustomRace{
 			ID:             raceID,
 			Name:           "Shadow Elf",
@@ -428,14 +428,14 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 			ApprovalStatus: models.ApprovalStatusApproved,
 			IsPublic:       false,
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(existingRace, nil)
 		mockRepo.On("Update", ctx, mock.MatchedBy(func(race *models.CustomRace) bool {
 			return race.IsPublic == true
 		})).Return(nil)
-		
+
 		err := service.MakePublic(ctx, raceID, approverID)
-		
+
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
@@ -443,14 +443,14 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 	t.Run("unauthorized user cannot make race public", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		creatorID := uuid.New()
 		unauthorizedID := uuid.New()
-		
+
 		existingRace := &models.CustomRace{
 			ID:             raceID,
 			Name:           "Shadow Elf",
@@ -458,11 +458,11 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 			ApprovalStatus: models.ApprovalStatusApproved,
 			IsPublic:       false,
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(existingRace, nil)
-		
+
 		err := service.MakePublic(ctx, raceID, unauthorizedID)
-		
+
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "unauthorized to make this race public")
 		mockRepo.AssertExpectations(t)
@@ -471,13 +471,13 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 	t.Run("cannot make unapproved race public", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		userID := uuid.New()
-		
+
 		existingRace := &models.CustomRace{
 			ID:             raceID,
 			Name:           "Shadow Elf",
@@ -485,11 +485,11 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 			ApprovalStatus: models.ApprovalStatusPending,
 			IsPublic:       false,
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(existingRace, nil)
-		
+
 		err := service.MakePublic(ctx, raceID, userID)
-		
+
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "only approved races can be made public")
 		mockRepo.AssertExpectations(t)
@@ -500,24 +500,24 @@ func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 	t.Run("creator can use their own race", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		userID := uuid.New()
-		
+
 		race := &models.CustomRace{
 			ID:             raceID,
 			CreatedBy:      userID,
 			ApprovalStatus: models.ApprovalStatusApproved,
 			IsPublic:       false,
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(race, nil)
-		
+
 		err := service.ValidateCustomRaceForCharacter(ctx, raceID, userID)
-		
+
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
@@ -525,25 +525,25 @@ func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 	t.Run("anyone can use public approved race", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		creatorID := uuid.New()
 		userID := uuid.New()
-		
+
 		race := &models.CustomRace{
 			ID:             raceID,
 			CreatedBy:      creatorID,
 			ApprovalStatus: models.ApprovalStatusApproved,
 			IsPublic:       true,
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(race, nil)
-		
+
 		err := service.ValidateCustomRaceForCharacter(ctx, raceID, userID)
-		
+
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
@@ -551,25 +551,25 @@ func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 	t.Run("cannot use private race of another user", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		creatorID := uuid.New()
 		userID := uuid.New()
-		
+
 		race := &models.CustomRace{
 			ID:             raceID,
 			CreatedBy:      creatorID,
 			ApprovalStatus: models.ApprovalStatusApproved,
 			IsPublic:       false,
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(race, nil)
-		
+
 		err := service.ValidateCustomRaceForCharacter(ctx, raceID, userID)
-		
+
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "you don't have permission to use this custom race")
 		mockRepo.AssertExpectations(t)
@@ -578,24 +578,24 @@ func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 	t.Run("cannot use unapproved race", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		userID := uuid.New()
-		
+
 		race := &models.CustomRace{
 			ID:             raceID,
 			CreatedBy:      userID,
 			ApprovalStatus: models.ApprovalStatusPending,
 			IsPublic:       false,
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(race, nil)
-		
+
 		err := service.ValidateCustomRaceForCharacter(ctx, raceID, userID)
-		
+
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "this custom race has not been approved yet")
 		mockRepo.AssertExpectations(t)
@@ -604,17 +604,17 @@ func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 	t.Run("race not found", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 		userID := uuid.New()
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(nil, errors.New("not found"))
-		
+
 		err := service.ValidateCustomRaceForCharacter(ctx, raceID, userID)
-		
+
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "custom race not found")
 		mockRepo.AssertExpectations(t)
@@ -625,24 +625,24 @@ func TestCustomRaceService_GetCustomRaceStats(t *testing.T) {
 	t.Run("successful stats retrieval", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
-		
+
 		race := &models.CustomRace{
-			ID:   raceID,
-			Name: "Shadow Elf",
+			ID:          raceID,
+			Name:        "Shadow Elf",
 			Description: "Elves touched by shadow magic",
 			AbilityScoreIncreases: map[string]int{
 				"dexterity":    2,
 				"intelligence": 1,
 			},
-			Size:       "Medium",
-			Speed:      30,
-			Darkvision: 120,
-			Languages:  []string{"Common", "Elvish"},
+			Size:        "Medium",
+			Speed:       30,
+			Darkvision:  120,
+			Languages:   []string{"Common", "Elvish"},
 			Resistances: []string{"necrotic"},
 			Traits: []models.RacialTrait{
 				{
@@ -651,11 +651,11 @@ func TestCustomRaceService_GetCustomRaceStats(t *testing.T) {
 				},
 			},
 		}
-		
+
 		mockRepo.On("GetByID", ctx, raceID).Return(race, nil)
-		
+
 		stats, err := service.GetCustomRaceStats(ctx, raceID)
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, stats)
 		require.Equal(t, "Shadow Elf", stats["name"])
@@ -672,20 +672,20 @@ func TestCustomRaceService_GetPendingApproval(t *testing.T) {
 	t.Run("retrieve pending races", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
-		
+
 		pendingRaces := []*models.CustomRace{
 			{ID: uuid.New(), Name: "Race 1", ApprovalStatus: models.ApprovalStatusPending},
 			{ID: uuid.New(), Name: "Race 2", ApprovalStatus: models.ApprovalStatusPending},
 		}
-		
+
 		mockRepo.On("GetPendingApproval", ctx).Return(pendingRaces, nil)
-		
+
 		result, err := service.GetPendingApproval(ctx)
-		
+
 		require.NoError(t, err)
 		require.Len(t, result, 2)
 		require.Equal(t, pendingRaces, result)
@@ -697,16 +697,16 @@ func TestCustomRaceService_IncrementUsage(t *testing.T) {
 	t.Run("successful usage increment", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
-		
+
 		service := NewCustomRaceService(mockRepo, mockAI)
-		
+
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
-		
+
 		mockRepo.On("IncrementUsage", ctx, raceID).Return(nil)
-		
+
 		err := service.IncrementUsage(ctx, raceID)
-		
+
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})

@@ -7,7 +7,8 @@ import (
 	"math/rand"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // FactionSystemService manages faction creation, relationships, and conflicts
@@ -169,7 +170,7 @@ Respond in JSON format:
 	// Generate initial relationships with existing factions
 	if err := s.generateInitialRelationships(ctx, faction); err != nil {
 		// Non-fatal error
-		fmt.Printf("Warning: failed to generate faction relationships: %v\n", err)
+		logger.WithContext(ctx).WithError(err).Warn().Msg("Failed to generate faction relationships")
 	}
 
 	return faction, nil
@@ -185,7 +186,7 @@ func (s *FactionSystemService) UpdateFactionRelationship(ctx context.Context, fa
 
 	var relationships map[string]interface{}
 	json.Unmarshal([]byte(faction1.FactionRelationships), &relationships)
-	
+
 	currentStanding := 0
 	if rel, exists := relationships[faction2ID.String()]; exists {
 		if relMap, ok := rel.(map[string]interface{}); ok {
@@ -292,7 +293,7 @@ func (s *FactionSystemService) generateInitialRelationships(ctx context.Context,
 
 		// Calculate initial standing based on faction types and goals
 		standing := s.calculateInitialStanding(newFaction, otherFaction)
-		
+
 		// Add some randomness
 		standing += rand.Intn(20) - 10
 
@@ -382,10 +383,10 @@ func (s *FactionSystemService) generateConflictEvent(ctx context.Context, factio
 		Severity: models.SeverityModerate,
 		Description: fmt.Sprintf("Tensions between %s and %s have escalated into open %s",
 			faction1.Name, faction2.Name, conflictType),
-		Cause:      "Longstanding grievances and incompatible goals",
-		StartDate:  "Current",
-		Duration:   "Ongoing",
-		IsActive:   true,
+		Cause:     "Longstanding grievances and incompatible goals",
+		StartDate: "Current",
+		Duration:  "Ongoing",
+		IsActive:  true,
 	}
 
 	// If either faction is corrupted or deals with ancient powers, it might escalate
@@ -498,49 +499,49 @@ func (s *FactionSystemService) generateFactionEvent(ctx context.Context, faction
 
 func (s *FactionSystemService) generateCorruptionEvent(faction *models.Faction) *models.WorldEvent {
 	return &models.WorldEvent{
-		Name:               fmt.Sprintf("Dark Revelation: %s", faction.Name),
-		Type:               models.EventSupernatural,
-		Severity:           models.SeverityMajor,
-		Description:        fmt.Sprintf("The corruption within %s has manifested in terrifying ways", faction.Name),
-		Cause:              "Ancient corruption reaching critical mass",
-		StartDate:          "Current",
-		Duration:           "Unknown",
-		IsActive:           true,
-		AncientCause:       true,
-		AwakensAncientEvil: rand.Float32() < 0.3,
-		AffectedFactions:   models.JSONB(fmt.Sprintf(`["%s"]`, faction.ID)),
-		AffectedRegions:    models.JSONB("[]"),
-		AffectedSettlements: models.JSONB("[]"),
-		EconomicImpacts:    models.JSONB("{}"),
-		PoliticalImpacts:   models.JSONB("{}"),
-		Stages:             models.JSONB("[]"),
+		Name:                 fmt.Sprintf("Dark Revelation: %s", faction.Name),
+		Type:                 models.EventSupernatural,
+		Severity:             models.SeverityMajor,
+		Description:          fmt.Sprintf("The corruption within %s has manifested in terrifying ways", faction.Name),
+		Cause:                "Ancient corruption reaching critical mass",
+		StartDate:            "Current",
+		Duration:             "Unknown",
+		IsActive:             true,
+		AncientCause:         true,
+		AwakensAncientEvil:   rand.Float32() < 0.3,
+		AffectedFactions:     models.JSONB(fmt.Sprintf(`["%s"]`, faction.ID)),
+		AffectedRegions:      models.JSONB("[]"),
+		AffectedSettlements:  models.JSONB("[]"),
+		EconomicImpacts:      models.JSONB("{}"),
+		PoliticalImpacts:     models.JSONB("{}"),
+		Stages:               models.JSONB("[]"),
 		ResolutionConditions: models.JSONB("[]"),
-		Consequences:       models.JSONB("{}"),
-		PartyActions:       models.JSONB("[]"),
+		Consequences:         models.JSONB("{}"),
+		PartyActions:         models.JSONB("[]"),
 	}
 }
 
 func (s *FactionSystemService) generateAncientPowerEvent(faction *models.Faction) *models.WorldEvent {
 	return &models.WorldEvent{
-		Name:             fmt.Sprintf("Ancient Discovery: %s", faction.Name),
-		Type:             models.EventSupernatural,
-		Severity:         models.SeverityModerate,
-		Description:      fmt.Sprintf("%s has uncovered significant ancient artifacts or knowledge", faction.Name),
-		Cause:            "Faction research and exploration",
-		StartDate:        "Current",
-		Duration:         "Ongoing",
-		IsActive:         true,
-		AncientCause:     true,
-		ProphecyRelated:  rand.Float32() < 0.4,
-		AffectedFactions: models.JSONB(fmt.Sprintf(`["%s"]`, faction.ID)),
-		AffectedRegions:  models.JSONB("[]"),
-		AffectedSettlements: models.JSONB("[]"),
-		EconomicImpacts:  models.JSONB("{}"),
-		PoliticalImpacts: models.JSONB("{}"),
-		Stages:           models.JSONB("[]"),
+		Name:                 fmt.Sprintf("Ancient Discovery: %s", faction.Name),
+		Type:                 models.EventSupernatural,
+		Severity:             models.SeverityModerate,
+		Description:          fmt.Sprintf("%s has uncovered significant ancient artifacts or knowledge", faction.Name),
+		Cause:                "Faction research and exploration",
+		StartDate:            "Current",
+		Duration:             "Ongoing",
+		IsActive:             true,
+		AncientCause:         true,
+		ProphecyRelated:      rand.Float32() < 0.4,
+		AffectedFactions:     models.JSONB(fmt.Sprintf(`["%s"]`, faction.ID)),
+		AffectedRegions:      models.JSONB("[]"),
+		AffectedSettlements:  models.JSONB("[]"),
+		EconomicImpacts:      models.JSONB("{}"),
+		PoliticalImpacts:     models.JSONB("{}"),
+		Stages:               models.JSONB("[]"),
 		ResolutionConditions: models.JSONB("[]"),
-		Consequences:     models.JSONB("{}"),
-		PartyActions:     models.JSONB("[]"),
+		Consequences:         models.JSONB("{}"),
+		PartyActions:         models.JSONB("[]"),
 	}
 }
 
@@ -678,7 +679,7 @@ func (s *FactionSystemService) estimateMemberCount(factionType models.FactionTyp
 	members = int(float64(members) * (float64(influenceLevel) / 5.0))
 
 	// Add variance
-	variance := rand.Float64() * 0.4 + 0.8 // 0.8 to 1.2
+	variance := rand.Float64()*0.4 + 0.8 // 0.8 to 1.2
 	members = int(float64(members) * variance)
 
 	if members < 10 {

@@ -7,13 +7,13 @@ import (
 	"runtime/debug"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/pkg/errors"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // ErrorHandlerV2 is the enhanced error handling middleware
-func ErrorHandlerV2(log logger.Logger) func(http.Handler) http.Handler {
+func ErrorHandlerV2(log *logger.LoggerV2) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Add request ID to context if not present
@@ -31,8 +31,8 @@ func ErrorHandlerV2(log logger.Logger) func(http.Handler) http.Handler {
 			// Create a custom response writer to capture panic
 			rw := &panicCapturingResponseWriter{
 				ResponseWriter: w,
-				log:           log,
-				requestID:     requestID,
+				log:            log,
+				requestID:      requestID,
 			}
 
 			// Defer panic recovery
@@ -50,14 +50,15 @@ func ErrorHandlerV2(log logger.Logger) func(http.Handler) http.Handler {
 // panicCapturingResponseWriter captures panics and converts them to proper error responses
 type panicCapturingResponseWriter struct {
 	http.ResponseWriter
-	log       logger.Logger
+	log       *logger.LoggerV2
 	requestID string
 }
 
 func (w *panicCapturingResponseWriter) handlePanic(rec interface{}, r *http.Request) {
 	// Log the panic with stack trace
 	stackTrace := string(debug.Stack())
-	w.log.Error().
+	w.log.WithContext(r.Context()).
+		Error().
 		Str("request_id", w.requestID).
 		Str("method", r.Method).
 		Str("path", r.URL.Path).

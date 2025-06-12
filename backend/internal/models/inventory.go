@@ -47,18 +47,18 @@ func (p *ItemProperties) Scan(value interface{}) error {
 }
 
 type Item struct {
-	ID                    string         `json:"id" db:"id"`
-	Name                  string         `json:"name" db:"name"`
-	Type                  ItemType       `json:"type" db:"type"`
-	Rarity                ItemRarity     `json:"rarity" db:"rarity"`
-	Weight                float64        `json:"weight" db:"weight"`
-	Value                 int            `json:"value" db:"value"`
-	Properties            ItemProperties `json:"properties" db:"properties"`
-	RequiresAttunement    bool           `json:"requires_attunement" db:"requires_attunement"`
-	AttunementRequirements string        `json:"attunement_requirements,omitempty" db:"attunement_requirements"`
-	Description           string         `json:"description,omitempty" db:"description"`
-	CreatedAt             time.Time      `json:"created_at" db:"created_at"`
-	UpdatedAt             time.Time      `json:"updated_at" db:"updated_at"`
+	ID                     string         `json:"id" db:"id"`
+	Name                   string         `json:"name" db:"name"`
+	Type                   ItemType       `json:"type" db:"type"`
+	Rarity                 ItemRarity     `json:"rarity" db:"rarity"`
+	Weight                 float64        `json:"weight" db:"weight"`
+	Value                  int            `json:"value" db:"value"`
+	Properties             ItemProperties `json:"properties" db:"properties"`
+	RequiresAttunement     bool           `json:"requires_attunement" db:"requires_attunement"`
+	AttunementRequirements string         `json:"attunement_requirements,omitempty" db:"attunement_requirements"`
+	Description            string         `json:"description,omitempty" db:"description"`
+	CreatedAt              time.Time      `json:"created_at" db:"created_at"`
+	UpdatedAt              time.Time      `json:"updated_at" db:"updated_at"`
 }
 
 type InventoryItem struct {
@@ -100,27 +100,27 @@ func (c *Currency) Subtract(copperValue int) bool {
 	}
 
 	total := c.TotalInCopper() - copperValue
-	
+
 	c.Platinum = total / 1000
 	total %= 1000
-	
+
 	c.Gold = total / 100
 	total %= 100
-	
+
 	c.Electrum = total / 50
 	total %= 50
-	
+
 	c.Silver = total / 10
 	c.Copper = total % 10
-	
+
 	return true
 }
 
 type InventoryWeight struct {
-	CurrentWeight float64 `json:"current_weight"`
-	CarryCapacity float64 `json:"carry_capacity"`
-	Encumbered    bool    `json:"encumbered"`
-	HeavilyEncumbered bool `json:"heavily_encumbered"`
+	CurrentWeight     float64 `json:"current_weight"`
+	CarryCapacity     float64 `json:"carry_capacity"`
+	Encumbered        bool    `json:"encumbered"`
+	HeavilyEncumbered bool    `json:"heavily_encumbered"`
 }
 
 func CalculateCarryCapacity(strength int) float64 {

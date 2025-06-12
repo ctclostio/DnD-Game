@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // RuleBuilderRepository handles database operations for rule builder
@@ -222,7 +222,7 @@ func (r *RuleBuilderRepository) UpdateRuleTemplate(templateID string, updates ma
 
 	for key, value := range updates {
 		query += fmt.Sprintf(", %s = ?", key)
-		
+
 		// Handle JSON fields
 		switch key {
 		case "logic_graph", "parameters", "conditional_modifiers", "tags":
@@ -251,7 +251,7 @@ func (r *RuleBuilderRepository) DeleteRuleTemplate(templateID string) error {
 
 // IncrementUsageCount increments the usage count for a template
 func (r *RuleBuilderRepository) IncrementUsageCount(templateID string) error {
-	_, err := r.db.Exec(
+	_, err := r.db.ExecRebind(
 		"UPDATE rule_templates SET usage_count = usage_count + 1 WHERE id = ?",
 		templateID,
 	)
@@ -421,7 +421,7 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 
 // DeactivateRule deactivates an active rule
 func (r *RuleBuilderRepository) DeactivateRule(ruleID string) error {
-	_, err := r.db.Exec(
+	_, err := r.db.ExecRebind(
 		"UPDATE active_rules SET is_active = false, updated_at = ? WHERE id = ?",
 		time.Now(),
 		ruleID,
@@ -489,7 +489,7 @@ func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, character
 	}
 
 	query += " ORDER BY executed_at DESC"
-	
+
 	if limit > 0 {
 		query += " LIMIT ?"
 		args = append(args, limit)
@@ -632,4 +632,3 @@ func (r *RuleBuilderRepository) DeactivateRuleInstance(instanceID string) error 
 	_, err := r.db.ExecRebind(query, time.Now(), instanceID)
 	return err
 }
-

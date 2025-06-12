@@ -52,17 +52,17 @@ const (
 	ErrCodeAIInvalidRequest     ErrorCode = "AI004"
 
 	// Validation
-	ErrCodeValidationFailed   ErrorCode = "VAL001"
-	ErrCodeInvalidInput       ErrorCode = "VAL002"
-	ErrCodeMissingRequired    ErrorCode = "VAL003"
-	ErrCodeInvalidFormat      ErrorCode = "VAL004"
-	ErrCodeOutOfRange         ErrorCode = "VAL005"
+	ErrCodeValidationFailed ErrorCode = "VAL001"
+	ErrCodeInvalidInput     ErrorCode = "VAL002"
+	ErrCodeMissingRequired  ErrorCode = "VAL003"
+	ErrCodeInvalidFormat    ErrorCode = "VAL004"
+	ErrCodeOutOfRange       ErrorCode = "VAL005"
 
 	// Database
-	ErrCodeDatabaseError      ErrorCode = "DB001"
-	ErrCodeDuplicateEntry     ErrorCode = "DB002"
+	ErrCodeDatabaseError       ErrorCode = "DB001"
+	ErrCodeDuplicateEntry      ErrorCode = "DB002"
 	ErrCodeForeignKeyViolation ErrorCode = "DB003"
-	ErrCodeDeadlock           ErrorCode = "DB004"
+	ErrCodeDeadlock            ErrorCode = "DB004"
 
 	// General
 	ErrCodeInternalError      ErrorCode = "INT001"

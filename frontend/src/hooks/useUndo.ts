@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from '@store/index';
-import { undo, redo, addUndoableAction } from '@store/slices/dmToolsSlice';
+import { useAppDispatch, useAppSelector } from '../store';
+import { undo, redo, addUndoableAction } from '../store/slices/dmToolsSlice';
 
 export const useUndo = () => {
   const dispatch = useAppDispatch();

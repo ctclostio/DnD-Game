@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type CampaignRepository interface {
@@ -403,7 +403,7 @@ func (r *campaignRepository) CreateOrUpdateNPCRelationship(relationship *models.
 			updated_at = ?
 		WHERE id = ?`
 	updateQuery = r.db.Rebind(updateQuery)
-	_, err = r.db.Exec(updateQuery, 
+	_, err = r.db.Exec(updateQuery,
 		relationship.RelationshipType,
 		relationship.RelationshipScore,
 		relationship.LastInteractionSession,

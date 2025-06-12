@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // UserFixture creates a test user
@@ -26,11 +26,11 @@ func UserFixture(t *testing.T) *models.User {
 func CharacterFixture(t *testing.T, userID string) *models.Character {
 	t.Helper()
 	return &models.Character{
-		ID:          uuid.New().String(),
-		UserID:      userID,
-		Name:        "Test Character",
-		Race:        "Human",
-		Class:       "Fighter",
+		ID:               uuid.New().String(),
+		UserID:           userID,
+		Name:             "Test Character",
+		Race:             "Human",
+		Class:            "Fighter",
 		Level:            1,
 		ExperiencePoints: 0,
 		HitPoints:        10,
@@ -58,14 +58,14 @@ func CharacterFixture(t *testing.T, userID string) *models.Character {
 			Wisdom:       models.SavingThrow{Modifier: 1, Proficiency: false},
 			Charisma:     models.SavingThrow{Modifier: -1, Proficiency: false},
 		},
-		Equipment: []models.Item{},
+		Equipment:        []models.Item{},
 		ProficiencyBonus: 2,
 		Features: []models.Feature{
 			{Name: "Fighting Style", Description: "Choose a fighting style", Level: 1, Source: "Fighter"},
 			{Name: "Second Wind", Description: "Regain hit points", Level: 1, Source: "Fighter"},
 		},
 		Spells: models.SpellData{
-			SpellSlots: []models.SpellSlot{},
+			SpellSlots:  []models.SpellSlot{},
 			SpellsKnown: []models.Spell{},
 		},
 		CreatedAt: time.Now(),
@@ -91,15 +91,15 @@ func GameSessionFixture(t *testing.T, dmID string) *models.GameSession {
 func NPCFixture(t *testing.T, sessionID string) *models.NPC {
 	t.Helper()
 	return &models.NPC{
-		ID:          uuid.New().String(),
-		Name:             "Guard Captain",
-		Type:             "humanoid",
-		Size:             "medium",
-		Alignment:        "lawful neutral",
-		ArmorClass:       16,
-		HitPoints:        20,
-		MaxHitPoints:     20,
-		Speed:            map[string]int{"walk": 30},
+		ID:           uuid.New().String(),
+		Name:         "Guard Captain",
+		Type:         "humanoid",
+		Size:         "medium",
+		Alignment:    "lawful neutral",
+		ArmorClass:   16,
+		HitPoints:    20,
+		MaxHitPoints: 20,
+		Speed:        map[string]int{"walk": 30},
 		Attributes: models.Attributes{
 			Strength:     15,
 			Dexterity:    12,
@@ -213,23 +213,23 @@ func InventoryItemFixture(t *testing.T, characterID string) *models.InventoryIte
 func EncounterFixture(t *testing.T, sessionID string) *models.Encounter {
 	t.Helper()
 	return &models.Encounter{
-		ID:          uuid.New().String(),
-		GameSessionID:   sessionID,
-		Name:        "Goblin Ambush",
-		Description: "Goblins attack from the bushes!",
-		Difficulty:  "medium",
-		Status:      "prepared",
+		ID:            uuid.New().String(),
+		GameSessionID: sessionID,
+		Name:          "Goblin Ambush",
+		Description:   "Goblins attack from the bushes!",
+		Difficulty:    "medium",
+		Status:        "prepared",
 		Enemies: []models.EncounterEnemy{
 			{
-				ID:               uuid.New().String(),
-				Name:             "Goblin",
-				Quantity:         4,
-				ChallengeRating:  0.25,
+				ID:              uuid.New().String(),
+				Name:            "Goblin",
+				Quantity:        4,
+				ChallengeRating: 0.25,
 			},
 		},
 		TotalXP:    200,
 		AdjustedXP: 200,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 }

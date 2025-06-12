@@ -24,7 +24,7 @@ type HTTPTestClient struct {
 func NewHTTPTestClient(t *testing.T) *HTTPTestClient {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	
+
 	return &HTTPTestClient{
 		t:      t,
 		router: router,
@@ -63,14 +63,14 @@ func (c *HTTPTestClient) Request(method, path string, body interface{}) *httptes
 
 	req := httptest.NewRequest(method, path, reqBody)
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	if c.token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.token)
 	}
 
 	w := httptest.NewRecorder()
 	c.router.ServeHTTP(w, req)
-	
+
 	return w
 }
 
@@ -116,8 +116,8 @@ func NewHTTPTestResponse(t *testing.T, recorder *httptest.ResponseRecorder) *HTT
 
 // AssertStatus asserts the response status code
 func (r *HTTPTestResponse) AssertStatus(expected int) *HTTPTestResponse {
-	require.Equal(r.t, expected, r.recorder.Code, 
-		"Expected status %d, got %d. Body: %s", 
+	require.Equal(r.t, expected, r.recorder.Code,
+		"Expected status %d, got %d. Body: %s",
 		expected, r.recorder.Code, string(r.body))
 	return r
 }
@@ -155,7 +155,7 @@ func (r *HTTPTestResponse) AssertNotFound() *HTTPTestResponse {
 // AssertHeader asserts a response header value
 func (r *HTTPTestResponse) AssertHeader(key, value string) *HTTPTestResponse {
 	actual := r.recorder.Header().Get(key)
-	require.Equal(r.t, value, actual, 
+	require.Equal(r.t, value, actual,
 		"Expected header %s to be %s, got %s", key, value, actual)
 	return r
 }
@@ -164,7 +164,7 @@ func (r *HTTPTestResponse) AssertHeader(key, value string) *HTTPTestResponse {
 func (r *HTTPTestResponse) AssertJSON(expected interface{}) *HTTPTestResponse {
 	expectedJSON, err := json.Marshal(expected)
 	require.NoError(r.t, err)
-	
+
 	require.JSONEq(r.t, string(expectedJSON), string(r.body))
 	return r
 }
@@ -174,7 +174,7 @@ func (r *HTTPTestResponse) AssertJSONPath(path string, expected interface{}) *HT
 	var data map[string]interface{}
 	err := json.Unmarshal(r.body, &data)
 	require.NoError(r.t, err)
-	
+
 	// Simple path implementation (can be enhanced with a proper JSON path library)
 	actual := data[path]
 	require.Equal(r.t, expected, actual)
@@ -238,7 +238,7 @@ func RunHTTPTestCases(t *testing.T, router *gin.Engine, cases []HTTPTestCase) {
 			}
 
 			client := NewHTTPTestClient(t).SetRouter(router)
-			
+
 			if tc.Auth && tc.UserID > 0 {
 				client = client.WithUser(tc.UserID)
 			}
@@ -266,7 +266,7 @@ func RunHTTPTestCases(t *testing.T, router *gin.Engine, cases []HTTPTestCase) {
 // MockHTTPContext creates a mock gin context for unit testing
 func MockHTTPContext(method, path string, body interface{}) (*gin.Context, *httptest.ResponseRecorder) {
 	gin.SetMode(gin.TestMode)
-	
+
 	var reqBody io.Reader
 	if body != nil {
 		jsonBytes, _ := json.Marshal(body)
@@ -275,11 +275,11 @@ func MockHTTPContext(method, path string, body interface{}) (*gin.Context, *http
 
 	req := httptest.NewRequest(method, path, reqBody)
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = req
-	
+
 	return c, w
 }
 
@@ -296,11 +296,11 @@ func SetContextValue(c *gin.Context, key string, value interface{}) {
 // AssertErrorResponse asserts an error response structure
 func AssertErrorResponseWithCode(t *testing.T, w *httptest.ResponseRecorder, expectedCode string, expectedStatus int) {
 	require.Equal(t, expectedStatus, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
-	
+
 	require.Equal(t, expectedCode, response["code"])
 	require.NotEmpty(t, response["message"])
 }

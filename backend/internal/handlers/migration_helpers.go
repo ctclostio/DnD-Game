@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/your-username/dnd-game/backend/pkg/response"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // DEPRECATED: These functions are kept for backward compatibility during migration
@@ -39,7 +39,7 @@ func deprecatedRespondWithJSON(w http.ResponseWriter, status int, data interface
 func deprecatedRespondWithError(w http.ResponseWriter, status int, message string) {
 	// Create a minimal request with empty context for backward compatibility
 	r, _ := http.NewRequest("", "", nil)
-	
+
 	switch status {
 	case http.StatusBadRequest:
 		response.BadRequest(w, r, message)

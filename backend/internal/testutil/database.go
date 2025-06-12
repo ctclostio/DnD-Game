@@ -20,7 +20,16 @@ func NewMockDB(t *testing.T) (*sqlx.DB, sqlmock.Sqlmock) {
 
 // SetupTestDB creates an in-memory SQLite database for integration tests
 func SetupTestDB(t *testing.T) *sqlx.DB {
-	db, err := sqlx.Open("sqlite3", ":memory:")
+	// Use shared cache mode for better concurrency support
+	db, err := sqlx.Open("sqlite3", ":memory:?cache=shared&mode=rwc")
+	require.NoError(t, err)
+
+	// Set connection pool settings for better concurrency
+	db.SetMaxOpenConns(1) // SQLite can only have one writer at a time
+	db.SetMaxIdleConns(1)
+
+	// Enable foreign keys
+	_, err = db.Exec("PRAGMA foreign_keys = ON")
 	require.NoError(t, err)
 
 	// Create test schema
@@ -33,6 +42,16 @@ func SetupTestDB(t *testing.T) *sqlx.DB {
 		role TEXT NOT NULL DEFAULT 'player',
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS refresh_tokens (
+		id TEXT PRIMARY KEY,
+		user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		token_hash TEXT NOT NULL UNIQUE,
+		token_id TEXT NOT NULL UNIQUE,
+		expires_at TIMESTAMP NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		revoked_at TIMESTAMP
 	);
 
 	CREATE TABLE IF NOT EXISTS characters (
@@ -117,7 +136,15 @@ func SetupTestDB(t *testing.T) *sqlx.DB {
 		description TEXT,
 		dm_user_id TEXT NOT NULL REFERENCES users(id),
 		code TEXT UNIQUE NOT NULL,
+		max_players INTEGER DEFAULT 6,
+		is_public BOOLEAN DEFAULT FALSE,
+		requires_invite BOOLEAN DEFAULT FALSE,
+		allowed_character_level INTEGER DEFAULT 0,
 		is_active BOOLEAN DEFAULT TRUE,
+		status TEXT NOT NULL DEFAULT 'active',
+		session_state TEXT DEFAULT '{}',
+		started_at TIMESTAMP,
+		ended_at TIMESTAMP,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
@@ -142,6 +169,36 @@ func SetupTestDB(t *testing.T) *sqlx.DB {
 		purpose TEXT,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
+
+	CREATE TABLE IF NOT EXISTS npcs (
+		id TEXT PRIMARY KEY,
+		game_session_id TEXT REFERENCES game_sessions(id) ON DELETE CASCADE,
+		name TEXT NOT NULL,
+		type TEXT NOT NULL,
+		size TEXT NOT NULL,
+		alignment TEXT,
+		armor_class INTEGER NOT NULL DEFAULT 10,
+		hit_points INTEGER NOT NULL,
+		max_hit_points INTEGER NOT NULL,
+		speed JSONB DEFAULT '{"walk": 30}',
+		attributes JSONB NOT NULL DEFAULT '{"strength": 10, "dexterity": 10, "constitution": 10, "intelligence": 10, "wisdom": 10, "charisma": 10}',
+		saving_throws JSONB DEFAULT '{}',
+		skills JSONB DEFAULT '[]',
+		damage_resistances JSONB DEFAULT '[]',
+		damage_immunities JSONB DEFAULT '[]',
+		condition_immunities JSONB DEFAULT '[]',
+		senses JSONB DEFAULT '{}',
+		languages JSONB DEFAULT '[]',
+		challenge_rating REAL DEFAULT 0,
+		experience_points INTEGER DEFAULT 0,
+		abilities JSONB DEFAULT '[]',
+		actions JSONB DEFAULT '[]',
+		legendary_actions INTEGER DEFAULT 0,
+		is_template BOOLEAN DEFAULT FALSE,
+		created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
 	`
 
 	_, err = db.Exec(schema)
@@ -161,12 +218,14 @@ func CleanupDB(db *sqlx.DB) {
 func TruncateTables(t *testing.T, db *sqlx.DB) {
 	tables := []string{
 		"dice_rolls",
+		"npcs",
 		"game_participants",
 		"game_sessions",
 		"character_currency",
 		"character_inventory",
 		"items",
 		"characters",
+		"refresh_tokens",
 		"users",
 	}
 
@@ -180,9 +239,9 @@ func TruncateTables(t *testing.T, db *sqlx.DB) {
 func SeedTestUser(t *testing.T, db *sqlx.DB, id, username, email, role string) {
 	query := `
 		INSERT INTO users (id, username, email, password_hash, role)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES (?, ?, ?, ?, ?)
 	`
-	_, err := db.Exec(query, id, username, email, "hashed_password", role)
+	_, err := db.Exec(db.Rebind(query), id, username, email, "hashed_password", role)
 	require.NoError(t, err)
 }
 

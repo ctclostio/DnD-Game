@@ -8,7 +8,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // WorldEventEngineService manages world events that happen regardless of party actions
@@ -199,14 +200,14 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 		// Check if event should progress
 		if s.shouldEventProgress(event) {
 			if err := s.progressEvent(ctx, event); err != nil {
-				fmt.Printf("Warning: failed to progress event %s: %v\n", event.Name, err)
+				logger.WithContext(ctx).WithError(err).WithField("event_name", event.Name).Warn().Msg("Failed to progress event")
 			}
 		}
 
 		// Check resolution conditions
 		if s.checkResolutionConditions(ctx, event) {
 			if err := s.resolveEvent(ctx, event); err != nil {
-				fmt.Printf("Warning: failed to resolve event %s: %v\n", event.Name, err)
+				logger.WithContext(ctx).WithError(err).WithField("event_name", event.Name).Warn().Msg("Failed to resolve event")
 			}
 		}
 	}
@@ -223,7 +224,7 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 		}
 
 		eventType := eventTypes[rand.Intn(len(eventTypes))]
-		
+
 		// Higher chance for ancient events in corrupted worlds
 		corruptionLevel := s.calculateWorldCorruption(gameSessionID)
 		if corruptionLevel > 5 && rand.Float32() < 0.5 {
@@ -295,7 +296,7 @@ func (s *WorldEventEngineService) progressEvent(ctx context.Context, event *mode
 func (s *WorldEventEngineService) checkResolutionConditions(ctx context.Context, event *models.WorldEvent) bool {
 	// Check if resolution conditions are met
 	// This is simplified - full implementation would check actual conditions
-	
+
 	// Party intervention can help resolve events
 	if event.PartyInvolved {
 		var partyActions []interface{}
@@ -404,7 +405,7 @@ func (s *WorldEventEngineService) applyEventEffects(ctx context.Context, event *
 		if event.Type == models.EventPolitical && len(affectedFactions) >= 2 {
 			faction1ID, _ := uuid.Parse(affectedFactions[0])
 			faction2ID, _ := uuid.Parse(affectedFactions[1])
-			
+
 			if faction1ID != uuid.Nil && faction2ID != uuid.Nil {
 				change := -10
 				if event.Severity == models.SeverityMajor {
@@ -419,7 +420,7 @@ func (s *WorldEventEngineService) applyEventEffects(ctx context.Context, event *
 func (s *WorldEventEngineService) applyStageEffects(ctx context.Context, event *models.WorldEvent) {
 	// Apply effects specific to the current stage
 	// This could trigger new events, modify settlements, etc.
-	
+
 	// Ancient awakening events get worse over time
 	if event.Type == models.EventAncientAwakening {
 		var affectedSettlements []string
@@ -452,27 +453,27 @@ func (s *WorldEventEngineService) generateCascadeEvents(ctx context.Context, par
 	if parentEvent.Type == models.EventAncientAwakening {
 		// Ancient awakenings might trigger supernatural events elsewhere
 		cascadeEvent := &models.WorldEvent{
-			GameSessionID:      parentEvent.GameSessionID,
-			Name:               fmt.Sprintf("Ripple Effect: %s", parentEvent.Name),
-			Type:               models.EventSupernatural,
-			Severity:           models.SeverityModerate,
-			Description:        "Strange phenomena manifest in response to ancient stirrings",
-			Cause:              parentEvent.Name,
-			StartDate:          "Current",
-			Duration:           "Weeks",
-			IsActive:           true,
-			AncientCause:       true,
-			ProphecyRelated:    parentEvent.ProphecyRelated,
-			CurrentStage:       1,
-			AffectedRegions:    models.JSONB("[]"),
-			AffectedSettlements: models.JSONB("[]"),
-			AffectedFactions:   models.JSONB("[]"),
-			EconomicImpacts:    models.JSONB("{}"),
-			PoliticalImpacts:   models.JSONB("{}"),
-			Stages:             models.JSONB("[]"),
+			GameSessionID:        parentEvent.GameSessionID,
+			Name:                 fmt.Sprintf("Ripple Effect: %s", parentEvent.Name),
+			Type:                 models.EventSupernatural,
+			Severity:             models.SeverityModerate,
+			Description:          "Strange phenomena manifest in response to ancient stirrings",
+			Cause:                parentEvent.Name,
+			StartDate:            "Current",
+			Duration:             "Weeks",
+			IsActive:             true,
+			AncientCause:         true,
+			ProphecyRelated:      parentEvent.ProphecyRelated,
+			CurrentStage:         1,
+			AffectedRegions:      models.JSONB("[]"),
+			AffectedSettlements:  models.JSONB("[]"),
+			AffectedFactions:     models.JSONB("[]"),
+			EconomicImpacts:      models.JSONB("{}"),
+			PoliticalImpacts:     models.JSONB("{}"),
+			Stages:               models.JSONB("[]"),
 			ResolutionConditions: models.JSONB("[]"),
-			Consequences:       models.JSONB("{}"),
-			PartyActions:       models.JSONB("[]"),
+			Consequences:         models.JSONB("{}"),
+			PartyActions:         models.JSONB("[]"),
 		}
 
 		s.worldRepo.CreateWorldEvent(cascadeEvent)
@@ -513,9 +514,9 @@ func (s *WorldEventEngineService) determineAffectedFactions(factions []*models.F
 
 	// Certain event types affect specific faction types
 	targetFactionTypes := map[models.WorldEventType][]models.FactionType{
-		models.EventPolitical:   {models.FactionPolitical, models.FactionMilitary},
-		models.EventEconomic:    {models.FactionMerchant, models.FactionCriminal},
-		models.EventSupernatural: {models.FactionCult, models.FactionAncientOrder, models.FactionReligious},
+		models.EventPolitical:        {models.FactionPolitical, models.FactionMilitary},
+		models.EventEconomic:         {models.FactionMerchant, models.FactionCriminal},
+		models.EventSupernatural:     {models.FactionCult, models.FactionAncientOrder, models.FactionReligious},
 		models.EventAncientAwakening: {models.FactionAncientOrder, models.FactionCult},
 	}
 
@@ -566,12 +567,12 @@ func (s *WorldEventEngineService) calculateWorldCorruption(gameSessionID uuid.UU
 
 func (s *WorldEventEngineService) generateProceduralEvent(gameSessionID uuid.UUID, eventType models.WorldEventType) *models.WorldEvent {
 	eventNames := map[models.WorldEventType][]string{
-		models.EventPolitical:   {"Border Dispute", "Succession Crisis", "Trade Embargo"},
-		models.EventEconomic:    {"Market Crash", "Resource Shortage", "Trade Boom"},
-		models.EventNatural:     {"Plague Outbreak", "Severe Storm", "Earthquake"},
-		models.EventSupernatural: {"Strange Portents", "Magical Anomaly", "Undead Rising"},
+		models.EventPolitical:        {"Border Dispute", "Succession Crisis", "Trade Embargo"},
+		models.EventEconomic:         {"Market Crash", "Resource Shortage", "Trade Boom"},
+		models.EventNatural:          {"Plague Outbreak", "Severe Storm", "Earthquake"},
+		models.EventSupernatural:     {"Strange Portents", "Magical Anomaly", "Undead Rising"},
 		models.EventAncientAwakening: {"Seal Weakening", "Artifact Activation", "Prophecy Manifests"},
-		models.EventPlanar:      {"Planar Rift", "Dimensional Instability", "Outsider Incursion"},
+		models.EventPlanar:           {"Planar Rift", "Dimensional Instability", "Outsider Incursion"},
 	}
 
 	names := eventNames[eventType]

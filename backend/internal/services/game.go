@@ -2,10 +2,10 @@ package services
 
 import (
 	"errors"
+	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"sync"
 	"time"
-	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type GameService struct {
@@ -25,12 +25,12 @@ func (s *GameService) CreateSession(session *models.GameSession) (*models.GameSe
 	session.ID = generateID()
 	session.Status = models.GameStatusActive
 	session.CreatedAt = time.Now()
-	
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.sessions[session.ID] = session
 	s.events[session.ID] = make([]*models.GameEvent, 0)
-	
+
 	return session, nil
 }
 
@@ -48,29 +48,29 @@ func (s *GameService) AddPlayerToSession(sessionID, playerID string, player *mod
 	s.mu.RLock()
 	_, exists := s.sessions[sessionID]
 	s.mu.RUnlock()
-	
+
 	if !exists {
 		return errors.New("session not found")
 	}
-	
+
 	player.JoinedAt = time.Now()
 	// TODO: Store player in database
 	// session.Players = append(session.Players, *player)
-	
+
 	return nil
 }
 
 func (s *GameService) RecordGameEvent(event *models.GameEvent) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	if _, exists := s.sessions[event.SessionID]; !exists {
 		return errors.New("session not found")
 	}
-	
+
 	event.ID = generateID()
 	event.Timestamp = time.Now()
-	
+
 	s.events[event.SessionID] = append(s.events[event.SessionID], event)
 	return nil
 }

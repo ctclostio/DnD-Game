@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type AICharacterService struct {
@@ -15,13 +15,13 @@ type AICharacterService struct {
 }
 
 type CustomCharacterRequest struct {
-	Name        string `json:"name"`
-	Concept     string `json:"concept"`
-	Race        string `json:"race,omitempty"`
-	Class       string `json:"class,omitempty"`
-	Background  string `json:"background,omitempty"`
-	Ruleset     string `json:"ruleset,omitempty"`
-	Level       int    `json:"level,omitempty"`
+	Name       string `json:"name"`
+	Concept    string `json:"concept"`
+	Race       string `json:"race,omitempty"`
+	Class      string `json:"class,omitempty"`
+	Background string `json:"background,omitempty"`
+	Ruleset    string `json:"ruleset,omitempty"`
+	Level      int    `json:"level,omitempty"`
 }
 
 func NewAICharacterService(llmProvider LLMProvider) *AICharacterService {
@@ -83,7 +83,7 @@ Is this character balanced for play? If not, suggest adjustments. Respond with J
 		character.Attributes.Wisdom, character.Attributes.Charisma)
 
 	systemPrompt := "You are a D&D character validator. Analyze the character for game balance and provide feedback. Your response must be valid JSON."
-	
+
 	response, err := s.llmProvider.GenerateCompletion(context.Background(), prompt, systemPrompt)
 	if err != nil {
 		return fmt.Errorf("validation failed: %w", err)
@@ -198,12 +198,11 @@ Respond with a JSON object in this format:
 	return prompt
 }
 
-
 func (s *AICharacterService) parseAIResponse(aiResponse string, req CustomCharacterRequest) (*models.Character, error) {
 	// Try to extract JSON from the response
 	startIdx := strings.Index(aiResponse, "{")
 	endIdx := strings.LastIndex(aiResponse, "}")
-	
+
 	if startIdx == -1 || endIdx == -1 {
 		return nil, fmt.Errorf("no valid JSON found in AI response")
 	}
@@ -225,14 +224,14 @@ func (s *AICharacterService) parseAIResponse(aiResponse string, req CustomCharac
 			Wisdom       int `json:"wisdom"`
 			Charisma     int `json:"charisma"`
 		} `json:"attributes"`
-		HitDice       string                   `json:"hitDice"`
-		Speed         int                      `json:"speed"`
-		Features      []models.Feature         `json:"features"`
-		Proficiencies models.Proficiencies     `json:"proficiencies"`
-		Skills        []string                 `json:"skills"`
-		Equipment     []models.Item            `json:"equipment"`
-		Personality   map[string][]string      `json:"personality"`
-		Backstory     string                   `json:"backstory"`
+		HitDice       string               `json:"hitDice"`
+		Speed         int                  `json:"speed"`
+		Features      []models.Feature     `json:"features"`
+		Proficiencies models.Proficiencies `json:"proficiencies"`
+		Skills        []string             `json:"skills"`
+		Equipment     []models.Item        `json:"equipment"`
+		Personality   map[string][]string  `json:"personality"`
+		Backstory     string               `json:"backstory"`
 	}
 
 	if err := json.Unmarshal([]byte(jsonStr), &aiChar); err != nil {
@@ -241,20 +240,20 @@ func (s *AICharacterService) parseAIResponse(aiResponse string, req CustomCharac
 
 	// Build the character model
 	character := &models.Character{
-		Name:       req.Name,
-		Race:       aiChar.Race,
-		Subrace:    aiChar.Subrace,
-		Class:      aiChar.Class,
-		Subclass:   aiChar.Subclass,
-		Background: aiChar.Background,
-		Alignment:  aiChar.Alignment,
-		Level:      req.Level,
-		HitDice:    aiChar.HitDice,
-		Speed:      aiChar.Speed,
-		Attributes: models.Attributes(aiChar.Attributes),
-		Features:   aiChar.Features,
+		Name:          req.Name,
+		Race:          aiChar.Race,
+		Subrace:       aiChar.Subrace,
+		Class:         aiChar.Class,
+		Subclass:      aiChar.Subclass,
+		Background:    aiChar.Background,
+		Alignment:     aiChar.Alignment,
+		Level:         req.Level,
+		HitDice:       aiChar.HitDice,
+		Speed:         aiChar.Speed,
+		Attributes:    models.Attributes(aiChar.Attributes),
+		Features:      aiChar.Features,
 		Proficiencies: aiChar.Proficiencies,
-		Equipment:  aiChar.Equipment,
+		Equipment:     aiChar.Equipment,
 	}
 
 	if character.Level == 0 {
@@ -264,7 +263,7 @@ func (s *AICharacterService) parseAIResponse(aiResponse string, req CustomCharac
 	// Calculate derived stats
 	character.ProficiencyBonus = ((character.Level - 1) / 4) + 2
 	character.Initiative = s.calculateModifier(character.Attributes.Dexterity)
-	
+
 	// Calculate HP
 	hitDiceValue := s.getHitDiceValue(aiChar.HitDice)
 	character.MaxHitPoints = hitDiceValue + s.calculateModifier(character.Attributes.Constitution)

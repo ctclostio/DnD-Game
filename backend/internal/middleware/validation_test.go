@@ -54,9 +54,9 @@ func TestValidationMiddleware_Validate(t *testing.T) {
 			expectedError:  true,
 		},
 		{
-			name:   "GET request - no validation",
-			method: http.MethodGet,
-			body:   nil,
+			name:           "GET request - no validation",
+			method:         http.MethodGet,
+			body:           nil,
 			targetStruct:   &CreateCharacterRequest{},
 			expectedStatus: http.StatusOK,
 			expectedError:  false,

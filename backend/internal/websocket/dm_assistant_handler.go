@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/services"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
 )
 
 // DMAssistantMessage represents a DM Assistant WebSocket message
@@ -68,10 +68,10 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 	contextData, _ := msg.Data["context"].(map[string]interface{})
 
 	req := models.DMAssistantRequest{
-		Type:          requestType,
-		GameSessionID: gameSessionID,
-		Parameters:    parameters,
-		Context:       contextData,
+		Type:           requestType,
+		GameSessionID:  gameSessionID,
+		Parameters:     parameters,
+		Context:        contextData,
 		StreamResponse: true,
 	}
 
@@ -123,7 +123,7 @@ func (c *Client) handleNPCDialogue(msg DMAssistantMessage, dmAssistant *services
 	// Stream NPC dialogue as it's generated
 	npcName, _ := msg.Data["npcName"].(string)
 	playerInput, _ := msg.Data["playerInput"].(string)
-	
+
 	// Send typing indicator
 	c.sendDMAssistantResponse(DMAssistantResponse{
 		Type:      "npc_dialogue_stream",
@@ -141,7 +141,7 @@ func (c *Client) handleNPCDialogue(msg DMAssistantMessage, dmAssistant *services
 	time.Sleep(500 * time.Millisecond) // Simulate thinking
 
 	dialogue := fmt.Sprintf("'%s? Well, that's an interesting question...'", playerInput)
-	
+
 	c.sendDMAssistantResponse(DMAssistantResponse{
 		Type:      "npc_dialogue_stream",
 		RequestID: msg.RequestID,
@@ -221,8 +221,8 @@ func (c *Client) handleCombatNarration(msg DMAssistantMessage, dmAssistant *serv
 	attackerName, _ := msg.Data["attackerName"].(string)
 	targetName, _ := msg.Data["targetName"].(string)
 	damage, _ := msg.Data["damage"].(float64)
-	
-	narration := fmt.Sprintf("%s strikes %s with devastating force, dealing %d damage!", 
+
+	narration := fmt.Sprintf("%s strikes %s with devastating force, dealing %d damage!",
 		attackerName, targetName, int(damage))
 
 	c.sendDMAssistantResponse(DMAssistantResponse{

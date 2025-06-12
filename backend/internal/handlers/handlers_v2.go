@@ -3,11 +3,11 @@ package handlers
 import (
 	"context"
 
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/your-username/dnd-game/backend/internal/websocket"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // HandlersV2 holds all HTTP handlers with logging support
@@ -86,7 +86,7 @@ func (h *HandlersV2) AuthHandler() *AuthHandlerV2 {
 func (h *HandlersV2) CharacterHandler() *CharacterHandlerV2WithLogging {
 	return &CharacterHandlerV2WithLogging{
 		characterService: h.characterService,
-		log:             h.log.WithOperation("character", "handler"),
+		log:              h.log.WithOperation("character", "handler"),
 	}
 }
 
@@ -113,7 +113,7 @@ func (h *HandlersV2) CombatHandler() *CombatHandlerV2 {
 func (h *HandlersV2) DMAssistantHandler() *DMAssistantHandlerV2 {
 	return &DMAssistantHandlerV2{
 		dmAssistantService: h.dmAssistantService,
-		log:               h.log.WithOperation("dm_assistant", "handler"),
+		log:                h.log.WithOperation("dm_assistant", "handler"),
 	}
 }
 
@@ -121,7 +121,7 @@ func (h *HandlersV2) DMAssistantHandler() *DMAssistantHandlerV2 {
 func (h *HandlersV2) InventoryHandler() *InventoryHandlerV2 {
 	return &InventoryHandlerV2{
 		inventoryService: h.inventoryService,
-		log:             h.log.WithOperation("inventory", "handler"),
+		log:              h.log.WithOperation("inventory", "handler"),
 	}
 }
 
@@ -143,7 +143,7 @@ type AuthHandlerV2 struct {
 // CharacterHandlerV2WithLogging handles character operations with logging
 type CharacterHandlerV2WithLogging struct {
 	characterService CharacterService
-	log             *logger.LoggerV2
+	log              *logger.LoggerV2
 }
 
 // GameHandlerV2 handles game sessions with logging
@@ -164,13 +164,13 @@ type CombatHandlerV2 struct {
 // DMAssistantHandlerV2 handles DM assistant features with logging
 type DMAssistantHandlerV2 struct {
 	dmAssistantService *services.DMAssistantService
-	log               *logger.LoggerV2
+	log                *logger.LoggerV2
 }
 
 // InventoryHandlerV2 handles inventory with logging
 type InventoryHandlerV2 struct {
 	inventoryService *services.InventoryService
-	log             *logger.LoggerV2
+	log              *logger.LoggerV2
 }
 
 // CharacterService interface for dependency injection

@@ -1,0 +1,33 @@
+# GoSec configuration for D&D Game backend
+# Exclude game mechanics files from weak random checks
+
+global:
+  # Confidence level
+  confidence: "medium"
+  # Severity level  
+  severity: "medium"
+  # Output format
+  fmt: "json"
+  # Verbose output
+  verbose: false
+
+rules:
+  # Exclude G404 (weak random) for game mechanics - these don't need crypto random
+  G404:
+    exclude:
+      - "**/*_test.go"
+      - "**/testutil/**"
+      - "**/pkg/dice/**"
+      - "**/services/dice_roll.go"
+      - "**/services/world_event_engine.go"
+      - "**/services/game_session.go"
+      - "**/services/settlement_generator.go"
+      - "**/services/economic_simulator.go"
+      - "**/services/faction_system.go"
+      - "**/services/procedural_culture.go"
+      - "**/services/living_ecosystem.go"
+      - "**/services/conditional_reality.go"
+  
+  # G104 (unhandled errors) - only report high confidence
+  G104:
+    confidence: "high"

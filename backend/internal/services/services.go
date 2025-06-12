@@ -1,8 +1,8 @@
 package services
 
 import (
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/config"
 )
 
 // Services aggregates all service interfaces

@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // LivingEcosystemService manages the autonomous world simulation
@@ -200,7 +200,7 @@ func (les *LivingEcosystemService) simulateNPCActivities(ctx context.Context, se
 func (les *LivingEcosystemService) simulateGoalProgress(ctx context.Context, npc *models.NPC, goal models.NPCGoal, timeDelta time.Duration) (*models.EmergentWorldEvent, float64) {
 	// Calculate progress based on goal type and time
 	progressRate := 0.1 * (timeDelta.Hours() / 24.0) // Base 10% progress per day
-	
+
 	// Adjust based on NPC stats and goal type
 	switch goal.GoalType {
 	case "acquire_wealth":
@@ -227,10 +227,10 @@ func (les *LivingEcosystemService) simulateGoalProgress(ctx context.Context, npc
 			Title:       fmt.Sprintf("%s Makes Progress", npc.Name),
 			Description: fmt.Sprintf("%s has made significant progress on their goal: %s", npc.Name, goal.Description),
 			Impact: map[string]interface{}{
-				"npc_id":      npc.ID,
-				"goal_id":     goal.ID,
-				"progress":    newProgress,
-				"goal_type":   goal.GoalType,
+				"npc_id":    npc.ID,
+				"goal_id":   goal.ID,
+				"progress":  newProgress,
+				"goal_type": goal.GoalType,
 			},
 			AffectedEntities: []string{npc.ID},
 			IsPlayerVisible:  npc.Type == "ally" || npc.Type == "neutral",
@@ -246,7 +246,7 @@ func (les *LivingEcosystemService) simulateGoalProgress(ctx context.Context, npc
 func (les *LivingEcosystemService) generateNPCGoal(ctx context.Context, npc *models.NPC) *models.NPCGoal {
 	goalTypes := []string{
 		"acquire_wealth",
-		"gain_influence", 
+		"gain_influence",
 		"improve_skill",
 		"complete_quest",
 		"build_relationship",
@@ -257,7 +257,7 @@ func (les *LivingEcosystemService) generateNPCGoal(ctx context.Context, npc *mod
 
 	// Weight goal types based on NPC personality and stats
 	selectedType := goalTypes[rand.Intn(len(goalTypes))]
-	
+
 	// Use AI to generate appropriate goal description
 	prompt := fmt.Sprintf(`Generate a specific personal goal for an NPC with these characteristics:
 Name: %s
@@ -358,35 +358,35 @@ Create a 1-2 sentence description of something noteworthy that happens. It could
 func (les *LivingEcosystemService) generateDefaultSchedule(npc *models.NPC) {
 	schedules := []models.NPCSchedule{
 		{
-			ID:        uuid.New().String(),
-			NPCID:     npc.ID,
-			TimeOfDay: "morning",
-			Activity:  "daily_routine",
-			Location:  "home",
+			ID:         uuid.New().String(),
+			NPCID:      npc.ID,
+			TimeOfDay:  "morning",
+			Activity:   "daily_routine",
+			Location:   "home",
 			Parameters: map[string]interface{}{},
 		},
 		{
-			ID:        uuid.New().String(),
-			NPCID:     npc.ID,
-			TimeOfDay: "afternoon",
-			Activity:  "work",
-			Location:  "workplace",
+			ID:         uuid.New().String(),
+			NPCID:      npc.ID,
+			TimeOfDay:  "afternoon",
+			Activity:   "work",
+			Location:   "workplace",
 			Parameters: map[string]interface{}{},
 		},
 		{
-			ID:        uuid.New().String(),
-			NPCID:     npc.ID,
-			TimeOfDay: "evening",
-			Activity:  "socializing",
-			Location:  "tavern",
+			ID:         uuid.New().String(),
+			NPCID:      npc.ID,
+			TimeOfDay:  "evening",
+			Activity:   "socializing",
+			Location:   "tavern",
 			Parameters: map[string]interface{}{},
 		},
 		{
-			ID:        uuid.New().String(),
-			NPCID:     npc.ID,
-			TimeOfDay: "night",
-			Activity:  "rest",
-			Location:  "home",
+			ID:         uuid.New().String(),
+			NPCID:      npc.ID,
+			TimeOfDay:  "night",
+			Activity:   "rest",
+			Location:   "home",
 			Parameters: map[string]interface{}{},
 		},
 	}
@@ -412,7 +412,7 @@ func (les *LivingEcosystemService) simulateEconomicChanges(ctx context.Context, 
 
 	for _, settlement := range settlements {
 		// Simulate trade effects
-		if rand.Float64() < 0.2 * (timeDelta.Hours() / 168.0) { // 20% chance per week
+		if rand.Float64() < 0.2*(timeDelta.Hours()/168.0) { // 20% chance per week
 			event := les.generateEconomicEvent(ctx, settlement)
 			if event != nil {
 				events = append(events, *event)
@@ -464,10 +464,10 @@ Create a brief description (2-3 sentences) of this economic event and its immedi
 		Title:       fmt.Sprintf("Economic Event in %s", settlement.Name),
 		Description: description,
 		Impact: map[string]interface{}{
-			"settlement_id":    settlement.ID.String(),
-			"economic_impact":  impact,
-			"affected_goods":   les.getAffectedGoods(eventType),
-			"duration_days":    rand.Intn(30) + 10,
+			"settlement_id":   settlement.ID.String(),
+			"economic_impact": impact,
+			"affected_goods":  les.getAffectedGoods(eventType),
+			"duration_days":   rand.Intn(30) + 10,
 		},
 		AffectedEntities: []string{settlement.ID.String()},
 		IsPlayerVisible:  true,
@@ -564,7 +564,7 @@ func (les *LivingEcosystemService) simulatePoliticalDevelopments(ctx context.Con
 		}
 
 		// Check for new political opportunities
-		if rand.Float64() < 0.15 * (timeDelta.Hours() / 168.0) { // 15% chance per week
+		if rand.Float64() < 0.15*(timeDelta.Hours()/168.0) { // 15% chance per week
 			event := les.generatePoliticalOpportunity(ctx, faction, personality)
 			if event != nil {
 				events = append(events, *event)
@@ -605,11 +605,11 @@ func (les *LivingEcosystemService) simulateAgendaProgress(ctx context.Context, f
 
 				// Generate completion event
 				return &models.EmergentWorldEvent{
-					ID:          uuid.New().String(),
-					SessionID:   faction.GameSessionID.String(),
-					EventType:   "political_milestone",
-					Title:       fmt.Sprintf("%s Advances Agenda", faction.Name),
-					Description: fmt.Sprintf("%s has completed a key milestone in their agenda '%s': %s", 
+					ID:        uuid.New().String(),
+					SessionID: faction.GameSessionID.String(),
+					EventType: "political_milestone",
+					Title:     fmt.Sprintf("%s Advances Agenda", faction.Name),
+					Description: fmt.Sprintf("%s has completed a key milestone in their agenda '%s': %s",
 						faction.Name, agenda.Title, stage.Description),
 					Impact: map[string]interface{}{
 						"faction_id":   faction.ID,
@@ -747,9 +747,9 @@ Create a dramatic description (2-3 sentences) of this event and its immediate im
 			Title:       les.generateEventTitle(eventType),
 			Description: description,
 			Impact: map[string]interface{}{
-				"severity":  rand.Intn(5) + 1,
-				"duration":  fmt.Sprintf("%d days", rand.Intn(30)+1),
-				"area":      les.getEventArea(eventType),
+				"severity": rand.Intn(5) + 1,
+				"duration": fmt.Sprintf("%d days", rand.Intn(30)+1),
+				"area":     les.getEventArea(eventType),
 			},
 			AffectedEntities: affectedEntities,
 			IsPlayerVisible:  true,
@@ -774,7 +774,7 @@ func (les *LivingEcosystemService) simulateCulturalEvolution(ctx context.Context
 
 	for _, culture := range cultures {
 		// Small chance of cultural shift
-		if rand.Float64() < 0.05 * (timeDelta.Hours() / 720.0) { // 5% chance per month
+		if rand.Float64() < 0.05*(timeDelta.Hours()/720.0) { // 5% chance per month
 			event := les.generateCulturalShift(ctx, culture)
 			if event != nil {
 				events = append(events, *event)
@@ -802,13 +802,13 @@ func getTimeOfDay(hour int) string {
 
 func (les *LivingEcosystemService) getAffectedGoods(eventType string) []string {
 	goodsMap := map[string][]string{
-		"trade_boom":          {"all"},
-		"trade_disruption":    {"luxury_goods", "exotic_materials"},
-		"new_resource":        {"raw_materials", "crafting_supplies"},
-		"resource_depletion":  {"basic_resources", "food"},
-		"merchant_arrival":    {"rare_items", "foreign_goods"},
-		"market_crash":        {"all"},
-		"guild_formation":     {"crafted_goods", "services"},
+		"trade_boom":            {"all"},
+		"trade_disruption":      {"luxury_goods", "exotic_materials"},
+		"new_resource":          {"raw_materials", "crafting_supplies"},
+		"resource_depletion":    {"basic_resources", "food"},
+		"merchant_arrival":      {"rare_items", "foreign_goods"},
+		"market_crash":          {"all"},
+		"guild_formation":       {"crafted_goods", "services"},
 		"technological_advance": {"tools", "weapons", "armor"},
 	}
 
@@ -966,8 +966,8 @@ Describe this cultural shift and its impact on society (2-3 sentences).`,
 		Title:       fmt.Sprintf("%s in %s Culture", shiftType, culture.Name),
 		Description: description,
 		Impact: map[string]interface{}{
-			"culture_id": culture.ID,
-			"shift_type": shiftType,
+			"culture_id":       culture.ID,
+			"shift_type":       shiftType,
 			"affected_aspects": les.getAffectedCulturalAspects(shiftType),
 		},
 		AffectedEntities: []string{culture.ID},
@@ -978,14 +978,14 @@ Describe this cultural shift and its impact on society (2-3 sentences).`,
 
 func (les *LivingEcosystemService) getAffectedCulturalAspects(shiftType string) []string {
 	aspectsMap := map[string][]string{
-		"artistic_renaissance":  {"art_style", "music_style", "architecture"},
-		"religious_reform":      {"belief_system", "customs", "holy_days"},
-		"linguistic_evolution":  {"language", "naming_conventions", "idioms"},
-		"social_movement":       {"social_structure", "values", "taboos"},
+		"artistic_renaissance":   {"art_style", "music_style", "architecture"},
+		"religious_reform":       {"belief_system", "customs", "holy_days"},
+		"linguistic_evolution":   {"language", "naming_conventions", "idioms"},
+		"social_movement":        {"social_structure", "values", "taboos"},
 		"technological_adoption": {"architecture", "art_style", "customs"},
-		"cultural_fusion":       {"cuisine", "clothing_style", "language"},
-		"traditional_revival":   {"customs", "belief_system", "art_style"},
-		"philosophical_shift":   {"values", "belief_system", "social_structure"},
+		"cultural_fusion":        {"cuisine", "clothing_style", "language"},
+		"traditional_revival":    {"customs", "belief_system", "art_style"},
+		"philosophical_shift":    {"values", "belief_system", "social_structure"},
 	}
 
 	if aspects, ok := aspectsMap[shiftType]; ok {

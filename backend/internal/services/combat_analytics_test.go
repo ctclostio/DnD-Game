@@ -8,127 +8,127 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
 func TestCombatAnalytics_TrackCombatAction(t *testing.T) {
 	t.Run("successful damage action recording", func(t *testing.T) {
 		mockRepo := new(MockCombatAnalyticsRepository)
-		
+
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
-		
+
 		combatID := uuid.New()
 		targetID := "npc-1"
-		
+
 		action := &models.CombatActionLog{
-			ID:           uuid.New(),
-			CombatID:     combatID,
-			ActorID:      "char-1",
-			ActorType:    "character",
-			ActionType:   "attack",
-			TargetID:     &targetID,
-			RollResults:  models.JSONB(`{"attack": 18}`),
-			DamageDealt:  12,
-			Outcome:      "hit",
-			RoundNumber:  1,
-			TurnNumber:   0,
-			Timestamp:    time.Now(),
+			ID:          uuid.New(),
+			CombatID:    combatID,
+			ActorID:     "char-1",
+			ActorType:   "character",
+			ActionType:  "attack",
+			TargetID:    &targetID,
+			RollResults: models.JSONB(`{"attack": 18}`),
+			DamageDealt: 12,
+			Outcome:     "hit",
+			RoundNumber: 1,
+			TurnNumber:  0,
+			Timestamp:   time.Now(),
 		}
-		
+
 		mockRepo.On("CreateCombatAction", mock.MatchedBy(func(a *models.CombatActionLog) bool {
 			return a.CombatID == action.CombatID &&
 				a.ActorID == action.ActorID &&
 				a.DamageDealt == action.DamageDealt &&
 				a.Outcome == "hit"
 		})).Return(nil)
-		
+
 		ctx := testutil.TestContext()
 		err := analytics.TrackCombatAction(ctx, action)
-		
+
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("healing action recording", func(t *testing.T) {
 		mockRepo := new(MockCombatAnalyticsRepository)
-		
+
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
-		
+
 		combatID := uuid.New()
 		targetID := "char-1"
-		
+
 		action := &models.CombatActionLog{
-			ID:           uuid.New(),
-			CombatID:     combatID,
-			ActorID:      "char-2",
-			ActorType:    "character",
-			ActionType:   "heal",
-			TargetID:     &targetID,
-			DamageDealt:  8, // Healing stored as positive damage
-			Outcome:      "success",
-			RoundNumber:  2,
-			Timestamp:    time.Now(),
+			ID:          uuid.New(),
+			CombatID:    combatID,
+			ActorID:     "char-2",
+			ActorType:   "character",
+			ActionType:  "heal",
+			TargetID:    &targetID,
+			DamageDealt: 8, // Healing stored as positive damage
+			Outcome:     "success",
+			RoundNumber: 2,
+			Timestamp:   time.Now(),
 		}
-		
+
 		mockRepo.On("CreateCombatAction", mock.AnythingOfType("*models.CombatActionLog")).Return(nil)
-		
+
 		ctx := testutil.TestContext()
 		err := analytics.TrackCombatAction(ctx, action)
-		
+
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("spell action with save", func(t *testing.T) {
 		mockRepo := new(MockCombatAnalyticsRepository)
-		
+
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
-		
+
 		combatID := uuid.New()
-		
+
 		action := &models.CombatActionLog{
-			ID:           uuid.New(),
-			CombatID:     combatID,
-			ActorID:      "char-3",
-			ActorType:    "character",
-			ActionType:   "spell",
+			ID:            uuid.New(),
+			CombatID:      combatID,
+			ActorID:       "char-3",
+			ActorType:     "character",
+			ActionType:    "spell",
 			ResourcesUsed: models.JSONB(`{"spell_level": 3, "spell_name": "Fireball"}`),
-			RollResults:  models.JSONB(`{"save_dc": 15}`),
-			DamageDealt:  28,
-			Outcome:      "hit",
-			RoundNumber:  3,
-			Timestamp:    time.Now(),
+			RollResults:   models.JSONB(`{"save_dc": 15}`),
+			DamageDealt:   28,
+			Outcome:       "hit",
+			RoundNumber:   3,
+			Timestamp:     time.Now(),
 		}
-		
+
 		mockRepo.On("CreateCombatAction", mock.AnythingOfType("*models.CombatActionLog")).Return(nil)
-		
+
 		ctx := testutil.TestContext()
 		err := analytics.TrackCombatAction(ctx, action)
-		
+
 		require.NoError(t, err)
 	})
 
 	t.Run("repository error", func(t *testing.T) {
 		mockRepo := new(MockCombatAnalyticsRepository)
-		
+
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
-		
+
 		action := &models.CombatActionLog{
-			ID:           uuid.New(),
-			CombatID:     uuid.New(),
-			ActorID:      "char-1",
-			ActorType:    "character",
-			ActionType:   "attack",
-			RoundNumber:  1,
+			ID:          uuid.New(),
+			CombatID:    uuid.New(),
+			ActorID:     "char-1",
+			ActorType:   "character",
+			ActionType:  "attack",
+			RoundNumber: 1,
 		}
-		
+
 		expectedErr := errors.New("database error")
 		mockRepo.On("CreateCombatAction", action).Return(expectedErr)
-		
+
 		ctx := testutil.TestContext()
 		err := analytics.TrackCombatAction(ctx, action)
-		
+
 		require.Error(t, err)
 		require.Equal(t, expectedErr, err)
 		mockRepo.AssertExpectations(t)
@@ -138,17 +138,17 @@ func TestCombatAnalytics_TrackCombatAction(t *testing.T) {
 func TestCombatAnalytics_FinalizeCombatAnalytics(t *testing.T) {
 	t.Run("complete combat analytics", func(t *testing.T) {
 		mockRepo := new(MockCombatAnalyticsRepository)
-		
+
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
-		
+
 		combatID := uuid.New()
 		sessionID := uuid.New()
-		
+
 		combat := &models.Combat{
-			ID:              combatID.String(),
-			GameSessionID:   sessionID.String(),
-			Round:           5,
-			Combatants:      []models.Combatant{
+			ID:            combatID.String(),
+			GameSessionID: sessionID.String(),
+			Round:         5,
+			Combatants: []models.Combatant{
 				{
 					ID:    "char-1",
 					Name:  "Fighter",
@@ -165,64 +165,64 @@ func TestCombatAnalytics_FinalizeCombatAnalytics(t *testing.T) {
 				},
 			},
 		}
-		
+
 		targetID := "npc-1"
 		actions := []*models.CombatActionLog{
 			{
-				ID:           uuid.New(),
-				CombatID:     combatID,
-				ActorID:      "char-1",
-				ActorType:    "character",
-				ActionType:   "attack",
-				TargetID:     &targetID,
-				DamageDealt:  20,
-				Outcome:      "killing_blow",
-				RoundNumber:  5,
+				ID:          uuid.New(),
+				CombatID:    combatID,
+				ActorID:     "char-1",
+				ActorType:   "character",
+				ActionType:  "attack",
+				TargetID:    &targetID,
+				DamageDealt: 20,
+				Outcome:     "killing_blow",
+				RoundNumber: 5,
 			},
 		}
-		
+
 		mockRepo.On("GetCombatActions", combatID).Return(actions, nil)
 		mockRepo.On("CreateCombatAnalytics", mock.AnythingOfType("*models.CombatAnalytics")).Return(nil)
 		mockRepo.On("CreateCombatantAnalytics", mock.AnythingOfType("*models.CombatantAnalytics")).Return(nil).Times(2)
 		mockRepo.On("UpdateCombatAnalytics", mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("map[string]interface {}")).Return(nil)
-		
+
 		ctx := testutil.TestContext()
 		result, err := analytics.FinalizeCombatAnalytics(ctx, combat, sessionID)
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.NotNil(t, result.Analytics)
 		require.Equal(t, 20, result.Analytics.TotalDamageDealt) // Based on single action with 20 damage
-		require.Equal(t, 0, result.Analytics.TotalHealingDone) // No healing actions provided
+		require.Equal(t, 0, result.Analytics.TotalHealingDone)  // No healing actions provided
 		require.Equal(t, "char-1", result.Analytics.MVPID)
-		
+
 		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("analytics with no actions", func(t *testing.T) {
 		mockRepo := new(MockCombatAnalyticsRepository)
-		
+
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
-		
+
 		combatID := uuid.New()
 		sessionID := uuid.New()
-		
+
 		combat := &models.Combat{
-			ID:              combatID.String(),
-			GameSessionID:   sessionID.String(),
-			Round:           1,
-			Combatants:      []models.Combatant{},
+			ID:            combatID.String(),
+			GameSessionID: sessionID.String(),
+			Round:         1,
+			Combatants:    []models.Combatant{},
 		}
-		
+
 		actions := []*models.CombatActionLog{}
-		
+
 		mockRepo.On("GetCombatActions", combatID).Return(actions, nil)
 		mockRepo.On("CreateCombatAnalytics", mock.AnythingOfType("*models.CombatAnalytics")).Return(nil)
 		mockRepo.On("UpdateCombatAnalytics", mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("map[string]interface {}")).Return(nil)
-		
+
 		ctx := testutil.TestContext()
 		result, err := analytics.FinalizeCombatAnalytics(ctx, combat, sessionID)
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Equal(t, 0, result.Analytics.TotalDamageDealt)
@@ -233,12 +233,12 @@ func TestCombatAnalytics_FinalizeCombatAnalytics(t *testing.T) {
 func TestCombatAnalytics_GetCombatAnalytics(t *testing.T) {
 	t.Run("retrieve analytics for combat", func(t *testing.T) {
 		mockRepo := new(MockCombatAnalyticsRepository)
-		
+
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
-		
+
 		combatID := uuid.New()
 		sessionID := uuid.New()
-		
+
 		expectedAnalytics := &models.CombatAnalytics{
 			ID:               uuid.New(),
 			CombatID:         combatID,
@@ -251,34 +251,34 @@ func TestCombatAnalytics_GetCombatAnalytics(t *testing.T) {
 			CreatedAt:        time.Now(),
 			UpdatedAt:        time.Now(),
 		}
-		
+
 		mockRepo.On("GetCombatAnalytics", combatID).Return(expectedAnalytics, nil)
-		
+
 		ctx := testutil.TestContext()
 		result, err := analytics.GetCombatAnalytics(ctx, combatID)
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Equal(t, combatID, result.CombatID)
 		require.Equal(t, 150, result.TotalDamageDealt)
 		require.Equal(t, 45, result.TotalHealingDone)
 		require.Equal(t, "char-1", result.MVPID)
-		
+
 		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("analytics not found", func(t *testing.T) {
 		mockRepo := new(MockCombatAnalyticsRepository)
-		
+
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
-		
+
 		combatID := uuid.New()
-		
+
 		mockRepo.On("GetCombatAnalytics", combatID).Return(nil, models.ErrNotFound)
-		
+
 		ctx := testutil.TestContext()
 		result, err := analytics.GetCombatAnalytics(ctx, combatID)
-		
+
 		require.Error(t, err)
 		require.Nil(t, result)
 		require.Equal(t, models.ErrNotFound, err)
@@ -288,11 +288,11 @@ func TestCombatAnalytics_GetCombatAnalytics(t *testing.T) {
 func TestCombatAnalytics_GetCombatantAnalytics(t *testing.T) {
 	t.Run("retrieve combatant analytics", func(t *testing.T) {
 		mockRepo := new(MockCombatAnalyticsRepository)
-		
+
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
-		
+
 		analyticsID := uuid.New()
-		
+
 		expectedCombatants := []*models.CombatantAnalytics{
 			{
 				ID:                uuid.New(),
@@ -327,12 +327,12 @@ func TestCombatAnalytics_GetCombatantAnalytics(t *testing.T) {
 				RoundsSurvived:    5,
 			},
 		}
-		
+
 		mockRepo.On("GetCombatantAnalytics", analyticsID).Return(expectedCombatants, nil)
-		
+
 		ctx := testutil.TestContext()
 		result, err := analytics.GetCombatantAnalytics(ctx, analyticsID)
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Len(t, result, 2)
@@ -340,7 +340,7 @@ func TestCombatAnalytics_GetCombatantAnalytics(t *testing.T) {
 		require.Equal(t, 65, result[0].DamageDealt)
 		require.Equal(t, "char-2", result[1].CombatantID)
 		require.Equal(t, 25, result[1].HealingDone)
-		
+
 		mockRepo.AssertExpectations(t)
 	})
 }
@@ -348,11 +348,11 @@ func TestCombatAnalytics_GetCombatantAnalytics(t *testing.T) {
 func TestCombatAnalytics_GetCombatAnalyticsBySession(t *testing.T) {
 	t.Run("retrieve all analytics for session", func(t *testing.T) {
 		mockRepo := new(MockCombatAnalyticsRepository)
-		
+
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
-		
+
 		sessionID := uuid.New()
-		
+
 		expectedAnalytics := []*models.CombatAnalytics{
 			{
 				ID:               uuid.New(),
@@ -375,12 +375,12 @@ func TestCombatAnalytics_GetCombatAnalyticsBySession(t *testing.T) {
 				MVPType:          "character",
 			},
 		}
-		
+
 		mockRepo.On("GetCombatAnalyticsBySession", sessionID).Return(expectedAnalytics, nil)
-		
+
 		ctx := testutil.TestContext()
 		result, err := analytics.GetCombatAnalyticsBySession(ctx, sessionID)
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Len(t, result, 2)
@@ -388,7 +388,7 @@ func TestCombatAnalytics_GetCombatAnalyticsBySession(t *testing.T) {
 		require.Equal(t, 95, result[0].TotalDamageDealt)
 		require.Equal(t, sessionID, result[1].GameSessionID)
 		require.Equal(t, 120, result[1].TotalDamageDealt)
-		
+
 		mockRepo.AssertExpectations(t)
 	})
 }

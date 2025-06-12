@@ -27,10 +27,10 @@ func NewCSRFStore() *CSRFStore {
 	store := &CSRFStore{
 		tokens: make(map[string]time.Time),
 	}
-	
+
 	// Start cleanup goroutine
 	go store.cleanup()
-	
+
 	return store
 }
 
@@ -38,7 +38,7 @@ func NewCSRFStore() *CSRFStore {
 func (s *CSRFStore) cleanup() {
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		s.mu.Lock()
 		now := time.Now()
@@ -57,13 +57,13 @@ func (s *CSRFStore) GenerateToken() (string, error) {
 	if _, err := rand.Read(bytes); err != nil {
 		return "", err
 	}
-	
+
 	token := base64.URLEncoding.EncodeToString(bytes)
-	
+
 	s.mu.Lock()
 	s.tokens[token] = time.Now().Add(csrfTokenTTL)
 	s.mu.Unlock()
-	
+
 	return token, nil
 }
 
@@ -72,18 +72,18 @@ func (s *CSRFStore) ValidateToken(token string) bool {
 	s.mu.RLock()
 	expiry, exists := s.tokens[token]
 	s.mu.RUnlock()
-	
+
 	if !exists {
 		return false
 	}
-	
+
 	if time.Now().After(expiry) {
 		s.mu.Lock()
 		delete(s.tokens, token)
 		s.mu.Unlock()
 		return false
 	}
-	
+
 	return true
 }
 
@@ -109,33 +109,33 @@ func CSRFMiddleware(store *CSRFStore) func(http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
-			
+
 			// For state-changing methods, validate CSRF token
 			cookieToken := ""
 			if cookie, err := r.Cookie(csrfCookieName); err == nil {
 				cookieToken = cookie.Value
 			}
-			
+
 			headerToken := r.Header.Get(csrfHeaderName)
-			
+
 			// Both tokens must be present and match
 			if cookieToken == "" || headerToken == "" {
 				http.Error(w, "CSRF token missing", http.StatusForbidden)
 				return
 			}
-			
+
 			// Use constant-time comparison
 			if subtle.ConstantTimeCompare([]byte(cookieToken), []byte(headerToken)) != 1 {
 				http.Error(w, "CSRF token mismatch", http.StatusForbidden)
 				return
 			}
-			
+
 			// Validate token exists and isn't expired
 			if !store.ValidateToken(cookieToken) {
 				http.Error(w, "Invalid CSRF token", http.StatusForbidden)
 				return
 			}
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -147,7 +147,7 @@ func ExemptCSRF(paths ...string) func(http.Handler) http.Handler {
 	for _, path := range paths {
 		pathMap[path] = true
 	}
-	
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if pathMap[r.URL.Path] {

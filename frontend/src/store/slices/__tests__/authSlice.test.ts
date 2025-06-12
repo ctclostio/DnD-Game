@@ -1,11 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
-import authReducer, { login, register, logout, clearError } from '../authSlice';
-import * as authService from '../../../services/auth';
-
-// Mock auth service
-jest.mock('../../../services/auth');
-
-// Mock localStorage
+// Mock localStorage before any imports
 const localStorageMock = {
   getItem: jest.fn(),
   setItem: jest.fn(),
@@ -15,6 +8,13 @@ const localStorageMock = {
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
+
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer, { login, register, logout, clearError } from '../authSlice';
+import * as authService from '../../../services/auth';
+
+// Mock auth service
+jest.mock('../../../services/auth');
 
 describe('authSlice', () => {
   let store: ReturnType<typeof configureStore>;
@@ -46,16 +46,21 @@ describe('authSlice', () => {
       const savedUser = { id: '1', username: 'testuser', email: 'test@example.com', role: 'player' };
       const savedToken = 'saved-token';
       
+      // Set up localStorage before requiring the module
       localStorageMock.getItem.mockImplementation((key) => {
         if (key === 'user') return JSON.stringify(savedUser);
         if (key === 'token') return savedToken;
         return null;
       });
 
+      // Clear module cache and re-import
+      jest.resetModules();
+      const authSlice = require('../authSlice').default;
+
       // Create new store to test initialization
       const newStore = configureStore({
         reducer: {
-          auth: authReducer,
+          auth: authSlice,
         },
       });
 

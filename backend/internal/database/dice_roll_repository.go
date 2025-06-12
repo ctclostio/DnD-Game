@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // diceRollRepository implements DiceRollRepository interface
@@ -162,7 +162,7 @@ func (r *diceRollRepository) GetByGameSessionAndUser(ctx context.Context, sessio
 // Delete deletes a dice roll
 func (r *diceRollRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM dice_rolls WHERE id = ?`
-	
+
 	result, err := r.db.ExecContextRebind(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete dice roll: %w", err)

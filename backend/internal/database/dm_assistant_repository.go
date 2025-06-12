@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/your-username/dnd-game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // DMAssistantRepository defines the interface for DM Assistant database operations
@@ -19,27 +19,27 @@ type DMAssistantRepository interface {
 	GetNPCsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AINPC, error)
 	UpdateNPC(ctx context.Context, npc *models.AINPC) error
 	AddNPCDialogue(ctx context.Context, npcID uuid.UUID, dialogue models.DialogueEntry) error
-	
+
 	// Location operations
 	SaveLocation(ctx context.Context, location *models.AILocation) error
 	GetLocationByID(ctx context.Context, id uuid.UUID) (*models.AILocation, error)
 	GetLocationsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AILocation, error)
 	UpdateLocation(ctx context.Context, location *models.AILocation) error
-	
+
 	// Narration operations
 	SaveNarration(ctx context.Context, narration *models.AINarration) error
 	GetNarrationsByType(ctx context.Context, sessionID uuid.UUID, narrationType string) ([]*models.AINarration, error)
-	
+
 	// Story element operations
 	SaveStoryElement(ctx context.Context, element *models.AIStoryElement) error
 	GetUnusedStoryElements(ctx context.Context, sessionID uuid.UUID) ([]*models.AIStoryElement, error)
 	MarkStoryElementUsed(ctx context.Context, elementID uuid.UUID) error
-	
+
 	// Environmental hazard operations
 	SaveEnvironmentalHazard(ctx context.Context, hazard *models.AIEnvironmentalHazard) error
 	GetActiveHazardsByLocation(ctx context.Context, locationID uuid.UUID) ([]*models.AIEnvironmentalHazard, error)
 	TriggerHazard(ctx context.Context, hazardID uuid.UUID) error
-	
+
 	// History operations
 	SaveHistory(ctx context.Context, history *models.DMAssistantHistory) error
 	GetHistoryBySession(ctx context.Context, sessionID uuid.UUID, limit int) ([]*models.DMAssistantHistory, error)

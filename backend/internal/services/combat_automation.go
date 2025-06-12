@@ -9,16 +9,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/pkg/dice"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/dice"
 )
 
 type CombatAutomationService struct {
-	combatRepo      database.CombatAnalyticsRepository
-	characterRepo   database.CharacterRepository
-	npcRepo         database.NPCRepository
-	diceRoller      *dice.Roller
+	combatRepo    database.CombatAnalyticsRepository
+	characterRepo database.CharacterRepository
+	npcRepo       database.NPCRepository
+	diceRoller    *dice.Roller
 }
 
 func NewCombatAutomationService(
@@ -41,15 +41,15 @@ func (cas *CombatAutomationService) AutoResolveCombat(
 	characters []*models.Character,
 	req models.AutoResolveRequest,
 ) (*models.AutoCombatResolution, error) {
-	
+
 	// Calculate encounter difficulty
 	partyLevel := cas.calculateAveragePartyLevel(characters)
 	encounterCR := cas.calculateEncounterCR(req.EnemyTypes)
-	
+
 	// Build party and enemy compositions
 	partyComp := cas.buildPartyComposition(characters)
 	enemyComp := cas.buildEnemyComposition(req.EnemyTypes)
-	
+
 	// Simulate combat
 	outcome, rounds, resources := cas.simulateCombat(
 		characters,
@@ -58,11 +58,11 @@ func (cas *CombatAutomationService) AutoResolveCombat(
 		encounterCR,
 		req.UseResources,
 	)
-	
+
 	// Generate loot and experience
 	loot := cas.generateLoot(req.EncounterDifficulty, req.EnemyTypes)
 	experience := cas.calculateExperience(req.EnemyTypes, len(characters))
-	
+
 	// Create narrative summary
 	narrative := cas.generateNarrativeSummary(
 		outcome,
@@ -71,19 +71,19 @@ func (cas *CombatAutomationService) AutoResolveCombat(
 		partyLevel,
 		encounterCR,
 	)
-	
+
 	// Convert resources to JSONB
 	resourcesJSON, err := json.Marshal(resources)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal resources: %w", err)
 	}
-	
+
 	// Convert loot to JSONB
 	lootJSON, err := json.Marshal(loot)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal loot: %w", err)
 	}
-	
+
 	// Save resolution to database
 	resolution := &models.AutoCombatResolution{
 		ID:                  uuid.New(),
@@ -100,11 +100,11 @@ func (cas *CombatAutomationService) AutoResolveCombat(
 		NarrativeSummary:    narrative,
 		CreatedAt:           time.Now(),
 	}
-	
+
 	if err := cas.combatRepo.CreateAutoCombatResolution(resolution); err != nil {
 		return nil, fmt.Errorf("failed to save combat resolution: %w", err)
 	}
-	
+
 	return resolution, nil
 }
 
@@ -114,13 +114,13 @@ func (cas *CombatAutomationService) SmartInitiative(
 	sessionID uuid.UUID,
 	req models.SmartInitiativeRequest,
 ) ([]models.InitiativeEntry, error) {
-	
+
 	var entries []models.InitiativeEntry
-	
+
 	for _, combatant := range req.Combatants {
 		// Get any special initiative rules
 		rule, _ := cas.combatRepo.GetInitiativeRule(sessionID, combatant.ID)
-		
+
 		// Calculate initiative bonus
 		bonus := combatant.DexterityModifier
 		if rule != nil {
@@ -129,7 +129,7 @@ func (cas *CombatAutomationService) SmartInitiative(
 				bonus += 5 // Alert feat gives +5 to initiative
 			}
 		}
-		
+
 		// Roll initiative
 		var roll int
 		if rule != nil && rule.AdvantageOnInitiative {
@@ -155,9 +155,9 @@ func (cas *CombatAutomationService) SmartInitiative(
 			}
 			roll = rollResult.Total
 		}
-		
+
 		total := roll + bonus
-		
+
 		// Apply any special rules
 		if rule != nil && rule.SpecialRules != nil {
 			// Handle special cases like "always goes first" etc.
@@ -169,7 +169,7 @@ func (cas *CombatAutomationService) SmartInitiative(
 				}
 			}
 		}
-		
+
 		entries = append(entries, models.InitiativeEntry{
 			ID:         combatant.ID,
 			Type:       combatant.Type,
@@ -179,13 +179,13 @@ func (cas *CombatAutomationService) SmartInitiative(
 			Bonus:      bonus,
 		})
 	}
-	
+
 	// Sort by initiative (highest first)
 	cas.sortInitiativeEntries(entries)
-	
+
 	// Handle ties
 	cas.resolveTies(entries)
-	
+
 	return entries, nil
 }
 
@@ -220,12 +220,12 @@ func (cas *CombatAutomationService) calculateAveragePartyLevel(characters []*mod
 	if len(characters) == 0 {
 		return 1
 	}
-	
+
 	totalLevel := 0
 	for _, char := range characters {
 		totalLevel += char.Level
 	}
-	
+
 	return float64(totalLevel) / float64(len(characters))
 }
 
@@ -236,12 +236,12 @@ func (cas *CombatAutomationService) calculateEncounterCR(enemies []models.EnemyI
 		cr := cas.parseCR(enemy.CR)
 		totalCR += cr * float64(enemy.Count)
 	}
-	
+
 	// Adjust for multiple enemies
 	if len(enemies) > 1 {
 		totalCR *= 1.2 // Multiple enemy bonus
 	}
-	
+
 	return totalCR
 }
 
@@ -269,20 +269,20 @@ func (cas *CombatAutomationService) simulateCombat(
 	encounterCR float64,
 	useResources bool,
 ) (outcome string, rounds int, resources map[string]interface{}) {
-	
+
 	// Simple combat simulation based on party strength vs encounter difficulty
 	partyStrength := partyLevel * float64(len(characters)) * 10
 	encounterStrength := encounterCR * 15
-	
+
 	// Add randomness
 	partyRollResult, _ := cas.diceRoller.Roll("1d20")
 	enemyRollResult, _ := cas.diceRoller.Roll("1d20")
 	partyRoll := float64(partyRollResult.Total)
 	enemyRoll := float64(enemyRollResult.Total)
-	
+
 	partyStrength += partyRoll * 5
 	encounterStrength += enemyRoll * 5
-	
+
 	// Determine outcome
 	if partyStrength > encounterStrength*1.5 {
 		outcome = "decisive_victory"
@@ -300,10 +300,10 @@ func (cas *CombatAutomationService) simulateCombat(
 		outcome = "defeat"
 		rounds = 4 + rand.Intn(4)
 	}
-	
+
 	// Calculate resources used
 	resources = make(map[string]interface{})
-	
+
 	// HP loss calculation
 	hpLossPercent := 0.0
 	switch outcome {
@@ -318,36 +318,36 @@ func (cas *CombatAutomationService) simulateCombat(
 	case "defeat":
 		hpLossPercent = 0.6 + rand.Float64()*0.3 // 60-90%
 	}
-	
+
 	totalHP := 0
 	for _, char := range characters {
 		totalHP += char.MaxHitPoints
 	}
 	resources["hp_lost"] = int(float64(totalHP) * hpLossPercent)
-	
+
 	// Spell slots and abilities used
 	if useResources {
 		spellSlotsUsed := make(map[int]int)
 		maxSlotLevel := int(math.Min(9, math.Ceil(partyLevel/2)))
-		
+
 		for i := 1; i <= maxSlotLevel; i++ {
-			if rand.Float64() < 0.3 + (float64(rounds)*0.05) {
+			if rand.Float64() < 0.3+(float64(rounds)*0.05) {
 				spellSlotsUsed[i] = 1 + rand.Intn(2)
 			}
 		}
 		resources["spell_slots_used"] = spellSlotsUsed
-		
+
 		// Other resources
 		resources["hit_dice_used"] = rounds / 2
 		resources["consumables_used"] = rand.Intn(rounds)
 	}
-	
+
 	return outcome, rounds, resources
 }
 
 func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []models.EnemyInfo) []map[string]interface{} {
 	loot := []map[string]interface{}{}
-	
+
 	// Base gold calculation
 	goldMultiplier := map[string]int{
 		"trivial": 10,
@@ -356,18 +356,18 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 		"hard":    100,
 		"deadly":  200,
 	}
-	
+
 	baseGold := goldMultiplier[difficulty]
 	if baseGold == 0 {
 		baseGold = 50
 	}
-	
+
 	totalGold := 0
 	for _, enemy := range enemies {
 		cr := cas.parseCR(enemy.CR)
 		totalGold += int(cr * float64(baseGold) * float64(enemy.Count))
 	}
-	
+
 	// Add some variance
 	if totalGold > 0 {
 		variance := totalGold / 2
@@ -375,13 +375,13 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 			totalGold = totalGold + rand.Intn(variance) - totalGold/4
 		}
 	}
-	
+
 	loot = append(loot, map[string]interface{}{
 		"type":     "currency",
 		"currency": "gp",
 		"amount":   totalGold,
 	})
-	
+
 	// Chance for items based on difficulty
 	itemChance := map[string]float64{
 		"trivial": 0.1,
@@ -390,7 +390,7 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 		"hard":    0.6,
 		"deadly":  0.8,
 	}
-	
+
 	if rand.Float64() < itemChance[difficulty] {
 		// Add a random item
 		itemTypes := []string{"potion", "scroll", "weapon", "armor", "trinket"}
@@ -400,13 +400,13 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 			"rarity": cas.getRandomRarity(difficulty),
 		})
 	}
-	
+
 	return loot
 }
 
 func (cas *CombatAutomationService) getRandomRarity(difficulty string) string {
 	roll := rand.Float64()
-	
+
 	switch difficulty {
 	case "trivial", "easy":
 		if roll < 0.95 {
@@ -460,10 +460,10 @@ func (cas *CombatAutomationService) calculateExperience(enemies []models.EnemyIn
 		"9":   5000,
 		"10":  5900,
 	}
-	
+
 	totalXP := 0
 	enemyCount := 0
-	
+
 	for _, enemy := range enemies {
 		xp := xpByCR[enemy.CR]
 		if xp == 0 {
@@ -479,7 +479,7 @@ func (cas *CombatAutomationService) calculateExperience(enemies []models.EnemyIn
 		totalXP += xp * enemy.Count
 		enemyCount += enemy.Count
 	}
-	
+
 	// Apply encounter multiplier
 	multiplier := 1.0
 	if enemyCount >= 2 {
@@ -497,14 +497,14 @@ func (cas *CombatAutomationService) calculateExperience(enemies []models.EnemyIn
 	if enemyCount >= 15 {
 		multiplier = 4.0
 	}
-	
+
 	// Adjust for party size
 	if partySize < 3 {
 		multiplier *= 1.5
 	} else if partySize > 5 {
 		multiplier *= 0.5
 	}
-	
+
 	return int(float64(totalXP) * multiplier)
 }
 
@@ -515,7 +515,7 @@ func (cas *CombatAutomationService) generateNarrativeSummary(
 	partyLevel float64,
 	encounterCR float64,
 ) string {
-	
+
 	// Build narrative based on outcome
 	narratives := map[string][]string{
 		"decisive_victory": {
@@ -544,9 +544,9 @@ func (cas *CombatAutomationService) generateNarrativeSummary(
 			"The party suffered a crushing defeat, barely escaping with their lives.",
 		},
 	}
-	
+
 	narrative := narratives[outcome][rand.Intn(len(narratives[outcome]))]
-	
+
 	// Add terrain flavor
 	if terrainType != "" {
 		terrainFlavor := map[string]string{
@@ -556,21 +556,21 @@ func (cas *CombatAutomationService) generateNarrativeSummary(
 			"urban":    " The city streets and buildings created a complex battlefield.",
 			"mountain": " The rocky terrain and elevation changes added complexity to the combat.",
 		}
-		
+
 		if flavor, ok := terrainFlavor[terrainType]; ok {
 			narrative += flavor
 		}
 	}
-	
+
 	// Add duration note
 	narrative += fmt.Sprintf(" The combat lasted %d rounds.", rounds)
-	
+
 	return narrative
 }
 
 func (cas *CombatAutomationService) buildPartyComposition(characters []*models.Character) []byte {
 	party := make([]map[string]interface{}, len(characters))
-	
+
 	for i, char := range characters {
 		party[i] = map[string]interface{}{
 			"id":    char.ID,
@@ -580,7 +580,7 @@ func (cas *CombatAutomationService) buildPartyComposition(characters []*models.C
 			"hp":    char.MaxHitPoints,
 		}
 	}
-	
+
 	data, _ := json.Marshal(party)
 	return data
 }
@@ -611,4 +611,3 @@ func (cas *CombatAutomationService) resolveTies(entries []models.InitiativeEntry
 		}
 	}
 }
-

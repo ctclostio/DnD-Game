@@ -235,3 +235,8 @@ export default authService;
 
 // Export types for use in other modules
 export type { User, AuthResponse, LoginRequest, RegisterRequest };
+
+// Export named functions for compatibility with authSlice
+export const login = (username: string, password: string) => authService.login(username, password);
+export const register = (username: string, email: string, password: string) => authService.register(username, email, password);
+export const logout = () => authService.logout();

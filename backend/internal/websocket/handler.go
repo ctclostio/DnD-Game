@@ -1,14 +1,14 @@
 package websocket
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"time"
-	
+
 	"github.com/gorilla/websocket"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/middleware"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 var allowedOrigins []string
@@ -19,7 +19,7 @@ func init() {
 		"http://localhost:3000",
 		"http://localhost:8080",
 	}
-	
+
 	// Add production origin from environment
 	if prodOrigin := os.Getenv("PRODUCTION_ORIGIN"); prodOrigin != "" {
 		allowedOrigins = append(allowedOrigins, prodOrigin)
@@ -29,12 +29,12 @@ func init() {
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		
+
 		// In development, also allow empty origin
 		if os.Getenv("GO_ENV") == "development" && origin == "" {
 			return true
 		}
-		
+
 		return middleware.ValidateOrigin(allowedOrigins, origin)
 	},
 	// Enable compression
@@ -68,12 +68,20 @@ type AuthMessage struct {
 
 func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Log the connection attempt
-	log.Printf("WebSocket connection attempt from origin: %s", r.Header.Get("Origin"))
+	logger.Info().
+		Str("origin", r.Header.Get("Origin")).
+		Str("remote_addr", r.RemoteAddr).
+		Str("user_agent", r.Header.Get("User-Agent")).
+		Msg("WebSocket connection attempt")
 
 	// Upgrade connection first
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("WebSocket upgrade error: %v", err)
+		logger.Error().
+			Err(err).
+			Str("origin", r.Header.Get("Origin")).
+			Str("remote_addr", r.RemoteAddr).
+			Msg("WebSocket upgrade error")
 		return
 	}
 
@@ -95,9 +103,11 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		"type":    "auth_required",
 		"message": "Please authenticate",
 	}
-	
+
 	if err := conn.WriteJSON(authRequest); err != nil {
-		log.Printf("Failed to send auth request: %v", err)
+		logger.Error().
+			Err(err).
+			Msg("Failed to send auth request")
 		conn.Close()
 		return
 	}
@@ -105,7 +115,9 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Wait for authentication message
 	var authMsg AuthMessage
 	if err := conn.ReadJSON(&authMsg); err != nil {
-		log.Printf("Failed to read auth message: %v", err)
+		logger.Error().
+			Err(err).
+			Msg("Failed to read auth message")
 		conn.WriteJSON(map[string]string{
 			"type":  "error",
 			"error": "Authentication failed",
@@ -126,7 +138,8 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	// Validate token
 	if jwtManager == nil {
-		log.Println("JWT manager not initialized")
+		logger.Error().
+			Msg("JWT manager not initialized")
 		conn.WriteJSON(map[string]string{
 			"type":  "error",
 			"error": "Internal server error",
@@ -137,7 +150,10 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := jwtManager.ValidateToken(authMsg.Token, auth.AccessToken)
 	if err != nil {
-		log.Printf("Token validation failed: %v", err)
+		logger.Warn().
+			Err(err).
+			Str("remote_addr", r.RemoteAddr).
+			Msg("Token validation failed")
 		conn.WriteJSON(map[string]string{
 			"type":  "error",
 			"error": "Invalid token",

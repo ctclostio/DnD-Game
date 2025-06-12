@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -13,8 +14,9 @@ import (
 type contextKey string
 
 const (
-	RequestIDKey contextKey = "request_id"
-	UserIDKey    contextKey = "user_id"
+	RequestIDKey     contextKey = "request_id"
+	CorrelationIDKey contextKey = "correlation_id"
+	UserIDKey        contextKey = "user_id"
 )
 
 // Logger wraps zerolog logger with additional functionality
@@ -69,6 +71,11 @@ func (l *Logger) WithContext(ctx context.Context) *Logger {
 		zl = zl.Str("request_id", requestID)
 	}
 
+	// Add correlation ID if present
+	if corrID, ok := ctx.Value(CorrelationIDKey).(string); ok && corrID != "" {
+		zl = zl.Str("correlation_id", corrID)
+	}
+
 	// Add user ID if present
 	if userID, ok := ctx.Value(UserIDKey).(string); ok && userID != "" {
 		zl = zl.Str("user_id", userID)
@@ -81,6 +88,12 @@ func (l *Logger) WithContext(ctx context.Context) *Logger {
 // WithRequestID adds request ID to logger
 func (l *Logger) WithRequestID(requestID string) *Logger {
 	logger := l.Logger.With().Str("request_id", requestID).Logger()
+	return &Logger{&logger}
+}
+
+// WithCorrelationID adds correlation ID to logger
+func (l *Logger) WithCorrelationID(correlationID string) *Logger {
+	logger := l.Logger.With().Str("correlation_id", correlationID).Logger()
 	return &Logger{&logger}
 }
 
@@ -113,10 +126,16 @@ func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
 }
 
 // Global logger instance
-var defaultLogger *Logger
+var (
+	defaultLogger *Logger
+	loggerMutex   sync.Mutex
+)
 
 // Init initializes the global logger
 func Init(cfg Config) {
+	loggerMutex.Lock()
+	defer loggerMutex.Unlock()
+
 	defaultLogger = New(cfg)
 	// Set global logger for zerolog
 	log.Logger = *defaultLogger.Logger
@@ -124,12 +143,17 @@ func Init(cfg Config) {
 
 // GetLogger returns the global logger instance
 func GetLogger() *Logger {
+	loggerMutex.Lock()
+	defer loggerMutex.Unlock()
+
 	if defaultLogger == nil {
 		// Initialize with default config if not set
-		Init(Config{
+		defaultLogger = New(Config{
 			Level:  "info",
 			Pretty: false,
 		})
+		// Set global logger for zerolog
+		log.Logger = *defaultLogger.Logger
 	}
 	return defaultLogger
 }
@@ -164,4 +188,22 @@ func Fatal() *zerolog.Event {
 // WithContext returns a logger with context
 func WithContext(ctx context.Context) *Logger {
 	return GetLogger().WithContext(ctx)
+}
+
+// ContextWithRequestID adds request ID to context
+func ContextWithRequestID(ctx context.Context, requestID string) context.Context {
+	return context.WithValue(ctx, RequestIDKey, requestID)
+}
+
+// ContextWithCorrelationID adds correlation ID to context
+func ContextWithCorrelationID(ctx context.Context, correlationID string) context.Context {
+	return context.WithValue(ctx, CorrelationIDKey, correlationID)
+}
+
+// GetCorrelationIDFromContext retrieves correlation ID from context
+func GetCorrelationIDFromContext(ctx context.Context) string {
+	if id, ok := ctx.Value(CorrelationIDKey).(string); ok {
+		return id
+	}
+	return ""
 }

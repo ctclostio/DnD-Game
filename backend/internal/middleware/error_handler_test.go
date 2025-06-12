@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/testutil"
-	"github.com/your-username/dnd-game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 )
 
 func TestErrorHandlerMiddleware(t *testing.T) {
@@ -86,7 +86,7 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 				c.Error(err2)
 				c.Abort()
 			},
-			expectedStatus: http.StatusNotFound, // Gin returns the status of the last error
+			expectedStatus: http.StatusNotFound,                     // Gin returns the status of the last error
 			expectedCode:   string(errors.ErrCodeCharacterNotFound), // And the code of the last error
 			expectedMsg:    "resource not found",
 		},
@@ -96,28 +96,28 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			gin.SetMode(gin.TestMode)
 			router := gin.New()
-			
+
 			// Add recovery middleware first
 			router.Use(gin.Recovery())
 			// Add error handler middleware
 			router.Use(ErrorHandlerGin())
-			
+
 			router.GET("/test", tt.handler)
-			
+
 			client := testutil.NewHTTPTestClient(t).SetRouter(router)
 			resp := client.GET("/test")
-			
+
 			resp.AssertStatus(tt.expectedStatus)
-			
+
 			var response map[string]interface{}
 			resp.DecodeJSON(&response)
-			
+
 			require.Equal(t, tt.expectedCode, response["code"])
-			
+
 			if tt.expectedMsg != "" {
 				require.Contains(t, response["message"], tt.expectedMsg)
 			}
-			
+
 			// Verify request ID is present
 			require.NotEmpty(t, response["request_id"])
 		})
@@ -128,9 +128,9 @@ func TestErrorHandlerMiddleware_ContextEnrichment(t *testing.T) {
 	t.Run("includes user context in error", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
-		
+
 		router.Use(ErrorHandlerGin())
-		
+
 		router.GET("/test", func(c *gin.Context) {
 			c.Set("user_id", int64(123))
 			c.Set("username", "testuser")
@@ -138,15 +138,15 @@ func TestErrorHandlerMiddleware_ContextEnrichment(t *testing.T) {
 			c.Error(err)
 			c.Abort()
 		})
-		
+
 		client := testutil.NewHTTPTestClient(t).SetRouter(router)
 		resp := client.GET("/test")
-		
+
 		resp.AssertForbidden()
-		
+
 		var response map[string]interface{}
 		resp.DecodeJSON(&response)
-		
+
 		// In production, user context might be logged but not returned
 		// This test verifies the middleware has access to context
 		require.Equal(t, string(errors.ErrCodeInsufficientPrivilege), response["code"])
@@ -155,9 +155,9 @@ func TestErrorHandlerMiddleware_ContextEnrichment(t *testing.T) {
 	t.Run("includes game session context", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
-		
+
 		router.Use(ErrorHandlerGin())
-		
+
 		router.GET("/test", func(c *gin.Context) {
 			c.Set("session_id", int64(456))
 			c.Set("is_dm", true)
@@ -165,10 +165,10 @@ func TestErrorHandlerMiddleware_ContextEnrichment(t *testing.T) {
 			c.Error(err)
 			c.Abort()
 		})
-		
+
 		client := testutil.NewHTTPTestClient(t).SetRouter(router)
 		resp := client.GET("/test")
-		
+
 		resp.AssertNotFound()
 	})
 }
@@ -177,42 +177,42 @@ func TestErrorHandlerMiddleware_ValidationErrors(t *testing.T) {
 	t.Run("formats validation errors properly", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
-		
+
 		router.Use(ErrorHandlerGin())
-		
+
 		router.POST("/test", func(c *gin.Context) {
 			validationErrors := &errors.ValidationErrors{}
 			validationErrors.Add("name", "is required")
 			validationErrors.Add("level", "must be between 1 and 20")
 			validationErrors.Add("abilities.strength", "must be at least 3")
-			
+
 			c.Error(validationErrors)
 			c.Abort()
 		})
-		
+
 		client := testutil.NewHTTPTestClient(t).SetRouter(router)
 		resp := client.POST("/test", nil)
-		
+
 		resp.AssertBadRequest()
-		
+
 		var response map[string]interface{}
 		resp.DecodeJSON(&response)
-		
+
 		require.Equal(t, string(errors.ErrCodeValidationFailed), response["code"])
-		
+
 		// Check for field errors
 		fieldErrors, ok := response["field_errors"].(map[string]interface{})
 		require.True(t, ok)
-		
+
 		// The ValidationErrors struct stores errors as arrays of strings
 		nameErrors, ok := fieldErrors["name"].([]interface{})
 		require.True(t, ok)
 		require.Contains(t, nameErrors, "is required")
-		
+
 		levelErrors, ok := fieldErrors["level"].([]interface{})
 		require.True(t, ok)
 		require.Contains(t, levelErrors, "must be between 1 and 20")
-		
+
 		strengthErrors, ok := fieldErrors["abilities.strength"].([]interface{})
 		require.True(t, ok)
 		require.Contains(t, strengthErrors, "must be at least 3")
@@ -223,25 +223,25 @@ func TestErrorHandlerMiddleware_RateLimiting(t *testing.T) {
 	t.Run("handles rate limit errors with retry header", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
-		
+
 		router.Use(ErrorHandlerGin())
-		
+
 		router.GET("/test", func(c *gin.Context) {
 			err := errors.NewRateLimitError("Too many requests").WithCode(string(errors.ErrCodeRateLimitExceeded)).WithDetails(map[string]interface{}{"retry_after": 60})
 			c.Error(err)
 			c.Abort()
 		})
-		
+
 		client := testutil.NewHTTPTestClient(t).SetRouter(router)
 		resp := client.Request(http.MethodGet, "/test", nil)
-		
+
 		testResp := testutil.NewHTTPTestResponse(t, resp)
 		testResp.AssertStatus(http.StatusTooManyRequests)
 		testResp.AssertHeader("Retry-After", "60")
-		
+
 		var response map[string]interface{}
 		testResp.DecodeJSON(&response)
-		
+
 		require.Equal(t, string(errors.ErrCodeRateLimitExceeded), response["code"])
 	})
 }
@@ -281,9 +281,9 @@ func TestErrorHandlerMiddleware_DatabaseErrors(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			gin.SetMode(gin.TestMode)
 			router := gin.New()
-			
+
 			router.Use(ErrorHandlerGin())
-			
+
 			router.GET("/test", func(c *gin.Context) {
 				// Convert database error to app error
 				var err error
@@ -297,15 +297,15 @@ func TestErrorHandlerMiddleware_DatabaseErrors(t *testing.T) {
 				c.Error(err)
 				c.Abort()
 			})
-			
+
 			client := testutil.NewHTTPTestClient(t).SetRouter(router)
 			resp := client.GET("/test")
-			
+
 			resp.AssertStatus(tt.expectedStatus)
-			
+
 			var response map[string]interface{}
 			resp.DecodeJSON(&response)
-			
+
 			require.Equal(t, tt.expectedCode, response["code"])
 			require.Contains(t, response["message"], tt.expectedMsg)
 		})
@@ -316,24 +316,24 @@ func TestErrorHandlerMiddleware_SecurityErrors(t *testing.T) {
 	t.Run("sanitizes sensitive information", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
-		
+
 		router.Use(ErrorHandlerGin())
-		
+
 		router.GET("/test", func(c *gin.Context) {
 			// Error containing sensitive info
 			err := stderrors.New("invalid password: expected 'secret123' but got 'wrongpass'")
 			c.Error(err)
 			c.Abort()
 		})
-		
+
 		client := testutil.NewHTTPTestClient(t).SetRouter(router)
 		resp := client.GET("/test")
-		
+
 		resp.AssertStatus(http.StatusInternalServerError)
-		
+
 		var response map[string]interface{}
 		resp.DecodeJSON(&response)
-		
+
 		// Should not expose sensitive information
 		require.NotContains(t, response["message"], "secret123")
 		require.NotContains(t, response["message"], "wrongpass")
@@ -343,23 +343,23 @@ func TestErrorHandlerMiddleware_SecurityErrors(t *testing.T) {
 	t.Run("handles CSRF errors", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		router := gin.New()
-		
+
 		router.Use(ErrorHandlerGin())
-		
+
 		router.POST("/test", func(c *gin.Context) {
 			err := errors.NewAuthorizationError("CSRF token mismatch").WithCode(string(errors.ErrCodeCSRFTokenMismatch))
 			c.Error(err)
 			c.Abort()
 		})
-		
+
 		client := testutil.NewHTTPTestClient(t).SetRouter(router)
 		resp := client.POST("/test", nil)
-		
+
 		resp.AssertForbidden()
-		
+
 		var response map[string]interface{}
 		resp.DecodeJSON(&response)
-		
+
 		require.Equal(t, string(errors.ErrCodeCSRFTokenMismatch), response["code"])
 	})
 }
@@ -368,17 +368,17 @@ func TestErrorHandlerMiddleware_SecurityErrors(t *testing.T) {
 func BenchmarkErrorHandler(b *testing.B) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
-	
+
 	router.Use(ErrorHandlerGin())
-	
+
 	router.GET("/test", func(c *gin.Context) {
 		err := errors.NewNotFoundError("resource").WithCode(string(errors.ErrCodeCharacterNotFound))
 		c.Error(err)
 		c.Abort()
 	})
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		client := testutil.NewHTTPTestClient(&testing.T{}).SetRouter(router)
 		_ = client.GET("/test")

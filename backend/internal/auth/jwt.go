@@ -21,17 +21,17 @@ var (
 
 // JWTManager handles JWT token operations
 type JWTManager struct {
-	secretKey              string
-	accessTokenDuration    time.Duration
-	refreshTokenDuration   time.Duration
+	secretKey            string
+	accessTokenDuration  time.Duration
+	refreshTokenDuration time.Duration
 }
 
 // NewJWTManager creates a new JWT manager
 func NewJWTManager(secretKey string, accessTokenDuration, refreshTokenDuration time.Duration) *JWTManager {
 	return &JWTManager{
-		secretKey:              secretKey,
-		accessTokenDuration:    accessTokenDuration,
-		refreshTokenDuration:   refreshTokenDuration,
+		secretKey:            secretKey,
+		accessTokenDuration:  accessTokenDuration,
+		refreshTokenDuration: refreshTokenDuration,
 	}
 }
 

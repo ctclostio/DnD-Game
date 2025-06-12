@@ -1,0 +1,26 @@
+# GoSec configuration
+# Exclude game mechanics files from weak random checks
+
+global:
+  # Audit mode - fails the scan on any finding
+  audit: false
+  # Confidence level
+  confidence: "medium"
+  # Severity level
+  severity: "medium"
+  # Output format
+  fmt: "json"
+  # Verbose output
+  verbose: false
+
+rules:
+  # Exclude G404 (weak random) for game mechanics
+  G404:
+    excludes:
+      - "**/*_test.go"
+      - "**/testutil/**"
+      - "**/pkg/dice/**"
+      - "**/services/dice_roll.go"
+      - "**/services/world_event_engine.go"
+      - "**/services/game_session.go"
+      - "**/services/settlement_generator.go"

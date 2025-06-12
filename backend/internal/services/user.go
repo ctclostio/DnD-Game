@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/models"
 )
 
 type UserService struct {
@@ -38,12 +39,18 @@ func (s *UserService) Register(ctx context.Context, req models.RegisterRequest) 
 	// Check if username already exists
 	existingUser, _ := s.repo.GetByUsername(ctx, req.Username)
 	if existingUser != nil {
+		logger.Warn().
+			Str("username", req.Username).
+			Msg("Registration attempt with existing username")
 		return nil, fmt.Errorf("username already taken")
 	}
 
 	// Check if email already exists
 	existingUser, _ = s.repo.GetByEmail(ctx, req.Email)
 	if existingUser != nil {
+		logger.Warn().
+			Str("email", req.Email).
+			Msg("Registration attempt with existing email")
 		return nil, fmt.Errorf("email already registered")
 	}
 
@@ -61,8 +68,18 @@ func (s *UserService) Register(ctx context.Context, req models.RegisterRequest) 
 	}
 
 	if err := s.repo.Create(ctx, user); err != nil {
+		logger.Error().
+			Err(err).
+			Str("username", req.Username).
+			Msg("Failed to create user")
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
+
+	logger.Info().
+		Str("user_id", user.ID).
+		Str("username", user.Username).
+		Str("email", user.Email).
+		Msg("User registered successfully")
 
 	return user, nil
 }
@@ -72,13 +89,25 @@ func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*mode
 	// Get user by username
 	user, err := s.repo.GetByUsername(ctx, req.Username)
 	if err != nil {
+		logger.Warn().
+			Str("username", req.Username).
+			Msg("Login attempt with non-existent username")
 		return nil, fmt.Errorf("invalid username or password")
 	}
 
 	// Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		logger.Warn().
+			Str("username", req.Username).
+			Str("user_id", user.ID).
+			Msg("Login attempt with incorrect password")
 		return nil, fmt.Errorf("invalid username or password")
 	}
+
+	logger.Info().
+		Str("user_id", user.ID).
+		Str("username", user.Username).
+		Msg("User logged in successfully")
 
 	// This should be handled by the auth handler, not here
 	// Just return the user for now
@@ -165,4 +194,3 @@ func (s *UserService) GetByUsername(ctx context.Context, username string) (*mode
 func (s *UserService) GetByID(ctx context.Context, id string) (*models.User, error) {
 	return s.GetUserByID(ctx, id)
 }
-

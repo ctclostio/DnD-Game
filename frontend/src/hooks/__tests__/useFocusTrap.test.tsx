@@ -72,6 +72,11 @@ describe('useFocusTrap', () => {
     const firstButton = screen.getByTestId('first-button');
     const lastButton = screen.getByTestId('last-button');
 
+    // Wait for initial focus setup
+    await waitFor(() => {
+      expect(document.activeElement).toBe(firstButton);
+    });
+
     // Focus last button
     lastButton.focus();
     expect(document.activeElement).toBe(lastButton);
@@ -110,9 +115,14 @@ describe('useFocusTrap', () => {
       screen.getByTestId('last-button'),
     ];
 
+    // Wait for initial focus
+    await waitFor(() => {
+      expect(document.activeElement).toBe(elements[0]);
+    });
+
     // Tab through all elements
-    for (let i = 0; i < elements.length; i++) {
-      if (i > 0) await user.tab();
+    for (let i = 1; i < elements.length; i++) {
+      await user.tab();
       expect(document.activeElement).toBe(elements[i]);
     }
 
@@ -275,6 +285,11 @@ describe('useFocusTrap', () => {
     const lastButton = screen.getByTestId('last-button');
     const outsideAfter = screen.getByTestId('outside-after');
 
+    // Wait for initial focus setup
+    await waitFor(() => {
+      expect(document.activeElement).toBe(firstButton);
+    });
+
     // Initially enabled - should trap
     lastButton.focus();
     await user.tab();
@@ -288,22 +303,35 @@ describe('useFocusTrap', () => {
     expect(document.activeElement).toBe(outsideAfter);
   });
 
-  it('should handle elements with negative tabindex', () => {
+  it('should handle elements with negative tabindex', async () => {
     render(
       <TestComponent>
-        <button data-testid="positive-tab" tabIndex={1}>Positive</button>
+        <button data-testid="first-tab">First</button>
         <button data-testid="negative-tab" tabIndex={-1}>Negative</button>
-        <button data-testid="zero-tab" tabIndex={0}>Zero</button>
+        <button data-testid="last-tab">Last</button>
       </TestComponent>
     );
 
-    const focusableElements = screen.getByTestId('trap-container').querySelectorAll(
-      'button:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    );
+    const user = userEvent.setup();
+    const firstTab = screen.getByTestId('first-tab');
+    const negativeTab = screen.getByTestId('negative-tab');
+    const lastTab = screen.getByTestId('last-tab');
 
-    // Should not include negative tabindex element
-    expect(focusableElements).toHaveLength(2);
-    expect(screen.getByTestId('negative-tab')).not.toBe(document.activeElement);
+    // Wait for initial focus
+    await waitFor(() => {
+      expect(document.activeElement).toBe(firstTab);
+    });
+
+    // Tab should skip negative tabindex element
+    await user.tab();
+    expect(document.activeElement).toBe(lastTab);
+
+    // Tab again should wrap back to first
+    await user.tab();
+    expect(document.activeElement).toBe(firstTab);
+
+    // Negative tabindex element should never receive focus via tab
+    expect(negativeTab).not.toBe(document.activeElement);
   });
 
   it('should return stable ref', () => {

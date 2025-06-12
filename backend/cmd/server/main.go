@@ -10,15 +10,15 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/config"
-	"github.com/your-username/dnd-game/backend/internal/database"
-	"github.com/your-username/dnd-game/backend/internal/handlers"
-	"github.com/your-username/dnd-game/backend/internal/middleware"
-	"github.com/your-username/dnd-game/backend/internal/routes"
-	"github.com/your-username/dnd-game/backend/internal/services"
-	"github.com/your-username/dnd-game/backend/internal/websocket"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
+	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
+	"github.com/ctclostio/DnD-Game/backend/internal/routes"
+	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 func main() {
@@ -67,9 +67,9 @@ func main() {
 		Bool("ai_enabled", cfg.AI.Provider != "mock").
 		Msg("Configuration loaded successfully")
 
-	// Initialize database
+	// Initialize database with logging
 	log.Info().Msg("Initializing database connection")
-	db, repos, err := database.Initialize(cfg)
+	db, repos, err := database.InitializeWithLogging(cfg, log)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize database")
 	}
@@ -110,12 +110,12 @@ func main() {
 	aiRaceGenerator := services.NewAIRaceGeneratorService(llmProvider)
 	aiDMAssistant := services.NewAIDMAssistantService(llmProvider)
 	aiEncounterBuilder := services.NewAIEncounterBuilder(llmProvider)
-	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"})
-	aiBattleMapGenerator := services.NewAIBattleMapGenerator(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"})
+	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"}, log)
+	aiBattleMapGenerator := services.NewAIBattleMapGenerator(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"}, log)
 
 	// Create services
 	log.Info().Msg("Initializing core services")
-	
+
 	// Token service with cleanup
 	refreshTokenService := services.NewRefreshTokenService(repos.RefreshTokens, jwtManager)
 	refreshTokenService.StartCleanupTask(1 * time.Hour)
@@ -125,14 +125,14 @@ func main() {
 	combatService := services.NewCombatService()
 	combatAutomationService := services.NewCombatAutomationService(repos.CombatAnalytics, repos.Characters, repos.NPCs)
 	combatAnalyticsService := services.NewCombatAnalyticsService(repos.CombatAnalytics, combatService)
-	
+
 	// World building services
 	worldBuildingRepo := database.NewWorldBuildingRepository(db)
 	settlementGenerator := services.NewSettlementGeneratorService(llmProvider, worldBuildingRepo)
 	factionSystem := services.NewFactionSystemService(llmProvider, worldBuildingRepo)
 	worldEventEngine := services.NewWorldEventEngineService(llmProvider, worldBuildingRepo, factionSystem)
 	economicSimulator := services.NewEconomicSimulatorService(worldBuildingRepo)
-	
+
 	// Narrative engine
 	narrativeEngine, err := services.NewNarrativeEngine(cfg)
 	if err != nil {
@@ -141,18 +141,23 @@ func main() {
 	} else {
 		log.Info().Msg("Narrative engine initialized")
 	}
-	
+
 	// Rule builder services
 	diceRollService := services.NewDiceRollService(repos.DiceRolls)
 	ruleEngine := services.NewRuleEngine(repos.RuleBuilder, diceRollService)
 	balanceAnalyzer := services.NewAIBalanceAnalyzer(cfg, llmProvider, ruleEngine, combatService)
 	conditionalReality := services.NewConditionalRealitySystem(ruleEngine)
 
+	// Create game session service with security dependencies
+	gameSessionService := services.NewGameSessionService(repos.GameSessions)
+	gameSessionService.SetCharacterRepository(repos.Characters)
+	gameSessionService.SetUserRepository(repos.Users)
+
 	// Aggregate all services
 	svc := &services.Services{
 		Users:              services.NewUserService(repos.Users),
 		Characters:         services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
-		GameSessions:       services.NewGameSessionService(repos.GameSessions),
+		GameSessions:       gameSessionService,
 		DiceRolls:          diceRollService,
 		Combat:             combatService,
 		NPCs:               services.NewNPCService(repos.NPCs),
@@ -191,36 +196,36 @@ func main() {
 
 	// Setup routes
 	r := mux.NewRouter()
-	
+
 	// Add middleware
 	r.Use(middleware.RequestIDMiddleware)
-	r.Use(middleware.LoggingMiddleware(log))
-	// TODO: Create LoggerV2 version of ErrorHandlerV2
-	// r.Use(middleware.ErrorHandlerV2(log))
+	r.Use(middleware.RequestContextMiddleware) // Add context enrichment
+	r.Use(middleware.LoggingMiddleware(log))   // This now uses the V2 version
+	r.Use(middleware.ErrorHandlerV2(log))      // Enable error handler with LoggerV2
 	// TODO: Create LoggerV2 version of RecoveryMiddleware
 	// r.Use(middleware.RecoveryMiddleware(log))
 	isDevelopment := cfg.Server.Environment == "development"
 	r.Use(middleware.SecurityHeaders(isDevelopment))
-	
+
 	// Create CSRF store
 	csrfStore := auth.NewCSRFStore()
-	
+
 	// Create auth middleware
 	authMiddleware := auth.NewMiddleware(jwtManager)
-	
+
 	// Create rate limiters
 	authRateLimiter := middleware.NewRateLimiter(15, time.Minute) // 15 requests per minute
 	apiRateLimiter := middleware.NewRateLimiter(200, time.Minute) // 200 requests per minute
-	
+
 	// Setup route config
 	routeConfig := &routes.Config{
-		Handlers:         h,
-		AuthMiddleware:   authMiddleware,
+		Handlers:        h,
+		AuthMiddleware:  authMiddleware,
 		CSRFStore:       csrfStore,
 		AuthRateLimiter: authRateLimiter,
 		APIRateLimiter:  apiRateLimiter,
 	}
-	
+
 	// Setup all routes
 	routes.RegisterRoutes(r, routeConfig)
 	log.Info().Msg("Routes configured")
@@ -230,7 +235,7 @@ func main() {
 	if cfg.Server.Environment == "production" {
 		allowedOrigins = []string{"https://yourdomain.com"}
 	}
-	
+
 	c := cors.New(cors.Options{
 		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -257,7 +262,7 @@ func main() {
 			Str("port", cfg.Server.Port).
 			Str("address", srv.Addr).
 			Msg("HTTP server starting")
-			
+
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal().Err(err).Msg("Failed to start HTTP server")
 		}
@@ -271,7 +276,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-quit
-	
+
 	log.Info().
 		Str("signal", sig.String()).
 		Msg("Shutdown signal received")
@@ -288,7 +293,7 @@ func main() {
 	// Stop refresh token cleanup
 	// TODO: Implement StopCleanupTask in RefreshTokenService
 	// refreshTokenService.StopCleanupTask()
-	
+
 	// Close WebSocket hub
 	// TODO: Implement Shutdown in WebSocket hub
 	// hub.Shutdown()

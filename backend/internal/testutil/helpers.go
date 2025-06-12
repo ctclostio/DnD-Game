@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,9 +12,9 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"github.com/your-username/dnd-game/backend/internal/auth"
-	"github.com/your-username/dnd-game/backend/internal/models"
-	"github.com/your-username/dnd-game/backend/pkg/logger"
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // TestLogger returns a logger for testing
@@ -45,15 +46,15 @@ func TestUser() *models.User {
 // TestCharacter returns a test character
 func TestCharacter() *models.Character {
 	return &models.Character{
-		ID:        "test-char-id",
-		UserID:    "test-user-id",
-		Name:      "Test Character",
-		Race:      "human",
-		Class:     "fighter",
-		Level:     1,
-		HitPoints: 10,
+		ID:           "test-char-id",
+		UserID:       "test-user-id",
+		Name:         "Test Character",
+		Race:         "human",
+		Class:        "fighter",
+		Level:        1,
+		HitPoints:    10,
 		MaxHitPoints: 10,
-		ArmorClass: 10,
+		ArmorClass:   10,
 		Attributes: models.Attributes{
 			Strength:     15,
 			Dexterity:    12,
@@ -73,10 +74,10 @@ func TestJWTManager() *auth.JWTManager {
 // AuthenticatedRequest creates an authenticated HTTP request
 func AuthenticatedRequest(t *testing.T, method, path string, body interface{}, user *models.User) *http.Request {
 	t.Helper()
-	
+
 	var req *http.Request
 	var err error
-	
+
 	if body != nil {
 		jsonBody, err := json.Marshal(body)
 		require.NoError(t, err)
@@ -87,19 +88,19 @@ func AuthenticatedRequest(t *testing.T, method, path string, body interface{}, u
 		req, err = http.NewRequest(method, path, nil)
 		require.NoError(t, err)
 	}
-	
+
 	// Add authentication
 	if user != nil {
 		jwtManager := TestJWTManager()
 		tokenPair, err := jwtManager.GenerateTokenPair(user.ID, user.Username, user.Email, user.Role)
 		require.NoError(t, err)
 		req.Header.Set("Authorization", "Bearer "+tokenPair.AccessToken)
-		
+
 		// Add user to context
 		ctx := context.WithValue(req.Context(), auth.UserContextKey, user)
 		req = req.WithContext(ctx)
 	}
-	
+
 	return req
 }
 
@@ -121,10 +122,10 @@ func ParseResponse(t *testing.T, rr *httptest.ResponseRecorder, v interface{}) {
 func AssertErrorResponse(t *testing.T, rr *httptest.ResponseRecorder, expectedStatus int) {
 	t.Helper()
 	require.Equal(t, expectedStatus, rr.Code)
-	
+
 	var response map[string]interface{}
 	ParseResponse(t, rr, &response)
-	
+
 	require.Contains(t, response, "type")
 	require.Contains(t, response, "message")
 }
@@ -139,4 +140,18 @@ func (m *MockDB) Ping() error {
 		return m.PingFunc()
 	}
 	return nil
+}
+
+// RandomString generates a random string of specified length
+func RandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	// Seed the random number generator
+	rand.Seed(time.Now().UnixNano())
+
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }
