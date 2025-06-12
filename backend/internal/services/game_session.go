@@ -55,9 +55,14 @@ func (s *GameSessionService) CreateSession(ctx context.Context, session *models.
 		return fmt.Errorf("dungeon master user ID is required")
 	}
 
-	// Set default status to active so the session can be used immediately
+	// Set default status to active so the session can be used immediately.
+	// If the caller didn't specify a status, also default IsActive to true so
+	// the session can be joined right away.
 	if session.Status == "" {
 		session.Status = models.GameStatusActive
+		if !session.IsActive {
+			session.IsActive = true
+		}
 	}
 
 	// Set security defaults
