@@ -6,12 +6,6 @@ run:
   tests: true
   build-tags:
     - integration
-  skip-dirs:
-    - vendor
-    - node_modules
-  skip-files:
-    - ".*_mock.go"
-    - ".*_gen.go"
 
 linters:
   enable:
@@ -53,25 +47,6 @@ linters:
     - goheader
     - nestif
     - revive
-    # Linters not available in v2.1.6:
-    # - errorlint
-    # - exhaustivestruct
-    # - forcetypeassert
-    # - goerr113
-    # - gci
-    # - ifshort
-    # - importas
-    # - makezero
-    # - nlreturn
-    # - nilerr
-    # - paralleltest
-    # - thelper
-    # - tparallel
-    # - sqlclosecheck
-    # - tagliatelle
-    # - testpackage
-    # - wastedassign
-    # - wrapcheck
 
   disable:
     - depguard
@@ -89,7 +64,6 @@ linters-settings:
   funlen:
     lines: 100
     statements: 50
-  # gci not available in v2.1.6
   goconst:
     min-len: 2
     min-occurrences: 2
@@ -168,10 +142,22 @@ linters-settings:
       - name: unused-parameter
       - name: unreachable-code
       - name: redefines-builtin-id
-  # testpackage not available in v2.1.6
-  # errorlint not available in v2.1.6
 
 issues:
+  # Exclude directories from analysis
+  exclude-dirs:
+    - vendor
+    - node_modules
+  
+  # Exclude files from analysis
+  exclude-files:
+    - ".*_mock.go"
+    - ".*_gen.go"
+  
+  # Use default exclusions
+  exclude-use-default: true
+  
+  # Custom exclusion rules
   exclude-rules:
     - path: _test\.go
       linters:
@@ -181,10 +167,6 @@ issues:
         - noctx
         - dogsled
         - bodyclose
-        # - testpackage  # not in v2.1.6
-        # - paralleltest  # not in v2.1.6
-        # - tparallel  # not in v2.1.6
-        # - errorlint  # not in v2.1.6
     - path: testing\.go
       linters:
         - gosec
@@ -198,7 +180,6 @@ issues:
     - linters:
         - lll
       source: "^//go:generate "
-    # goerr113 not available in v2.1.6
     - linters:
         - stylecheck
       text: "ST1000:"
@@ -209,4 +190,3 @@ issues:
   max-issues-per-linter: 0
   max-same-issues: 0
   new: false
-
