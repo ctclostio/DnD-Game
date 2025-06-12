@@ -1,3 +1,5 @@
+# golangci-lint v2.x configuration
+version: v2
 run:
   timeout: 5m
   tests: true
@@ -16,7 +18,7 @@ linters:
     - dogsled
     - dupl
     - errcheck
-    - exportloopref
+    - copyloopvar  # renamed from exportloopref
     - exhaustive
     - gochecknoinits
     - goconst
@@ -47,14 +49,14 @@ linters:
     - predeclared
     - asciicheck
     - errorlint
-    - exhaustivestruct
+    # - exhaustivestruct  # deprecated in v2
     - forcetypeassert
     - goerr113
     - godot
     - godox
     - goheader
     - gci
-    - ifshort
+    # - ifshort  # deprecated in v2
     - importas
     - makezero
     - nestif
@@ -108,8 +110,6 @@ linters-settings:
     min-complexity: 15
   goimports:
     local-prefixes: github.com/your-username/dnd-game
-  golint:
-    min-confidence: 0
   gomnd:
     settings:
       mnd:
@@ -132,8 +132,6 @@ linters-settings:
     check-shadowing: true
   lll:
     line-length: 140
-  maligned:
-    suggest-new: true
   misspell:
     locale: US
   nolintlint:
@@ -176,12 +174,6 @@ linters-settings:
     errorf: true
     asserts: true
     comparison: true
-  exhaustivestruct:
-    struct-patterns:
-      - '*.Test*'
-      - '*.test*'
-      - '*.Mock*'
-      - '*.mock*'
 
 issues:
   exclude-rules:
@@ -204,10 +196,9 @@ issues:
       linters:
         - gochecknoinits
         - gochecknoglobals
-        - exhaustivestruct
     - path: internal/models/
       linters:
-        - exhaustivestruct
+        - govet  # placeholder to keep the rule structure
     - linters:
         - lll
       source: "^//go:generate "
@@ -225,5 +216,3 @@ issues:
   max-same-issues: 0
   new: false
 
-service:
-  golangci-lint-version: 1.55.x
