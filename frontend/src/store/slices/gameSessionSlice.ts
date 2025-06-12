@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { GameSessionState, EntityState } from '../../types/state';
 import { GameSession, CombatParticipant } from '../../types/game';
-import * as api from '../../services/api';
+import apiService from '../../services/api';
 
 const initialState: GameSessionState = {
   sessions: {
@@ -30,7 +30,9 @@ function createEntityState<T>(items: T[], getId: (item: T) => string): EntitySta
 export const fetchSessions = createAsyncThunk(
   'gameSession/fetchSessions',
   async () => {
-    const response = await api.getGameSessions();
+    // TODO: API doesn't have getGameSessions (plural) method yet
+    // For now, return empty array
+    const response = await apiService.getGameSessions?.() || [];
     return response;
   }
 );
@@ -38,7 +40,7 @@ export const fetchSessions = createAsyncThunk(
 export const createSession = createAsyncThunk(
   'gameSession/create',
   async (sessionData: { name: string; campaignId?: string }) => {
-    const response = await api.createGameSession(sessionData);
+    const response = await apiService.createGameSession(sessionData);
     return response;
   }
 );
@@ -46,7 +48,7 @@ export const createSession = createAsyncThunk(
 export const joinSession = createAsyncThunk(
   'gameSession/join',
   async (sessionId: string) => {
-    const response = await api.joinGameSession(sessionId);
+    const response = await apiService.joinGameSession(sessionId);
     return response;
   }
 );
@@ -54,7 +56,7 @@ export const joinSession = createAsyncThunk(
 export const leaveSession = createAsyncThunk(
   'gameSession/leave',
   async (sessionId: string) => {
-    await api.leaveGameSession(sessionId);
+    await apiService.leaveGameSession(sessionId);
     return sessionId;
   }
 );
@@ -62,7 +64,7 @@ export const leaveSession = createAsyncThunk(
 export const updateSession = createAsyncThunk(
   'gameSession/update',
   async ({ sessionId, updates }: { sessionId: string; updates: Partial<GameSession> }) => {
-    const response = await api.updateGameSession(sessionId, updates);
+    const response = await apiService.updateGameSession(sessionId, updates);
     return response;
   }
 );
@@ -82,8 +84,11 @@ const gameSessionSlice = createSlice({
     playerJoined: (state, action: PayloadAction<{ sessionId: string; playerId: string }>) => {
       const { sessionId, playerId } = action.payload;
       const session = state.sessions.entities[sessionId];
-      if (session && !session.playerIds.includes(playerId)) {
-        session.playerIds.push(playerId);
+      if (session) {
+        if (!session.playerIds.includes(playerId)) {
+          // Create a new array to ensure Immer detects the change
+          session.playerIds = [...session.playerIds, playerId];
+        }
       }
     },
     

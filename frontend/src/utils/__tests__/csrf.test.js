@@ -1,33 +1,42 @@
 import { getCSRFToken, addCSRFHeader, fetchWithCSRF } from '../csrf';
 
 describe('CSRF utilities', () => {
+  // Mock document.cookie
+  let cookieValue = '';
   beforeEach(() => {
     // Clear cookies
-    document.cookie = '';
+    cookieValue = '';
+    Object.defineProperty(document, 'cookie', {
+      get: jest.fn(() => cookieValue),
+      set: jest.fn((value) => {
+        cookieValue = value;
+      }),
+      configurable: true,
+    });
     // Reset fetch mock
     global.fetch.mockClear();
   });
 
   describe('getCSRFToken', () => {
     it('should extract CSRF token from cookie', () => {
-      document.cookie = 'csrf_token=test-token-123; path=/';
+      cookieValue = 'csrf_token=test-token-123';
       expect(getCSRFToken()).toBe('test-token-123');
     });
 
     it('should return null if no CSRF token cookie', () => {
-      document.cookie = 'other_cookie=value; path=/';
+      cookieValue = 'other_cookie=value';
       expect(getCSRFToken()).toBeNull();
     });
 
     it('should handle multiple cookies', () => {
-      document.cookie = 'session=abc; csrf_token=my-token; user=123';
+      cookieValue = 'session=abc; csrf_token=my-token; user=123';
       expect(getCSRFToken()).toBe('my-token');
     });
   });
 
   describe('addCSRFHeader', () => {
     beforeEach(() => {
-      document.cookie = 'csrf_token=test-csrf-token; path=/';
+      cookieValue = 'csrf_token=test-csrf-token';
     });
 
     it('should add CSRF header to object', () => {
@@ -45,7 +54,7 @@ describe('CSRF utilities', () => {
     });
 
     it('should not add header if no token available', () => {
-      document.cookie = '';
+      cookieValue = '';
       const headers = {};
       const result = addCSRFHeader(headers);
       
@@ -67,7 +76,7 @@ describe('CSRF utilities', () => {
 
   describe('fetchWithCSRF', () => {
     beforeEach(() => {
-      document.cookie = 'csrf_token=csrf-123; path=/';
+      cookieValue = 'csrf_token=csrf-123';
       global.fetch.mockResolvedValue({
         ok: true,
         status: 200,

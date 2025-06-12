@@ -155,32 +155,36 @@ export class ApiService {
   }
 
   // Game session endpoints
+  async getGameSessions() {
+    return this.request<GameSession[]>('/sessions');
+  }
+
   async createGameSession(sessionData: Partial<GameSession>) {
-    return this.request<GameSession>('/game/sessions', {
+    return this.request<GameSession>('/sessions', {
       method: 'POST',
       body: JSON.stringify(sessionData),
     });
   }
 
   async getGameSession(id: string) {
-    return this.request<GameSession>(`/game/sessions/${id}`);
+    return this.request<GameSession>(`/sessions/${id}`);
   }
 
   async updateGameSession(id: string, sessionData: Partial<GameSession>) {
-    return this.request<GameSession>(`/game/sessions/${id}`, {
+    return this.request<GameSession>(`/sessions/${id}`, {
       method: 'PUT',
       body: JSON.stringify(sessionData),
     });
   }
 
   async joinGameSession(id: string) {
-    return this.request(`/game/sessions/${id}/join`, {
+    return this.request(`/sessions/${id}/join`, {
       method: 'POST',
     });
   }
 
   async leaveGameSession(id: string) {
-    return this.request(`/game/sessions/${id}/leave`, {
+    return this.request(`/sessions/${id}/leave`, {
       method: 'POST',
     });
   }

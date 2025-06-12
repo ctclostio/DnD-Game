@@ -69,26 +69,40 @@ describe('useWebSocket', () => {
     expect(mockedWsService.sendMessage).toHaveBeenCalledWith(message.type, message.data);
   });
 
-  it('should return the current connection state', () => {
+  it('should return the current connection state', async () => {
     mockedGetConnectionState.mockReturnValue('connected');
     const { result } = renderHook(() => useWebSocket({ roomId: 'test-room' }));
+    
+    // Initially disconnected
+    expect(result.current.isConnected).toBe(false);
+    expect(result.current.connectionState).toBe('disconnected');
+    
+    // Wait for the interval to update the state
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    
     expect(result.current.isConnected).toBe(true);
     expect(result.current.connectionState).toBe('connected');
   });
 });
 
 describe('useWebSocketChat', () => {
-  it('should send a chat message', () => {
+  it('should send a chat message', async () => {
     mockedGetConnectionState.mockReturnValue('connected');
     const { result } = renderHook(() => useWebSocketChat('test-room'));
+    
+    // Wait for connection state to update
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    
     const message = 'Hello, world!';
     result.current.sendChatMessage(message);
     expect(mockedWsService.sendMessage).toHaveBeenCalledWith('chat', { message });
   });
 
   it('should add a received chat message to the state', () => {
+    // Mock Date.now to return a predictable value
+    const mockDateNow = jest.spyOn(Date, 'now').mockReturnValue(1);
+    
     const chatMessage = {
-      id: '1',
       type: 'chat',
       data: { username: 'test', message: 'hello' },
     };
@@ -97,6 +111,13 @@ describe('useWebSocketChat', () => {
       return jest.fn();
     });
     const { result } = renderHook(() => useWebSocketChat('test-room'));
-    expect(result.current.messages).toEqual([chatMessage]);
+    expect(result.current.messages).toEqual([{
+      id: '1',
+      type: 'chat',
+      data: { username: 'test', message: 'hello' },
+    }]);
+    
+    // Restore Date.now
+    mockDateNow.mockRestore();
   });
 });

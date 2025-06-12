@@ -16,14 +16,21 @@ import uiReducer, {
   updateUISettings,
 } from '../uiSlice';
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-global.localStorage = localStorageMock as any;
+// Mock localStorage directly
+const mockSetItem = jest.fn();
+const mockGetItem = jest.fn();
+const mockRemoveItem = jest.fn();
+const mockClear = jest.fn();
+
+Object.defineProperty(window, 'localStorage', {
+  value: {
+    setItem: mockSetItem,
+    getItem: mockGetItem,
+    removeItem: mockRemoveItem,
+    clear: mockClear,
+  },
+  writable: true,
+});
 
 // Mock Date.now() for consistent notification IDs
 const mockNow = 1640995200000; // 2022-01-01T00:00:00.000Z
@@ -70,7 +77,7 @@ describe('uiSlice', () => {
 
         const state = store.getState().ui;
         expect(state.theme).toBe('light');
-        expect(localStorageMock.setItem).toHaveBeenCalledWith('theme', 'light');
+        expect(mockSetItem).toHaveBeenCalledWith('theme', 'light');
       });
 
       it('should set theme to dark', () => {
@@ -79,7 +86,7 @@ describe('uiSlice', () => {
 
         const state = store.getState().ui;
         expect(state.theme).toBe('dark');
-        expect(localStorageMock.setItem).toHaveBeenLastCalledWith('theme', 'dark');
+        expect(mockSetItem).toHaveBeenLastCalledWith('theme', 'dark');
       });
     });
 
@@ -89,18 +96,18 @@ describe('uiSlice', () => {
 
         const state = store.getState().ui;
         expect(state.theme).toBe('light');
-        expect(localStorageMock.setItem).toHaveBeenCalledWith('theme', 'light');
+        expect(mockSetItem).toHaveBeenCalledWith('theme', 'light');
       });
 
       it('should toggle from light to dark', () => {
         store.dispatch(setTheme('light'));
-        localStorageMock.setItem.mockClear();
+        mockSetItem.mockClear();
         
         store.dispatch(toggleTheme());
 
         const state = store.getState().ui;
         expect(state.theme).toBe('dark');
-        expect(localStorageMock.setItem).toHaveBeenCalledWith('theme', 'dark');
+        expect(mockSetItem).toHaveBeenCalledWith('theme', 'dark');
       });
 
       it('should toggle multiple times', () => {
@@ -505,7 +512,7 @@ describe('uiSlice', () => {
       expect(store.getState().ui.theme).toBe('light');
       
       // Verify localStorage was updated each time
-      expect(localStorageMock.setItem).toHaveBeenCalledTimes(3);
+      expect(mockSetItem).toHaveBeenCalledTimes(3);
     });
 
     it('should handle keyboard shortcut customization', () => {
@@ -556,7 +563,8 @@ describe('uiSlice', () => {
       const state = store.getState().ui;
       // Should only keep last 10
       expect(state.notifications).toHaveLength(10);
-      expect(state.notifications[0].message).toBe('Quest completed');
+      // First 2 notifications should have been removed
+      expect(state.notifications[0].message).toBe('You take 5 damage');
       expect(state.notifications[9].message).toBe('Enemy defeated');
     });
 

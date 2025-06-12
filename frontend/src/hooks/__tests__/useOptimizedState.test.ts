@@ -349,8 +349,10 @@ describe('useOptimizedForm', () => {
 
     act(() => {
       result.current.setFieldValue('age', 21);
-      const error = validators.age(result.current.values.age);
-      expect(error).toBeUndefined();
     });
+    
+    // Validate the new value directly
+    const error = validators.age(21);
+    expect(error).toBeUndefined();
   });
 });

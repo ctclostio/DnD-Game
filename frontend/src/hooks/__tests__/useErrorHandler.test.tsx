@@ -116,8 +116,7 @@ describe('useErrorHandler', () => {
     };
 
     await act(async () => {
-      const wrappedOperation = result.current.handleAsyncError(asyncOperation);
-      await wrappedOperation();
+      await result.current.handleAsyncError(asyncOperation);
     });
 
     const state = store.getState();
@@ -135,8 +134,7 @@ describe('useErrorHandler', () => {
 
     let operationResult;
     await act(async () => {
-      const wrappedOperation = result.current.handleAsyncError(asyncOperation);
-      operationResult = await wrappedOperation();
+      operationResult = await result.current.handleAsyncError(asyncOperation);
     });
 
     expect(operationResult).toBe('Success result');

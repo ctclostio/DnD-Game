@@ -12,7 +12,7 @@ export function useOptimizedState<T>(
   }
 ) {
   const [state, setState] = useState(initialValue);
-  const previousValueRef = useRef(state);
+  const previousValueRef = useRef<T | undefined>(undefined);
   const memoizedOptions = useMemo(() => options, [options?.compareFunction, options?.onUpdate]);
   
   // Custom setState that only updates if value actually changed
@@ -88,16 +88,24 @@ export function useOptimizedForm<T extends Record<string, unknown>>(
       
       const newValues = { ...prev, [field]: value };
       
+      // Mark field as touched
+      setTouched(prevTouched => ({ ...prevTouched, [field]: true }));
+      
       // Validate on change if enabled
-      if (options?.validateOnChange && touched[field as string]) {
+      if (options?.validateOnChange) {
         const newErrors = validate(newValues);
-        setErrors(newErrors);
+        // Filter out empty error strings
+        const filteredErrors = Object.entries(newErrors).reduce((acc, [key, error]) => {
+          if (error) acc[key] = error;
+          return acc;
+        }, {} as Record<string, string>);
+        setErrors(filteredErrors);
       }
       
       return newValues;
     });
     });
-  }, [touched, validate, options?.validateOnChange]);
+  }, [validate, options?.validateOnChange]);
   
   // Mark field as touched
   const setFieldTouched = useCallback((field: keyof T, isTouched = true) => {
@@ -160,8 +168,12 @@ export function useOptimizedForm<T extends Record<string, unknown>>(
   
   // Check if form is valid
   const isValid = useMemo(() => {
-    return Object.keys(validate(values)).length === 0;
-  }, [values, validate]);
+    // Check both validation errors and manually set errors
+    const validationErrors = validate(values);
+    const hasValidationErrors = Object.values(validationErrors).some(error => !!error);
+    const hasManualErrors = Object.values(errors).some(error => !!error);
+    return !hasValidationErrors && !hasManualErrors;
+  }, [values, validate, errors]);
   
   // Check if form is dirty
   const isDirty = useMemo(() => {
