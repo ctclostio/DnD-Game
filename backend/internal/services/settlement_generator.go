@@ -88,10 +88,7 @@ func (s *SettlementGeneratorService) GenerateSettlement(ctx context.Context, gam
 	// Generate NPCs
 	npcCount := s.calculateNPCCount(settlement.Type)
 	for i := 0; i < npcCount; i++ {
-		npc, err := s.generateNPC(ctx, settlement)
-		if err != nil {
-			continue
-		}
+		npc := s.generateNPC(ctx, settlement)
 		if err := s.worldRepo.CreateSettlementNPC(npc); err == nil {
 			settlement.NPCs = append(settlement.NPCs, *npc)
 		}
@@ -259,7 +256,7 @@ Respond in JSON format:
 	return settlement, nil
 }
 
-func (s *SettlementGeneratorService) generateNPC(ctx context.Context, settlement *models.Settlement) (*models.SettlementNPC, error) {
+func (s *SettlementGeneratorService) generateNPC(ctx context.Context, settlement *models.Settlement) *models.SettlementNPC {
 	// Determine NPC role based on settlement needs
 	roles := s.getNPCRoles(settlement.Type)
 	role := roles[rand.Intn(len(roles))]
@@ -368,7 +365,7 @@ Respond in JSON format:
 	npc.Skills = models.JSONB("{}")
 	npc.Inventory = models.JSONB("[]")
 
-	return npc, nil
+	return npc
 }
 
 func (s *SettlementGeneratorService) generateShop(ctx context.Context, settlement *models.Settlement) *models.SettlementShop {

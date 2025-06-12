@@ -205,6 +205,10 @@ func (r *EmergentWorldRepository) GetNPCGoals(npcID string) ([]models.NPCGoal, e
 		goals = append(goals, goal)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return goals, nil
 }
 
@@ -307,6 +311,10 @@ func (r *EmergentWorldRepository) GetNPCSchedule(npcID string) ([]models.NPCSche
 		}
 
 		schedules = append(schedules, schedule)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return schedules, nil
@@ -487,6 +495,10 @@ func (r *EmergentWorldRepository) GetFactionAgendas(factionID string) ([]models.
 		json.Unmarshal(parametersJSON, &agenda.Parameters)
 
 		agendas = append(agendas, agenda)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return agendas, nil
@@ -700,6 +712,10 @@ func (r *EmergentWorldRepository) GetCulturesBySession(sessionID string) ([]*mod
 		cultures = append(cultures, culture)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return cultures, nil
 }
 
@@ -818,6 +834,10 @@ func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, on
 		events = append(events, event)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return events, nil
 }
 
@@ -895,6 +915,10 @@ func (r *EmergentWorldRepository) GetSimulationLogs(sessionID string, limit int)
 
 		json.Unmarshal(detailsJSON, &log.Details)
 		logs = append(logs, log)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return logs, nil

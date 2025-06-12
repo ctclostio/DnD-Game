@@ -136,6 +136,10 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 		sessions = append(sessions, &session)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return sessions, nil
 }
 
@@ -175,6 +179,10 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 		session.State = make(map[string]interface{})
 
 		sessions = append(sessions, &session)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return sessions, nil
@@ -259,6 +267,10 @@ func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]
 		session.State = make(map[string]interface{})
 
 		sessions = append(sessions, &session)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return sessions, nil

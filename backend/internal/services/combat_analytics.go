@@ -165,7 +165,6 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 	combat *models.Combat,
 	actions []*models.CombatActionLog,
 ) []*models.CombatantReport {
-
 	reports := []*models.CombatantReport{}
 
 	// Create a map to track analytics for each combatant
@@ -372,7 +371,6 @@ func (cas *CombatAnalyticsService) analyzeTactics(
 	actions []*models.CombatActionLog,
 	reports []*models.CombatantReport,
 ) *models.TacticalAnalysis {
-
 	analysis := &models.TacticalAnalysis{
 		PositioningScore:     cas.analyzePositioning(actions),
 		ResourceManagement:   cas.analyzeResourceUse(actions),
@@ -626,7 +624,6 @@ func (cas *CombatAnalyticsService) generateRecommendations(
 	reports []*models.CombatantReport,
 	analysis *models.TacticalAnalysis,
 ) []string {
-
 	recommendations := []string{}
 
 	// Based on tactical analysis scores

@@ -82,7 +82,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 				UserID: userID,
 				Type:   auth.AccessToken,
 			})
-			req = req.WithContext(ctx)
+			// req = req.WithContext(ctx) // Not used in this test
 
 			// For this test, verify request structure
 			if tt.body != nil {
@@ -148,7 +148,7 @@ func TestInventoryHandler_EquipItems(t *testing.T) {
 				UserID: userID,
 				Type:   auth.AccessToken,
 			})
-			req = req.WithContext(ctx)
+			// req = req.WithContext(ctx) // Not used in this test
 
 			// Verify route variables are set
 			vars := mux.Vars(req)
@@ -218,7 +218,7 @@ func TestInventoryHandler_Currency(t *testing.T) {
 				UserID: userID,
 				Type:   auth.AccessToken,
 			})
-			req = req.WithContext(ctx)
+			// req = req.WithContext(ctx) // Not used in this test
 
 			// Verify request structure
 			var decoded map[string]interface{}

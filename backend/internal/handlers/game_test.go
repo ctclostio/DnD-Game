@@ -117,7 +117,7 @@ func TestGameHandler_CreateGameSession(t *testing.T) {
 					Role:   tt.userRole,
 					Type:   auth.AccessToken,
 				})
-				req = req.WithContext(ctx)
+				// req = req.WithContext(ctx) // Not used in this test
 			}
 
 			// For this test, verify request structure
@@ -171,7 +171,7 @@ func TestGameHandler_GetGameSession(t *testing.T) {
 					UserID: tt.userID,
 					Type:   auth.AccessToken,
 				})
-				req = req.WithContext(ctx)
+				// req = req.WithContext(ctx) // Not used in this test
 			}
 
 			// Verify session ID is properly extracted
@@ -232,7 +232,7 @@ func TestGameHandler_JoinGameSession(t *testing.T) {
 					UserID: tt.userID,
 					Type:   auth.AccessToken,
 				})
-				req = req.WithContext(ctx)
+				// req = req.WithContext(ctx) // Not used in this test
 			}
 
 			// Verify request structure

@@ -267,7 +267,6 @@ func (cas *CombatAutomationService) simulateCombat(
 	encounterCR float64,
 	useResources bool,
 ) (outcome string, rounds int, resources map[string]interface{}) {
-
 	partyStrength := partyLevel * float64(len(characters)) * 10
 	encounterStrength := encounterCR * 15
 
@@ -512,7 +511,6 @@ func (cas *CombatAutomationService) generateNarrativeSummary(
 	partyLevel float64,
 	encounterCR float64,
 ) string {
-
 	narratives := map[string][]string{
 		"decisive_victory": {
 			"The party swiftly overwhelmed their foes with coordinated strikes and superior tactics.",

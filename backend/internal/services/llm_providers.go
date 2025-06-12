@@ -169,7 +169,7 @@ func (p *AnthropicProvider) GenerateCompletion(ctx context.Context, prompt strin
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("Anthropic API error (status %d): %s", resp.StatusCode, string(body))
+		return "", fmt.Errorf("anthropic API error (status %d): %s", resp.StatusCode, string(body))
 	}
 
 	var response struct {

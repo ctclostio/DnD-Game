@@ -16,10 +16,10 @@ import (
 )
 
 // Helper function to create a test context with auth claims
-func createAuthContext(userID, username, email, role string) context.Context {
+func createAuthContext(userID, email, role string) context.Context {
 	claims := &auth.Claims{
 		UserID:   userID,
-		Username: username,
+		Username: "testuser",
 		Email:    email,
 		Role:     role,
 		Type:     auth.AccessToken,
@@ -110,7 +110,7 @@ func TestCharacterHandler_RequestValidation(t *testing.T) {
 
 			// Add auth context if userID is provided
 			if tt.userID != "" {
-				ctx := createAuthContext(tt.userID, "testuser", "test@example.com", "player")
+				ctx := createAuthContext(tt.userID, "test@example.com", "player")
 				req = req.WithContext(ctx)
 			}
 
@@ -198,7 +198,7 @@ func TestCharacterHandler_UpdateCharacter(t *testing.T) {
 
 			// Add auth context
 			if tt.userID != "" {
-				ctx := createAuthContext(tt.userID, "testuser", "test@example.com", "player")
+				ctx := createAuthContext(tt.userID, "test@example.com", "player")
 				req = req.WithContext(ctx)
 			}
 
@@ -271,7 +271,7 @@ func TestCharacterHandler_SpellSlots(t *testing.T) {
 			req = mux.SetURLVars(req, map[string]string{"id": characterID})
 
 			// Add auth context
-			ctx := createAuthContext(userID, "testuser", "test@example.com", "player")
+			ctx := createAuthContext(userID, "test@example.com", "player")
 			req = req.WithContext(ctx)
 
 			// Verify request structure
@@ -308,7 +308,7 @@ func TestCharacterHandler_CustomClass(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 
 		// Add auth context
-		ctx := createAuthContext(userID, "testuser", "test@example.com", "player")
+		ctx := createAuthContext(userID, "test@example.com", "player")
 		req = req.WithContext(ctx)
 
 		// Verify request structure
@@ -324,7 +324,7 @@ func TestCharacterHandler_CustomClass(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/characters/custom-classes?includeUnapproved=true", nil)
 
 		// Add auth context
-		ctx := createAuthContext(userID, "testuser", "test@example.com", "player")
+		ctx := createAuthContext(userID, "test@example.com", "player")
 		req = req.WithContext(ctx)
 
 		// Verify query parameter

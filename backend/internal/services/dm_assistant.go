@@ -85,10 +85,7 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 		result = location
 
 	case models.RequestTypeCombatNarration:
-		combatReq, err := s.parseCombatRequest(req.Parameters)
-		if err != nil {
-			return nil, err
-		}
+		combatReq := s.parseCombatRequest(req.Parameters)
 		prompt = fmt.Sprintf("Combat: %s vs %s", combatReq.AttackerName, combatReq.TargetName)
 
 		narration, err := s.aiAssistant.GenerateCombatNarration(ctx, *combatReq)
@@ -264,7 +261,7 @@ func (s *DMAssistantService) parseLocationRequest(params map[string]interface{})
 	return req, nil
 }
 
-func (s *DMAssistantService) parseCombatRequest(params map[string]interface{}) (*models.CombatNarrationRequest, error) {
+func (s *DMAssistantService) parseCombatRequest(params map[string]interface{}) *models.CombatNarrationRequest {
 	req := &models.CombatNarrationRequest{}
 
 	req.AttackerName, _ = params["attackerName"].(string)
@@ -286,7 +283,7 @@ func (s *DMAssistantService) parseCombatRequest(params map[string]interface{}) (
 		req.TargetMaxHP = int(maxHP)
 	}
 
-	return req, nil
+	return req
 }
 
 func (s *DMAssistantService) getCombatNarrationType(req *models.CombatNarrationRequest) string {
