@@ -37,10 +37,7 @@ func NewAIBalanceAnalyzer(cfg *config.Config, llm LLMProvider, ruleEngine *RuleE
 // AnalyzeRuleBalance performs comprehensive balance analysis on a rule template
 func (ba *AIBalanceAnalyzer) AnalyzeRuleBalance(ctx context.Context, template *models.RuleTemplate) (*models.BalanceMetrics, error) {
 	// Run simulations across different scenarios
-	simResults, err := ba.runSimulations(ctx, template)
-	if err != nil {
-		return nil, fmt.Errorf("simulation failed: %w", err)
-	}
+	simResults := ba.runSimulations(ctx, template)
 
 	// Calculate damage expectations if applicable
 	damageExpectation := ba.calculateDamageExpectation(template)
@@ -91,7 +88,7 @@ func (ba *AIBalanceAnalyzer) AnalyzeRuleBalance(ctx context.Context, template *m
 }
 
 // runSimulations executes balance simulations across various scenarios
-func (ba *AIBalanceAnalyzer) runSimulations(ctx context.Context, template *models.RuleTemplate) ([]models.SimulationResult, error) {
+func (ba *AIBalanceAnalyzer) runSimulations(ctx context.Context, template *models.RuleTemplate) []models.SimulationResult {
 	scenarios := ba.getSimulationScenarios(template.Category)
 	results := []models.SimulationResult{}
 
@@ -104,7 +101,7 @@ func (ba *AIBalanceAnalyzer) runSimulations(ctx context.Context, template *model
 		results = append(results, result)
 	}
 
-	return results, nil
+	return results
 }
 
 // simulateScenario runs a single simulation scenario

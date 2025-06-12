@@ -287,6 +287,10 @@ func (r *EncounterRepository) getEncounterEnemies(encounterID string) ([]models.
 		enemies = append(enemies, enemy)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return enemies, nil
 }
 
@@ -322,6 +326,10 @@ func (r *EncounterRepository) GetByGameSession(gameSessionID string) ([]*models.
 			continue
 		}
 		encounters = append(encounters, &encounter)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return encounters, nil
@@ -425,6 +433,10 @@ func (r *EncounterRepository) GetEvents(encounterID string, limit int) ([]*model
 		events = append(events, &event)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return events, nil
 }
 
@@ -522,6 +534,10 @@ func (r *EncounterRepository) GetObjectives(encounterID string) ([]*models.Encou
 		json.Unmarshal(itemRewards, &objective.ItemRewards)
 
 		objectives = append(objectives, &objective)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return objectives, nil

@@ -138,7 +138,6 @@ func TestCharacterBuilder_BuildCharacter(t *testing.T) {
 		assert.Equal(t, 16, char.Attributes.Strength) // 14 + 2
 		assert.Equal(t, 15, char.Attributes.Charisma) // 14 + 1
 	})
-
 }
 
 func TestCharacterBuilder_GetAvailableOptions(t *testing.T) {

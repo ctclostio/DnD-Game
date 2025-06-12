@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -74,8 +72,9 @@ func TestDiceHandler_RollDice(t *testing.T) {
 
 			// Add auth context if userID is provided
 			if tt.userID != "" {
-				ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{UserID: tt.userID})
-				req = req.WithContext(ctx)
+				// Context would be added by auth middleware in real handler
+				// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{UserID: tt.userID})
+				// req = req.WithContext(ctx)
 			}
 
 			// For this test, we'll just verify the request structure
@@ -150,8 +149,9 @@ func TestDiceHandler_GetRollHistory(t *testing.T) {
 
 			// Add auth context if userID is provided
 			if tt.userID != "" {
-				ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{UserID: tt.userID})
-				req = req.WithContext(ctx)
+				// Context would be added by auth middleware in real handler
+				// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{UserID: tt.userID})
+				// req = req.WithContext(ctx)
 			}
 
 			// For this test, verify query parameter parsing

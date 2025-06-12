@@ -38,7 +38,6 @@ func (cas *CombatAnalyticsService) FinalizeCombatAnalytics(
 	combat *models.Combat,
 	sessionID uuid.UUID,
 ) (*models.CombatAnalyticsReport, error) {
-
 	// Get all combat actions
 	// Convert Combat.ID string to uuid.UUID
 	combatUUID, err := uuid.Parse(combat.ID)
@@ -97,7 +96,6 @@ func (cas *CombatAnalyticsService) calculateCombatAnalytics(
 	actions []*models.CombatActionLog,
 	combatUUID uuid.UUID,
 ) *models.CombatAnalytics {
-
 	// Calculate total damage and healing
 	totalDamage := 0
 	totalHealing := 0
@@ -167,7 +165,6 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 	combat *models.Combat,
 	actions []*models.CombatActionLog,
 ) []*models.CombatantReport {
-
 	reports := []*models.CombatantReport{}
 
 	// Create a map to track analytics for each combatant
@@ -374,7 +371,6 @@ func (cas *CombatAnalyticsService) analyzeTactics(
 	actions []*models.CombatActionLog,
 	reports []*models.CombatantReport,
 ) *models.TacticalAnalysis {
-
 	analysis := &models.TacticalAnalysis{
 		PositioningScore:     cas.analyzePositioning(actions),
 		ResourceManagement:   cas.analyzeResourceUse(actions),
@@ -628,7 +624,6 @@ func (cas *CombatAnalyticsService) generateRecommendations(
 	reports []*models.CombatantReport,
 	analysis *models.TacticalAnalysis,
 ) []string {
-
 	recommendations := []string{}
 
 	// Based on tactical analysis scores

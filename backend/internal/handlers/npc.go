@@ -372,7 +372,7 @@ func (h *Handlers) NPCQuickActions(w http.ResponseWriter, r *http.Request) {
 	// Return updated NPC
 	updatedNPC, err := h.npcService.GetNPC(r.Context(), npcID)
 	if err != nil {
-		response.InternalServerError(w, r, errors.New("Failed to retrieve updated NPC"))
+		response.InternalServerError(w, r, errors.New("failed to retrieve updated NPC"))
 		return
 	}
 

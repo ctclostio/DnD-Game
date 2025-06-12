@@ -88,10 +88,7 @@ func (s *SettlementGeneratorService) GenerateSettlement(ctx context.Context, gam
 	// Generate NPCs
 	npcCount := s.calculateNPCCount(settlement.Type)
 	for i := 0; i < npcCount; i++ {
-		npc, err := s.generateNPC(ctx, settlement)
-		if err != nil {
-			continue
-		}
+		npc := s.generateNPC(ctx, settlement)
 		if err := s.worldRepo.CreateSettlementNPC(npc); err == nil {
 			settlement.NPCs = append(settlement.NPCs, *npc)
 		}
@@ -100,10 +97,7 @@ func (s *SettlementGeneratorService) GenerateSettlement(ctx context.Context, gam
 	// Generate shops
 	shopCount := s.calculateShopCount(settlement.Type)
 	for i := 0; i < shopCount; i++ {
-		shop, err := s.generateShop(ctx, settlement)
-		if err != nil {
-			continue
-		}
+		shop := s.generateShop(ctx, settlement)
 		if err := s.worldRepo.CreateSettlementShop(shop); err == nil {
 			settlement.Shops = append(settlement.Shops, *shop)
 		}
@@ -262,7 +256,7 @@ Respond in JSON format:
 	return settlement, nil
 }
 
-func (s *SettlementGeneratorService) generateNPC(ctx context.Context, settlement *models.Settlement) (*models.SettlementNPC, error) {
+func (s *SettlementGeneratorService) generateNPC(ctx context.Context, settlement *models.Settlement) *models.SettlementNPC {
 	// Determine NPC role based on settlement needs
 	roles := s.getNPCRoles(settlement.Type)
 	role := roles[rand.Intn(len(roles))]
@@ -310,7 +304,7 @@ Respond in JSON format:
 	response, err := s.llmProvider.GenerateCompletion(ctx, userPrompt, systemPrompt)
 	if err != nil {
 		// Fallback to procedural generation
-		return s.generateProceduralNPC(settlement, role), nil
+		return s.generateProceduralNPC(settlement, role)
 	}
 
 	var npcData struct {
@@ -331,7 +325,7 @@ Respond in JSON format:
 	}
 
 	if err := json.Unmarshal([]byte(response), &npcData); err != nil {
-		return s.generateProceduralNPC(settlement, role), nil
+		return s.generateProceduralNPC(settlement, role)
 	}
 
 	npc := &models.SettlementNPC{
@@ -371,10 +365,10 @@ Respond in JSON format:
 	npc.Skills = models.JSONB("{}")
 	npc.Inventory = models.JSONB("[]")
 
-	return npc, nil
+	return npc
 }
 
-func (s *SettlementGeneratorService) generateShop(ctx context.Context, settlement *models.Settlement) (*models.SettlementShop, error) {
+func (s *SettlementGeneratorService) generateShop(ctx context.Context, settlement *models.Settlement) *models.SettlementShop {
 	// Determine shop type based on settlement
 	shopTypes := s.getShopTypes(settlement.Type)
 	shopType := shopTypes[rand.Intn(len(shopTypes))]
@@ -413,7 +407,7 @@ Respond in JSON format:
 	response, err := s.llmProvider.GenerateCompletion(ctx, userPrompt, systemPrompt)
 	if err != nil {
 		// Fallback to procedural generation
-		return s.generateProceduralShop(settlement, shopType), nil
+		return s.generateProceduralShop(settlement, shopType)
 	}
 
 	var shopData struct {
@@ -428,7 +422,7 @@ Respond in JSON format:
 	}
 
 	if err := json.Unmarshal([]byte(response), &shopData); err != nil {
-		return s.generateProceduralShop(settlement, shopType), nil
+		return s.generateProceduralShop(settlement, shopType)
 	}
 
 	shop := &models.SettlementShop{
@@ -458,7 +452,7 @@ Respond in JSON format:
 	shop.FactionDiscount = models.JSONB("{}")
 	shop.OperatingHours = models.JSONB(`{"open": "dawn", "close": "dusk"}`)
 
-	return shop, nil
+	return shop
 }
 
 // Helper functions

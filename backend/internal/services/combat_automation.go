@@ -41,7 +41,6 @@ func (cas *CombatAutomationService) AutoResolveCombat(
 	characters []*models.Character,
 	req models.AutoResolveRequest,
 ) (*models.AutoCombatResolution, error) {
-
 	// Calculate encounter difficulty
 	partyLevel := cas.calculateAveragePartyLevel(characters)
 	encounterCR := cas.calculateEncounterCR(req.EnemyTypes)
@@ -114,7 +113,6 @@ func (cas *CombatAutomationService) SmartInitiative(
 	sessionID uuid.UUID,
 	req models.SmartInitiativeRequest,
 ) ([]models.InitiativeEntry, error) {
-
 	var entries []models.InitiativeEntry
 
 	for _, combatant := range req.Combatants {
@@ -269,8 +267,6 @@ func (cas *CombatAutomationService) simulateCombat(
 	encounterCR float64,
 	useResources bool,
 ) (outcome string, rounds int, resources map[string]interface{}) {
-
-	// Simple combat simulation based on party strength vs encounter difficulty
 	partyStrength := partyLevel * float64(len(characters)) * 10
 	encounterStrength := encounterCR * 15
 
@@ -515,8 +511,6 @@ func (cas *CombatAutomationService) generateNarrativeSummary(
 	partyLevel float64,
 	encounterCR float64,
 ) string {
-
-	// Build narrative based on outcome
 	narratives := map[string][]string{
 		"decisive_victory": {
 			"The party swiftly overwhelmed their foes with coordinated strikes and superior tactics.",
