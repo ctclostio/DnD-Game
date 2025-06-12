@@ -1,4 +1,4 @@
-# golangci-lint configuration
+# golangci-lint configuration for v2.x
 version: "2"
 
 run:
@@ -13,7 +13,7 @@ linters:
     - dogsled
     - dupl
     - errcheck
-    - exportloopref  # use exportloopref for v2.1.6
+    - exportloopref
     - exhaustive
     - gochecknoinits
     - goconst
@@ -56,137 +56,134 @@ linters:
     - wsl
     - gochecknoglobals
 
-linters-settings:
-  dupl:
-    threshold: 100
-  exhaustive:
-    default-signifies-exhaustive: false
-  funlen:
-    lines: 100
-    statements: 50
-  goconst:
-    min-len: 2
-    min-occurrences: 2
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      - dupImport
-      - ifElseChain
-      - octalLiteral
-      - whyNoLint
-      - wrapperFunc
-  gocyclo:
-    min-complexity: 15
-  goimports:
-    local-prefixes: github.com/your-username/dnd-game
-  gomnd:
-    settings:
-      mnd:
-        checks:
-          - argument
-          - case
-          - condition
-          - return
-        ignored-numbers:
-          - '0'
-          - '1'
-          - '2'
-          - '3'
-          - '10'
-        ignored-files:
-          - 'test'
-        ignored-functions:
-          - 'strconv.ParseInt'
-  govet:
-    check-shadowing: true
-  lll:
-    line-length: 140
-  misspell:
-    locale: US
-  nolintlint:
-    allow-leading-space: true
-    allow-unused: false
-    require-explanation: false
-    require-specific: false
-  prealloc:
-    simple: true
-    range-loops: true
-    for-loops: true
-  revive:
+  settings:
+    dupl:
+      threshold: 100
+    exhaustive:
+      default-signifies-exhaustive: false
+    funlen:
+      lines: 100
+      statements: 50
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+      disabled-checks:
+        - dupImport
+        - ifElseChain
+        - octalLiteral
+        - whyNoLint
+        - wrapperFunc
+    gocyclo:
+      min-complexity: 15
+    goimports:
+      local-prefixes: github.com/your-username/dnd-game
+    gomnd:
+      checks:
+        - argument
+        - case
+        - condition
+        - return
+      ignored-numbers:
+        - '0'
+        - '1'
+        - '2'
+        - '3'
+        - '10'
+      ignored-files:
+        - 'test'
+      ignored-functions:
+        - 'strconv.ParseInt'
+    govet:
+      check-shadowing: true
+    lll:
+      line-length: 140
+    misspell:
+      locale: US
+    nolintlint:
+      allow-leading-space: true
+      allow-unused: false
+      require-explanation: false
+      require-specific: false
+    prealloc:
+      simple: true
+      range-loops: true
+      for-loops: true
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: if-return
+        - name: increment-decrement
+        - name: var-naming
+        - name: var-declaration
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: errorf
+        - name: empty-block
+        - name: superfluous-else
+        - name: unused-parameter
+        - name: unreachable-code
+        - name: redefines-builtin-id
+
+  # Path and file exclusions
+  exclusions:
+    paths:
+      - vendor
+      - node_modules
+      - ".*_mock.go"
+      - ".*_gen.go"
+    
+    # Use default exclusion presets  
+    presets:
+      - legacy
+    
+    # Custom exclusion rules
     rules:
-      - name: blank-imports
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: dot-imports
-      - name: error-return
-      - name: error-strings
-      - name: error-naming
-      - name: if-return
-      - name: increment-decrement
-      - name: var-naming
-      - name: var-declaration
-      - name: package-comments
-      - name: range
-      - name: receiver-naming
-      - name: time-naming
-      - name: unexported-return
-      - name: indent-error-flow
-      - name: errorf
-      - name: empty-block
-      - name: superfluous-else
-      - name: unused-parameter
-      - name: unreachable-code
-      - name: redefines-builtin-id
+      - path: _test\.go
+        linters:
+          - gomnd
+          - goconst
+          - gosec
+          - noctx
+          - dogsled
+          - bodyclose
+      - path: testing\.go
+        linters:
+          - gosec
+      - path: cmd/
+        linters:
+          - gochecknoinits
+          - gochecknoglobals
+      - path: internal/models/
+        linters:
+          - govet
+      - linters:
+          - lll
+        source: "^//go:generate "
+      - linters:
+          - stylecheck
+        text: "ST1000:"
+      - linters:
+          - revive
+        text: "exported:"
 
 issues:
-  # Exclude directories from analysis
-  exclude-dirs:
-    - vendor
-    - node_modules
-  
-  # Exclude files from analysis
-  exclude-files:
-    - ".*_mock.go"
-    - ".*_gen.go"
-  
-  # Use default exclusions
-  exclude-use-default: true
-  
-  # Custom exclusion rules
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gomnd
-        - goconst
-        - gosec
-        - noctx
-        - dogsled
-        - bodyclose
-    - path: testing\.go
-      linters:
-        - gosec
-    - path: cmd/
-      linters:
-        - gochecknoinits
-        - gochecknoglobals
-    - path: internal/models/
-      linters:
-        - govet  # placeholder to keep the rule structure
-    - linters:
-        - lll
-      source: "^//go:generate "
-    - linters:
-        - stylecheck
-      text: "ST1000:"
-    - linters:
-        - revive
-      text: "exported:"
-
   max-issues-per-linter: 0
   max-same-issues: 0
   new: false
