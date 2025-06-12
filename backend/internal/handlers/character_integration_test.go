@@ -111,7 +111,7 @@ func setupIntegrationTest(t *testing.T) (*testContext, func()) {
 
 	// Create handlers
 	hub := websocket.GetHub()
-	handlers := NewHandlers(svc, hub)
+       handlers := NewHandlers(svc, hub, db)
 
 	// Setup router
 	router := mux.NewRouter()

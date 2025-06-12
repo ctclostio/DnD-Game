@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/your-username/dnd-game/backend/internal/auth"
+	"github.com/your-username/dnd-game/backend/internal/database"
 	"github.com/your-username/dnd-game/backend/internal/services"
 	"github.com/your-username/dnd-game/backend/internal/websocket"
 	"github.com/your-username/dnd-game/backend/pkg/errors"
@@ -28,10 +29,11 @@ type Handlers struct {
 	jwtManager          *auth.JWTManager
 	refreshTokenService *services.RefreshTokenService
 	websocketHub        *websocket.Hub
+	db                  *database.DB
 }
 
 // NewHandlers creates a new handlers instance
-func NewHandlers(svc *services.Services, hub *websocket.Hub) *Handlers {
+func NewHandlers(svc *services.Services, hub *websocket.Hub, db *database.DB) *Handlers {
 	return &Handlers{
 		userService:         svc.Users,
 		characterService:    svc.Characters,
@@ -49,6 +51,7 @@ func NewHandlers(svc *services.Services, hub *websocket.Hub) *Handlers {
 		jwtManager:          svc.JWTManager,
 		refreshTokenService: svc.RefreshTokens,
 		websocketHub:        hub,
+		db:                  db,
 	}
 }
 
