@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math/rand"
 	"testing"
 
 	"github.com/google/uuid"
@@ -466,12 +467,12 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 
 		for _, tt := range tests {
 			result := service.getNPCRoles(tt.settlementType)
-			
+
 			// Check base roles are included
 			for _, role := range baseRoles {
 				require.Contains(t, result, role)
 			}
-			
+
 			// Check specific roles are included
 			for _, role := range tt.expectedRoles {
 				require.Contains(t, result, role)
@@ -502,12 +503,12 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 
 		for _, tt := range tests {
 			result := service.getShopTypes(tt.settlementType)
-			
+
 			// Check base shops are included
 			for _, shop := range baseShops {
 				require.Contains(t, result, shop)
 			}
-			
+
 			// Check specific shops are included
 			for _, shop := range tt.expectedShops {
 				require.Contains(t, result, shop)
@@ -518,6 +519,7 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 
 func TestSettlementGeneratorService_GenerateMarketConditions(t *testing.T) {
 	service := &SettlementGeneratorService{}
+	rand.Seed(42)
 
 	t.Run("basic market", func(t *testing.T) {
 		settlement := &models.Settlement{

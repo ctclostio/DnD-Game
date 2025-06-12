@@ -96,9 +96,12 @@ func TestGameSessionSecurity(t *testing.T) {
 				expectedError:  "don't own this character",
 			},
 			{
-				name:           "Cannot join with high level character",
-				userID:         player1.ID,
-				characterID:    charHighLevel.ID,
+				name:        "Cannot join with high level character",
+				userID:      player1.ID,
+				characterID: charHighLevel.ID,
+				setupFunc: func() {
+					_ = svc.GameSessions.LeaveSession(ctx, session.ID, player1.ID)
+				},
 				expectedStatus: http.StatusBadRequest,
 				expectedError:  "exceeds session limit",
 			},
@@ -109,8 +112,8 @@ func TestGameSessionSecurity(t *testing.T) {
 				expectedStatus: http.StatusOK,
 			},
 			{
-				name:        "Cannot join full session",
-				userID:      "another_user",
+				name:   "Cannot join full session",
+				userID: "another_user",
 				setupFunc: func() {
 					// Fill the session to capacity
 					session.MaxPlayers = 2 // DM + 1 player
@@ -137,10 +140,10 @@ func TestGameSessionSecurity(t *testing.T) {
 				req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
 				// Create user claims and add to context
 				claims := &auth.Claims{
-					UserID: tt.userID,
+					UserID:   tt.userID,
 					Username: "testuser",
-					Email: "test@example.com",
-					Role: "player",
+					Email:    "test@example.com",
+					Role:     "player",
 				}
 				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 				req = mux.SetURLVars(req, map[string]string{"id": session.ID})
@@ -155,13 +158,21 @@ func TestGameSessionSecurity(t *testing.T) {
 					var response map[string]interface{}
 					err := json.NewDecoder(rr.Body).Decode(&response)
 					require.NoError(t, err)
-					assert.Contains(t, response["error"], tt.expectedError)
+
+					errMap, ok := response["error"].(map[string]interface{})
+					require.True(t, ok)
+					assert.Contains(t, errMap["message"], tt.expectedError)
 				}
 			})
 		}
 	})
 
 	t.Run("GetGameSession_Authorization", func(t *testing.T) {
+		// Ensure player1 can join the session
+		_ = svc.GameSessions.LeaveSession(ctx, session.ID, player1.ID)
+		session.MaxPlayers = 4
+		testCtx.Repos.GameSessions.Update(ctx, session)
+		_ = svc.GameSessions.JoinSession(ctx, session.ID, player1.ID, &char1.ID)
 		// Create private session
 		privateSession := &models.GameSession{
 			DMID:        dm.ID,
@@ -203,10 +214,10 @@ func TestGameSessionSecurity(t *testing.T) {
 				req := httptest.NewRequest("GET", "/api/v1/game/sessions/"+tt.sessionID, nil)
 				// Create user claims and add to context
 				claims := &auth.Claims{
-					UserID: tt.userID,
+					UserID:   tt.userID,
 					Username: "testuser",
-					Email: "test@example.com",
-					Role: "player",
+					Email:    "test@example.com",
+					Role:     "player",
 				}
 				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 				req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
@@ -220,7 +231,8 @@ func TestGameSessionSecurity(t *testing.T) {
 	})
 
 	t.Run("KickPlayer_Security", func(t *testing.T) {
-		// Add player2 to session for kick testing
+		// Ensure player2 is in the session for kick testing
+		_ = svc.GameSessions.LeaveSession(ctx, session.ID, player2.ID)
 		err := svc.GameSessions.JoinSession(ctx, session.ID, player2.ID, &char2.ID)
 		require.NoError(t, err)
 
@@ -283,7 +295,10 @@ func TestGameSessionSecurity(t *testing.T) {
 					var response map[string]interface{}
 					err := json.NewDecoder(rr.Body).Decode(&response)
 					require.NoError(t, err)
-					assert.Contains(t, response["error"], tt.expectedError)
+
+					errMap, ok := response["error"].(map[string]interface{})
+					require.True(t, ok)
+					assert.Contains(t, errMap["message"], tt.expectedError)
 				}
 			})
 		}
@@ -294,19 +309,20 @@ func TestGameSessionSecurity(t *testing.T) {
 		inactiveSession := &models.GameSession{
 			DMID:     dm.ID,
 			Name:     "Inactive Session",
+			Status:   models.GameStatusActive,
 			IsActive: false,
 		}
 		err := svc.GameSessions.CreateSession(ctx, inactiveSession)
 		require.NoError(t, err)
 
 		// Try to join inactive session
-		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+inactiveSession.ID+"/join", nil)
+		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+inactiveSession.ID+"/join", bytes.NewBufferString("{}"))
 		// Create user claims and add to context
 		claims := &auth.Claims{
-			UserID: player1.ID,
+			UserID:   player1.ID,
 			Username: "testuser",
-			Email: "test@example.com",
-			Role: "player",
+			Email:    "test@example.com",
+			Role:     "player",
 		}
 		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 		req = mux.SetURLVars(req, map[string]string{"id": inactiveSession.ID})
@@ -317,7 +333,9 @@ func TestGameSessionSecurity(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
 		var response map[string]interface{}
 		json.NewDecoder(rr.Body).Decode(&response)
-		assert.Contains(t, response["error"], "not active")
+		errMap, ok := response["error"].(map[string]interface{})
+		require.True(t, ok)
+		assert.Contains(t, errMap["message"], "not active")
 
 		// Test operations on completed session
 		completedSession := &models.GameSession{
@@ -329,13 +347,13 @@ func TestGameSessionSecurity(t *testing.T) {
 		require.NoError(t, err)
 
 		// Try to join completed session
-		req = httptest.NewRequest("POST", "/api/v1/game/sessions/"+completedSession.ID+"/join", nil)
+		req = httptest.NewRequest("POST", "/api/v1/game/sessions/"+completedSession.ID+"/join", bytes.NewBufferString("{}"))
 		// Create user claims and add to context
 		claims2 := &auth.Claims{
-			UserID: player1.ID,
+			UserID:   player1.ID,
 			Username: "testuser",
-			Email: "test@example.com",
-			Role: "player",
+			Email:    "test@example.com",
+			Role:     "player",
 		}
 		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims2))
 		req = mux.SetURLVars(req, map[string]string{"id": completedSession.ID})
@@ -345,7 +363,9 @@ func TestGameSessionSecurity(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
 		json.NewDecoder(rr.Body).Decode(&response)
-		assert.Contains(t, response["error"], "completed session")
+		errMap, ok = response["error"].(map[string]interface{})
+		require.True(t, ok)
+		assert.Contains(t, errMap["message"], "completed session")
 	})
 }
 
