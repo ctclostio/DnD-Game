@@ -277,12 +277,12 @@ func (r *EncounterRepository) getEncounterEnemies(encounterID string) ([]models.
 		}
 
 		// Unmarshal JSON fields
-		json.Unmarshal(stats, &enemy.Stats)
-		json.Unmarshal(abilities, &enemy.Abilities)
-		json.Unmarshal(actions, &enemy.Actions)
-		json.Unmarshal(legendaryActions, &enemy.LegendaryActions)
-		json.Unmarshal(initialPosition, &enemy.InitialPosition)
-		json.Unmarshal(currentPosition, &enemy.CurrentPosition)
+		_ = json.Unmarshal(stats, &enemy.Stats)
+		_ = json.Unmarshal(abilities, &enemy.Abilities)
+		_ = json.Unmarshal(actions, &enemy.Actions)
+		_ = json.Unmarshal(legendaryActions, &enemy.LegendaryActions)
+		_ = json.Unmarshal(initialPosition, &enemy.InitialPosition)
+		_ = json.Unmarshal(currentPosition, &enemy.CurrentPosition)
 
 		enemies = append(enemies, enemy)
 	}
@@ -429,7 +429,7 @@ func (r *EncounterRepository) GetEvents(encounterID string, limit int) ([]*model
 			continue
 		}
 
-		json.Unmarshal(mechanicalEffect, &event.MechanicalEffect)
+		_ = json.Unmarshal(mechanicalEffect, &event.MechanicalEffect)
 		events = append(events, &event)
 	}
 
@@ -529,9 +529,9 @@ func (r *EncounterRepository) GetObjectives(encounterID string) ([]*models.Encou
 			continue
 		}
 
-		json.Unmarshal(successConditions, &objective.SuccessConditions)
-		json.Unmarshal(failureConditions, &objective.FailureConditions)
-		json.Unmarshal(itemRewards, &objective.ItemRewards)
+		_ = json.Unmarshal(successConditions, &objective.SuccessConditions)
+		_ = json.Unmarshal(failureConditions, &objective.FailureConditions)
+		_ = json.Unmarshal(itemRewards, &objective.ItemRewards)
 
 		objectives = append(objectives, &objective)
 	}
