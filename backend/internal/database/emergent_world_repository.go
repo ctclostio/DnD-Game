@@ -491,8 +491,8 @@ func (r *EmergentWorldRepository) GetFactionAgendas(factionID string) ([]models.
 			return nil, err
 		}
 
-		json.Unmarshal(stagesJSON, &agenda.Stages)
-		json.Unmarshal(parametersJSON, &agenda.Parameters)
+		_ = json.Unmarshal(stagesJSON, &agenda.Stages)
+		_ = json.Unmarshal(parametersJSON, &agenda.Parameters)
 
 		agendas = append(agendas, agenda)
 	}
@@ -625,20 +625,20 @@ func (r *EmergentWorldRepository) GetCulture(cultureID string) (*models.Procedur
 	}
 
 	// Unmarshal all JSON fields
-	json.Unmarshal(languageJSON, &culture.Language)
-	json.Unmarshal(customsJSON, &culture.Customs)
-	json.Unmarshal(artStyleJSON, &culture.ArtStyle)
-	json.Unmarshal(beliefSystemJSON, &culture.BeliefSystem)
-	json.Unmarshal(valuesJSON, &culture.Values)
-	json.Unmarshal(taboosJSON, &culture.Taboos)
-	json.Unmarshal(greetingsJSON, &culture.Greetings)
-	json.Unmarshal(architectureJSON, &culture.Architecture)
-	json.Unmarshal(cuisineJSON, &culture.Cuisine)
-	json.Unmarshal(musicStyleJSON, &culture.MusicStyle)
-	json.Unmarshal(clothingStyleJSON, &culture.ClothingStyle)
-	json.Unmarshal(namingConventionsJSON, &culture.NamingConventions)
-	json.Unmarshal(socialStructureJSON, &culture.SocialStructure)
-	json.Unmarshal(metadataJSON, &culture.Metadata)
+	_ = json.Unmarshal(languageJSON, &culture.Language)
+	_ = json.Unmarshal(customsJSON, &culture.Customs)
+	_ = json.Unmarshal(artStyleJSON, &culture.ArtStyle)
+	_ = json.Unmarshal(beliefSystemJSON, &culture.BeliefSystem)
+	_ = json.Unmarshal(valuesJSON, &culture.Values)
+	_ = json.Unmarshal(taboosJSON, &culture.Taboos)
+	_ = json.Unmarshal(greetingsJSON, &culture.Greetings)
+	_ = json.Unmarshal(architectureJSON, &culture.Architecture)
+	_ = json.Unmarshal(cuisineJSON, &culture.Cuisine)
+	_ = json.Unmarshal(musicStyleJSON, &culture.MusicStyle)
+	_ = json.Unmarshal(clothingStyleJSON, &culture.ClothingStyle)
+	_ = json.Unmarshal(namingConventionsJSON, &culture.NamingConventions)
+	_ = json.Unmarshal(socialStructureJSON, &culture.SocialStructure)
+	_ = json.Unmarshal(metadataJSON, &culture.Metadata)
 
 	return &culture, nil
 }
@@ -694,20 +694,20 @@ func (r *EmergentWorldRepository) GetCulturesBySession(sessionID string) ([]*mod
 		}
 
 		// Unmarshal JSON fields
-		json.Unmarshal(languageJSON, &culture.Language)
-		json.Unmarshal(customsJSON, &culture.Customs)
-		json.Unmarshal(artStyleJSON, &culture.ArtStyle)
-		json.Unmarshal(beliefSystemJSON, &culture.BeliefSystem)
-		json.Unmarshal(valuesJSON, &culture.Values)
-		json.Unmarshal(taboosJSON, &culture.Taboos)
-		json.Unmarshal(greetingsJSON, &culture.Greetings)
-		json.Unmarshal(architectureJSON, &culture.Architecture)
-		json.Unmarshal(cuisineJSON, &culture.Cuisine)
-		json.Unmarshal(musicStyleJSON, &culture.MusicStyle)
-		json.Unmarshal(clothingStyleJSON, &culture.ClothingStyle)
-		json.Unmarshal(namingConventionsJSON, &culture.NamingConventions)
-		json.Unmarshal(socialStructureJSON, &culture.SocialStructure)
-		json.Unmarshal(metadataJSON, &culture.Metadata)
+		_ = json.Unmarshal(languageJSON, &culture.Language)
+		_ = json.Unmarshal(customsJSON, &culture.Customs)
+		_ = json.Unmarshal(artStyleJSON, &culture.ArtStyle)
+		_ = json.Unmarshal(beliefSystemJSON, &culture.BeliefSystem)
+		_ = json.Unmarshal(valuesJSON, &culture.Values)
+		_ = json.Unmarshal(taboosJSON, &culture.Taboos)
+		_ = json.Unmarshal(greetingsJSON, &culture.Greetings)
+		_ = json.Unmarshal(architectureJSON, &culture.Architecture)
+		_ = json.Unmarshal(cuisineJSON, &culture.Cuisine)
+		_ = json.Unmarshal(musicStyleJSON, &culture.MusicStyle)
+		_ = json.Unmarshal(clothingStyleJSON, &culture.ClothingStyle)
+		_ = json.Unmarshal(namingConventionsJSON, &culture.NamingConventions)
+		_ = json.Unmarshal(socialStructureJSON, &culture.SocialStructure)
+		_ = json.Unmarshal(metadataJSON, &culture.Metadata)
 
 		cultures = append(cultures, culture)
 	}
@@ -827,9 +827,9 @@ func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, on
 			return nil, err
 		}
 
-		json.Unmarshal(impactJSON, &event.Impact)
-		json.Unmarshal(affectedEntitiesJSON, &event.AffectedEntities)
-		json.Unmarshal(consequencesJSON, &event.Consequences)
+		_ = json.Unmarshal(impactJSON, &event.Impact)
+		_ = json.Unmarshal(affectedEntitiesJSON, &event.AffectedEntities)
+		_ = json.Unmarshal(consequencesJSON, &event.Consequences)
 
 		events = append(events, event)
 	}
@@ -913,7 +913,7 @@ func (r *EmergentWorldRepository) GetSimulationLogs(sessionID string, limit int)
 			return nil, err
 		}
 
-		json.Unmarshal(detailsJSON, &log.Details)
+		_ = json.Unmarshal(detailsJSON, &log.Details)
 		logs = append(logs, log)
 	}
 

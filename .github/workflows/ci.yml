@@ -73,7 +73,7 @@ jobs:
           DB_PASSWORD: postgres
           DB_NAME: dnd_test
           DB_SSLMODE: disable
-          JWT_SECRET: test-secret-key
+          JWT_SECRET: test-secret-key-that-is-at-least-32-characters-long
         run: |
           cd backend
           go run cmd/server/main.go migrate up
@@ -86,7 +86,7 @@ jobs:
           DB_PASSWORD: postgres
           DB_NAME: dnd_test
           DB_SSLMODE: disable
-          JWT_SECRET: test-secret-key
+          JWT_SECRET: test-secret-key-that-is-at-least-32-characters-long
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           GO_ENV: test
