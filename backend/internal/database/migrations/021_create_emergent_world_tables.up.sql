@@ -110,7 +110,7 @@ CREATE INDEX idx_cultures_name ON procedural_cultures(name);
 CREATE INDEX idx_cultures_session ON procedural_cultures((metadata->>'session_id'));
 
 -- World Events for tracking significant happenings
-CREATE TABLE IF NOT EXISTS world_events (
+CREATE TABLE IF NOT EXISTS emergent_world_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id UUID NOT NULL REFERENCES game_sessions(id) ON DELETE CASCADE,
     event_type VARCHAR(50) NOT NULL,
@@ -123,11 +123,11 @@ CREATE TABLE IF NOT EXISTS world_events (
     occurred_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create indexes for world_events
-CREATE INDEX idx_world_events_session ON world_events(session_id);
-CREATE INDEX idx_world_events_type ON world_events(event_type);
-CREATE INDEX idx_world_events_occurred ON world_events(occurred_at DESC);
-CREATE INDEX idx_world_events_visible ON world_events(is_player_visible);
+-- Create indexes for emergent_world_events
+CREATE INDEX idx_emergent_world_events_session ON emergent_world_events(session_id);
+CREATE INDEX idx_emergent_world_events_type ON emergent_world_events(event_type);
+CREATE INDEX idx_emergent_world_events_occurred ON emergent_world_events(occurred_at DESC);
+CREATE INDEX idx_emergent_world_events_visible ON emergent_world_events(is_player_visible);
 
 -- Simulation Logs for tracking world simulation activities
 CREATE TABLE IF NOT EXISTS simulation_logs (

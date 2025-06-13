@@ -6,7 +6,7 @@ DROP FUNCTION IF EXISTS update_emergent_world_updated_at();
 DROP TABLE IF EXISTS faction_memories;
 DROP TABLE IF EXISTS cultural_interactions;
 DROP TABLE IF EXISTS simulation_logs;
-DROP TABLE IF EXISTS world_events;
+DROP TABLE IF EXISTS emergent_world_events;
 DROP TABLE IF EXISTS procedural_cultures;
 DROP TABLE IF EXISTS faction_agendas;
 DROP TABLE IF EXISTS faction_personalities;

@@ -753,7 +753,7 @@ func (r *EmergentWorldRepository) CreateWorldEvent(event *models.EmergentWorldEv
 	consequencesJSON, _ := json.Marshal(event.Consequences)
 
 	query := `
-		INSERT INTO world_events (
+		INSERT INTO emergent_world_events (
 			id, session_id, event_type, title, description,
 			impact, affected_entities, consequences,
 			is_player_visible, occurred_at
@@ -782,7 +782,7 @@ func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, on
 		SELECT id, session_id, event_type, title, description,
 		       impact, affected_entities, consequences,
 		       is_player_visible, occurred_at
-		FROM world_events
+		FROM emergent_world_events
 		WHERE session_id = ?
 	`
 
