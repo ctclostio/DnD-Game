@@ -108,13 +108,13 @@ func (r *npcRepository) GetByID(ctx context.Context, id string) (*models.NPC, er
 	}
 
 	// Unmarshal JSON fields
-	json.Unmarshal(speedJSON, &npc.Speed)
-	json.Unmarshal(attributesJSON, &npc.Attributes)
-	json.Unmarshal(savingThrowsJSON, &npc.SavingThrows)
-	json.Unmarshal(skillsJSON, &npc.Skills)
-	json.Unmarshal(sensesJSON, &npc.Senses)
-	json.Unmarshal(abilitiesJSON, &npc.Abilities)
-	json.Unmarshal(actionsJSON, &npc.Actions)
+	_ = json.Unmarshal(speedJSON, &npc.Speed)
+	_ = json.Unmarshal(attributesJSON, &npc.Attributes)
+	_ = json.Unmarshal(savingThrowsJSON, &npc.SavingThrows)
+	_ = json.Unmarshal(skillsJSON, &npc.Skills)
+	_ = json.Unmarshal(sensesJSON, &npc.Senses)
+	_ = json.Unmarshal(abilitiesJSON, &npc.Abilities)
+	_ = json.Unmarshal(actionsJSON, &npc.Actions)
 
 	// Unmarshal array fields stored as JSON
 	json.Unmarshal(damageResistancesJSON, &npc.DamageResistances)

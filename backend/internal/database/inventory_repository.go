@@ -135,7 +135,7 @@ func (r *inventoryRepository) RemoveItemFromInventory(characterID, itemID string
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	var currentQty int
 	query := `SELECT quantity FROM character_inventory WHERE character_id = ? AND item_id = ?`
@@ -250,7 +250,7 @@ func (r *inventoryRepository) AttuneItem(characterID, itemID string) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	var slotsUsed, maxSlots int
 	query := `SELECT attunement_slots_used FROM characters WHERE id = ?`
@@ -305,7 +305,7 @@ func (r *inventoryRepository) UnattuneItem(characterID, itemID string) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	query := `UPDATE character_inventory SET attuned = false, updated_at = ? WHERE character_id = ? AND item_id = ?`
 	query = r.db.Rebind(query)
