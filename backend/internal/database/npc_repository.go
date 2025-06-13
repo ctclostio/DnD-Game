@@ -117,10 +117,10 @@ func (r *npcRepository) GetByID(ctx context.Context, id string) (*models.NPC, er
 	_ = json.Unmarshal(actionsJSON, &npc.Actions)
 
 	// Unmarshal array fields stored as JSON
-	json.Unmarshal(damageResistancesJSON, &npc.DamageResistances)
-	json.Unmarshal(damageImmunitiesJSON, &npc.DamageImmunities)
-	json.Unmarshal(conditionImmunitiesJSON, &npc.ConditionImmunities)
-	json.Unmarshal(languagesJSON, &npc.Languages)
+	_ = json.Unmarshal(damageResistancesJSON, &npc.DamageResistances)
+	_ = json.Unmarshal(damageImmunitiesJSON, &npc.DamageImmunities)
+	_ = json.Unmarshal(conditionImmunitiesJSON, &npc.ConditionImmunities)
+	_ = json.Unmarshal(languagesJSON, &npc.Languages)
 
 	return &npc, nil
 }
@@ -343,19 +343,19 @@ func (r *npcRepository) GetTemplateByID(ctx context.Context, id string) (*models
 	}
 
 	// Unmarshal JSON fields
-	json.Unmarshal(speedJSON, &template.Speed)
-	json.Unmarshal(attributesJSON, &template.Attributes)
-	json.Unmarshal(savingThrowsJSON, &template.SavingThrows)
-	json.Unmarshal(skillsJSON, &template.Skills)
-	json.Unmarshal(sensesJSON, &template.Senses)
-	json.Unmarshal(abilitiesJSON, &template.Abilities)
-	json.Unmarshal(actionsJSON, &template.Actions)
+	_ = json.Unmarshal(speedJSON, &template.Speed)
+	_ = json.Unmarshal(attributesJSON, &template.Attributes)
+	_ = json.Unmarshal(savingThrowsJSON, &template.SavingThrows)
+	_ = json.Unmarshal(skillsJSON, &template.Skills)
+	_ = json.Unmarshal(sensesJSON, &template.Senses)
+	_ = json.Unmarshal(abilitiesJSON, &template.Abilities)
+	_ = json.Unmarshal(actionsJSON, &template.Actions)
 
 	// Unmarshal array fields stored as JSON
-	json.Unmarshal(damageResistancesJSON, &template.DamageResistances)
-	json.Unmarshal(damageImmunitiesJSON, &template.DamageImmunities)
-	json.Unmarshal(conditionImmunitiesJSON, &template.ConditionImmunities)
-	json.Unmarshal(languagesJSON, &template.Languages)
+	_ = json.Unmarshal(damageResistancesJSON, &template.DamageResistances)
+	_ = json.Unmarshal(damageImmunitiesJSON, &template.DamageImmunities)
+	_ = json.Unmarshal(conditionImmunitiesJSON, &template.ConditionImmunities)
+	_ = json.Unmarshal(languagesJSON, &template.Languages)
 
 	return &template, nil
 }
@@ -431,19 +431,19 @@ func (r *npcRepository) scanNPC(scanner interface{ Scan(...interface{}) error })
 	}
 
 	// Unmarshal JSON fields
-	json.Unmarshal(speedJSON, &npc.Speed)
-	json.Unmarshal(attributesJSON, &npc.Attributes)
-	json.Unmarshal(savingThrowsJSON, &npc.SavingThrows)
-	json.Unmarshal(skillsJSON, &npc.Skills)
-	json.Unmarshal(sensesJSON, &npc.Senses)
-	json.Unmarshal(abilitiesJSON, &npc.Abilities)
-	json.Unmarshal(actionsJSON, &npc.Actions)
+	_ = json.Unmarshal(speedJSON, &npc.Speed)
+	_ = json.Unmarshal(attributesJSON, &npc.Attributes)
+	_ = json.Unmarshal(savingThrowsJSON, &npc.SavingThrows)
+	_ = json.Unmarshal(skillsJSON, &npc.Skills)
+	_ = json.Unmarshal(sensesJSON, &npc.Senses)
+	_ = json.Unmarshal(abilitiesJSON, &npc.Abilities)
+	_ = json.Unmarshal(actionsJSON, &npc.Actions)
 
 	// Unmarshal array fields stored as JSON
-	json.Unmarshal(damageResistancesJSON, &npc.DamageResistances)
-	json.Unmarshal(damageImmunitiesJSON, &npc.DamageImmunities)
-	json.Unmarshal(conditionImmunitiesJSON, &npc.ConditionImmunities)
-	json.Unmarshal(languagesJSON, &npc.Languages)
+	_ = json.Unmarshal(damageResistancesJSON, &npc.DamageResistances)
+	_ = json.Unmarshal(damageImmunitiesJSON, &npc.DamageImmunities)
+	_ = json.Unmarshal(conditionImmunitiesJSON, &npc.ConditionImmunities)
+	_ = json.Unmarshal(languagesJSON, &npc.Languages)
 
 	return &npc, nil
 }
@@ -469,19 +469,19 @@ func (r *npcRepository) scanNPCTemplate(scanner interface{ Scan(...interface{}) 
 	}
 
 	// Unmarshal JSON fields
-	json.Unmarshal(speedJSON, &template.Speed)
-	json.Unmarshal(attributesJSON, &template.Attributes)
-	json.Unmarshal(savingThrowsJSON, &template.SavingThrows)
-	json.Unmarshal(skillsJSON, &template.Skills)
-	json.Unmarshal(sensesJSON, &template.Senses)
-	json.Unmarshal(abilitiesJSON, &template.Abilities)
-	json.Unmarshal(actionsJSON, &template.Actions)
+	_ = json.Unmarshal(speedJSON, &template.Speed)
+	_ = json.Unmarshal(attributesJSON, &template.Attributes)
+	_ = json.Unmarshal(savingThrowsJSON, &template.SavingThrows)
+	_ = json.Unmarshal(skillsJSON, &template.Skills)
+	_ = json.Unmarshal(sensesJSON, &template.Senses)
+	_ = json.Unmarshal(abilitiesJSON, &template.Abilities)
+	_ = json.Unmarshal(actionsJSON, &template.Actions)
 
 	// Unmarshal array fields stored as JSON
-	json.Unmarshal(damageResistancesJSON, &template.DamageResistances)
-	json.Unmarshal(damageImmunitiesJSON, &template.DamageImmunities)
-	json.Unmarshal(conditionImmunitiesJSON, &template.ConditionImmunities)
-	json.Unmarshal(languagesJSON, &template.Languages)
+	_ = json.Unmarshal(damageResistancesJSON, &template.DamageResistances)
+	_ = json.Unmarshal(damageImmunitiesJSON, &template.DamageImmunities)
+	_ = json.Unmarshal(conditionImmunitiesJSON, &template.ConditionImmunities)
+	_ = json.Unmarshal(languagesJSON, &template.Languages)
 
 	return &template, nil
 }
