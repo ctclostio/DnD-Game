@@ -191,7 +191,7 @@ func main() {
 	log.Info().Msg("WebSocket hub started")
 
 	// Create handlers
-	h := handlers.NewHandlers(svc, hub)
+	h := handlers.NewHandlers(svc, hub, db)
 	log.Info().Msg("Handlers initialized")
 
 	// Setup routes

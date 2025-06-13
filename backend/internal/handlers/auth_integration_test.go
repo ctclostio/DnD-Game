@@ -40,7 +40,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 	}
 
 	// Create handlers and setup routes
-	h := handlers.NewHandlers(svc, nil)
+	h := handlers.NewHandlers(svc, nil, ctx.DB)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
@@ -354,7 +354,7 @@ func TestPasswordValidation_Integration(t *testing.T) {
 		JWTManager:    ctx.JWTManager,
 	}
 
-	h := handlers.NewHandlers(svc, nil)
+	h := handlers.NewHandlers(svc, nil, ctx.DB)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()

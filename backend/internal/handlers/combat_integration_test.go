@@ -53,7 +53,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 	go hub.Run()
 
 	// Create handlers and setup routes
-	h := handlers.NewHandlers(svc, hub)
+	h := handlers.NewHandlers(svc, hub, ctx.DB)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
@@ -376,7 +376,7 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 		JWTManager:   ctx.JWTManager,
 	}
 
-	h := handlers.NewHandlers(svc, nil)
+	h := handlers.NewHandlers(svc, nil, ctx.DB)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()

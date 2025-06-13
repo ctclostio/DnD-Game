@@ -107,7 +107,7 @@ func SetupTestHandlers(t *testing.T, testCtx *testutil.IntegrationTestContext) (
 	}
 
 	// Create handlers
-	h := NewHandlers(svc, hub)
+	h := NewHandlers(svc, hub, testCtx.DB)
 
 	return h, hub
 }

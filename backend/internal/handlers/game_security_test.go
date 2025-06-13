@@ -41,7 +41,7 @@ func TestGameSessionSecurity(t *testing.T) {
 	}
 
 	// Create handlers
-	h := handlers.NewHandlers(svc, nil)
+	h := handlers.NewHandlers(svc, nil, testCtx.DB)
 
 	// Create test users
 	dm := createTestUser(t, testCtx, "dm_user", "dm@example.com", "dm")

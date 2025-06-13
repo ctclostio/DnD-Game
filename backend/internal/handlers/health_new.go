@@ -105,23 +105,18 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 	checks := make(map[string]HealthCheckResult)
 	allHealthy := true
 
-	// TODO: Check database connection if available
-	// This would require adding a GetDB() method to repositories or passing DB separately
-	/*
-		if db, ok := h.repositories.(*sql.DB); ok && db != nil {
-			if err := db.Ping(); err != nil {
-				checks["database"] = HealthCheckResult{
-					Status:  "unhealthy",
-					Message: "Database connection failed",
-				}
-				allHealthy = false
-			} else {
-				checks["database"] = HealthCheckResult{
-					Status: "healthy",
-				}
+	// Check database connection if available
+	if h.db != nil {
+		if err := h.db.Ping(); err != nil {
+			checks["database"] = HealthCheckResult{
+				Status:  "unhealthy",
+				Message: "Database connection failed",
 			}
+			allHealthy = false
+		} else {
+			checks["database"] = HealthCheckResult{Status: "healthy"}
 		}
-	*/
+	}
 
 	// Check if we have required services
 	if h.userService == nil || h.characterService == nil {
@@ -185,10 +180,15 @@ func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 	checks := make(map[string]HealthCheckResult)
 
 	// Check database if available
-	// TODO: Add database health check when repository interface supports it
-	checks["database"] = HealthCheckResult{
-		Status:  "healthy",
-		Message: "Database check not implemented",
+	if h.db != nil {
+		if err := h.db.Ping(); err != nil {
+			checks["database"] = HealthCheckResult{
+				Status:  "unhealthy",
+				Message: "Database connection failed",
+			}
+		} else {
+			checks["database"] = HealthCheckResult{Status: "healthy"}
+		}
 	}
 
 	// Check services
