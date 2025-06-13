@@ -129,11 +129,11 @@ func (c *Client) WritePump() {
 		select {
 		case message, ok := <-c.send:
 			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
-			c.conn.WriteMessage(websocket.TextMessage, message)
+			_ = c.conn.WriteMessage(websocket.TextMessage, message)
 		}
 	}
 }

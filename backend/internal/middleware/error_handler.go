@@ -53,7 +53,7 @@ func (w *errorHandlerResponseWriter) handlePanic(rec interface{}, r *http.Reques
 		"message": "Internal server error",
 	}
 
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 // SendError sends an error response
@@ -95,7 +95,7 @@ func SendError(w http.ResponseWriter, err error, log *logger.Logger) {
 		response["details"] = appErr.Details
 	}
 
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 // SendSuccess sends a success response
@@ -104,7 +104,7 @@ func SendSuccess(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.WriteHeader(statusCode)
 
 	if data != nil {
-		json.NewEncoder(w).Encode(data)
+		_ = json.NewEncoder(w).Encode(data)
 	}
 }
 

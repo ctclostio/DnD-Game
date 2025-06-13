@@ -157,9 +157,9 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		Msg("WebSocket connection established")
 
 	// Configure connection
-	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		_ = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 		log.Debug().
 			Str("client_id", clientID).
 			Msg("Received pong, extending read deadline")
@@ -187,7 +187,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Wait for authentication
-	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 
 	var authMsg AuthMessageV2
 	if err := conn.ReadJSON(&authMsg); err != nil {
@@ -197,7 +197,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Msg("Failed to read auth message")
 		errorMsg := map[string]string{"type": "error", "message": "Authentication failed"}
 		errorData, _ := json.Marshal(errorMsg)
-		tempConn.WriteMessage(websocket.TextMessage, errorData)
+		_ = tempConn.WriteMessage(websocket.TextMessage, errorData)
 		conn.Close()
 		return
 	}
@@ -211,7 +211,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Msg("Invalid auth message")
 		errorMsg := map[string]string{"type": "error", "message": "Invalid authentication message"}
 		errorData, _ := json.Marshal(errorMsg)
-		tempConn.WriteMessage(websocket.TextMessage, errorData)
+		_ = tempConn.WriteMessage(websocket.TextMessage, errorData)
 		conn.Close()
 		return
 	}
@@ -225,7 +225,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Msg("Token validation failed")
 		errorMsg := map[string]string{"type": "error", "message": "Invalid token"}
 		errorData, _ := json.Marshal(errorMsg)
-		tempConn.WriteMessage(websocket.TextMessage, errorData)
+		_ = tempConn.WriteMessage(websocket.TextMessage, errorData)
 		conn.Close()
 		return
 	}
@@ -278,7 +278,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		Msg("WebSocket client authenticated and registered")
 
 	// Reset read deadline for normal operation
-	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 
 	// Start client goroutines
 	go client.WritePump()
