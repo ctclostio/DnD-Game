@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS narrative_threads;
 DROP TABLE IF EXISTS player_actions;
 DROP TABLE IF EXISTS narrative_memories;
 DROP TABLE IF EXISTS perspective_narratives;
-DROP TABLE IF EXISTS world_events;
+DROP TABLE IF EXISTS narrative_world_events;
 DROP TABLE IF EXISTS consequence_events;
 DROP TABLE IF EXISTS personalized_narratives;
 DROP TABLE IF EXISTS backstory_elements;

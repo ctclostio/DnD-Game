@@ -66,7 +66,7 @@ CREATE INDEX idx_consequence_status ON consequence_events (status);
 CREATE INDEX idx_consequence_trigger_time ON consequence_events (actual_trigger_time);
 
 -- World events that can have multiple perspectives
-CREATE TABLE IF NOT EXISTS world_events (
+CREATE TABLE IF NOT EXISTS narrative_world_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     type VARCHAR(100) NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -81,14 +81,14 @@ CREATE TABLE IF NOT EXISTS world_events (
     metadata JSONB DEFAULT '{}'
 );
 
-CREATE INDEX idx_world_event_type ON world_events (type);
-CREATE INDEX idx_world_event_timestamp ON world_events (event_timestamp);
-CREATE INDEX idx_world_event_status ON world_events (status);
+CREATE INDEX idx_narrative_world_event_type ON narrative_world_events (type);
+CREATE INDEX idx_narrative_world_event_timestamp ON narrative_world_events (event_timestamp);
+CREATE INDEX idx_narrative_world_event_status ON narrative_world_events (status);
 
 -- Different perspectives on the same event
 CREATE TABLE IF NOT EXISTS perspective_narratives (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id UUID NOT NULL REFERENCES world_events(id) ON DELETE CASCADE,
+    event_id UUID NOT NULL REFERENCES narrative_world_events(id) ON DELETE CASCADE,
     perspective_type VARCHAR(50) NOT NULL, -- npc, faction, deity, historical
     source_id UUID NOT NULL,
     source_name VARCHAR(255) NOT NULL,
