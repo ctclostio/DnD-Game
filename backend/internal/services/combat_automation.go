@@ -255,7 +255,7 @@ func (cas *CombatAutomationService) parseCR(cr string) float64 {
 	default:
 		// Try to parse as integer
 		var value float64
-		fmt.Sscanf(cr, "%f", &value)
+		_, _ = fmt.Sscanf(cr, "%f", &value)
 		return value
 	}
 }
@@ -465,7 +465,7 @@ func (cas *CombatAutomationService) calculateExperience(enemies []models.EnemyIn
 		if xp == 0 {
 			// Try to parse as integer for higher CRs
 			var cr int
-			fmt.Sscanf(enemy.CR, "%d", &cr)
+			_, _ = fmt.Sscanf(enemy.CR, "%d", &cr)
 			if cr > 10 {
 				xp = 5900 + (cr-10)*1000
 			} else {

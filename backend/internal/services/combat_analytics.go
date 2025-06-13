@@ -392,7 +392,7 @@ func (cas *CombatAnalyticsService) analyzePositioning(actions []*models.CombatAc
 	for _, action := range actions {
 		if action.PositionData != nil {
 			var posData map[string]interface{}
-			json.Unmarshal(action.PositionData, &posData)
+			_ = json.Unmarshal(action.PositionData, &posData)
 
 			if cover, ok := posData["used_cover"].(bool); ok && cover {
 				coverUses++
@@ -430,7 +430,7 @@ func (cas *CombatAnalyticsService) analyzeResourceUse(actions []*models.CombatAc
 	for _, action := range actions {
 		if action.ResourcesUsed != nil {
 			var resources map[string]interface{}
-			json.Unmarshal(action.ResourcesUsed, &resources)
+			_ = json.Unmarshal(action.ResourcesUsed, &resources)
 
 			if spellLevel, ok := resources["spell_level"].(float64); ok {
 				if spellLevel >= 3 && action.DamageDealt < 20 {
@@ -534,7 +534,7 @@ func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActio
 		// Check for setup actions (buffs, debuffs)
 		if action.ActionType == "spell" || action.ActionType == "ability" {
 			var conditions []string
-			json.Unmarshal(action.ConditionsApplied, &conditions)
+			_ = json.Unmarshal(action.ConditionsApplied, &conditions)
 			if len(conditions) > 0 {
 				setupActions++
 			}
@@ -600,7 +600,7 @@ func (cas *CombatAnalyticsService) findMissedOpportunities(actions []*models.Com
 	for _, action := range lastRoundActions {
 		if action.ResourcesUsed != nil {
 			var resources map[string]interface{}
-			json.Unmarshal(action.ResourcesUsed, &resources)
+			_ = json.Unmarshal(action.ResourcesUsed, &resources)
 			if slots, ok := resources["spell_slots_remaining"].(map[string]interface{}); ok {
 				for level, remaining := range slots {
 					if level >= "3" && remaining.(float64) > 0 {

@@ -148,8 +148,8 @@ func (s *EconomicSimulatorService) CalculateItemPrice(settlementID uuid.UUID, ba
 	// Check if item is in high demand or surplus
 	var highDemand []string
 	var surplus []string
-	json.Unmarshal([]byte(market.HighDemandItems), &highDemand)
-	json.Unmarshal([]byte(market.SurplusItems), &surplus)
+	_ = json.Unmarshal([]byte(market.HighDemandItems), &highDemand)
+	_ = json.Unmarshal([]byte(market.SurplusItems), &surplus)
 
 	for _, item := range highDemand {
 		if item == itemType {
@@ -266,7 +266,7 @@ func (s *EconomicSimulatorService) applyEventEffects(market *models.Market, sett
 	for _, event := range events {
 		// Check if settlement is affected
 		var affectedSettlements []string
-		json.Unmarshal([]byte(event.AffectedSettlements), &affectedSettlements)
+		_ = json.Unmarshal([]byte(event.AffectedSettlements), &affectedSettlements)
 
 		isAffected := false
 		for _, affectedID := range affectedSettlements {
@@ -381,7 +381,7 @@ func (s *EconomicSimulatorService) applyRandomMarketEvent(market *models.Market)
 		itemTypes := []string{"food", "weapons", "potions", "materials"}
 		shortage := itemTypes[rand.Intn(len(itemTypes))]
 		var highDemand []string
-		json.Unmarshal([]byte(market.HighDemandItems), &highDemand)
+		_ = json.Unmarshal([]byte(market.HighDemandItems), &highDemand)
 		highDemand = append(highDemand, shortage)
 		demandJSON, _ := json.Marshal(highDemand)
 		market.HighDemandItems = models.JSONB(demandJSON)
@@ -453,8 +453,8 @@ func (s *EconomicSimulatorService) triggerEconomicEvent(ctx context.Context, gam
 func (s *EconomicSimulatorService) calculateDistance(start, end *models.Settlement) int {
 	// Simplified distance calculation based on coordinates
 	var startCoords, endCoords map[string]int
-	json.Unmarshal([]byte(start.Coordinates), &startCoords)
-	json.Unmarshal([]byte(end.Coordinates), &endCoords)
+	_ = json.Unmarshal([]byte(start.Coordinates), &startCoords)
+	_ = json.Unmarshal([]byte(end.Coordinates), &endCoords)
 
 	dx := float64(endCoords["x"] - startCoords["x"])
 	dy := float64(endCoords["y"] - startCoords["y"])
@@ -522,10 +522,10 @@ func (s *EconomicSimulatorService) determineTradedGoods(start, end *models.Settl
 
 	// Get what each settlement exports/imports
 	var startExports, startImports, endExports, endImports []string
-	json.Unmarshal([]byte(start.PrimaryExports), &startExports)
-	json.Unmarshal([]byte(start.PrimaryImports), &startImports)
-	json.Unmarshal([]byte(end.PrimaryExports), &endExports)
-	json.Unmarshal([]byte(end.PrimaryImports), &endImports)
+	_ = json.Unmarshal([]byte(start.PrimaryExports), &startExports)
+	_ = json.Unmarshal([]byte(start.PrimaryImports), &startImports)
+	_ = json.Unmarshal([]byte(end.PrimaryExports), &endExports)
+	_ = json.Unmarshal([]byte(end.PrimaryImports), &endImports)
 
 	// Match exports to imports
 	for _, export := range startExports {
@@ -671,7 +671,7 @@ func (s *EconomicSimulatorService) determineEnvironmentalHazards(start, end *mod
 func (s *EconomicSimulatorService) updateSettlementTradeConnections(start, end *models.Settlement, routeID uuid.UUID) {
 	// Update start settlement's trade routes
 	var startRoutes []string
-	json.Unmarshal([]byte(start.TradeRoutes), &startRoutes)
+	_ = json.Unmarshal([]byte(start.TradeRoutes), &startRoutes)
 	startRoutes = append(startRoutes, routeID.String())
 	startRoutesJSON, _ := json.Marshal(startRoutes)
 	start.TradeRoutes = models.JSONB(startRoutesJSON)
@@ -679,7 +679,7 @@ func (s *EconomicSimulatorService) updateSettlementTradeConnections(start, end *
 
 	// Update end settlement's trade routes
 	var endRoutes []string
-	json.Unmarshal([]byte(end.TradeRoutes), &endRoutes)
+	_ = json.Unmarshal([]byte(end.TradeRoutes), &endRoutes)
 	endRoutes = append(endRoutes, routeID.String())
 	endRoutesJSON, _ := json.Marshal(endRoutes)
 	end.TradeRoutes = models.JSONB(endRoutesJSON)
