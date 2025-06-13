@@ -24,7 +24,7 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 			name: "handles custom error with code",
 			handler: func(c *gin.Context) {
 				err := errors.NewNotFoundError("character").WithCode(string(errors.ErrCodeCharacterNotFound))
-				c.Error(err)
+				_ = c.Error(err)
 				c.Abort()
 			},
 			expectedStatus: http.StatusNotFound,
@@ -35,7 +35,7 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 			name: "handles validation error",
 			handler: func(c *gin.Context) {
 				err := errors.NewValidationError("name is required").WithCode(string(errors.ErrCodeValidationFailed))
-				c.Error(err)
+				_ = c.Error(err)
 				c.Abort()
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -46,7 +46,7 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 			name: "handles authorization error",
 			handler: func(c *gin.Context) {
 				err := errors.NewAuthenticationError("invalid token").WithCode(string(errors.ErrCodeTokenInvalid))
-				c.Error(err)
+				_ = c.Error(err)
 				c.Abort()
 			},
 			expectedStatus: http.StatusUnauthorized,
@@ -57,7 +57,7 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 			name: "handles generic error",
 			handler: func(c *gin.Context) {
 				err := stderrors.New("something went wrong")
-				c.Error(err)
+				_ = c.Error(err)
 				c.Abort()
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -71,7 +71,7 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 			handler: func(c *gin.Context) {
 				c.Set("request_id", "test-request-123")
 				err := errors.NewNotFoundError("resource").WithCode(string(errors.ErrCodeCharacterNotFound))
-				c.Error(err)
+				_ = c.Error(err)
 				c.Abort()
 			},
 			expectedStatus: http.StatusNotFound,
@@ -294,7 +294,7 @@ func TestErrorHandlerMiddleware_DatabaseErrors(t *testing.T) {
 				} else if tt.dbError != nil && tt.dbError.Error() == "duplicate key value violates unique constraint" {
 					err = errors.NewConflictError("Resource already exists").WithCode(string(errors.ErrCodeDuplicateEntry))
 				}
-				c.Error(err)
+				_ = c.Error(err)
 				c.Abort()
 			})
 
