@@ -678,10 +678,10 @@ func (r *dmAssistantRepository) scanStoryElement(rows *sql.Rows) (*models.AIStor
 		return nil, err
 	}
 
-	json.Unmarshal(contextJSON, &element.Context)
-	json.Unmarshal(prereqJSON, &element.Prerequisites)
-	json.Unmarshal(consequencesJSON, &element.Consequences)
-	json.Unmarshal(hintsJSON, &element.ForeshadowingHints)
+	_ = json.Unmarshal(contextJSON, &element.Context)
+	_ = json.Unmarshal(prereqJSON, &element.Prerequisites)
+	_ = json.Unmarshal(consequencesJSON, &element.Consequences)
+	_ = json.Unmarshal(hintsJSON, &element.ForeshadowingHints)
 
 	return &element, nil
 }
@@ -704,7 +704,7 @@ func (r *dmAssistantRepository) scanHazard(rows *sql.Rows) (*models.AIEnvironmen
 		return nil, err
 	}
 
-	json.Unmarshal(mechanicalJSON, &hazard.MechanicalEffects)
+	_ = json.Unmarshal(mechanicalJSON, &hazard.MechanicalEffects)
 
 	return &hazard, nil
 }

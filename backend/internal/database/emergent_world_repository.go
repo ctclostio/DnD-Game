@@ -382,11 +382,11 @@ func (r *EmergentWorldRepository) GetFactionPersonality(factionID string) (*mode
 	}
 
 	// Unmarshal JSON fields
-	json.Unmarshal(traitsJSON, &personality.Traits)
-	json.Unmarshal(valuesJSON, &personality.Values)
-	json.Unmarshal(memoriesJSON, &personality.Memories)
-	json.Unmarshal(decisionWeightsJSON, &personality.DecisionWeights)
-	json.Unmarshal(learningDataJSON, &personality.LearningData)
+	_ = json.Unmarshal(traitsJSON, &personality.Traits)
+	_ = json.Unmarshal(valuesJSON, &personality.Values)
+	_ = json.Unmarshal(memoriesJSON, &personality.Memories)
+	_ = json.Unmarshal(decisionWeightsJSON, &personality.DecisionWeights)
+	_ = json.Unmarshal(learningDataJSON, &personality.LearningData)
 
 	return &personality, nil
 }
