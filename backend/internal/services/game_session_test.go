@@ -39,10 +39,10 @@ func TestGameSessionService_CreateSession(t *testing.T) {
 			},
 			setupMock: func(sessionRepo *mocks.MockGameSessionRepository) {
 				sessionRepo.On("Create", ctx, mock.MatchedBy(func(s *models.GameSession) bool {
-                                       return s.DMID == "dm-123" &&
-                                               s.Name == "Lost Mines of Phandelver" &&
-                                               s.Description == "A classic D&D 5e adventure" &&
-                                               s.Status == models.GameStatusPending
+					return s.DMID == "dm-123" &&
+						s.Name == "Lost Mines of Phandelver" &&
+						s.Description == "A classic D&D 5e adventure" &&
+						s.Status == models.GameStatusPending
 				})).Return(nil).Run(func(args mock.Arguments) {
 					// Simulate the repository setting the ID
 					session := args.Get(1).(*models.GameSession)
@@ -53,7 +53,7 @@ func TestGameSessionService_CreateSession(t *testing.T) {
 			validate: func(t *testing.T, session *models.GameSession) {
 				assert.Equal(t, "dm-123", session.DMID)
 				assert.Equal(t, "Lost Mines of Phandelver", session.Name)
-                               assert.Equal(t, models.GameStatusPending, session.Status)
+				assert.Equal(t, models.GameStatusPending, session.Status)
 			},
 		},
 		{
@@ -217,8 +217,9 @@ func TestGameSessionService_JoinSession(t *testing.T) {
 				return &s
 			}(),
 			setupMock: func(m *mocks.MockGameSessionRepository) {
-				session := &models.GameSession{ID: "session-123"}
+				session := &models.GameSession{ID: "session-123", IsActive: true}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
+				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
 				m.On("AddParticipant", ctx, "session-123", "user-123", mock.Anything).Return(nil)
 			},
 		},
@@ -228,8 +229,9 @@ func TestGameSessionService_JoinSession(t *testing.T) {
 			userID:      "user-123",
 			characterID: nil,
 			setupMock: func(m *mocks.MockGameSessionRepository) {
-				session := &models.GameSession{ID: "session-123"}
+				session := &models.GameSession{ID: "session-123", IsActive: true}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
+				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
 				m.On("AddParticipant", ctx, "session-123", "user-123", (*string)(nil)).Return(nil)
 			},
 		},
@@ -253,8 +255,9 @@ func TestGameSessionService_JoinSession(t *testing.T) {
 			userID:      "user-123",
 			characterID: nil,
 			setupMock: func(m *mocks.MockGameSessionRepository) {
-				session := &models.GameSession{ID: "session-123"}
+				session := &models.GameSession{ID: "session-123", IsActive: true}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
+				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
 				m.On("AddParticipant", ctx, "session-123", "user-123", (*string)(nil)).Return(errors.New("database error"))
 			},
 			expectedError: "database error",
