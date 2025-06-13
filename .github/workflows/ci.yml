@@ -67,16 +67,28 @@ jobs:
 
       - name: Run database migrations
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dnd_test?sslmode=disable
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: dnd_test
+          DB_SSLMODE: disable
+          JWT_SECRET: test-secret-key
         run: |
           cd backend
           go run cmd/server/main.go migrate up
 
       - name: Run tests with coverage
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dnd_test?sslmode=disable
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: dnd_test
+          DB_SSLMODE: disable
           JWT_SECRET: test-secret-key
-          REDIS_URL: redis://localhost:6379
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
           GO_ENV: test
         run: |
           cd backend
