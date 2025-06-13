@@ -261,7 +261,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 
 		// User2 should receive the message
 		var received map[string]interface{}
-		conn2.SetReadDeadline(time.Now().Add(5 * time.Second))
+		_ = conn2.SetReadDeadline(time.Now().Add(5 * time.Second))
 		err = conn2.ReadJSON(&received)
 		require.NoError(t, err)
 		assert.Equal(t, "message", received["type"])
@@ -345,7 +345,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		require.NoError(t, err)
 
 		// Room 2 should not receive the message
-		conn2.SetReadDeadline(time.Now().Add(1 * time.Second))
+		_ = conn2.SetReadDeadline(time.Now().Add(1 * time.Second))
 		var received map[string]interface{}
 		err = conn2.ReadJSON(&received)
 		assert.Error(t, err) // Should timeout

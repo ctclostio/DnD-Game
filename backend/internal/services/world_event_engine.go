@@ -411,7 +411,7 @@ func (s *WorldEventEngineService) applyEventEffects(ctx context.Context, event *
 				if event.Severity == models.SeverityMajor {
 					change = -25
 				}
-				s.factionService.UpdateFactionRelationship(ctx, faction1ID, faction2ID, change, "world event")
+				_ = s.factionService.UpdateFactionRelationship(ctx, faction1ID, faction2ID, change, "world event")
 			}
 		}
 	}
@@ -424,7 +424,7 @@ func (s *WorldEventEngineService) applyStageEffects(ctx context.Context, event *
 	// Ancient awakening events get worse over time
 	if event.Type == models.EventAncientAwakening {
 		var affectedSettlements []string
-		json.Unmarshal([]byte(event.AffectedSettlements), &affectedSettlements)
+		_ = json.Unmarshal([]byte(event.AffectedSettlements), &affectedSettlements)
 
 		for _, settlementIDStr := range affectedSettlements {
 			settlementID, err := uuid.Parse(settlementIDStr)
@@ -476,7 +476,7 @@ func (s *WorldEventEngineService) generateCascadeEvents(ctx context.Context, par
 			PartyActions:         models.JSONB("[]"),
 		}
 
-		s.worldRepo.CreateWorldEvent(cascadeEvent)
+		_ = s.worldRepo.CreateWorldEvent(cascadeEvent)
 	}
 }
 

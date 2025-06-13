@@ -37,7 +37,7 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 		w.Header().Set("X-Context-Correlation-ID", corrID)
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	})
 
 	// Apply logging middleware
@@ -127,7 +127,7 @@ func TestRequestContextMiddleware(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Context should be enriched by middleware
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	})
 
 	// Apply middleware
