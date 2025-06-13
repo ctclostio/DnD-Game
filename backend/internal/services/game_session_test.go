@@ -220,7 +220,6 @@ func TestGameSessionService_JoinSession(t *testing.T) {
 				session := &models.GameSession{ID: "session-123", IsActive: true}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
 				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
-				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
 				m.On("AddParticipant", ctx, "session-123", "user-123", mock.Anything).Return(nil)
 			},
 		},
@@ -233,15 +232,10 @@ func TestGameSessionService_JoinSession(t *testing.T) {
 				session := &models.GameSession{ID: "session-123", IsActive: true}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
 				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
-				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
 				m.On("AddParticipant", ctx, "session-123", "user-123", (*string)(nil)).Return(nil)
 			},
 		},
 		{
-			name:          "empty session ID",
-			sessionID:     "",
-			userID:        "user-123",
-			characterID:   nil,
 			name:          "empty session ID",
 			sessionID:     "",
 			userID:        "user-123",
@@ -253,16 +247,9 @@ func TestGameSessionService_JoinSession(t *testing.T) {
 			sessionID:     "session-123",
 			userID:        "",
 			characterID:   nil,
-			name:          "empty user ID",
-			sessionID:     "session-123",
-			userID:        "",
-			characterID:   nil,
 			expectedError: "user ID is required",
 		},
 		{
-			name:        "repository error",
-			sessionID:   "session-123",
-			userID:      "user-123",
 			name:        "repository error",
 			sessionID:   "session-123",
 			userID:      "user-123",
@@ -270,7 +257,6 @@ func TestGameSessionService_JoinSession(t *testing.T) {
 			setupMock: func(m *mocks.MockGameSessionRepository) {
 				session := &models.GameSession{ID: "session-123", IsActive: true}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
-				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
 				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
 				m.On("AddParticipant", ctx, "session-123", "user-123", (*string)(nil)).Return(errors.New("database error"))
 			},
@@ -318,7 +304,6 @@ func TestGameSessionService_LeaveSession(t *testing.T) {
 				session := &models.GameSession{
 					ID:   "session-123",
 					DMID: "dm-456", // Different from userID
-					DMID: "dm-456", // Different from userID
 				}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
 				m.On("RemoveParticipant", ctx, "session-123", "user-123").Return(nil)
@@ -332,7 +317,6 @@ func TestGameSessionService_LeaveSession(t *testing.T) {
 				session := &models.GameSession{
 					ID:   "session-123",
 					DMID: "dm-123", // Same as userID
-					DMID: "dm-123", // Same as userID
 				}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
 			},
@@ -345,7 +329,6 @@ func TestGameSessionService_LeaveSession(t *testing.T) {
 			setupMock: func(m *mocks.MockGameSessionRepository) {
 				session := &models.GameSession{
 					ID:   "session-123",
-					DMID: "dm-456", // Different from userID
 					DMID: "dm-456", // Different from userID
 				}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
@@ -517,11 +500,6 @@ func TestGameSessionService_GetSessionParticipants(t *testing.T) {
 			setupMock: func(m *mocks.MockGameSessionRepository) {
 				participants := []*models.GameParticipant{
 					{
-						SessionID: "session-123",
-						UserID:    "dm-123",
-						Role:      models.ParticipantRoleDM,
-						IsOnline:  true,
-						JoinedAt:  time.Now(),
 						SessionID: "session-123",
 						UserID:    "dm-123",
 						Role:      models.ParticipantRoleDM,
