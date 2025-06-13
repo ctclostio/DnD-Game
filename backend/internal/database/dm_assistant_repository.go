@@ -402,8 +402,8 @@ func (r *dmAssistantRepository) GetNarrationsByType(ctx context.Context, session
 			return nil, err
 		}
 
-		json.Unmarshal(contextJSON, &n.Context)
-		json.Unmarshal(tagsJSON, &n.Tags)
+		_ = json.Unmarshal(contextJSON, &n.Context)
+		_ = json.Unmarshal(tagsJSON, &n.Tags)
 
 		narrations = append(narrations, &n)
 	}
@@ -603,7 +603,7 @@ func (r *dmAssistantRepository) GetHistoryBySession(ctx context.Context, session
 			return nil, err
 		}
 
-		json.Unmarshal(contextJSON, &h.RequestContext)
+		_ = json.Unmarshal(contextJSON, &h.RequestContext)
 		history = append(history, &h)
 	}
 
@@ -629,9 +629,9 @@ func (r *dmAssistantRepository) scanNPC(rows *sql.Rows) (*models.AINPC, error) {
 		return nil, err
 	}
 
-	json.Unmarshal(personalityJSON, &npc.PersonalityTraits)
-	json.Unmarshal(statBlockJSON, &npc.StatBlock)
-	json.Unmarshal(dialogueJSON, &npc.GeneratedDialogue)
+	_ = json.Unmarshal(personalityJSON, &npc.PersonalityTraits)
+	_ = json.Unmarshal(statBlockJSON, &npc.StatBlock)
+	_ = json.Unmarshal(dialogueJSON, &npc.GeneratedDialogue)
 
 	return &npc, nil
 }
@@ -653,10 +653,10 @@ func (r *dmAssistantRepository) scanLocation(rows *sql.Rows) (*models.AILocation
 		return nil, err
 	}
 
-	json.Unmarshal(featuresJSON, &location.NotableFeatures)
-	json.Unmarshal(npcsJSON, &location.NPCsPresent)
-	json.Unmarshal(actionsJSON, &location.AvailableActions)
-	json.Unmarshal(secretsJSON, &location.SecretsAndHidden)
+	_ = json.Unmarshal(featuresJSON, &location.NotableFeatures)
+	_ = json.Unmarshal(npcsJSON, &location.NPCsPresent)
+	_ = json.Unmarshal(actionsJSON, &location.AvailableActions)
+	_ = json.Unmarshal(secretsJSON, &location.SecretsAndHidden)
 
 	return &location, nil
 }
