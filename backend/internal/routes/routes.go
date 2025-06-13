@@ -60,4 +60,5 @@ func RegisterRoutes(router *mux.Router, cfg *Config) {
 	RegisterWorldBuildingRoutes(api, cfg)
 	RegisterRuleBuilderRoutes(api, cfg)
 	RegisterNarrativeRoutes(api, cfg)
+	RegisterCRDTRoutes(router)
 }
