@@ -93,7 +93,7 @@ func (s *EncounterService) StartEncounter(ctx context.Context, encounterID strin
 		ActorName:   "System",
 		Description: fmt.Sprintf("Encounter '%s' has begun!", encounter.Name),
 	}
-	s.repo.CreateEvent(event)
+	_ = s.repo.CreateEvent(event)
 
 	return nil
 }
@@ -113,7 +113,7 @@ func (s *EncounterService) CompleteEncounter(ctx context.Context, encounterID st
 		ActorName:   "System",
 		Description: fmt.Sprintf("Encounter completed: %s", outcome),
 	}
-	s.repo.CreateEvent(event)
+	_ = s.repo.CreateEvent(event)
 
 	return nil
 }
@@ -163,7 +163,7 @@ func (s *EncounterService) ScaleEncounter(ctx context.Context, encounterID strin
 		ActorName:   "DM",
 		Description: fmt.Sprintf("Encounter difficulty changed to %s", newDifficulty),
 	}
-	s.repo.CreateEvent(event)
+	_ = s.repo.CreateEvent(event)
 
 	return encounter, nil
 }
@@ -190,7 +190,7 @@ func (s *EncounterService) GetTacticalSuggestion(ctx context.Context, encounterI
 		Description:  situation,
 		AISuggestion: suggestion,
 	}
-	s.repo.CreateEvent(event)
+	_ = s.repo.CreateEvent(event)
 
 	return suggestion, nil
 }
@@ -251,7 +251,7 @@ func (s *EncounterService) TriggerReinforcements(ctx context.Context, encounterI
 		ActorName:   "Battlefield",
 		Description: wave.Announcement,
 	}
-	s.repo.CreateEvent(event)
+	_ = s.repo.CreateEvent(event)
 
 	return nil
 }
@@ -338,7 +338,7 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 		primaryObjective.Description = "Solve the puzzle or riddle"
 	}
 
-	s.repo.CreateObjective(primaryObjective)
+	_ = s.repo.CreateObjective(primaryObjective)
 
 	// Create optional objectives for non-combat resolution
 	if encounter.EncounterType == "combat" && len(encounter.SocialSolutions) > 0 {
@@ -349,7 +349,7 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 			XPReward:     encounter.TotalXP / 4,
 			StoryRewards: []string{"Peaceful resolution bonus"},
 		}
-		s.repo.CreateObjective(bonusObjective)
+		_ = s.repo.CreateObjective(bonusObjective)
 	}
 }
 
@@ -412,5 +412,5 @@ func (s *EncounterService) awardObjectiveRewards(ctx context.Context, objective 
 		Description: fmt.Sprintf("Objective completed: %s. Rewards: %d XP, %d gold",
 			objective.Description, objective.XPReward, objective.GoldReward),
 	}
-	s.repo.CreateEvent(event)
+	_ = s.repo.CreateEvent(event)
 }
