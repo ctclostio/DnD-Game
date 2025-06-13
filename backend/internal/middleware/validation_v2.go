@@ -8,17 +8,17 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/go-playground/validator/v10"
 )
 
-// ValidationMiddlewareV2 provides enhanced request validation
+// ValidationMiddlewareV2 provides enhanced request validation.
 type ValidationMiddlewareV2 struct {
 	validator *validator.Validate
 }
 
-// NewValidationMiddlewareV2 creates a new validation middleware
+// NewValidationMiddlewareV2 creates a new validation middleware.
 func NewValidationMiddlewareV2() *ValidationMiddlewareV2 {
 	v := validator.New()
 
@@ -39,7 +39,7 @@ func NewValidationMiddlewareV2() *ValidationMiddlewareV2 {
 	}
 }
 
-// ValidateRequest validates a request against a struct type
+// ValidateRequest validates a request against a struct type.
 func (vm *ValidationMiddlewareV2) ValidateRequest(structType interface{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +80,7 @@ func (vm *ValidationMiddlewareV2) ValidateRequest(structType interface{}) func(h
 	}
 }
 
-// formatValidationErrors converts validator errors to our ValidationErrors format
+// formatValidationErrors converts validator errors to our ValidationErrors format.
 func (vm *ValidationMiddlewareV2) formatValidationErrors(err error) *errors.ValidationErrors {
 	validationErrors := &errors.ValidationErrors{}
 
@@ -99,7 +99,7 @@ func (vm *ValidationMiddlewareV2) formatValidationErrors(err error) *errors.Vali
 	return validationErrors
 }
 
-// getErrorMessage generates user-friendly validation error messages
+// getErrorMessage generates user-friendly validation error messages.
 func (vm *ValidationMiddlewareV2) getErrorMessage(field, tag, param string, value interface{}) string {
 	switch tag {
 	case "required":
@@ -176,7 +176,7 @@ func (vm *ValidationMiddlewareV2) getErrorMessage(field, tag, param string, valu
 	}
 }
 
-// registerCustomValidators registers D&D-specific validators
+// registerCustomValidators registers D&D-specific validators.
 func registerCustomValidators(v *validator.Validate) {
 	// D&D ability score (3-20)
 	v.RegisterValidation("dnd_ability_score", func(fl validator.FieldLevel) bool {
@@ -277,7 +277,7 @@ func registerCustomValidators(v *validator.Validate) {
 	})
 }
 
-// GetValidatedRequest retrieves the validated request from context
+// GetValidatedRequest retrieves the validated request from context.
 func GetValidatedRequest[T any](r *http.Request) (T, error) {
 	var zero T
 

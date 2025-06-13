@@ -7,19 +7,19 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/validation"
 )
 
-// ValidationMiddleware provides request validation
+// ValidationMiddleware provides request validation.
 type ValidationMiddleware struct {
 	validator *validation.Validator
 }
 
-// NewValidationMiddleware creates a new validation middleware
+// NewValidationMiddleware creates a new validation middleware.
 func NewValidationMiddleware() *ValidationMiddleware {
 	return &ValidationMiddleware{
 		validator: validation.New(),
 	}
 }
 
-// Validate returns a middleware that validates request bodies
+// Validate returns a middleware that validates request bodies.
 func (vm *ValidationMiddleware) Validate(targetStruct interface{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

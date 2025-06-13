@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 )
 
 func TestErrorHandlerMiddleware(t *testing.T) {
@@ -364,7 +364,7 @@ func TestErrorHandlerMiddleware_SecurityErrors(t *testing.T) {
 	})
 }
 
-// Benchmark error handler performance
+// Benchmark error handler performance.
 func BenchmarkErrorHandler(b *testing.B) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
