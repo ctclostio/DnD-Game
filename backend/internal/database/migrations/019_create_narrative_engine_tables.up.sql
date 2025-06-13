@@ -22,11 +22,12 @@ CREATE TABLE IF NOT EXISTS backstory_elements (
     used BOOLEAN DEFAULT FALSE,
     usage_count INTEGER DEFAULT 0,
     tags TEXT[] DEFAULT '{}',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_backstory_character (character_id),
-    INDEX idx_backstory_type (type),
-    INDEX idx_backstory_used (used)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_backstory_character ON backstory_elements (character_id);
+CREATE INDEX idx_backstory_type ON backstory_elements (type);
+CREATE INDEX idx_backstory_used ON backstory_elements (used);
 
 -- Personalized narratives generated for specific players
 CREATE TABLE IF NOT EXISTS personalized_narratives (
@@ -38,10 +39,11 @@ CREATE TABLE IF NOT EXISTS personalized_narratives (
     emotional_resonance FLOAT DEFAULT 0.0,
     predicted_impact JSONB DEFAULT '[]',
     metadata JSONB DEFAULT '{}',
-    generated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_personalized_character (character_id),
-    INDEX idx_personalized_event (base_event_id)
+    generated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_personalized_character ON personalized_narratives (character_id);
+CREATE INDEX idx_personalized_event ON personalized_narratives (base_event_id);
 
 -- Consequence events tracking ripple effects
 CREATE TABLE IF NOT EXISTS consequence_events (
@@ -56,11 +58,12 @@ CREATE TABLE IF NOT EXISTS consequence_events (
     cascade_effects JSONB NOT NULL DEFAULT '[]',
     status VARCHAR(50) DEFAULT 'pending', -- pending, triggered, resolved, prevented
     metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_consequence_trigger (trigger_action_id),
-    INDEX idx_consequence_status (status),
-    INDEX idx_consequence_trigger_time (actual_trigger_time)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_consequence_trigger ON consequence_events (trigger_action_id);
+CREATE INDEX idx_consequence_status ON consequence_events (status);
+CREATE INDEX idx_consequence_trigger_time ON consequence_events (actual_trigger_time);
 
 -- World events that can have multiple perspectives
 CREATE TABLE IF NOT EXISTS world_events (
@@ -75,11 +78,12 @@ CREATE TABLE IF NOT EXISTS world_events (
     immediate_effects TEXT[] DEFAULT '{}',
     player_involvement JSONB DEFAULT '{}',
     status VARCHAR(50) DEFAULT 'active',
-    metadata JSONB DEFAULT '{}',
-    INDEX idx_world_event_type (type),
-    INDEX idx_world_event_timestamp (timestamp),
-    INDEX idx_world_event_status (status)
+    metadata JSONB DEFAULT '{}'
 );
+
+CREATE INDEX idx_world_event_type ON world_events (type);
+CREATE INDEX idx_world_event_timestamp ON world_events (timestamp);
+CREATE INDEX idx_world_event_status ON world_events (status);
 
 -- Different perspectives on the same event
 CREATE TABLE IF NOT EXISTS perspective_narratives (
@@ -95,11 +99,12 @@ CREATE TABLE IF NOT EXISTS perspective_narratives (
     contradictions JSONB DEFAULT '[]',
     emotional_tone VARCHAR(50),
     cultural_context JSONB DEFAULT '{}',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_perspective_event (event_id),
-    INDEX idx_perspective_source (source_id),
-    INDEX idx_perspective_type (perspective_type)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_perspective_event ON perspective_narratives (event_id);
+CREATE INDEX idx_perspective_source ON perspective_narratives (source_id);
+CREATE INDEX idx_perspective_type ON perspective_narratives (perspective_type);
 
 -- Narrative memory for AI context
 CREATE TABLE IF NOT EXISTS narrative_memories (
@@ -115,12 +120,13 @@ CREATE TABLE IF NOT EXISTS narrative_memories (
     reference_count INTEGER DEFAULT 0,
     tags TEXT[] DEFAULT '{}',
     metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_memory_session (session_id),
-    INDEX idx_memory_character (character_id),
-    INDEX idx_memory_type (memory_type),
-    INDEX idx_memory_active (active)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_memory_session ON narrative_memories (session_id);
+CREATE INDEX idx_memory_character ON narrative_memories (character_id);
+CREATE INDEX idx_memory_type ON narrative_memories (memory_type);
+CREATE INDEX idx_memory_active ON narrative_memories (active);
 
 -- Player actions that can trigger consequences
 CREATE TABLE IF NOT EXISTS player_actions (
@@ -135,11 +141,12 @@ CREATE TABLE IF NOT EXISTS player_actions (
     immediate_result TEXT,
     potential_consequences INTEGER DEFAULT 0,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    metadata JSONB DEFAULT '{}',
-    INDEX idx_action_session (session_id),
-    INDEX idx_action_character (character_id),
-    INDEX idx_action_timestamp (timestamp)
+    metadata JSONB DEFAULT '{}'
 );
+
+CREATE INDEX idx_action_session ON player_actions (session_id);
+CREATE INDEX idx_action_character ON player_actions (character_id);
+CREATE INDEX idx_action_timestamp ON player_actions (timestamp);
 
 -- Narrative threads connecting events across time
 CREATE TABLE IF NOT EXISTS narrative_threads (
@@ -155,10 +162,11 @@ CREATE TABLE IF NOT EXISTS narrative_threads (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     resolved_at TIMESTAMP WITH TIME ZONE,
-    metadata JSONB DEFAULT '{}',
-    INDEX idx_thread_status (status),
-    INDEX idx_thread_type (thread_type)
+    metadata JSONB DEFAULT '{}'
 );
+
+CREATE INDEX idx_thread_status ON narrative_threads (status);
+CREATE INDEX idx_thread_type ON narrative_threads (thread_type);
 
 -- Track relationships between entities for narrative purposes
 CREATE TABLE IF NOT EXISTS narrative_relationships (
@@ -174,10 +182,11 @@ CREATE TABLE IF NOT EXISTS narrative_relationships (
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(entity1_id, entity2_id, relationship_type),
-    INDEX idx_relationship_entities (entity1_id, entity2_id),
-    INDEX idx_relationship_type (relationship_type)
+    UNIQUE(entity1_id, entity2_id, relationship_type)
 );
+
+CREATE INDEX idx_relationship_entities ON narrative_relationships (entity1_id, entity2_id);
+CREATE INDEX idx_relationship_type ON narrative_relationships (relationship_type);
 
 -- Create update trigger for updated_at columns
 CREATE OR REPLACE FUNCTION update_narrative_updated_at()

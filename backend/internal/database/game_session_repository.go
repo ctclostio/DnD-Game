@@ -100,7 +100,7 @@ func (r *gameSessionRepository) GetByID(ctx context.Context, id string) (*models
 
 // GetByDMUserID retrieves all game sessions for a DM
 func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID string) ([]*models.GameSession, error) {
-	var sessions []*models.GameSession
+	sessions := make([]*models.GameSession, 0, 20)
 	query := `
 		SELECT id, name, description, dm_user_id, code, is_active,
 		       status, session_state, max_players, is_public, requires_invite,
@@ -145,7 +145,7 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 
 // GetByParticipantUserID retrieves all game sessions where user is a participant
 func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, userID string) ([]*models.GameSession, error) {
-	var sessions []*models.GameSession
+	sessions := make([]*models.GameSession, 0, 20)
 	query := `
 		SELECT DISTINCT gs.id, gs.name, gs.description, gs.dm_user_id, gs.code, gs.is_active,
 		       gs.status, gs.session_state, gs.max_players, gs.is_public, gs.requires_invite,
@@ -234,7 +234,7 @@ func (r *gameSessionRepository) Delete(ctx context.Context, id string) error {
 
 // List retrieves a paginated list of game sessions
 func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]*models.GameSession, error) {
-	var sessions []*models.GameSession
+	sessions := make([]*models.GameSession, 0, limit)
 	query := `
 		SELECT id, name, description, dm_user_id, code, is_active,
 		       status, session_state, max_players, is_public, requires_invite,
@@ -346,6 +346,10 @@ func (r *gameSessionRepository) GetParticipants(ctx context.Context, sessionID s
 		}
 
 		participants = append(participants, &p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating participants: %w", err)
 	}
 
 	return participants, nil

@@ -316,8 +316,10 @@ Format as JSON matching the SessionMemory structure:
 // Default/fallback generators
 
 func (acm *AICampaignManager) generateDefaultStoryArc(req models.GenerateStoryArcRequest) *models.GeneratedStoryArc {
+	// Simple title case conversion
+	titleCased := strings.ToUpper(req.ArcType[:1]) + strings.ToLower(req.ArcType[1:])
 	return &models.GeneratedStoryArc{
-		Title:           fmt.Sprintf("The %s Quest", strings.Title(req.ArcType)),
+		Title:           fmt.Sprintf("The %s Quest", titleCased),
 		Description:     "A new adventure awaits the party",
 		ArcType:         req.ArcType,
 		ImportanceLevel: 5,

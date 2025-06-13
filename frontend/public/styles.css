@@ -2016,3 +2016,35 @@ input:checked + .slider:before {
     border-color: #ff5252;
     color: #ff5252;
 }
+
+/* Password Requirements Styles */
+.password-requirements {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background-color: rgba(255, 82, 82, 0.1);
+    border: 1px solid rgba(255, 82, 82, 0.3);
+    border-radius: 4px;
+}
+
+.password-requirements small {
+    color: #ff5252;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.password-requirements ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    list-style-type: disc;
+}
+
+.password-requirements li {
+    color: #ff5252;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.error-text {
+    color: #ff5252;
+}

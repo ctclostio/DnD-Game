@@ -16,9 +16,16 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    console.log('Login form submitted with:', formData.username);
+    
     const result = await dispatch(login(formData));
+    console.log('Login action result:', result);
+    
     if (login.fulfilled.match(result)) {
+      console.log('Login successful, navigating to dashboard');
       navigate('/dashboard');
+    } else {
+      console.log('Login failed');
     }
   };
 

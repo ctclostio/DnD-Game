@@ -56,11 +56,12 @@ func (s *DiceRollService) RollDice(ctx context.Context, roll *models.DiceRoll) e
 	roll.Results = make([]int, count)
 	roll.Total = modifier
 
-	rand.Seed(time.Now().UnixNano())
+	// Create a local random generator
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	diceMax := getDiceMax(diceType)
 
 	for i := 0; i < count; i++ {
-		result := rand.Intn(diceMax) + 1
+		result := rng.Intn(diceMax) + 1
 		roll.Results[i] = result
 		roll.Total += result
 	}
@@ -112,11 +113,12 @@ func (s *DiceRollService) SimulateRoll(notation string) (*models.DiceRoll, error
 	}
 
 	// Perform the rolls
-	rand.Seed(time.Now().UnixNano())
+	// Create a local random generator
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	diceMax := getDiceMax(diceType)
 
 	for i := 0; i < count; i++ {
-		result := rand.Intn(diceMax) + 1
+		result := rng.Intn(diceMax) + 1
 		roll.Results[i] = result
 		roll.Total += result
 	}

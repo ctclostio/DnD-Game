@@ -670,7 +670,6 @@ func (cas *CombatAnalyticsService) generateCombatSummary(
 	reports []*models.CombatantReport,
 	analysis *models.TacticalAnalysis,
 ) []byte {
-
 	summary := map[string]interface{}{
 		"overview": fmt.Sprintf("Combat lasted %d rounds with %d total damage dealt and %d HP healed.",
 			analytics.CombatDuration, analytics.TotalDamageDealt, analytics.TotalHealingDone),
@@ -720,7 +719,6 @@ func (cas *CombatAnalyticsService) determineOutcomeFactors(
 	analytics *models.CombatAnalytics,
 	reports []*models.CombatantReport,
 ) []string {
-
 	factors := []string{}
 
 	// Check for decisive factors

@@ -348,7 +348,7 @@ func (r *customRaceRepository) IncrementUsage(ctx context.Context, id uuid.UUID)
 // Helper functions
 
 func scanCustomRaces(rows *sql.Rows) ([]*models.CustomRace, error) {
-	var races []*models.CustomRace
+	races := make([]*models.CustomRace, 0, 20)
 
 	for rows.Next() {
 		var race models.CustomRace

@@ -17,9 +17,6 @@ type GameSessionService struct {
 }
 
 func NewGameSessionService(repo database.GameSessionRepository) *GameSessionService {
-	// Seed random number generator
-	rand.Seed(time.Now().UnixNano())
-
 	return &GameSessionService{
 		repo: repo,
 	}
@@ -38,9 +35,11 @@ func (s *GameSessionService) SetUserRepository(userRepo database.UserRepository)
 // generateSessionCode generates a unique 6-character alphanumeric code
 func (s *GameSessionService) generateSessionCode() string {
 	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	// Create a local random generator
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	code := make([]byte, 6)
 	for i := range code {
-		code[i] = chars[rand.Intn(len(chars))]
+		code[i] = chars[rng.Intn(len(chars))]
 	}
 	return string(code)
 }

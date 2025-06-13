@@ -172,7 +172,7 @@ func (r *CustomClassRepository) GetByUserID(userID string, includeUnapproved boo
 	}
 	defer rows.Close()
 
-	var classes []*models.CustomClass
+	classes := make([]*models.CustomClass, 0, 20)
 	for rows.Next() {
 		var class models.CustomClass
 		err := rows.Scan(
@@ -209,7 +209,7 @@ func (r *CustomClassRepository) GetApproved() ([]*models.CustomClass, error) {
 	}
 	defer rows.Close()
 
-	var classes []*models.CustomClass
+	classes := make([]*models.CustomClass, 0, 50)
 	for rows.Next() {
 		var class models.CustomClass
 		err := rows.Scan(

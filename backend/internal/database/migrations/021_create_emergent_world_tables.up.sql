@@ -2,15 +2,17 @@
 CREATE TABLE IF NOT EXISTS world_states (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id UUID NOT NULL REFERENCES game_sessions(id) ON DELETE CASCADE,
-    current_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    world_time TIMESTAMP WITH TIME ZONE NOT NULL,
     last_simulated TIMESTAMP WITH TIME ZONE NOT NULL,
     world_data JSONB DEFAULT '{}',
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_world_states_session (session_id),
-    INDEX idx_world_states_active (is_active)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes for world_states
+CREATE INDEX idx_world_states_session ON world_states(session_id);
+CREATE INDEX idx_world_states_active ON world_states(is_active);
 
 -- NPC Goals for autonomous behavior
 CREATE TABLE IF NOT EXISTS npc_goals (
@@ -23,11 +25,13 @@ CREATE TABLE IF NOT EXISTS npc_goals (
     parameters JSONB DEFAULT '{}',
     status VARCHAR(20) DEFAULT 'active',
     started_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP WITH TIME ZONE,
-    INDEX idx_npc_goals_npc (npc_id),
-    INDEX idx_npc_goals_status (status),
-    INDEX idx_npc_goals_priority (priority DESC)
+    completed_at TIMESTAMP WITH TIME ZONE
 );
+
+-- Create indexes for npc_goals
+CREATE INDEX idx_npc_goals_npc ON npc_goals(npc_id);
+CREATE INDEX idx_npc_goals_status ON npc_goals(status);
+CREATE INDEX idx_npc_goals_priority ON npc_goals(priority DESC);
 
 -- NPC Schedules for daily routines
 CREATE TABLE IF NOT EXISTS npc_schedules (
@@ -36,10 +40,12 @@ CREATE TABLE IF NOT EXISTS npc_schedules (
     time_of_day VARCHAR(20) NOT NULL,
     activity VARCHAR(100) NOT NULL,
     location VARCHAR(255),
-    parameters JSONB DEFAULT '{}',
-    INDEX idx_npc_schedules_npc (npc_id),
-    INDEX idx_npc_schedules_time (time_of_day)
+    parameters JSONB DEFAULT '{}'
 );
+
+-- Create indexes for npc_schedules
+CREATE INDEX idx_npc_schedules_npc ON npc_schedules(npc_id);
+CREATE INDEX idx_npc_schedules_time ON npc_schedules(time_of_day);
 
 -- Faction Personalities for AI-driven behavior
 CREATE TABLE IF NOT EXISTS faction_personalities (
@@ -52,9 +58,11 @@ CREATE TABLE IF NOT EXISTS faction_personalities (
     decision_weights JSONB DEFAULT '{}',
     learning_data JSONB DEFAULT '{}',
     last_learning_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(faction_id),
-    INDEX idx_faction_personalities_faction (faction_id)
+    UNIQUE(faction_id)
 );
+
+-- Create indexes for faction_personalities
+CREATE INDEX idx_faction_personalities_faction ON faction_personalities(faction_id);
 
 -- Faction Agendas for long-term goals
 CREATE TABLE IF NOT EXISTS faction_agendas (
@@ -68,11 +76,13 @@ CREATE TABLE IF NOT EXISTS faction_agendas (
     progress DECIMAL(3,2) DEFAULT 0.0,
     status VARCHAR(20) DEFAULT 'active',
     parameters JSONB DEFAULT '{}',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_faction_agendas_faction (faction_id),
-    INDEX idx_faction_agendas_status (status),
-    INDEX idx_faction_agendas_priority (priority DESC)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes for faction_agendas
+CREATE INDEX idx_faction_agendas_faction ON faction_agendas(faction_id);
+CREATE INDEX idx_faction_agendas_status ON faction_agendas(status);
+CREATE INDEX idx_faction_agendas_priority ON faction_agendas(priority DESC);
 
 -- Procedural Cultures table
 CREATE TABLE IF NOT EXISTS procedural_cultures (
@@ -92,10 +102,12 @@ CREATE TABLE IF NOT EXISTS procedural_cultures (
     naming_conventions JSONB NOT NULL,
     social_structure JSONB NOT NULL,
     metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_cultures_name (name),
-    INDEX idx_cultures_session ((metadata->>'session_id'))
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes for procedural_cultures
+CREATE INDEX idx_cultures_name ON procedural_cultures(name);
+CREATE INDEX idx_cultures_session ON procedural_cultures((metadata->>'session_id'));
 
 -- World Events for tracking significant happenings
 CREATE TABLE IF NOT EXISTS world_events (
@@ -108,12 +120,14 @@ CREATE TABLE IF NOT EXISTS world_events (
     affected_entities JSONB DEFAULT '[]',
     consequences JSONB DEFAULT '[]',
     is_player_visible BOOLEAN DEFAULT TRUE,
-    occurred_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_world_events_session (session_id),
-    INDEX idx_world_events_type (event_type),
-    INDEX idx_world_events_occurred (occurred_at DESC),
-    INDEX idx_world_events_visible (is_player_visible)
+    occurred_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes for world_events
+CREATE INDEX idx_world_events_session ON world_events(session_id);
+CREATE INDEX idx_world_events_type ON world_events(event_type);
+CREATE INDEX idx_world_events_occurred ON world_events(occurred_at DESC);
+CREATE INDEX idx_world_events_visible ON world_events(is_player_visible);
 
 -- Simulation Logs for tracking world simulation activities
 CREATE TABLE IF NOT EXISTS simulation_logs (
@@ -125,11 +139,13 @@ CREATE TABLE IF NOT EXISTS simulation_logs (
     events_created INTEGER DEFAULT 0,
     details JSONB DEFAULT '{}',
     success BOOLEAN DEFAULT TRUE,
-    error_message TEXT,
-    INDEX idx_simulation_logs_session (session_id),
-    INDEX idx_simulation_logs_type (simulation_type),
-    INDEX idx_simulation_logs_time (start_time DESC)
+    error_message TEXT
 );
+
+-- Create indexes for simulation_logs
+CREATE INDEX idx_simulation_logs_session ON simulation_logs(session_id);
+CREATE INDEX idx_simulation_logs_type ON simulation_logs(simulation_type);
+CREATE INDEX idx_simulation_logs_time ON simulation_logs(start_time DESC);
 
 -- Cultural Interactions table for tracking player influence on cultures
 CREATE TABLE IF NOT EXISTS cultural_interactions (
@@ -141,11 +157,13 @@ CREATE TABLE IF NOT EXISTS cultural_interactions (
     approach VARCHAR(50) NOT NULL,
     impact JSONB DEFAULT '{}',
     response JSONB DEFAULT '{}',
-    occurred_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_cultural_interactions_culture (culture_id),
-    INDEX idx_cultural_interactions_actor (actor_id, actor_type),
-    INDEX idx_cultural_interactions_time (occurred_at DESC)
+    occurred_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes for cultural_interactions
+CREATE INDEX idx_cultural_interactions_culture ON cultural_interactions(culture_id);
+CREATE INDEX idx_cultural_interactions_actor ON cultural_interactions(actor_id, actor_type);
+CREATE INDEX idx_cultural_interactions_time ON cultural_interactions(occurred_at DESC);
 
 -- Faction Memories for detailed event tracking
 CREATE TABLE IF NOT EXISTS faction_memories (
@@ -157,11 +175,13 @@ CREATE TABLE IF NOT EXISTS faction_memories (
     participants JSONB DEFAULT '[]',
     context JSONB DEFAULT '{}',
     decay_rate DECIMAL(3,2) DEFAULT 0.95,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_faction_memories_faction (faction_id),
-    INDEX idx_faction_memories_type (memory_type),
-    INDEX idx_faction_memories_impact (impact DESC)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes for faction_memories
+CREATE INDEX idx_faction_memories_faction ON faction_memories(faction_id);
+CREATE INDEX idx_faction_memories_type ON faction_memories(memory_type);
+CREATE INDEX idx_faction_memories_impact ON faction_memories(impact DESC);
 
 -- Create triggers for updated_at
 CREATE OR REPLACE FUNCTION update_emergent_world_updated_at()

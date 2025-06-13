@@ -16,11 +16,11 @@ import (
 )
 
 // Helper function to create a test context with auth claims
-func createAuthContext(userID, email, role string) context.Context {
+func createAuthContext(userID, role string) context.Context {
 	claims := &auth.Claims{
 		UserID:   userID,
 		Username: "testuser",
-		Email:    email,
+		Email:    "test@example.com",
 		Role:     role,
 		Type:     auth.AccessToken,
 	}
@@ -110,8 +110,9 @@ func TestCharacterHandler_RequestValidation(t *testing.T) {
 
 			// Add auth context if userID is provided
 			if tt.userID != "" {
-				ctx := createAuthContext(tt.userID, "test@example.com", "player")
-				req = req.WithContext(ctx)
+				// Context would be added by auth middleware in real handler
+				// ctx := createAuthContext(tt.userID, "player")
+				// req = req.WithContext(ctx)
 			}
 
 			// For this test, we'll just verify the request structure
@@ -198,8 +199,9 @@ func TestCharacterHandler_UpdateCharacter(t *testing.T) {
 
 			// Add auth context
 			if tt.userID != "" {
-				ctx := createAuthContext(tt.userID, "test@example.com", "player")
-				req = req.WithContext(ctx)
+				// Context would be added by auth middleware in real handler
+				// ctx := createAuthContext(tt.userID, "player")
+				// req = req.WithContext(ctx)
 			}
 
 			// Verify request can be parsed
@@ -271,7 +273,7 @@ func TestCharacterHandler_SpellSlots(t *testing.T) {
 			req = mux.SetURLVars(req, map[string]string{"id": characterID})
 
 			// Add auth context
-			ctx := createAuthContext(userID, "test@example.com", "player")
+			ctx := createAuthContext(userID, "player")
 			req = req.WithContext(ctx)
 
 			// Verify request structure
@@ -292,8 +294,6 @@ func TestCharacterHandler_SpellSlots(t *testing.T) {
 }
 
 func TestCharacterHandler_CustomClass(t *testing.T) {
-	userID := uuid.New().String()
-
 	t.Run("generate custom class request", func(t *testing.T) {
 		body := map[string]interface{}{
 			"name":        "Shadow Dancer",
@@ -308,8 +308,9 @@ func TestCharacterHandler_CustomClass(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 
 		// Add auth context
-		ctx := createAuthContext(userID, "test@example.com", "player")
-		req = req.WithContext(ctx)
+		// Context would be added by auth middleware in real handler
+		// ctx := createAuthContext(userID, "player")
+		// req = req.WithContext(ctx)
 
 		// Verify request structure
 		var decoded map[string]interface{}
@@ -324,8 +325,9 @@ func TestCharacterHandler_CustomClass(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/characters/custom-classes?includeUnapproved=true", nil)
 
 		// Add auth context
-		ctx := createAuthContext(userID, "test@example.com", "player")
-		req = req.WithContext(ctx)
+		// Context would be added by auth middleware in real handler
+		// ctx := createAuthContext(userID, "player")
+		// req = req.WithContext(ctx)
 
 		// Verify query parameter
 		includeUnapproved := req.URL.Query().Get("includeUnapproved")

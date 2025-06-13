@@ -17,7 +17,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: JSON.parse(localStorage.getItem('user') || 'null'),
-  token: localStorage.getItem('token'),
+  token: localStorage.getItem('access_token'),
   isLoading: false,
   error: null,
 };
@@ -85,7 +85,7 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         localStorage.removeItem('user');
-        localStorage.removeItem('token');
+        localStorage.removeItem('access_token');
       });
   },
 });

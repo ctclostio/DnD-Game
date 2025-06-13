@@ -239,7 +239,7 @@ func (r *EncounterRepository) getEncounterEnemies(encounterID string) ([]models.
 	}
 	defer rows.Close()
 
-	var enemies []models.EncounterEnemy
+	enemies := make([]models.EncounterEnemy, 0, 10)
 	for rows.Next() {
 		var enemy models.EncounterEnemy
 		var stats, abilities, actions, legendaryActions,
@@ -308,7 +308,7 @@ func (r *EncounterRepository) GetByGameSession(gameSessionID string) ([]*models.
 	}
 	defer rows.Close()
 
-	var encounters []*models.Encounter
+	encounters := make([]*models.Encounter, 0, 20)
 	for rows.Next() {
 		var encounter models.Encounter
 		err := rows.Scan(
@@ -405,7 +405,7 @@ func (r *EncounterRepository) GetEvents(encounterID string, limit int) ([]*model
 	}
 	defer rows.Close()
 
-	var events []*models.EncounterEvent
+	events := make([]*models.EncounterEvent, 0, 50)
 	for rows.Next() {
 		var event models.EncounterEvent
 		var mechanicalEffect []byte
@@ -503,7 +503,7 @@ func (r *EncounterRepository) GetObjectives(encounterID string) ([]*models.Encou
 	}
 	defer rows.Close()
 
-	var objectives []*models.EncounterObjective
+	objectives := make([]*models.EncounterObjective, 0, 10)
 	for rows.Next() {
 		var objective models.EncounterObjective
 		var successConditions, failureConditions, itemRewards []byte

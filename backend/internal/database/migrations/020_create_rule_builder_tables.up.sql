@@ -16,12 +16,14 @@ CREATE TABLE IF NOT EXISTS rule_templates (
     approval_status VARCHAR(50) DEFAULT 'pending',
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_rule_templates_category (category),
-    INDEX idx_rule_templates_created_by (created_by),
-    INDEX idx_rule_templates_public (is_public),
-    INDEX idx_rule_templates_approval (approval_status)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes for rule_templates
+CREATE INDEX idx_rule_templates_category ON rule_templates(category);
+CREATE INDEX idx_rule_templates_created_by ON rule_templates(created_by);
+CREATE INDEX idx_rule_templates_public ON rule_templates(is_public);
+CREATE INDEX idx_rule_templates_approval ON rule_templates(approval_status);
 
 -- Rule Instances table for active rules in play
 CREATE TABLE IF NOT EXISTS rule_instances (
@@ -37,12 +39,14 @@ CREATE TABLE IF NOT EXISTS rule_instances (
     activated_at TIMESTAMP WITH TIME ZONE,
     expires_at TIMESTAMP WITH TIME ZONE,
     usage_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_rule_instances_template (template_id),
-    INDEX idx_rule_instances_owner (owner_id, owner_type),
-    INDEX idx_rule_instances_session (session_id),
-    INDEX idx_rule_instances_active (is_active)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes for rule_instances
+CREATE INDEX idx_rule_instances_template ON rule_instances(template_id);
+CREATE INDEX idx_rule_instances_owner ON rule_instances(owner_id, owner_type);
+CREATE INDEX idx_rule_instances_session ON rule_instances(session_id);
+CREATE INDEX idx_rule_instances_active ON rule_instances(is_active);
 
 -- Balance Simulations table for tracking AI balance analysis
 CREATE TABLE IF NOT EXISTS balance_simulations (
@@ -52,10 +56,12 @@ CREATE TABLE IF NOT EXISTS balance_simulations (
     parameters JSONB NOT NULL,
     results JSONB NOT NULL,
     suggestions JSONB DEFAULT '[]',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_balance_simulations_template (template_id),
-    INDEX idx_balance_simulations_created (created_at)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes for balance_simulations
+CREATE INDEX idx_balance_simulations_template ON balance_simulations(template_id);
+CREATE INDEX idx_balance_simulations_created ON balance_simulations(created_at);
 
 -- Rule Library table for community-shared rules
 CREATE TABLE IF NOT EXISTS rule_library (
@@ -70,12 +76,14 @@ CREATE TABLE IF NOT EXISTS rule_library (
     rating_count INTEGER DEFAULT 0,
     download_count INTEGER DEFAULT 0,
     featured BOOLEAN DEFAULT FALSE,
-    published_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_rule_library_category (category),
-    INDEX idx_rule_library_author (author_id),
-    INDEX idx_rule_library_rating (rating DESC),
-    INDEX idx_rule_library_featured (featured)
+    published_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes for rule_library
+CREATE INDEX idx_rule_library_category ON rule_library(category);
+CREATE INDEX idx_rule_library_author ON rule_library(author_id);
+CREATE INDEX idx_rule_library_rating ON rule_library(rating DESC);
+CREATE INDEX idx_rule_library_featured ON rule_library(featured);
 
 -- Rule Ratings table
 CREATE TABLE IF NOT EXISTS rule_ratings (
@@ -98,11 +106,13 @@ CREATE TABLE IF NOT EXISTS conditional_contexts (
     is_active BOOLEAN DEFAULT TRUE,
     started_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     ended_at TIMESTAMP WITH TIME ZONE,
-    metadata JSONB DEFAULT '{}',
-    INDEX idx_conditional_contexts_session (session_id),
-    INDEX idx_conditional_contexts_type (context_type),
-    INDEX idx_conditional_contexts_active (is_active)
+    metadata JSONB DEFAULT '{}'
 );
+
+-- Create indexes for conditional_contexts
+CREATE INDEX idx_conditional_contexts_session ON conditional_contexts(session_id);
+CREATE INDEX idx_conditional_contexts_type ON conditional_contexts(context_type);
+CREATE INDEX idx_conditional_contexts_active ON conditional_contexts(is_active);
 
 -- Rule Execution Log for debugging and analysis
 CREATE TABLE IF NOT EXISTS rule_execution_log (
@@ -115,11 +125,13 @@ CREATE TABLE IF NOT EXISTS rule_execution_log (
     nodes_executed JSONB,
     execution_duration_ms INTEGER,
     success BOOLEAN DEFAULT TRUE,
-    error_message TEXT,
-    INDEX idx_rule_execution_instance (instance_id),
-    INDEX idx_rule_execution_time (execution_time),
-    INDEX idx_rule_execution_success (success)
+    error_message TEXT
 );
+
+-- Create indexes for rule_execution_log
+CREATE INDEX idx_rule_execution_instance ON rule_execution_log(instance_id);
+CREATE INDEX idx_rule_execution_time ON rule_execution_log(execution_time);
+CREATE INDEX idx_rule_execution_success ON rule_execution_log(success);
 
 -- Node Templates table for reusable node configurations
 CREATE TABLE IF NOT EXISTS node_templates (
@@ -136,10 +148,12 @@ CREATE TABLE IF NOT EXISTS node_templates (
     category VARCHAR(50),
     is_system BOOLEAN DEFAULT FALSE, -- System nodes vs user-created
     created_by UUID REFERENCES users(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_node_templates_type (node_type),
-    INDEX idx_node_templates_category (category)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create indexes for node_templates
+CREATE INDEX idx_node_templates_type ON node_templates(node_type);
+CREATE INDEX idx_node_templates_category ON node_templates(category);
 
 -- Version History table for rule templates
 CREATE TABLE IF NOT EXISTS rule_template_versions (
@@ -151,9 +165,11 @@ CREATE TABLE IF NOT EXISTS rule_template_versions (
     change_notes TEXT,
     created_by UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_rule_versions_template (template_id),
     UNIQUE(template_id, version)
 );
+
+-- Create indexes for rule_template_versions
+CREATE INDEX idx_rule_versions_template ON rule_template_versions(template_id);
 
 -- Create update triggers
 CREATE OR REPLACE FUNCTION update_rule_builder_updated_at()

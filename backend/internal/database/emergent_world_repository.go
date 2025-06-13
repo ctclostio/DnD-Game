@@ -176,7 +176,7 @@ func (r *EmergentWorldRepository) GetNPCGoals(npcID string) ([]models.NPCGoal, e
 	}
 	defer rows.Close()
 
-	var goals []models.NPCGoal
+	goals := make([]models.NPCGoal, 0, 10)
 	for rows.Next() {
 		var goal models.NPCGoal
 		var parametersJSON []byte
@@ -288,7 +288,7 @@ func (r *EmergentWorldRepository) GetNPCSchedule(npcID string) ([]models.NPCSche
 	}
 	defer rows.Close()
 
-	var schedules []models.NPCSchedule
+	schedules := make([]models.NPCSchedule, 0, 24)
 	for rows.Next() {
 		var schedule models.NPCSchedule
 		var parametersJSON []byte
@@ -468,7 +468,7 @@ func (r *EmergentWorldRepository) GetFactionAgendas(factionID string) ([]models.
 	}
 	defer rows.Close()
 
-	var agendas []models.FactionAgenda
+	agendas := make([]models.FactionAgenda, 0, 10)
 	for rows.Next() {
 		var agenda models.FactionAgenda
 		var stagesJSON, parametersJSON []byte
@@ -661,7 +661,7 @@ func (r *EmergentWorldRepository) GetCulturesBySession(sessionID string) ([]*mod
 	}
 	defer rows.Close()
 
-	var cultures []*models.ProceduralCulture
+	cultures := make([]*models.ProceduralCulture, 0, 20)
 	for rows.Next() {
 		culture := &models.ProceduralCulture{}
 		var languageJSON, customsJSON, artStyleJSON, beliefSystemJSON []byte
@@ -805,7 +805,7 @@ func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, on
 	}
 	defer rows.Close()
 
-	var events []models.EmergentWorldEvent
+	events := make([]models.EmergentWorldEvent, 0, limit)
 	for rows.Next() {
 		var event models.EmergentWorldEvent
 		var impactJSON, affectedEntitiesJSON, consequencesJSON []byte
@@ -892,7 +892,7 @@ func (r *EmergentWorldRepository) GetSimulationLogs(sessionID string, limit int)
 	}
 	defer rows.Close()
 
-	var logs []models.SimulationLog
+	logs := make([]models.SimulationLog, 0, limit)
 	for rows.Next() {
 		var log models.SimulationLog
 		var detailsJSON []byte

@@ -17,6 +17,29 @@ const Register: React.FC = () => {
   });
 
   const [validationError, setValidationError] = useState('');
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
+  const validatePassword = (password: string): string[] => {
+    const errors: string[] = [];
+    
+    if (password.length < 8) {
+      errors.push('Password must be at least 8 characters long');
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Password must contain at least one uppercase letter');
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push('Password must contain at least one lowercase letter');
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push('Password must contain at least one number');
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push('Password must contain at least one special character');
+    }
+    
+    return errors;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -41,6 +64,13 @@ const Register: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     setValidationError('');
+    
+    // Validate password as user types
+    if (name === 'password') {
+      const errors = validatePassword(value);
+      setPasswordErrors(errors);
+    }
+    
     if (error) {
       dispatch(clearError());
     }
@@ -92,8 +122,18 @@ const Register: React.FC = () => {
               value={formData.password}
               onChange={handleInputChange}
               required
-              minLength={6}
+              minLength={8}
             />
+            {formData.password && passwordErrors.length > 0 && (
+              <div className="password-requirements">
+                <small>Password requirements:</small>
+                <ul>
+                  {passwordErrors.map((error, index) => (
+                    <li key={index} className="error-text">{error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="form-group">

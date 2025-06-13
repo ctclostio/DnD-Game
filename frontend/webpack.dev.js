@@ -26,17 +26,19 @@ module.exports = merge(common, {
     hot: true,
     historyApiFallback: true,
     open: false,
-    proxy: {
-      '/api': {
+    proxy: [
+      {
+        context: ['/api'],
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/ws': {
+      {
+        context: ['/ws'],
         target: 'ws://localhost:8080',
         ws: true,
         changeOrigin: true,
       },
-    },
+    ],
   },
   optimization: {
     runtimeChunk: 'single',

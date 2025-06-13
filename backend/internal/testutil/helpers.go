@@ -146,12 +146,12 @@ func (m *MockDB) Ping() error {
 func RandomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-	// Seed the random number generator
-	rand.Seed(time.Now().UnixNano())
+	// Create a local random generator
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	b := make([]byte, length)
 	for i := range b {
-		b[i] = charset[rand.Intn(len(charset))]
+		b[i] = charset[rng.Intn(len(charset))]
 	}
 	return string(b)
 }

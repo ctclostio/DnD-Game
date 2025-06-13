@@ -211,6 +211,10 @@ func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPubl
 		templates = append(templates, template)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
 	return templates, nil
 }
 
@@ -314,6 +318,10 @@ func (r *RuleBuilderRepository) GetNodeTemplates() ([]models.NodeTemplate, error
 		templates = append(templates, template)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
 	return templates, nil
 }
 
@@ -414,6 +422,10 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 		}
 
 		rules = append(rules, rule)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
 	return rules, nil
@@ -535,6 +547,10 @@ func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, character
 		executions = append(executions, execution)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
 	return executions, nil
 }
 
@@ -581,6 +597,10 @@ func (r *RuleBuilderRepository) GetConditionalModifiers(ruleID string) ([]models
 		}
 
 		modifiers = append(modifiers, modifier)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
 	return modifiers, nil

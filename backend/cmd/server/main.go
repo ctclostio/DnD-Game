@@ -231,7 +231,7 @@ func main() {
 	log.Info().Msg("Routes configured")
 
 	// Setup CORS
-	allowedOrigins := []string{"http://localhost:3000", "http://localhost:8080"}
+	allowedOrigins := []string{"http://localhost:3000", "http://localhost:8080", "http://192.168.1.161:3000"}
 	if cfg.Server.Environment == "production" {
 		allowedOrigins = []string{"https://yourdomain.com"}
 	}

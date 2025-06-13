@@ -79,7 +79,7 @@ func (r *diceRollRepository) GetByGameSession(ctx context.Context, sessionID str
 	}
 	defer rows.Close()
 
-	var rolls []*models.DiceRoll
+	rolls := make([]*models.DiceRoll, 0, limit)
 	for rows.Next() {
 		var roll models.DiceRoll
 		err := rows.Scan(
@@ -90,6 +90,10 @@ func (r *diceRollRepository) GetByGameSession(ctx context.Context, sessionID str
 			return nil, fmt.Errorf("failed to scan dice roll: %w", err)
 		}
 		rolls = append(rolls, &roll)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating dice rolls: %w", err)
 	}
 
 	return rolls, nil
@@ -111,7 +115,7 @@ func (r *diceRollRepository) GetByUser(ctx context.Context, userID string, offse
 	}
 	defer rows.Close()
 
-	var rolls []*models.DiceRoll
+	rolls := make([]*models.DiceRoll, 0, limit)
 	for rows.Next() {
 		var roll models.DiceRoll
 		err := rows.Scan(
@@ -122,6 +126,10 @@ func (r *diceRollRepository) GetByUser(ctx context.Context, userID string, offse
 			return nil, fmt.Errorf("failed to scan dice roll: %w", err)
 		}
 		rolls = append(rolls, &roll)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating dice rolls: %w", err)
 	}
 
 	return rolls, nil
@@ -143,7 +151,7 @@ func (r *diceRollRepository) GetByGameSessionAndUser(ctx context.Context, sessio
 	}
 	defer rows.Close()
 
-	var rolls []*models.DiceRoll
+	rolls := make([]*models.DiceRoll, 0, limit)
 	for rows.Next() {
 		var roll models.DiceRoll
 		err := rows.Scan(
@@ -154,6 +162,10 @@ func (r *diceRollRepository) GetByGameSessionAndUser(ctx context.Context, sessio
 			return nil, fmt.Errorf("failed to scan dice roll: %w", err)
 		}
 		rolls = append(rolls, &roll)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating dice rolls: %w", err)
 	}
 
 	return rolls, nil

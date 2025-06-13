@@ -72,7 +72,8 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 			}
 			req := httptest.NewRequest(tt.method, tt.path, bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
-			req = mux.SetURLVars(req, map[string]string{"characterId": characterID})
+			// Route vars would be set by router in real handler
+			// req = mux.SetURLVars(req, map[string]string{"characterId": characterID})
 
 			// Add auth context
 			// Context would be added by auth middleware in real handler
@@ -208,7 +209,8 @@ func TestInventoryHandler_Currency(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost,
 				"/api/characters/"+characterID+"/currency", bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
-			req = mux.SetURLVars(req, map[string]string{"characterId": characterID})
+			// Route vars would be set by router in real handler
+			// req = mux.SetURLVars(req, map[string]string{"characterId": characterID})
 
 			// Add auth context
 			// Context would be added by auth middleware in real handler
