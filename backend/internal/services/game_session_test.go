@@ -39,10 +39,10 @@ func TestGameSessionService_CreateSession(t *testing.T) {
 			},
 			setupMock: func(sessionRepo *mocks.MockGameSessionRepository) {
 				sessionRepo.On("Create", ctx, mock.MatchedBy(func(s *models.GameSession) bool {
-					return s.DMID == "dm-123" &&
-						s.Name == "Lost Mines of Phandelver" &&
-						s.Description == "A classic D&D 5e adventure" &&
-						s.Status == models.GameStatusActive
+                                       return s.DMID == "dm-123" &&
+                                               s.Name == "Lost Mines of Phandelver" &&
+                                               s.Description == "A classic D&D 5e adventure" &&
+                                               s.Status == models.GameStatusPending
 				})).Return(nil).Run(func(args mock.Arguments) {
 					// Simulate the repository setting the ID
 					session := args.Get(1).(*models.GameSession)
@@ -53,7 +53,7 @@ func TestGameSessionService_CreateSession(t *testing.T) {
 			validate: func(t *testing.T, session *models.GameSession) {
 				assert.Equal(t, "dm-123", session.DMID)
 				assert.Equal(t, "Lost Mines of Phandelver", session.Name)
-				assert.Equal(t, models.GameStatusActive, session.Status)
+                               assert.Equal(t, models.GameStatusPending, session.Status)
 			},
 		},
 		{
