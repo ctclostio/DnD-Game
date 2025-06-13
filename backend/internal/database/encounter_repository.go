@@ -202,17 +202,17 @@ func (r *EncounterRepository) GetByID(id string) (*models.Encounter, error) {
 	}
 
 	// Unmarshal JSON fields
-	json.Unmarshal(partyComposition, &encounter.PartyComposition)
-	json.Unmarshal(enemies, &encounter.Enemies)
-	json.Unmarshal(enemyTactics, &encounter.EnemyTactics)
-	json.Unmarshal(environmentalHazards, &encounter.EnvironmentalHazards)
-	json.Unmarshal(terrainFeatures, &encounter.TerrainFeatures)
-	json.Unmarshal(socialSolutions, &encounter.SocialSolutions)
-	json.Unmarshal(stealthOptions, &encounter.StealthOptions)
-	json.Unmarshal(environmentalSolutions, &encounter.EnvironmentalSolutions)
-	json.Unmarshal(scalingOptions, &encounter.ScalingOptions)
-	json.Unmarshal(reinforcementWaves, &encounter.ReinforcementWaves)
-	json.Unmarshal(escapeRoutes, &encounter.EscapeRoutes)
+	_ = json.Unmarshal(partyComposition, &encounter.PartyComposition)
+	_ = json.Unmarshal(enemies, &encounter.Enemies)
+	_ = json.Unmarshal(enemyTactics, &encounter.EnemyTactics)
+	_ = json.Unmarshal(environmentalHazards, &encounter.EnvironmentalHazards)
+	_ = json.Unmarshal(terrainFeatures, &encounter.TerrainFeatures)
+	_ = json.Unmarshal(socialSolutions, &encounter.SocialSolutions)
+	_ = json.Unmarshal(stealthOptions, &encounter.StealthOptions)
+	_ = json.Unmarshal(environmentalSolutions, &encounter.EnvironmentalSolutions)
+	_ = json.Unmarshal(scalingOptions, &encounter.ScalingOptions)
+	_ = json.Unmarshal(reinforcementWaves, &encounter.ReinforcementWaves)
+	_ = json.Unmarshal(escapeRoutes, &encounter.EscapeRoutes)
 
 	// Load encounter enemies
 	enemies_list, err := r.getEncounterEnemies(id)

@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS world_events (
     name VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     location VARCHAR(255),
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    event_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     participants TEXT[] DEFAULT '{}',
     witnesses TEXT[] DEFAULT '{}',
     immediate_effects TEXT[] DEFAULT '{}',
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS world_events (
 );
 
 CREATE INDEX idx_world_event_type ON world_events (type);
-CREATE INDEX idx_world_event_timestamp ON world_events (timestamp);
+CREATE INDEX idx_world_event_timestamp ON world_events (event_timestamp);
 CREATE INDEX idx_world_event_status ON world_events (status);
 
 -- Different perspectives on the same event
@@ -140,13 +140,13 @@ CREATE TABLE IF NOT EXISTS player_actions (
     moral_weight VARCHAR(50), -- good, evil, neutral, chaotic, lawful
     immediate_result TEXT,
     potential_consequences INTEGER DEFAULT 0,
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    action_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB DEFAULT '{}'
 );
 
 CREATE INDEX idx_action_session ON player_actions (session_id);
 CREATE INDEX idx_action_character ON player_actions (character_id);
-CREATE INDEX idx_action_timestamp ON player_actions (timestamp);
+CREATE INDEX idx_action_timestamp ON player_actions (action_timestamp);
 
 -- Narrative threads connecting events across time
 CREATE TABLE IF NOT EXISTS narrative_threads (
