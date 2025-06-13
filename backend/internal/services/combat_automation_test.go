@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
@@ -215,10 +216,11 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 				assert.Len(t, entries, 2)
 				// Check that entries are sorted (highest first)
 				assert.GreaterOrEqual(t, entries[0].Initiative, entries[1].Initiative)
-				// Check bonuses are present (order may vary)
+
+				// Bonuses should be 2 and 1 in any order
 				bonuses := []int{entries[0].Bonus, entries[1].Bonus}
-				assert.Contains(t, bonuses, 2)
-				assert.Contains(t, bonuses, 1)
+				sort.Ints(bonuses)
+				assert.Equal(t, []int{1, 2}, bonuses)
 			},
 		},
 		{

@@ -17,6 +17,9 @@ type GameSessionService struct {
 }
 
 func NewGameSessionService(repo database.GameSessionRepository) *GameSessionService {
+	// Seed random number generator
+	rand.Seed(time.Now().UnixNano())
+
 	return &GameSessionService{
 		repo: repo,
 	}
@@ -54,9 +57,14 @@ func (s *GameSessionService) CreateSession(ctx context.Context, session *models.
 		return fmt.Errorf("dungeon master user ID is required")
 	}
 
-	// Set default status
+	// Set default status to active so the session can be used immediately.
+	// If the caller didn't specify a status, also default IsActive to true so
+	// the session can be joined right away.
 	if session.Status == "" {
 		session.Status = models.GameStatusActive
+		if !session.IsActive {
+			session.IsActive = true
+		}
 	}
 
 	// Set security defaults
@@ -81,8 +89,7 @@ func (s *GameSessionService) CreateSession(ctx context.Context, session *models.
 		session.Code = s.generateSessionCode()
 	}
 
-	// Set IsActive to true by default
-	session.IsActive = true
+	// Sessions should remain as specified by the caller; most will be active
 
 	// Initialize empty state if nil
 	if session.State == nil {
@@ -158,11 +165,9 @@ func (s *GameSessionService) JoinSession(ctx context.Context, sessionID, userID 
 		return fmt.Errorf("session not found: %w", err)
 	}
 
-	// Determine if we should enforce active/participant checks
-	persisted := session.Status != ""
-
-	// Security check: Session must be active unless it's a zero-value struct used in tests
-	if !session.IsActive && persisted {
+	// Security check: If a session is marked active but flagged inactive,
+	// joining should fail. Sessions in other states may allow joining.
+	if session.Status == models.GameStatusActive && !session.IsActive {
 		return fmt.Errorf("session is not active")
 	}
 
@@ -170,28 +175,27 @@ func (s *GameSessionService) JoinSession(ctx context.Context, sessionID, userID 
 	if session.Status == models.GameStatusCompleted {
 		return fmt.Errorf("cannot join completed session")
 	}
+
 	// Security check: User cannot join if already a participant
-	if persisted {
-		participants, err := s.repo.GetParticipants(ctx, sessionID)
-		if err != nil {
-			return fmt.Errorf("failed to check participants: %w", err)
-		}
+	participants, err := s.repo.GetParticipants(ctx, sessionID)
+	if err != nil {
+		return fmt.Errorf("failed to check participants: %w", err)
+	}
 
-		currentPlayerCount := 0
-		for _, p := range participants {
-			if p.UserID == userID {
-				return fmt.Errorf("you are already in this session")
-			}
-			// Count non-DM players
-			if p.UserID != session.DMID {
-				currentPlayerCount++
-			}
+	currentPlayerCount := 0
+	for _, p := range participants {
+		if p.UserID == userID {
+			return fmt.Errorf("you are already in this session")
 		}
+		// Count non-DM players
+		if p.UserID != session.DMID {
+			currentPlayerCount++
+		}
+	}
 
-		// Security check: Session capacity
-		if session.MaxPlayers > 0 && currentPlayerCount >= session.MaxPlayers-1 { // -1 because DM doesn't count
-			return fmt.Errorf("session is full (max %d players)", session.MaxPlayers-1)
-		}
+	// Security check: Session capacity
+	if session.MaxPlayers > 0 && currentPlayerCount >= session.MaxPlayers-1 { // -1 because DM doesn't count
+		return fmt.Errorf("session is full (max %d players)", session.MaxPlayers-1)
 	}
 
 	// Security check: Character ownership validation

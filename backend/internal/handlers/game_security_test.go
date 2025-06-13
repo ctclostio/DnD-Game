@@ -8,14 +8,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGameSessionSecurity(t *testing.T) {
@@ -73,7 +73,7 @@ func TestGameSessionSecurity(t *testing.T) {
 			"character_id": char1.ID,
 		}
 		jsonBody, _ := json.Marshal(body)
-		
+
 		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		claims := &auth.Claims{
@@ -84,20 +84,20 @@ func TestGameSessionSecurity(t *testing.T) {
 		}
 		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 		req = mux.SetURLVars(req, map[string]string{"id": session.ID})
-		
+
 		rr := httptest.NewRecorder()
 		h.JoinGameSession(rr, req)
-		
+
 		// Verify player1 joined successfully
 		require.Equal(t, http.StatusOK, rr.Code, "Player1 should be able to join initially")
-		
+
 		// Now run the security tests
 		t.Run("Cannot join twice", func(t *testing.T) {
 			body := map[string]interface{}{
 				"character_id": char1.ID,
 			}
 			jsonBody, _ := json.Marshal(body)
-			
+
 			req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
 			req.Header.Set("Content-Type", "application/json")
 			claims := &auth.Claims{
@@ -108,16 +108,16 @@ func TestGameSessionSecurity(t *testing.T) {
 			}
 			req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 			req = mux.SetURLVars(req, map[string]string{"id": session.ID})
-			
+
 			rr := httptest.NewRecorder()
 			h.JoinGameSession(rr, req)
-			
+
 			assert.Equal(t, http.StatusBadRequest, rr.Code)
-			
+
 			// Debug: print the response body
 			bodyBytes := rr.Body.Bytes()
 			t.Logf("Response body: %s", string(bodyBytes))
-			
+
 			var response map[string]interface{}
 			err := json.Unmarshal(bodyBytes, &response)
 			if err != nil {
@@ -129,7 +129,7 @@ func TestGameSessionSecurity(t *testing.T) {
 			require.True(t, ok, "Expected error object in response")
 			assert.Contains(t, errorObj["message"], "already in this session")
 		})
-		
+
 		// Continue with other tests
 		tests := []struct {
 			name           string
@@ -147,9 +147,12 @@ func TestGameSessionSecurity(t *testing.T) {
 				expectedError:  "don't own this character",
 			},
 			{
-				name:           "Cannot join with high level character",
-				userID:         player3.ID,
-				characterID:    charHighLevel.ID,
+				name:        "Cannot join with high level character",
+				userID:      player1.ID,
+				characterID: charHighLevel.ID,
+				setupFunc: func() {
+					_ = svc.GameSessions.LeaveSession(ctx, session.ID, player1.ID)
+				},
 				expectedStatus: http.StatusBadRequest,
 				expectedError:  "exceeds session limit",
 			},
@@ -207,16 +210,21 @@ func TestGameSessionSecurity(t *testing.T) {
 					var response map[string]interface{}
 					err := json.NewDecoder(rr.Body).Decode(&response)
 					require.NoError(t, err)
-					// The error message is nested in response.error.message
-					errorObj, ok := response["error"].(map[string]interface{})
-					require.True(t, ok, "Expected error object in response")
-					assert.Contains(t, errorObj["message"], tt.expectedError)
+
+					errMap, ok := response["error"].(map[string]interface{})
+					require.True(t, ok)
+					assert.Contains(t, errMap["message"], tt.expectedError)
 				}
 			})
 		}
 	})
 
 	t.Run("GetGameSession_Authorization", func(t *testing.T) {
+		// Ensure player1 can join the session
+		_ = svc.GameSessions.LeaveSession(ctx, session.ID, player1.ID)
+		session.MaxPlayers = 4
+		testCtx.Repos.GameSessions.Update(ctx, session)
+		_ = svc.GameSessions.JoinSession(ctx, session.ID, player1.ID, &char1.ID)
 		// Create private session
 		privateSession := &models.GameSession{
 			DMID:        dm.ID,
@@ -275,7 +283,8 @@ func TestGameSessionSecurity(t *testing.T) {
 	})
 
 	t.Run("KickPlayer_Security", func(t *testing.T) {
-		// Add player2 to session for kick testing
+		// Ensure player2 is in the session for kick testing
+		_ = svc.GameSessions.LeaveSession(ctx, session.ID, player2.ID)
 		err := svc.GameSessions.JoinSession(ctx, session.ID, player2.ID, &char2.ID)
 		require.NoError(t, err)
 
@@ -341,10 +350,10 @@ func TestGameSessionSecurity(t *testing.T) {
 					var response map[string]interface{}
 					err := json.NewDecoder(rr.Body).Decode(&response)
 					require.NoError(t, err)
-					// The error message is nested in response.error.message
-					errorObj, ok := response["error"].(map[string]interface{})
-					require.True(t, ok, "Expected error object in response")
-					assert.Contains(t, errorObj["message"], tt.expectedError)
+
+					errMap, ok := response["error"].(map[string]interface{})
+					require.True(t, ok)
+					assert.Contains(t, errMap["message"], tt.expectedError)
 				}
 			})
 		}
@@ -355,20 +364,19 @@ func TestGameSessionSecurity(t *testing.T) {
 		inactiveSession := &models.GameSession{
 			DMID:     dm.ID,
 			Name:     "Inactive Session",
+			Status:   models.GameStatusActive,
+			IsActive: false,
 		}
 		err := svc.GameSessions.CreateSession(ctx, inactiveSession)
 		require.NoError(t, err)
-		
+
 		// Update session to be inactive (CreateSession sets it to active by default)
 		inactiveSession.IsActive = false
 		err = testCtx.Repos.GameSessions.Update(ctx, inactiveSession)
 		require.NoError(t, err)
 
 		// Try to join inactive session
-		body := map[string]interface{}{}
-		jsonBody, _ := json.Marshal(body)
-		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+inactiveSession.ID+"/join", bytes.NewBuffer(jsonBody))
-		req.Header.Set("Content-Type", "application/json")
+		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+inactiveSession.ID+"/join", bytes.NewBufferString("{}"))
 		// Create user claims and add to context
 		claims := &auth.Claims{
 			UserID:   player1.ID,
@@ -384,11 +392,10 @@ func TestGameSessionSecurity(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
 		var response map[string]interface{}
-		_ = json.NewDecoder(rr.Body).Decode(&response)
-		// The error message is nested in response.error.message
-		errorObj, ok := response["error"].(map[string]interface{})
-		require.True(t, ok, "Expected error object in response")
-		assert.Contains(t, errorObj["message"], "not active")
+		json.NewDecoder(rr.Body).Decode(&response)
+		errMap, ok := response["error"].(map[string]interface{})
+		require.True(t, ok)
+		assert.Contains(t, errMap["message"], "not active")
 
 		// Test operations on completed session
 		completedSession := &models.GameSession{
@@ -400,10 +407,7 @@ func TestGameSessionSecurity(t *testing.T) {
 		require.NoError(t, err)
 
 		// Try to join completed session
-		body2 := map[string]interface{}{}
-		jsonBody2, _ := json.Marshal(body2)
-		req = httptest.NewRequest("POST", "/api/v1/game/sessions/"+completedSession.ID+"/join", bytes.NewBuffer(jsonBody2))
-		req.Header.Set("Content-Type", "application/json")
+		req = httptest.NewRequest("POST", "/api/v1/game/sessions/"+completedSession.ID+"/join", bytes.NewBufferString("{}"))
 		// Create user claims and add to context
 		claims2 := &auth.Claims{
 			UserID:   player1.ID,
@@ -418,11 +422,10 @@ func TestGameSessionSecurity(t *testing.T) {
 		h.JoinGameSession(rr, req)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		_ = json.NewDecoder(rr.Body).Decode(&response)
-		// The error message is nested in response.error.message
-		errorObj2, ok := response["error"].(map[string]interface{})
-		require.True(t, ok, "Expected error object in response")
-		assert.Contains(t, errorObj2["message"], "completed session")
+		json.NewDecoder(rr.Body).Decode(&response)
+		errMap, ok = response["error"].(map[string]interface{})
+		require.True(t, ok)
+		assert.Contains(t, errMap["message"], "completed session")
 	})
 }
 

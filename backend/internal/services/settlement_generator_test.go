@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math/rand"
 	"testing"
 
 	"github.com/google/uuid"
@@ -518,6 +519,7 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 
 func TestSettlementGeneratorService_GenerateMarketConditions(t *testing.T) {
 	service := &SettlementGeneratorService{}
+	rand.Seed(42)
 
 	t.Run("basic market", func(t *testing.T) {
 		settlement := &models.Settlement{
