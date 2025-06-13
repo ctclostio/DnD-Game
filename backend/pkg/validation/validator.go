@@ -42,10 +42,10 @@ func New() *Validator {
 // registerCustomValidations registers custom validation rules
 func registerCustomValidations(v *validator.Validate) {
 	// D&D specific validations
-	v.RegisterValidation("dndname", validateDnDName)
-	v.RegisterValidation("dicenotation", validateDiceNotation)
-	v.RegisterValidation("alignment", validateAlignment)
-	v.RegisterValidation("ability", validateAbilityScore)
+	_ = v.RegisterValidation("dndname", validateDnDName)
+	_ = v.RegisterValidation("dicenotation", validateDiceNotation)
+	_ = v.RegisterValidation("alignment", validateAlignment)
+	_ = v.RegisterValidation("ability", validateAbilityScore)
 }
 
 // Validate validates a struct

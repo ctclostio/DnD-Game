@@ -59,14 +59,14 @@ func TestAppError_WithDetails(t *testing.T) {
 		"reason": "invalid format",
 	}
 
-	err.WithDetails(details)
+	_ = err.WithDetails(details)
 
 	assert.Equal(t, details, err.Details)
 }
 
 func TestAppError_WithCode(t *testing.T) {
 	err := NewNotFoundError("Resource")
-	err.WithCode("RESOURCE_404")
+	_ = err.WithCode("RESOURCE_404")
 
 	assert.Equal(t, "RESOURCE_404", err.Code)
 }
@@ -75,7 +75,7 @@ func TestAppError_WithInternal(t *testing.T) {
 	err := NewBadRequestError("Bad request")
 	internalErr := assert.AnError
 
-	err.WithInternal(internalErr)
+	_ = err.WithInternal(internalErr)
 
 	assert.Equal(t, internalErr, err.Internal)
 }

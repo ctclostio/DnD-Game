@@ -39,7 +39,9 @@ func SyncHandler(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				break
 			}
-			conn.WriteMessage(websocket.BinaryMessage, m.Bytes())
+			if err := conn.WriteMessage(websocket.BinaryMessage, m.Bytes()); err != nil {
+				return
+			}
 		}
 	}
 }

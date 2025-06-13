@@ -280,10 +280,10 @@ func (r *dmAssistantRepository) GetLocationByID(ctx context.Context, id uuid.UUI
 	}
 
 	// Unmarshal JSON fields
-	json.Unmarshal(featuresJSON, &location.NotableFeatures)
-	json.Unmarshal(npcsJSON, &location.NPCsPresent)
-	json.Unmarshal(actionsJSON, &location.AvailableActions)
-	json.Unmarshal(secretsJSON, &location.SecretsAndHidden)
+	_ = json.Unmarshal(featuresJSON, &location.NotableFeatures)
+	_ = json.Unmarshal(npcsJSON, &location.NPCsPresent)
+	_ = json.Unmarshal(actionsJSON, &location.AvailableActions)
+	_ = json.Unmarshal(secretsJSON, &location.SecretsAndHidden)
 
 	return &location, nil
 }

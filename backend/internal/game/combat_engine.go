@@ -176,7 +176,9 @@ func (ce *CombatEngine) DamageRoll(damageDice string, damageModifier int, damage
 	if isCritical {
 		// Double the number of dice on critical
 		var numDice, dieSize int
-		fmt.Sscanf(damageDice, "%dd%d", &numDice, &dieSize)
+		if _, err := fmt.Sscanf(damageDice, "%dd%d", &numDice, &dieSize); err != nil {
+			return 0, fmt.Errorf("invalid damage dice format: %v", err)
+		}
 		finalDice = fmt.Sprintf("%dd%d", numDice*2, dieSize)
 	}
 
