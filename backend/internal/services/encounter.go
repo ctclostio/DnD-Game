@@ -301,10 +301,10 @@ func (s *EncounterService) CheckObjectives(ctx context.Context, encounterID stri
 		}
 
 		if completed {
-			s.repo.CompleteObjective(objective.ID)
+			_ = s.repo.CompleteObjective(objective.ID)
 			s.awardObjectiveRewards(ctx, objective, encounter.GameSessionID)
 		} else if failed {
-			s.repo.FailObjective(objective.ID)
+			_ = s.repo.FailObjective(objective.ID)
 		}
 	}
 
