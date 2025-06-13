@@ -352,7 +352,7 @@ func TestGameService_GetSessionEvents(t *testing.T) {
 				PlayerID:  "player-123",
 				Data:      map[string]interface{}{"index": i},
 			}
-			service.RecordGameEvent(event)
+			_ = service.RecordGameEvent(event)
 		}
 
 		// Retrieve events

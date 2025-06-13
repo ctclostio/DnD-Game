@@ -185,7 +185,7 @@ func (s *FactionSystemService) UpdateFactionRelationship(ctx context.Context, fa
 	}
 
 	var relationships map[string]interface{}
-	json.Unmarshal([]byte(faction1.FactionRelationships), &relationships)
+	_ = json.Unmarshal([]byte(faction1.FactionRelationships), &relationships)
 
 	currentStanding := 0
 	if rel, exists := relationships[faction2ID.String()]; exists {
@@ -305,7 +305,7 @@ func (s *FactionSystemService) generateInitialRelationships(ctx context.Context,
 		}
 
 		// Update both factions' relationships
-		s.worldRepo.UpdateFactionRelationship(newFaction.ID, otherFaction.ID, standing, relationType)
+		_ = s.worldRepo.UpdateFactionRelationship(newFaction.ID, otherFaction.ID, standing, relationType)
 	}
 
 	return nil
@@ -356,7 +356,7 @@ func (s *FactionSystemService) calculateInitialStanding(faction1, faction2 *mode
 
 func (s *FactionSystemService) getFactionStanding(faction *models.Faction, otherFactionID uuid.UUID) int {
 	var relationships map[string]interface{}
-	json.Unmarshal([]byte(faction.FactionRelationships), &relationships)
+	_ = json.Unmarshal([]byte(faction.FactionRelationships), &relationships)
 
 	if rel, exists := relationships[otherFactionID.String()]; exists {
 		if relMap, ok := rel.(map[string]interface{}); ok {

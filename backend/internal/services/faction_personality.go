@@ -71,7 +71,7 @@ Provide a JSON response with:
 
 	// Parse AI response
 	var aiInsights map[string]interface{}
-	json.Unmarshal([]byte(response), &aiInsights)
+	_ = json.Unmarshal([]byte(response), &aiInsights)
 
 	personality := &models.FactionPersonality{
 		ID:               uuid.New().String(),
@@ -363,7 +363,7 @@ Provide a JSON response with:
 		Decay:        0.9,
 	}
 	personality.Memories = append(personality.Memories, decisionMemory)
-	fps.worldRepo.UpdateFactionPersonality(personality)
+	_ = fps.worldRepo.UpdateFactionPersonality(personality)
 
 	chosenOption := ""
 	if opt, ok := aiDecision["chosen_option"].(string); ok {

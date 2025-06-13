@@ -135,7 +135,7 @@ func (les *LivingEcosystemService) SimulateWorldProgress(ctx context.Context, se
 
 	// Save simulation log
 	simLog.EndTime = time.Now()
-	les.worldRepo.CreateSimulationLog(simLog)
+	_ = les.worldRepo.CreateSimulationLog(simLog)
 
 	return nil
 }
@@ -177,14 +177,14 @@ func (les *LivingEcosystemService) simulateNPCActivities(ctx context.Context, se
 				now := time.Now()
 				goal.CompletedAt = &now
 			}
-			les.worldRepo.UpdateNPCGoal(&goal)
+			_ = les.worldRepo.UpdateNPCGoal(&goal)
 		}
 
 		// Check if NPC should create new goals
 		if len(goals) < 3 && rand.Float64() < 0.3 {
 			newGoal := les.generateNPCGoal(ctx, npc)
 			if newGoal != nil {
-				les.worldRepo.CreateNPCGoal(newGoal)
+				_ = les.worldRepo.CreateNPCGoal(newGoal)
 			}
 		}
 
@@ -392,7 +392,7 @@ func (les *LivingEcosystemService) generateDefaultSchedule(npc *models.NPC) {
 	}
 
 	for _, schedule := range schedules {
-		les.worldRepo.CreateNPCSchedule(&schedule)
+		_ = les.worldRepo.CreateNPCSchedule(&schedule)
 	}
 }
 
