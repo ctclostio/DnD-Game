@@ -281,7 +281,7 @@ func (ctx *IntegrationTestContext) CreateTestGameSession(dmUserID, name, code st
 
 	// Update max_players if the column exists
 	updateQuery := `UPDATE game_sessions SET max_players = 6 WHERE id = ?`
-	ctx.SQLXDB.Exec(ctx.SQLXDB.Rebind(updateQuery), sessionID)
+	_, _ = ctx.SQLXDB.Exec(ctx.SQLXDB.Rebind(updateQuery), sessionID)
 
 	return sessionID
 }

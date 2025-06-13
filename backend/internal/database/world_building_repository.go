@@ -418,7 +418,7 @@ func (r *WorldBuildingRepository) UpdateFactionRelationship(faction1ID, faction2
 
 	// Update relationships
 	var relationships map[string]interface{}
-	json.Unmarshal([]byte(faction1.FactionRelationships), &relationships)
+	_ = json.Unmarshal([]byte(faction1.FactionRelationships), &relationships)
 	if relationships == nil {
 		relationships = make(map[string]interface{})
 	}
@@ -439,7 +439,7 @@ func (r *WorldBuildingRepository) UpdateFactionRelationship(faction1ID, faction2
 		faction2, err := r.GetFaction(faction2ID)
 		if err == nil {
 			var relationships2 map[string]interface{}
-			json.Unmarshal([]byte(faction2.FactionRelationships), &relationships2)
+			_ = json.Unmarshal([]byte(faction2.FactionRelationships), &relationships2)
 			if relationships2 == nil {
 				relationships2 = make(map[string]interface{})
 			}
@@ -450,7 +450,7 @@ func (r *WorldBuildingRepository) UpdateFactionRelationship(faction1ID, faction2
 			}
 
 			updatedRelationships2, _ := json.Marshal(relationships2)
-			r.db.ExecRebind(query, updatedRelationships2, time.Now(), faction2ID)
+			_, _ = r.db.ExecRebind(query, updatedRelationships2, time.Now(), faction2ID)
 		}
 	}
 
@@ -819,7 +819,7 @@ func (r *WorldBuildingRepository) SimulateEconomicChanges(gameSessionID uuid.UUI
 								market.CommonGoodsModifier *= modifier
 								market.FoodPriceModifier *= modifier
 							}
-							r.CreateOrUpdateMarket(market)
+							_ = r.CreateOrUpdateMarket(market)
 						}
 					}
 				}

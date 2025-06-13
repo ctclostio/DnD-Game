@@ -86,9 +86,9 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set initial timeouts
-	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		_ = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 		return nil
 	})
 
@@ -118,7 +118,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		logger.Error().
 			Err(err).
 			Msg("Failed to read auth message")
-		conn.WriteJSON(map[string]string{
+		_ = conn.WriteJSON(map[string]string{
 			"type":  "error",
 			"error": "Authentication failed",
 		})
@@ -128,7 +128,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	// Validate authentication message
 	if authMsg.Type != "auth" || authMsg.Token == "" {
-		conn.WriteJSON(map[string]string{
+		_ = conn.WriteJSON(map[string]string{
 			"type":  "error",
 			"error": "Invalid authentication message",
 		})
@@ -140,7 +140,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	if jwtManager == nil {
 		logger.Error().
 			Msg("JWT manager not initialized")
-		conn.WriteJSON(map[string]string{
+		_ = conn.WriteJSON(map[string]string{
 			"type":  "error",
 			"error": "Internal server error",
 		})
@@ -154,7 +154,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Err(err).
 			Str("remote_addr", r.RemoteAddr).
 			Msg("Token validation failed")
-		conn.WriteJSON(map[string]string{
+		_ = conn.WriteJSON(map[string]string{
 			"type":  "error",
 			"error": "Invalid token",
 		})
@@ -168,7 +168,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		// Try to get from query params as fallback
 		roomID = r.URL.Query().Get("room")
 		if roomID == "" {
-			conn.WriteJSON(map[string]string{
+			_ = conn.WriteJSON(map[string]string{
 				"type":  "error",
 				"error": "Room ID required",
 			})
@@ -189,7 +189,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send authentication success
-	conn.WriteJSON(map[string]string{
+	_ = conn.WriteJSON(map[string]string{
 		"type":     "auth_success",
 		"message":  "Authentication successful",
 		"username": client.username,
@@ -197,7 +197,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Remove read deadline after successful auth
-	conn.SetReadDeadline(time.Time{})
+	_ = conn.SetReadDeadline(time.Time{})
 
 	// Register client with hub
 	client.hub.register <- client
