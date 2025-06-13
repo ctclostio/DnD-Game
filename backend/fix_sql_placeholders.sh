@@ -7,22 +7,32 @@ echo "Finding repository files with PostgreSQL parameter syntax..."
 echo "================================================="
 
 # Find all repository files using $1, $2, etc. syntax
-for file in /home/gooner/GithubContributions/ctclostio/DnD-Game/backend/internal/database/*_repository.go; do
-    if grep -q '\$[0-9]' "$file"; then
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || echo "$SCRIPT_DIR")"
+
+found=0
+for file in "$REPO_ROOT"/backend/internal/database/*_repository.go; do
+    if [ -f "$file" ] && grep -q '\$[0-9]' "$file"; then
         basename=$(basename "$file")
         count=$(grep -c '\$[0-9]' "$file")
         echo "$basename: $count queries with PostgreSQL syntax"
+        found=1
     fi
 done
+
+if [ "$found" -eq 0 ]; then
+    echo "No repositories require placeholder updates."
+    exit 0
+fi
 
 echo ""
 echo "Files that need updating:"
 echo "========================"
-grep -l '\$[0-9]' /home/gooner/GithubContributions/ctclostio/DnD-Game/backend/internal/database/*_repository.go | xargs -I {} basename {}
+grep -l '\$[0-9]' "$REPO_ROOT"/backend/internal/database/*_repository.go 2>/dev/null | xargs -I {} basename {}
 
 echo ""
 echo "To fix a file:"
-echo "1. Replace $1, $2, etc. with ?"
+echo "1. Replace \$1, \$2, etc. with ?"
 echo "2. For sqlx.DB repos: Add 'query = r.db.Rebind(query)' before execution"
 echo "3. For DB wrapper repos: Use QueryRowContextRebind, ExecContextRebind methods"
 echo ""
