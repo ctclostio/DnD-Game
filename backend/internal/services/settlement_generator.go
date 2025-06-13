@@ -105,7 +105,7 @@ func (s *SettlementGeneratorService) GenerateSettlement(ctx context.Context, gam
 
 	// Generate initial market conditions
 	market := s.generateMarketConditions(settlement)
-	s.worldRepo.CreateOrUpdateMarket(market)
+	_ = s.worldRepo.CreateOrUpdateMarket(market)
 
 	return settlement, nil
 }

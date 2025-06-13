@@ -231,7 +231,7 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 			eventType = models.EventAncientAwakening
 		}
 
-		s.GenerateWorldEvent(ctx, gameSessionID, eventType)
+		_ = s.GenerateWorldEvent(ctx, gameSessionID, eventType)
 	}
 
 	return nil
@@ -300,7 +300,7 @@ func (s *WorldEventEngineService) checkResolutionConditions(ctx context.Context,
 	// Party intervention can help resolve events
 	if event.PartyInvolved {
 		var partyActions []interface{}
-		json.Unmarshal([]byte(event.PartyActions), &partyActions)
+		_ = json.Unmarshal([]byte(event.PartyActions), &partyActions)
 		if len(partyActions) >= 3 {
 			return rand.Float32() < 0.7 // High chance if party is actively involved
 		}
@@ -322,7 +322,7 @@ func (s *WorldEventEngineService) resolveEvent(ctx context.Context, event *model
 
 	// Apply resolution consequences
 	var consequences map[string]string
-	json.Unmarshal([]byte(event.Consequences), &consequences)
+	_ = json.Unmarshal([]byte(event.Consequences), &consequences)
 
 	outcome := "ifIgnored"
 	if event.PartyInvolved {
@@ -362,12 +362,12 @@ func (s *WorldEventEngineService) resolveEvent(ctx context.Context, event *model
 func (s *WorldEventEngineService) applyEventEffects(ctx context.Context, event *models.WorldEvent) {
 	// Apply economic impacts
 	var economicImpacts map[string]interface{}
-	json.Unmarshal([]byte(event.EconomicImpacts), &economicImpacts)
+	_ = json.Unmarshal([]byte(event.EconomicImpacts), &economicImpacts)
 
 	if len(economicImpacts) > 0 {
 		// Update market conditions in affected settlements
 		var affectedSettlements []string
-		json.Unmarshal([]byte(event.AffectedSettlements), &affectedSettlements)
+		_ = json.Unmarshal([]byte(event.AffectedSettlements), &affectedSettlements)
 
 		for _, settlementIDStr := range affectedSettlements {
 			settlementID, err := uuid.Parse(settlementIDStr)

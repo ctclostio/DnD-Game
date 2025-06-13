@@ -771,7 +771,7 @@ func (re *RuleEngine) ActivateRule(templateID, gameSessionID, characterID string
 	}
 
 	// Increment usage count
-	re.repository.IncrementUsageCount(templateID)
+	_ = re.repository.IncrementUsageCount(templateID)
 
 	return activeRule, nil
 }

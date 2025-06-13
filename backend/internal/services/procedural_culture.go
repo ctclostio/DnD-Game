@@ -141,7 +141,7 @@ Return as JSON with keys: common_words (map), idioms (array of {expression, lite
 	}
 
 	var langData map[string]interface{}
-	json.Unmarshal([]byte(response), &langData)
+	_ = json.Unmarshal([]byte(response), &langData)
 
 	// Build language structure
 	language := models.CultureLanguage{
@@ -421,7 +421,7 @@ Return as JSON map of context to greeting phrase.`,
 	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
 
 	if err == nil {
-		json.Unmarshal([]byte(response), &greetings)
+		_ = json.Unmarshal([]byte(response), &greetings)
 	}
 
 	// Ensure all contexts have greetings

@@ -560,7 +560,7 @@ func (les *LivingEcosystemService) simulatePoliticalDevelopments(ctx context.Con
 			}
 
 			// Update agenda
-			les.worldRepo.UpdateFactionAgenda(&agenda)
+			_ = les.worldRepo.UpdateFactionAgenda(&agenda)
 		}
 
 		// Check for new political opportunities
