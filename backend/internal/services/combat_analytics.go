@@ -80,7 +80,7 @@ func (cas *CombatAnalyticsService) FinalizeCombatAnalytics(
 		"combat_summary":  models.JSONB(summary),
 		"tactical_rating": calculateOverallScore(tacticalAnalysis),
 	}
-	cas.analyticsRepo.UpdateCombatAnalytics(analytics.ID, updates)
+	_ = cas.analyticsRepo.UpdateCombatAnalytics(analytics.ID, updates)
 
 	return &models.CombatAnalyticsReport{
 		Analytics:        analytics,
@@ -222,7 +222,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 				stats.DamageDealt += action.DamageDealt
 				// Track ability usage
 				abilities := []string{}
-				json.Unmarshal(stats.AbilitiesUsed, &abilities)
+				_ = json.Unmarshal(stats.AbilitiesUsed, &abilities)
 				abilities = append(abilities, action.ActionType)
 				abilitiesJSON, _ := json.Marshal(abilities)
 				stats.AbilitiesUsed = models.JSONB(abilitiesJSON)
@@ -243,10 +243,10 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 				// Track conditions
 				if len(action.ConditionsApplied) > 0 {
 					conditions := []string{}
-					json.Unmarshal(stats.ConditionsSuffered, &conditions)
+					_ = json.Unmarshal(stats.ConditionsSuffered, &conditions)
 
 					var newConditions []string
-					json.Unmarshal(action.ConditionsApplied, &newConditions)
+					_ = json.Unmarshal(action.ConditionsApplied, &newConditions)
 					conditions = append(conditions, newConditions...)
 
 					conditionsJSON, _ := json.Marshal(conditions)

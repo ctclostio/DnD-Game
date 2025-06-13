@@ -179,7 +179,7 @@ func (vm *ValidationMiddlewareV2) getErrorMessage(field, tag, param string, valu
 // registerCustomValidators registers D&D-specific validators
 func registerCustomValidators(v *validator.Validate) {
 	// D&D ability score (3-20)
-	v.RegisterValidation("dnd_ability_score", func(fl validator.FieldLevel) bool {
+	_ = v.RegisterValidation("dnd_ability_score", func(fl validator.FieldLevel) bool {
 		if value, ok := fl.Field().Interface().(int); ok {
 			return value >= 3 && value <= 20
 		}
@@ -187,7 +187,7 @@ func registerCustomValidators(v *validator.Validate) {
 	})
 
 	// D&D level (1-20)
-	v.RegisterValidation("dnd_level", func(fl validator.FieldLevel) bool {
+	_ = v.RegisterValidation("dnd_level", func(fl validator.FieldLevel) bool {
 		if value, ok := fl.Field().Interface().(int); ok {
 			return value >= 1 && value <= 20
 		}
@@ -195,7 +195,7 @@ func registerCustomValidators(v *validator.Validate) {
 	})
 
 	// D&D alignment
-	v.RegisterValidation("dnd_alignment", func(fl validator.FieldLevel) bool {
+	_ = v.RegisterValidation("dnd_alignment", func(fl validator.FieldLevel) bool {
 		validAlignments := map[string]bool{
 			"lawful good":     true,
 			"neutral good":    true,
@@ -215,7 +215,7 @@ func registerCustomValidators(v *validator.Validate) {
 	})
 
 	// D&D dice notation (e.g., 2d6+3)
-	v.RegisterValidation("dnd_dice_notation", func(fl validator.FieldLevel) bool {
+	_ = v.RegisterValidation("dnd_dice_notation", func(fl validator.FieldLevel) bool {
 		if value, ok := fl.Field().Interface().(string); ok {
 			// Simple regex for dice notation
 			pattern := `^\d+d\d+([+-]\d+)?$`
@@ -225,7 +225,7 @@ func registerCustomValidators(v *validator.Validate) {
 	})
 
 	// D&D skill
-	v.RegisterValidation("dnd_skill", func(fl validator.FieldLevel) bool {
+	_ = v.RegisterValidation("dnd_skill", func(fl validator.FieldLevel) bool {
 		validSkills := map[string]bool{
 			"acrobatics":      true,
 			"animal handling": true,
@@ -254,7 +254,7 @@ func registerCustomValidators(v *validator.Validate) {
 	})
 
 	// D&D ability
-	v.RegisterValidation("dnd_ability", func(fl validator.FieldLevel) bool {
+	_ = v.RegisterValidation("dnd_ability", func(fl validator.FieldLevel) bool {
 		validAbilities := map[string]bool{
 			"strength":     true,
 			"str":          true,
