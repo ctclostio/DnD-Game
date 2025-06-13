@@ -165,7 +165,7 @@ func TestGameSessionSecurity(t *testing.T) {
 				setupFunc: func() {
 					// Fill the session to capacity
 					session.MaxPlayers = 2 // DM + 1 player
-					testCtx.Repos.GameSessions.Update(ctx, session)
+					_ = testCtx.Repos.GameSessions.Update(ctx, session)
 				},
 				expectedStatus: http.StatusBadRequest,
 				expectedError:  "session is full",
@@ -384,7 +384,7 @@ func TestGameSessionSecurity(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
 		var response map[string]interface{}
-		json.NewDecoder(rr.Body).Decode(&response)
+		_ = json.NewDecoder(rr.Body).Decode(&response)
 		// The error message is nested in response.error.message
 		errorObj, ok := response["error"].(map[string]interface{})
 		require.True(t, ok, "Expected error object in response")
@@ -418,7 +418,7 @@ func TestGameSessionSecurity(t *testing.T) {
 		h.JoinGameSession(rr, req)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		json.NewDecoder(rr.Body).Decode(&response)
+		_ = json.NewDecoder(rr.Body).Decode(&response)
 		// The error message is nested in response.error.message
 		errorObj2, ok := response["error"].(map[string]interface{})
 		require.True(t, ok, "Expected error object in response")
