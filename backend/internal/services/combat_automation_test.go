@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
-	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
 // Using MockCombatAnalyticsRepository from combat_analytics_test.go
@@ -215,9 +215,10 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 				assert.Len(t, entries, 2)
 				// Check that entries are sorted (highest first)
 				assert.GreaterOrEqual(t, entries[0].Initiative, entries[1].Initiative)
-				// Check bonuses are applied
-				assert.Equal(t, 2, entries[0].Bonus)
-				assert.Equal(t, 1, entries[1].Bonus)
+				// Check bonuses are present (order may vary)
+				bonuses := []int{entries[0].Bonus, entries[1].Bonus}
+				assert.Contains(t, bonuses, 2)
+				assert.Contains(t, bonuses, 1)
 			},
 		},
 		{
