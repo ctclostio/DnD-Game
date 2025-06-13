@@ -388,18 +388,18 @@ func (s *WorldEventEngineService) applyEventEffects(ctx context.Context, event *
 				}
 			}
 
-			s.worldRepo.CreateOrUpdateMarket(market)
+			_ = s.worldRepo.CreateOrUpdateMarket(market)
 		}
 	}
 
 	// Apply political impacts
 	var politicalImpacts map[string]interface{}
-	json.Unmarshal([]byte(event.PoliticalImpacts), &politicalImpacts)
+	_ = json.Unmarshal([]byte(event.PoliticalImpacts), &politicalImpacts)
 
 	if len(politicalImpacts) > 0 {
 		// Update faction relationships
 		var affectedFactions []string
-		json.Unmarshal([]byte(event.AffectedFactions), &affectedFactions)
+		_ = json.Unmarshal([]byte(event.AffectedFactions), &affectedFactions)
 
 		// Conflicts might worsen relationships
 		if event.Type == models.EventPolitical && len(affectedFactions) >= 2 {

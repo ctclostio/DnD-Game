@@ -346,7 +346,7 @@ func (h *Handlers) Rest(w http.ResponseWriter, r *http.Request) {
 		char, err := h.characterService.GetCharacterByID(r.Context(), characterID)
 		if err == nil {
 			char.HitPoints = char.MaxHitPoints
-			h.characterService.UpdateCharacter(r.Context(), char)
+			_ = h.characterService.UpdateCharacter(r.Context(), char)
 		}
 	}
 

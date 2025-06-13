@@ -154,7 +154,7 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 		params["customRaceStats"] = raceStats
 
 		// Increment usage counter
-		go h.customRaceService.IncrementUsage(r.Context(), customRaceUUID)
+		go func() { _ = h.customRaceService.IncrementUsage(r.Context(), customRaceUUID) }()
 	}
 
 	character, err := h.characterBuilder.BuildCharacter(params)

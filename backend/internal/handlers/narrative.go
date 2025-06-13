@@ -347,10 +347,10 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 		consequences, err := h.narrativeEngine.ConsequenceEngine.CalculateConsequences(ctx, action, worldState)
 		if err == nil {
 			for _, consequence := range consequences {
-				h.narrativeRepo.CreateConsequenceEvent(&consequence)
+				_ = h.narrativeRepo.CreateConsequenceEvent(&consequence)
 			}
 			action.PotentialConsequences = len(consequences)
-			h.narrativeRepo.UpdatePlayerAction(&action)
+			_ = h.narrativeRepo.UpdatePlayerAction(&action)
 		}
 	}()
 
@@ -368,7 +368,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 
 		updatedProfile, err := h.narrativeEngine.ProfileService.AnalyzePlayerDecision(r.Context(), profile, decision)
 		if err == nil {
-			h.narrativeRepo.UpdateNarrativeProfile(updatedProfile)
+			_ = h.narrativeRepo.UpdateNarrativeProfile(updatedProfile)
 		}
 	}
 
@@ -510,7 +510,7 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 		perspectives, err := h.narrativeEngine.PerspectiveGen.GenerateMultiplePerspectives(ctx, event, sources)
 		if err == nil {
 			for _, perspective := range perspectives {
-				h.narrativeRepo.CreatePerspectiveNarrative(&perspective)
+				_ = h.narrativeRepo.CreatePerspectiveNarrative(&perspective)
 			}
 		}
 	}()
@@ -612,7 +612,7 @@ func (h *NarrativeHandlers) PersonalizeEvent(w http.ResponseWriter, r *http.Requ
 
 	// Update backstory usage
 	for _, callback := range narrative.BackstoryCallbacks {
-		h.narrativeRepo.IncrementBackstoryUsage(callback.BackstoryElementID)
+		_ = h.narrativeRepo.IncrementBackstoryUsage(callback.BackstoryElementID)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
