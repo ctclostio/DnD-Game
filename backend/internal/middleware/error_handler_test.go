@@ -82,8 +82,8 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 			handler: func(c *gin.Context) {
 				err1 := errors.NewValidationError("first error").WithCode(string(errors.ErrCodeValidationFailed))
 				err2 := errors.NewNotFoundError("resource").WithCode(string(errors.ErrCodeCharacterNotFound))
-				c.Error(err1)
-				c.Error(err2)
+				_ = c.Error(err1)
+				_ = c.Error(err2)
 				c.Abort()
 			},
 			expectedStatus: http.StatusNotFound,                     // Gin returns the status of the last error
@@ -135,7 +135,7 @@ func TestErrorHandlerMiddleware_ContextEnrichment(t *testing.T) {
 			c.Set("user_id", int64(123))
 			c.Set("username", "testuser")
 			err := errors.NewAuthorizationError("access denied").WithCode(string(errors.ErrCodeInsufficientPrivilege))
-			c.Error(err)
+			_ = c.Error(err)
 			c.Abort()
 		})
 
@@ -162,7 +162,7 @@ func TestErrorHandlerMiddleware_ContextEnrichment(t *testing.T) {
 			c.Set("session_id", int64(456))
 			c.Set("is_dm", true)
 			err := errors.NewNotFoundError("session").WithCode(string(errors.ErrCodeSessionNotFound))
-			c.Error(err)
+			_ = c.Error(err)
 			c.Abort()
 		})
 
@@ -186,7 +186,7 @@ func TestErrorHandlerMiddleware_ValidationErrors(t *testing.T) {
 			validationErrors.Add("level", "must be between 1 and 20")
 			validationErrors.Add("abilities.strength", "must be at least 3")
 
-			c.Error(validationErrors)
+			_ = c.Error(validationErrors)
 			c.Abort()
 		})
 
@@ -228,7 +228,7 @@ func TestErrorHandlerMiddleware_RateLimiting(t *testing.T) {
 
 		router.GET("/test", func(c *gin.Context) {
 			err := errors.NewRateLimitError("Too many requests").WithCode(string(errors.ErrCodeRateLimitExceeded)).WithDetails(map[string]interface{}{"retry_after": 60})
-			c.Error(err)
+			_ = c.Error(err)
 			c.Abort()
 		})
 
@@ -322,7 +322,7 @@ func TestErrorHandlerMiddleware_SecurityErrors(t *testing.T) {
 		router.GET("/test", func(c *gin.Context) {
 			// Error containing sensitive info
 			err := stderrors.New("invalid password: expected 'secret123' but got 'wrongpass'")
-			c.Error(err)
+			_ = c.Error(err)
 			c.Abort()
 		})
 
@@ -348,7 +348,7 @@ func TestErrorHandlerMiddleware_SecurityErrors(t *testing.T) {
 
 		router.POST("/test", func(c *gin.Context) {
 			err := errors.NewAuthorizationError("CSRF token mismatch").WithCode(string(errors.ErrCodeCSRFTokenMismatch))
-			c.Error(err)
+			_ = c.Error(err)
 			c.Abort()
 		})
 
@@ -373,7 +373,7 @@ func BenchmarkErrorHandler(b *testing.B) {
 
 	router.GET("/test", func(c *gin.Context) {
 		err := errors.NewNotFoundError("resource").WithCode(string(errors.ErrCodeCharacterNotFound))
-		c.Error(err)
+		_ = c.Error(err)
 		c.Abort()
 	})
 
