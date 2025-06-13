@@ -231,7 +231,7 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 			eventType = models.EventAncientAwakening
 		}
 
-		_ = s.GenerateWorldEvent(ctx, gameSessionID, eventType)
+		_, _ = s.GenerateWorldEvent(ctx, gameSessionID, eventType)
 	}
 
 	return nil
