@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -73,7 +74,7 @@ func (r *campaignRepository) CreateStoryArc(arc *models.StoryArc) error {
 		arc.ID = uuid.New()
 	}
 	if arc.Status == "" {
-		arc.Status = "active"
+		arc.Status = constants.StatusActive
 	}
 	if arc.ImportanceLevel == 0 {
 		arc.ImportanceLevel = 5

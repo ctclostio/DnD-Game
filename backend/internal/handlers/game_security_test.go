@@ -223,7 +223,8 @@ func TestGameSessionSecurity(t *testing.T) {
 		// Ensure player1 can join the session
 		_ = svc.GameSessions.LeaveSession(ctx, session.ID, player1.ID)
 		session.MaxPlayers = 4
-		testCtx.Repos.GameSessions.Update(ctx, session)
+		err = testCtx.Repos.GameSessions.Update(ctx, session)
+		require.NoError(t, err)
 		_ = svc.GameSessions.JoinSession(ctx, session.ID, player1.ID, &char1.ID)
 		// Create private session
 		privateSession := &models.GameSession{
@@ -392,7 +393,8 @@ func TestGameSessionSecurity(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
 		var response map[string]interface{}
-		json.NewDecoder(rr.Body).Decode(&response)
+		err = json.NewDecoder(rr.Body).Decode(&response)
+		require.NoError(t, err)
 		errMap, ok := response["error"].(map[string]interface{})
 		require.True(t, ok)
 		assert.Contains(t, errMap["message"], "not active")
@@ -422,7 +424,8 @@ func TestGameSessionSecurity(t *testing.T) {
 		h.JoinGameSession(rr, req)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		json.NewDecoder(rr.Body).Decode(&response)
+		err = json.NewDecoder(rr.Body).Decode(&response)
+		require.NoError(t, err)
 		errMap, ok = response["error"].(map[string]interface{})
 		require.True(t, ok)
 		assert.Contains(t, errMap["message"], "completed session")

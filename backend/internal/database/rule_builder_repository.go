@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -380,7 +381,7 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 	}
 
 	if characterID != "" {
-		query += " AND character_id = ?"
+		query += constants.AndCharacterIDClause
 		args = append(args, characterID)
 	}
 
@@ -496,7 +497,7 @@ func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, character
 	}
 
 	if characterID != "" {
-		query += " AND character_id = ?"
+		query += constants.AndCharacterIDClause
 		args = append(args, characterID)
 	}
 

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -33,10 +34,10 @@ func (r *gameSessionRepository) Create(ctx context.Context, session *models.Game
 	session.UpdatedAt = now
 
 	// Convert state to JSON string for storage
-	stateJSON := "{}"
+	stateJSON := constants.EmptyJSON
 	if session.State != nil && len(session.State) > 0 {
 		// In production, handle JSON marshaling properly
-		stateJSON = "{}"
+		stateJSON = constants.EmptyJSON
 	}
 
 	query := `

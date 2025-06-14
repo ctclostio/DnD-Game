@@ -152,6 +152,9 @@ issues:
         - noctx
         - dogsled
         - bodyclose
+    - path: docs/
+      linters:
+        - gochecknoinits
     - path: testing\.go
       linters:
         - gosec

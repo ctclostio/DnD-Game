@@ -11,19 +11,20 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
-var allowedOrigins []string
-
-func init() {
+// getAllowedOrigins returns the list of allowed origins for CORS
+func getAllowedOrigins() []string {
 	// Default development origins
-	allowedOrigins = []string{
+	origins := []string{
 		"http://localhost:3000",
 		"http://localhost:8080",
 	}
 
 	// Add production origin from environment
 	if prodOrigin := os.Getenv("PRODUCTION_ORIGIN"); prodOrigin != "" {
-		allowedOrigins = append(allowedOrigins, prodOrigin)
+		origins = append(origins, prodOrigin)
 	}
+	
+	return origins
 }
 
 var upgrader = websocket.Upgrader{
@@ -35,22 +36,31 @@ var upgrader = websocket.Upgrader{
 			return true
 		}
 
-		return middleware.ValidateOrigin(allowedOrigins, origin)
+		return middleware.ValidateOrigin(getAllowedOrigins(), origin)
 	},
 	// Enable compression
 	EnableCompression: true,
 }
 
-var hub = NewHub()
+var (
+	hub        *Hub
+	jwtManager *auth.JWTManager
+)
 
-var jwtManager *auth.JWTManager
-
-func init() {
-	go hub.Run()
+// InitHub initializes and starts the websocket hub
+func InitHub() *Hub {
+	if hub == nil {
+		hub = NewHub()
+		go hub.Run()
+	}
+	return hub
 }
 
 // GetHub returns the websocket hub instance
 func GetHub() *Hub {
+	if hub == nil {
+		return InitHub()
+	}
 	return hub
 }
 

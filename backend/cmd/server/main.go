@@ -185,9 +185,9 @@ func main() {
 		BattleMapGen:       aiBattleMapGenerator,
 	}
 
-	// Create WebSocket hub
-	hub := websocket.NewHub()
-	go hub.Run()
+	// Initialize WebSocket hub
+	hub := websocket.InitHub()
+	websocket.SetJWTManager(jwtManager)
 	log.Info().Msg("WebSocket hub started")
 
 	// Create handlers
