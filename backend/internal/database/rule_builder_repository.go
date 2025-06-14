@@ -163,7 +163,7 @@ func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPubl
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	templates := make([]models.RuleTemplate, 0, 10)
 	for rows.Next() {
@@ -278,7 +278,7 @@ func (r *RuleBuilderRepository) GetNodeTemplates() ([]models.NodeTemplate, error
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	templates := make([]models.NodeTemplate, 0, 10)
 	for rows.Next() {
@@ -390,7 +390,7 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	rules := make([]models.ActiveRule, 0, 10)
 	for rows.Next() {
@@ -513,7 +513,7 @@ func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, character
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	executions := make([]models.RuleExecution, 0, 10)
 	for rows.Next() {
@@ -571,7 +571,7 @@ func (r *RuleBuilderRepository) GetConditionalModifiers(ruleID string) ([]models
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	modifiers := make([]models.ConditionalModifier, 0, 10)
 	for rows.Next() {

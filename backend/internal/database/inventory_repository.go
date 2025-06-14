@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 type inventoryRepository struct {
@@ -79,7 +79,9 @@ func (r *inventoryRepository) GetItemsByType(itemType models.ItemType) ([]*model
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	items := make([]*models.Item, 0, 20)
 	for rows.Next() {
@@ -184,7 +186,9 @@ func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*mode
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	items := make([]*models.InventoryItem, 0, 20)
 	for rows.Next() {

@@ -246,13 +246,13 @@ func TestNewClaims(t *testing.T) {
 	assert.Equal(t, email, claims.Email)
 	assert.Equal(t, role, claims.Role)
 	assert.Equal(t, tokenType, claims.Type)
-	assert.NotEmpty(t, claims.RegisteredClaims.ID)
-	assert.NotNil(t, claims.RegisteredClaims.ExpiresAt)
-	assert.NotNil(t, claims.RegisteredClaims.IssuedAt)
-	assert.NotNil(t, claims.RegisteredClaims.NotBefore)
+	assert.NotEmpty(t, claims.ID)
+	assert.NotNil(t, claims.ExpiresAt)
+	assert.NotNil(t, claims.IssuedAt)
+	assert.NotNil(t, claims.NotBefore)
 
 	// Check expiration is set correctly
 	expectedExpiry := time.Now().Add(duration)
-	actualExpiry := claims.RegisteredClaims.ExpiresAt.Time
+	actualExpiry := claims.ExpiresAt.Time
 	assert.WithinDuration(t, expectedExpiry, actualExpiry, 1*time.Second)
 }

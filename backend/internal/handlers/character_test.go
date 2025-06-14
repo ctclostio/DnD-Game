@@ -8,11 +8,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"github.com/ctclostio/DnD-Game/backend/internal/auth"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // Helper function to create a test context with auth claims
@@ -108,12 +108,7 @@ func TestCharacterHandler_RequestValidation(t *testing.T) {
 			req := httptest.NewRequest(tt.method, tt.path, bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 
-			// Add auth context if userID is provided
-			if tt.userID != "" {
-				// Context would be added by auth middleware in real handler
-				// ctx := createAuthContext(tt.userID, "player")
-				// req = req.WithContext(ctx)
-			}
+			// Add auth context if userID is provided (placeholder for middleware)
 
 			// For this test, we'll just verify the request structure
 			if tt.body != nil {
@@ -195,14 +190,9 @@ func TestCharacterHandler_UpdateCharacter(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 
 			// Add route vars
-			req = mux.SetURLVars(req, map[string]string{"id": tt.characterID})
+			_ = mux.SetURLVars(req, map[string]string{"id": tt.characterID})
 
-			// Add auth context
-			if tt.userID != "" {
-				// Context would be added by auth middleware in real handler
-				// ctx := createAuthContext(tt.userID, "player")
-				// req = req.WithContext(ctx)
-			}
+			// Add auth context (placeholder)
 
 			// Verify request can be parsed
 			var decoded map[string]interface{}
@@ -270,11 +260,11 @@ func TestCharacterHandler_SpellSlots(t *testing.T) {
 
 			req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
-			req = mux.SetURLVars(req, map[string]string{"id": characterID})
+			_ = mux.SetURLVars(req, map[string]string{"id": characterID})
 
 			// Add auth context
 			ctx := createAuthContext(userID, "player")
-			req = req.WithContext(ctx)
+			_ = req.WithContext(ctx)
 
 			// Verify request structure
 			var decoded map[string]interface{}

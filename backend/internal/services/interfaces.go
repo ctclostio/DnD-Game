@@ -107,3 +107,8 @@ type AIDMAssistantInterface interface {
 	GenerateEnvironmentalHazard(ctx context.Context, locationType string, difficulty int) (*models.AIEnvironmentalHazard, error)
 	GenerateNPC(ctx context.Context, role string, context map[string]interface{}) (*models.AINPC, error)
 }
+
+// Shutdowner defines a service that can be gracefully shut down
+type Shutdowner interface {
+	Shutdown(ctx context.Context) error
+}

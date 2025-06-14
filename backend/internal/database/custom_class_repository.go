@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/lib/pq"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/lib/pq"
 )
 
 type CustomClassRepository struct {
@@ -170,7 +170,7 @@ func (r *CustomClassRepository) GetByUserID(userID string, includeUnapproved boo
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	classes := make([]*models.CustomClass, 0, 20)
 	for rows.Next() {
@@ -211,7 +211,7 @@ func (r *CustomClassRepository) GetApproved() ([]*models.CustomClass, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	classes := make([]*models.CustomClass, 0, 50)
 	for rows.Next() {

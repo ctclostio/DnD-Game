@@ -31,7 +31,9 @@ func Recovery(log *logger.LoggerV2) func(http.Handler) http.Handler {
 					w.WriteHeader(http.StatusInternalServerError)
 
 					// Send a generic error message (don't expose internal details)
-					fmt.Fprintf(w, `{"error":"Internal server error"}`)
+					if _, err := fmt.Fprintf(w, `{"error":"Internal server error"}`); err != nil {
+						fmt.Printf("failed to write error response: %v\n", err)
+					}
 				}
 			}()
 
@@ -85,7 +87,9 @@ func RecoveryWithConfig(config RecoveryConfig) func(http.Handler) http.Handler {
 						// Default error handling
 						w.Header().Set("Content-Type", "application/json")
 						w.WriteHeader(http.StatusInternalServerError)
-						fmt.Fprintf(w, `{"error":"Internal server error"}`)
+						if _, err := fmt.Fprintf(w, `{"error":"Internal server error"}`); err != nil {
+							fmt.Printf("failed to write error response: %v\n", err)
+						}
 					}
 				}
 			}()

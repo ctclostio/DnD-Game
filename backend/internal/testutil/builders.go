@@ -6,8 +6,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/stretchr/testify/require"
+)
+
+type ctxKey string
+
+const (
+	requestIDKey ctxKey = "request_id"
+	userIDKey    ctxKey = "user_id"
 )
 
 // Builder interface for all test builders
@@ -538,7 +545,7 @@ func (s *TestScenario) AssertValid() {
 // TestContext creates a context with common test values
 func TestContext() context.Context {
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, "request_id", "test-request-123")
-	ctx = context.WithValue(ctx, "user_id", int64(1))
+	ctx = context.WithValue(ctx, requestIDKey, "test-request-123")
+	ctx = context.WithValue(ctx, userIDKey, int64(1))
 	return ctx
 }

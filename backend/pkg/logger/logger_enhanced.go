@@ -151,7 +151,7 @@ func NewV2(cfg ConfigV2) (*LoggerV2, error) {
 
 // WithContext enriches the logger with context values
 func (l *LoggerV2) WithContext(ctx context.Context) *LoggerV2 {
-	zl := l.Logger.With()
+	zl := l.With()
 
 	// Add all context values
 	contextKeys := []struct {
@@ -179,7 +179,7 @@ func (l *LoggerV2) WithContext(ctx context.Context) *LoggerV2 {
 
 // WithOperation adds operation context
 func (l *LoggerV2) WithOperation(service, method string) *LoggerV2 {
-	logger := l.Logger.With().
+	logger := l.With().
 		Str("service", service).
 		Str("method", method).
 		Logger()
@@ -188,7 +188,7 @@ func (l *LoggerV2) WithOperation(service, method string) *LoggerV2 {
 
 // WithGameContext adds game-specific context
 func (l *LoggerV2) WithGameContext(sessionID, characterID string) *LoggerV2 {
-	zl := l.Logger.With()
+	zl := l.With()
 	if sessionID != "" {
 		zl = zl.Str("session_id", sessionID)
 	}
@@ -201,7 +201,7 @@ func (l *LoggerV2) WithGameContext(sessionID, characterID string) *LoggerV2 {
 
 // LogHTTPRequest logs HTTP request details
 func (l *LoggerV2) LogHTTPRequest(method, path string, statusCode int, duration time.Duration, fields ...map[string]interface{}) {
-	event := l.Logger.Info().
+	event := l.Info().
 		Str("method", method).
 		Str("path", path).
 		Int("status", statusCode).
@@ -229,7 +229,7 @@ func (l *LoggerV2) LogHTTPRequest(method, path string, statusCode int, duration 
 
 // LogDatabaseQuery logs database query details
 func (l *LoggerV2) LogDatabaseQuery(query string, duration time.Duration, err error, args ...interface{}) {
-	event := l.Logger.Debug().
+	event := l.Debug().
 		Str("query", truncateQuery(query)).
 		Dur("duration", duration).
 		Int("args_count", len(args))
@@ -243,7 +243,7 @@ func (l *LoggerV2) LogDatabaseQuery(query string, duration time.Duration, err er
 
 // LogAIOperation logs AI operation details
 func (l *LoggerV2) LogAIOperation(operation string, provider string, duration time.Duration, tokens int, err error) {
-	event := l.Logger.Info().
+	event := l.Info().
 		Str("operation", operation).
 		Str("provider", provider).
 		Dur("duration", duration).
@@ -258,7 +258,7 @@ func (l *LoggerV2) LogAIOperation(operation string, provider string, duration ti
 
 // LogWebSocketEvent logs WebSocket events
 func (l *LoggerV2) LogWebSocketEvent(eventType string, clientID string, data interface{}) {
-	l.Logger.Debug().
+	l.Debug().
 		Str("event_type", eventType).
 		Str("client_id", clientID).
 		Interface("data", data).
@@ -267,7 +267,7 @@ func (l *LoggerV2) LogWebSocketEvent(eventType string, clientID string, data int
 
 // LogGameEvent logs game-specific events
 func (l *LoggerV2) LogGameEvent(eventType string, sessionID string, details map[string]interface{}) {
-	event := l.Logger.Info().
+	event := l.Info().
 		Str("event_type", eventType).
 		Str("session_id", sessionID)
 

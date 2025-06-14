@@ -8,9 +8,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // FactionPersonalityService manages AI-driven faction personalities
@@ -636,6 +636,7 @@ func (fps *FactionPersonalityService) makeDefaultDecision(personality *models.Fa
 	}
 }
 
+//lint:ignore U1000 retained for future feature work
 func (fps *FactionPersonalityService) parseRelationshipImpacts(impacts interface{}) map[string]float64 {
 	result := make(map[string]float64)
 

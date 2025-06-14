@@ -5,8 +5,8 @@ import (
 	"errors"
 	"math/rand"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // CombatService adapter for tests
@@ -133,7 +133,7 @@ func (s *CombatService) GetCombatState(ctx context.Context, combatID string) (*m
 	for _, c := range testCombat.CombatantsMap {
 		combatants = append(combatants, *c)
 	}
-	testCombat.Combat.Combatants = combatants
+	testCombat.Combatants = combatants
 
 	return testCombat.Combat, nil
 }
@@ -219,12 +219,12 @@ func (s *CombatService) EndCombat(ctx context.Context, combatID string) error {
 		return errors.New("combat not found")
 	}
 
-	if !testCombat.Combat.IsActive || testCombat.Combat.Status == models.CombatStatusCompleted {
+	if !testCombat.IsActive || testCombat.Status == models.CombatStatusCompleted {
 		return errors.New("combat has already ended")
 	}
 
-	testCombat.Combat.IsActive = false
-	testCombat.Combat.Status = models.CombatStatusCompleted
+	testCombat.IsActive = false
+	testCombat.Status = models.CombatStatusCompleted
 	return nil
 }
 
@@ -242,9 +242,10 @@ func (s *CombatService) SetCombatState(combat *models.Combat) {
 	combat.Turn = combat.CurrentTurn
 
 	// Sync IsActive with Status if needed
-	if combat.Status == models.CombatStatusActive {
+	switch combat.Status {
+	case models.CombatStatusActive:
 		combat.IsActive = true
-	} else if combat.Status == models.CombatStatusCompleted {
+	case models.CombatStatusCompleted:
 		combat.IsActive = false
 	}
 

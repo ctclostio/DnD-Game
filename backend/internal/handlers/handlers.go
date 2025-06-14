@@ -33,7 +33,7 @@ type Handlers struct {
 }
 
 // NewHandlers creates a new handlers instance
-func NewHandlers(svc *services.Services, hub *websocket.Hub, db *database.DB) *Handlers {
+func NewHandlers(svc *services.Services, db *database.DB, hub *websocket.Hub) *Handlers {
 	return &Handlers{
 		userService:         svc.Users,
 		characterService:    svc.Characters,

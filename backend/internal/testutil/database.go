@@ -210,7 +210,7 @@ func SetupTestDB(t *testing.T) *sqlx.DB {
 // CleanupDB closes the database connection
 func CleanupDB(db *sqlx.DB) {
 	if db != nil {
-		db.Close()
+		_ = db.Close()
 	}
 }
 

@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // CustomRaceRepository defines the interface for custom race database operations
@@ -193,7 +193,7 @@ func (r *customRaceRepository) GetByUserID(ctx context.Context, userID uuid.UUID
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	return scanCustomRaces(rows)
 }
@@ -220,7 +220,7 @@ func (r *customRaceRepository) GetPublicRaces(ctx context.Context) ([]*models.Cu
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	return scanCustomRaces(rows)
 }
@@ -247,7 +247,7 @@ func (r *customRaceRepository) GetPendingApproval(ctx context.Context) ([]*model
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	return scanCustomRaces(rows)
 }

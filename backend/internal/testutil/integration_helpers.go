@@ -9,14 +9,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/mux"
-	"github.com/jmoiron/sqlx"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
+	"github.com/stretchr/testify/require"
 )
 
 // IntegrationTestContext contains all dependencies for integration testing
@@ -157,11 +157,7 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 	}
 
 	cleanup := func() {
-		if hub != nil {
-			// Hub will be cleaned up when the test ends
-			// The goroutine will exit when the test process ends
-		}
-		sqlxDB.Close()
+		_ = sqlxDB.Close()
 	}
 
 	return &IntegrationTestContext{

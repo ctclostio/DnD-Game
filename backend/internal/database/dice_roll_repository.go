@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/lib/pq"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/lib/pq"
 )
 
 // diceRollRepository implements DiceRollRepository interface
@@ -77,7 +77,7 @@ func (r *diceRollRepository) GetByGameSession(ctx context.Context, sessionID str
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dice rolls by game session: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	rolls := make([]*models.DiceRoll, 0, limit)
 	for rows.Next() {
@@ -113,7 +113,7 @@ func (r *diceRollRepository) GetByUser(ctx context.Context, userID string, offse
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dice rolls by user: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	rolls := make([]*models.DiceRoll, 0, limit)
 	for rows.Next() {
@@ -149,7 +149,7 @@ func (r *diceRollRepository) GetByGameSessionAndUser(ctx context.Context, sessio
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dice rolls by game session and user: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	rolls := make([]*models.DiceRoll, 0, limit)
 	for rows.Next() {

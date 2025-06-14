@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/google/uuid"
 )
 
 type AIBattleMapGenerator struct {
@@ -200,7 +200,8 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 	var terrainFeatures []models.BattleMapTerrainFeature
 
 	// Add some walls or trees based on map type
-	if req.MapType == "dungeon" {
+	switch req.MapType {
+	case "dungeon":
 		// Add walls around the edges
 		for x := 0; x < gridX; x++ {
 			terrainFeatures = append(terrainFeatures,
@@ -218,7 +219,7 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 				},
 			)
 		}
-	} else if req.MapType == "outdoor" {
+	case "outdoor":
 		// Add some trees
 		for i := 0; i < 5; i++ {
 			terrainFeatures = append(terrainFeatures, models.BattleMapTerrainFeature{

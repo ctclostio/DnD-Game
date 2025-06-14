@@ -3,10 +3,12 @@ package services
 import (
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/internal/database"
 )
 
 // Services aggregates all service interfaces
 type Services struct {
+	DB                 *database.DB
 	Users              *UserService
 	Characters         *CharacterService
 	GameSessions       *GameSessionService

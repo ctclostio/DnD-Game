@@ -22,15 +22,15 @@ func TestLoad(t *testing.T) {
 	}
 	for _, key := range envVars {
 		originalEnv[key] = os.Getenv(key)
-		os.Unsetenv(key)
+		require.NoError(t, os.Unsetenv(key))
 	}
 	defer func() {
 		// Restore original env vars
 		for key, value := range originalEnv {
 			if value != "" {
-				os.Setenv(key, value)
+				require.NoError(t, os.Setenv(key, value))
 			} else {
-				os.Unsetenv(key)
+				require.NoError(t, os.Unsetenv(key))
 			}
 		}
 	}()
@@ -70,28 +70,28 @@ func TestLoad(t *testing.T) {
 
 	t.Run("loads from environment variables", func(t *testing.T) {
 		// Set test env vars
-		os.Setenv("PORT", "3000")
-		os.Setenv("ENV", "production")
-		os.Setenv("DB_HOST", "test-host")
-		os.Setenv("DB_PORT", "5433")
-		os.Setenv("DB_USER", "test-user")
-		os.Setenv("DB_PASSWORD", "test-pass")
-		os.Setenv("DB_NAME", "test-db")
-		os.Setenv("DB_SSLMODE", "require")
-		os.Setenv("DB_MAX_OPEN_CONNS", "50")
-		os.Setenv("DB_MAX_IDLE_CONNS", "10")
-		os.Setenv("DB_MAX_LIFETIME", "10m")
-		os.Setenv("REDIS_HOST", "redis-host")
-		os.Setenv("REDIS_PORT", "6380")
-		os.Setenv("REDIS_PASSWORD", "redis-pass")
-		os.Setenv("REDIS_DB", "1")
-		os.Setenv("JWT_SECRET", "test-secret-key-that-is-long-enough")
-		os.Setenv("ACCESS_TOKEN_DURATION", "30m")
-		os.Setenv("REFRESH_TOKEN_DURATION", "336h")
-		os.Setenv("BCRYPT_COST", "12")
-		os.Setenv("AI_PROVIDER", "openai")
-		os.Setenv("AI_API_KEY", "test-api-key")
-		os.Setenv("AI_MODEL", "gpt-4")
+		require.NoError(t, os.Setenv("PORT", "3000"))
+		require.NoError(t, os.Setenv("ENV", "production"))
+		require.NoError(t, os.Setenv("DB_HOST", "test-host"))
+		require.NoError(t, os.Setenv("DB_PORT", "5433"))
+		require.NoError(t, os.Setenv("DB_USER", "test-user"))
+		require.NoError(t, os.Setenv("DB_PASSWORD", "test-pass"))
+		require.NoError(t, os.Setenv("DB_NAME", "test-db"))
+		require.NoError(t, os.Setenv("DB_SSLMODE", "require"))
+		require.NoError(t, os.Setenv("DB_MAX_OPEN_CONNS", "50"))
+		require.NoError(t, os.Setenv("DB_MAX_IDLE_CONNS", "10"))
+		require.NoError(t, os.Setenv("DB_MAX_LIFETIME", "10m"))
+		require.NoError(t, os.Setenv("REDIS_HOST", "redis-host"))
+		require.NoError(t, os.Setenv("REDIS_PORT", "6380"))
+		require.NoError(t, os.Setenv("REDIS_PASSWORD", "redis-pass"))
+		require.NoError(t, os.Setenv("REDIS_DB", "1"))
+		require.NoError(t, os.Setenv("JWT_SECRET", "test-secret-key-that-is-long-enough"))
+		require.NoError(t, os.Setenv("ACCESS_TOKEN_DURATION", "30m"))
+		require.NoError(t, os.Setenv("REFRESH_TOKEN_DURATION", "336h"))
+		require.NoError(t, os.Setenv("BCRYPT_COST", "12"))
+		require.NoError(t, os.Setenv("AI_PROVIDER", "openai"))
+		require.NoError(t, os.Setenv("AI_API_KEY", "test-api-key"))
+		require.NoError(t, os.Setenv("AI_MODEL", "gpt-4"))
 
 		cfg, err := Load()
 		require.NoError(t, err)
@@ -121,7 +121,7 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("handles invalid port", func(t *testing.T) {
-		os.Setenv("DB_PORT", "invalid")
+		require.NoError(t, os.Setenv("DB_PORT", "invalid"))
 
 		cfg, err := Load()
 		require.NoError(t, err)
@@ -130,7 +130,7 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("handles invalid duration", func(t *testing.T) {
-		os.Setenv("ACCESS_TOKEN_DURATION", "invalid")
+		require.NoError(t, os.Setenv("ACCESS_TOKEN_DURATION", "invalid"))
 
 		cfg, err := Load()
 		require.NoError(t, err)

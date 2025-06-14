@@ -44,6 +44,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 	npcService := services.NewNPCService(ctx.Repos.NPCs)
 
 	svc := &services.Services{
+		DB:           ctx.DB,
 		Users:        userService,
 		Characters:   characterService,
 		GameSessions: gameSessionService,
@@ -57,7 +58,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 	go hub.Run()
 
 	// Create handlers and setup routes
-	h := handlers.NewHandlers(svc, hub, ctx.DB)
+	h := handlers.NewHandlers(svc, ctx.DB, hub)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
@@ -372,6 +373,7 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 
 	// Create services
 	svc := &services.Services{
+		DB:           ctx.DB,
 		Users:        services.NewUserService(ctx.Repos.Users),
 		Characters:   services.NewCharacterService(ctx.Repos.Characters, ctx.Repos.CustomClasses, nil),
 		GameSessions: services.NewGameSessionService(ctx.Repos.GameSessions),
@@ -380,7 +382,7 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 		JWTManager:   ctx.JWTManager,
 	}
 
-	h := handlers.NewHandlers(svc, nil, ctx.DB)
+	h := handlers.NewHandlers(svc, ctx.DB, nil)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()

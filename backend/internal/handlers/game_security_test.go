@@ -38,6 +38,7 @@ func TestGameSessionSecurity(t *testing.T) {
 	gameService.SetUserRepository(testCtx.Repos.Users)
 
 	svc := &services.Services{
+		DB:           testCtx.DB,
 		Users:        services.NewUserService(testCtx.Repos.Users),
 		Characters:   services.NewCharacterService(testCtx.Repos.Characters, nil, nil),
 		GameSessions: gameService,
@@ -45,7 +46,7 @@ func TestGameSessionSecurity(t *testing.T) {
 	}
 
 	// Create handlers
-	h := handlers.NewHandlers(svc, nil, testCtx.DB)
+	h := handlers.NewHandlers(svc, testCtx.DB, nil)
 
 	// Create test users
 	dm := createTestUser(t, testCtx, "dm_user", "dm@example.com", "dm")
@@ -367,10 +368,8 @@ func TestGameSessionSecurity(t *testing.T) {
 	t.Run("SessionState_Security", func(t *testing.T) {
 		// Test operations on inactive session
 		inactiveSession := &models.GameSession{
-			DMID:     dm.ID,
-			Name:     "Inactive Session",
-			Status:   models.GameStatusActive,
-			IsActive: false,
+			DMID: dm.ID,
+			Name: "Inactive Session",
 		}
 		err := svc.GameSessions.CreateSession(ctx, inactiveSession)
 		require.NoError(t, err)

@@ -55,10 +55,7 @@ func (s *EncounterService) GetEncounter(ctx context.Context, encounterID string)
 
 	// Load objectives
 	objectives, _ := s.repo.GetObjectives(encounterID)
-	if objectives != nil {
-		// Add objectives to encounter (you might want to add this field to the model)
-		// encounter.Objectives = objectives
-	}
+	_ = objectives // placeholder for future objective handling
 
 	return encounter, nil
 }
@@ -354,15 +351,9 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 }
 
 func (s *EncounterService) applyScalingAdjustment(encounter *models.Encounter, adjustment models.ScalingAdjustment) {
-	// Remove enemies
-	if len(adjustment.RemoveEnemies) > 0 {
-		// Logic to remove specified enemies
-	}
+	// Remove enemies - logic to remove specified enemies could be added here
 
-	// Add enemies
-	if len(adjustment.AddEnemies) > 0 {
-		// Logic to add specified enemies
-	}
+	// Add enemies - placeholder for future logic
 
 	// Adjust HP for all enemies
 	if adjustment.HPModifier != 0 {
@@ -375,19 +366,11 @@ func (s *EncounterService) applyScalingAdjustment(encounter *models.Encounter, a
 	}
 
 	// Adjust damage (would need to modify actions)
-	if adjustment.DamageModifier != 0 {
-		// Logic to adjust damage values
-	}
+	_ = adjustment.DamageModifier // Placeholder for future damage modification
 
-	// Add hazards
-	if len(adjustment.AddHazards) > 0 {
-		// Logic to add environmental hazards
-	}
+	// Add hazards - future enhancement
 
-	// Add terrain
-	if len(adjustment.AddTerrain) > 0 {
-		// Logic to add terrain features
-	}
+	// Add terrain - future enhancement
 }
 
 func (s *EncounterService) awardObjectiveRewards(ctx context.Context, objective *models.EncounterObjective, gameSessionID string) {
@@ -398,9 +381,7 @@ func (s *EncounterService) awardObjectiveRewards(ctx context.Context, objective 
 	// This would integrate with inventory service
 
 	// Award items
-	if len(objective.ItemRewards) > 0 {
-		// This would integrate with inventory service
-	}
+	_ = objective.ItemRewards // Placeholder for item rewards integration
 
 	// Log the rewards
 	event := &models.EncounterEvent{

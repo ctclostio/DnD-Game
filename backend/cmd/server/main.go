@@ -8,8 +8,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/mux"
-	"github.com/rs/cors"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
@@ -19,6 +17,8 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -155,6 +155,7 @@ func main() {
 
 	// Aggregate all services
 	svc := &services.Services{
+		DB:                 db,
 		Users:              services.NewUserService(repos.Users),
 		Characters:         services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
 		GameSessions:       gameSessionService,
@@ -191,7 +192,7 @@ func main() {
 	log.Info().Msg("WebSocket hub started")
 
 	// Create handlers
-	h := handlers.NewHandlers(svc, hub, db)
+	h := handlers.NewHandlers(svc, db, hub)
 	log.Info().Msg("Handlers initialized")
 
 	// Setup routes
@@ -291,12 +292,12 @@ func main() {
 	}
 
 	// Stop refresh token cleanup
-	// TODO: Implement StopCleanupTask in RefreshTokenService
-	// refreshTokenService.StopCleanupTask()
+	refreshTokenService.StopCleanupTask()
 
 	// Close WebSocket hub
-	// TODO: Implement Shutdown in WebSocket hub
-	// hub.Shutdown()
+	if err := hub.Shutdown(ctx); err != nil {
+		log.Error().Err(err).Msg("Failed to shutdown websocket hub")
+	}
 
 	log.Info().Msg("Server shutdown complete")
 }

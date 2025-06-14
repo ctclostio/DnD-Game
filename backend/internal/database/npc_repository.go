@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 type npcRepository struct {
@@ -144,7 +144,7 @@ func (r *npcRepository) GetByGameSession(ctx context.Context, gameSessionID stri
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	npcs := make([]*models.NPC, 0, 10)
 	for rows.Next() {
@@ -261,7 +261,7 @@ func (r *npcRepository) Search(ctx context.Context, filter models.NPCSearchFilte
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	npcs := make([]*models.NPC, 0, 10)
 	for rows.Next() {
@@ -292,7 +292,7 @@ func (r *npcRepository) GetTemplates(ctx context.Context) ([]*models.NPCTemplate
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	templates := make([]*models.NPCTemplate, 0, 10)
 	for rows.Next() {

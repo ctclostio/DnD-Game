@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"runtime"
 	"time"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/health"
 )
 
 // HealthResponse represents the health check response
@@ -105,16 +107,12 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 	checks := make(map[string]HealthCheckResult)
 	allHealthy := true
 
-	// Check database connection if available
-	if h.db != nil {
-		if err := h.db.Ping(); err != nil {
-			checks["database"] = HealthCheckResult{
-				Status:  "unhealthy",
-				Message: "Database connection failed",
-			}
+	// Dependency checks
+	results := health.RunChecks(r.Context(), &health.DBChecker{DB: h.db})
+	for name, res := range results {
+		checks[name] = HealthCheckResult{Status: res.Status, Message: res.Message}
+		if res.Status != "healthy" {
 			allHealthy = false
-		} else {
-			checks["database"] = HealthCheckResult{Status: "healthy"}
 		}
 	}
 
@@ -180,15 +178,9 @@ func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 	checks := make(map[string]HealthCheckResult)
 
 	// Check database if available
-	if h.db != nil {
-		if err := h.db.Ping(); err != nil {
-			checks["database"] = HealthCheckResult{
-				Status:  "unhealthy",
-				Message: "Database connection failed",
-			}
-		} else {
-			checks["database"] = HealthCheckResult{Status: "healthy"}
-		}
+	dbResults := health.RunChecks(r.Context(), &health.DBChecker{DB: h.db})
+	if res, ok := dbResults["database"]; ok {
+		checks["database"] = HealthCheckResult{Status: res.Status, Message: res.Message}
 	}
 
 	// Check services

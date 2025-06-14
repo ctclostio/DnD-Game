@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/jmoiron/sqlx"
 )
 
 // LoggedDB wraps DB with query logging
@@ -149,7 +149,7 @@ func (ldb *LoggedDB) WithTxContext(ctx context.Context, fn func(*sqlx.Tx) error)
 	log := ldb.logger.WithContext(ctx)
 	log.Debug().Msg("Beginning database transaction")
 
-	tx, err := ldb.DB.BeginTxx(ctx, nil)
+	tx, err := ldb.BeginTxx(ctx, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to begin transaction")
 		return err

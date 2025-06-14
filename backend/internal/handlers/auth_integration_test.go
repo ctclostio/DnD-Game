@@ -7,9 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
@@ -18,6 +15,9 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAuthFlow_Integration(t *testing.T) {
@@ -34,13 +34,14 @@ func TestAuthFlow_Integration(t *testing.T) {
 	refreshTokenService := services.NewRefreshTokenService(ctx.Repos.RefreshTokens, ctx.JWTManager)
 
 	svc := &services.Services{
+		DB:            ctx.DB,
 		Users:         userService,
 		RefreshTokens: refreshTokenService,
 		JWTManager:    ctx.JWTManager,
 	}
 
 	// Create handlers and setup routes
-	h := handlers.NewHandlers(svc, nil, ctx.DB)
+	h := handlers.NewHandlers(svc, ctx.DB, nil)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
@@ -349,12 +350,13 @@ func TestPasswordValidation_Integration(t *testing.T) {
 	require.NoError(t, err)
 
 	svc := &services.Services{
+		DB:            ctx.DB,
 		Users:         services.NewUserService(ctx.Repos.Users),
 		RefreshTokens: services.NewRefreshTokenService(ctx.Repos.RefreshTokens, ctx.JWTManager),
 		JWTManager:    ctx.JWTManager,
 	}
 
-	h := handlers.NewHandlers(svc, nil, ctx.DB)
+	h := handlers.NewHandlers(svc, ctx.DB, nil)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
@@ -455,21 +457,3 @@ func TestRateLimiting_Integration(t *testing.T) {
 }
 
 // Helper to create authenticated request
-func createAuthRequest(t *testing.T, method, url string, body interface{}, token string) *http.Request {
-	var bodyReader *bytes.Reader
-	if body != nil {
-		bodyBytes, err := json.Marshal(body)
-		require.NoError(t, err)
-		bodyReader = bytes.NewReader(bodyBytes)
-	} else {
-		bodyReader = bytes.NewReader([]byte{})
-	}
-
-	req := httptest.NewRequest(method, url, bodyReader)
-	req.Header.Set("Content-Type", "application/json")
-	if token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
-
-	return req
-}

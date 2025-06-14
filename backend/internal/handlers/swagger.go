@@ -55,7 +55,9 @@ func SwaggerUI(w http.ResponseWriter, r *http.Request) {
 </html>`
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, html)
+	if _, err := fmt.Fprint(w, html); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // SwaggerJSON returns the OpenAPI specification
@@ -205,5 +207,7 @@ func (h *Handlers) SwaggerJSON(w http.ResponseWriter, r *http.Request) {
 }`
 
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprint(w, spec)
+	if _, err := fmt.Fprint(w, spec); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }

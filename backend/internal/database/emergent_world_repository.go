@@ -175,7 +175,9 @@ func (r *EmergentWorldRepository) GetNPCGoals(npcID string) ([]models.NPCGoal, e
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	goals := make([]models.NPCGoal, 0, 10)
 	for rows.Next() {
@@ -287,7 +289,9 @@ func (r *EmergentWorldRepository) GetNPCSchedule(npcID string) ([]models.NPCSche
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	schedules := make([]models.NPCSchedule, 0, 24)
 	for rows.Next() {
@@ -467,7 +471,9 @@ func (r *EmergentWorldRepository) GetFactionAgendas(factionID string) ([]models.
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	agendas := make([]models.FactionAgenda, 0, 10)
 	for rows.Next() {
@@ -660,7 +666,9 @@ func (r *EmergentWorldRepository) GetCulturesBySession(sessionID string) ([]*mod
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	cultures := make([]*models.ProceduralCulture, 0, 20)
 	for rows.Next() {
@@ -804,7 +812,9 @@ func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, on
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	events := make([]models.EmergentWorldEvent, 0, limit)
 	for rows.Next() {
@@ -891,7 +901,9 @@ func (r *EmergentWorldRepository) GetSimulationLogs(sessionID string, limit int)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	logs := make([]models.SimulationLog, 0, limit)
 	for rows.Next() {

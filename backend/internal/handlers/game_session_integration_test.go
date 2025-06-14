@@ -225,8 +225,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		joinReq := map[string]interface{}{
 			"character_id": char3ID,
 		}
-		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/join", joinReq, player3ID)
-		// Ignore the result - they might already be in the session
+		_ = ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/join", joinReq, player3ID)
 
 		// Now leave
 		w = ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/leave", nil, player3ID)

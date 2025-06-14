@@ -123,7 +123,9 @@ func (rl *RateLimiter) Middleware() func(http.Handler) http.Handler {
 				w.Header().Set("X-RateLimit-Window", rl.window.String())
 				w.Header().Set("Retry-After", rl.window.String())
 				w.WriteHeader(http.StatusTooManyRequests)
-				fmt.Fprintf(w, `{"error":"Rate limit exceeded. Please try again later."}`)
+				if _, err := fmt.Fprintf(w, `{"error":"Rate limit exceeded. Please try again later."}`); err != nil {
+					fmt.Printf("failed to write rate limit response: %v\n", err)
+				}
 				return
 			}
 

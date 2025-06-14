@@ -13,6 +13,10 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+type contextKey string
+
+const validatedRequestKey contextKey = "validated_request"
+
 // ValidationMiddlewareV2 provides enhanced request validation.
 type ValidationMiddlewareV2 struct {
 	validator *validator.Validate
@@ -72,7 +76,7 @@ func (vm *ValidationMiddlewareV2) ValidateRequest(structType interface{}) func(h
 			}
 
 			// Store validated request in context for handler use
-			ctx := context.WithValue(r.Context(), "validated_request", req)
+			ctx := context.WithValue(r.Context(), validatedRequestKey, req)
 			r = r.WithContext(ctx)
 
 			next.ServeHTTP(w, r)
@@ -281,7 +285,7 @@ func registerCustomValidators(v *validator.Validate) {
 func GetValidatedRequest[T any](r *http.Request) (T, error) {
 	var zero T
 
-	val := r.Context().Value("validated_request")
+	val := r.Context().Value(validatedRequestKey)
 	if val == nil {
 		return zero, errors.NewInternalError("No validated request in context", nil)
 	}

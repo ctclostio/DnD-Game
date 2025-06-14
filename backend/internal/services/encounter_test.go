@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/stretchr/testify/assert"
 )
 
 // Basic compilation test to ensure the service compiles correctly
@@ -392,6 +392,8 @@ func TestXPCalculation(t *testing.T) {
 }
 
 // Helper function to test encounter creation
+//
+//lint:ignore U1000 retained for future tests
 func createTestEncounterData() *models.Encounter {
 	return &models.Encounter{
 		Name:          "Test Encounter",

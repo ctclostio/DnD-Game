@@ -6,29 +6,35 @@ import (
 	"os"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/gorilla/websocket"
 )
 
 const (
 	// Time allowed to write a message to the peer
+	//lint:ignore U1000 retained for future use
 	writeWait = 10 * time.Second
 
 	// Time allowed to read the next pong message from the peer
+	//lint:ignore U1000 retained for future use
 	pongWait = 60 * time.Second
 
 	// Send pings to peer with this period. Must be less than pongWait
+	//lint:ignore U1000 retained for future use
 	pingPeriod = (pongWait * 9) / 10
 
 	// Maximum message size allowed from peer
+	//lint:ignore U1000 retained for future use
 	maxMessageSize = 512 * 1024 // 512KB
 )
 
 var (
+	//lint:ignore U1000 retained for future use
 	newline = []byte{'\n'}
-	space   = []byte{' '}
+	//lint:ignore U1000 retained for future use
+	space = []byte{' '}
 )
 
 // AuthMessageV2 represents the authentication message
@@ -182,7 +188,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Err(err).
 			Str("client_id", clientID).
 			Msg("Failed to send auth request")
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 
@@ -198,7 +204,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		errorMsg := map[string]string{"type": "error", "message": "Authentication failed"}
 		errorData, _ := json.Marshal(errorMsg)
 		_ = tempConn.WriteMessage(websocket.TextMessage, errorData)
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 
@@ -212,7 +218,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		errorMsg := map[string]string{"type": "error", "message": "Invalid authentication message"}
 		errorData, _ := json.Marshal(errorMsg)
 		_ = tempConn.WriteMessage(websocket.TextMessage, errorData)
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 
@@ -226,7 +232,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		errorMsg := map[string]string{"type": "error", "message": "Invalid token"}
 		errorData, _ := json.Marshal(errorMsg)
 		_ = tempConn.WriteMessage(websocket.TextMessage, errorData)
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 	userID := claims.UserID
