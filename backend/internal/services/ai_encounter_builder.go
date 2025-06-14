@@ -10,6 +10,8 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+const difficultyEasy = "easy"
+
 type EncounterRequest struct {
 	PartyLevel       int      `json:"partyLevel"`
 	PartySize        int      `json:"partySize"`
@@ -597,14 +599,14 @@ func (b *AIEncounterBuilder) calculateXPBudget(level, size int, difficulty strin
 	}
 
 	difficultyIndex := map[string]int{
-		"easy":   0,
+		difficultyEasy:   0,
 		"medium": 1,
 		"hard":   2,
 		"deadly": 3,
 	}
 
 	idx := difficultyIndex[difficulty]
-	if idx == 0 && difficulty != "easy" {
+	if idx == 0 && difficulty != difficultyEasy {
 		idx = 1 // Default to medium
 	}
 

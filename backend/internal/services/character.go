@@ -11,6 +11,8 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+const classWarlock = "warlock"
+
 type CharacterService struct {
 	repo            database.CharacterRepository
 	customClassRepo *database.CustomClassRepository
@@ -170,7 +172,7 @@ func (s *CharacterService) CalculateHitPoints(class string, level int, constitut
 		"druid":     8,
 		"monk":      8,
 		"sorcerer":  6,
-		"warlock":   8,
+		classWarlock:   8,
 	}
 
 	base, ok := baseHP[class]
@@ -322,7 +324,7 @@ func (s *CharacterService) RestoreSpellSlots(ctx context.Context, characterID st
 	switch restType {
 	case "short":
 		// Warlocks recover all spell slots on short rest
-		if char.Class == "warlock" {
+		if char.Class == classWarlock {
 			for i := range char.Spells.SpellSlots {
 				char.Spells.SpellSlots[i].Remaining = char.Spells.SpellSlots[i].Total
 			}
@@ -519,7 +521,7 @@ func (s *CharacterService) calculateHPIncrease(class string, constitution int) i
 		"druid":     5, // 1d8 average
 		"monk":      5, // 1d8 average
 		"sorcerer":  4, // 1d6 average
-		"warlock":   5, // 1d8 average
+		classWarlock:   5, // 1d8 average
 	}
 
 	average, ok := hitDieAverage[class]

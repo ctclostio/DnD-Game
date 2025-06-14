@@ -9,6 +9,8 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+const encounterTypeCombat = "combat"
+
 type EncounterService struct {
 	repo             *database.EncounterRepository
 	encounterBuilder *AIEncounterBuilder
@@ -322,7 +324,7 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 	}
 
 	switch encounter.EncounterType {
-	case "combat":
+	case encounterTypeCombat:
 		primaryObjective.Type = constants.ObjectiveDefeatAll
 		primaryObjective.Description = "Defeat all enemies"
 	case "social":
@@ -339,7 +341,7 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 	_ = s.repo.CreateObjective(primaryObjective)
 
 	// Create optional objectives for non-combat resolution
-	if encounter.EncounterType == "combat" && len(encounter.SocialSolutions) > 0 {
+	if encounter.EncounterType == encounterTypeCombat && len(encounter.SocialSolutions) > 0 {
 		bonusObjective := &models.EncounterObjective{
 			EncounterID:  encounter.ID,
 			Type:         "custom",

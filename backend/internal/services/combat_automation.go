@@ -15,6 +15,8 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/dice"
 )
 
+const difficultyMedium = "medium"
+
 type CombatAutomationService struct {
 	combatRepo    database.CombatAnalyticsRepository
 	characterRepo database.CharacterRepository
@@ -349,7 +351,7 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 	goldMultiplier := map[string]int{
 		"trivial": 10,
 		"easy":    25,
-		"medium":  50,
+		difficultyMedium:  50,
 		constants.DifficultyHard:    100,
 		constants.DifficultyDeadly:  200,
 	}
@@ -383,7 +385,7 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 	itemChance := map[string]float64{
 		"trivial": 0.1,
 		"easy":    0.2,
-		"medium":  0.4,
+		difficultyMedium:  0.4,
 		constants.DifficultyHard:    0.6,
 		constants.DifficultyDeadly:  0.8,
 	}
@@ -410,7 +412,7 @@ func (cas *CombatAutomationService) getRandomRarity(difficulty string) string {
 			return constants.RarityCommon
 		}
 		return "uncommon"
-	case "medium":
+	case difficultyMedium:
 		if roll < 0.7 {
 			return constants.RarityCommon
 		} else if roll < 0.95 {

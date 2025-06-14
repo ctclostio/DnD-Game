@@ -13,6 +13,13 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	actionTypeSpell = "spell"
+	actionTypeAbility = "ability"
+	outcomeHit = "hit"
+	outcomeKillingBlow = "killing_blow"
+)
+
 type CombatAnalyticsService struct {
 	analyticsRepo database.CombatAnalyticsRepository
 	combatService *CombatService
@@ -106,7 +113,7 @@ func (cas *CombatAnalyticsService) calculateCombatAnalytics(
 	damageByActor := make(map[string]int)
 
 	for _, action := range actions {
-		if action.ActionType == constants.ActionAttack || action.ActionType == "spell" {
+		if action.ActionType == constants.ActionAttack || action.ActionType == actionTypeSpell {
 			totalDamage += action.DamageDealt
 			damageByActor[action.ActorID] += action.DamageDealt
 		}
@@ -116,7 +123,7 @@ func (cas *CombatAnalyticsService) calculateCombatAnalytics(
 		}
 
 		// Check for killing blows
-		if action.Outcome == "killing_blow" {
+		if action.Outcome == outcomeKillingBlow {
 			killingBlows = append(killingBlows, map[string]interface{}{
 				"dealer_id": action.ActorID,
 				"target_id": action.TargetID,
@@ -189,7 +196,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 		if combatant.HP <= 0 {
 			// Find when they were defeated
 			for _, action := range actions {
-				if action.TargetID != nil && *action.TargetID == combatant.ID && action.Outcome == "killing_blow" {
+				if action.TargetID != nil && *action.TargetID == combatant.ID && action.Outcome == outcomeKillingBlow {
 					stats.RoundsSurvived = action.RoundNumber
 					break
 				}
@@ -207,7 +214,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 			case constants.ActionAttack:
 				stats.AttacksMade++
 				switch action.Outcome {
-				case "hit", constants.ActionCritical:
+				case outcomeHit, constants.ActionCritical:
 					stats.AttacksHit++
 					if action.Outcome == constants.ActionCritical {
 						stats.CriticalHits++
@@ -219,7 +226,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 					stats.CriticalMisses++
 				}
 				stats.DamageDealt += action.DamageDealt
-			case "spell", "ability":
+			case actionTypeSpell, actionTypeAbility:
 				stats.DamageDealt += action.DamageDealt
 				// Track ability usage
 				abilities := []string{}
@@ -236,7 +243,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 		if action.TargetID != nil {
 			if stats, ok := combatantStats[*action.TargetID]; ok {
 				switch action.ActionType {
-				case constants.ActionAttack, "spell":
+				case constants.ActionAttack, actionTypeSpell:
 					stats.DamageTaken += action.DamageDealt
 				case constants.ActionHeal:
 					stats.HealingReceived += action.DamageDealt
@@ -478,7 +485,7 @@ func (cas *CombatAnalyticsService) analyzeTargeting(actions []*models.CombatActi
 		if action.TargetID != nil && action.ActionType == constants.ActionAttack {
 			targetPriority[*action.TargetID]++
 
-			if action.Outcome == "killing_blow" {
+			if action.Outcome == outcomeKillingBlow {
 				// Check if this was a high-priority target
 				for _, combatant := range combat.Combatants {
 					if combatant.ID == *action.TargetID {
@@ -534,7 +541,7 @@ func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActio
 		}
 
 		// Check for setup actions (buffs, debuffs)
-		if action.ActionType == "spell" || action.ActionType == "ability" {
+		if action.ActionType == actionTypeSpell || action.ActionType == actionTypeAbility {
 			var conditions []string
 			_ = json.Unmarshal(action.ConditionsApplied, &conditions)
 			if len(conditions) > 0 {

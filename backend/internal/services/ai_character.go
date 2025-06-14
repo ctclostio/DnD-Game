@@ -10,6 +10,8 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+const diceD10 = "1d10"
+
 type AICharacterService struct {
 	llmProvider LLMProvider
 	aiEnabled   bool
@@ -292,7 +294,7 @@ func (s *AICharacterService) getHitDiceValue(hitDice string) int {
 		return 6
 	case constants.DiceD8:
 		return 8
-	case "1d10":
+	case diceD10:
 		return 10
 	case constants.DiceD12:
 		return 12

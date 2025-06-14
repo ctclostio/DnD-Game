@@ -327,7 +327,7 @@ func (h *CampaignHandler) GetPlotThreads(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	activeOnly := r.URL.Query().Get("active") == "true"
+	activeOnly := r.URL.Query().Get("active") == queryParamTrue
 
 	threads, err := h.campaignService.GetPlotThreads(ctx, sessionID, activeOnly)
 	if err != nil {

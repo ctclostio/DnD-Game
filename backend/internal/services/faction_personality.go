@@ -14,6 +14,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const outcomeNeutral = "neutral"
+
 // FactionPersonalityService manages AI-driven faction personalities
 type FactionPersonalityService struct {
 	worldRepo   *database.EmergentWorldRepository
@@ -61,7 +63,7 @@ Provide a JSON response with:
 	if err != nil {
 		// Use defaults if AI fails
 		response = `{
-			"mood": "neutral",
+			"mood": outcomeNeutral,
 			"decision_style": "pragmatic",
 			"communication_style": "formal",
 			"core_motivations": ["power", "security", "prosperity"],
@@ -514,7 +516,7 @@ func (fps *FactionPersonalityService) LearnFromInteraction(ctx context.Context, 
 
 	// Track interaction patterns
 	// Extract outcome from context
-	outcome := "neutral"
+	outcome := outcomeNeutral
 	if outcomeVal, ok := interaction.Context["outcome"].(string); ok {
 		outcome = outcomeVal
 	}

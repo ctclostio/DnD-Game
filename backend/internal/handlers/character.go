@@ -233,7 +233,7 @@ func (h *Handlers) GetCustomClasses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	includeUnapproved := r.URL.Query().Get("includeUnapproved") == "true"
+	includeUnapproved := r.URL.Query().Get("includeUnapproved") == queryParamTrue
 
 	classes, err := h.characterService.GetUserCustomClasses(r.Context(), userID, includeUnapproved)
 	if err != nil {
