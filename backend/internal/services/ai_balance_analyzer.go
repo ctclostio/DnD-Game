@@ -257,7 +257,7 @@ func (ba *AIBalanceAnalyzer) predictMetaImpact(ctx context.Context, template *mo
 	}
 
 	// Analyze potential combos
-	if template.Category == "spell" || template.Category == "ability" {
+	if template.Category == constants.CategorySpell || template.Category == "ability" {
 		// Check for action surge potential
 		if ba.analyzeActionEconomy(template) < 1 {
 			prediction.EnablesCombos = append(prediction.EnablesCombos, "Action Surge combos")
@@ -310,7 +310,7 @@ func (ba *AIBalanceAnalyzer) getSimulationScenarios(category string) []Simulatio
 
 	// Add category-specific scenarios
 	switch category {
-	case "spell":
+	case constants.CategorySpell:
 		baseScenarios = append(baseScenarios, SimulationScenario{
 			Name: "Counterspell Scenario", Level: 10, PartySize: 4, SpecialConditions: []string{"enemy_counterspell"},
 		})
@@ -561,7 +561,7 @@ func containsInBalancer(slice []string, item string) bool {
 
 // Additional helper methods for meta prediction
 func (ba *AIBalanceAnalyzer) hasSpellProperties(template *models.RuleTemplate) bool {
-	return template.Category == "spell" || strings.Contains(template.Description, "spell")
+	return template.Category == constants.CategorySpell || strings.Contains(template.Description, "spell")
 }
 
 func (ba *AIBalanceAnalyzer) getDamageTypes(template *models.RuleTemplate) map[string]bool {

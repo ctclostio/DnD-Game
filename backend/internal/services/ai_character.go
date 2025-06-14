@@ -294,7 +294,7 @@ func (s *AICharacterService) getHitDiceValue(hitDice string) int {
 		return 8
 	case "1d10":
 		return 10
-	case "1d12":
+	case constants.DiceD12:
 		return 12
 	default:
 		return 8

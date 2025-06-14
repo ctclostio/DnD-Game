@@ -288,13 +288,13 @@ func (cas *CombatAutomationService) simulateCombat(
 		outcome = "victory"
 		rounds = 3 + rand.Intn(4)
 	} else if partyStrength > encounterStrength*0.7 {
-		outcome = "costly_victory"
+		outcome = constants.OutcomeCostlyVictory
 		rounds = 5 + rand.Intn(5)
 	} else if partyStrength > encounterStrength*0.5 {
 		outcome = constants.ActionTypeRetreat
 		rounds = 3 + rand.Intn(3)
 	} else {
-		outcome = "defeat"
+		outcome = constants.OutcomeDefeat
 		rounds = 4 + rand.Intn(4)
 	}
 
@@ -308,11 +308,11 @@ func (cas *CombatAutomationService) simulateCombat(
 		hpLossPercent = 0.1 + rand.Float64()*0.1 // 10-20%
 	case "victory":
 		hpLossPercent = 0.2 + rand.Float64()*0.2 // 20-40%
-	case "costly_victory":
+	case constants.OutcomeCostlyVictory:
 		hpLossPercent = 0.4 + rand.Float64()*0.3 // 40-70%
 	case constants.ActionTypeRetreat:
 		hpLossPercent = 0.3 + rand.Float64()*0.3 // 30-60%
-	case "defeat":
+	case constants.OutcomeDefeat:
 		hpLossPercent = 0.6 + rand.Float64()*0.3 // 60-90%
 	}
 
@@ -350,7 +350,7 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 		"trivial": 10,
 		"easy":    25,
 		"medium":  50,
-		"hard":    100,
+		constants.DifficultyHard:    100,
 		"deadly":  200,
 	}
 
@@ -384,7 +384,7 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 		"trivial": 0.1,
 		"easy":    0.2,
 		"medium":  0.4,
-		"hard":    0.6,
+		constants.DifficultyHard:    0.6,
 		"deadly":  0.8,
 	}
 
@@ -417,7 +417,7 @@ func (cas *CombatAutomationService) getRandomRarity(difficulty string) string {
 			return "uncommon"
 		}
 		return "rare"
-	case "hard":
+	case constants.DifficultyHard:
 		if roll < 0.4 {
 			return constants.RarityCommon
 		} else if roll < 0.8 {
@@ -523,7 +523,7 @@ func (cas *CombatAutomationService) generateNarrativeSummary(
 			"The adventurers fought well, overcoming their foes through teamwork and determination.",
 			"Though the enemies put up a fight, the party's strength proved superior.",
 		},
-		"costly_victory": {
+		constants.OutcomeCostlyVictory: {
 			"The battle was hard-fought, with the party paying a steep price for their victory.",
 			"Bloodied but unbowed, the adventurers managed to defeat their foes after a grueling combat.",
 			"Victory came at a cost, with several party members bearing serious wounds.",
@@ -533,7 +533,7 @@ func (cas *CombatAutomationService) generateNarrativeSummary(
 			"The adventurers fought a retreating action, escaping with their lives if not their pride.",
 			"Discretion proved the better part of valor as the party retreated from overwhelming odds.",
 		},
-		"defeat": {
+		constants.OutcomeDefeat: {
 			"The encounter proved too much for the party, forcing a desperate escape.",
 			"Overwhelmed by their foes, the adventurers were routed from the field.",
 			"The party suffered a crushing defeat, barely escaping with their lives.",

@@ -476,13 +476,13 @@ func (s *EconomicSimulatorService) calculateRouteDifficulty(start, end *models.S
 	terrains := []string{start.TerrainType, end.TerrainType}
 	for _, terrain := range terrains {
 		switch terrain {
-		case "mountainous":
+		case constants.TerrainMountainous:
 			difficulty += 2
 		case "swamp":
 			difficulty += 2
 		case "desert":
 			difficulty += 1
-		case "forest":
+		case constants.TerrainForest:
 			difficulty += 1
 		}
 	}
@@ -504,7 +504,7 @@ func (s *EconomicSimulatorService) determineRouteType(start, end *models.Settlem
 		return "sea"
 	}
 
-	if start.TerrainType == "mountainous" && end.TerrainType == "mountainous" {
+	if start.TerrainType == constants.TerrainMountainous && end.TerrainType == constants.TerrainMountainous {
 		return "mountain pass"
 	}
 
@@ -640,13 +640,13 @@ func (s *EconomicSimulatorService) determineEnvironmentalHazards(start, end *mod
 	terrains := []string{start.TerrainType, end.TerrainType}
 	for _, terrain := range terrains {
 		switch terrain {
-		case "mountainous":
+		case constants.TerrainMountainous:
 			hazards = append(hazards, "avalanches", "altitude sickness")
 		case "swamp":
 			hazards = append(hazards, "disease", "quicksand")
 		case "desert":
 			hazards = append(hazards, "sandstorms", "dehydration")
-		case "forest":
+		case constants.TerrainForest:
 			hazards = append(hazards, "getting lost", "wild animals")
 		}
 	}

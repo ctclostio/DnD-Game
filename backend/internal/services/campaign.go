@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
@@ -38,7 +39,7 @@ func (cs *CampaignService) CreateStoryArc(ctx context.Context, sessionID uuid.UU
 		Title:           req.Title,
 		Description:     req.Description,
 		ArcType:         req.ArcType,
-		Status:          "active",
+		Status:          constants.StatusActive,
 		ParentArcID:     req.ParentArcID,
 		ImportanceLevel: req.ImportanceLevel,
 		Metadata:        models.JSONB(`{}`),
@@ -72,7 +73,7 @@ func (cs *CampaignService) GenerateStoryArc(ctx context.Context, sessionID uuid.
 		Title:           generated.Title,
 		Description:     generated.Description,
 		ArcType:         generated.ArcType,
-		Status:          "active",
+		Status:          constants.StatusActive,
 		ImportanceLevel: generated.ImportanceLevel,
 		Metadata:        models.JSONB(metadata),
 		CreatedAt:       time.Now(),
@@ -101,7 +102,7 @@ func (cs *CampaignService) UpdateStoryArc(ctx context.Context, arcID uuid.UUID, 
 	}
 	if req.Status != nil {
 		updates["status"] = *req.Status
-		if *req.Status == "completed" {
+		if *req.Status == constants.StatusCompleted {
 			now := time.Now()
 			updates["resolved_at"] = now
 		}
@@ -193,7 +194,7 @@ func (cs *CampaignService) CreatePlotThread(ctx context.Context, sessionID uuid.
 	thread.UpdatedAt = time.Now()
 
 	if thread.Status == "" {
-		thread.Status = "active"
+		thread.Status = constants.StatusActive
 	}
 	if thread.TensionLevel == 0 {
 		thread.TensionLevel = 5

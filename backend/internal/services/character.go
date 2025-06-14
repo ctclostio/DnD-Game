@@ -481,15 +481,15 @@ func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitP
 	// Apply attribute increase if specified
 	if attributeIncrease != "" {
 		switch attributeIncrease {
-		case "strength":
+		case constants.AbilityStrength:
 			char.Attributes.Strength++
-		case "dexterity":
+		case constants.AbilityDexterity:
 			char.Attributes.Dexterity++
-		case "constitution":
+		case constants.AbilityConstitution:
 			char.Attributes.Constitution++
-		case "intelligence":
+		case constants.AbilityIntelligence:
 			char.Attributes.Intelligence++
-		case "wisdom":
+		case constants.AbilityWisdom:
 			char.Attributes.Wisdom++
 		case constants.AbilityCharisma:
 			char.Attributes.Charisma++
@@ -534,11 +534,11 @@ func (s *CharacterService) calculateHPIncrease(class string, constitution int) i
 // getSpellcastingAbilityModifier returns the modifier for the character's spellcasting ability
 func (s *CharacterService) getSpellcastingAbilityModifier(char *models.Character) int {
 	switch strings.ToLower(char.Spells.SpellcastingAbility) {
-	case "intelligence":
+	case constants.AbilityIntelligence:
 		return getModifier(char.Attributes.Intelligence)
-	case "wisdom":
+	case constants.AbilityWisdom:
 		return getModifier(char.Attributes.Wisdom)
-	case "charisma":
+	case constants.AbilityCharisma:
 		return getModifier(char.Attributes.Charisma)
 	default:
 		return 0

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -172,7 +173,7 @@ func (crs *ConditionalRealitySystem) evaluateLocationCondition(condition models.
 			}
 
 			switch condition.Operator {
-			case "equals":
+			case constants.OperatorEquals:
 				return location == condition.Value.(string)
 			case "contains":
 				return strings.Contains(location, condition.Value.(string))
@@ -220,7 +221,7 @@ func (crs *ConditionalRealitySystem) evaluateEmotionCondition(condition models.R
 		}
 
 		switch condition.Operator {
-		case "equals":
+		case constants.OperatorEquals:
 			return emotion == condition.Value.(string)
 		case "intensity_above":
 			intensity, _ := emotionalState["intensity"].(float64)
@@ -261,7 +262,7 @@ func (crs *ConditionalRealitySystem) evaluateTimeCondition(condition models.Rule
 			return hour >= 7 && hour < 18
 		case "dusk":
 			return hour >= 18 && hour < 20
-		case "night":
+		case constants.TimeNight:
 			return hour >= 20 || hour < 5
 		}
 	}

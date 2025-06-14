@@ -58,7 +58,7 @@ func DefaultConfig() ConfigV2 {
 		TimeFormat:   time.RFC3339Nano,
 		CallerInfo:   true,
 		StackTrace:   true,
-		Output:       constants.LogOutputStdout,
+		Output:       constants.LoggerStdout,
 		SamplingRate: 1.0,
 		ServiceName:  "dnd-game-backend",
 		Environment:  "development",
@@ -87,7 +87,7 @@ func NewV2(cfg ConfigV2) (*LoggerV2, error) {
 	// Configure output
 	var output io.Writer
 	switch cfg.Output {
-	case constants.LogOutputStdout:
+	case constants.LoggerStdout:
 		output = os.Stdout
 	case "stderr":
 		output = os.Stderr

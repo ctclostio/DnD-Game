@@ -1241,7 +1241,7 @@ func (pcs *ProceduralCultureService) evaluateCulturalResponse(culture *models.Pr
 		response.AffectedAspect = "customs"
 	case "diplomacy":
 		response.AffectedAspect = constants.CultureValues
-	case "conflict":
+	case constants.EventConflict:
 		response.AffectedAspect = "social_structure"
 	case constants.CultureInfluence:
 		response.AffectedAspect = action.Target
@@ -1282,7 +1282,7 @@ func (pcs *ProceduralCultureService) modifyCustoms(culture *models.ProceduralCul
 
 func (pcs *ProceduralCultureService) adjustSocialStructure(culture *models.ProceduralCulture, action PlayerCulturalAction, response CulturalResponse) {
 	// Modify social mobility or class structure based on actions
-	if action.Type == "conflict" && response.Impact < -0.5 {
+	if action.Type == constants.EventConflict && response.Impact < -0.5 {
 		culture.SocialStructure.Mobility = "more rigid due to external threats"
 	} else if action.Type == "diplomacy" && response.Impact > 0.5 {
 		culture.SocialStructure.Outsiders = "viewed with cautious respect"
@@ -1293,7 +1293,7 @@ func (pcs *ProceduralCultureService) generateCulturalResponseEvent(ctx context.C
 	eventTypes := map[string]string{
 		"trade":     "commercial_shift",
 		"diplomacy": "diplomatic_development",
-		"conflict":  "cultural_resistance",
+		constants.EventConflict:  "cultural_resistance",
 		constants.CultureInfluence: "cultural_evolution",
 	}
 

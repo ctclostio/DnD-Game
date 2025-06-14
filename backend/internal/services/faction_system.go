@@ -7,6 +7,7 @@ import (
 	"math/rand"
 
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
@@ -206,11 +207,11 @@ func (s *FactionSystemService) UpdateFactionRelationship(ctx context.Context, fa
 	}
 
 	// Determine relationship type
-	relationType := "neutral"
+	relationType := constants.RelationNeutral
 	if newStanding >= 50 {
-		relationType = "ally"
+		relationType = constants.RelationAlly
 	} else if newStanding <= -50 {
-		relationType = "enemy"
+		relationType = constants.RelationEnemy
 	}
 
 	// Update the relationship
@@ -297,11 +298,11 @@ func (s *FactionSystemService) generateInitialRelationships(ctx context.Context,
 		// Add some randomness
 		standing += rand.Intn(20) - 10
 
-		relationType := "neutral"
+		relationType := constants.RelationNeutral
 		if standing >= 50 {
-			relationType = "ally"
+			relationType = constants.RelationAlly
 		} else if standing <= -50 {
-			relationType = "enemy"
+			relationType = constants.RelationEnemy
 		}
 
 		// Update both factions' relationships

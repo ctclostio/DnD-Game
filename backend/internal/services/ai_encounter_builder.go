@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -728,7 +729,7 @@ func (b *AIEncounterBuilder) addPartySpecificTactics(encounter *models.Encounter
 		switch class {
 		case "cleric", "druid", "bard":
 			hasHealer = true
-		case "wizard", "sorcerer", "warlock":
+		case "wizard", "sorcerer", constants.ClassWarlock:
 			hasCaster = true
 		case "fighter", "paladin", "barbarian":
 			hasTank = true
