@@ -478,7 +478,7 @@ func TestCombatAutomationService_GetAutoResolutionsBySession(t *testing.T) {
 		},
 	}
 
-	service, mockCombatRepo, _, _ := createTestCombatAutomationService()
+	service, mockCombatRepo, _ := createTestCombatAutomationService()
 
 	mockCombatRepo.On("GetAutoCombatResolutionsBySession", sessionID).Return(resolutions, nil)
 
@@ -492,7 +492,7 @@ func TestCombatAutomationService_GetAutoResolutionsBySession(t *testing.T) {
 // Helper method tests
 
 func TestCombatAutomationService_CalculateAveragePartyLevel(t *testing.T) {
-	service, _, _, _ := createTestCombatAutomationService()
+	service, _, _ := createTestCombatAutomationService()
 
 	tests := []struct {
 		name       string
@@ -535,7 +535,7 @@ func TestCombatAutomationService_CalculateAveragePartyLevel(t *testing.T) {
 }
 
 func TestCombatAutomationService_ParseCR(t *testing.T) {
-	service, _, _, _ := createTestCombatAutomationService()
+	service, _, _ := createTestCombatAutomationService()
 
 	tests := []struct {
 		cr       string
@@ -562,7 +562,7 @@ func TestCombatAutomationService_ParseCR(t *testing.T) {
 }
 
 func TestCombatAutomationService_CalculateEncounterCR(t *testing.T) {
-	service, _, _, _ := createTestCombatAutomationService()
+	service, _, _ := createTestCombatAutomationService()
 
 	tests := []struct {
 		name     string
@@ -612,7 +612,7 @@ func TestCombatAutomationService_CalculateEncounterCR(t *testing.T) {
 // Benchmark tests
 
 func BenchmarkCombatAutomationService_AutoResolveCombat(b *testing.B) {
-	service, mockCombatRepo, _, _ := createTestCombatAutomationService()
+	service, mockCombatRepo, _ := createTestCombatAutomationService()
 	sessionID := uuid.New()
 	characters := createTestCharacters(4, 5)
 
@@ -635,7 +635,7 @@ func BenchmarkCombatAutomationService_AutoResolveCombat(b *testing.B) {
 }
 
 func BenchmarkCombatAutomationService_SmartInitiative(b *testing.B) {
-	service, mockCombatRepo, _, _ := createTestCombatAutomationService()
+	service, mockCombatRepo, _ := createTestCombatAutomationService()
 	sessionID := uuid.New()
 
 	// Setup mocks to return quickly

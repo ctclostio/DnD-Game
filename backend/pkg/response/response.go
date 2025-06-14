@@ -130,27 +130,55 @@ func ErrorWithCode(w http.ResponseWriter, r *http.Request, code errors.ErrorCode
 	var statusCode int
 
 	switch code {
-	case errors.ErrCodeInvalidCredentials, errors.ErrCodeTokenExpired, errors.ErrCodeTokenInvalid:
+	// Authentication errors (401 Unauthorized)
+	case errors.ErrCodeInvalidCredentials, errors.ErrCodeTokenExpired, errors.ErrCodeTokenInvalid,
+		errors.ErrCodeSessionExpired, errors.ErrCodeCSRFTokenMismatch, errors.ErrCodeEmailNotVerified:
 		errType = errors.ErrorTypeAuthentication
 		statusCode = http.StatusUnauthorized
-	case errors.ErrCodeInsufficientPrivilege:
+		
+	// Authorization errors (403 Forbidden)
+	case errors.ErrCodeInsufficientPrivilege, errors.ErrCodeCharacterNotOwned, errors.ErrCodeNotDM:
 		errType = errors.ErrorTypeAuthorization
 		statusCode = http.StatusForbidden
-	case errors.ErrCodeUserNotFound, errors.ErrCodeCharacterNotFound, errors.ErrCodeSessionNotFound, errors.ErrCodeItemNotFound:
+		
+	// Not Found errors (404)
+	case errors.ErrCodeUserNotFound, errors.ErrCodeCharacterNotFound, errors.ErrCodeSessionNotFound,
+		errors.ErrCodeItemNotFound:
 		errType = errors.ErrorTypeNotFound
 		statusCode = http.StatusNotFound
-	case errors.ErrCodeUserExists, errors.ErrCodeDuplicateEntry:
+		
+	// Conflict errors (409)
+	case errors.ErrCodeUserExists, errors.ErrCodeDuplicateEntry, errors.ErrCodeSessionFull,
+		errors.ErrCodeSessionInProgress, errors.ErrCodeNotInSession, errors.ErrCodeCombatNotActive,
+		errors.ErrCodeNotYourTurn, errors.ErrCodeItemAlreadyEquipped:
 		errType = errors.ErrorTypeConflict
 		statusCode = http.StatusConflict
-	case errors.ErrCodeValidationFailed, errors.ErrCodeInvalidInput, errors.ErrCodeMissingRequired, errors.ErrCodeInvalidPassword, errors.ErrCodeInvalidFormat, errors.ErrCodeOutOfRange:
+		
+	// Validation/Bad Request errors (400)
+	case errors.ErrCodeValidationFailed, errors.ErrCodeInvalidInput, errors.ErrCodeMissingRequired,
+		errors.ErrCodeInvalidPassword, errors.ErrCodeInvalidFormat, errors.ErrCodeOutOfRange,
+		errors.ErrCodeCharacterLimitReached, errors.ErrCodeInvalidCharacterData, errors.ErrCodeInvalidTarget,
+		errors.ErrCodeInsufficientRange, errors.ErrCodeNoActionsRemaining, errors.ErrCodeInventoryFull,
+		errors.ErrCodeInsufficientFunds, errors.ErrCodeItemNotEquippable, errors.ErrCodeAIInvalidRequest:
 		errType = errors.ErrorTypeValidation
 		statusCode = http.StatusBadRequest
+		
+	// Rate Limit errors (429)
 	case errors.ErrCodeRateLimitExceeded, errors.ErrCodeAIRateLimitExceeded:
 		errType = errors.ErrorTypeRateLimit
 		statusCode = http.StatusTooManyRequests
-	case errors.ErrCodeServiceUnavailable, errors.ErrCodeAIServiceUnavailable:
+		
+	// Service Unavailable errors (503)
+	case errors.ErrCodeServiceUnavailable, errors.ErrCodeAIServiceUnavailable, errors.ErrCodeAIGenerationFailed:
 		errType = errors.ErrorTypeServiceUnavailable
 		statusCode = http.StatusServiceUnavailable
+		
+	// Internal Server errors (500)
+	case errors.ErrCodeDatabaseError, errors.ErrCodeForeignKeyViolation, errors.ErrCodeDeadlock,
+		errors.ErrCodeInternalError, errors.ErrCodeTimeout:
+		errType = errors.ErrorTypeInternal
+		statusCode = http.StatusInternalServerError
+		
 	default:
 		errType = errors.ErrorTypeInternal
 		statusCode = http.StatusInternalServerError
