@@ -65,7 +65,9 @@ func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repo
 
 	// Run migrations
 	if err := RunMigrations(db); err != nil {
-		db.Close()
+		if cerr := db.Close(); cerr != nil && log != nil {
+			log.Error().Err(cerr).Msg("failed to close db after migrations")
+		}
 		return nil, nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 

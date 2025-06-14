@@ -7,16 +7,16 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 func TestUserRepository_Create(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	dbWrapper := &DB{DB: sqlxDB}
@@ -84,7 +84,7 @@ func TestUserRepository_Create(t *testing.T) {
 func TestUserRepository_GetByID(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	dbWrapper := &DB{DB: sqlxDB}
@@ -135,7 +135,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 func TestUserRepository_GetByUsername(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	dbWrapper := &DB{DB: sqlxDB}
@@ -185,7 +185,7 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 func TestUserRepository_GetByEmail(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	dbWrapper := &DB{DB: sqlxDB}
@@ -223,7 +223,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 func TestUserRepository_Update(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	dbWrapper := &DB{DB: sqlxDB}
@@ -275,7 +275,7 @@ func TestUserRepository_Update(t *testing.T) {
 func TestUserRepository_Delete(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	dbWrapper := &DB{DB: sqlxDB}

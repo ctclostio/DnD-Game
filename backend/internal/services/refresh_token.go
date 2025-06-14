@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -11,8 +12,10 @@ import (
 
 // RefreshTokenService handles refresh token operations
 type RefreshTokenService struct {
-	repo       database.RefreshTokenRepository
-	jwtManager *auth.JWTManager
+	repo          database.RefreshTokenRepository
+	jwtManager    *auth.JWTManager
+	cleanupTicker *time.Ticker
+	stopCleanup   chan struct{}
 }
 
 // NewRefreshTokenService creates a new refresh token service
@@ -81,14 +84,34 @@ func (s *RefreshTokenService) CleanupExpired() error {
 
 // StartCleanupTask starts a background task to clean up expired tokens
 func (s *RefreshTokenService) StartCleanupTask(interval time.Duration) {
-	ticker := time.NewTicker(interval)
+	s.cleanupTicker = time.NewTicker(interval)
+	s.stopCleanup = make(chan struct{})
 	go func() {
-		for range ticker.C {
-			if err := s.CleanupExpired(); err != nil {
-				logger.Error().
-					Err(err).
-					Msg("Failed to cleanup expired tokens")
+		for {
+			select {
+			case <-s.cleanupTicker.C:
+				if err := s.CleanupExpired(); err != nil {
+					logger.Error().
+						Err(err).
+						Msg("Failed to cleanup expired tokens")
+				}
+			case <-s.stopCleanup:
+				s.cleanupTicker.Stop()
+				return
 			}
 		}
 	}()
+}
+
+// StopCleanupTask stops the background cleanup task
+func (s *RefreshTokenService) StopCleanupTask() {
+	if s.stopCleanup != nil {
+		close(s.stopCleanup)
+	}
+}
+
+// Shutdown implements the Shutdowner interface
+func (s *RefreshTokenService) Shutdown(ctx context.Context) error {
+	s.StopCleanupTask()
+	return nil
 }

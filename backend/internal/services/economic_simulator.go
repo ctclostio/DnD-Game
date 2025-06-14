@@ -7,9 +7,9 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/google/uuid"
 )
 
 // EconomicSimulatorService manages market dynamics and trade
@@ -129,7 +129,7 @@ func (s *EconomicSimulatorService) CalculateItemPrice(settlementID uuid.UUID, ba
 	}
 
 	// Apply type-specific modifiers
-	modifier := 1.0
+	modifier := market.CommonGoodsModifier
 	switch itemType {
 	case "food", "rations":
 		modifier = market.FoodPriceModifier
@@ -141,8 +141,6 @@ func (s *EconomicSimulatorService) CalculateItemPrice(settlementID uuid.UUID, ba
 		modifier = market.MagicalItemsModifier
 	case "artifact":
 		modifier = market.AncientArtifactsModifier
-	default:
-		modifier = market.CommonGoodsModifier
 	}
 
 	// Check if item is in high demand or surplus
@@ -225,14 +223,14 @@ func (s *EconomicSimulatorService) updateSettlementMarket(ctx context.Context, s
 }
 
 func (s *EconomicSimulatorService) applySettlementFactors(market *models.Market, settlement *models.Settlement) {
-	// Wealth affects general prices
+	// Wealth affects general prices based on settlement level
 	wealthFactor := float64(settlement.WealthLevel) / 5.0
 	if wealthFactor < 0.5 {
 		wealthFactor = 0.5
-	}
-	if wealthFactor > 1.5 {
+	} else if wealthFactor > 1.5 {
 		wealthFactor = 1.5
 	}
+	_ = wealthFactor // currently unused but kept for future balancing logic
 
 	// Poor settlements have higher prices due to scarcity
 	if settlement.WealthLevel < 3 {

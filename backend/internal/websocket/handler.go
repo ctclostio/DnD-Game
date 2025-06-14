@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/gorilla/websocket"
 )
 
 var allowedOrigins []string
@@ -108,7 +108,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		logger.Error().
 			Err(err).
 			Msg("Failed to send auth request")
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 
@@ -122,7 +122,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			"type":  "error",
 			"error": "Authentication failed",
 		})
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 
@@ -132,7 +132,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			"type":  "error",
 			"error": "Invalid authentication message",
 		})
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 
@@ -144,7 +144,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			"type":  "error",
 			"error": "Internal server error",
 		})
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 
@@ -158,7 +158,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			"type":  "error",
 			"error": "Invalid token",
 		})
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 
@@ -172,7 +172,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 				"type":  "error",
 				"error": "Room ID required",
 			})
-			conn.Close()
+			_ = conn.Close()
 			return
 		}
 	}

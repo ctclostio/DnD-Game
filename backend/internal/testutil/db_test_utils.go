@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // convertToDriverValues converts interface{} slice to driver.Value slice
@@ -167,7 +167,7 @@ func RunDBTestCases(t *testing.T, cases []DBTestCase) {
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
 			db, mock := NewMockDB(t)
-			defer db.Close()
+			defer func() { _ = db.Close() }()
 
 			if tc.Setup != nil {
 				tc.Setup(mock)
@@ -309,7 +309,7 @@ func NewTestRepository(t *testing.T) *TestRepository {
 
 // Cleanup cleans up test resources
 func (r *TestRepository) Cleanup() {
-	r.db.Close()
+	_ = r.db.Close()
 	err := r.mock.ExpectationsWereMet()
 	require.NoError(r.t, err)
 }

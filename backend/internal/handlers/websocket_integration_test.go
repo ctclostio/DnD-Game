@@ -12,19 +12,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/websocket"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 	ws "github.com/ctclostio/DnD-Game/backend/internal/websocket"
+	"github.com/gorilla/websocket"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWebSocketHandlerIntegration(t *testing.T) {
 	// Set development environment for origin validation
 	origEnv := os.Getenv("GO_ENV")
-	os.Setenv("GO_ENV", "development")
-	defer os.Setenv("GO_ENV", origEnv)
+	require.NoError(t, os.Setenv("GO_ENV", "development"))
+	defer func() { _ = os.Setenv("GO_ENV", origEnv) }()
 
 	// Setup test context
 	testCtx, cleanup := testutil.SetupIntegrationTest(t)
@@ -203,7 +203,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		wsURL = fmt.Sprintf("%s?room=%s", wsURL, session.ID)
 		conn1, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
-		defer conn1.Close()
+		defer func() { _ = conn1.Close() }()
 
 		// Authenticate first user
 		var authReq1 map[string]string
@@ -226,7 +226,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		// Connect second user
 		conn2, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
-		defer conn2.Close()
+		defer func() { _ = conn2.Close() }()
 
 		// Authenticate second user
 		var authReq2 map[string]string
@@ -288,7 +288,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		wsURL1 = fmt.Sprintf("%s?room=%s", wsURL1, session.ID)
 		conn1, _, err := websocket.DefaultDialer.Dial(wsURL1, header)
 		require.NoError(t, err)
-		defer conn1.Close()
+		defer func() { _ = conn1.Close() }()
 
 		// Authenticate in room 1
 		var authReq1 map[string]string
@@ -312,7 +312,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		wsURL2 = fmt.Sprintf("%s?room=%s", wsURL2, session2.ID)
 		conn2, _, err := websocket.DefaultDialer.Dial(wsURL2, header)
 		require.NoError(t, err)
-		defer conn2.Close()
+		defer func() { _ = conn2.Close() }()
 
 		// Authenticate in room 2
 		var authReq2 map[string]string
@@ -385,7 +385,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		require.NoError(t, err)
 
 		// Close first connection
-		conn1.Close()
+		_ = conn1.Close()
 
 		// Wait a bit
 		time.Sleep(100 * time.Millisecond)
@@ -393,7 +393,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		// Reconnect
 		conn2, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
-		defer conn2.Close()
+		defer func() { _ = conn2.Close() }()
 
 		// Authenticate again
 		err = conn2.ReadJSON(&authReq)
@@ -502,8 +502,8 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 
 		// Test with invalid origin (should fail in production mode)
-		os.Setenv("GO_ENV", "production")
-		defer os.Setenv("GO_ENV", "development")
+		require.NoError(t, os.Setenv("GO_ENV", "production"))
+		defer func() { _ = os.Setenv("GO_ENV", "development") }()
 
 		header := http.Header{}
 		header.Set("Origin", "http://evil.com")

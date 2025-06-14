@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // LivingEcosystemService manages the autonomous world simulation
@@ -511,6 +511,7 @@ func (les *LivingEcosystemService) updateSettlementProsperity(ctx context.Contex
 
 	// Apply time-based change
 	prosperityChange *= timeDelta.Hours() / 168.0 // Weekly rate
+	_ = prosperityChange                          // placeholder until persistence implemented
 
 	// Update prosperity
 	// TODO: Implement UpdateSettlement method in repository
@@ -825,7 +826,7 @@ func (les *LivingEcosystemService) getFactionRelationship(faction1, faction2 *mo
 }
 
 func (les *LivingEcosystemService) generateFactionInteraction(ctx context.Context, faction1, faction2 *models.Faction, relationship float64) *models.EmergentWorldEvent {
-	interactionTypes := []string{}
+	var interactionTypes []string
 
 	if relationship < -25 {
 		interactionTypes = []string{"border_skirmish", "trade_embargo", "diplomatic_protest", "spy_captured"}

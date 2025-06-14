@@ -23,7 +23,7 @@ func NewMockDB(t *testing.T) (*database.DB, sqlmock.Sqlmock, func()) {
 	}
 
 	cleanup := func() {
-		mockDB.Close()
+		_ = mockDB.Close()
 	}
 
 	return db, mock, cleanup
@@ -44,7 +44,7 @@ func NewTestDB(t *testing.T) (*database.DB, func()) {
 	require.NoError(t, err)
 
 	cleanup := func() {
-		sqlxDB.Close()
+		_ = sqlxDB.Close()
 	}
 
 	return db, cleanup

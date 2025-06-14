@@ -1,9 +1,10 @@
 package websocket
 
 import (
+	"context"
 	"encoding/json"
-	"github.com/gorilla/websocket"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/gorilla/websocket"
 )
 
 type Hub struct {
@@ -12,6 +13,7 @@ type Hub struct {
 	register   chan *Client
 	unregister chan *Client
 	rooms      map[string]map[*Client]bool
+	shutdown   chan struct{}
 }
 
 type Client struct {
@@ -40,12 +42,19 @@ func NewHub() *Hub {
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
 		rooms:      make(map[string]map[*Client]bool),
+		shutdown:   make(chan struct{}),
 	}
 }
 
 func (h *Hub) Run() {
 	for {
 		select {
+		case <-h.shutdown:
+			for client := range h.clients {
+				close(client.send)
+				_ = client.conn.Close()
+			}
+			return
 		case client := <-h.register:
 			h.clients[client] = true
 			if client.roomID != "" {
@@ -103,7 +112,7 @@ func (h *Hub) Run() {
 func (c *Client) ReadPump() {
 	defer func() {
 		c.hub.unregister <- c
-		c.conn.Close()
+		_ = c.conn.Close()
 	}()
 
 	for {
@@ -123,7 +132,7 @@ func (c *Client) ReadPump() {
 }
 
 func (c *Client) WritePump() {
-	defer c.conn.Close()
+	defer func() { _ = c.conn.Close() }()
 
 	for {
 		select {
@@ -141,4 +150,10 @@ func (c *Client) WritePump() {
 // Broadcast sends a message to the hub's broadcast channel
 func (h *Hub) Broadcast(message []byte) {
 	h.broadcast <- message
+}
+
+// Shutdown gracefully stops the hub and closes all connections
+func (h *Hub) Shutdown(ctx context.Context) error {
+	close(h.shutdown)
+	return nil
 }

@@ -56,7 +56,7 @@ func (s *GameSessionService) CreateSession(ctx context.Context, session *models.
 
 	// Set default status
 	if session.Status == "" {
-		session.Status = models.GameStatusActive
+		session.Status = models.GameStatusPending
 	}
 
 	// Set security defaults

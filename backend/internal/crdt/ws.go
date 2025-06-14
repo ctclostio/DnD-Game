@@ -19,7 +19,9 @@ func SyncHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 
 	doc, _ := LoadDoc(id)
 	state := automerge.NewSyncState(doc)

@@ -8,9 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
@@ -20,6 +17,9 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCombatFlow_Integration(t *testing.T) {
@@ -40,6 +40,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 	npcService := services.NewNPCService(ctx.Repos.NPCs)
 
 	svc := &services.Services{
+		DB:           ctx.DB,
 		Users:        userService,
 		Characters:   characterService,
 		GameSessions: gameSessionService,
@@ -53,7 +54,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 	go hub.Run()
 
 	// Create handlers and setup routes
-	h := handlers.NewHandlers(svc, hub)
+	h := handlers.NewHandlers(svc, ctx.DB, hub)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
@@ -368,6 +369,7 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 
 	// Create services
 	svc := &services.Services{
+		DB:           ctx.DB,
 		Users:        services.NewUserService(ctx.Repos.Users),
 		Characters:   services.NewCharacterService(ctx.Repos.Characters, ctx.Repos.CustomClasses, nil),
 		GameSessions: services.NewGameSessionService(ctx.Repos.GameSessions),
@@ -376,7 +378,7 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 		JWTManager:   ctx.JWTManager,
 	}
 
-	h := handlers.NewHandlers(svc, nil)
+	h := handlers.NewHandlers(svc, ctx.DB, nil)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()

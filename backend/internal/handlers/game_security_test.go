@@ -8,14 +8,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGameSessionSecurity(t *testing.T) {
@@ -34,6 +34,7 @@ func TestGameSessionSecurity(t *testing.T) {
 	gameService.SetUserRepository(testCtx.Repos.Users)
 
 	svc := &services.Services{
+		DB:           testCtx.DB,
 		Users:        services.NewUserService(testCtx.Repos.Users),
 		Characters:   services.NewCharacterService(testCtx.Repos.Characters, nil, nil),
 		GameSessions: gameService,
@@ -41,7 +42,7 @@ func TestGameSessionSecurity(t *testing.T) {
 	}
 
 	// Create handlers
-	h := handlers.NewHandlers(svc, nil)
+	h := handlers.NewHandlers(svc, testCtx.DB, nil)
 
 	// Create test users
 	dm := createTestUser(t, testCtx, "dm_user", "dm@example.com", "dm")
@@ -73,7 +74,7 @@ func TestGameSessionSecurity(t *testing.T) {
 			"character_id": char1.ID,
 		}
 		jsonBody, _ := json.Marshal(body)
-		
+
 		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		claims := &auth.Claims{
@@ -84,20 +85,20 @@ func TestGameSessionSecurity(t *testing.T) {
 		}
 		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 		req = mux.SetURLVars(req, map[string]string{"id": session.ID})
-		
+
 		rr := httptest.NewRecorder()
 		h.JoinGameSession(rr, req)
-		
+
 		// Verify player1 joined successfully
 		require.Equal(t, http.StatusOK, rr.Code, "Player1 should be able to join initially")
-		
+
 		// Now run the security tests
 		t.Run("Cannot join twice", func(t *testing.T) {
 			body := map[string]interface{}{
 				"character_id": char1.ID,
 			}
 			jsonBody, _ := json.Marshal(body)
-			
+
 			req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
 			req.Header.Set("Content-Type", "application/json")
 			claims := &auth.Claims{
@@ -108,16 +109,16 @@ func TestGameSessionSecurity(t *testing.T) {
 			}
 			req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 			req = mux.SetURLVars(req, map[string]string{"id": session.ID})
-			
+
 			rr := httptest.NewRecorder()
 			h.JoinGameSession(rr, req)
-			
+
 			assert.Equal(t, http.StatusBadRequest, rr.Code)
-			
+
 			// Debug: print the response body
 			bodyBytes := rr.Body.Bytes()
 			t.Logf("Response body: %s", string(bodyBytes))
-			
+
 			var response map[string]interface{}
 			err := json.Unmarshal(bodyBytes, &response)
 			if err != nil {
@@ -129,7 +130,7 @@ func TestGameSessionSecurity(t *testing.T) {
 			require.True(t, ok, "Expected error object in response")
 			assert.Contains(t, errorObj["message"], "already in this session")
 		})
-		
+
 		// Continue with other tests
 		tests := []struct {
 			name           string
@@ -353,12 +354,12 @@ func TestGameSessionSecurity(t *testing.T) {
 	t.Run("SessionState_Security", func(t *testing.T) {
 		// Test operations on inactive session
 		inactiveSession := &models.GameSession{
-			DMID:     dm.ID,
-			Name:     "Inactive Session",
+			DMID: dm.ID,
+			Name: "Inactive Session",
 		}
 		err := svc.GameSessions.CreateSession(ctx, inactiveSession)
 		require.NoError(t, err)
-		
+
 		// Update session to be inactive (CreateSession sets it to active by default)
 		inactiveSession.IsActive = false
 		err = testCtx.Repos.GameSessions.Update(ctx, inactiveSession)

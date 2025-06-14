@@ -7,16 +7,16 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 func TestInventoryRepository_CreateItem(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	dbWrapper := &DB{DB: sqlxDB}
@@ -82,7 +82,7 @@ func TestInventoryRepository_CreateItem(t *testing.T) {
 func TestInventoryRepository_GetItem(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	dbWrapper := &DB{DB: sqlxDB}
@@ -139,7 +139,7 @@ func TestInventoryRepository_GetItem(t *testing.T) {
 func TestInventoryRepository_AddItemToInventory(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	dbWrapper := &DB{DB: sqlxDB}
@@ -172,7 +172,7 @@ func TestInventoryRepository_AddItemToInventory(t *testing.T) {
 func TestInventoryRepository_GetCharacterInventory(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	dbWrapper := &DB{DB: sqlxDB}
@@ -210,7 +210,7 @@ func TestInventoryRepository_GetCharacterInventory(t *testing.T) {
 func TestInventoryRepository_GetCharacterCurrency(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 	dbWrapper := &DB{DB: sqlxDB}

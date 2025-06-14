@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // characterRepository implements CharacterRepository interface
@@ -150,7 +150,7 @@ func (r *characterRepository) GetByUserID(ctx context.Context, userID string) ([
 	if err != nil {
 		return nil, fmt.Errorf("failed to get characters by user id: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var characters []*models.Character
 	for rows.Next() {
@@ -277,7 +277,7 @@ func (r *characterRepository) List(ctx context.Context, offset, limit int) ([]*m
 	if err != nil {
 		return nil, fmt.Errorf("failed to list characters: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var characters []*models.Character
 	for rows.Next() {

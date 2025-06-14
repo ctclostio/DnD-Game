@@ -160,7 +160,7 @@ func (r *dmAssistantRepository) GetNPCsBySession(ctx context.Context, sessionID 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	npcs := make([]*models.AINPC, 0, 20)
 	for rows.Next() {
@@ -306,7 +306,7 @@ func (r *dmAssistantRepository) GetLocationsBySession(ctx context.Context, sessi
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	locations := make([]*models.AILocation, 0, 20)
 	for rows.Next() {
@@ -386,7 +386,7 @@ func (r *dmAssistantRepository) GetNarrationsByType(ctx context.Context, session
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	narrations := make([]*models.AINarration, 0, 10)
 	for rows.Next() {
@@ -456,7 +456,7 @@ func (r *dmAssistantRepository) GetUnusedStoryElements(ctx context.Context, sess
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	elements := make([]*models.AIStoryElement, 0, 20)
 	for rows.Next() {
@@ -527,7 +527,7 @@ func (r *dmAssistantRepository) GetActiveHazardsByLocation(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	hazards := make([]*models.AIEnvironmentalHazard, 0, 10)
 	for rows.Next() {
@@ -587,7 +587,7 @@ func (r *dmAssistantRepository) GetHistoryBySession(ctx context.Context, session
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	history := make([]*models.DMAssistantHistory, 0, limit)
 	for rows.Next() {

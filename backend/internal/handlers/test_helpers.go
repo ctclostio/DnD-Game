@@ -13,7 +13,7 @@ import (
 )
 
 // createTestServices creates a complete services instance for testing
-func createTestServices(t *testing.T, repos *database.Repositories, jwtManager *auth.JWTManager, cfg *config.Config, log *logger.LoggerV2) *services.Services {
+func createTestServices(t *testing.T, db *database.DB, repos *database.Repositories, jwtManager *auth.JWTManager, cfg *config.Config, log *logger.LoggerV2) *services.Services {
 	// Create mock LLM provider
 	llmProvider := &services.MockLLMProvider{}
 
@@ -28,7 +28,7 @@ func createTestServices(t *testing.T, repos *database.Repositories, jwtManager *
 
 	// Create event bus with logger
 	eventBus := services.NewEventBus(log) // eventBus - can be used if needed
-	_ = eventBus // Mark as intentionally unused for now
+	_ = eventBus                          // Mark as intentionally unused for now
 
 	// Combat services
 	combatService := services.NewCombatService()
@@ -51,6 +51,7 @@ func createTestServices(t *testing.T, repos *database.Repositories, jwtManager *
 
 	// Create service container
 	return &services.Services{
+		DB:                 db,
 		Users:              userService,
 		Characters:         services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
 		GameSessions:       gameSessionService,
@@ -102,12 +103,12 @@ func SetupTestHandlers(t *testing.T, testCtx *testutil.IntegrationTestContext) (
 		}
 	} else {
 		// Create services
-		svc = createTestServices(t, testCtx.Repos, testCtx.JWTManager, testCtx.Config, testCtx.Logger)
+		svc = createTestServices(t, testCtx.DB, testCtx.Repos, testCtx.JWTManager, testCtx.Config, testCtx.Logger)
 		testCtx.Services = svc
 	}
 
 	// Create handlers
-	h := NewHandlers(svc, hub)
+	h := NewHandlers(svc, testCtx.DB, hub)
 
 	return h, hub
 }

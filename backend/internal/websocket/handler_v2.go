@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -182,7 +182,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Err(err).
 			Str("client_id", clientID).
 			Msg("Failed to send auth request")
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 
@@ -198,7 +198,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		errorMsg := map[string]string{"type": "error", "message": "Authentication failed"}
 		errorData, _ := json.Marshal(errorMsg)
 		_ = tempConn.WriteMessage(websocket.TextMessage, errorData)
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 
@@ -212,7 +212,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		errorMsg := map[string]string{"type": "error", "message": "Invalid authentication message"}
 		errorData, _ := json.Marshal(errorMsg)
 		_ = tempConn.WriteMessage(websocket.TextMessage, errorData)
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 
@@ -226,7 +226,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		errorMsg := map[string]string{"type": "error", "message": "Invalid token"}
 		errorData, _ := json.Marshal(errorMsg)
 		_ = tempConn.WriteMessage(websocket.TextMessage, errorData)
-		conn.Close()
+		_ = conn.Close()
 		return
 	}
 	userID := claims.UserID

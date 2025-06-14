@@ -6,9 +6,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/dice"
+	"github.com/google/uuid"
 )
 
 type CombatEngine struct {
@@ -124,13 +124,14 @@ func (ce *CombatEngine) NextTurn(combat *models.Combat) (*models.Combatant, bool
 
 func (ce *CombatEngine) StartNewRound(combat *models.Combat) {
 	// Update effect durations
-	for i := range combat.ActiveEffects {
+	for i := 0; i < len(combat.ActiveEffects); {
 		combat.ActiveEffects[i].RemainingTime--
 		if combat.ActiveEffects[i].RemainingTime <= 0 {
 			// Remove expired effects
 			combat.ActiveEffects = append(combat.ActiveEffects[:i], combat.ActiveEffects[i+1:]...)
-			i--
+			continue
 		}
+		i++
 	}
 
 	// Reset reactions for all combatants

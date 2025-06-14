@@ -9,10 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/mux"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
@@ -21,6 +17,10 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/gorilla/mux"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type testContext struct {
@@ -111,7 +111,7 @@ func setupIntegrationTest(t *testing.T) (*testContext, func()) {
 
 	// Create handlers
 	hub := websocket.GetHub()
-	handlers := NewHandlers(svc, hub)
+	handlers := NewHandlers(svc, db, hub)
 
 	// Setup router
 	router := mux.NewRouter()
@@ -131,7 +131,7 @@ func setupIntegrationTest(t *testing.T) (*testContext, func()) {
 	router.HandleFunc("/api/v1/characters/{characterId}/inventory/{itemId}/equip", authMiddleware.Authenticate(inventoryHandler.EquipItem)).Methods("POST")
 
 	cleanup := func() {
-		sqlxDB.Close()
+		_ = sqlxDB.Close()
 	}
 
 	return &testContext{

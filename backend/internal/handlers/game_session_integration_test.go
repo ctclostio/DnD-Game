@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 	ws "github.com/ctclostio/DnD-Game/backend/internal/websocket"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGameSessionLifecycle_Integration(t *testing.T) {
@@ -221,8 +221,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		joinReq := map[string]interface{}{
 			"character_id": char3ID,
 		}
-		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/join", joinReq, player3ID)
-		// Ignore the result - they might already be in the session
+		_ = ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/join", joinReq, player3ID)
 
 		// Now leave
 		w = ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/leave", nil, player3ID)

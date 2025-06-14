@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"runtime"
 	"time"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/health"
 )
 
 // HealthResponse represents the health check response
@@ -105,23 +107,14 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 	checks := make(map[string]HealthCheckResult)
 	allHealthy := true
 
-	// TODO: Check database connection if available
-	// This would require adding a GetDB() method to repositories or passing DB separately
-	/*
-		if db, ok := h.repositories.(*sql.DB); ok && db != nil {
-			if err := db.Ping(); err != nil {
-				checks["database"] = HealthCheckResult{
-					Status:  "unhealthy",
-					Message: "Database connection failed",
-				}
-				allHealthy = false
-			} else {
-				checks["database"] = HealthCheckResult{
-					Status: "healthy",
-				}
-			}
+	// Dependency checks
+	results := health.RunChecks(r.Context(), &health.DBChecker{DB: h.db})
+	for name, res := range results {
+		checks[name] = HealthCheckResult{Status: res.Status, Message: res.Message}
+		if res.Status != "healthy" {
+			allHealthy = false
 		}
-	*/
+	}
 
 	// Check if we have required services
 	if h.userService == nil || h.characterService == nil {
@@ -185,10 +178,9 @@ func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 	checks := make(map[string]HealthCheckResult)
 
 	// Check database if available
-	// TODO: Add database health check when repository interface supports it
-	checks["database"] = HealthCheckResult{
-		Status:  "healthy",
-		Message: "Database check not implemented",
+	dbResults := health.RunChecks(r.Context(), &health.DBChecker{DB: h.db})
+	if res, ok := dbResults["database"]; ok {
+		checks["database"] = HealthCheckResult{Status: res.Status, Message: res.Message}
 	}
 
 	// Check services
