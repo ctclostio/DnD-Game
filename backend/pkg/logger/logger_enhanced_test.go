@@ -170,7 +170,9 @@ func TestLoggerV2_WithContext(t *testing.T) {
 	assert.Equal(t, "TestMethod", logEntry["method"])
 }
 
-func TestLoggerV2_WithOperation(t *testing.T) {
+// testLoggerContext is a helper to test logger context methods
+func testLoggerContext(t *testing.T, setupFunc func(*LoggerV2) *LoggerV2, logMsg string, expectedFields map[string]string) {
+	t.Helper()
 	var buf bytes.Buffer
 	zl := zerolog.New(&buf).With().Timestamp().Logger()
 	logger := &LoggerV2{
@@ -178,32 +180,41 @@ func TestLoggerV2_WithOperation(t *testing.T) {
 		config: DefaultConfig(),
 	}
 
-	opLogger := logger.WithOperation("UserService", "CreateUser")
-	opLogger.Info().Msg("operation test")
+	testLogger := setupFunc(logger)
+	testLogger.Info().Msg(logMsg)
 
 	var logEntry map[string]interface{}
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
 
-	assert.Equal(t, "UserService", logEntry["service"])
-	assert.Equal(t, "CreateUser", logEntry["method"])
+	for field, expected := range expectedFields {
+		assert.Equal(t, expected, logEntry[field], "field %s should match", field)
+	}
+}
+
+func TestLoggerV2_WithOperation(t *testing.T) {
+	testLoggerContext(t,
+		func(l *LoggerV2) *LoggerV2 {
+			return l.WithOperation("UserService", "CreateUser")
+		},
+		"operation test",
+		map[string]string{
+			"service": "UserService",
+			"method":  "CreateUser",
+		},
+	)
 }
 
 func TestLoggerV2_WithGameContext(t *testing.T) {
-	var buf bytes.Buffer
-	zl := zerolog.New(&buf).With().Timestamp().Logger()
-	logger := &LoggerV2{
-		Logger: &zl,
-		config: DefaultConfig(),
-	}
-
-	gameLogger := logger.WithGameContext("game-123", "char-456")
-	gameLogger.Info().Msg("game context test")
-
-	var logEntry map[string]interface{}
-	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
-
-	assert.Equal(t, "game-123", logEntry["session_id"])
-	assert.Equal(t, "char-456", logEntry["character_id"])
+	testLoggerContext(t,
+		func(l *LoggerV2) *LoggerV2 {
+			return l.WithGameContext("game-123", "char-456")
+		},
+		"game context test",
+		map[string]string{
+			"session_id":    "game-123",
+			"character_id": "char-456",
+		},
+	)
 }
 
 func TestLoggerV2_LogHTTPRequest(t *testing.T) {

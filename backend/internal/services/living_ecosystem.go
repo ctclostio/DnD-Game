@@ -737,7 +737,7 @@ Create a dramatic description (2-3 sentences) of this event and its immediate im
 
 		description, err := les.llm.GenerateContent(ctx, prompt, "")
 		if err != nil {
-			return events, nil
+			return events, err
 		}
 
 		// Determine affected area
