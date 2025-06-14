@@ -27,29 +27,17 @@ func (h *InventoryHandler) GetCharacterInventory(w http.ResponseWriter, r *http.
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(inventory); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendJSONResponse(w, http.StatusOK, inventory)
 }
 
 func (h *InventoryHandler) AddItemToInventory(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	characterID := vars["characterId"]
 
-	var req struct {
-		ItemID   string `json:"item_id"`
-		Quantity int    `json:"quantity"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeItemRequest(r)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	}
-
-	if req.Quantity <= 0 {
-		req.Quantity = 1
 	}
 
 	if err := h.inventoryService.AddItemToCharacter(characterID, req.ItemID, req.Quantity); err != nil {
@@ -57,29 +45,17 @@ func (h *InventoryHandler) AddItemToInventory(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(map[string]string{"status": "success"}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendSuccessResponse(w, "success")
 }
 
 func (h *InventoryHandler) RemoveItemFromInventory(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	characterID := vars["characterId"]
 
-	var req struct {
-		ItemID   string `json:"item_id"`
-		Quantity int    `json:"quantity"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeItemRequest(r)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	}
-
-	if req.Quantity <= 0 {
-		req.Quantity = 1
 	}
 
 	if err := h.inventoryService.RemoveItemFromCharacter(characterID, req.ItemID, req.Quantity); err != nil {
@@ -87,11 +63,7 @@ func (h *InventoryHandler) RemoveItemFromInventory(w http.ResponseWriter, r *htt
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(map[string]string{"status": "success"}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendSuccessResponse(w, "success")
 }
 
 func (h *InventoryHandler) EquipItem(w http.ResponseWriter, r *http.Request) {
@@ -104,11 +76,7 @@ func (h *InventoryHandler) EquipItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(map[string]string{"status": "equipped"}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendSuccessResponse(w, "equipped")
 }
 
 func (h *InventoryHandler) UnequipItem(w http.ResponseWriter, r *http.Request) {
@@ -121,11 +89,7 @@ func (h *InventoryHandler) UnequipItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(map[string]string{"status": "unequipped"}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendSuccessResponse(w, "unequipped")
 }
 
 func (h *InventoryHandler) AttuneItem(w http.ResponseWriter, r *http.Request) {
@@ -138,11 +102,7 @@ func (h *InventoryHandler) AttuneItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(map[string]string{"status": "attuned"}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendSuccessResponse(w, "attuned")
 }
 
 func (h *InventoryHandler) UnattuneItem(w http.ResponseWriter, r *http.Request) {
@@ -155,11 +115,7 @@ func (h *InventoryHandler) UnattuneItem(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(map[string]string{"status": "unattuned"}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendSuccessResponse(w, "unattuned")
 }
 
 func (h *InventoryHandler) GetCharacterCurrency(w http.ResponseWriter, r *http.Request) {
@@ -172,11 +128,7 @@ func (h *InventoryHandler) GetCharacterCurrency(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(currency); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendJSONResponse(w, http.StatusOK, currency)
 }
 
 func (h *InventoryHandler) UpdateCharacterCurrency(w http.ResponseWriter, r *http.Request) {
@@ -208,29 +160,17 @@ func (h *InventoryHandler) UpdateCharacterCurrency(w http.ResponseWriter, r *htt
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(currency); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendJSONResponse(w, http.StatusOK, currency)
 }
 
 func (h *InventoryHandler) PurchaseItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	characterID := vars["characterId"]
 
-	var req struct {
-		ItemID   string `json:"item_id"`
-		Quantity int    `json:"quantity"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeItemRequest(r)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	}
-
-	if req.Quantity <= 0 {
-		req.Quantity = 1
 	}
 
 	if err := h.inventoryService.PurchaseItem(characterID, req.ItemID, req.Quantity); err != nil {
@@ -238,29 +178,17 @@ func (h *InventoryHandler) PurchaseItem(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(map[string]string{"status": "purchased"}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendSuccessResponse(w, "purchased")
 }
 
 func (h *InventoryHandler) SellItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	characterID := vars["characterId"]
 
-	var req struct {
-		ItemID   string `json:"item_id"`
-		Quantity int    `json:"quantity"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeItemRequest(r)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-	}
-
-	if req.Quantity <= 0 {
-		req.Quantity = 1
 	}
 
 	if err := h.inventoryService.SellItem(characterID, req.ItemID, req.Quantity); err != nil {
@@ -268,11 +196,7 @@ func (h *InventoryHandler) SellItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(map[string]string{"status": "sold"}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendSuccessResponse(w, "sold")
 }
 
 func (h *InventoryHandler) GetCharacterWeight(w http.ResponseWriter, r *http.Request) {
@@ -285,11 +209,7 @@ func (h *InventoryHandler) GetCharacterWeight(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(weight); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendJSONResponse(w, http.StatusOK, weight)
 }
 
 func (h *InventoryHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
@@ -304,11 +224,7 @@ func (h *InventoryHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(item); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendJSONResponse(w, http.StatusOK, item)
 }
 
 func (h *InventoryHandler) GetItemsByType(w http.ResponseWriter, r *http.Request) {
@@ -324,9 +240,5 @@ func (h *InventoryHandler) GetItemsByType(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(items); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	sendJSONResponse(w, http.StatusOK, items)
 }

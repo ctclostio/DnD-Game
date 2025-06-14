@@ -18,13 +18,11 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - mnd
     - goprintffuncname
     - gosec
     - gosimple
     - govet
     - ineffassign
-    - lll
     - misspell
     - nakedret
     - noctx
@@ -39,9 +37,6 @@ linters:
     - prealloc
     - predeclared
     - asciicheck
-    - godot
-    - godox
-    - goheader
     - nestif
     - revive
 
@@ -52,6 +47,10 @@ linters:
     - gomodguard
     - wsl
     - gochecknoglobals
+    - godot      # Too many false positives for comment formatting
+    - godox      # TODO/FIXME comments are useful during development
+    - lll        # Line length is already handled by formatting
+    - mnd        # Magic numbers are often clearer inline
 
 linters-settings:
   dupl:
@@ -135,6 +134,9 @@ linters-settings:
       - name: unused-parameter
       - name: unreachable-code
       - name: redefines-builtin-id
+  gosec:
+    excludes:
+      - G404  # Weak random OK for game dice/non-crypto uses
 
 issues:
   exclude-dirs:

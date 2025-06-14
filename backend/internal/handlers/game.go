@@ -239,17 +239,10 @@ func (h *Handlers) GetSessionPlayers(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["id"]
 
-	// Get user ID from auth context
-	userID, ok := auth.GetUserIDFromContext(r.Context())
-	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
-		return
-	}
-
-	// Verify user is in the session
-	if err := h.gameService.ValidateUserInSession(r.Context(), sessionID, userID); err != nil {
-		response.Forbidden(w, r, "You are not a participant in this session")
-		return
+	// Validate user session access
+	_, err := validateUserSession(w, r, h.gameService, sessionID)
+	if err != nil {
+		return // Response already sent by helper
 	}
 
 	// Get all participants

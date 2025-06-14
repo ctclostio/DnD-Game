@@ -216,18 +216,14 @@ func (h *Handlers) GetDMAssistantLocation(w http.ResponseWriter, r *http.Request
 
 // GetDMAssistantStoryElements retrieves unused story elements for a session
 func (h *Handlers) GetDMAssistantStoryElements(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from context
-	_, ok := auth.GetUserIDFromContext(r.Context())
-	if !ok {
-		response.Unauthorized(w, r, "")
+	// Authenticate user
+	if _, ok := authenticateUser(w, r); !ok {
 		return
 	}
 
-	// Get session ID from URL
-	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	// Parse session ID
+	sessionID, err := parseUUIDFromRequest(w, r, "sessionId")
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
 		return
 	}
 
@@ -243,18 +239,14 @@ func (h *Handlers) GetDMAssistantStoryElements(w http.ResponseWriter, r *http.Re
 
 // MarkStoryElementUsed marks a story element as used
 func (h *Handlers) MarkStoryElementUsed(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from context
-	_, ok := auth.GetUserIDFromContext(r.Context())
-	if !ok {
-		response.Unauthorized(w, r, "")
+	// Authenticate user
+	if _, ok := authenticateUser(w, r); !ok {
 		return
 	}
 
-	// Get element ID from URL
-	vars := mux.Vars(r)
-	elementID, err := uuid.Parse(vars["id"])
+	// Parse element ID
+	elementID, err := parseUUIDFromRequest(w, r, "id")
 	if err != nil {
-		response.BadRequest(w, r, "Invalid element ID")
 		return
 	}
 
@@ -269,18 +261,14 @@ func (h *Handlers) MarkStoryElementUsed(w http.ResponseWriter, r *http.Request) 
 
 // GetDMAssistantHazards retrieves environmental hazards for a location
 func (h *Handlers) GetDMAssistantHazards(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from context
-	_, ok := auth.GetUserIDFromContext(r.Context())
-	if !ok {
-		response.Unauthorized(w, r, "")
+	// Authenticate user
+	if _, ok := authenticateUser(w, r); !ok {
 		return
 	}
 
-	// Get location ID from URL
-	vars := mux.Vars(r)
-	locationID, err := uuid.Parse(vars["locationId"])
+	// Parse location ID
+	locationID, err := parseUUIDFromRequest(w, r, "locationId")
 	if err != nil {
-		response.BadRequest(w, r, "Invalid location ID")
 		return
 	}
 
@@ -296,18 +284,14 @@ func (h *Handlers) GetDMAssistantHazards(w http.ResponseWriter, r *http.Request)
 
 // TriggerHazard marks a hazard as triggered
 func (h *Handlers) TriggerHazard(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from context
-	_, ok := auth.GetUserIDFromContext(r.Context())
-	if !ok {
-		response.Unauthorized(w, r, "")
+	// Authenticate user
+	if _, ok := authenticateUser(w, r); !ok {
 		return
 	}
 
-	// Get hazard ID from URL
-	vars := mux.Vars(r)
-	hazardID, err := uuid.Parse(vars["id"])
+	// Parse hazard ID
+	hazardID, err := parseUUIDFromRequest(w, r, "id")
 	if err != nil {
-		response.BadRequest(w, r, "Invalid hazard ID")
 		return
 	}
 

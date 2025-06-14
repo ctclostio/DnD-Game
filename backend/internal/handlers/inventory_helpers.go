@@ -1,0 +1,47 @@
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+)
+
+// sendJSONResponse sends a JSON response with proper error handling
+func sendJSONResponse(w http.ResponseWriter, status int, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	if status != http.StatusOK {
+		w.WriteHeader(status)
+	}
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}
+
+// sendSuccessResponse sends a generic success response
+func sendSuccessResponse(w http.ResponseWriter, message string) {
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": message}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}
+
+// decodeItemRequest decodes and validates an item request from the request body
+type ItemRequest struct {
+	ItemID   string `json:"item_id"`
+	Quantity int    `json:"quantity"`
+}
+
+func decodeItemRequest(r *http.Request) (*ItemRequest, error) {
+	var req ItemRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
+	}
+	
+	// Ensure quantity is at least 1
+	if req.Quantity <= 0 {
+		req.Quantity = 1
+	}
+	
+	return &req, nil
+}

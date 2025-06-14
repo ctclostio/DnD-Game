@@ -82,17 +82,10 @@ func (h *Handlers) GetNPCsBySession(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["sessionId"]
 
-	// Get user ID from auth context
-	userID, ok := auth.GetUserIDFromContext(r.Context())
-	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
-		return
-	}
-
-	// Verify user has access to this game session
-	if err := h.gameService.ValidateUserInSession(r.Context(), sessionID, userID); err != nil {
-		response.Forbidden(w, r, "You don't have access to this game session")
-		return
+	// Validate user session access
+	_, err := validateUserSession(w, r, h.gameService, sessionID)
+	if err != nil {
+		return // Response already sent by helper
 	}
 
 	npcs, err := h.npcService.GetNPCsByGameSession(r.Context(), sessionID)
