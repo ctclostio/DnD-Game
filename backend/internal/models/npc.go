@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// NPC represents a non-player character or monster
+// NPC represents a non-player character or monster.
 type NPC struct {
 	ID                  string         `json:"id" db:"id"`
 	GameSessionID       string         `json:"gameSessionId" db:"game_session_id"`
@@ -35,13 +35,13 @@ type NPC struct {
 	UpdatedAt           time.Time      `json:"updatedAt" db:"updated_at"`
 }
 
-// NPCAbility represents a special ability or trait
+// NPCAbility represents a special ability or trait.
 type NPCAbility struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
-// NPCAction represents an action the NPC can take
+// NPCAction represents an action the NPC can take.
 type NPCAction struct {
 	Name        string `json:"name"`
 	Type        string `json:"type"` // action, bonus_action, reaction, legendary
@@ -54,7 +54,7 @@ type NPCAction struct {
 	SaveType    string `json:"saveType,omitempty"` // STR, DEX, CON, INT, WIS, CHA
 }
 
-// NPCTemplate represents a template for creating NPCs
+// NPCTemplate represents a template for creating NPCs.
 type NPCTemplate struct {
 	ID                  string         `json:"id" db:"id"`
 	Name                string         `json:"name" db:"name"`
@@ -80,7 +80,7 @@ type NPCTemplate struct {
 	CreatedAt           time.Time      `json:"createdAt" db:"created_at"`
 }
 
-// NPCSearchFilter represents search criteria for NPCs
+// NPCSearchFilter represents search criteria for NPCs.
 type NPCSearchFilter struct {
 	GameSessionID    string  `json:"gameSessionId"`
 	Name             string  `json:"name"`

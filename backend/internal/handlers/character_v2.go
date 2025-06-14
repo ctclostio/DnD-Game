@@ -4,27 +4,27 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
-// CharacterHandlerV2 demonstrates the new standardized error handling
+// CharacterHandlerV2 demonstrates the new standardized error handling.
 type CharacterHandlerV2 struct {
 	characterService CharacterService
 }
 
-// NewCharacterHandlerV2 creates a new character handler with standardized error handling
+// NewCharacterHandlerV2 creates a new character handler with standardized error handling.
 func NewCharacterHandlerV2(characterService CharacterService) *CharacterHandlerV2 {
 	return &CharacterHandlerV2{
 		characterService: characterService,
 	}
 }
 
-// GetCharacters retrieves all characters for the authenticated user
+// GetCharacters retrieves all characters for the authenticated user.
 func (h *CharacterHandlerV2) GetCharacters(w http.ResponseWriter, r *http.Request, userID uuid.UUID) error {
 	characters, err := h.characterService.GetAllCharacters(r.Context(), userID.String())
 	if err != nil {
@@ -39,12 +39,12 @@ func (h *CharacterHandlerV2) GetCharacters(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-// GetCharacter retrieves a specific character
+// GetCharacter retrieves a specific character.
 func (h *CharacterHandlerV2) GetCharacter(w http.ResponseWriter, r *http.Request, userID uuid.UUID) error {
 	vars := mux.Vars(r)
 	characterID := vars["id"]
 
-	// Validate character ID format
+	// Validate character ID format.
 	if _, err := uuid.Parse(characterID); err != nil {
 		return errors.NewValidationError("Invalid character ID format").
 			WithCode(string(errors.ErrCodeInvalidInput)).
@@ -55,7 +55,7 @@ func (h *CharacterHandlerV2) GetCharacter(w http.ResponseWriter, r *http.Request
 
 	character, err := h.characterService.GetCharacterByID(r.Context(), characterID)
 	if err != nil {
-		// Check if it's a not found error
+		// Check if it's a not found error.
 		if errors.IsNotFound(err) {
 			return errors.NewNotFoundError("character").
 				WithCode(string(errors.ErrCodeCharacterNotFound))
@@ -64,7 +64,7 @@ func (h *CharacterHandlerV2) GetCharacter(w http.ResponseWriter, r *http.Request
 			WithCode(string(errors.ErrCodeDatabaseError))
 	}
 
-	// Verify ownership
+	// Verify ownership.
 	if character.UserID != userID.String() {
 		return errors.NewAuthorizationError("You don't have permission to access this character").
 			WithCode(string(errors.ErrCodeCharacterNotOwned)).
@@ -77,7 +77,7 @@ func (h *CharacterHandlerV2) GetCharacter(w http.ResponseWriter, r *http.Request
 	return nil
 }
 
-// CreateCharacter creates a new character
+// CreateCharacter creates a new character.
 func (h *CharacterHandlerV2) CreateCharacter(w http.ResponseWriter, r *http.Request, userID uuid.UUID) error {
 	var req CreateCharacterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -85,12 +85,12 @@ func (h *CharacterHandlerV2) CreateCharacter(w http.ResponseWriter, r *http.Requ
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
-	// Validate request
+	// Validate request.
 	if validationErr := h.validateCreateCharacterRequest(&req); validationErr != nil {
 		return validationErr
 	}
 
-	// Check character limit
+	// Check character limit.
 	characters, err := h.characterService.GetAllCharacters(r.Context(), userID.String())
 	if err != nil {
 		return errors.NewInternalError("Failed to check character limit", err).
@@ -107,7 +107,7 @@ func (h *CharacterHandlerV2) CreateCharacter(w http.ResponseWriter, r *http.Requ
 			})
 	}
 
-	// Create character
+	// Create character.
 	character := &models.Character{
 		UserID:     userID.String(),
 		Name:       req.Name,
@@ -120,7 +120,7 @@ func (h *CharacterHandlerV2) CreateCharacter(w http.ResponseWriter, r *http.Requ
 	}
 
 	if err := h.characterService.CreateCharacter(r.Context(), character); err != nil {
-		// Check for duplicate name
+		// Check for duplicate name.
 		if errors.IsDuplicate(err) {
 			return errors.NewConflictError("A character with this name already exists").
 				WithCode(string(errors.ErrCodeDuplicateEntry)).
@@ -136,18 +136,18 @@ func (h *CharacterHandlerV2) CreateCharacter(w http.ResponseWriter, r *http.Requ
 	return nil
 }
 
-// UpdateCharacter updates an existing character
+// UpdateCharacter updates an existing character.
 func (h *CharacterHandlerV2) UpdateCharacter(w http.ResponseWriter, r *http.Request, userID uuid.UUID) error {
 	vars := mux.Vars(r)
 	characterID := vars["id"]
 
-	// Validate character ID
+	// Validate character ID.
 	if _, err := uuid.Parse(characterID); err != nil {
 		return errors.NewValidationError("Invalid character ID format").
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
-	// Verify ownership first
+	// Verify ownership first.
 	existing, err := h.characterService.GetCharacterByID(r.Context(), characterID)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -163,25 +163,25 @@ func (h *CharacterHandlerV2) UpdateCharacter(w http.ResponseWriter, r *http.Requ
 			WithCode(string(errors.ErrCodeCharacterNotOwned))
 	}
 
-	// Parse update request
+	// Parse update request.
 	var req UpdateCharacterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return errors.NewBadRequestError("Invalid request body").
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
-	// Validate update request
+	// Validate update request.
 	if validationErr := h.validateUpdateCharacterRequest(&req); validationErr != nil {
 		return validationErr
 	}
 
-	// Apply updates
+	// Apply updates.
 	character := &models.Character{
 		ID:     characterID,
 		UserID: userID.String(), // Ensure ownership can't be changed
 	}
 
-	// Only update provided fields
+	// Only update provided fields.
 	if req.Name != nil {
 		character.Name = *req.Name
 	}
@@ -200,7 +200,7 @@ func (h *CharacterHandlerV2) UpdateCharacter(w http.ResponseWriter, r *http.Requ
 			WithCode(string(errors.ErrCodeDatabaseError))
 	}
 
-	// Fetch and return updated character
+	// Fetch and return updated character.
 	updated, err := h.characterService.GetCharacterByID(r.Context(), characterID)
 	if err != nil {
 		return errors.NewInternalError("Failed to retrieve updated character", err).
@@ -211,18 +211,18 @@ func (h *CharacterHandlerV2) UpdateCharacter(w http.ResponseWriter, r *http.Requ
 	return nil
 }
 
-// DeleteCharacter deletes a character
+// DeleteCharacter deletes a character.
 func (h *CharacterHandlerV2) DeleteCharacter(w http.ResponseWriter, r *http.Request, userID uuid.UUID) error {
 	vars := mux.Vars(r)
 	characterID := vars["id"]
 
-	// Validate character ID
+	// Validate character ID.
 	if _, err := uuid.Parse(characterID); err != nil {
 		return errors.NewValidationError("Invalid character ID format").
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
-	// Verify ownership
+	// Verify ownership.
 	character, err := h.characterService.GetCharacterByID(r.Context(), characterID)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -238,9 +238,8 @@ func (h *CharacterHandlerV2) DeleteCharacter(w http.ResponseWriter, r *http.Requ
 			WithCode(string(errors.ErrCodeCharacterNotOwned))
 	}
 
-	// TODO: Check if character is in active game session
-	// This would require checking the game_participants table or adding a CurrentGameSessionID field to Character
-
+	// TODO: Check if character is in active game session.
+	// This would require checking the game_participants table or adding a CurrentGameSessionID field to Character.
 	if err := h.characterService.DeleteCharacter(r.Context(), characterID); err != nil {
 		return errors.NewInternalError("Failed to delete character", err).
 			WithCode(string(errors.ErrCodeDatabaseError))
@@ -253,18 +252,18 @@ func (h *CharacterHandlerV2) DeleteCharacter(w http.ResponseWriter, r *http.Requ
 	return nil
 }
 
-// LevelUp levels up a character
+// LevelUp levels up a character.
 func (h *CharacterHandlerV2) LevelUp(w http.ResponseWriter, r *http.Request, userID uuid.UUID) error {
 	vars := mux.Vars(r)
 	characterID := vars["id"]
 
-	// Validate character ID
+	// Validate character ID.
 	if _, err := uuid.Parse(characterID); err != nil {
 		return errors.NewValidationError("Invalid character ID format").
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
-	// Verify ownership
+	// Verify ownership.
 	character, err := h.characterService.GetCharacterByID(r.Context(), characterID)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -280,7 +279,7 @@ func (h *CharacterHandlerV2) LevelUp(w http.ResponseWriter, r *http.Request, use
 			WithCode(string(errors.ErrCodeCharacterNotOwned))
 	}
 
-	// Check if character can level up
+	// Check if character can level up.
 	if character.Level >= 20 {
 		return errors.NewBadRequestError("Character is already at maximum level").
 			WithCode(string(errors.ErrCodeOutOfRange)).
@@ -290,14 +289,14 @@ func (h *CharacterHandlerV2) LevelUp(w http.ResponseWriter, r *http.Request, use
 			})
 	}
 
-	// Parse level up choices
+	// Parse level up choices.
 	var req LevelUpRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return errors.NewBadRequestError("Invalid request body").
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
-	// Perform level up
+	// Perform level up.
 	updatedCharacter, err := h.characterService.LevelUp(r.Context(), characterID, req.HitPointIncrease, req.AttributeIncrease)
 	if err != nil {
 		return errors.NewInternalError("Failed to level up character", err).
@@ -308,8 +307,7 @@ func (h *CharacterHandlerV2) LevelUp(w http.ResponseWriter, r *http.Request, use
 	return nil
 }
 
-// Validation helpers
-
+// Validation helpers.
 func (h *CharacterHandlerV2) validateCreateCharacterRequest(req *CreateCharacterRequest) error {
 	validationErrors := &errors.ValidationErrors{}
 
@@ -331,7 +329,7 @@ func (h *CharacterHandlerV2) validateCreateCharacterRequest(req *CreateCharacter
 		validationErrors.Add("level", "Level must be between 1 and 20")
 	}
 
-	// Validate attributes
+	// Validate attributes.
 	attrs := []struct {
 		name  string
 		value int
@@ -383,9 +381,9 @@ func (h *CharacterHandlerV2) validateUpdateCharacterRequest(req *UpdateCharacter
 	return nil
 }
 
-// RegisterRoutesV2 registers the character routes with new error handling
+// RegisterRoutesV2 registers the character routes with new error handling.
 func (h *CharacterHandlerV2) RegisterRoutesV2(r *mux.Router) {
-	// All routes use authenticated handlers
+	// All routes use authenticated handlers.
 	r.HandleFunc("/characters", middleware.AuthenticatedHandler(h.GetCharacters)).Methods("GET")
 	r.HandleFunc("/characters", middleware.AuthenticatedHandler(h.CreateCharacter)).Methods("POST")
 	r.HandleFunc("/characters/{id}", middleware.AuthenticatedHandler(h.GetCharacter)).Methods("GET")
@@ -394,8 +392,7 @@ func (h *CharacterHandlerV2) RegisterRoutesV2(r *mux.Router) {
 	r.HandleFunc("/characters/{id}/level-up", middleware.AuthenticatedHandler(h.LevelUp)).Methods("POST")
 }
 
-// Request/Response types
-
+// Request/Response types.
 type CreateCharacterRequest struct {
 	Name       string            `json:"name"`
 	Race       string            `json:"race"`

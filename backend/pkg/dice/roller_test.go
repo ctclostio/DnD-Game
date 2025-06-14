@@ -142,7 +142,7 @@ func TestRoller_Roll(t *testing.T) {
 func TestRoller_RollAdvantage(t *testing.T) {
 	roller := NewRoller()
 
-	// Run multiple times to ensure it's working properly
+	// Run multiple times to ensure it's working properly.
 	for i := 0; i < 10; i++ {
 		result, err := roller.RollAdvantage()
 		require.NoError(t, err)
@@ -158,7 +158,7 @@ func TestRoller_RollAdvantage(t *testing.T) {
 func TestRoller_RollDisadvantage(t *testing.T) {
 	roller := NewRoller()
 
-	// Run multiple times to ensure it's working properly
+	// Run multiple times to ensure it's working properly.
 	for i := 0; i < 10; i++ {
 		result, err := roller.RollDisadvantage()
 		require.NoError(t, err)
@@ -171,7 +171,7 @@ func TestRoller_RollDisadvantage(t *testing.T) {
 	}
 }
 
-// Test that advantage tends to produce higher results than disadvantage
+// Test that advantage tends to produce higher results than disadvantage.
 func TestRoller_AdvantageVsDisadvantage(t *testing.T) {
 	roller := NewRoller()
 
@@ -187,19 +187,19 @@ func TestRoller_AdvantageVsDisadvantage(t *testing.T) {
 		disadvantageSum += dis.Total
 	}
 
-	// On average, advantage should produce higher results
-	// This might fail occasionally due to randomness, but very rarely
+	// On average, advantage should produce higher results.
+	// This might fail occasionally due to randomness, but very rarely.
 	assert.Greater(t, float64(advantageSum)/float64(rolls), float64(disadvantageSum)/float64(rolls))
 }
 
-// Test for distribution (basic check)
+// Test for distribution (basic check).
 func TestRoller_Distribution(t *testing.T) {
 	t.Skip("Skipping distribution test in short mode")
 
 	roller := NewRoller()
 	counts := make(map[int]int)
 
-	// Roll a d6 many times
+	// Roll a d6 many times.
 	rolls := 6000
 	for i := 0; i < rolls; i++ {
 		result, err := roller.Roll("1d6")
@@ -207,8 +207,8 @@ func TestRoller_Distribution(t *testing.T) {
 		counts[result.Total]++
 	}
 
-	// Each face should appear roughly 1/6 of the time
-	// We'll allow a generous margin for randomness
+	// Each face should appear roughly 1/6 of the time.
+	// We'll allow a generous margin for randomness.
 	expectedCount := rolls / 6
 	tolerance := float64(expectedCount) * 0.25 // 25% tolerance
 

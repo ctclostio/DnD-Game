@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// CombatService adapter for tests
+// CombatService adapter for tests.
 type CombatService struct {
 	combats  map[string]*TestCombat
 	charRepo interface{}
@@ -23,7 +23,7 @@ type TestCombat struct {
 	CombatantsMap map[string]*models.Combatant
 }
 
-// NewCombatService creates a new combat service for tests
+// NewCombatService creates a new combat service for tests.
 func NewCombatService(charRepo, diceRepo, llm interface{}) *CombatService {
 	return &CombatService{
 		combats:  make(map[string]*TestCombat),
@@ -33,7 +33,7 @@ func NewCombatService(charRepo, diceRepo, llm interface{}) *CombatService {
 	}
 }
 
-// StartCombat initializes a new combat
+// StartCombat initializes a new combat.
 func (s *CombatService) StartCombat(ctx context.Context, sessionID string, participants []models.Combatant) (*models.Combat, error) {
 	if sessionID == "" {
 		return nil, errors.New("session ID is required")
@@ -43,7 +43,7 @@ func (s *CombatService) StartCombat(ctx context.Context, sessionID string, parti
 		return nil, errors.New("at least two combatants are required")
 	}
 
-	// Validate participants
+	// Validate participants.
 	for _, p := range participants {
 		if p.ID == "" {
 			return nil, errors.New("combatant ID is required")
@@ -56,7 +56,7 @@ func (s *CombatService) StartCombat(ctx context.Context, sessionID string, parti
 		}
 	}
 
-	// Roll initiative for each combatant
+	// Roll initiative for each combatant.
 	for i := range participants {
 		participants[i].Initiative = rand.Intn(20) + 1 + participants[i].InitiativeRoll
 		if participants[i].Initiative == 0 {
@@ -64,13 +64,13 @@ func (s *CombatService) StartCombat(ctx context.Context, sessionID string, parti
 		}
 	}
 
-	// Sort by initiative (descending)
+	// Sort by initiative (descending).
 	turnOrder := make([]string, len(participants))
 	for i, p := range participants {
 		turnOrder[i] = p.ID
 	}
 
-	// Sort turn order by initiative
+	// Sort turn order by initiative.
 	for i := 0; i < len(turnOrder)-1; i++ {
 		for j := i + 1; j < len(turnOrder); j++ {
 			var init1, init2 int
@@ -102,7 +102,7 @@ func (s *CombatService) StartCombat(ctx context.Context, sessionID string, parti
 		ActionHistory: []models.CombatAction{},
 	}
 
-	// Create combatants map
+	// Create combatants map.
 	combatantsMap := make(map[string]*models.Combatant)
 	for i := range combat.Combatants {
 		combatantsMap[combat.Combatants[i].ID] = &combat.Combatants[i]
@@ -117,7 +117,7 @@ func (s *CombatService) StartCombat(ctx context.Context, sessionID string, parti
 	return combat, nil
 }
 
-// GetCombatState retrieves the current state of a combat
+// GetCombatState retrieves the current state of a combat.
 func (s *CombatService) GetCombatState(ctx context.Context, combatID string) (*models.Combat, error) {
 	if combatID == "" {
 		return nil, errors.New("combat ID is required")
@@ -128,7 +128,7 @@ func (s *CombatService) GetCombatState(ctx context.Context, combatID string) (*m
 		return nil, errors.New("combat not found")
 	}
 
-	// Update combatants from map to slice
+	// Update combatants from map to slice.
 	combatants := make([]models.Combatant, 0, len(testCombat.CombatantsMap))
 	for _, c := range testCombat.CombatantsMap {
 		combatants = append(combatants, *c)
@@ -138,7 +138,7 @@ func (s *CombatService) GetCombatState(ctx context.Context, combatID string) (*m
 	return testCombat.Combat, nil
 }
 
-// ExecuteAction processes a combat action
+// ExecuteAction processes a combat action.
 func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, action models.CombatAction) (*models.Combat, error) {
 	if combatID == "" {
 		return nil, errors.New("combat not found")
@@ -155,19 +155,19 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 		return nil, errors.New("combat has already ended")
 	}
 
-	// Check if it's the actor's turn
+	// Check if it's the actor's turn.
 	currentTurnID := combat.TurnOrder[combat.Turn]
 	if action.ActorID != currentTurnID && action.ActionType != models.ActionTypeReaction {
 		return nil, errors.New("not this combatant's turn")
 	}
 
-	// Process action based on type
+	// Process action based on type.
 	switch action.ActionType {
 	case models.ActionTypeAttack:
-		// Simulate attack (hit/miss)
+		// Simulate attack (hit/miss).
 		action.Hit = rand.Intn(20)+1+action.AttackBonus >= 10 // Simple hit calculation
 		if action.Hit && action.TargetID != "" {
-			// Apply damage if hit
+			// Apply damage if hit.
 			if target, ok := testCombat.CombatantsMap[action.TargetID]; ok {
 				damage := rand.Intn(8) + 1 + action.DamageBonus
 				target.HP -= damage
@@ -178,16 +178,15 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 		}
 
 	case models.ActionTypeCastSpell:
-		// Record spell cast
-
+		// Record spell cast.
 	case models.ActionTypeMove:
-		// Update position
+		// Update position.
 		if actor, ok := testCombat.CombatantsMap[action.ActorID]; ok {
 			actor.Position = action.NewPosition
 		}
 
 	case models.ActionTypeDodge:
-		// Add dodge condition
+		// Add dodge condition.
 		if actor, ok := testCombat.CombatantsMap[action.ActorID]; ok {
 			if actor.Conditions == nil {
 				actor.Conditions = []models.Condition{}
@@ -196,7 +195,7 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 		}
 
 	case models.ActionTypeEndTurn:
-		// Advance turn
+		// Advance turn.
 		combat.Turn++
 		combat.CurrentTurn = combat.Turn
 		if combat.Turn >= len(combat.TurnOrder) {
@@ -206,13 +205,13 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 		}
 	}
 
-	// Record the action with all modifications
+	// Record the action with all modifications.
 	combat.ActionHistory = append(combat.ActionHistory, action)
 
 	return s.GetCombatState(ctx, combatID)
 }
 
-// EndCombat ends an active combat
+// EndCombat ends an active combat.
 func (s *CombatService) EndCombat(ctx context.Context, combatID string) error {
 	testCombat, exists := s.combats[combatID]
 	if !exists {
@@ -228,20 +227,20 @@ func (s *CombatService) EndCombat(ctx context.Context, combatID string) error {
 	return nil
 }
 
-// SetCombatState sets the combat state (for testing)
+// SetCombatState sets the combat state (for testing).
 func (s *CombatService) SetCombatState(combat *models.Combat) {
 	combatantsMap := make(map[string]*models.Combatant)
 	for i := range combat.Combatants {
 		combatantsMap[combat.Combatants[i].ID] = &combat.Combatants[i]
 	}
 
-	// Set aliases
+	// Set aliases.
 	if combat.GameSessionID != "" {
 		combat.SessionID = combat.GameSessionID
 	}
 	combat.Turn = combat.CurrentTurn
 
-	// Sync IsActive with Status if needed
+	// Sync IsActive with Status if needed.
 	switch combat.Status {
 	case models.CombatStatusActive:
 		combat.IsActive = true
@@ -255,7 +254,7 @@ func (s *CombatService) SetCombatState(combat *models.Combat) {
 	}
 }
 
-// ApplyDamage applies damage to a combatant
+// ApplyDamage applies damage to a combatant.
 func (s *CombatService) ApplyDamage(ctx context.Context, combatID, targetID string, damage int, damageType string) (*models.Combat, error) {
 	testCombat, exists := s.combats[combatID]
 	if !exists {
@@ -267,10 +266,10 @@ func (s *CombatService) ApplyDamage(ctx context.Context, combatID, targetID stri
 		return nil, errors.New("target not found in combat")
 	}
 
-	// Check resistances/immunities/vulnerabilities
+	// Check resistances/immunities/vulnerabilities.
 	finalDamage := damage
 
-	// Check string-based lists
+	// Check string-based lists.
 	for _, immunity := range target.DamageImmunities {
 		if immunity == damageType {
 			finalDamage = 0
@@ -294,13 +293,13 @@ func (s *CombatService) ApplyDamage(ctx context.Context, combatID, targetID stri
 		}
 	}
 
-	// Apply damage
+	// Apply damage.
 	target.HP -= finalDamage
 	if target.HP < 0 {
 		target.HP = 0
 	}
 
-	// Add unconscious condition if HP drops to 0
+	// Add unconscious condition if HP drops to 0.
 	if target.HP == 0 {
 		hasUnconscious := false
 		for _, cond := range target.Conditions {
@@ -317,7 +316,7 @@ func (s *CombatService) ApplyDamage(ctx context.Context, combatID, targetID stri
 	return s.GetCombatState(ctx, combatID)
 }
 
-// ApplyHealing applies healing to a combatant
+// ApplyHealing applies healing to a combatant.
 func (s *CombatService) ApplyHealing(ctx context.Context, combatID, targetID string, healing int) (*models.Combat, error) {
 	if healing <= 0 {
 		return nil, errors.New("healing must be positive")
@@ -333,13 +332,13 @@ func (s *CombatService) ApplyHealing(ctx context.Context, combatID, targetID str
 		return nil, errors.New("target not found in combat")
 	}
 
-	// Apply healing
+	// Apply healing.
 	target.HP += healing
 	if target.HP > target.MaxHP {
 		target.HP = target.MaxHP
 	}
 
-	// Remove unconscious condition if healed
+	// Remove unconscious condition if healed.
 	if target.HP > 0 && target.Conditions != nil {
 		newConditions := []models.Condition{}
 		for _, cond := range target.Conditions {
@@ -353,7 +352,7 @@ func (s *CombatService) ApplyHealing(ctx context.Context, combatID, targetID str
 	return s.GetCombatState(ctx, combatID)
 }
 
-// DeathSavingThrow processes a death saving throw
+// DeathSavingThrow processes a death saving throw.
 func (s *CombatService) DeathSavingThrow(ctx context.Context, combatID, characterID string) (*models.Combat, *models.DeathSaveResult, error) {
 	testCombat, exists := s.combats[combatID]
 	if !exists {
@@ -369,31 +368,31 @@ func (s *CombatService) DeathSavingThrow(ctx context.Context, combatID, characte
 		return nil, nil, errors.New("character is not unconscious")
 	}
 
-	// Roll d20
+	// Roll d20.
 	roll := rand.Intn(20) + 1
 	result := &models.DeathSaveResult{
 		Roll: roll,
 	}
 
-	// Critical success (20) - regain 1 HP
+	// Critical success (20) - regain 1 HP.
 	if roll == 20 {
 		handleCriticalSuccess(character, result)
 		combat, _ := s.GetCombatState(ctx, combatID)
 		return combat, result, nil
 	}
 
-	// Critical failure - 2 failures
+	// Critical failure - 2 failures.
 	if roll == 1 {
 		handleCriticalFailure(character, result)
 		combat, _ := s.GetCombatState(ctx, combatID)
 		return combat, result, nil
 	}
 
-	// Normal success
+	// Normal success.
 	if roll >= 10 {
 		handleSuccess(character, result)
 	} else {
-		// Failure
+		// Failure.
 		handleFailure(character, result)
 	}
 
@@ -401,59 +400,59 @@ func (s *CombatService) DeathSavingThrow(ctx context.Context, combatID, characte
 	return combat, result, nil
 }
 
-// handleCriticalSuccess processes a critical success on a death save
+// handleCriticalSuccess processes a critical success on a death save.
 func handleCriticalSuccess(combatant *models.Combatant, result *models.DeathSaveResult) {
 	result.CritSuccess = true
 	result.Success = true
 	combatant.HP = 1
-	
-	// Remove unconscious condition
+
+	// Remove unconscious condition.
 	removeUnconsciousCondition(combatant)
-	
+
 	combatant.DeathSaveSuccesses = 0
 	combatant.DeathSaveFailures = 0
 }
 
-// handleCriticalFailure processes a critical failure on a death save
+// handleCriticalFailure processes a critical failure on a death save.
 func handleCriticalFailure(combatant *models.Combatant, result *models.DeathSaveResult) {
 	result.CritFailure = true
 	combatant.DeathSaveFailures += 2
-	
+
 	if combatant.DeathSaveFailures >= 3 {
 		combatant.DeathSaveFailures = 3
 		combatant.Conditions = append(combatant.Conditions, models.ConditionDead)
 	}
 }
 
-// handleSuccess processes a normal success on a death save
+// handleSuccess processes a normal success on a death save.
 func handleSuccess(combatant *models.Combatant, result *models.DeathSaveResult) {
 	result.Success = true
 	combatant.DeathSaveSuccesses++
-	
+
 	if combatant.DeathSaveSuccesses >= 3 {
-		// Stabilized
+		// Stabilized.
 		combatant.DeathSaveSuccesses = 0
 		combatant.DeathSaveFailures = 0
 		combatant.Conditions = append(combatant.Conditions, models.ConditionStable)
 	}
 }
 
-// handleFailure processes a failure on a death save
+// handleFailure processes a failure on a death save.
 func handleFailure(combatant *models.Combatant, result *models.DeathSaveResult) {
 	combatant.DeathSaveFailures++
-	
+
 	if combatant.DeathSaveFailures >= 3 {
 		combatant.DeathSaveFailures = 3
 		combatant.Conditions = append(combatant.Conditions, models.ConditionDead)
 	}
 }
 
-// removeUnconsciousCondition removes the unconscious condition from a combatant
+// removeUnconsciousCondition removes the unconscious condition from a combatant.
 func removeUnconsciousCondition(combatant *models.Combatant) {
 	if combatant.Conditions == nil {
 		return
 	}
-	
+
 	newConditions := []models.Condition{}
 	for _, cond := range combatant.Conditions {
 		if cond != models.ConditionUnconscious {

@@ -9,14 +9,14 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
-// InMemoryEventBus is a simple in-memory event bus implementation
+// InMemoryEventBus is a simple in-memory event bus implementation.
 type InMemoryEventBus struct {
 	handlers map[string][]EventHandler
 	mu       sync.RWMutex
 	logger   *logger.LoggerV2
 }
 
-// NewEventBus creates a new event bus
+// NewEventBus creates a new event bus.
 func NewEventBus(log *logger.LoggerV2) EventBus {
 	return &InMemoryEventBus{
 		handlers: make(map[string][]EventHandler),
@@ -24,18 +24,18 @@ func NewEventBus(log *logger.LoggerV2) EventBus {
 	}
 }
 
-// Publish sends an event to all registered handlers
+// Publish sends an event to all registered handlers.
 func (eb *InMemoryEventBus) Publish(ctx context.Context, event Event) error {
 	eb.mu.RLock()
 	handlers, exists := eb.handlers[event.Type()]
 	eb.mu.RUnlock()
 
 	if !exists || len(handlers) == 0 {
-		// No handlers registered for this event type
+		// No handlers registered for this event type.
 		return nil
 	}
 
-	// Execute handlers asynchronously
+	// Execute handlers asynchronously.
 	for _, handler := range handlers {
 		go func(h EventHandler) {
 			defer func() {
@@ -65,7 +65,7 @@ func (eb *InMemoryEventBus) Publish(ctx context.Context, event Event) error {
 	return nil
 }
 
-// Subscribe registers a handler for a specific event type
+// Subscribe registers a handler for a specific event type.
 func (eb *InMemoryEventBus) Subscribe(eventType string, handler EventHandler) error {
 	if handler == nil {
 		return fmt.Errorf("handler cannot be nil")
@@ -78,7 +78,7 @@ func (eb *InMemoryEventBus) Subscribe(eventType string, handler EventHandler) er
 	return nil
 }
 
-// NewEvent creates a new event
+// NewEvent creates a new event.
 func NewEvent(eventType string, data interface{}) Event {
 	return BaseEvent{
 		EventType: eventType,
@@ -87,16 +87,15 @@ func NewEvent(eventType string, data interface{}) Event {
 	}
 }
 
-// Example domain events
-
-// CombatStartedEvent is emitted when combat begins
+// Example domain events.
+// CombatStartedEvent is emitted when combat begins.
 type CombatStartedEvent struct {
 	BaseEvent
 	CombatID  string `json:"combat_id"`
 	SessionID string `json:"session_id"`
 }
 
-// CombatEndedEvent is emitted when combat ends
+// CombatEndedEvent is emitted when combat ends.
 type CombatEndedEvent struct {
 	BaseEvent
 	CombatID  string `json:"combat_id"`
@@ -104,7 +103,7 @@ type CombatEndedEvent struct {
 	Victory   bool   `json:"victory"`
 }
 
-// CharacterLeveledEvent is emitted when a character levels up
+// CharacterLeveledEvent is emitted when a character levels up.
 type CharacterLeveledEvent struct {
 	BaseEvent
 	CharacterID string `json:"character_id"`
@@ -112,7 +111,7 @@ type CharacterLeveledEvent struct {
 	NewLevel    int    `json:"new_level"`
 }
 
-// FactionRelationChangedEvent is emitted when faction relationships change
+// FactionRelationChangedEvent is emitted when faction relationships change.
 type FactionRelationChangedEvent struct {
 	BaseEvent
 	Faction1ID  string  `json:"faction1_id"`

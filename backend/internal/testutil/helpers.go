@@ -10,14 +10,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
 )
 
-// TestLogger returns a logger for testing
+// TestLogger returns a logger for testing.
 func TestLogger() *logger.Logger {
 	cfg := logger.Config{
 		Level:  "debug",
@@ -26,14 +26,14 @@ func TestLogger() *logger.Logger {
 	return logger.New(cfg)
 }
 
-// TestContextWithT returns a context with test values
+// TestContextWithT returns a context with test values.
 func TestContextWithT(t *testing.T) context.Context {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logger.RequestIDKey, "test-request-id")
 	return ctx
 }
 
-// TestUser returns a test user
+// TestUser returns a test user.
 func TestUser() *models.User {
 	return &models.User{
 		ID:       "test-user-id",
@@ -43,7 +43,7 @@ func TestUser() *models.User {
 	}
 }
 
-// TestCharacter returns a test character
+// TestCharacter returns a test character.
 func TestCharacter() *models.Character {
 	return &models.Character{
 		ID:           "test-char-id",
@@ -66,12 +66,12 @@ func TestCharacter() *models.Character {
 	}
 }
 
-// TestJWTManager returns a JWT manager for testing
+// TestJWTManager returns a JWT manager for testing.
 func TestJWTManager() *auth.JWTManager {
 	return auth.NewJWTManager("test-secret-key-32-characters-long", 15*time.Minute, 7*24*time.Hour)
 }
 
-// AuthenticatedRequest creates an authenticated HTTP request
+// AuthenticatedRequest creates an authenticated HTTP request.
 func AuthenticatedRequest(t *testing.T, method, path string, body interface{}, user *models.User) *http.Request {
 	t.Helper()
 
@@ -89,14 +89,14 @@ func AuthenticatedRequest(t *testing.T, method, path string, body interface{}, u
 		require.NoError(t, err)
 	}
 
-	// Add authentication
+	// Add authentication.
 	if user != nil {
 		jwtManager := TestJWTManager()
 		tokenPair, err := jwtManager.GenerateTokenPair(user.ID, user.Username, user.Email, user.Role)
 		require.NoError(t, err)
 		req.Header.Set("Authorization", "Bearer "+tokenPair.AccessToken)
 
-		// Add user to context
+		// Add user to context.
 		ctx := context.WithValue(req.Context(), auth.UserContextKey, user)
 		req = req.WithContext(ctx)
 	}
@@ -104,21 +104,21 @@ func AuthenticatedRequest(t *testing.T, method, path string, body interface{}, u
 	return req
 }
 
-// ExecuteRequest executes an HTTP request and returns the response
+// ExecuteRequest executes an HTTP request and returns the response.
 func ExecuteRequest(req *http.Request, router *mux.Router) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
 	return rr
 }
 
-// ParseResponse parses JSON response body
+// ParseResponse parses JSON response body.
 func ParseResponse(t *testing.T, rr *httptest.ResponseRecorder, v interface{}) {
 	t.Helper()
 	err := json.NewDecoder(rr.Body).Decode(v)
 	require.NoError(t, err)
 }
 
-// AssertErrorResponse asserts that the response is an error with expected status
+// AssertErrorResponse asserts that the response is an error with expected status.
 func AssertErrorResponse(t *testing.T, rr *httptest.ResponseRecorder, expectedStatus int) {
 	t.Helper()
 	require.Equal(t, expectedStatus, rr.Code)
@@ -130,7 +130,7 @@ func AssertErrorResponse(t *testing.T, rr *httptest.ResponseRecorder, expectedSt
 	require.Contains(t, response, "message")
 }
 
-// MockDB provides a mock database for testing
+// MockDB provides a mock database for testing.
 type MockDB struct {
 	PingFunc func() error
 }
@@ -142,11 +142,11 @@ func (m *MockDB) Ping() error {
 	return nil
 }
 
-// RandomString generates a random string of specified length
+// RandomString generates a random string of specified length.
 func RandomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-	// Create a local random generator
+	// Create a local random generator.
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	b := make([]byte, length)

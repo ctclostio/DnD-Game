@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockGameSessionService is a mock implementation of the game session service
+// MockGameSessionService is a mock implementation of the game session service.
 type MockGameSessionService struct {
 	mock.Mock
 }
@@ -98,7 +98,7 @@ func TestGameHandler_CreateGameSession(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
+			// Create request.
 			var body []byte
 			if str, ok := tt.body.(string); ok {
 				body = []byte(str)
@@ -109,15 +109,14 @@ func TestGameHandler_CreateGameSession(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/sessions", bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 
-			// Add auth context (placeholder)
-
-			// For this test, verify request structure
+			// Add auth context (placeholder).
+			// For this test, verify request structure.
 			if tt.body != nil && tt.body != "invalid json" {
 				var decoded map[string]interface{}
 				err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 				assert.NoError(t, err)
 
-				// Validate required fields
+				// Validate required fields.
 				if _, ok := decoded["name"]; !ok && tt.expectedError == "session name is required" {
 					assert.True(t, true, "Name is correctly missing")
 				}
@@ -152,12 +151,11 @@ func TestGameHandler_GetGameSession(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
+			// Create request.
 			req := httptest.NewRequest(http.MethodGet, "/api/sessions/"+tt.sessionID, nil)
 			req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
-			// Add auth context (placeholder)
-
-			// Verify session ID is properly extracted
+			// Add auth context (placeholder).
+			// Verify session ID is properly extracted.
 			vars := mux.Vars(req)
 			assert.Equal(t, tt.sessionID, vars["id"])
 		})
@@ -203,20 +201,20 @@ func TestGameHandler_JoinGameSession(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
+			// Create request.
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPost, "/api/sessions/"+tt.sessionID+"/join", bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
-			// Route vars would be set by router in real handler
+			// Route vars would be set by router in real handler.
 			// req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
 
-			// Add auth context (placeholder)
-			// Add auth context
+			// Add auth context (placeholder).
+			// Add auth context.
 			var decoded map[string]interface{}
 			err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 			assert.NoError(t, err)
 
-			// Validate character ID if provided
+			// Validate character ID if provided.
 			if charID, ok := decoded["characterId"].(string); ok && tt.expectedError == "Invalid character ID format" {
 				_, err := uuid.Parse(charID)
 				assert.Error(t, err, "Character ID should be invalid UUID")
@@ -256,19 +254,19 @@ func TestGameHandler_UpdatePlayerStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
+			// Create request.
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPut, "/api/sessions/"+sessionID+"/status", bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 			_ = mux.SetURLVars(req, map[string]string{"id": sessionID})
 
-			// Add auth context
-			// Add auth context (placeholder)
+			// Add auth context.
+			// Add auth context (placeholder).
 			var decoded map[string]interface{}
 			err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 			assert.NoError(t, err)
 
-			// Check for required field
+			// Check for required field.
 			_, hasStatus := decoded["isOnline"]
 			if tt.expectedStatus == http.StatusBadRequest {
 				assert.False(t, hasStatus, "isOnline should be missing")
@@ -280,7 +278,7 @@ func TestGameHandler_UpdatePlayerStatus(t *testing.T) {
 }
 
 func TestGameHandler_SessionValidation(t *testing.T) {
-	// Test various session validation scenarios
+	// Test various session validation scenarios.
 	validationTests := []struct {
 		name        string
 		session     models.GameSession
@@ -330,7 +328,7 @@ func TestGameHandler_SessionValidation(t *testing.T) {
 
 	for _, tt := range validationTests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Validate session attributes
+			// Validate session attributes.
 			if tt.session.Name == "" && tt.shouldError {
 				assert.Equal(t, "session name is required", tt.errorMsg)
 			}
@@ -350,7 +348,7 @@ func TestGameHandler_SessionValidation(t *testing.T) {
 }
 
 func TestGameHandler_SessionLifecycle(t *testing.T) {
-	// Test the lifecycle of a game session
+	// Test the lifecycle of a game session.
 	t.Run("session lifecycle", func(t *testing.T) {
 		sessionID := uuid.New().String()
 		dmID := uuid.New().String()

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/game"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 type CombatService struct {
@@ -68,7 +68,7 @@ func (s *CombatService) ProcessAction(ctx context.Context, combatID string, requ
 		return nil, err
 	}
 
-	// Find actor
+	// Find actor.
 	var actor *models.Combatant
 	for i := range combat.Combatants {
 		if combat.Combatants[i].ID == request.ActorID {
@@ -80,7 +80,7 @@ func (s *CombatService) ProcessAction(ctx context.Context, combatID string, requ
 		return nil, fmt.Errorf("actor not found")
 	}
 
-	// Create action record
+	// Create action record.
 	action := &models.CombatAction{
 		ID:          uuid.New().String(),
 		CombatID:    combatID,
@@ -91,7 +91,7 @@ func (s *CombatService) ProcessAction(ctx context.Context, combatID string, requ
 		Description: request.Description,
 	}
 
-	// Process based on action type
+	// Process based on action type.
 	switch request.Action {
 	case models.ActionTypeAttack:
 		err = s.processAttack(combat, actor, request, action)
@@ -104,7 +104,7 @@ func (s *CombatService) ProcessAction(ctx context.Context, combatID string, requ
 	case models.ActionTypeDodge:
 		err = s.processDodge(combat, actor, action)
 	case models.ActionTypeEndTurn:
-		// End turn just creates the action, turn will advance below
+		// End turn just creates the action, turn will advance below.
 		action.Description = fmt.Sprintf("%s ends their turn", actor.Name)
 	default:
 		err = fmt.Errorf("unsupported action type: %s", request.Action)
@@ -114,7 +114,7 @@ func (s *CombatService) ProcessAction(ctx context.Context, combatID string, requ
 		return nil, err
 	}
 
-	// Auto-advance turn after most actions (except reactions and some special cases)
+	// Auto-advance turn after most actions (except reactions and some special cases).
 	if request.Action != models.ActionTypeReaction && request.Action != models.ActionTypeConcentration {
 		s.engine.NextTurn(combat)
 	}
@@ -123,12 +123,12 @@ func (s *CombatService) ProcessAction(ctx context.Context, combatID string, requ
 }
 
 func (s *CombatService) processAttack(combat *models.Combat, actor *models.Combatant, request models.CombatRequest, action *models.CombatAction) error {
-	// Check action economy
+	// Check action economy.
 	if err := s.engine.UseAction(actor, models.ActionTypeAttack); err != nil {
 		return err
 	}
 
-	// Find target
+	// Find target.
 	var target *models.Combatant
 	for i := range combat.Combatants {
 		if combat.Combatants[i].ID == request.TargetID {
@@ -140,20 +140,20 @@ func (s *CombatService) processAttack(combat *models.Combat, actor *models.Comba
 		return fmt.Errorf("target not found")
 	}
 
-	// Determine advantage/disadvantage
+	// Determine advantage/disadvantage.
 	hasAdvantage := request.Advantage || s.engine.AttacksHaveAdvantage(target)
 	hasDisadvantage := request.Disadvantage || s.engine.HasAttackDisadvantage(actor)
 
-	// Make attack roll
+	// Make attack roll.
 	attackRoll, err := s.engine.AttackRoll(actor.AttackBonus, hasAdvantage, hasDisadvantage)
 	if err != nil {
 		return err
 	}
 	action.Rolls = append(action.Rolls, *attackRoll)
 
-	// Check if hit
+	// Check if hit.
 	if attackRoll.Result >= target.AC || attackRoll.Critical {
-		// Roll damage (example with 1d8+3 damage)
+		// Roll damage (example with 1d8+3 damage).
 		damageRoll, damage, err := s.engine.DamageRoll("1d8", 3, models.DamageTypeSlashing, attackRoll.Critical)
 		if err != nil {
 			return err
@@ -161,10 +161,10 @@ func (s *CombatService) processAttack(combat *models.Combat, actor *models.Comba
 		action.Rolls = append(action.Rolls, *damageRoll)
 		action.Damage = damage
 
-		// Apply damage
+		// Apply damage.
 		totalDamage := s.engine.ApplyDamage(target, damage)
 
-		// Check for concentration
+		// Check for concentration.
 		if target.IsConcentrating && totalDamage > 0 {
 			concRoll, success, err := s.engine.ConcentrationCheck(target, totalDamage)
 			if err == nil {
@@ -185,7 +185,7 @@ func (s *CombatService) processAttack(combat *models.Combat, actor *models.Comba
 }
 
 func (s *CombatService) processMovement(combat *models.Combat, actor *models.Combatant, request models.CombatRequest, action *models.CombatAction) error {
-	// Calculate distance
+	// Calculate distance.
 	distance := 5 // Example: each square is 5 feet
 
 	err := s.engine.UseMovement(actor, distance)
@@ -235,7 +235,7 @@ func (s *CombatService) processDodge(combat *models.Combat, actor *models.Combat
 		return err
 	}
 
-	// Apply dodge condition (would give disadvantage to attacks against them)
+	// Apply dodge condition (would give disadvantage to attacks against them).
 	s.engine.ApplyCondition(actor, models.Condition("dodging"))
 	action.Description = fmt.Sprintf("%s takes the Dodge action", actor.Name)
 	action.Effects = append(action.Effects, "Dodging until start of next turn")
@@ -310,13 +310,13 @@ func (s *CombatService) HealCombatant(ctx context.Context, combatID string, comb
 		return fmt.Errorf("combatant not found")
 	}
 
-	// Heal cannot exceed max HP
+	// Heal cannot exceed max HP.
 	combatant.HP += healing
 	if combatant.HP > combatant.MaxHP {
 		combatant.HP = combatant.MaxHP
 	}
 
-	// Reset death saves if healing from 0
+	// Reset death saves if healing from 0.
 	if combatant.HP > 0 && (combatant.DeathSaves.Successes > 0 || combatant.DeathSaves.Failures > 0) {
 		combatant.DeathSaves = models.DeathSaves{}
 	}

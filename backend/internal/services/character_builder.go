@@ -54,18 +54,18 @@ type BackgroundData struct {
 	Feature            map[string]interface{} `json:"feature"`
 }
 
-// validateFileName validates a filename to prevent path traversal attacks
+// validateFileName validates a filename to prevent path traversal attacks.
 func validateFileName(name string) error {
 	if name == "" {
 		return errors.New("name cannot be empty")
 	}
 
-	// Check for path traversal attempts
+	// Check for path traversal attempts.
 	if strings.Contains(name, "..") || strings.Contains(name, "/") || strings.Contains(name, "\\") {
 		return errors.New("invalid characters in name")
 	}
 
-	// Only allow alphanumeric, dash, and underscore
+	// Only allow alphanumeric, dash, and underscore.
 	validName := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 	if !validName.MatchString(name) {
 		return errors.New("name contains invalid characters")
@@ -110,7 +110,7 @@ func (cb *CharacterBuilder) GetAvailableOptions() (map[string]interface{}, error
 }
 
 func (cb *CharacterBuilder) BuildCharacter(params map[string]interface{}) (*models.Character, error) {
-	// Extract parameters
+	// Extract parameters.
 	race, _ := params["race"].(string)
 	customRaceID, _ := params["customRaceId"].(string)
 	customRaceStats, hasCustomRace := params["customRaceStats"].(map[string]interface{})
@@ -121,7 +121,7 @@ func (cb *CharacterBuilder) BuildCharacter(params map[string]interface{}) (*mode
 	alignment := params["alignment"].(string)
 	abilityScores := params["abilityScores"].(map[string]int)
 
-	// Create character
+	// Create character.
 	character := &models.Character{
 		Name:       name,
 		Race:       race,
@@ -132,17 +132,17 @@ func (cb *CharacterBuilder) BuildCharacter(params map[string]interface{}) (*mode
 		Level:      1,
 	}
 
-	// Handle custom race vs standard race
+	// Handle custom race vs standard race.
 	var raceData *RaceData
 	var err error
 
 	if hasCustomRace && customRaceID != "" {
-		// Use custom race data
+		// Use custom race data.
 		character.Race = customRaceStats["name"].(string)
 		character.CustomRaceID = &customRaceID
 		raceData = cb.convertCustomRaceToRaceData(customRaceStats)
 	} else {
-		// Load standard race data
+		// Load standard race data.
 		raceData, err = cb.loadRaceData(race)
 		if err != nil {
 			return nil, err
@@ -159,27 +159,27 @@ func (cb *CharacterBuilder) BuildCharacter(params map[string]interface{}) (*mode
 		return nil, err
 	}
 
-	// Apply ability scores and racial modifiers
+	// Apply ability scores and racial modifiers.
 	character.Attributes = cb.calculateFinalAbilityScores(abilityScores, raceData, subrace)
 
-	// Calculate derived stats
+	// Calculate derived stats.
 	character.ProficiencyBonus = cb.calculateProficiencyBonus(character.Level)
 	character.Initiative = cb.calculateModifier(character.Attributes.Dexterity)
 	character.Speed = raceData.Speed
 
-	// Apply class features
+	// Apply class features.
 	cb.applyClassFeatures(character, classData)
 
-	// Apply racial features
+	// Apply racial features.
 	cb.applyRacialFeatures(character, raceData, subrace)
 
-	// Apply background
+	// Apply background.
 	cb.applyBackground(character, backgroundData)
 
-	// Calculate saving throws
+	// Calculate saving throws.
 	character.SavingThrows = cb.calculateSavingThrows(character, classData)
 
-	// Calculate skills
+	// Calculate skills.
 	character.Skills = cb.calculateSkills(character)
 
 	return character, nil
@@ -192,7 +192,7 @@ func (cb *CharacterBuilder) RollAbilityScores(method string) (map[string]int, er
 	switch method {
 	case "standard_array":
 		standardArray := []int{15, 14, 13, 12, 10, 8}
-		// User would assign these values
+		// User would assign these values.
 		for i, ability := range abilities {
 			scores[ability] = standardArray[i]
 		}
@@ -203,12 +203,11 @@ func (cb *CharacterBuilder) RollAbilityScores(method string) (map[string]int, er
 		}
 
 	case "point_buy":
-		// Start with all 8s (costs 0 points)
+		// Start with all 8s (costs 0 points).
 		for _, ability := range abilities {
 			scores[ability] = 8
 		}
-		// User would spend 27 points to increase
-
+		// User would spend 27 points to increase.
 	default:
 		return nil, fmt.Errorf("invalid ability score method: %s", method)
 	}
@@ -222,7 +221,7 @@ func (cb *CharacterBuilder) roll4d6DropLowest() int {
 		dice[i] = rand.Intn(6) + 1
 	}
 	sort.Ints(dice)
-	// Sum the highest 3
+	// Sum the highest 3.
 	return dice[1] + dice[2] + dice[3]
 }
 
@@ -235,12 +234,12 @@ func (cb *CharacterBuilder) calculateProficiencyBonus(level int) int {
 }
 
 func (cb *CharacterBuilder) calculateFinalAbilityScores(base map[string]int, raceData *RaceData, subrace string) models.Attributes {
-	// Apply racial modifiers
+	// Apply racial modifiers.
 	for ability, increase := range raceData.AbilityIncreases {
 		base[strings.ToLower(ability)] += increase
 	}
 
-	// Apply subrace modifiers if applicable
+	// Apply subrace modifiers if applicable.
 	if subrace != "" {
 		for _, sr := range raceData.Subraces {
 			if sr.Name == subrace {
@@ -266,42 +265,42 @@ func (cb *CharacterBuilder) calculateSavingThrows(character *models.Character, c
 	saves := models.SavingThrows{}
 	profBonus := character.ProficiencyBonus
 
-	// Strength
+	// Strength.
 	saves.Strength.Modifier = cb.calculateModifier(character.Attributes.Strength)
 	saves.Strength.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Strength")
 	if saves.Strength.Proficiency {
 		saves.Strength.Modifier += profBonus
 	}
 
-	// Dexterity
+	// Dexterity.
 	saves.Dexterity.Modifier = cb.calculateModifier(character.Attributes.Dexterity)
 	saves.Dexterity.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Dexterity")
 	if saves.Dexterity.Proficiency {
 		saves.Dexterity.Modifier += profBonus
 	}
 
-	// Constitution
+	// Constitution.
 	saves.Constitution.Modifier = cb.calculateModifier(character.Attributes.Constitution)
 	saves.Constitution.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Constitution")
 	if saves.Constitution.Proficiency {
 		saves.Constitution.Modifier += profBonus
 	}
 
-	// Intelligence
+	// Intelligence.
 	saves.Intelligence.Modifier = cb.calculateModifier(character.Attributes.Intelligence)
 	saves.Intelligence.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Intelligence")
 	if saves.Intelligence.Proficiency {
 		saves.Intelligence.Modifier += profBonus
 	}
 
-	// Wisdom
+	// Wisdom.
 	saves.Wisdom.Modifier = cb.calculateModifier(character.Attributes.Wisdom)
 	saves.Wisdom.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Wisdom")
 	if saves.Wisdom.Proficiency {
 		saves.Wisdom.Modifier += profBonus
 	}
 
-	// Charisma
+	// Charisma.
 	saves.Charisma.Modifier = cb.calculateModifier(character.Attributes.Charisma)
 	saves.Charisma.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Charisma")
 	if saves.Charisma.Proficiency {
@@ -312,16 +311,16 @@ func (cb *CharacterBuilder) calculateSavingThrows(character *models.Character, c
 }
 
 func (cb *CharacterBuilder) calculateSkills(character *models.Character) []models.Skill {
-	// This would be expanded to calculate all skills based on proficiencies
-	// For now, return empty slice
+	// This would be expanded to calculate all skills based on proficiencies.
+	// For now, return empty slice.
 	return []models.Skill{}
 }
 
 func (cb *CharacterBuilder) applyClassFeatures(character *models.Character, classData *ClassData) {
-	// Parse hit dice
+	// Parse hit dice.
 	character.HitDice = classData.HitDice
 
-	// Calculate HP (max at level 1)
+	// Calculate HP (max at level 1).
 	var baseHP int
 	switch classData.HitDice {
 	case "1d6":
@@ -336,22 +335,22 @@ func (cb *CharacterBuilder) applyClassFeatures(character *models.Character, clas
 	character.MaxHitPoints = baseHP + cb.calculateModifier(character.Attributes.Constitution)
 	character.HitPoints = character.MaxHitPoints
 
-	// Initialize spell slots for spellcasting classes
+	// Initialize spell slots for spellcasting classes.
 	if len(classData.Spellcasting) > 0 {
-		// Extract spellcasting ability
+		// Extract spellcasting ability.
 		if ability, ok := classData.Spellcasting["ability"].(string); ok {
 			character.Spells.SpellcastingAbility = ability
 
-			// Calculate spell save DC and attack bonus
+			// Calculate spell save DC and attack bonus.
 			abilityMod := cb.getAbilityModifier(character, ability)
 			character.Spells.SpellSaveDC = 8 + character.ProficiencyBonus + abilityMod
 			character.Spells.SpellAttackBonus = character.ProficiencyBonus + abilityMod
 		}
 
-		// Initialize spell slots directly
+		// Initialize spell slots directly.
 		character.Spells.SpellSlots = InitializeSpellSlots(character.Class, character.Level)
 
-		// Set cantrips known if applicable
+		// Set cantrips known if applicable.
 		if cantripsKnown, ok := classData.Spellcasting["cantripsKnown"].([]interface{}); ok {
 			for _, levelData := range cantripsKnown {
 				if levelMap, ok := levelData.(map[string]interface{}); ok {
@@ -366,25 +365,23 @@ func (cb *CharacterBuilder) applyClassFeatures(character *models.Character, clas
 		}
 	}
 
-	// TODO: Apply other class features based on level
+	// TODO: Apply other class features based on level.
 }
 
 func (cb *CharacterBuilder) applyRacialFeatures(character *models.Character, raceData *RaceData, subrace string) {
-	// Apply racial traits
+	// Apply racial traits.
 	character.Proficiencies.Languages = append(character.Proficiencies.Languages, raceData.Languages...)
 
-	// TODO: Apply other racial features
+	// TODO: Apply other racial features.
 }
 
 func (cb *CharacterBuilder) applyBackground(character *models.Character, backgroundData *BackgroundData) {
-	// Apply background proficiencies
-	// TODO: Add skill proficiencies from background
-
-	// TODO: Apply other background features
+	// Apply background proficiencies.
+	// TODO: Add skill proficiencies from background.
+	// TODO: Apply other background features.
 }
 
-// Helper functions
-
+// Helper functions.
 func (cb *CharacterBuilder) loadRaces() ([]string, error) {
 	files, err := os.ReadDir(filepath.Join(cb.dataPath, "races"))
 	if err != nil {
@@ -431,7 +428,7 @@ func (cb *CharacterBuilder) loadBackgrounds() ([]string, error) {
 }
 
 func (cb *CharacterBuilder) loadRaceData(race string) (*RaceData, error) {
-	// Validate input to prevent path traversal
+	// Validate input to prevent path traversal.
 	if err := validateFileName(race); err != nil {
 		return nil, fmt.Errorf("invalid race name: %w", err)
 	}
@@ -450,7 +447,7 @@ func (cb *CharacterBuilder) loadRaceData(race string) (*RaceData, error) {
 }
 
 func (cb *CharacterBuilder) loadClassData(class string) (*ClassData, error) {
-	// Validate input to prevent path traversal
+	// Validate input to prevent path traversal.
 	if err := validateFileName(class); err != nil {
 		return nil, fmt.Errorf("invalid class name: %w", err)
 	}
@@ -469,7 +466,7 @@ func (cb *CharacterBuilder) loadClassData(class string) (*ClassData, error) {
 }
 
 func (cb *CharacterBuilder) loadBackgroundData(background string) (*BackgroundData, error) {
-	// Validate input to prevent path traversal
+	// Validate input to prevent path traversal.
 	if err := validateFileName(background); err != nil {
 		return nil, fmt.Errorf("invalid background name: %w", err)
 	}
@@ -488,7 +485,7 @@ func (cb *CharacterBuilder) loadBackgroundData(background string) (*BackgroundDa
 }
 
 func (cb *CharacterBuilder) convertCustomRaceToRaceData(customRaceStats map[string]interface{}) *RaceData {
-	// Convert custom race stats to RaceData format
+	// Convert custom race stats to RaceData format.
 	raceData := &RaceData{
 		Name:             customRaceStats["name"].(string),
 		AbilityIncreases: make(map[string]int),
@@ -498,7 +495,7 @@ func (cb *CharacterBuilder) convertCustomRaceToRaceData(customRaceStats map[stri
 		Traits:           []map[string]interface{}{},
 	}
 
-	// Convert ability score increases
+	// Convert ability score increases.
 	if asi, ok := customRaceStats["abilityScoreIncreases"].(map[string]interface{}); ok {
 		for ability, increase := range asi {
 			if val, ok := increase.(float64); ok {
@@ -507,7 +504,7 @@ func (cb *CharacterBuilder) convertCustomRaceToRaceData(customRaceStats map[stri
 		}
 	}
 
-	// Convert languages
+	// Convert languages.
 	if languages, ok := customRaceStats["languages"].([]interface{}); ok {
 		for _, lang := range languages {
 			if langStr, ok := lang.(string); ok {
@@ -516,7 +513,7 @@ func (cb *CharacterBuilder) convertCustomRaceToRaceData(customRaceStats map[stri
 		}
 	}
 
-	// Convert traits
+	// Convert traits.
 	if traits, ok := customRaceStats["traits"].([]interface{}); ok {
 		for _, trait := range traits {
 			if traitMap, ok := trait.(map[string]interface{}); ok {
@@ -525,8 +522,8 @@ func (cb *CharacterBuilder) convertCustomRaceToRaceData(customRaceStats map[stri
 		}
 	}
 
-	// Add additional features from custom race
-	// Darkvision
+	// Add additional features from custom race.
+	// Darkvision.
 	if darkvision, ok := customRaceStats["darkvision"].(float64); ok && darkvision > 0 {
 		raceData.Traits = append(raceData.Traits, map[string]interface{}{
 			"name":        "Darkvision",
@@ -534,7 +531,7 @@ func (cb *CharacterBuilder) convertCustomRaceToRaceData(customRaceStats map[stri
 		})
 	}
 
-	// Resistances
+	// Resistances.
 	if resistances, ok := customRaceStats["resistances"].([]interface{}); ok && len(resistances) > 0 {
 		resistanceList := []string{}
 		for _, res := range resistances {
@@ -550,7 +547,7 @@ func (cb *CharacterBuilder) convertCustomRaceToRaceData(customRaceStats map[stri
 		}
 	}
 
-	// Immunities
+	// Immunities.
 	if immunities, ok := customRaceStats["immunities"].([]interface{}); ok && len(immunities) > 0 {
 		immunityList := []string{}
 		for _, imm := range immunities {
@@ -566,7 +563,7 @@ func (cb *CharacterBuilder) convertCustomRaceToRaceData(customRaceStats map[stri
 		}
 	}
 
-	// Skill proficiencies
+	// Skill proficiencies.
 	if skills, ok := customRaceStats["skillProficiencies"].([]interface{}); ok && len(skills) > 0 {
 		skillList := []string{}
 		for _, skill := range skills {
@@ -613,9 +610,9 @@ func (cb *CharacterBuilder) getAbilityModifier(character *models.Character, abil
 	}
 }
 
-// InitializeSpellSlots creates spell slots based on class and level
+// InitializeSpellSlots creates spell slots based on class and level.
 func InitializeSpellSlots(class string, level int) []models.SpellSlot {
-	// Spell slots by level for full casters (wizard, cleric, druid, bard, sorcerer)
+	// Spell slots by level for full casters (wizard, cleric, druid, bard, sorcerer).
 	fullCasterSlots := map[int][]int{
 		1:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
 		2:  {3, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -639,7 +636,7 @@ func InitializeSpellSlots(class string, level int) []models.SpellSlot {
 		20: {4, 3, 3, 3, 3, 2, 2, 1, 1},
 	}
 
-	// Half casters (ranger, paladin) get spells at level 2
+	// Half casters (ranger, paladin) get spells at level 2.
 	halfCasterSlots := map[int][]int{
 		1:  {0, 0, 0, 0, 0, 0, 0, 0, 0},
 		2:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -663,7 +660,7 @@ func InitializeSpellSlots(class string, level int) []models.SpellSlot {
 		20: {4, 3, 3, 3, 2, 0, 0, 0, 0},
 	}
 
-	// Warlock has unique spell slot progression (Pact Magic)
+	// Warlock has unique spell slot progression (Pact Magic).
 	warlockSlots := map[int][]int{
 		1:  {1, 0, 0, 0, 0, 0, 0, 0, 0},
 		2:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -696,7 +693,7 @@ func InitializeSpellSlots(class string, level int) []models.SpellSlot {
 	case "warlock":
 		slotsTable = warlockSlots
 	default:
-		// Non-casters have no spell slots
+		// Non-casters have no spell slots.
 		return []models.SpellSlot{}
 	}
 

@@ -5,13 +5,13 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// MockLLMProviderDMTest is a mock implementation for testing
+// MockLLMProviderDMTest is a mock implementation for testing.
 type MockLLMProviderDMTest struct {
 	mock.Mock
 }

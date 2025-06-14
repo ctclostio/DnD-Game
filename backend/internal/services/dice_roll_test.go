@@ -5,12 +5,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDiceRollService_RollDice(t *testing.T) {
@@ -469,10 +469,10 @@ func TestDiceRollService_RollInitiative(t *testing.T) {
 				Initiative  int
 			}) {
 				assert.Len(t, results, 2)
-				// First participant has +2 modifier
+				// First participant has +2 modifier.
 				assert.GreaterOrEqual(t, results[0].Initiative, 3) // 1+2
 				assert.LessOrEqual(t, results[0].Initiative, 22)   // 20+2
-				// Second participant has -1 modifier
+				// Second participant has -1 modifier.
 				assert.GreaterOrEqual(t, results[1].Initiative, 0) // 1-1
 				assert.LessOrEqual(t, results[1].Initiative, 19)   // 20-1
 			},

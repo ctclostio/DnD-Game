@@ -13,16 +13,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// GetCSRFToken handles CSRF token generation
+// GetCSRFToken handles CSRF token generation.
 func (h *Handlers) GetCSRFToken(w http.ResponseWriter, r *http.Request) {
-	// The CSRF middleware will automatically set the cookie
-	// This endpoint just needs to return success
+	// The CSRF middleware will automatically set the cookie.
+	// This endpoint just needs to return success.
 	response.JSON(w, r, http.StatusOK, map[string]string{
 		"message": "CSRF token set",
 	})
 }
 
-// Register handles user registration
+// Register handles user registration.
 func (h *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 	var req models.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -30,25 +30,25 @@ func (h *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate input
+	// Validate input.
 	if req.Username == "" || req.Email == "" || req.Password == "" {
 		response.ErrorWithCode(w, r, errors.ErrCodeMissingRequired, "Username, email, and password are required")
 		return
 	}
 
-	// Validate email format
+	// Validate email format.
 	if !strings.Contains(req.Email, "@") {
 		response.ErrorWithCode(w, r, errors.ErrCodeInvalidFormat, "Invalid email format")
 		return
 	}
 
-	// Validate password strength
+	// Validate password strength.
 	if err := validatePassword(req.Password); err != nil {
 		response.ErrorWithCode(w, r, errors.ErrCodeInvalidPassword)
 		return
 	}
 
-	// Register user
+	// Register user.
 	user, err := h.userService.Register(r.Context(), req)
 	if err != nil {
 		if strings.Contains(err.Error(), "username already taken") {
@@ -61,23 +61,23 @@ func (h *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set default role
+	// Set default role.
 	user.Role = "player"
 
-	// Generate tokens
+	// Generate tokens.
 	tokenPair, err := h.jwtManager.GenerateTokenPair(user.ID, user.Username, user.Email, user.Role)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Store refresh token
+	// Store refresh token.
 	if err := h.refreshTokenService.Create(user.ID, tokenPair.RefreshToken); err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Create response
+	// Create response.
 	authResponse := models.AuthResponse{
 		AccessToken:  tokenPair.AccessToken,
 		RefreshToken: tokenPair.RefreshToken,
@@ -89,7 +89,7 @@ func (h *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusCreated, authResponse)
 }
 
-// Login handles user login
+// Login handles user login.
 func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 	var req models.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -97,39 +97,39 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate input
+	// Validate input.
 	if req.Username == "" || req.Password == "" {
 		response.ErrorWithCode(w, r, errors.ErrCodeMissingRequired, "Username and password are required")
 		return
 	}
 
-	// Get user by username
+	// Get user by username.
 	user, err := h.userService.GetByUsername(r.Context(), req.Username)
 	if err != nil {
 		response.ErrorWithCode(w, r, errors.ErrCodeInvalidCredentials)
 		return
 	}
 
-	// Verify password
+	// Verify password.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 		response.ErrorWithCode(w, r, errors.ErrCodeInvalidCredentials)
 		return
 	}
 
-	// Generate tokens
+	// Generate tokens.
 	tokenPair, err := h.jwtManager.GenerateTokenPair(user.ID, user.Username, user.Email, user.Role)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Store refresh token
+	// Store refresh token.
 	if err := h.refreshTokenService.Create(user.ID, tokenPair.RefreshToken); err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Create response
+	// Create response.
 	authResponse := models.AuthResponse{
 		AccessToken:  tokenPair.AccessToken,
 		RefreshToken: tokenPair.RefreshToken,
@@ -141,7 +141,7 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, authResponse)
 }
 
-// RefreshToken handles token refresh
+// RefreshToken handles token refresh.
 func (h *Handlers) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	var req models.RefreshTokenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -149,13 +149,13 @@ func (h *Handlers) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate input
+	// Validate input.
 	if req.RefreshToken == "" {
 		response.ErrorWithCode(w, r, errors.ErrCodeMissingRequired, "Refresh token is required")
 		return
 	}
 
-	// Refresh access token
+	// Refresh access token.
 	tokenPair, userID, err := h.refreshTokenService.RefreshAccessToken(req.RefreshToken)
 	if err != nil {
 		if err == auth.ErrExpiredToken {
@@ -166,20 +166,20 @@ func (h *Handlers) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get user details
+	// Get user details.
 	user, err := h.userService.GetByID(r.Context(), userID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Store new refresh token
+	// Store new refresh token.
 	if err := h.refreshTokenService.Create(user.ID, tokenPair.RefreshToken); err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Create response
+	// Create response.
 	authResponse := models.AuthResponse{
 		AccessToken:  tokenPair.AccessToken,
 		RefreshToken: tokenPair.RefreshToken,
@@ -191,38 +191,38 @@ func (h *Handlers) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, authResponse)
 }
 
-// Logout handles user logout
+// Logout handles user logout.
 func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
-	// Get user from context
+	// Get user from context.
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "")
 		return
 	}
 
-	// Revoke all refresh tokens for the user
+	// Revoke all refresh tokens for the user.
 	if err := h.refreshTokenService.RevokeAllForUser(claims.UserID); err != nil {
-		// Log error but don't fail the logout; the access token will still expire
+		// Log error but don't fail the logout; the access token will still expire.
 		fmt.Printf("failed to revoke tokens for user %s: %v\n", claims.UserID, err)
 	}
 
-	// Response
+	// Response.
 	logoutResponse := map[string]string{
 		"message": "Successfully logged out",
 	}
 	response.JSON(w, r, http.StatusOK, logoutResponse)
 }
 
-// GetCurrentUser returns the current authenticated user
+// GetCurrentUser returns the current authenticated user.
 func (h *Handlers) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
-	// Get user from context
+	// Get user from context.
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "")
 		return
 	}
 
-	// Get user details
+	// Get user details.
 	user, err := h.userService.GetByID(r.Context(), claims.UserID)
 	if err != nil {
 		response.ErrorWithCode(w, r, errors.ErrCodeUserNotFound)
@@ -232,7 +232,7 @@ func (h *Handlers) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, user)
 }
 
-// validatePassword checks if the password meets security requirements
+// validatePassword checks if the password meets security requirements.
 func validatePassword(password string) error {
 	if len(password) < 8 {
 		return fmt.Errorf("password must be at least 8 characters long")

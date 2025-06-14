@@ -17,7 +17,7 @@ type Combat struct {
 	CreatedAt     time.Time      `json:"createdAt"`
 	UpdatedAt     time.Time      `json:"updatedAt"`
 
-	// Aliases for backward compatibility
+	// Aliases for backward compatibility.
 	SessionID     string         `json:"-"` // Alias for GameSessionID
 	Status        CombatStatus   `json:"-"` // Alias for IsActive
 	Turn          int            `json:"-"` // Alias for CurrentTurn
@@ -53,24 +53,24 @@ type Combatant struct {
 	Speed          int           `json:"speed"`
 	Condition      string        `json:"condition,omitempty"` // Simple status field
 
-	// Action Economy
+	// Action Economy.
 	Actions      int `json:"actions"`
 	BonusActions int `json:"bonusActions"`
 	Reactions    int `json:"reactions"`
 	Movement     int `json:"movement"`
 
-	// Status
+	// Status.
 	Conditions         []Condition `json:"conditions"`
 	DeathSaves         DeathSaves  `json:"deathSaves"`
 	IsConcentrating    bool        `json:"isConcentrating"`
 	ConcentrationSpell string      `json:"concentrationSpell,omitempty"`
 
-	// Combat Stats
+	// Combat Stats.
 	AttackBonus      int `json:"attackBonus"`
 	SpellAttackBonus int `json:"spellAttackBonus"`
 	SpellSaveDC      int `json:"spellSaveDc"`
 
-	// Resistances and Vulnerabilities
+	// Resistances and Vulnerabilities.
 	Resistances           []DamageType `json:"resistances"`
 	Immunities            []DamageType `json:"immunities"`
 	Vulnerabilities       []DamageType `json:"vulnerabilities"`
@@ -78,7 +78,7 @@ type Combatant struct {
 	DamageImmunities      []string     `json:"damageImmunities,omitempty"`
 	DamageVulnerabilities []string     `json:"damageVulnerabilities,omitempty"`
 
-	// Ability Scores and Modifiers
+	// Ability Scores and Modifiers.
 	Abilities    map[string]int `json:"abilities"`
 	SavingThrows map[string]int `json:"savingThrows"`
 	Skills       map[string]int `json:"skills"`
@@ -87,7 +87,7 @@ type Combatant struct {
 	IsVisible         bool   `json:"isVisible"`
 	Notes             string `json:"notes,omitempty"`
 
-	// Additional fields for test compatibility
+	// Additional fields for test compatibility.
 	DeathSaveSuccesses int      `json:"deathSaveSuccesses,omitempty"`
 	DeathSaveFailures  int      `json:"deathSaveFailures,omitempty"`
 	Position           Position `json:"position,omitempty"`
@@ -182,7 +182,7 @@ type CombatAction struct {
 	Effects     []string   `json:"effects,omitempty"`
 	Timestamp   time.Time  `json:"timestamp"`
 
-	// Additional fields for test compatibility
+	// Additional fields for test compatibility.
 	Type             ActionType `json:"type,omitempty"`
 	WeaponName       string     `json:"weaponName,omitempty"`
 	AttackBonus      int        `json:"attackBonus,omitempty"`
@@ -236,19 +236,19 @@ type Roll struct {
 
 type RollType string
 
-// Position represents a location on the battle grid
+// Position represents a location on the battle grid.
 type Position struct {
 	X int `json:"x"`
 	Y int `json:"y"`
 }
 
-// CombatParticipant is an alias for Combatant to maintain compatibility
+// CombatParticipant is an alias for Combatant to maintain compatibility.
 type CombatParticipant = Combatant
 
-// GridPosition is an alias for Position to maintain compatibility
+// GridPosition is an alias for Position to maintain compatibility.
 type GridPosition = Position
 
-// ActionResult represents the result of a combat action
+// ActionResult represents the result of a combat action.
 type ActionResult struct {
 	Success           bool          `json:"success"`
 	Message           string        `json:"message"`
@@ -309,14 +309,14 @@ const (
 	UpdateTypeConcentration UpdateType = "concentration"
 )
 
-// CombatantUpdate represents an update to a combatant's state
+// CombatantUpdate represents an update to a combatant's state.
 type CombatantUpdate struct {
 	HP        int    `json:"hp,omitempty"`
 	TempHP    int    `json:"tempHp,omitempty"`
 	Condition string `json:"condition,omitempty"`
 }
 
-// RollDetails represents the details of a dice roll
+// RollDetails represents the details of a dice roll.
 type RollDetails struct {
 	Total        int      `json:"total"`
 	Rolls        []int    `json:"rolls"`
@@ -326,7 +326,7 @@ type RollDetails struct {
 	Disadvantage bool     `json:"disadvantage"`
 }
 
-// DeathSaveResult represents the result of a death saving throw
+// DeathSaveResult represents the result of a death saving throw.
 type DeathSaveResult struct {
 	Roll        int  `json:"roll"`
 	Success     bool `json:"success"`

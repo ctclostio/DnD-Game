@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// IntegrationTestContext contains all dependencies for integration testing
+// IntegrationTestContext contains all dependencies for integration testing.
 type IntegrationTestContext struct {
 	T          *testing.T
 	DB         *database.DB
@@ -33,7 +33,7 @@ type IntegrationTestContext struct {
 	Config     *config.Config
 }
 
-// IntegrationTestOptions allows customization of test setup
+// IntegrationTestOptions allows customization of test setup.
 type IntegrationTestOptions struct {
 	SkipAuth      bool
 	SkipWebSocket bool
@@ -41,14 +41,14 @@ type IntegrationTestOptions struct {
 	MockLLM       interface{} // Will be LLMProvider
 }
 
-// SetupIntegrationTest creates a complete test environment
+// SetupIntegrationTest creates a complete test environment.
 func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*IntegrationTestContext, func()) {
 	var options IntegrationTestOptions
 	if len(opts) > 0 {
 		options = opts[0]
 	}
 
-	// Setup test logger
+	// Setup test logger.
 	logConfig := logger.ConfigV2{
 		Level:       "debug",
 		Pretty:      true,
@@ -58,11 +58,11 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 	log, err := logger.NewV2(logConfig)
 	require.NoError(t, err)
 
-	// Setup test database
+	// Setup test database.
 	sqlxDB := SetupTestDB(t)
 	db := &database.DB{DB: sqlxDB}
 
-	// Create repositories
+	// Create repositories.
 	repos := &database.Repositories{
 		Users:           database.NewUserRepository(db),
 		Characters:      database.NewCharacterRepository(db),
@@ -80,12 +80,12 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 		RuleBuilder:     database.NewRuleBuilderRepository(db),
 	}
 
-	// Create world building repositories
+	// Create world building repositories.
 	repos.WorldBuilding = database.NewWorldBuildingRepository(db)
 	repos.Narrative = database.NewNarrativeRepository(sqlxDB)
 	_ = database.NewEmergentWorldRepository(db) // emergentWorldRepo - can be used if needed
 
-	// Create test config
+	// Create test config.
 	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Port:        "8080",
@@ -110,37 +110,36 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 		},
 	}
 
-	// JWT Manager
+	// JWT Manager.
 	jwtManager := auth.NewJWTManager(
 		cfg.Auth.JWTSecret,
 		cfg.Auth.AccessTokenDuration,
 		cfg.Auth.RefreshTokenDuration,
 	)
 
-	// Services will be created by the test if needed
-	// This avoids import cycles with the services package
-
-	// WebSocket hub - create without importing websocket package to avoid cycle
+	// Services will be created by the test if needed.
+	// This avoids import cycles with the services package.
+	// WebSocket hub - create without importing websocket package to avoid cycle.
 	var hub interface{}
 	if !options.SkipWebSocket {
-		// Hub will be created in the test that needs it
+		// Hub will be created in the test that needs it.
 		hub = nil
 	}
 
-	// Setup router
+	// Setup router.
 	router := mux.NewRouter()
 
-	// Apply middleware
+	// Apply middleware.
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Add request ID for testing
+			// Add request ID for testing.
 			ctx := context.WithValue(r.Context(), response.RequestIDKey, "test-request-id")
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
 		})
 	})
 
-	// Apply custom routes
+	// Apply custom routes.
 	if options.CustomRoutes != nil {
 		options.CustomRoutes(router, &IntegrationTestContext{
 			T:          t,
@@ -174,7 +173,7 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 	}, cleanup
 }
 
-// AuthenticatedRequest creates an authenticated HTTP request
+// AuthenticatedRequest creates an authenticated HTTP request.
 func (ctx *IntegrationTestContext) AuthenticatedRequest(method, url string, body interface{}, userID string) *http.Request {
 	var bodyReader *bytes.Reader
 	if body != nil {
@@ -188,7 +187,7 @@ func (ctx *IntegrationTestContext) AuthenticatedRequest(method, url string, body
 	req := httptest.NewRequest(method, url, bodyReader)
 	req.Header.Set("Content-Type", "application/json")
 
-	// Generate token and add to request
+	// Generate token and add to request.
 	tokenPair, err := ctx.JWTManager.GenerateTokenPair(userID, "testuser", "test@example.com", "player")
 	require.NoError(ctx.T, err)
 	req.Header.Set("Authorization", "Bearer "+tokenPair.AccessToken)
@@ -196,33 +195,33 @@ func (ctx *IntegrationTestContext) AuthenticatedRequest(method, url string, body
 	return req
 }
 
-// MakeRequest executes an HTTP request and returns the response
+// MakeRequest executes an HTTP request and returns the response.
 func (ctx *IntegrationTestContext) MakeRequest(req *http.Request) *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
 	ctx.Router.ServeHTTP(w, req)
 	return w
 }
 
-// MakeAuthenticatedRequest is a convenience method combining AuthenticatedRequest and MakeRequest
+// MakeAuthenticatedRequest is a convenience method combining AuthenticatedRequest and MakeRequest.
 func (ctx *IntegrationTestContext) MakeAuthenticatedRequest(method, url string, body interface{}, userID string) *httptest.ResponseRecorder {
 	req := ctx.AuthenticatedRequest(method, url, body, userID)
 	return ctx.MakeRequest(req)
 }
 
-// DecodeResponse decodes a JSON response into the provided interface
+// DecodeResponse decodes a JSON response into the provided interface.
 func (ctx *IntegrationTestContext) DecodeResponse(w *httptest.ResponseRecorder, v interface{}) {
 	err := json.NewDecoder(w.Body).Decode(v)
 	require.NoError(ctx.T, err, "Failed to decode response: %s", w.Body.String())
 }
 
-// DecodeResponseData decodes the data field from a wrapped response into the provided interface
+// DecodeResponseData decodes the data field from a wrapped response into the provided interface.
 func (ctx *IntegrationTestContext) DecodeResponseData(w *httptest.ResponseRecorder, v interface{}) {
 	var resp response.Response
 	err := json.NewDecoder(w.Body).Decode(&resp)
 	require.NoError(ctx.T, err, "Failed to decode response wrapper: %s", w.Body.String())
 	require.True(ctx.T, resp.Success, "Expected success response, got error: %v", resp.Error)
 
-	// Marshal the data back to JSON then unmarshal into the target type
+	// Marshal the data back to JSON then unmarshal into the target type.
 	// This handles the case where resp.Data is a map[string]interface{}
 	dataBytes, err := json.Marshal(resp.Data)
 	require.NoError(ctx.T, err, "Failed to marshal response data")
@@ -231,7 +230,7 @@ func (ctx *IntegrationTestContext) DecodeResponseData(w *httptest.ResponseRecord
 	require.NoError(ctx.T, err, "Failed to unmarshal response data into target type")
 }
 
-// AssertSuccessResponse asserts that the response is successful
+// AssertSuccessResponse asserts that the response is successful.
 func (ctx *IntegrationTestContext) AssertSuccessResponse(w *httptest.ResponseRecorder) response.Response {
 	var resp response.Response
 	ctx.DecodeResponse(w, &resp)
@@ -239,7 +238,7 @@ func (ctx *IntegrationTestContext) AssertSuccessResponse(w *httptest.ResponseRec
 	return resp
 }
 
-// AssertErrorResponse asserts that the response contains an error
+// AssertErrorResponse asserts that the response contains an error.
 func (ctx *IntegrationTestContext) AssertErrorResponse(w *httptest.ResponseRecorder, expectedMessage string) response.Response {
 	var resp response.Response
 	ctx.DecodeResponse(w, &resp)
@@ -251,7 +250,7 @@ func (ctx *IntegrationTestContext) AssertErrorResponse(w *httptest.ResponseRecor
 	return resp
 }
 
-// CreateTestUser creates a test user and returns the user ID
+// CreateTestUser creates a test user and returns the user ID.
 func (ctx *IntegrationTestContext) CreateTestUser(username, email, password string) string {
 	userID := "user-" + username
 	hashedPassword := "$2a$10$test-hash" // Mock hash for testing
@@ -261,28 +260,28 @@ func (ctx *IntegrationTestContext) CreateTestUser(username, email, password stri
 	return userID
 }
 
-// CreateTestCharacter creates a test character and returns the character ID
+// CreateTestCharacter creates a test character and returns the character ID.
 func (ctx *IntegrationTestContext) CreateTestCharacter(userID, name string) string {
 	charID := "char-" + name
 	SeedTestCharacter(ctx.T, ctx.SQLXDB, charID, userID, name)
 	return charID
 }
 
-// CreateTestGameSession creates a test game session and returns the session ID
+// CreateTestGameSession creates a test game session and returns the session ID.
 func (ctx *IntegrationTestContext) CreateTestGameSession(dmUserID, name, code string) string {
 	sessionID := "session-" + code
 	query := `INSERT INTO game_sessions (id, name, description, dm_user_id, code, is_active) VALUES (?, ?, ?, ?, ?, ?)`
 	_, err := ctx.SQLXDB.Exec(ctx.SQLXDB.Rebind(query), sessionID, name, "Test session", dmUserID, code, true)
 	require.NoError(ctx.T, err)
 
-	// Update max_players if the column exists
+	// Update max_players if the column exists.
 	updateQuery := `UPDATE game_sessions SET max_players = 6 WHERE id = ?`
 	_, _ = ctx.SQLXDB.Exec(ctx.SQLXDB.Rebind(updateQuery), sessionID)
 
 	return sessionID
 }
 
-// AddUserToSession adds a user to a game session
+// AddUserToSession adds a user to a game session.
 func (ctx *IntegrationTestContext) AddUserToSession(sessionID, userID string, characterID *string) {
 	participantID := "participant-" + userID + "-" + sessionID
 	query := `INSERT INTO game_participants (id, session_id, user_id, character_id, is_online) VALUES (?, ?, ?, ?, ?)`
@@ -290,7 +289,7 @@ func (ctx *IntegrationTestContext) AddUserToSession(sessionID, userID string, ch
 	require.NoError(ctx.T, err)
 }
 
-// CleanupDatabase truncates all tables for test isolation
+// CleanupDatabase truncates all tables for test isolation.
 func (ctx *IntegrationTestContext) CleanupDatabase() {
 	TruncateTables(ctx.T, ctx.SQLXDB)
 }

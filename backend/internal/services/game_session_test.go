@@ -15,7 +15,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
-// Helper function to get string pointer
+// Helper function to get string pointer.
 func stringPtr(s string) *string {
 	return &s
 }
@@ -44,7 +44,7 @@ func TestGameSessionService_CreateSession(t *testing.T) {
 						s.Description == "A classic D&D 5e adventure" &&
 						s.Status == models.GameStatusPending
 				})).Return(nil).Run(func(args mock.Arguments) {
-					// Simulate the repository setting the ID
+					// Simulate the repository setting the ID.
 					session := args.Get(1).(*models.GameSession)
 					session.ID = "session-123"
 				})
@@ -594,9 +594,9 @@ func TestGameSessionService_ValidateUserInSession(t *testing.T) {
 			sessionID: "session-123",
 			userID:    "dm-123",
 			setupMock: func(m *mocks.MockGameSessionRepository) {
-				// Not in participants list
+				// Not in participants list.
 				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
-				// But is the DM
+				// But is the DM.
 				m.On("GetByID", ctx, "session-123").Return(&models.GameSession{
 					ID:   "session-123",
 					DMID: "dm-123",
@@ -818,25 +818,25 @@ func TestGameSessionService_UpdatePlayerOnlineStatus(t *testing.T) {
 	}
 }
 
-// Test aliases
+// Test aliases.
 func TestGameSessionService_Aliases(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := new(mocks.MockGameSessionRepository)
 	service := services.NewGameSessionService(mockRepo)
 
-	// Setup mock for all alias calls
+	// Setup mock for all alias calls.
 	expectedSession := &models.GameSession{
 		ID:   "session-123",
 		Name: "Test Session",
 	}
 	mockRepo.On("GetByID", ctx, "session-123").Return(expectedSession, nil)
 
-	// Test GetGameSession alias
+	// Test GetGameSession alias.
 	session1, err := service.GetGameSession(ctx, "session-123")
 	require.NoError(t, err)
 	assert.Equal(t, expectedSession, session1)
 
-	// Test GetSession alias
+	// Test GetSession alias.
 	session2, err := service.GetSession(ctx, "session-123")
 	require.NoError(t, err)
 	assert.Equal(t, expectedSession, session2)

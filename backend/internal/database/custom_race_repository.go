@@ -11,7 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// CustomRaceRepository defines the interface for custom race database operations
+// CustomRaceRepository defines the interface for custom race database operations.
 type CustomRaceRepository interface {
 	Create(ctx context.Context, race *models.CustomRace) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.CustomRace, error)
@@ -23,19 +23,19 @@ type CustomRaceRepository interface {
 	IncrementUsage(ctx context.Context, id uuid.UUID) error
 }
 
-// customRaceRepository implements CustomRaceRepository
+// customRaceRepository implements CustomRaceRepository.
 type customRaceRepository struct {
 	db *sqlx.DB
 }
 
-// NewCustomRaceRepository creates a new custom race repository
+// NewCustomRaceRepository creates a new custom race repository.
 func NewCustomRaceRepository(db *sqlx.DB) CustomRaceRepository {
 	return &customRaceRepository{db: db}
 }
 
-// Create inserts a new custom race
+// Create inserts a new custom race.
 func (r *customRaceRepository) Create(ctx context.Context, race *models.CustomRace) error {
-	// Marshal JSON fields
+	// Marshal JSON fields.
 	abilityScoresJSON, err := json.Marshal(race.AbilityScoreIncreases)
 	if err != nil {
 		return fmt.Errorf("failed to marshal ability scores: %w", err)
@@ -112,7 +112,7 @@ func (r *customRaceRepository) Create(ctx context.Context, race *models.CustomRa
 	return err
 }
 
-// GetByID retrieves a custom race by ID
+// GetByID retrieves a custom race by ID.
 func (r *customRaceRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.CustomRace, error) {
 	var race models.CustomRace
 	var (
@@ -160,7 +160,7 @@ func (r *customRaceRepository) GetByID(ctx context.Context, id uuid.UUID) (*mode
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	if err := unmarshalRaceJSON(&race, abilityScoresJSON, traitsJSON, languagesJSON,
 		resistancesJSON, immunitiesJSON, skillProfJSON, toolProfJSON,
 		weaponProfJSON, armorProfJSON); err != nil {
@@ -170,7 +170,7 @@ func (r *customRaceRepository) GetByID(ctx context.Context, id uuid.UUID) (*mode
 	return &race, nil
 }
 
-// GetByUserID retrieves all custom races created by a user
+// GetByUserID retrieves all custom races created by a user.
 func (r *customRaceRepository) GetByUserID(ctx context.Context, userID uuid.UUID) ([]*models.CustomRace, error) {
 	query := `
 		SELECT 
@@ -198,7 +198,7 @@ func (r *customRaceRepository) GetByUserID(ctx context.Context, userID uuid.UUID
 	return scanCustomRaces(rows)
 }
 
-// GetPublicRaces retrieves all approved public custom races
+// GetPublicRaces retrieves all approved public custom races.
 func (r *customRaceRepository) GetPublicRaces(ctx context.Context) ([]*models.CustomRace, error) {
 	query := `
 		SELECT 
@@ -225,7 +225,7 @@ func (r *customRaceRepository) GetPublicRaces(ctx context.Context) ([]*models.Cu
 	return scanCustomRaces(rows)
 }
 
-// GetPendingApproval retrieves all custom races pending DM approval
+// GetPendingApproval retrieves all custom races pending DM approval.
 func (r *customRaceRepository) GetPendingApproval(ctx context.Context) ([]*models.CustomRace, error) {
 	query := `
 		SELECT 
@@ -252,9 +252,9 @@ func (r *customRaceRepository) GetPendingApproval(ctx context.Context) ([]*model
 	return scanCustomRaces(rows)
 }
 
-// Update updates a custom race
+// Update updates a custom race.
 func (r *customRaceRepository) Update(ctx context.Context, race *models.CustomRace) error {
-	// Marshal JSON fields
+	// Marshal JSON fields.
 	abilityScoresJSON, err := json.Marshal(race.AbilityScoreIncreases)
 	if err != nil {
 		return fmt.Errorf("failed to marshal ability scores: %w", err)
@@ -329,7 +329,7 @@ func (r *customRaceRepository) Update(ctx context.Context, race *models.CustomRa
 	return err
 }
 
-// Delete removes a custom race
+// Delete removes a custom race.
 func (r *customRaceRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	query := `DELETE FROM custom_races WHERE id = ?`
 	query = r.db.Rebind(query)
@@ -337,7 +337,7 @@ func (r *customRaceRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-// IncrementUsage increments the usage counter for a custom race
+// IncrementUsage increments the usage counter for a custom race.
 func (r *customRaceRepository) IncrementUsage(ctx context.Context, id uuid.UUID) error {
 	query := `UPDATE custom_races SET times_used = times_used + 1 WHERE id = ?`
 	query = r.db.Rebind(query)
@@ -345,8 +345,7 @@ func (r *customRaceRepository) IncrementUsage(ctx context.Context, id uuid.UUID)
 	return err
 }
 
-// Helper functions
-
+// Helper functions.
 func scanCustomRaces(rows *sql.Rows) ([]*models.CustomRace, error) {
 	races := make([]*models.CustomRace, 0, 20)
 

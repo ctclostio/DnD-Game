@@ -16,7 +16,7 @@ type npcRepository struct {
 	db *sqlx.DB
 }
 
-// NewNPCRepository creates a new NPC repository
+// NewNPCRepository creates a new NPC repository.
 func NewNPCRepository(db *sqlx.DB) NPCRepository {
 	return &npcRepository{db: db}
 }
@@ -26,7 +26,7 @@ func (r *npcRepository) Create(ctx context.Context, npc *models.NPC) error {
 		npc.ID = uuid.New().String()
 	}
 
-	// Convert complex fields to JSON
+	// Convert complex fields to JSON.
 	speedJSON, _ := json.Marshal(npc.Speed)
 	attributesJSON, _ := json.Marshal(npc.Attributes)
 	savingThrowsJSON, _ := json.Marshal(npc.SavingThrows)
@@ -52,7 +52,7 @@ func (r *npcRepository) Create(ctx context.Context, npc *models.NPC) error {
 			?, ?, ?, ?, ?
 		)`
 
-	// Convert arrays to JSON for SQLite compatibility
+	// Convert arrays to JSON for SQLite compatibility.
 	damageResistancesJSON, _ := json.Marshal(npc.DamageResistances)
 	damageImmunitiesJSON, _ := json.Marshal(npc.DamageImmunities)
 	conditionImmunitiesJSON, _ := json.Marshal(npc.ConditionImmunities)
@@ -108,7 +108,7 @@ func (r *npcRepository) GetByID(ctx context.Context, id string) (*models.NPC, er
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	_ = json.Unmarshal(speedJSON, &npc.Speed)
 	_ = json.Unmarshal(attributesJSON, &npc.Attributes)
 	_ = json.Unmarshal(savingThrowsJSON, &npc.SavingThrows)
@@ -117,7 +117,7 @@ func (r *npcRepository) GetByID(ctx context.Context, id string) (*models.NPC, er
 	_ = json.Unmarshal(abilitiesJSON, &npc.Abilities)
 	_ = json.Unmarshal(actionsJSON, &npc.Actions)
 
-	// Unmarshal array fields stored as JSON
+	// Unmarshal array fields stored as JSON.
 	_ = json.Unmarshal(damageResistancesJSON, &npc.DamageResistances)
 	_ = json.Unmarshal(damageImmunitiesJSON, &npc.DamageImmunities)
 	_ = json.Unmarshal(conditionImmunitiesJSON, &npc.ConditionImmunities)
@@ -159,7 +159,7 @@ func (r *npcRepository) GetByGameSession(ctx context.Context, gameSessionID stri
 }
 
 func (r *npcRepository) Update(ctx context.Context, npc *models.NPC) error {
-	// Convert complex fields to JSON
+	// Convert complex fields to JSON.
 	speedJSON, _ := json.Marshal(npc.Speed)
 	attributesJSON, _ := json.Marshal(npc.Attributes)
 	savingThrowsJSON, _ := json.Marshal(npc.SavingThrows)
@@ -179,7 +179,7 @@ func (r *npcRepository) Update(ctx context.Context, npc *models.NPC) error {
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?`
 
-	// Convert arrays to JSON for SQLite compatibility
+	// Convert arrays to JSON for SQLite compatibility.
 	damageResistancesJSON, _ := json.Marshal(npc.DamageResistances)
 	damageImmunitiesJSON, _ := json.Marshal(npc.DamageImmunities)
 	conditionImmunitiesJSON, _ := json.Marshal(npc.ConditionImmunities)
@@ -343,7 +343,7 @@ func (r *npcRepository) GetTemplateByID(ctx context.Context, id string) (*models
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	_ = json.Unmarshal(speedJSON, &template.Speed)
 	_ = json.Unmarshal(attributesJSON, &template.Attributes)
 	_ = json.Unmarshal(savingThrowsJSON, &template.SavingThrows)
@@ -352,7 +352,7 @@ func (r *npcRepository) GetTemplateByID(ctx context.Context, id string) (*models
 	_ = json.Unmarshal(abilitiesJSON, &template.Abilities)
 	_ = json.Unmarshal(actionsJSON, &template.Actions)
 
-	// Unmarshal array fields stored as JSON
+	// Unmarshal array fields stored as JSON.
 	_ = json.Unmarshal(damageResistancesJSON, &template.DamageResistances)
 	_ = json.Unmarshal(damageImmunitiesJSON, &template.DamageImmunities)
 	_ = json.Unmarshal(conditionImmunitiesJSON, &template.ConditionImmunities)
@@ -367,8 +367,8 @@ func (r *npcRepository) CreateFromTemplate(ctx context.Context, templateID, game
 		return nil, err
 	}
 
-	// Calculate hit points from hit dice
-	// This is simplified - in reality we'd parse the dice notation
+	// Calculate hit points from hit dice.
+	// This is simplified - in reality we'd parse the dice notation.
 	hitPoints := 10 // Default
 
 	npc := &models.NPC{
@@ -398,7 +398,7 @@ func (r *npcRepository) CreateFromTemplate(ctx context.Context, templateID, game
 		CreatedBy:           createdBy,
 	}
 
-	// Calculate experience points based on CR
+	// Calculate experience points based on CR.
 	npc.ExperiencePoints = r.calculateXPFromCR(template.ChallengeRating)
 
 	err = r.Create(ctx, npc)
@@ -409,8 +409,7 @@ func (r *npcRepository) CreateFromTemplate(ctx context.Context, templateID, game
 	return npc, nil
 }
 
-// Helper functions
-
+// Helper functions.
 func (r *npcRepository) scanNPC(scanner interface{ Scan(...interface{}) error }) (*models.NPC, error) {
 	var npc models.NPC
 	var speedJSON, attributesJSON, savingThrowsJSON, skillsJSON []byte
@@ -431,7 +430,7 @@ func (r *npcRepository) scanNPC(scanner interface{ Scan(...interface{}) error })
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	_ = json.Unmarshal(speedJSON, &npc.Speed)
 	_ = json.Unmarshal(attributesJSON, &npc.Attributes)
 	_ = json.Unmarshal(savingThrowsJSON, &npc.SavingThrows)
@@ -440,7 +439,7 @@ func (r *npcRepository) scanNPC(scanner interface{ Scan(...interface{}) error })
 	_ = json.Unmarshal(abilitiesJSON, &npc.Abilities)
 	_ = json.Unmarshal(actionsJSON, &npc.Actions)
 
-	// Unmarshal array fields stored as JSON
+	// Unmarshal array fields stored as JSON.
 	_ = json.Unmarshal(damageResistancesJSON, &npc.DamageResistances)
 	_ = json.Unmarshal(damageImmunitiesJSON, &npc.DamageImmunities)
 	_ = json.Unmarshal(conditionImmunitiesJSON, &npc.ConditionImmunities)
@@ -469,7 +468,7 @@ func (r *npcRepository) scanNPCTemplate(scanner interface{ Scan(...interface{}) 
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	_ = json.Unmarshal(speedJSON, &template.Speed)
 	_ = json.Unmarshal(attributesJSON, &template.Attributes)
 	_ = json.Unmarshal(savingThrowsJSON, &template.SavingThrows)
@@ -478,7 +477,7 @@ func (r *npcRepository) scanNPCTemplate(scanner interface{ Scan(...interface{}) 
 	_ = json.Unmarshal(abilitiesJSON, &template.Abilities)
 	_ = json.Unmarshal(actionsJSON, &template.Actions)
 
-	// Unmarshal array fields stored as JSON
+	// Unmarshal array fields stored as JSON.
 	_ = json.Unmarshal(damageResistancesJSON, &template.DamageResistances)
 	_ = json.Unmarshal(damageImmunitiesJSON, &template.DamageImmunities)
 	_ = json.Unmarshal(conditionImmunitiesJSON, &template.ConditionImmunities)
@@ -488,7 +487,7 @@ func (r *npcRepository) scanNPCTemplate(scanner interface{ Scan(...interface{}) 
 }
 
 func (r *npcRepository) calculateXPFromCR(cr float64) int {
-	// D&D 5e XP by Challenge Rating
+	// D&D 5e XP by Challenge Rating.
 	xpByCR := map[float64]int{
 		0:     10,
 		0.125: 25,

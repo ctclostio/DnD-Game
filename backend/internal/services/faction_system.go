@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/google/uuid"
 )
 
-// FactionSystemService manages faction creation, relationships, and conflicts
+// FactionSystemService manages faction creation, relationships, and conflicts.
 type FactionSystemService struct {
 	llmProvider LLMProvider
 	worldRepo   WorldBuildingRepository
 }
 
-// NewFactionSystemService creates a new faction system service
+// NewFactionSystemService creates a new faction system service.
 func NewFactionSystemService(llmProvider LLMProvider, worldRepo WorldBuildingRepository) *FactionSystemService {
 	return &FactionSystemService{
 		llmProvider: llmProvider,
@@ -25,7 +25,7 @@ func NewFactionSystemService(llmProvider LLMProvider, worldRepo WorldBuildingRep
 	}
 }
 
-// CreateFaction generates a new faction with goals and relationships
+// CreateFaction generates a new faction with goals and relationships.
 func (s *FactionSystemService) CreateFaction(ctx context.Context, gameSessionID uuid.UUID, req models.FactionCreationRequest) (*models.Faction, error) {
 	systemPrompt := `You are creating factions for a dark fantasy world where ancient powers still shape events.
 Factions might seek forbidden knowledge, guard against ancient evils, or be corrupted by them.
@@ -84,7 +84,7 @@ Respond in JSON format:
 
 	response, err := s.llmProvider.GenerateCompletion(ctx, userPrompt, systemPrompt)
 	if err != nil {
-		// Fallback to procedural generation
+		// Fallback to procedural generation.
 		return s.generateProceduralFaction(gameSessionID, req), nil
 	}
 
@@ -114,7 +114,7 @@ Respond in JSON format:
 		return s.generateProceduralFaction(gameSessionID, req), nil
 	}
 
-	// Calculate power levels based on faction type and resources
+	// Calculate power levels based on faction type and resources.
 	influenceLevel := s.calculateInfluenceLevel(req.Type, factionData.Resources)
 	militaryStrength := s.calculateMilitaryStrength(req.Type, factionData.Resources)
 	economicPower := s.calculateEconomicPower(req.Type, factionData.Resources)
@@ -139,7 +139,7 @@ Respond in JSON format:
 		MemberCount:           s.estimateMemberCount(req.Type, influenceLevel),
 	}
 
-	// Convert to JSONB
+	// Convert to JSONB.
 	publicGoals, _ := json.Marshal(factionData.PublicGoals)
 	faction.PublicGoals = models.JSONB(publicGoals)
 
@@ -158,27 +158,27 @@ Respond in JSON format:
 	resources, _ := json.Marshal(factionData.Resources)
 	faction.Resources = models.JSONB(resources)
 
-	// Initialize empty relationships and territory
+	// Initialize empty relationships and territory.
 	faction.FactionRelationships = models.JSONB("{}")
 	faction.TerritoryControl = models.JSONB("[]")
 
-	// Save the faction
+	// Save the faction.
 	if err := s.worldRepo.CreateFaction(faction); err != nil {
 		return nil, fmt.Errorf("failed to save faction: %w", err)
 	}
 
-	// Generate initial relationships with existing factions
+	// Generate initial relationships with existing factions.
 	if err := s.generateInitialRelationships(ctx, faction); err != nil {
-		// Non-fatal error
+		// Non-fatal error.
 		logger.WithContext(ctx).WithError(err).Warn().Msg("Failed to generate faction relationships")
 	}
 
 	return faction, nil
 }
 
-// UpdateFactionRelationship changes the relationship between two factions
+// UpdateFactionRelationship changes the relationship between two factions.
 func (s *FactionSystemService) UpdateFactionRelationship(ctx context.Context, faction1ID, faction2ID uuid.UUID, change int, reason string) error {
-	// Get current relationship
+	// Get current relationship.
 	faction1, err := s.worldRepo.GetFaction(faction1ID)
 	if err != nil {
 		return err
@@ -196,7 +196,7 @@ func (s *FactionSystemService) UpdateFactionRelationship(ctx context.Context, fa
 		}
 	}
 
-	// Calculate new standing
+	// Calculate new standing.
 	newStanding := currentStanding + change
 	if newStanding > 100 {
 		newStanding = 100
@@ -205,7 +205,7 @@ func (s *FactionSystemService) UpdateFactionRelationship(ctx context.Context, fa
 		newStanding = -100
 	}
 
-	// Determine relationship type
+	// Determine relationship type.
 	relationType := "neutral"
 	if newStanding >= 50 {
 		relationType = "ally"
@@ -213,11 +213,11 @@ func (s *FactionSystemService) UpdateFactionRelationship(ctx context.Context, fa
 		relationType = "enemy"
 	}
 
-	// Update the relationship
+	// Update the relationship.
 	return s.worldRepo.UpdateFactionRelationship(faction1ID, faction2ID, newStanding, relationType)
 }
 
-// SimulateFactionConflicts processes faction interactions and conflicts
+// SimulateFactionConflicts processes faction interactions and conflicts.
 func (s *FactionSystemService) SimulateFactionConflicts(ctx context.Context, gameSessionID uuid.UUID) ([]*models.WorldEvent, error) {
 	factions, err := s.worldRepo.GetFactionsByGameSession(gameSessionID)
 	if err != nil {
@@ -226,18 +226,18 @@ func (s *FactionSystemService) SimulateFactionConflicts(ctx context.Context, gam
 
 	var events []*models.WorldEvent
 
-	// Check each faction pair for potential conflicts
+	// Check each faction pair for potential conflicts.
 	for i := 0; i < len(factions); i++ {
 		for j := i + 1; j < len(factions); j++ {
 			faction1 := factions[i]
 			faction2 := factions[j]
 
-			// Get their relationship
+			// Get their relationship.
 			standing := s.getFactionStanding(faction1, faction2.ID)
 
-			// Check for conflict conditions
+			// Check for conflict conditions.
 			if standing < -50 && rand.Float32() < 0.3 {
-				// Generate conflict event
+				// Generate conflict event.
 				event := s.generateConflictEvent(ctx, faction1, faction2)
 				if event != nil {
 					event.GameSessionID = gameSessionID
@@ -247,9 +247,9 @@ func (s *FactionSystemService) SimulateFactionConflicts(ctx context.Context, gam
 				}
 			}
 
-			// Check for alliance opportunities
+			// Check for alliance opportunities.
 			if standing > 50 && rand.Float32() < 0.2 {
-				// Generate alliance event
+				// Generate alliance event.
 				event := s.generateAllianceEvent(ctx, faction1, faction2)
 				if event != nil {
 					event.GameSessionID = gameSessionID
@@ -277,10 +277,9 @@ func (s *FactionSystemService) SimulateFactionConflicts(ctx context.Context, gam
 	return events, nil
 }
 
-// Helper methods
-
+// Helper methods.
 func (s *FactionSystemService) generateInitialRelationships(ctx context.Context, newFaction *models.Faction) error {
-	// Get other factions in the same game session
+	// Get other factions in the same game session.
 	otherFactions, err := s.worldRepo.GetFactionsByGameSession(newFaction.GameSessionID)
 	if err != nil {
 		return err
@@ -291,10 +290,10 @@ func (s *FactionSystemService) generateInitialRelationships(ctx context.Context,
 			continue
 		}
 
-		// Calculate initial standing based on faction types and goals
+		// Calculate initial standing based on faction types and goals.
 		standing := s.calculateInitialStanding(newFaction, otherFaction)
 
-		// Add some randomness
+		// Add some randomness.
 		standing += rand.Intn(20) - 10
 
 		relationType := "neutral"
@@ -304,7 +303,7 @@ func (s *FactionSystemService) generateInitialRelationships(ctx context.Context,
 			relationType = "enemy"
 		}
 
-		// Update both factions' relationships
+		// Update both factions' relationships.
 		_ = s.worldRepo.UpdateFactionRelationship(newFaction.ID, otherFaction.ID, standing, relationType)
 	}
 
@@ -314,12 +313,12 @@ func (s *FactionSystemService) generateInitialRelationships(ctx context.Context,
 func (s *FactionSystemService) calculateInitialStanding(faction1, faction2 *models.Faction) int {
 	standing := 0
 
-	// Same type factions might compete
+	// Same type factions might compete.
 	if faction1.Type == faction2.Type {
 		standing -= 20
 	}
 
-	// Natural oppositions
+	// Natural oppositions.
 	oppositions := map[models.FactionType]models.FactionType{
 		models.FactionReligious: models.FactionCult,
 		models.FactionCriminal:  models.FactionMilitary,
@@ -330,23 +329,23 @@ func (s *FactionSystemService) calculateInitialStanding(faction1, faction2 *mode
 		standing -= 50
 	}
 
-	// Both seek ancient power - conflict
+	// Both seek ancient power - conflict.
 	if faction1.SeeksAncientPower && faction2.SeeksAncientPower {
 		standing -= 30
 	}
 
-	// One guards, one seeks - major conflict
+	// One guards, one seeks - major conflict.
 	if (faction1.GuardsAncientSecrets && faction2.SeeksAncientPower) ||
 		(faction2.GuardsAncientSecrets && faction1.SeeksAncientPower) {
 		standing -= 70
 	}
 
-	// Both corrupted - might ally
+	// Both corrupted - might ally.
 	if faction1.Corrupted && faction2.Corrupted {
 		standing += 30
 	}
 
-	// Merchant factions generally neutral to positive
+	// Merchant factions generally neutral to positive.
 	if faction1.Type == models.FactionMerchant || faction2.Type == models.FactionMerchant {
 		standing += 20
 	}
@@ -389,18 +388,18 @@ func (s *FactionSystemService) generateConflictEvent(ctx context.Context, factio
 		IsActive:  true,
 	}
 
-	// If either faction is corrupted or deals with ancient powers, it might escalate
+	// If either faction is corrupted or deals with ancient powers, it might escalate.
 	if faction1.Corrupted || faction2.Corrupted {
 		event.AncientCause = true
 		event.Severity = models.SeverityMajor
 	}
 
-	// Set affected factions
+	// Set affected factions.
 	affectedFactions := []string{faction1.ID.String(), faction2.ID.String()}
 	affectedFactionsJSON, _ := json.Marshal(affectedFactions)
 	event.AffectedFactions = models.JSONB(affectedFactionsJSON)
 
-	// Empty arrays for other fields
+	// Empty arrays for other fields.
 	event.AffectedRegions = models.JSONB("[]")
 	event.AffectedSettlements = models.JSONB("[]")
 	event.EconomicImpacts = models.JSONB("{}")
@@ -432,12 +431,12 @@ func (s *FactionSystemService) generateAllianceEvent(ctx context.Context, factio
 		IsActive:    true,
 	}
 
-	// Set affected factions
+	// Set affected factions.
 	affectedFactions := []string{faction1.ID.String(), faction2.ID.String()}
 	affectedFactionsJSON, _ := json.Marshal(affectedFactions)
 	event.AffectedFactions = models.JSONB(affectedFactionsJSON)
 
-	// Empty arrays for other fields
+	// Empty arrays for other fields.
 	event.AffectedRegions = models.JSONB("[]")
 	event.AffectedSettlements = models.JSONB("[]")
 	event.EconomicImpacts = models.JSONB("{}")
@@ -451,7 +450,7 @@ func (s *FactionSystemService) generateAllianceEvent(ctx context.Context, factio
 }
 
 func (s *FactionSystemService) generateFactionEvent(ctx context.Context, faction *models.Faction) *models.WorldEvent {
-	// Different event types based on faction characteristics
+	// Different event types based on faction characteristics.
 	if faction.Corrupted && rand.Float32() < 0.5 {
 		return s.generateCorruptionEvent(faction)
 	}
@@ -460,7 +459,7 @@ func (s *FactionSystemService) generateFactionEvent(ctx context.Context, faction
 		return s.generateAncientPowerEvent(faction)
 	}
 
-	// Default to internal faction events
+	// Default to internal faction events.
 	events := []string{
 		"leadership change", "schism", "major discovery",
 		"recruitment drive", "internal purge", "expansion",
@@ -479,12 +478,12 @@ func (s *FactionSystemService) generateFactionEvent(ctx context.Context, faction
 		IsActive:    true,
 	}
 
-	// Set affected faction
+	// Set affected faction.
 	affectedFactions := []string{faction.ID.String()}
 	affectedFactionsJSON, _ := json.Marshal(affectedFactions)
 	event.AffectedFactions = models.JSONB(affectedFactionsJSON)
 
-	// Empty arrays for other fields
+	// Empty arrays for other fields.
 	event.AffectedRegions = models.JSONB("[]")
 	event.AffectedSettlements = models.JSONB("[]")
 	event.EconomicImpacts = models.JSONB("{}")
@@ -545,8 +544,7 @@ func (s *FactionSystemService) generateAncientPowerEvent(faction *models.Faction
 	}
 }
 
-// Power calculation methods
-
+// Power calculation methods.
 func (s *FactionSystemService) calculateInfluenceLevel(factionType models.FactionType, resources map[string]interface{}) int {
 	baseInfluence := map[models.FactionType]int{
 		models.FactionReligious:    6,
@@ -560,12 +558,12 @@ func (s *FactionSystemService) calculateInfluenceLevel(factionType models.Factio
 
 	influence := baseInfluence[factionType]
 
-	// Adjust based on resources
+	// Adjust based on resources.
 	if connections, ok := resources["connections"].(string); ok && connections != "" {
 		influence++
 	}
 
-	// Add randomness
+	// Add randomness.
 	influence += rand.Intn(3) - 1
 
 	if influence < 1 {
@@ -591,7 +589,7 @@ func (s *FactionSystemService) calculateMilitaryStrength(factionType models.Fact
 
 	strength := baseMilitary[factionType]
 
-	// Add randomness
+	// Add randomness.
 	strength += rand.Intn(3) - 1
 
 	if strength < 1 {
@@ -617,12 +615,12 @@ func (s *FactionSystemService) calculateEconomicPower(factionType models.Faction
 
 	power := baseEconomic[factionType]
 
-	// Adjust based on resources
+	// Adjust based on resources.
 	if wealth, ok := resources["wealth"].(string); ok && wealth != "" {
 		power++
 	}
 
-	// Add randomness
+	// Add randomness.
 	power += rand.Intn(3) - 1
 
 	if power < 1 {
@@ -648,10 +646,10 @@ func (s *FactionSystemService) calculateMagicalResources(factionType models.Fact
 
 	magical := baseMagical[factionType]
 
-	// Ancient knowledge greatly increases magical resources
+	// Ancient knowledge greatly increases magical resources.
 	magical += ancientKnowledgeLevel / 2
 
-	// Add randomness
+	// Add randomness.
 	magical += rand.Intn(2)
 
 	if magical < 1 {
@@ -678,7 +676,7 @@ func (s *FactionSystemService) estimateMemberCount(factionType models.FactionTyp
 	members := baseMembers[factionType]
 	members = int(float64(members) * (float64(influenceLevel) / 5.0))
 
-	// Add variance
+	// Add variance.
 	variance := rand.Float64()*0.4 + 0.8 // 0.8 to 1.2
 	members = int(float64(members) * variance)
 
@@ -689,8 +687,7 @@ func (s *FactionSystemService) estimateMemberCount(factionType models.FactionTyp
 	return members
 }
 
-// Procedural fallback
-
+// Procedural fallback.
 func (s *FactionSystemService) generateProceduralFaction(gameSessionID uuid.UUID, req models.FactionCreationRequest) *models.Faction {
 	faction := &models.Faction{
 		GameSessionID:         gameSessionID,
@@ -711,11 +708,11 @@ func (s *FactionSystemService) generateProceduralFaction(gameSessionID uuid.UUID
 		MemberCount:           rand.Intn(500) + 100,
 	}
 
-	// Set goals from request
+	// Set goals from request.
 	publicGoals, _ := json.Marshal(req.Goals)
 	faction.PublicGoals = models.JSONB(publicGoals)
 
-	// Generate secret goals
+	// Generate secret goals.
 	secretGoals := []string{"Gain more power", "Eliminate rivals"}
 	if req.AncientTies {
 		secretGoals = append(secretGoals, "Uncover ancient secrets")
@@ -723,7 +720,7 @@ func (s *FactionSystemService) generateProceduralFaction(gameSessionID uuid.UUID
 	secretGoalsJSON, _ := json.Marshal(secretGoals)
 	faction.SecretGoals = models.JSONB(secretGoalsJSON)
 
-	// Empty fields
+	// Empty fields.
 	faction.Motivations = models.JSONB(`["survival", "dominance"]`)
 	faction.FactionRelationships = models.JSONB("{}")
 	faction.TerritoryControl = models.JSONB("[]")

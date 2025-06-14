@@ -6,10 +6,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewAIClassGenerator(t *testing.T) {
@@ -22,7 +22,7 @@ func TestNewAIClassGenerator(t *testing.T) {
 
 func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 	t.Run("successful generation", func(t *testing.T) {
-		// Prepare valid AI response
+		// Prepare valid AI response.
 		aiClass := map[string]interface{}{
 			"name":                     "Shadowdancer",
 			"description":              "Masters of stealth and shadow magic",
@@ -145,7 +145,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 	})
 
 	t.Run("validation failure - overpowered", func(t *testing.T) {
-		// Create an overpowered class
+		// Create an overpowered class.
 		aiClass := map[string]interface{}{
 			"name":                     "Godslayer",
 			"description":              "Too powerful",

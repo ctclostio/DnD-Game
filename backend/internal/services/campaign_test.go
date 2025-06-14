@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
-	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
-// MockAICampaignManager is used for testing
+// MockAICampaignManager is used for testing.
 type MockAICampaignManager struct {
 	mock.Mock
 }
@@ -42,13 +42,12 @@ func (m *MockAICampaignManager) GenerateForeshadowing(ctx context.Context, req m
 	return args.Get(0).(*models.GeneratedForeshadowing), args.Error(1)
 }
 
-// Test helpers
+// Test helpers.
 func createTestCampaignService(repo *mocks.MockCampaignRepository, gameRepo *mocks.MockGameSessionRepository, aiManager *MockAICampaignManager) *CampaignService {
 	return NewCampaignService(repo, gameRepo, aiManager)
 }
 
-// Tests for Story Arc Management
-
+// Tests for Story Arc Management.
 func TestCampaignService_CreateStoryArc(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -391,8 +390,7 @@ func TestCampaignService_UpdateStoryArc(t *testing.T) {
 	}
 }
 
-// Tests for Session Memory Management
-
+// Tests for Session Memory Management.
 func TestCampaignService_CreateSessionMemory(t *testing.T) {
 	sessionID := uuid.New()
 	sessionDate := time.Now()
@@ -678,8 +676,7 @@ func TestCampaignService_GenerateRecap(t *testing.T) {
 	}
 }
 
-// Tests for Plot Thread Management
-
+// Tests for Plot Thread Management.
 func TestCampaignService_CreatePlotThread(t *testing.T) {
 	sessionID := uuid.New()
 
@@ -838,8 +835,7 @@ func TestCampaignService_GetPlotThreads(t *testing.T) {
 	}
 }
 
-// Benchmarks
-
+// Benchmarks.
 func BenchmarkCampaignService_CreateStoryArc(b *testing.B) {
 	mockRepo := new(mocks.MockCampaignRepository)
 	mockGameRepo := new(mocks.MockGameSessionRepository)

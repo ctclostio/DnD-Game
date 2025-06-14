@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 func TestNPCService_CreateNPC(t *testing.T) {
@@ -245,7 +245,7 @@ func TestNPCService_RollInitiative(t *testing.T) {
 		initiative, err := service.RollInitiative(context.Background(), "npc-1")
 
 		require.NoError(t, err)
-		// Initiative should be between 5 (1+4) and 24 (20+4)
+		// Initiative should be between 5 (1+4) and 24 (20+4).
 		require.GreaterOrEqual(t, initiative, 5)
 		require.LessOrEqual(t, initiative, 24)
 		mockRepo.AssertExpectations(t)
@@ -329,8 +329,7 @@ func TestNPCService_ApplyDamage(t *testing.T) {
 		}
 
 		mockRepo.On("GetByID", mock.Anything, "npc-1").Return(npc, nil)
-		// Should not call Update since no damage is taken
-
+		// Should not call Update since no damage is taken.
 		err := service.ApplyDamage(context.Background(), "npc-1", 50, "fire")
 
 		require.NoError(t, err)
@@ -585,7 +584,7 @@ func TestNPCService_GetProficiencyBonusFromCR(t *testing.T) {
 	}
 }
 
-// Mock implementations
+// Mock implementations.
 type MockNPCRepository struct {
 	mock.Mock
 }

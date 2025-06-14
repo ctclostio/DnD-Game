@@ -111,7 +111,7 @@ type SpellSlot struct {
 	Remaining int `json:"remaining" db:"remaining"`
 }
 
-// CustomClass represents a player-created custom class
+// CustomClass represents a player-created custom class.
 type CustomClass struct {
 	ID                       string                 `json:"id" db:"id"`
 	UserID                   string                 `json:"userId" db:"user_id"`

@@ -6,31 +6,31 @@ import (
 	"net/http"
 )
 
-// ErrorType represents the type of error
+// ErrorType represents the type of error.
 type ErrorType string
 
 const (
-	// ErrorTypeValidation indicates a validation error
+	// ErrorTypeValidation indicates a validation error.
 	ErrorTypeValidation ErrorType = "VALIDATION_ERROR"
-	// ErrorTypeAuthorization indicates an authorization error
+	// ErrorTypeAuthorization indicates an authorization error.
 	ErrorTypeAuthorization ErrorType = "AUTHORIZATION_ERROR"
-	// ErrorTypeAuthentication indicates an authentication error
+	// ErrorTypeAuthentication indicates an authentication error.
 	ErrorTypeAuthentication ErrorType = "AUTHENTICATION_ERROR"
-	// ErrorTypeNotFound indicates a resource not found error
+	// ErrorTypeNotFound indicates a resource not found error.
 	ErrorTypeNotFound ErrorType = "NOT_FOUND"
 	// ErrorTypeConflict indicates a conflict error (e.g., duplicate)
 	ErrorTypeConflict ErrorType = "CONFLICT"
-	// ErrorTypeInternal indicates an internal server error
+	// ErrorTypeInternal indicates an internal server error.
 	ErrorTypeInternal ErrorType = "INTERNAL_ERROR"
-	// ErrorTypeRateLimit indicates rate limit exceeded
+	// ErrorTypeRateLimit indicates rate limit exceeded.
 	ErrorTypeRateLimit ErrorType = "RATE_LIMIT_EXCEEDED"
-	// ErrorTypeBadRequest indicates a bad request
+	// ErrorTypeBadRequest indicates a bad request.
 	ErrorTypeBadRequest ErrorType = "BAD_REQUEST"
-	// ErrorTypeServiceUnavailable indicates service is unavailable
+	// ErrorTypeServiceUnavailable indicates service is unavailable.
 	ErrorTypeServiceUnavailable ErrorType = "SERVICE_UNAVAILABLE"
 )
 
-// AppError represents an application error
+// AppError represents an application error.
 type AppError struct {
 	Type       ErrorType              `json:"type"`
 	Message    string                 `json:"message"`
@@ -40,7 +40,7 @@ type AppError struct {
 	Internal   error                  `json:"-"` // Internal error not exposed to client
 }
 
-// Error implements the error interface
+// Error implements the error interface.
 func (e *AppError) Error() string {
 	if e.Internal != nil {
 		return fmt.Sprintf("%s: %s (internal: %v)", e.Type, e.Message, e.Internal)
@@ -48,33 +48,32 @@ func (e *AppError) Error() string {
 	return fmt.Sprintf("%s: %s", e.Type, e.Message)
 }
 
-// WithDetails adds details to the error
+// WithDetails adds details to the error.
 func (e *AppError) WithDetails(details map[string]interface{}) *AppError {
 	e.Details = details
 	return e
 }
 
-// WithInternal adds internal error information
+// WithInternal adds internal error information.
 func (e *AppError) WithInternal(err error) *AppError {
 	e.Internal = err
 	return e
 }
 
-// WithCode adds an error code
+// WithCode adds an error code.
 func (e *AppError) WithCode(code string) *AppError {
 	e.Code = code
 	return e
 }
 
-// ToJSON converts error to JSON
+// ToJSON converts error to JSON.
 func (e *AppError) ToJSON() []byte {
 	data, _ := json.Marshal(e)
 	return data
 }
 
-// Common error constructors
-
-// NewValidationError creates a validation error
+// Common error constructors.
+// NewValidationError creates a validation error.
 func NewValidationError(message string) *AppError {
 	return &AppError{
 		Type:       ErrorTypeValidation,
@@ -83,7 +82,7 @@ func NewValidationError(message string) *AppError {
 	}
 }
 
-// NewAuthenticationError creates an authentication error
+// NewAuthenticationError creates an authentication error.
 func NewAuthenticationError(message string) *AppError {
 	return &AppError{
 		Type:       ErrorTypeAuthentication,
@@ -92,7 +91,7 @@ func NewAuthenticationError(message string) *AppError {
 	}
 }
 
-// NewAuthorizationError creates an authorization error
+// NewAuthorizationError creates an authorization error.
 func NewAuthorizationError(message string) *AppError {
 	return &AppError{
 		Type:       ErrorTypeAuthorization,
@@ -101,7 +100,7 @@ func NewAuthorizationError(message string) *AppError {
 	}
 }
 
-// NewNotFoundError creates a not found error
+// NewNotFoundError creates a not found error.
 func NewNotFoundError(resource string) *AppError {
 	return &AppError{
 		Type:       ErrorTypeNotFound,
@@ -110,7 +109,7 @@ func NewNotFoundError(resource string) *AppError {
 	}
 }
 
-// NewConflictError creates a conflict error
+// NewConflictError creates a conflict error.
 func NewConflictError(message string) *AppError {
 	return &AppError{
 		Type:       ErrorTypeConflict,
@@ -119,7 +118,7 @@ func NewConflictError(message string) *AppError {
 	}
 }
 
-// NewInternalError creates an internal error
+// NewInternalError creates an internal error.
 func NewInternalError(message string, err error) *AppError {
 	return &AppError{
 		Type:       ErrorTypeInternal,
@@ -129,7 +128,7 @@ func NewInternalError(message string, err error) *AppError {
 	}
 }
 
-// NewRateLimitError creates a rate limit error
+// NewRateLimitError creates a rate limit error.
 func NewRateLimitError(message string) *AppError {
 	return &AppError{
 		Type:       ErrorTypeRateLimit,
@@ -138,7 +137,7 @@ func NewRateLimitError(message string) *AppError {
 	}
 }
 
-// NewBadRequestError creates a bad request error
+// NewBadRequestError creates a bad request error.
 func NewBadRequestError(message string) *AppError {
 	return &AppError{
 		Type:       ErrorTypeBadRequest,
@@ -147,7 +146,7 @@ func NewBadRequestError(message string) *AppError {
 	}
 }
 
-// NewServiceUnavailableError creates a service unavailable error
+// NewServiceUnavailableError creates a service unavailable error.
 func NewServiceUnavailableError(message string) *AppError {
 	return &AppError{
 		Type:       ErrorTypeServiceUnavailable,
@@ -156,13 +155,13 @@ func NewServiceUnavailableError(message string) *AppError {
 	}
 }
 
-// IsAppError checks if error is an AppError
+// IsAppError checks if error is an AppError.
 func IsAppError(err error) bool {
 	_, ok := err.(*AppError)
 	return ok
 }
 
-// GetAppError converts error to AppError if possible
+// GetAppError converts error to AppError if possible.
 func GetAppError(err error) *AppError {
 	if appErr, ok := err.(*AppError); ok {
 		return appErr
@@ -170,18 +169,18 @@ func GetAppError(err error) *AppError {
 	return NewInternalError("An unexpected error occurred", err)
 }
 
-// ValidationErrors represents multiple validation errors
+// ValidationErrors represents multiple validation errors.
 type ValidationErrors struct {
 	Errors map[string][]string `json:"errors"`
 }
 
-// Error implements the error interface
+// Error implements the error interface.
 func (v *ValidationErrors) Error() string {
 	if len(v.Errors) == 0 {
 		return "validation errors"
 	}
 
-	// Create a simple string representation of the errors
+	// Create a simple string representation of the errors.
 	var messages []string
 	for field, errs := range v.Errors {
 		for _, err := range errs {
@@ -196,7 +195,7 @@ func (v *ValidationErrors) Error() string {
 	return fmt.Sprintf("validation errors: %v", messages)
 }
 
-// Add adds a validation error for a field
+// Add adds a validation error for a field.
 func (v *ValidationErrors) Add(field, message string) {
 	if v.Errors == nil {
 		v.Errors = make(map[string][]string)
@@ -204,12 +203,12 @@ func (v *ValidationErrors) Add(field, message string) {
 	v.Errors[field] = append(v.Errors[field], message)
 }
 
-// HasErrors checks if there are any validation errors
+// HasErrors checks if there are any validation errors.
 func (v *ValidationErrors) HasErrors() bool {
 	return len(v.Errors) > 0
 }
 
-// ToAppError converts validation errors to AppError
+// ToAppError converts validation errors to AppError.
 func (v *ValidationErrors) ToAppError() *AppError {
 	if !v.HasErrors() {
 		return nil

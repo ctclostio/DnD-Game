@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGameService_CreateSession(t *testing.T) {
@@ -26,22 +26,22 @@ func TestGameService_CreateSession(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, result)
 
-		// Verify ID was generated
+		// Verify ID was generated.
 		require.NotEmpty(t, result.ID)
 
-		// Verify status was set
+		// Verify status was set.
 		require.Equal(t, models.GameStatusActive, result.Status)
 
-		// Verify timestamp
+		// Verify timestamp.
 		require.True(t, !result.CreatedAt.Before(beforeCreate))
 		require.True(t, !result.CreatedAt.After(afterCreate))
 
-		// Verify session was stored
+		// Verify session was stored.
 		stored, exists := service.sessions[result.ID]
 		require.True(t, exists)
 		require.Equal(t, result, stored)
 
-		// Verify events slice was initialized
+		// Verify events slice was initialized.
 		events, exists := service.events[result.ID]
 		require.True(t, exists)
 		require.NotNil(t, events)
@@ -67,10 +67,10 @@ func TestGameService_CreateSession(t *testing.T) {
 		require.NoError(t, err1)
 		require.NoError(t, err2)
 
-		// Verify unique IDs
+		// Verify unique IDs.
 		require.NotEqual(t, result1.ID, result2.ID)
 
-		// Verify both are stored
+		// Verify both are stored.
 		require.Len(t, service.sessions, 2)
 		require.Contains(t, service.sessions, result1.ID)
 		require.Contains(t, service.sessions, result2.ID)
@@ -103,14 +103,14 @@ func TestGameService_GetSessionByID(t *testing.T) {
 	t.Run("successful retrieval", func(t *testing.T) {
 		service := NewGameService()
 
-		// Create a session first
+		// Create a session first.
 		session := &models.GameSession{
 			DMID: "dm-123",
 			Name: "Test Campaign",
 		}
 		created, _ := service.CreateSession(session)
 
-		// Retrieve it
+		// Retrieve it.
 		retrieved, err := service.GetSessionByID(created.ID)
 
 		require.NoError(t, err)
@@ -143,14 +143,14 @@ func TestGameService_AddPlayerToSession(t *testing.T) {
 	t.Run("successful player addition", func(t *testing.T) {
 		service := NewGameService()
 
-		// Create a session first
+		// Create a session first.
 		session := &models.GameSession{
 			DMID: "dm-123",
 			Name: "Test Campaign",
 		}
 		created, _ := service.CreateSession(session)
 
-		// Add player
+		// Add player.
 		player := &models.Player{
 			ID:          "player-456",
 			Name:        "Aragorn",
@@ -164,12 +164,12 @@ func TestGameService_AddPlayerToSession(t *testing.T) {
 
 		require.NoError(t, err)
 
-		// Verify JoinedAt was set
+		// Verify JoinedAt was set.
 		require.True(t, !player.JoinedAt.Before(beforeAdd))
 		require.True(t, !player.JoinedAt.After(afterAdd))
 
-		// Note: Current implementation doesn't actually store players
-		// This is marked as TODO in the code
+		// Note: Current implementation doesn't actually store players.
+		// This is marked as TODO in the code.
 	})
 
 	t.Run("session not found", func(t *testing.T) {
@@ -205,14 +205,14 @@ func TestGameService_RecordGameEvent(t *testing.T) {
 	t.Run("successful event recording", func(t *testing.T) {
 		service := NewGameService()
 
-		// Create a session first
+		// Create a session first.
 		session := &models.GameSession{
 			DMID: "dm-123",
 			Name: "Test Campaign",
 		}
 		created, _ := service.CreateSession(session)
 
-		// Record event
+		// Record event.
 		event := &models.GameEvent{
 			SessionID: created.ID,
 			Type:      "roll",
@@ -229,14 +229,14 @@ func TestGameService_RecordGameEvent(t *testing.T) {
 
 		require.NoError(t, err)
 
-		// Verify ID was generated
+		// Verify ID was generated.
 		require.NotEmpty(t, event.ID)
 
-		// Verify timestamp
+		// Verify timestamp.
 		require.True(t, !event.Timestamp.Before(beforeRecord))
 		require.True(t, !event.Timestamp.After(afterRecord))
 
-		// Verify event was stored
+		// Verify event was stored.
 		events, exists := service.events[created.ID]
 		require.True(t, exists)
 		require.Len(t, events, 1)
@@ -246,14 +246,14 @@ func TestGameService_RecordGameEvent(t *testing.T) {
 	t.Run("multiple events in order", func(t *testing.T) {
 		service := NewGameService()
 
-		// Create a session
+		// Create a session.
 		session := &models.GameSession{
 			DMID: "dm-123",
 			Name: "Test Campaign",
 		}
 		created, _ := service.CreateSession(session)
 
-		// Record multiple events
+		// Record multiple events.
 		event1 := &models.GameEvent{
 			SessionID: created.ID,
 			Type:      "roll",
@@ -281,18 +281,18 @@ func TestGameService_RecordGameEvent(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 		require.NoError(t, service.RecordGameEvent(event3))
 
-		// Verify all events were stored in order
+		// Verify all events were stored in order.
 		events := service.events[created.ID]
 		require.Len(t, events, 3)
 		require.Equal(t, "roll", events[0].Type)
 		require.Equal(t, "message", events[1].Type)
 		require.Equal(t, "combat", events[2].Type)
 
-		// Verify timestamps are in order
+		// Verify timestamps are in order.
 		require.True(t, events[0].Timestamp.Before(events[1].Timestamp))
 		require.True(t, events[1].Timestamp.Before(events[2].Timestamp))
 
-		// Verify each event has unique ID
+		// Verify each event has unique ID.
 		require.NotEqual(t, events[0].ID, events[1].ID)
 		require.NotEqual(t, events[1].ID, events[2].ID)
 		require.NotEqual(t, events[0].ID, events[2].ID)
@@ -312,7 +312,7 @@ func TestGameService_RecordGameEvent(t *testing.T) {
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "session not found")
 
-		// Verify event ID and timestamp were not set
+		// Verify event ID and timestamp were not set.
 		require.Empty(t, event.ID)
 		require.True(t, event.Timestamp.IsZero())
 	})
@@ -337,14 +337,14 @@ func TestGameService_GetSessionEvents(t *testing.T) {
 	t.Run("successful retrieval of events", func(t *testing.T) {
 		service := NewGameService()
 
-		// Create session and add events
+		// Create session and add events.
 		session := &models.GameSession{
 			DMID: "dm-123",
 			Name: "Test Campaign",
 		}
 		created, _ := service.CreateSession(session)
 
-		// Record several events
+		// Record several events.
 		for i := 0; i < 5; i++ {
 			event := &models.GameEvent{
 				SessionID: created.ID,
@@ -355,14 +355,14 @@ func TestGameService_GetSessionEvents(t *testing.T) {
 			_ = service.RecordGameEvent(event)
 		}
 
-		// Retrieve events
+		// Retrieve events.
 		events, err := service.GetSessionEvents(created.ID)
 
 		require.NoError(t, err)
 		require.NotNil(t, events)
 		require.Len(t, events, 5)
 
-		// Verify order and data
+		// Verify order and data.
 		for i, event := range events {
 			require.Equal(t, "test", event.Type)
 			require.Equal(t, i, event.Data["index"])
@@ -372,14 +372,14 @@ func TestGameService_GetSessionEvents(t *testing.T) {
 	t.Run("empty events list", func(t *testing.T) {
 		service := NewGameService()
 
-		// Create session without events
+		// Create session without events.
 		session := &models.GameSession{
 			DMID: "dm-123",
 			Name: "Test Campaign",
 		}
 		created, _ := service.CreateSession(session)
 
-		// Retrieve events
+		// Retrieve events.
 		events, err := service.GetSessionEvents(created.ID)
 
 		require.NoError(t, err)
@@ -430,12 +430,12 @@ func TestGameService_ConcurrentAccess(t *testing.T) {
 		close(sessionIDs)
 		close(errorsChan)
 
-		// Check for errors
+		// Check for errors.
 		for err := range errorsChan {
 			t.Fatalf("Unexpected error during concurrent creation: %v", err)
 		}
 
-		// Verify all sessions were created
+		// Verify all sessions were created.
 		createdIDs := make(map[string]bool)
 		for id := range sessionIDs {
 			if createdIDs[id] {
@@ -451,7 +451,7 @@ func TestGameService_ConcurrentAccess(t *testing.T) {
 	t.Run("concurrent event recording", func(t *testing.T) {
 		service := NewGameService()
 
-		// Create a session
+		// Create a session.
 		session := &models.GameSession{
 			DMID: "dm-123",
 			Name: "Test Campaign",
@@ -483,17 +483,17 @@ func TestGameService_ConcurrentAccess(t *testing.T) {
 		wg.Wait()
 		close(errorsChan)
 
-		// Check for errors
+		// Check for errors.
 		for err := range errorsChan {
 			t.Fatalf("Unexpected error during concurrent recording: %v", err)
 		}
 
-		// Verify all events were recorded
+		// Verify all events were recorded.
 		events, err := service.GetSessionEvents(created.ID)
 		require.NoError(t, err)
 		require.Len(t, events, numEvents)
 
-		// Verify each event has unique ID
+		// Verify each event has unique ID.
 		eventIDs := make(map[string]bool)
 		for _, event := range events {
 			if eventIDs[event.ID] {
@@ -506,7 +506,7 @@ func TestGameService_ConcurrentAccess(t *testing.T) {
 	t.Run("concurrent read and write", func(t *testing.T) {
 		service := NewGameService()
 
-		// Create multiple sessions
+		// Create multiple sessions.
 		sessionIDs := make([]string, 5)
 		for i := 0; i < 5; i++ {
 			session := &models.GameSession{
@@ -517,12 +517,12 @@ func TestGameService_ConcurrentAccess(t *testing.T) {
 			sessionIDs[i] = created.ID
 		}
 
-		// Concurrent operations
+		// Concurrent operations.
 		wg := sync.WaitGroup{}
 		errors := make([]error, 0)
 		var errorsMu sync.Mutex
 
-		// Writers
+		// Writers.
 		for i := 0; i < 50; i++ {
 			wg.Add(1)
 			go func(index int) {
@@ -543,7 +543,7 @@ func TestGameService_ConcurrentAccess(t *testing.T) {
 			}(i)
 		}
 
-		// Readers
+		// Readers.
 		for i := 0; i < 50; i++ {
 			wg.Add(1)
 			go func(index int) {
@@ -551,14 +551,14 @@ func TestGameService_ConcurrentAccess(t *testing.T) {
 
 				sessionID := sessionIDs[index%len(sessionIDs)]
 
-				// Read session
+				// Read session.
 				if _, err := service.GetSessionByID(sessionID); err != nil {
 					errorsMu.Lock()
 					errors = append(errors, err)
 					errorsMu.Unlock()
 				}
 
-				// Read events
+				// Read events.
 				if _, err := service.GetSessionEvents(sessionID); err != nil {
 					errorsMu.Lock()
 					errors = append(errors, err)
@@ -569,10 +569,10 @@ func TestGameService_ConcurrentAccess(t *testing.T) {
 
 		wg.Wait()
 
-		// Check for errors
+		// Check for errors.
 		require.Len(t, errors, 0, "Unexpected errors during concurrent operations")
 
-		// Verify data integrity
+		// Verify data integrity.
 		for _, sessionID := range sessionIDs {
 			session, err := service.GetSessionByID(sessionID)
 			require.NoError(t, err)
@@ -592,11 +592,11 @@ func TestGenerateID(t *testing.T) {
 		for i := 0; i < 1000; i++ {
 			id := generateID()
 
-			// Verify format (UUID)
+			// Verify format (UUID).
 			require.Len(t, id, 36)
 			require.Contains(t, id, "-")
 
-			// Verify uniqueness
+			// Verify uniqueness.
 			if ids[id] {
 				t.Fatal("Duplicate ID generated")
 			}
@@ -625,7 +625,7 @@ func TestGenerateID(t *testing.T) {
 		wg.Wait()
 		close(idsChan)
 
-		// Verify uniqueness
+		// Verify uniqueness.
 		ids := make(map[string]bool)
 		for id := range idsChan {
 			if ids[id] {

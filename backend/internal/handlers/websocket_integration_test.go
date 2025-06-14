@@ -21,50 +21,50 @@ import (
 )
 
 func TestWebSocketHandlerIntegration(t *testing.T) {
-	// Set development environment for origin validation
+	// Set development environment for origin validation.
 	origEnv := os.Getenv("GO_ENV")
 	require.NoError(t, os.Setenv("GO_ENV", "development"))
 	defer func() { _ = os.Setenv("GO_ENV", origEnv) }()
 
-	// Setup test context
+	// Setup test context.
 	testCtx, cleanup := testutil.SetupIntegrationTest(t)
 	defer cleanup()
 
-	// Setup handlers with WebSocket hub
+	// Setup handlers with WebSocket hub.
 	_, _ = handlers.SetupTestHandlers(t, testCtx)
 
-	// Create test user
+	// Create test user.
 	username := "ws_user"
 	email := "ws_user@example.com"
 	password := "password123"
 	userID := testCtx.CreateTestUser(username, email, password)
 
-	// Get the user from DB for the user object
+	// Get the user from DB for the user object.
 	user, err := testCtx.Repos.Users.GetByID(context.Background(), userID)
 	require.NoError(t, err)
 
-	// Create game session
+	// Create game session.
 	sessionID := testCtx.CreateTestGameSession(userID, "ws_game", "WSGAME01")
 
-	// Get the session from DB
+	// Get the session from DB.
 	session, err := testCtx.Repos.GameSessions.GetByID(context.Background(), sessionID)
 	require.NoError(t, err)
 
-	// Login to get token
+	// Login to get token.
 	tokenPair, err := testCtx.JWTManager.GenerateTokenPair(userID, username, email, "player")
 	require.NoError(t, err)
 	token := tokenPair.AccessToken
 
 	t.Run("successful connection and authentication", func(t *testing.T) {
-		// Create test server
+		// Create test server.
 		server := httptest.NewServer(http.HandlerFunc(ws.HandleWebSocket))
 		defer server.Close()
 
-		// Convert http to ws URL
+		// Convert http to ws URL.
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 		wsURL = fmt.Sprintf("%s?room=%s", wsURL, session.ID)
 
-		// Connect to WebSocket with proper origin header
+		// Connect to WebSocket with proper origin header.
 		header := http.Header{}
 		header.Set("Origin", "http://localhost:3000")
 		conn, _, err := websocket.DefaultDialer.Dial(wsURL, header)
@@ -75,13 +75,13 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 			}
 		}()
 
-		// Read auth required message
+		// Read auth required message.
 		var authReq map[string]string
 		err = conn.ReadJSON(&authReq)
 		require.NoError(t, err)
 		assert.Equal(t, "auth_required", authReq["type"])
 
-		// Send authentication
+		// Send authentication.
 		authMsg := ws.AuthMessage{
 			Type:  "auth",
 			Token: token,
@@ -90,7 +90,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		err = conn.WriteJSON(authMsg)
 		require.NoError(t, err)
 
-		// Read auth success
+		// Read auth success.
 		var authResp map[string]string
 		err = conn.ReadJSON(&authResp)
 		require.NoError(t, err)
@@ -99,14 +99,14 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 	})
 
 	t.Run("authentication failure with invalid token", func(t *testing.T) {
-		// Create test server
+		// Create test server.
 		server := httptest.NewServer(http.HandlerFunc(ws.HandleWebSocket))
 		defer server.Close()
 
-		// Convert http to ws URL
+		// Convert http to ws URL.
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 
-		// Connect to WebSocket with proper origin header
+		// Connect to WebSocket with proper origin header.
 		header := http.Header{}
 		header.Set("Origin", "http://localhost:3000")
 		conn, _, err := websocket.DefaultDialer.Dial(wsURL, header)
@@ -117,12 +117,12 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 			}
 		}()
 
-		// Read auth required message
+		// Read auth required message.
 		var authReq map[string]string
 		err = conn.ReadJSON(&authReq)
 		require.NoError(t, err)
 
-		// Send invalid authentication
+		// Send invalid authentication.
 		authMsg := ws.AuthMessage{
 			Type:  "auth",
 			Token: "invalid_token",
@@ -131,7 +131,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		err = conn.WriteJSON(authMsg)
 		require.NoError(t, err)
 
-		// Read error response
+		// Read error response.
 		var errorResp map[string]string
 		err = conn.ReadJSON(&errorResp)
 		require.NoError(t, err)
@@ -140,14 +140,14 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 	})
 
 	t.Run("authentication failure with missing room", func(t *testing.T) {
-		// Create test server
+		// Create test server.
 		server := httptest.NewServer(http.HandlerFunc(ws.HandleWebSocket))
 		defer server.Close()
 
-		// Convert http to ws URL (no room parameter)
+		// Convert http to ws URL (no room parameter).
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 
-		// Connect to WebSocket with proper origin header
+		// Connect to WebSocket with proper origin header.
 		header := http.Header{}
 		header.Set("Origin", "http://localhost:3000")
 		conn, _, err := websocket.DefaultDialer.Dial(wsURL, header)
@@ -158,21 +158,21 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 			}
 		}()
 
-		// Read auth required message
+		// Read auth required message.
 		var authReq map[string]string
 		err = conn.ReadJSON(&authReq)
 		require.NoError(t, err)
 
-		// Send authentication without room
+		// Send authentication without room.
 		authMsg := ws.AuthMessage{
 			Type:  "auth",
 			Token: token,
-			// Room field is empty
+			// Room field is empty.
 		}
 		err = conn.WriteJSON(authMsg)
 		require.NoError(t, err)
 
-		// Read error response
+		// Read error response.
 		var errorResp map[string]string
 		err = conn.ReadJSON(&errorResp)
 		require.NoError(t, err)
@@ -181,11 +181,11 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 	})
 
 	t.Run("message broadcasting", func(t *testing.T) {
-		// Create test server
+		// Create test server.
 		server := httptest.NewServer(http.HandlerFunc(ws.HandleWebSocket))
 		defer server.Close()
 
-		// Create second user
+		// Create second user.
 		user2ID := testCtx.CreateTestUser("ws_user2", "ws_user2@example.com", "password123")
 		_, err = testCtx.Repos.Users.GetByID(context.Background(), user2ID)
 		require.NoError(t, err)
@@ -194,18 +194,18 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		require.NoError(t, err)
 		token2 := tokenPair2.AccessToken
 
-		// Setup headers with origin
+		// Setup headers with origin.
 		header := http.Header{}
 		header.Set("Origin", "http://localhost:3000")
 
-		// Connect first user
+		// Connect first user.
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 		wsURL = fmt.Sprintf("%s?room=%s", wsURL, session.ID)
 		conn1, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
 		defer func() { _ = conn1.Close() }()
 
-		// Authenticate first user
+		// Authenticate first user.
 		var authReq1 map[string]string
 		err = conn1.ReadJSON(&authReq1)
 		require.NoError(t, err)
@@ -218,17 +218,17 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		err = conn1.WriteJSON(authMsg1)
 		require.NoError(t, err)
 
-		// Skip auth success message
+		// Skip auth success message.
 		var authResp1 map[string]string
 		err = conn1.ReadJSON(&authResp1)
 		require.NoError(t, err)
 
-		// Connect second user
+		// Connect second user.
 		conn2, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
 		defer func() { _ = conn2.Close() }()
 
-		// Authenticate second user
+		// Authenticate second user.
 		var authReq2 map[string]string
 		err = conn2.ReadJSON(&authReq2)
 		require.NoError(t, err)
@@ -241,12 +241,12 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		err = conn2.WriteJSON(authMsg2)
 		require.NoError(t, err)
 
-		// Skip auth success message
+		// Skip auth success message.
 		var authResp2 map[string]string
 		err = conn2.ReadJSON(&authResp2)
 		require.NoError(t, err)
 
-		// Send message from user1
+		// Send message from user1.
 		message := map[string]interface{}{
 			"type":     "message",
 			"roomId":   session.ID,
@@ -259,7 +259,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		err = conn1.WriteJSON(message)
 		require.NoError(t, err)
 
-		// User2 should receive the message
+		// User2 should receive the message.
 		var received map[string]interface{}
 		_ = conn2.SetReadDeadline(time.Now().Add(5 * time.Second))
 		err = conn2.ReadJSON(&received)
@@ -270,27 +270,27 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 	})
 
 	t.Run("room isolation", func(t *testing.T) {
-		// Create test server
+		// Create test server.
 		server := httptest.NewServer(http.HandlerFunc(ws.HandleWebSocket))
 		defer server.Close()
 
-		// Create another game session
+		// Create another game session.
 		sessionID2 := testCtx.CreateTestGameSession(userID, "ws_game2", "WSGAME02")
 		session2, err := testCtx.Repos.GameSessions.GetByID(context.Background(), sessionID2)
 		require.NoError(t, err)
 
-		// Setup headers with origin
+		// Setup headers with origin.
 		header := http.Header{}
 		header.Set("Origin", "http://localhost:3000")
 
-		// Connect to room 1
+		// Connect to room 1.
 		wsURL1 := "ws" + strings.TrimPrefix(server.URL, "http")
 		wsURL1 = fmt.Sprintf("%s?room=%s", wsURL1, session.ID)
 		conn1, _, err := websocket.DefaultDialer.Dial(wsURL1, header)
 		require.NoError(t, err)
 		defer func() { _ = conn1.Close() }()
 
-		// Authenticate in room 1
+		// Authenticate in room 1.
 		var authReq1 map[string]string
 		err = conn1.ReadJSON(&authReq1)
 		require.NoError(t, err)
@@ -307,14 +307,14 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		err = conn1.ReadJSON(&authResp1)
 		require.NoError(t, err)
 
-		// Connect to room 2
+		// Connect to room 2.
 		wsURL2 := "ws" + strings.TrimPrefix(server.URL, "http")
 		wsURL2 = fmt.Sprintf("%s?room=%s", wsURL2, session2.ID)
 		conn2, _, err := websocket.DefaultDialer.Dial(wsURL2, header)
 		require.NoError(t, err)
 		defer func() { _ = conn2.Close() }()
 
-		// Authenticate in room 2
+		// Authenticate in room 2.
 		var authReq2 map[string]string
 		err = conn2.ReadJSON(&authReq2)
 		require.NoError(t, err)
@@ -331,7 +331,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		err = conn2.ReadJSON(&authResp2)
 		require.NoError(t, err)
 
-		// Send message to room 1
+		// Send message to room 1.
 		message := map[string]interface{}{
 			"type":     "message",
 			"roomId":   session.ID,
@@ -344,7 +344,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		err = conn1.WriteJSON(message)
 		require.NoError(t, err)
 
-		// Room 2 should not receive the message
+		// Room 2 should not receive the message.
 		_ = conn2.SetReadDeadline(time.Now().Add(1 * time.Second))
 		var received map[string]interface{}
 		err = conn2.ReadJSON(&received)
@@ -352,22 +352,22 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 	})
 
 	t.Run("reconnection handling", func(t *testing.T) {
-		// Create test server
+		// Create test server.
 		server := httptest.NewServer(http.HandlerFunc(ws.HandleWebSocket))
 		defer server.Close()
 
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 		wsURL = fmt.Sprintf("%s?room=%s", wsURL, session.ID)
 
-		// Setup headers with origin
+		// Setup headers with origin.
 		header := http.Header{}
 		header.Set("Origin", "http://localhost:3000")
 
-		// First connection
+		// First connection.
 		conn1, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
 
-		// Authenticate
+		// Authenticate.
 		var authReq map[string]string
 		err = conn1.ReadJSON(&authReq)
 		require.NoError(t, err)
@@ -384,18 +384,18 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		err = conn1.ReadJSON(&authResp)
 		require.NoError(t, err)
 
-		// Close first connection
+		// Close first connection.
 		_ = conn1.Close()
 
-		// Wait a bit
+		// Wait a bit.
 		time.Sleep(100 * time.Millisecond)
 
-		// Reconnect
+		// Reconnect.
 		conn2, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
 		defer func() { _ = conn2.Close() }()
 
-		// Authenticate again
+		// Authenticate again.
 		err = conn2.ReadJSON(&authReq)
 		require.NoError(t, err)
 
@@ -408,18 +408,18 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 	})
 
 	t.Run("concurrent connections", func(t *testing.T) {
-		// Create test server
+		// Create test server.
 		server := httptest.NewServer(http.HandlerFunc(ws.HandleWebSocket))
 		defer server.Close()
 
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 		wsURL = fmt.Sprintf("%s?room=%s", wsURL, session.ID)
 
-		// Setup headers with origin
+		// Setup headers with origin.
 		header := http.Header{}
 		header.Set("Origin", "http://localhost:3000")
 
-		// Create multiple users
+		// Create multiple users.
 		numUsers := 5
 		tokens := make([]string, numUsers)
 
@@ -433,7 +433,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 			tokens[i] = tp.AccessToken
 		}
 
-		// Connect all users concurrently
+		// Connect all users concurrently.
 		var wg sync.WaitGroup
 		connections := make([]*websocket.Conn, numUsers)
 
@@ -442,7 +442,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 			go func(idx int) {
 				defer wg.Done()
 
-				// Connect
+				// Connect.
 				conn, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 				if err != nil {
 					t.Errorf("Failed to connect user %d: %v", idx, err)
@@ -450,7 +450,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 				}
 				connections[idx] = conn
 
-				// Authenticate
+				// Authenticate.
 				var authReq map[string]string
 				err = conn.ReadJSON(&authReq)
 				if err != nil {
@@ -484,7 +484,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 
 		wg.Wait()
 
-		// Close all connections
+		// Close all connections.
 		for _, conn := range connections {
 			if conn != nil {
 				if err := conn.Close(); err != nil {
@@ -495,13 +495,13 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 	})
 
 	t.Run("origin validation", func(t *testing.T) {
-		// Create test server
+		// Create test server.
 		server := httptest.NewServer(http.HandlerFunc(ws.HandleWebSocket))
 		defer server.Close()
 
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 
-		// Test with invalid origin (should fail in production mode)
+		// Test with invalid origin (should fail in production mode).
 		require.NoError(t, os.Setenv("GO_ENV", "production"))
 		defer func() { _ = os.Setenv("GO_ENV", "development") }()
 

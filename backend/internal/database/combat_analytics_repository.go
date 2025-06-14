@@ -5,41 +5,41 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type CombatAnalyticsRepository interface {
-	// Combat Analytics methods
+	// Combat Analytics methods.
 	CreateCombatAnalytics(analytics *models.CombatAnalytics) error
 	GetCombatAnalytics(combatID uuid.UUID) (*models.CombatAnalytics, error)
 	GetCombatAnalyticsBySession(sessionID uuid.UUID) ([]*models.CombatAnalytics, error)
 	UpdateCombatAnalytics(id uuid.UUID, updates map[string]interface{}) error
 
-	// Combatant Analytics methods
+	// Combatant Analytics methods.
 	CreateCombatantAnalytics(analytics *models.CombatantAnalytics) error
 	GetCombatantAnalytics(combatAnalyticsID uuid.UUID) ([]*models.CombatantAnalytics, error)
 	UpdateCombatantAnalytics(id uuid.UUID, updates map[string]interface{}) error
 
-	// Auto Combat Resolution methods
+	// Auto Combat Resolution methods.
 	CreateAutoCombatResolution(resolution *models.AutoCombatResolution) error
 	GetAutoCombatResolution(id uuid.UUID) (*models.AutoCombatResolution, error)
 	GetAutoCombatResolutionsBySession(sessionID uuid.UUID) ([]*models.AutoCombatResolution, error)
 
-	// Battle Map methods
+	// Battle Map methods.
 	CreateBattleMap(battleMap *models.BattleMap) error
 	GetBattleMap(id uuid.UUID) (*models.BattleMap, error)
 	GetBattleMapByCombat(combatID uuid.UUID) (*models.BattleMap, error)
 	GetBattleMapsBySession(sessionID uuid.UUID) ([]*models.BattleMap, error)
 	UpdateBattleMap(id uuid.UUID, updates map[string]interface{}) error
 
-	// Smart Initiative methods
+	// Smart Initiative methods.
 	CreateOrUpdateInitiativeRule(rule *models.SmartInitiativeRule) error
 	GetInitiativeRule(sessionID uuid.UUID, entityID string) (*models.SmartInitiativeRule, error)
 	GetInitiativeRulesBySession(sessionID uuid.UUID) ([]*models.SmartInitiativeRule, error)
 
-	// Combat Action Log methods
+	// Combat Action Log methods.
 	CreateCombatAction(action *models.CombatActionLog) error
 	GetCombatActions(combatID uuid.UUID) ([]*models.CombatActionLog, error)
 	GetCombatActionsByRound(combatID uuid.UUID, roundNumber int) ([]*models.CombatActionLog, error)
@@ -53,8 +53,7 @@ func NewCombatAnalyticsRepository(db *sqlx.DB) CombatAnalyticsRepository {
 	return &combatAnalyticsRepository{db: db}
 }
 
-// Combat Analytics methods
-
+// Combat Analytics methods.
 func (r *combatAnalyticsRepository) CreateCombatAnalytics(analytics *models.CombatAnalytics) error {
 	query := `
 		INSERT INTO combat_analytics (
@@ -108,13 +107,12 @@ func (r *combatAnalyticsRepository) GetCombatAnalyticsBySession(sessionID uuid.U
 }
 
 func (r *combatAnalyticsRepository) UpdateCombatAnalytics(id uuid.UUID, updates map[string]interface{}) error {
-	// TODO: Implement database-agnostic update query builder
-	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax
+	// TODO: Implement database-agnostic update query builder.
+	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax.
 	return fmt.Errorf("UpdateCombatAnalytics not implemented - pending SQL migration")
 }
 
-// Combatant Analytics methods
-
+// Combatant Analytics methods.
 func (r *combatAnalyticsRepository) CreateCombatantAnalytics(analytics *models.CombatantAnalytics) error {
 	query := `
 		INSERT INTO combatant_analytics (
@@ -168,13 +166,12 @@ func (r *combatAnalyticsRepository) GetCombatantAnalytics(combatAnalyticsID uuid
 }
 
 func (r *combatAnalyticsRepository) UpdateCombatantAnalytics(id uuid.UUID, updates map[string]interface{}) error {
-	// TODO: Implement database-agnostic update query builder
-	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax
+	// TODO: Implement database-agnostic update query builder.
+	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax.
 	return fmt.Errorf("UpdateCombatantAnalytics not implemented - pending SQL migration")
 }
 
-// Auto Combat Resolution methods
-
+// Auto Combat Resolution methods.
 func (r *combatAnalyticsRepository) CreateAutoCombatResolution(resolution *models.AutoCombatResolution) error {
 	query := `
 		INSERT INTO auto_combat_resolutions (
@@ -228,8 +225,7 @@ func (r *combatAnalyticsRepository) GetAutoCombatResolutionsBySession(sessionID 
 	return resolutions, err
 }
 
-// Battle Map methods
-
+// Battle Map methods.
 func (r *combatAnalyticsRepository) CreateBattleMap(battleMap *models.BattleMap) error {
 	query := `
 		INSERT INTO battle_maps (
@@ -298,22 +294,21 @@ func (r *combatAnalyticsRepository) GetBattleMapsBySession(sessionID uuid.UUID) 
 }
 
 func (r *combatAnalyticsRepository) UpdateBattleMap(id uuid.UUID, updates map[string]interface{}) error {
-	// TODO: Implement database-agnostic update query builder
-	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax
+	// TODO: Implement database-agnostic update query builder.
+	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax.
 	return fmt.Errorf("UpdateBattleMap not implemented - pending SQL migration")
 }
 
-// Smart Initiative methods
-
+// Smart Initiative methods.
 func (r *combatAnalyticsRepository) CreateOrUpdateInitiativeRule(rule *models.SmartInitiativeRule) error {
-	// Check if rule exists
+	// Check if rule exists.
 	var existingID string
 	checkQuery := `SELECT id FROM smart_initiative_rules WHERE game_session_id = ? AND entity_id = ?`
 	checkQuery = r.db.Rebind(checkQuery)
 	err := r.db.QueryRow(checkQuery, rule.GameSessionID, rule.EntityID).Scan(&existingID)
 
 	if err == sql.ErrNoRows {
-		// Insert new rule
+		// Insert new rule.
 		if rule.ID == uuid.Nil {
 			rule.ID = uuid.New()
 		}
@@ -344,7 +339,7 @@ func (r *combatAnalyticsRepository) CreateOrUpdateInitiativeRule(rule *models.Sm
 		return err
 	}
 
-	// Update existing rule
+	// Update existing rule.
 	rule.UpdatedAt = time.Now()
 	updateQuery := `
 		UPDATE smart_initiative_rules SET
@@ -391,8 +386,7 @@ func (r *combatAnalyticsRepository) GetInitiativeRulesBySession(sessionID uuid.U
 	return rules, err
 }
 
-// Combat Action Log methods
-
+// Combat Action Log methods.
 func (r *combatAnalyticsRepository) CreateCombatAction(action *models.CombatActionLog) error {
 	query := `
 		INSERT INTO combat_action_log (

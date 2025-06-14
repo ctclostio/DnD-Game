@@ -8,12 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Basic compilation test to ensure the service compiles correctly
+// Basic compilation test to ensure the service compiles correctly.
 func TestEncounterService_Compilation(t *testing.T) {
-	// This test just ensures that the EncounterService struct and its methods compile correctly
+	// This test just ensures that the EncounterService struct and its methods compile correctly.
 	var _ *EncounterService
 
-	// Test that EncounterRequest struct exists
+	// Test that EncounterRequest struct exists.
 	req := EncounterRequest{
 		PartyLevel:    5,
 		PartySize:     4,
@@ -24,9 +24,9 @@ func TestEncounterService_Compilation(t *testing.T) {
 	assert.NotNil(t, req)
 }
 
-// Test the basic structure of encounters
+// Test the basic structure of encounters.
 func TestEncounterModels(t *testing.T) {
-	// Test Encounter model
+	// Test Encounter model.
 	encounter := &models.Encounter{
 		Name:          "Test Encounter",
 		Description:   "A test encounter",
@@ -38,7 +38,7 @@ func TestEncounterModels(t *testing.T) {
 	assert.Equal(t, "Test Encounter", encounter.Name)
 	assert.Equal(t, "combat", encounter.EncounterType)
 
-	// Test EncounterEnemy model
+	// Test EncounterEnemy model.
 	enemy := models.EncounterEnemy{
 		Name:            "Goblin",
 		Type:            "humanoid",
@@ -51,7 +51,7 @@ func TestEncounterModels(t *testing.T) {
 	assert.Equal(t, 0.25, enemy.ChallengeRating)
 	assert.Equal(t, 4, enemy.Quantity)
 
-	// Test Action model
+	// Test Action model.
 	action := models.Action{
 		Name:        "Scimitar",
 		AttackBonus: 4,
@@ -60,14 +60,14 @@ func TestEncounterModels(t *testing.T) {
 	assert.Equal(t, "Scimitar", action.Name)
 	assert.Equal(t, 4, action.AttackBonus)
 
-	// Test Ability model
+	// Test Ability model.
 	ability := models.Ability{
 		Name:        "Nimble Escape",
 		Description: "The goblin can take the Disengage or Hide action as a bonus action on each of its turns.",
 	}
 	assert.Equal(t, "Nimble Escape", ability.Name)
 
-	// Test ScalingOptions
+	// Test ScalingOptions.
 	scalingOptions := &models.ScalingOptions{
 		Easy: models.ScalingAdjustment{
 			HPModifier:     -2,
@@ -89,7 +89,7 @@ func TestEncounterModels(t *testing.T) {
 	assert.Equal(t, -2, scalingOptions.Easy.HPModifier)
 	assert.Equal(t, 5, scalingOptions.Hard.HPModifier)
 
-	// Test EncounterObjective
+	// Test EncounterObjective.
 	objective := &models.EncounterObjective{
 		Type:        "defeat_all",
 		Description: "Defeat all enemies",
@@ -99,7 +99,7 @@ func TestEncounterModels(t *testing.T) {
 	assert.Equal(t, "defeat_all", objective.Type)
 	assert.Equal(t, 200, objective.XPReward)
 
-	// Test EncounterEvent
+	// Test EncounterEvent.
 	event := &models.EncounterEvent{
 		RoundNumber: 1,
 		EventType:   "combat_start",
@@ -111,7 +111,7 @@ func TestEncounterModels(t *testing.T) {
 	assert.Equal(t, "combat_start", event.EventType)
 }
 
-// Test encounter request validation
+// Test encounter request validation.
 func TestEncounterRequest_Validation(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -149,7 +149,7 @@ func TestEncounterRequest_Validation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Basic validation
+			// Basic validation.
 			if tt.valid {
 				assert.Greater(t, tt.request.PartyLevel, 0)
 				assert.NotEmpty(t, tt.request.Difficulty)
@@ -160,7 +160,7 @@ func TestEncounterRequest_Validation(t *testing.T) {
 	}
 }
 
-// Test difficulty scaling logic
+// Test difficulty scaling logic.
 func TestDifficultyScaling(t *testing.T) {
 	testCases := []struct {
 		difficulty  string
@@ -180,7 +180,7 @@ func TestDifficultyScaling(t *testing.T) {
 				DamageModifier: tc.dmgModifier,
 			}
 
-			// Test HP modification
+			// Test HP modification.
 			baseHP := 10
 			modifiedHP := baseHP + scaling.HPModifier
 			if scaling.HPModifier < 0 {
@@ -191,7 +191,7 @@ func TestDifficultyScaling(t *testing.T) {
 				assert.Equal(t, modifiedHP, baseHP)
 			}
 
-			// Ensure HP never goes below 1
+			// Ensure HP never goes below 1.
 			if modifiedHP < 1 {
 				modifiedHP = 1
 			}
@@ -200,7 +200,7 @@ func TestDifficultyScaling(t *testing.T) {
 	}
 }
 
-// Test encounter status transitions
+// Test encounter status transitions.
 func TestEncounterStatusTransitions(t *testing.T) {
 	validTransitions := map[string][]string{
 		"planned":   {"active", "cancelled"},
@@ -212,13 +212,13 @@ func TestEncounterStatusTransitions(t *testing.T) {
 
 	for fromStatus, toStatuses := range validTransitions {
 		t.Run(fromStatus, func(t *testing.T) {
-			// Test valid transitions
+			// Test valid transitions.
 			for _, toStatus := range toStatuses {
-				// In a real implementation, you'd have a method to validate transitions
+				// In a real implementation, you'd have a method to validate transitions.
 				assert.Contains(t, toStatuses, toStatus)
 			}
 
-			// Test that completed/failed/cancelled are terminal states
+			// Test that completed/failed/cancelled are terminal states.
 			if fromStatus == "completed" || fromStatus == "failed" || fromStatus == "cancelled" {
 				assert.Empty(t, toStatuses)
 			}
@@ -226,7 +226,7 @@ func TestEncounterStatusTransitions(t *testing.T) {
 	}
 }
 
-// Test environmental hazard creation
+// Test environmental hazard creation.
 func TestEnvironmentalHazard(t *testing.T) {
 	hazard := models.EnvironmentalHazard{
 		Name:        "Falling Rocks",
@@ -242,7 +242,7 @@ func TestEnvironmentalHazard(t *testing.T) {
 	assert.Equal(t, "2d6", hazard.Damage)
 }
 
-// Test terrain feature creation
+// Test terrain feature creation.
 func TestTerrainFeature(t *testing.T) {
 	terrain := models.TerrainFeature{
 		Name:        "Difficult Terrain",
@@ -255,7 +255,7 @@ func TestTerrainFeature(t *testing.T) {
 	assert.Equal(t, "Movement costs double", terrain.Effect)
 }
 
-// Test solution options
+// Test solution options.
 func TestSolutionOptions(t *testing.T) {
 	solution := models.Solution{
 		Method:       "Negotiation",
@@ -270,7 +270,7 @@ func TestSolutionOptions(t *testing.T) {
 	assert.Len(t, solution.Requirements, 2)
 }
 
-// Test reinforcement waves
+// Test reinforcement waves.
 func TestReinforcementWave(t *testing.T) {
 	wave := models.ReinforcementWave{
 		Round:   3,
@@ -290,7 +290,7 @@ func TestReinforcementWave(t *testing.T) {
 	assert.Equal(t, 2, wave.Enemies[0].Quantity)
 }
 
-// Test escape routes
+// Test escape routes.
 func TestEscapeRoute(t *testing.T) {
 	routes := []models.EscapeRoute{
 		{
@@ -310,7 +310,7 @@ func TestEscapeRoute(t *testing.T) {
 	assert.Equal(t, "Medium", routes[1].Difficulty)
 }
 
-// Test tactical info structure
+// Test tactical info structure.
 func TestTacticalInfo(t *testing.T) {
 	tactics := &models.TacticalInfo{
 		GeneralStrategy: "Goblins use hit-and-run tactics",
@@ -337,7 +337,7 @@ func TestTacticalInfo(t *testing.T) {
 	assert.Equal(t, "Opening", tactics.CombatPhases[0].Name)
 }
 
-// Test encounter validation helpers
+// Test encounter validation helpers.
 func TestEncounterValidation(t *testing.T) {
 	t.Run("Valid Difficulties", func(t *testing.T) {
 		validDifficulties := []string{"easy", "medium", "hard", "deadly"}
@@ -361,9 +361,9 @@ func TestEncounterValidation(t *testing.T) {
 	})
 }
 
-// Test XP calculation helpers
+// Test XP calculation helpers.
 func TestXPCalculation(t *testing.T) {
-	// Test party size multipliers
+	// Test party size multipliers.
 	partySizeMultipliers := map[int]float64{
 		1: 1.5,  // Solo
 		2: 1.5,  // Pair
@@ -391,9 +391,9 @@ func TestXPCalculation(t *testing.T) {
 	}
 }
 
-// Helper function to test encounter creation
+// Helper function to test encounter creation.
 //
-//lint:ignore U1000 retained for future tests
+//lint:ignore U1000 retained for future tests.
 func createTestEncounterData() *models.Encounter {
 	return &models.Encounter{
 		Name:          "Test Encounter",

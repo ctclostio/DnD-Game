@@ -11,7 +11,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
-// Handlers holds all HTTP handlers
+// Handlers holds all HTTP handlers.
 type Handlers struct {
 	userService         *services.UserService
 	characterService    *services.CharacterService
@@ -32,7 +32,7 @@ type Handlers struct {
 	db                  *database.DB
 }
 
-// NewHandlers creates a new handlers instance
+// NewHandlers creates a new handlers instance.
 func NewHandlers(svc *services.Services, db *database.DB, hub *websocket.Hub) *Handlers {
 	return &Handlers{
 		userService:         svc.Users,
@@ -55,7 +55,7 @@ func NewHandlers(svc *services.Services, db *database.DB, hub *websocket.Hub) *H
 	}
 }
 
-// HealthCheck handles health check requests
+// HealthCheck handles health check requests.
 func (h *Handlers) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
 		"status":  "healthy",
@@ -65,7 +65,7 @@ func (h *Handlers) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, data)
 }
 
-// Combat automation methods (stubs for now)
+// Combat automation methods (stubs for now).
 func (h *Handlers) AutomateCombat(w http.ResponseWriter, r *http.Request) {
 	response.BadRequest(w, r, "Combat automation not implemented")
 }
@@ -74,7 +74,7 @@ func (h *Handlers) GetCombatSuggestion(w http.ResponseWriter, r *http.Request) {
 	response.BadRequest(w, r, "Combat suggestions not implemented")
 }
 
-// Combat analytics methods (stubs for now)
+// Combat analytics methods (stubs for now).
 func (h *Handlers) GetCombatAnalytics(w http.ResponseWriter, r *http.Request) {
 	response.BadRequest(w, r, "Combat analytics not implemented")
 }
@@ -87,7 +87,7 @@ func (h *Handlers) GetCharacterCombatStats(w http.ResponseWriter, r *http.Reques
 	response.BadRequest(w, r, "Character combat stats not implemented")
 }
 
-// DM Assistant methods (stubs for now)
+// DM Assistant methods (stubs for now).
 func (h *Handlers) GenerateDMContent(w http.ResponseWriter, r *http.Request) {
 	response.Error(w, r, &errors.AppError{
 		Type:       errors.ErrorTypeInternal,
@@ -170,7 +170,7 @@ func (h *Handlers) GenerateNPCDialogue(w http.ResponseWriter, r *http.Request) {
 
 // Game session methods are implemented in game.go
 
-// Narrative methods (stubs for now)
+// Narrative methods (stubs for now).
 func (h *Handlers) GetStoryThreads(w http.ResponseWriter, r *http.Request) {
 	response.Error(w, r, &errors.AppError{
 		Type:       errors.ErrorTypeInternal,
@@ -307,7 +307,7 @@ func (h *Handlers) IntegrateBackstory(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Rule builder methods (stubs for now)
+// Rule builder methods (stubs for now).
 func (h *Handlers) GetRules(w http.ResponseWriter, r *http.Request) {
 	response.Error(w, r, &errors.AppError{
 		Type:       errors.ErrorTypeInternal,
@@ -396,7 +396,7 @@ func (h *Handlers) AnalyzeRuleImpact(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// World building methods (stubs for now)
+// World building methods (stubs for now).
 func (h *Handlers) GetSettlements(w http.ResponseWriter, r *http.Request) {
 	response.Error(w, r, &errors.AppError{
 		Type:       errors.ErrorTypeInternal,

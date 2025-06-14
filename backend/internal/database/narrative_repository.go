@@ -12,17 +12,17 @@ import (
 	"github.com/lib/pq"
 )
 
-// NarrativeRepository handles all narrative-related database operations
+// NarrativeRepository handles all narrative-related database operations.
 type NarrativeRepository struct {
 	db *sqlx.DB
 }
 
-// NewNarrativeRepository creates a new narrative repository
+// NewNarrativeRepository creates a new narrative repository.
 func NewNarrativeRepository(db *sqlx.DB) *NarrativeRepository {
 	return &NarrativeRepository{db: db}
 }
 
-// CreateNarrativeProfile creates a new narrative profile for a character
+// CreateNarrativeProfile creates a new narrative profile for a character.
 func (r *NarrativeRepository) CreateNarrativeProfile(profile *models.NarrativeProfile) error {
 	profile.ID = uuid.New().String()
 	profile.CreatedAt = time.Now()
@@ -66,7 +66,7 @@ func (r *NarrativeRepository) CreateNarrativeProfile(profile *models.NarrativePr
 	return err
 }
 
-// GetNarrativeProfile retrieves a narrative profile by character ID
+// GetNarrativeProfile retrieves a narrative profile by character ID.
 func (r *NarrativeRepository) GetNarrativeProfile(characterID string) (*models.NarrativeProfile, error) {
 	var profile models.NarrativeProfile
 	var preferencesJSON, decisionHistoryJSON, analyticsJSON []byte
@@ -94,7 +94,7 @@ func (r *NarrativeRepository) GetNarrativeProfile(characterID string) (*models.N
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	if err := json.Unmarshal(preferencesJSON, &profile.Preferences); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal preferences: %w", err)
 	}
@@ -110,7 +110,7 @@ func (r *NarrativeRepository) GetNarrativeProfile(characterID string) (*models.N
 	return &profile, nil
 }
 
-// UpdateNarrativeProfile updates an existing narrative profile
+// UpdateNarrativeProfile updates an existing narrative profile.
 func (r *NarrativeRepository) UpdateNarrativeProfile(profile *models.NarrativeProfile) error {
 	profile.UpdatedAt = time.Now()
 
@@ -149,7 +149,7 @@ func (r *NarrativeRepository) UpdateNarrativeProfile(profile *models.NarrativePr
 	return err
 }
 
-// CreateBackstoryElement creates a new backstory element
+// CreateBackstoryElement creates a new backstory element.
 func (r *NarrativeRepository) CreateBackstoryElement(element *models.BackstoryElement) error {
 	element.ID = uuid.New().String()
 	element.CreatedAt = time.Now()
@@ -177,7 +177,7 @@ func (r *NarrativeRepository) CreateBackstoryElement(element *models.BackstoryEl
 	return err
 }
 
-// GetBackstoryElements retrieves all backstory elements for a character
+// GetBackstoryElements retrieves all backstory elements for a character.
 func (r *NarrativeRepository) GetBackstoryElements(characterID string) ([]models.BackstoryElement, error) {
 	query := `
 		SELECT id, character_id, type, content, weight, used,
@@ -216,7 +216,7 @@ func (r *NarrativeRepository) GetBackstoryElements(characterID string) ([]models
 	return elements, rows.Err()
 }
 
-// CreatePlayerAction records a player action
+// CreatePlayerAction records a player action.
 func (r *NarrativeRepository) CreatePlayerAction(action *models.PlayerAction) error {
 	action.ID = uuid.New().String()
 	action.Timestamp = time.Now()
@@ -253,7 +253,7 @@ func (r *NarrativeRepository) CreatePlayerAction(action *models.PlayerAction) er
 	return err
 }
 
-// CreateConsequenceEvent creates a new consequence event
+// CreateConsequenceEvent creates a new consequence event.
 func (r *NarrativeRepository) CreateConsequenceEvent(consequence *models.ConsequenceEvent) error {
 	consequence.ID = uuid.New().String()
 	consequence.CreatedAt = time.Now()
@@ -300,9 +300,9 @@ func (r *NarrativeRepository) CreateConsequenceEvent(consequence *models.Consequ
 	return err
 }
 
-// GetPendingConsequences retrieves consequences ready to trigger
+// GetPendingConsequences retrieves consequences ready to trigger.
 func (r *NarrativeRepository) GetPendingConsequences(sessionID string, currentTime time.Time) ([]models.ConsequenceEvent, error) {
-	// Calculate time thresholds for database-agnostic queries
+	// Calculate time thresholds for database-agnostic queries.
 	shortThreshold := currentTime.Add(-1 * time.Hour)
 	mediumThreshold := currentTime.Add(-24 * time.Hour)
 	longThreshold := currentTime.Add(-7 * 24 * time.Hour)
@@ -353,7 +353,7 @@ func (r *NarrativeRepository) GetPendingConsequences(sessionID string, currentTi
 			return nil, err
 		}
 
-		// Unmarshal JSON fields
+		// Unmarshal JSON fields.
 		if err := json.Unmarshal(affectedEntitiesJSON, &consequence.AffectedEntities); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal affected entities: %w", err)
 		}
@@ -372,7 +372,7 @@ func (r *NarrativeRepository) GetPendingConsequences(sessionID string, currentTi
 	return consequences, rows.Err()
 }
 
-// CreateNarrativeEvent creates a new narrative event
+// CreateNarrativeEvent creates a new narrative event.
 func (r *NarrativeRepository) CreateNarrativeEvent(event *models.NarrativeEvent) error {
 	event.ID = uuid.New().String()
 	event.Timestamp = time.Now()
@@ -414,7 +414,7 @@ func (r *NarrativeRepository) CreateNarrativeEvent(event *models.NarrativeEvent)
 	return err
 }
 
-// CreatePerspectiveNarrative creates a new perspective on an event
+// CreatePerspectiveNarrative creates a new perspective on an event.
 func (r *NarrativeRepository) CreatePerspectiveNarrative(perspective *models.PerspectiveNarrative) error {
 	perspective.ID = uuid.New().String()
 	perspective.CreatedAt = time.Now()
@@ -457,7 +457,7 @@ func (r *NarrativeRepository) CreatePerspectiveNarrative(perspective *models.Per
 	return err
 }
 
-// GetEventPerspectives retrieves all perspectives for an event
+// GetEventPerspectives retrieves all perspectives for an event.
 func (r *NarrativeRepository) GetEventPerspectives(eventID string) ([]models.PerspectiveNarrative, error) {
 	query := `
 		SELECT id, event_id, perspective_type, source_id, source_name,
@@ -498,7 +498,7 @@ func (r *NarrativeRepository) GetEventPerspectives(eventID string) ([]models.Per
 			return nil, err
 		}
 
-		// Unmarshal JSON fields
+		// Unmarshal JSON fields.
 		if err := json.Unmarshal(contradictionsJSON, &perspective.Contradictions); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal contradictions: %w", err)
 		}
@@ -513,7 +513,7 @@ func (r *NarrativeRepository) GetEventPerspectives(eventID string) ([]models.Per
 	return perspectives, rows.Err()
 }
 
-// CreateNarrativeMemory stores a narrative memory
+// CreateNarrativeMemory stores a narrative memory.
 func (r *NarrativeRepository) CreateNarrativeMemory(memory *models.NarrativeMemory) error {
 	memory.ID = uuid.New().String()
 	memory.CreatedAt = time.Now()
@@ -552,7 +552,7 @@ func (r *NarrativeRepository) CreateNarrativeMemory(memory *models.NarrativeMemo
 	return err
 }
 
-// GetActiveMemories retrieves active memories for a character
+// GetActiveMemories retrieves active memories for a character.
 func (r *NarrativeRepository) GetActiveMemories(characterID string, limit int) ([]models.NarrativeMemory, error) {
 	query := `
 		SELECT id, session_id, character_id, memory_type, content,
@@ -604,7 +604,7 @@ func (r *NarrativeRepository) GetActiveMemories(characterID string, limit int) (
 	return memories, rows.Err()
 }
 
-// UpdateConsequenceStatus updates the status of a consequence event
+// UpdateConsequenceStatus updates the status of a consequence event.
 func (r *NarrativeRepository) UpdateConsequenceStatus(consequenceID string, status string, triggerTime *time.Time) error {
 	query := `
 		UPDATE consequence_events
@@ -616,7 +616,7 @@ func (r *NarrativeRepository) UpdateConsequenceStatus(consequenceID string, stat
 	return err
 }
 
-// IncrementBackstoryUsage marks a backstory element as used
+// IncrementBackstoryUsage marks a backstory element as used.
 func (r *NarrativeRepository) IncrementBackstoryUsage(elementID string) error {
 	query := `
 		UPDATE backstory_elements
@@ -628,7 +628,7 @@ func (r *NarrativeRepository) IncrementBackstoryUsage(elementID string) error {
 	return err
 }
 
-// CreateNarrativeThread creates a new narrative thread
+// CreateNarrativeThread creates a new narrative thread.
 func (r *NarrativeRepository) CreateNarrativeThread(thread *models.NarrativeThread) error {
 	thread.ID = uuid.New().String()
 	thread.CreatedAt = time.Now()
@@ -666,7 +666,7 @@ func (r *NarrativeRepository) CreateNarrativeThread(thread *models.NarrativeThre
 	return err
 }
 
-// GetActiveNarrativeThreads retrieves all active narrative threads
+// GetActiveNarrativeThreads retrieves all active narrative threads.
 func (r *NarrativeRepository) GetActiveNarrativeThreads() ([]models.NarrativeThread, error) {
 	query := `
 		SELECT id, name, description, thread_type, status,
@@ -723,31 +723,31 @@ func (r *NarrativeRepository) GetActiveNarrativeThreads() ([]models.NarrativeThr
 	return threads, rows.Err()
 }
 
-// UpdatePlayerAction updates an existing player action
+// UpdatePlayerAction updates an existing player action.
 func (r *NarrativeRepository) UpdatePlayerAction(action *models.PlayerAction) error {
-	// TODO: Implement update logic
+	// TODO: Implement update logic.
 	return nil
 }
 
-// GetWorldEvent retrieves a narrative event by ID
+// GetWorldEvent retrieves a narrative event by ID.
 func (r *NarrativeRepository) GetWorldEvent(eventID string) (*models.NarrativeEvent, error) {
-	// TODO: Implement retrieval logic
+	// TODO: Implement retrieval logic.
 	return &models.NarrativeEvent{}, nil
 }
 
-// CreateWorldEvent creates a new narrative event
+// CreateWorldEvent creates a new narrative event.
 func (r *NarrativeRepository) CreateWorldEvent(event *models.NarrativeEvent) error {
-	// TODO: Implement creation logic
+	// TODO: Implement creation logic.
 	return nil
 }
 
-// CreatePersonalizedNarrative saves a personalized narrative
+// CreatePersonalizedNarrative saves a personalized narrative.
 func (r *NarrativeRepository) CreatePersonalizedNarrative(narrative *models.PersonalizedNarrative) error {
-	// TODO: Implement creation logic
+	// TODO: Implement creation logic.
 	return nil
 }
 
-// Add NarrativeThread model if not in models package
+// Add NarrativeThread model if not in models package.
 type NarrativeThread struct {
 	ID                  string                 `json:"id" db:"id"`
 	Name                string                 `json:"name" db:"name"`

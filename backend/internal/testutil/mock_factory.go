@@ -4,21 +4,21 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/mock"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/stretchr/testify/mock"
 )
 
-// MockFactory creates mock objects for testing
+// MockFactory creates mock objects for testing.
 type MockFactory struct {
 	t *testing.T
 }
 
-// NewMockFactory creates a new mock factory
+// NewMockFactory creates a new mock factory.
 func NewMockFactory(t *testing.T) *MockFactory {
 	return &MockFactory{t: t}
 }
 
-// MockCharacterRepository creates a mock character repository
+// MockCharacterRepository creates a mock character repository.
 type MockCharacterRepository struct {
 	mock.Mock
 }
@@ -59,7 +59,7 @@ func (m *MockCharacterRepository) UpdateHP(id int64, hp int) error {
 	return args.Error(0)
 }
 
-// MockUserRepository creates a mock user repository
+// MockUserRepository creates a mock user repository.
 type MockUserRepository struct {
 	mock.Mock
 }
@@ -98,7 +98,7 @@ func (m *MockUserRepository) Update(user *models.User) error {
 	return args.Error(0)
 }
 
-// MockGameSessionRepository creates a mock game session repository
+// MockGameSessionRepository creates a mock game session repository.
 type MockGameSessionRepository struct {
 	mock.Mock
 }
@@ -142,7 +142,7 @@ func (m *MockGameSessionRepository) GetActiveByUserID(userID int64) ([]*models.G
 	return args.Get(0).([]*models.GameSession), args.Error(1)
 }
 
-// MockCombatRepository creates a mock combat repository
+// MockCombatRepository creates a mock combat repository.
 type MockCombatRepository struct {
 	mock.Mock
 }
@@ -173,7 +173,7 @@ func (m *MockCombatRepository) Update(combat *models.Combat) error {
 	return args.Error(0)
 }
 
-// MockInventoryRepository creates a mock inventory repository
+// MockInventoryRepository creates a mock inventory repository.
 type MockInventoryRepository struct {
 	mock.Mock
 }
@@ -209,7 +209,7 @@ func (m *MockInventoryRepository) DeleteItem(id int64) error {
 	return args.Error(0)
 }
 
-// MockDiceRollRepository creates a mock dice roll repository
+// MockDiceRollRepository creates a mock dice roll repository.
 type MockDiceRollRepository struct {
 	mock.Mock
 }
@@ -235,9 +235,8 @@ func (m *MockDiceRollRepository) GetBySessionID(sessionID int64, limit int) ([]*
 	return args.Get(0).([]*models.DiceRoll), args.Error(1)
 }
 
-// Service Mocks
-
-// MockCharacterService creates a mock character service
+// Service Mocks.
+// MockCharacterService creates a mock character service.
 type MockCharacterService struct {
 	mock.Mock
 }
@@ -288,7 +287,7 @@ func (m *MockCharacterService) Heal(id int64, healing int) error {
 	return args.Error(0)
 }
 
-// MockCombatService creates a mock combat service
+// MockCombatService creates a mock combat service.
 type MockCombatService struct {
 	mock.Mock
 }
@@ -319,7 +318,7 @@ func (m *MockCombatService) EndCombat(combatID int64) error {
 	return args.Error(0)
 }
 
-// MockLLMProvider creates a mock LLM provider
+// MockLLMProvider creates a mock LLM provider.
 type MockLLMProvider struct {
 	mock.Mock
 }
@@ -349,7 +348,7 @@ func (m *MockLLMProvider) GenerateNPCDialogue(npc *models.NPC, context string) (
 	return args.String(0), args.Error(1)
 }
 
-// MockWebSocketHub creates a mock WebSocket hub
+// MockWebSocketHub creates a mock WebSocket hub.
 type MockWebSocketHub struct {
 	mock.Mock
 }
@@ -366,38 +365,36 @@ func (m *MockWebSocketHub) SendToSession(sessionID int64, message interface{}) {
 	m.Called(sessionID, message)
 }
 
-// ExpectationSetters provides helper methods to set up mock expectations
-
-// SetupCharacterRepoExpectations sets up common character repository expectations
+// ExpectationSetters provides helper methods to set up mock expectations.
+// SetupCharacterRepoExpectations sets up common character repository expectations.
 func SetupCharacterRepoExpectations(repo *MockCharacterRepository, char *models.Character) {
 	repo.On("GetByID", char.ID).Return(char, nil)
 	repo.On("Update", char).Return(nil)
 	repo.On("UpdateHP", char.ID, mock.AnythingOfType("int")).Return(nil)
 }
 
-// SetupUserRepoExpectations sets up common user repository expectations
+// SetupUserRepoExpectations sets up common user repository expectations.
 func SetupUserRepoExpectations(repo *MockUserRepository, user *models.User) {
 	repo.On("GetByID", user.ID).Return(user, nil)
 	repo.On("GetByUsername", user.Username).Return(user, nil)
 	repo.On("GetByEmail", user.Email).Return(user, nil)
 }
 
-// SetupGameSessionRepoExpectations sets up common game session repository expectations
+// SetupGameSessionRepoExpectations sets up common game session repository expectations.
 func SetupGameSessionRepoExpectations(repo *MockGameSessionRepository, session *models.GameSession) {
 	repo.On("GetByID", session.ID).Return(session, nil)
 	repo.On("Update", session).Return(nil)
 }
 
-// SetupCombatRepoExpectations sets up common combat repository expectations
+// SetupCombatRepoExpectations sets up common combat repository expectations.
 func SetupCombatRepoExpectations(repo *MockCombatRepository, combat *models.Combat) {
 	repo.On("GetByID", combat.ID).Return(combat, nil)
 	repo.On("GetBySessionID", combat.GameSessionID).Return(combat, nil)
 	repo.On("Update", combat).Return(nil)
 }
 
-// MockBehaviorPresets provides preset mock behaviors
-
-// PresetSuccessfulCharacterCreation sets up mocks for successful character creation
+// MockBehaviorPresets provides preset mock behaviors.
+// PresetSuccessfulCharacterCreation sets up mocks for successful character creation.
 func PresetSuccessfulCharacterCreation(
 	userRepo *MockUserRepository,
 	charRepo *MockCharacterRepository,
@@ -408,7 +405,7 @@ func PresetSuccessfulCharacterCreation(
 	charRepo.On("Create", mock.AnythingOfType("*models.Character")).Return(nil)
 }
 
-// PresetSuccessfulCombatStart sets up mocks for successful combat start
+// PresetSuccessfulCombatStart sets up mocks for successful combat start.
 func PresetSuccessfulCombatStart(
 	sessionRepo *MockGameSessionRepository,
 	combatRepo *MockCombatRepository,
@@ -419,7 +416,7 @@ func PresetSuccessfulCombatStart(
 	sessionRepo.On("Update", mock.AnythingOfType("*models.GameSession")).Return(nil)
 }
 
-// PresetNotFound sets up mocks for not found scenarios
+// PresetNotFound sets up mocks for not found scenarios.
 func PresetNotFound(repo interface{}, method string, id int64) {
 	switch r := repo.(type) {
 	case *MockCharacterRepository:

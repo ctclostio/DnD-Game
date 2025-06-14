@@ -237,7 +237,7 @@ func TestUserRepository_Update(t *testing.T) {
 			PasswordHash: "$2a$10$newhashedpassword",
 		}
 
-		// The Update method uses QueryRowContext with RETURNING
+		// The Update method uses QueryRowContext with RETURNING.
 		mock.ExpectQuery(
 			`UPDATE users SET username = \?, email = \?, password_hash = \?, updated_at = CURRENT_TIMESTAMP WHERE id = \? RETURNING updated_at`,
 		).WithArgs(
@@ -257,7 +257,7 @@ func TestUserRepository_Update(t *testing.T) {
 			PasswordHash: "$2a$10$newhashedpassword",
 		}
 
-		// The Update method uses QueryRowContext with RETURNING
+		// The Update method uses QueryRowContext with RETURNING.
 		// For user not found, it should return sql.ErrNoRows
 		mock.ExpectQuery(
 			`UPDATE users SET username = \?, email = \?, password_hash = \?, updated_at = CURRENT_TIMESTAMP WHERE id = \? RETURNING updated_at`,

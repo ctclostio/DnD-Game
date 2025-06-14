@@ -6,7 +6,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 )
 
-// Services aggregates all service interfaces
+// Services aggregates all service interfaces.
 type Services struct {
 	DB                 *database.DB
 	Users              *UserService

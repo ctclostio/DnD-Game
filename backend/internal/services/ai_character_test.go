@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewAICharacterService(t *testing.T) {
@@ -267,7 +267,7 @@ func TestAICharacterService_ValidateCustomContent(t *testing.T) {
 func TestAICharacterService_ValidateCustomContent_Disabled(t *testing.T) {
 	service := NewAICharacterService(nil)
 
-	// Should skip validation when AI is disabled
+	// Should skip validation when AI is disabled.
 	err := service.ValidateCustomContent(&models.Character{Name: "Test"})
 	assert.NoError(t, err)
 }
@@ -323,7 +323,7 @@ func TestAICharacterService_GenerateFallbackCharacter(t *testing.T) {
 			assert.NotNil(t, character)
 			tt.validateCharacter(t, character)
 
-			// Verify resources contain concept
+			// Verify resources contain concept.
 			assert.Equal(t, tt.request.Concept, character.Resources["concept"])
 			assert.Equal(t, true, character.Resources["custom"])
 		})

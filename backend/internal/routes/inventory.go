@@ -1,13 +1,13 @@
 package routes
 
 import (
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
+	"github.com/gorilla/mux"
 )
 
-// RegisterInventoryRoutes registers all inventory-related routes
+// RegisterInventoryRoutes registers all inventory-related routes.
 func RegisterInventoryRoutes(api *mux.Router, cfg *Config) {
-	// Check if inventory handler exists
+	// Check if inventory handler exists.
 	if cfg.InventoryHandler == nil {
 		return
 	}
@@ -19,7 +19,7 @@ func RegisterInventoryRoutes(api *mux.Router, cfg *Config) {
 
 	auth := cfg.AuthMiddleware.Authenticate
 
-	// Inventory management
+	// Inventory management.
 	api.HandleFunc("/characters/{characterId}/inventory",
 		auth(inventoryHandler.GetCharacterInventory)).Methods("GET")
 	api.HandleFunc("/characters/{characterId}/inventory",
@@ -27,25 +27,25 @@ func RegisterInventoryRoutes(api *mux.Router, cfg *Config) {
 	api.HandleFunc("/characters/{characterId}/inventory/remove",
 		auth(inventoryHandler.RemoveItemFromInventory)).Methods("POST")
 
-	// Equipment management
+	// Equipment management.
 	api.HandleFunc("/characters/{characterId}/inventory/{itemId}/equip",
 		auth(inventoryHandler.EquipItem)).Methods("POST")
 	api.HandleFunc("/characters/{characterId}/inventory/{itemId}/unequip",
 		auth(inventoryHandler.UnequipItem)).Methods("POST")
 
-	// Attunement
+	// Attunement.
 	api.HandleFunc("/characters/{characterId}/inventory/{itemId}/attune",
 		auth(inventoryHandler.AttuneItem)).Methods("POST")
 	api.HandleFunc("/characters/{characterId}/inventory/{itemId}/unattune",
 		auth(inventoryHandler.UnattuneItem)).Methods("POST")
 
-	// Currency management
+	// Currency management.
 	api.HandleFunc("/characters/{characterId}/currency",
 		auth(inventoryHandler.GetCharacterCurrency)).Methods("GET")
 	api.HandleFunc("/characters/{characterId}/currency",
 		auth(inventoryHandler.UpdateCharacterCurrency)).Methods("PUT")
 
-	// Trading
+	// Trading.
 	api.HandleFunc("/characters/{characterId}/inventory/purchase",
 		auth(inventoryHandler.PurchaseItem)).Methods("POST")
 	api.HandleFunc("/characters/{characterId}/inventory/sell",

@@ -12,19 +12,18 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// EmergentWorldRepository handles database operations for the emergent world system
+// EmergentWorldRepository handles database operations for the emergent world system.
 type EmergentWorldRepository struct {
 	db *DB
 }
 
-// NewEmergentWorldRepository creates a new emergent world repository
+// NewEmergentWorldRepository creates a new emergent world repository.
 func NewEmergentWorldRepository(db *DB) *EmergentWorldRepository {
 	return &EmergentWorldRepository{db: db}
 }
 
-// World State Methods
-
-// GetWorldState retrieves the current world state for a session
+// World State Methods.
+// GetWorldState retrieves the current world state for a session.
 func (r *EmergentWorldRepository) GetWorldState(sessionID string) (*models.WorldState, error) {
 	query := `
 		SELECT id, session_id, current_time, last_simulated, world_data, 
@@ -49,7 +48,7 @@ func (r *EmergentWorldRepository) GetWorldState(sessionID string) (*models.World
 	)
 
 	if err == sql.ErrNoRows {
-		// Create new world state if none exists
+		// Create new world state if none exists.
 		return r.createWorldState(sessionID)
 	} else if err != nil {
 		return nil, err
@@ -62,7 +61,7 @@ func (r *EmergentWorldRepository) GetWorldState(sessionID string) (*models.World
 	return &state, nil
 }
 
-// createWorldState creates a new world state
+// createWorldState creates a new world state.
 func (r *EmergentWorldRepository) createWorldState(sessionID string) (*models.WorldState, error) {
 	state := &models.WorldState{
 		ID:            generateUUID(),
@@ -102,7 +101,7 @@ func (r *EmergentWorldRepository) createWorldState(sessionID string) (*models.Wo
 	return state, nil
 }
 
-// UpdateWorldState updates an existing world state
+// UpdateWorldState updates an existing world state.
 func (r *EmergentWorldRepository) UpdateWorldState(state *models.WorldState) error {
 	worldDataJSON, err := json.Marshal(state.WorldData)
 	if err != nil {
@@ -129,9 +128,8 @@ func (r *EmergentWorldRepository) UpdateWorldState(state *models.WorldState) err
 	return err
 }
 
-// NPC Goal Methods
-
-// CreateNPCGoal creates a new NPC goal
+// NPC Goal Methods.
+// CreateNPCGoal creates a new NPC goal.
 func (r *EmergentWorldRepository) CreateNPCGoal(goal *models.NPCGoal) error {
 	parametersJSON, err := json.Marshal(goal.Parameters)
 	if err != nil {
@@ -161,7 +159,7 @@ func (r *EmergentWorldRepository) CreateNPCGoal(goal *models.NPCGoal) error {
 	return err
 }
 
-// GetNPCGoals retrieves all goals for an NPC
+// GetNPCGoals retrieves all goals for an NPC.
 func (r *EmergentWorldRepository) GetNPCGoals(npcID string) ([]models.NPCGoal, error) {
 	query := `
 		SELECT id, npc_id, goal_type, priority, description,
@@ -215,7 +213,7 @@ func (r *EmergentWorldRepository) GetNPCGoals(npcID string) ([]models.NPCGoal, e
 	return goals, nil
 }
 
-// UpdateNPCGoal updates an existing NPC goal
+// UpdateNPCGoal updates an existing NPC goal.
 func (r *EmergentWorldRepository) UpdateNPCGoal(goal *models.NPCGoal) error {
 	parametersJSON, err := json.Marshal(goal.Parameters)
 	if err != nil {
@@ -243,9 +241,8 @@ func (r *EmergentWorldRepository) UpdateNPCGoal(goal *models.NPCGoal) error {
 	return err
 }
 
-// NPC Schedule Methods
-
-// CreateNPCSchedule creates a new NPC schedule entry
+// NPC Schedule Methods.
+// CreateNPCSchedule creates a new NPC schedule entry.
 func (r *EmergentWorldRepository) CreateNPCSchedule(schedule *models.NPCSchedule) error {
 	parametersJSON, err := json.Marshal(schedule.Parameters)
 	if err != nil {
@@ -270,7 +267,7 @@ func (r *EmergentWorldRepository) CreateNPCSchedule(schedule *models.NPCSchedule
 	return err
 }
 
-// GetNPCSchedule retrieves the schedule for an NPC
+// GetNPCSchedule retrieves the schedule for an NPC.
 func (r *EmergentWorldRepository) GetNPCSchedule(npcID string) ([]models.NPCSchedule, error) {
 	query := `
 		SELECT id, npc_id, time_of_day, activity, location, parameters
@@ -325,9 +322,8 @@ func (r *EmergentWorldRepository) GetNPCSchedule(npcID string) ([]models.NPCSche
 	return schedules, nil
 }
 
-// Faction Personality Methods
-
-// CreateFactionPersonality creates a new faction personality
+// Faction Personality Methods.
+// CreateFactionPersonality creates a new faction personality.
 func (r *EmergentWorldRepository) CreateFactionPersonality(personality *models.FactionPersonality) error {
 	traitsJSON, _ := json.Marshal(personality.Traits)
 	valuesJSON, _ := json.Marshal(personality.Values)
@@ -357,7 +353,7 @@ func (r *EmergentWorldRepository) CreateFactionPersonality(personality *models.F
 	return err
 }
 
-// GetFactionPersonality retrieves a faction's personality
+// GetFactionPersonality retrieves a faction's personality.
 func (r *EmergentWorldRepository) GetFactionPersonality(factionID string) (*models.FactionPersonality, error) {
 	query := `
 		SELECT id, faction_id, traits, values, memories,
@@ -386,7 +382,7 @@ func (r *EmergentWorldRepository) GetFactionPersonality(factionID string) (*mode
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	_ = json.Unmarshal(traitsJSON, &personality.Traits)
 	_ = json.Unmarshal(valuesJSON, &personality.Values)
 	_ = json.Unmarshal(memoriesJSON, &personality.Memories)
@@ -396,7 +392,7 @@ func (r *EmergentWorldRepository) GetFactionPersonality(factionID string) (*mode
 	return &personality, nil
 }
 
-// UpdateFactionPersonality updates a faction personality
+// UpdateFactionPersonality updates a faction personality.
 func (r *EmergentWorldRepository) UpdateFactionPersonality(personality *models.FactionPersonality) error {
 	traitsJSON, _ := json.Marshal(personality.Traits)
 	valuesJSON, _ := json.Marshal(personality.Values)
@@ -426,9 +422,8 @@ func (r *EmergentWorldRepository) UpdateFactionPersonality(personality *models.F
 	return err
 }
 
-// Faction Agenda Methods
-
-// CreateFactionAgenda creates a new faction agenda
+// Faction Agenda Methods.
+// CreateFactionAgenda creates a new faction agenda.
 func (r *EmergentWorldRepository) CreateFactionAgenda(agenda *models.FactionAgenda) error {
 	stagesJSON, _ := json.Marshal(agenda.Stages)
 	parametersJSON, _ := json.Marshal(agenda.Parameters)
@@ -457,7 +452,7 @@ func (r *EmergentWorldRepository) CreateFactionAgenda(agenda *models.FactionAgen
 	return err
 }
 
-// GetFactionAgendas retrieves all agendas for a faction
+// GetFactionAgendas retrieves all agendas for a faction.
 func (r *EmergentWorldRepository) GetFactionAgendas(factionID string) ([]models.FactionAgenda, error) {
 	query := `
 		SELECT id, faction_id, agenda_type, title, description,
@@ -511,7 +506,7 @@ func (r *EmergentWorldRepository) GetFactionAgendas(factionID string) ([]models.
 	return agendas, nil
 }
 
-// UpdateFactionAgenda updates a faction agenda
+// UpdateFactionAgenda updates a faction agenda.
 func (r *EmergentWorldRepository) UpdateFactionAgenda(agenda *models.FactionAgenda) error {
 	stagesJSON, _ := json.Marshal(agenda.Stages)
 	parametersJSON, _ := json.Marshal(agenda.Parameters)
@@ -539,9 +534,8 @@ func (r *EmergentWorldRepository) UpdateFactionAgenda(agenda *models.FactionAgen
 	return err
 }
 
-// Culture Methods
-
-// CreateCulture creates a new procedural culture
+// Culture Methods.
+// CreateCulture creates a new procedural culture.
 func (r *EmergentWorldRepository) CreateCulture(culture *models.ProceduralCulture) error {
 	languageJSON, _ := json.Marshal(culture.Language)
 	customsJSON, _ := json.Marshal(culture.Customs)
@@ -590,7 +584,7 @@ func (r *EmergentWorldRepository) CreateCulture(culture *models.ProceduralCultur
 	return err
 }
 
-// GetCulture retrieves a culture by ID
+// GetCulture retrieves a culture by ID.
 func (r *EmergentWorldRepository) GetCulture(cultureID string) (*models.ProceduralCulture, error) {
 	query := `
 		SELECT id, name, language, customs, art_style, belief_system,
@@ -631,7 +625,7 @@ func (r *EmergentWorldRepository) GetCulture(cultureID string) (*models.Procedur
 		return nil, err
 	}
 
-	// Unmarshal all JSON fields
+	// Unmarshal all JSON fields.
 	_ = json.Unmarshal(languageJSON, &culture.Language)
 	_ = json.Unmarshal(customsJSON, &culture.Customs)
 	_ = json.Unmarshal(artStyleJSON, &culture.ArtStyle)
@@ -650,7 +644,7 @@ func (r *EmergentWorldRepository) GetCulture(cultureID string) (*models.Procedur
 	return &culture, nil
 }
 
-// GetCulturesBySession retrieves all cultures for a session
+// GetCulturesBySession retrieves all cultures for a session.
 func (r *EmergentWorldRepository) GetCulturesBySession(sessionID string) ([]*models.ProceduralCulture, error) {
 	query := `
 		SELECT id, name, language, customs, art_style, belief_system,
@@ -702,7 +696,7 @@ func (r *EmergentWorldRepository) GetCulturesBySession(sessionID string) ([]*mod
 			return nil, err
 		}
 
-		// Unmarshal JSON fields
+		// Unmarshal JSON fields.
 		_ = json.Unmarshal(languageJSON, &culture.Language)
 		_ = json.Unmarshal(customsJSON, &culture.Customs)
 		_ = json.Unmarshal(artStyleJSON, &culture.ArtStyle)
@@ -728,9 +722,9 @@ func (r *EmergentWorldRepository) GetCulturesBySession(sessionID string) ([]*mod
 	return cultures, nil
 }
 
-// UpdateCulture updates a procedural culture
+// UpdateCulture updates a procedural culture.
 func (r *EmergentWorldRepository) UpdateCulture(culture *models.ProceduralCulture) error {
-	// Marshal only the fields that might change
+	// Marshal only the fields that might change.
 	valuesJSON, _ := json.Marshal(culture.Values)
 	customsJSON, _ := json.Marshal(culture.Customs)
 	socialStructureJSON, _ := json.Marshal(culture.SocialStructure)
@@ -753,9 +747,8 @@ func (r *EmergentWorldRepository) UpdateCulture(culture *models.ProceduralCultur
 	return err
 }
 
-// World Event Methods
-
-// CreateWorldEvent creates a new world event
+// World Event Methods.
+// CreateWorldEvent creates a new world event.
 func (r *EmergentWorldRepository) CreateWorldEvent(event *models.EmergentWorldEvent) error {
 	impactJSON, _ := json.Marshal(event.Impact)
 	affectedEntitiesJSON, _ := json.Marshal(event.AffectedEntities)
@@ -785,7 +778,7 @@ func (r *EmergentWorldRepository) CreateWorldEvent(event *models.EmergentWorldEv
 	return err
 }
 
-// GetWorldEvents retrieves world events for a session
+// GetWorldEvents retrieves world events for a session.
 func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, onlyPlayerVisible bool) ([]models.EmergentWorldEvent, error) {
 	query := `
 		SELECT id, session_id, event_type, title, description,
@@ -852,9 +845,8 @@ func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, on
 	return events, nil
 }
 
-// Simulation Log Methods
-
-// CreateSimulationLog creates a new simulation log entry
+// Simulation Log Methods.
+// CreateSimulationLog creates a new simulation log entry.
 func (r *EmergentWorldRepository) CreateSimulationLog(log *models.SimulationLog) error {
 	detailsJSON, _ := json.Marshal(log.Details)
 
@@ -880,7 +872,7 @@ func (r *EmergentWorldRepository) CreateSimulationLog(log *models.SimulationLog)
 	return err
 }
 
-// GetSimulationLogs retrieves simulation logs for a session
+// GetSimulationLogs retrieves simulation logs for a session.
 func (r *EmergentWorldRepository) GetSimulationLogs(sessionID string, limit int) ([]models.SimulationLog, error) {
 	query := `
 		SELECT id, session_id, simulation_type, start_time, end_time,
@@ -937,7 +929,7 @@ func (r *EmergentWorldRepository) GetSimulationLogs(sessionID string, limit int)
 	return logs, nil
 }
 
-// Helper function to generate UUID
+// Helper function to generate UUID.
 func generateUUID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), rand.Int63())
 }

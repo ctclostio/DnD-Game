@@ -6,23 +6,23 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
-// AIDMAssistantService handles AI-powered DM assistance
+// AIDMAssistantService handles AI-powered DM assistance.
 type AIDMAssistantService struct {
 	llmProvider LLMProvider
 }
 
-// NewAIDMAssistantService creates a new AI DM assistant service
+// NewAIDMAssistantService creates a new AI DM assistant service.
 func NewAIDMAssistantService(llmProvider LLMProvider) *AIDMAssistantService {
 	return &AIDMAssistantService{
 		llmProvider: llmProvider,
 	}
 }
 
-// GenerateNPCDialogue generates contextual dialogue for an NPC
+// GenerateNPCDialogue generates contextual dialogue for an NPC.
 func (s *AIDMAssistantService) GenerateNPCDialogue(ctx context.Context, req models.NPCDialogueRequest) (string, error) {
 	systemPrompt := `You are a Dungeon Master helping to generate NPC dialogue for a D&D game. 
 Generate dialogue that:
@@ -58,7 +58,7 @@ Generate an appropriate response from this NPC.`,
 	return strings.TrimSpace(response), nil
 }
 
-// GenerateLocationDescription creates immersive location descriptions
+// GenerateLocationDescription creates immersive location descriptions.
 func (s *AIDMAssistantService) GenerateLocationDescription(ctx context.Context, req models.LocationDescriptionRequest) (*models.AILocation, error) {
 	systemPrompt := `You are a Dungeon Master creating vivid location descriptions for a D&D game.
 Your descriptions should:
@@ -109,7 +109,7 @@ Make it immersive and interactive.`,
 		return nil, fmt.Errorf("failed to generate location description: %w", err)
 	}
 
-	// Parse the JSON response
+	// Parse the JSON response.
 	var locationData struct {
 		Description          string                `json:"description"`
 		Atmosphere           string                `json:"atmosphere"`
@@ -120,7 +120,7 @@ Make it immersive and interactive.`,
 	}
 
 	if err := json.Unmarshal([]byte(response), &locationData); err != nil {
-		// Fallback to simple text response
+		// Fallback to simple text response.
 		return &models.AILocation{
 			Name:        req.LocationName,
 			Type:        req.LocationType,
@@ -144,7 +144,7 @@ Make it immersive and interactive.`,
 	return location, nil
 }
 
-// GenerateCombatNarration creates dynamic combat descriptions
+// GenerateCombatNarration creates dynamic combat descriptions.
 func (s *AIDMAssistantService) GenerateCombatNarration(ctx context.Context, req models.CombatNarrationRequest) (string, error) {
 	intensity := "normal"
 	if req.IsCritical {
@@ -189,7 +189,7 @@ Describe the near-miss in an exciting way.`,
 	return strings.TrimSpace(response), nil
 }
 
-// GeneratePlotTwist creates unexpected story developments
+// GeneratePlotTwist creates unexpected story developments.
 func (s *AIDMAssistantService) GeneratePlotTwist(ctx context.Context, currentContext map[string]interface{}) (*models.AIStoryElement, error) {
 	systemPrompt := `You are a master storyteller creating plot twists for a D&D campaign.
 Your twists should:
@@ -249,7 +249,7 @@ Generate an engaging plot twist that fits naturally into the story.`, string(con
 	}, nil
 }
 
-// GenerateEnvironmentalHazard creates location-appropriate challenges
+// GenerateEnvironmentalHazard creates location-appropriate challenges.
 func (s *AIDMAssistantService) GenerateEnvironmentalHazard(ctx context.Context, locationType string, difficulty int) (*models.AIEnvironmentalHazard, error) {
 	systemPrompt := `You are creating environmental hazards for a D&D game.
 Create hazards that:
@@ -301,7 +301,7 @@ Make it thematically appropriate and mechanically interesting.`, locationType, d
 		return nil, fmt.Errorf("failed to parse environmental hazard: %w", err)
 	}
 
-	// Extract DC and damage formula from mechanical effects
+	// Extract DC and damage formula from mechanical effects.
 	dc := 12 // default
 	damageFormula := "1d6"
 
@@ -328,7 +328,7 @@ Make it thematically appropriate and mechanically interesting.`, locationType, d
 	}, nil
 }
 
-// GenerateNPC creates a full NPC with personality and motivations
+// GenerateNPC creates a full NPC with personality and motivations.
 func (s *AIDMAssistantService) GenerateNPC(ctx context.Context, role string, context map[string]interface{}) (*models.AINPC, error) {
 	systemPrompt := `You are creating memorable NPCs for a D&D game.
 Create NPCs that:

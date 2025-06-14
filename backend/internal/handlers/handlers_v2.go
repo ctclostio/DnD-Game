@@ -10,7 +10,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
-// HandlersV2 holds all HTTP handlers with logging support
+// HandlersV2 holds all HTTP handlers with logging support.
 type HandlersV2 struct {
 	userService         *services.UserService
 	characterService    *services.CharacterService
@@ -39,7 +39,7 @@ type HandlersV2 struct {
 	log                 *logger.LoggerV2
 }
 
-// New creates a new handlers instance with logging
+// New creates a new handlers instance with logging.
 func New(svc *services.Services, hub *websocket.Hub, log *logger.LoggerV2) *HandlersV2 {
 	return &HandlersV2{
 		userService:         svc.Users,
@@ -70,9 +70,8 @@ func New(svc *services.Services, hub *websocket.Hub, log *logger.LoggerV2) *Hand
 	}
 }
 
-// Service-specific handler getters with proper logging context
-
-// AuthHandler returns auth handler with logging
+// Service-specific handler getters with proper logging context.
+// AuthHandler returns auth handler with logging.
 func (h *HandlersV2) AuthHandler() *AuthHandlerV2 {
 	return &AuthHandlerV2{
 		userService:         h.userService,
@@ -82,7 +81,7 @@ func (h *HandlersV2) AuthHandler() *AuthHandlerV2 {
 	}
 }
 
-// CharacterHandler returns character handler with logging
+// CharacterHandler returns character handler with logging.
 func (h *HandlersV2) CharacterHandler() *CharacterHandlerV2WithLogging {
 	return &CharacterHandlerV2WithLogging{
 		characterService: h.characterService,
@@ -90,7 +89,7 @@ func (h *HandlersV2) CharacterHandler() *CharacterHandlerV2WithLogging {
 	}
 }
 
-// GameHandler returns game session handler with logging
+// GameHandler returns game session handler with logging.
 func (h *HandlersV2) GameHandler() *GameHandlerV2 {
 	return &GameHandlerV2{
 		gameService:  h.gameService,
@@ -99,7 +98,7 @@ func (h *HandlersV2) GameHandler() *GameHandlerV2 {
 	}
 }
 
-// CombatHandler returns combat handler with logging
+// CombatHandler returns combat handler with logging.
 func (h *HandlersV2) CombatHandler() *CombatHandlerV2 {
 	return &CombatHandlerV2{
 		combatService:    h.combatService,
@@ -109,7 +108,7 @@ func (h *HandlersV2) CombatHandler() *CombatHandlerV2 {
 	}
 }
 
-// DMAssistantHandler returns DM assistant handler with logging
+// DMAssistantHandler returns DM assistant handler with logging.
 func (h *HandlersV2) DMAssistantHandler() *DMAssistantHandlerV2 {
 	return &DMAssistantHandlerV2{
 		dmAssistantService: h.dmAssistantService,
@@ -117,7 +116,7 @@ func (h *HandlersV2) DMAssistantHandler() *DMAssistantHandlerV2 {
 	}
 }
 
-// InventoryHandler returns inventory handler with logging
+// InventoryHandler returns inventory handler with logging.
 func (h *HandlersV2) InventoryHandler() *InventoryHandlerV2 {
 	return &InventoryHandlerV2{
 		inventoryService: h.inventoryService,
@@ -125,14 +124,13 @@ func (h *HandlersV2) InventoryHandler() *InventoryHandlerV2 {
 	}
 }
 
-// WebSocketHandler returns WebSocket handler with logging
+// WebSocketHandler returns WebSocket handler with logging.
 func (h *HandlersV2) WebSocketHandler() *websocket.HandlerV2 {
 	return websocket.NewHandlerV2(h.websocketHub, h.jwtManager, h.log.WithOperation("websocket", "handler"))
 }
 
-// Example handler structures (implement similarly for all handlers)
-
-// AuthHandlerV2 handles authentication with logging
+// Example handler structures (implement similarly for all handlers).
+// AuthHandlerV2 handles authentication with logging.
 type AuthHandlerV2 struct {
 	userService         *services.UserService
 	jwtManager          *auth.JWTManager
@@ -140,20 +138,20 @@ type AuthHandlerV2 struct {
 	log                 *logger.LoggerV2
 }
 
-// CharacterHandlerV2WithLogging handles character operations with logging
+// CharacterHandlerV2WithLogging handles character operations with logging.
 type CharacterHandlerV2WithLogging struct {
 	characterService CharacterService
 	log              *logger.LoggerV2
 }
 
-// GameHandlerV2 handles game sessions with logging
+// GameHandlerV2 handles game sessions with logging.
 type GameHandlerV2 struct {
 	gameService  *services.GameSessionService
 	websocketHub *websocket.Hub
 	log          *logger.LoggerV2
 }
 
-// CombatHandlerV2 handles combat with logging
+// CombatHandlerV2 handles combat with logging.
 type CombatHandlerV2 struct {
 	combatService    *services.CombatService
 	combatAutomation *services.CombatAutomationService
@@ -161,19 +159,19 @@ type CombatHandlerV2 struct {
 	log              *logger.LoggerV2
 }
 
-// DMAssistantHandlerV2 handles DM assistant features with logging
+// DMAssistantHandlerV2 handles DM assistant features with logging.
 type DMAssistantHandlerV2 struct {
 	dmAssistantService *services.DMAssistantService
 	log                *logger.LoggerV2
 }
 
-// InventoryHandlerV2 handles inventory with logging
+// InventoryHandlerV2 handles inventory with logging.
 type InventoryHandlerV2 struct {
 	inventoryService *services.InventoryService
 	log              *logger.LoggerV2
 }
 
-// CharacterService interface for dependency injection
+// CharacterService interface for dependency injection.
 type CharacterService interface {
 	GetAllCharacters(ctx context.Context, userID string) ([]*models.Character, error)
 	GetCharacterByID(ctx context.Context, id string) (*models.Character, error)

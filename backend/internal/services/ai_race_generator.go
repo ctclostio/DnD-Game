@@ -9,19 +9,19 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// AIRaceGeneratorService handles AI-powered custom race generation
+// AIRaceGeneratorService handles AI-powered custom race generation.
 type AIRaceGeneratorService struct {
 	llmProvider LLMProvider
 }
 
-// NewAIRaceGeneratorService creates a new AI race generator service
+// NewAIRaceGeneratorService creates a new AI race generator service.
 func NewAIRaceGeneratorService(llmProvider LLMProvider) *AIRaceGeneratorService {
 	return &AIRaceGeneratorService{
 		llmProvider: llmProvider,
 	}
 }
 
-// GenerateCustomRace uses AI to generate a balanced custom race
+// GenerateCustomRace uses AI to generate a balanced custom race.
 func (s *AIRaceGeneratorService) GenerateCustomRace(ctx context.Context, request models.CustomRaceRequest) (*models.CustomRaceGenerationResult, error) {
 	systemPrompt := s.buildSystemPrompt()
 	userPrompt := s.buildUserPrompt(request)
@@ -31,13 +31,13 @@ func (s *AIRaceGeneratorService) GenerateCustomRace(ctx context.Context, request
 		return nil, fmt.Errorf("failed to generate race: %w", err)
 	}
 
-	// Parse the JSON response
+	// Parse the JSON response.
 	var result models.CustomRaceGenerationResult
 	if err := json.Unmarshal([]byte(response), &result); err != nil {
 		return nil, fmt.Errorf("failed to parse AI response: %w", err)
 	}
 
-	// Validate and sanitize the result
+	// Validate and sanitize the result.
 	if err := s.validateGeneratedRace(&result); err != nil {
 		return nil, fmt.Errorf("generated race failed validation: %w", err)
 	}
@@ -113,7 +113,7 @@ Generate a complete, balanced race following the system prompt guidelines. Ensur
 }
 
 func (s *AIRaceGeneratorService) validateGeneratedRace(race *models.CustomRaceGenerationResult) error {
-	// Validate ability score increases
+	// Validate ability score increases.
 	totalASI := 0
 	validAbilities := map[string]bool{
 		"strength": true, "dexterity": true, "constitution": true,
@@ -134,7 +134,7 @@ func (s *AIRaceGeneratorService) validateGeneratedRace(race *models.CustomRaceGe
 		return fmt.Errorf("total ability score increases (%d) outside acceptable range (1-6)", totalASI)
 	}
 
-	// Validate size
+	// Validate size.
 	validSize := false
 	for _, size := range models.ValidSizes {
 		if race.Size == size {
@@ -146,12 +146,12 @@ func (s *AIRaceGeneratorService) validateGeneratedRace(race *models.CustomRaceGe
 		return fmt.Errorf("invalid size: %s", race.Size)
 	}
 
-	// Validate speed
+	// Validate speed.
 	if race.Speed < 20 || race.Speed > 40 {
 		return fmt.Errorf("speed %d outside acceptable range (20-40)", race.Speed)
 	}
 
-	// Validate traits
+	// Validate traits.
 	if len(race.Traits) < 1 {
 		return fmt.Errorf("race must have at least one trait")
 	}
@@ -159,7 +159,7 @@ func (s *AIRaceGeneratorService) validateGeneratedRace(race *models.CustomRaceGe
 		return fmt.Errorf("too many traits (%d), maximum is 6", len(race.Traits))
 	}
 
-	// Validate languages
+	// Validate languages.
 	if len(race.Languages) < 1 {
 		return fmt.Errorf("race must know at least one language")
 	}
@@ -167,12 +167,12 @@ func (s *AIRaceGeneratorService) validateGeneratedRace(race *models.CustomRaceGe
 		return fmt.Errorf("too many languages (%d), maximum is 4", len(race.Languages))
 	}
 
-	// Validate darkvision
+	// Validate darkvision.
 	if race.Darkvision != 0 && race.Darkvision != 30 && race.Darkvision != 60 && race.Darkvision != 120 {
 		return fmt.Errorf("invalid darkvision range: %d", race.Darkvision)
 	}
 
-	// Validate damage types for resistances/immunities
+	// Validate damage types for resistances/immunities.
 	for _, resistance := range race.Resistances {
 		if !isValidDamageType(resistance) {
 			return fmt.Errorf("invalid damage resistance type: %s", resistance)
@@ -185,7 +185,7 @@ func (s *AIRaceGeneratorService) validateGeneratedRace(race *models.CustomRaceGe
 		}
 	}
 
-	// Validate balance score
+	// Validate balance score.
 	if race.BalanceScore < 1 || race.BalanceScore > 10 {
 		return fmt.Errorf("balance score %d outside range (1-10)", race.BalanceScore)
 	}

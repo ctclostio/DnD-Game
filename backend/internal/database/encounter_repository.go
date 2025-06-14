@@ -18,7 +18,7 @@ func NewEncounterRepository(db *DB) *EncounterRepository {
 }
 
 func (r *EncounterRepository) Create(encounter *models.Encounter) error {
-	// Convert complex types to JSON
+	// Convert complex types to JSON.
 	partyComposition, _ := json.Marshal(encounter.PartyComposition)
 	enemies, _ := json.Marshal(encounter.Enemies)
 	enemyTactics, _ := json.Marshal(encounter.EnemyTactics)
@@ -79,7 +79,7 @@ func (r *EncounterRepository) Create(encounter *models.Encounter) error {
 		return fmt.Errorf("failed to create encounter: %w", err)
 	}
 
-	// Create encounter enemies
+	// Create encounter enemies.
 	for _, enemy := range encounter.Enemies {
 		enemy.EncounterID = encounter.ID
 		if err := r.CreateEncounterEnemy(&enemy); err != nil {
@@ -90,7 +90,7 @@ func (r *EncounterRepository) Create(encounter *models.Encounter) error {
 	return nil
 }
 
-// CreateEncounterEnemy adds a new enemy to an encounter (exported for reinforcements)
+// CreateEncounterEnemy adds a new enemy to an encounter (exported for reinforcements).
 func (r *EncounterRepository) CreateEncounterEnemy(enemy *models.EncounterEnemy) error {
 	stats, _ := json.Marshal(enemy.Stats)
 	abilities, _ := json.Marshal(enemy.Abilities)
@@ -201,7 +201,7 @@ func (r *EncounterRepository) GetByID(id string) (*models.Encounter, error) {
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	_ = json.Unmarshal(partyComposition, &encounter.PartyComposition)
 	_ = json.Unmarshal(enemies, &encounter.Enemies)
 	_ = json.Unmarshal(enemyTactics, &encounter.EnemyTactics)
@@ -214,7 +214,7 @@ func (r *EncounterRepository) GetByID(id string) (*models.Encounter, error) {
 	_ = json.Unmarshal(reinforcementWaves, &encounter.ReinforcementWaves)
 	_ = json.Unmarshal(escapeRoutes, &encounter.EscapeRoutes)
 
-	// Load encounter enemies
+	// Load encounter enemies.
 	enemies_list, err := r.getEncounterEnemies(id)
 	if err == nil {
 		encounter.Enemies = enemies_list
@@ -278,7 +278,7 @@ func (r *EncounterRepository) getEncounterEnemies(encounterID string) ([]models.
 			continue
 		}
 
-		// Unmarshal JSON fields
+		// Unmarshal JSON fields.
 		_ = json.Unmarshal(stats, &enemy.Stats)
 		_ = json.Unmarshal(abilities, &enemy.Abilities)
 		_ = json.Unmarshal(actions, &enemy.Actions)
@@ -447,7 +447,7 @@ func (r *EncounterRepository) GetEvents(encounterID string, limit int) ([]*model
 }
 
 func (r *EncounterRepository) UpdateEnemyStatus(enemyID string, updates map[string]interface{}) error {
-	// Build dynamic update query
+	// Build dynamic update query.
 	setClause := ""
 	args := []interface{}{}
 

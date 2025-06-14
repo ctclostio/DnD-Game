@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 type CharacterService struct {
@@ -27,11 +27,11 @@ func NewCharacterService(repo database.CharacterRepository, customClassRepo *dat
 }
 
 func (s *CharacterService) GetAllCharacters(ctx context.Context, userID string) ([]*models.Character, error) {
-	// If userID is provided, get characters for that user
+	// If userID is provided, get characters for that user.
 	if userID != "" {
 		return s.repo.GetByUserID(ctx, userID)
 	}
-	// Otherwise, return an empty list (we don't allow listing all characters)
+	// Otherwise, return an empty list (we don't allow listing all characters).
 	return []*models.Character{}, nil
 }
 
@@ -40,7 +40,7 @@ func (s *CharacterService) GetCharacterByID(ctx context.Context, id string) (*mo
 }
 
 func (s *CharacterService) CreateCharacter(ctx context.Context, char *models.Character) error {
-	// Validate character
+	// Validate character.
 	if char.UserID == "" {
 		return fmt.Errorf("user ID is required")
 	}
@@ -54,7 +54,7 @@ func (s *CharacterService) CreateCharacter(ctx context.Context, char *models.Cha
 		return fmt.Errorf("character class is required")
 	}
 
-	// Set default values
+	// Set default values.
 	if char.Level == 0 {
 		char.Level = 1
 	}
@@ -63,25 +63,25 @@ func (s *CharacterService) CreateCharacter(ctx context.Context, char *models.Cha
 	}
 	char.HitPoints = char.MaxHitPoints
 
-	// Set default armor class if not provided
+	// Set default armor class if not provided.
 	if char.ArmorClass == 0 {
 		char.ArmorClass = 10 + getModifier(char.Attributes.Dexterity)
 	}
 
-	// Set default speed if not provided
+	// Set default speed if not provided.
 	if char.Speed == 0 {
 		char.Speed = 30 // Default speed in feet
 	}
 
-	// Set carry capacity based on strength
+	// Set carry capacity based on strength.
 	char.CarryCapacity = CalculateCarryCapacity(char.Attributes.Strength)
 
-	// Set default attunement slots
+	// Set default attunement slots.
 	if char.AttunementSlotsMax == 0 {
 		char.AttunementSlotsMax = 3
 	}
 
-	// Generate ID if not provided
+	// Generate ID if not provided.
 	if char.ID == "" {
 		char.ID = uuid.New().String()
 	}
@@ -90,18 +90,18 @@ func (s *CharacterService) CreateCharacter(ctx context.Context, char *models.Cha
 }
 
 func (s *CharacterService) UpdateCharacter(ctx context.Context, char *models.Character) error {
-	// Validate character ID
+	// Validate character ID.
 	if char.ID == "" {
 		return fmt.Errorf("character ID is required")
 	}
 
-	// Check if character exists
+	// Check if character exists.
 	existing, err := s.repo.GetByID(ctx, char.ID)
 	if err != nil {
 		return fmt.Errorf("character not found: %w", err)
 	}
 
-	// Merge updates with existing data to support partial updates
+	// Merge updates with existing data to support partial updates.
 	if char.Name != "" {
 		existing.Name = char.Name
 	}
@@ -129,7 +129,7 @@ func (s *CharacterService) UpdateCharacter(ctx context.Context, char *models.Cha
 	if char.Speed > 0 {
 		existing.Speed = char.Speed
 	}
-	// Update attributes if provided
+	// Update attributes if provided.
 	if char.Attributes.Strength > 0 || char.Attributes.Dexterity > 0 ||
 		char.Attributes.Constitution > 0 || char.Attributes.Intelligence > 0 ||
 		char.Attributes.Wisdom > 0 || char.Attributes.Charisma > 0 {
@@ -144,19 +144,19 @@ func (s *CharacterService) DeleteCharacter(ctx context.Context, id string) error
 	return s.repo.Delete(ctx, id)
 }
 
-// Helper function to calculate ability modifier
+// Helper function to calculate ability modifier.
 func getModifier(ability int) int {
 	return (ability - 10) / 2
 }
 
-// CalculateCarryCapacity calculates carry capacity based on strength
+// CalculateCarryCapacity calculates carry capacity based on strength.
 func CalculateCarryCapacity(strength int) float64 {
 	return float64(strength * 15)
 }
 
-// CalculateHitPoints calculates hit points based on class and constitution
+// CalculateHitPoints calculates hit points based on class and constitution.
 func (s *CharacterService) CalculateHitPoints(class string, level int, constitution int) int {
-	// Base hit points by class (simplified)
+	// Base hit points by class (simplified).
 	baseHP := map[string]int{
 		"fighter":   10,
 		"wizard":    6,
@@ -178,8 +178,8 @@ func (s *CharacterService) CalculateHitPoints(class string, level int, constitut
 	}
 
 	conMod := getModifier(constitution)
-	// First level gets full hit die + con mod
-	// Additional levels get average hit die + con mod
+	// First level gets full hit die + con mod.
+	// Additional levels get average hit die + con mod.
 	hitPoints := base + conMod
 	if level > 1 {
 		hitPoints += (level - 1) * ((base/2 + 1) + conMod)
@@ -188,9 +188,9 @@ func (s *CharacterService) CalculateHitPoints(class string, level int, constitut
 	return hitPoints
 }
 
-// InitializeSpellSlots sets up spell slots based on class and level
+// InitializeSpellSlots sets up spell slots based on class and level.
 func (s *CharacterService) InitializeSpellSlots(class string, level int) []models.SpellSlot {
-	// Spell slots by level for full casters (wizard, cleric, druid, bard, sorcerer)
+	// Spell slots by level for full casters (wizard, cleric, druid, bard, sorcerer).
 	fullCasterSlots := map[int][]int{
 		1:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
 		2:  {3, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -214,7 +214,7 @@ func (s *CharacterService) InitializeSpellSlots(class string, level int) []model
 		20: {4, 3, 3, 3, 3, 2, 2, 1, 1},
 	}
 
-	// Half casters (ranger, paladin) get spells at level 2
+	// Half casters (ranger, paladin) get spells at level 2.
 	halfCasterSlots := map[int][]int{
 		1:  {0, 0, 0, 0, 0, 0, 0, 0, 0},
 		2:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -238,7 +238,7 @@ func (s *CharacterService) InitializeSpellSlots(class string, level int) []model
 		20: {4, 3, 3, 3, 2, 0, 0, 0, 0},
 	}
 
-	// Warlock has unique spell slot progression (Pact Magic)
+	// Warlock has unique spell slot progression (Pact Magic).
 	warlockSlots := map[int][]int{
 		1:  {1, 0, 0, 0, 0, 0, 0, 0, 0},
 		2:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -271,7 +271,7 @@ func (s *CharacterService) InitializeSpellSlots(class string, level int) []model
 	case "warlock":
 		slotsTable = warlockSlots
 	default:
-		// Non-casters have no spell slots
+		// Non-casters have no spell slots.
 		return []models.SpellSlot{}
 	}
 
@@ -291,7 +291,7 @@ func (s *CharacterService) InitializeSpellSlots(class string, level int) []model
 	return slots
 }
 
-// UseSpellSlot consumes a spell slot of the specified level
+// UseSpellSlot consumes a spell slot of the specified level.
 func (s *CharacterService) UseSpellSlot(ctx context.Context, characterID string, slotLevel int) error {
 	char, err := s.GetCharacterByID(ctx, characterID)
 	if err != nil {
@@ -311,7 +311,7 @@ func (s *CharacterService) UseSpellSlot(ctx context.Context, characterID string,
 	return fmt.Errorf("character does not have spell slots of level %d", slotLevel)
 }
 
-// RestoreSpellSlots restores spell slots (short or long rest)
+// RestoreSpellSlots restores spell slots (short or long rest).
 func (s *CharacterService) RestoreSpellSlots(ctx context.Context, characterID string, restType string) error {
 	char, err := s.GetCharacterByID(ctx, characterID)
 	if err != nil {
@@ -320,16 +320,16 @@ func (s *CharacterService) RestoreSpellSlots(ctx context.Context, characterID st
 
 	switch restType {
 	case "short":
-		// Warlocks recover all spell slots on short rest
+		// Warlocks recover all spell slots on short rest.
 		if char.Class == "warlock" {
 			for i := range char.Spells.SpellSlots {
 				char.Spells.SpellSlots[i].Remaining = char.Spells.SpellSlots[i].Total
 			}
 		}
-		// Other classes might have features that restore slots on short rest
-		// This could be expanded based on specific class features
+		// Other classes might have features that restore slots on short rest.
+		// This could be expanded based on specific class features.
 	case "long":
-		// All classes recover all spell slots on long rest
+		// All classes recover all spell slots on long rest.
 		for i := range char.Spells.SpellSlots {
 			char.Spells.SpellSlots[i].Remaining = char.Spells.SpellSlots[i].Total
 		}
@@ -340,9 +340,8 @@ func (s *CharacterService) RestoreSpellSlots(ctx context.Context, characterID st
 	return s.UpdateCharacter(ctx, char)
 }
 
-// Experience and Level Management
-
-// AddExperience adds XP to a character and handles level up if needed
+// Experience and Level Management.
+// AddExperience adds XP to a character and handles level up if needed.
 func (s *CharacterService) AddExperience(ctx context.Context, characterID string, xp int) error {
 	char, err := s.GetCharacterByID(ctx, characterID)
 	if err != nil {
@@ -351,10 +350,10 @@ func (s *CharacterService) AddExperience(ctx context.Context, characterID string
 
 	char.ExperiencePoints += xp
 
-	// Check for level up
+	// Check for level up.
 	newLevel := s.calculateLevelFromXP(char.ExperiencePoints)
 	if newLevel > char.Level {
-		// For automatic level up, use class hit die average
+		// For automatic level up, use class hit die average.
 		hpIncrease := s.calculateHPIncrease(char.Class, getModifier(char.Attributes.Constitution))
 		_, err := s.LevelUp(ctx, char.ID, hpIncrease, "")
 		return err
@@ -363,7 +362,7 @@ func (s *CharacterService) AddExperience(ctx context.Context, characterID string
 	return s.UpdateCharacter(ctx, char)
 }
 
-// calculateLevelFromXP determines character level based on XP
+// calculateLevelFromXP determines character level based on XP.
 func (s *CharacterService) calculateLevelFromXP(xp int) int {
 	xpThresholds := []int{
 		0,      // Level 1
@@ -404,7 +403,7 @@ func (s *CharacterService) calculateLevelFromXP(xp int) int {
 	return level
 }
 
-// GetXPForNextLevel returns the XP needed for the next level
+// GetXPForNextLevel returns the XP needed for the next level.
 func (s *CharacterService) GetXPForNextLevel(level int) int {
 	xpThresholds := map[int]int{
 		1:  300,
@@ -435,9 +434,9 @@ func (s *CharacterService) GetXPForNextLevel(level int) int {
 	return 999999
 }
 
-// LevelUp handles character level progression
+// LevelUp handles character level progression.
 func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitPointIncrease int, attributeIncrease string) (*models.Character, error) {
-	// Get character
+	// Get character.
 	char, err := s.repo.GetByID(ctx, characterID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get character: %w", err)
@@ -447,37 +446,36 @@ func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitP
 	oldLevel := char.Level
 	char.Level = newLevel
 
-	// Update proficiency bonus
+	// Update proficiency bonus.
 	char.ProficiencyBonus = ((char.Level - 1) / 4) + 2
 
-	// Calculate HP increase for each level gained
+	// Calculate HP increase for each level gained.
 	for level := oldLevel + 1; level <= newLevel; level++ {
 		hpIncrease := s.calculateHPIncrease(char.Class, char.Attributes.Constitution)
 		char.MaxHitPoints += hpIncrease
 		char.HitPoints += hpIncrease // Also increase current HP
 	}
 
-	// Update spell slots for spellcasters
+	// Update spell slots for spellcasters.
 	if char.Spells.SpellcastingAbility != "" {
 		char.Spells.SpellSlots = s.InitializeSpellSlots(char.Class, char.Level)
 
-		// Update spell save DC and attack bonus
+		// Update spell save DC and attack bonus.
 		abilityMod := s.getSpellcastingAbilityModifier(char)
 		char.Spells.SpellSaveDC = 8 + char.ProficiencyBonus + abilityMod
 		char.Spells.SpellAttackBonus = char.ProficiencyBonus + abilityMod
 	}
 
-	// Update saving throws
+	// Update saving throws.
 	s.updateSavingThrows(char)
 
-	// TODO: Add class features based on new level
-	// TODO: Update skill modifiers
-
-	// Apply hit point increase
+	// TODO: Add class features based on new level.
+	// TODO: Update skill modifiers.
+	// Apply hit point increase.
 	char.MaxHitPoints += hitPointIncrease
 	char.HitPoints += hitPointIncrease
 
-	// Apply attribute increase if specified
+	// Apply attribute increase if specified.
 	if attributeIncrease != "" {
 		switch attributeIncrease {
 		case "strength":
@@ -495,7 +493,7 @@ func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitP
 		}
 	}
 
-	// Update the character
+	// Update the character.
 	if err := s.UpdateCharacter(ctx, char); err != nil {
 		return nil, err
 	}
@@ -503,9 +501,9 @@ func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitP
 	return char, nil
 }
 
-// calculateHPIncrease calculates HP gained on level up
+// calculateHPIncrease calculates HP gained on level up.
 func (s *CharacterService) calculateHPIncrease(class string, constitution int) int {
-	// Average hit die value by class
+	// Average hit die value by class.
 	hitDieAverage := map[string]int{
 		"fighter":   6, // 1d10 average
 		"wizard":    4, // 1d6 average
@@ -530,7 +528,7 @@ func (s *CharacterService) calculateHPIncrease(class string, constitution int) i
 	return average + conMod
 }
 
-// getSpellcastingAbilityModifier returns the modifier for the character's spellcasting ability
+// getSpellcastingAbilityModifier returns the modifier for the character's spellcasting ability.
 func (s *CharacterService) getSpellcastingAbilityModifier(char *models.Character) int {
 	switch strings.ToLower(char.Spells.SpellcastingAbility) {
 	case "intelligence":
@@ -544,9 +542,9 @@ func (s *CharacterService) getSpellcastingAbilityModifier(char *models.Character
 	}
 }
 
-// updateSavingThrows recalculates saving throws with new proficiency bonus
+// updateSavingThrows recalculates saving throws with new proficiency bonus.
 func (s *CharacterService) updateSavingThrows(char *models.Character) {
-	// Recalculate all saving throws
+	// Recalculate all saving throws.
 	char.SavingThrows.Strength.Modifier = getModifier(char.Attributes.Strength)
 	if char.SavingThrows.Strength.Proficiency {
 		char.SavingThrows.Strength.Modifier += char.ProficiencyBonus
@@ -578,12 +576,12 @@ func (s *CharacterService) updateSavingThrows(char *models.Character) {
 	}
 }
 
-// GetCharacter gets a character by ID (alias for GetCharacterByID)
+// GetCharacter gets a character by ID (alias for GetCharacterByID).
 func (s *CharacterService) GetCharacter(ctx context.Context, id string) (*models.Character, error) {
 	return s.GetCharacterByID(ctx, id)
 }
 
-// GenerateCustomClass generates a custom class using AI
+// GenerateCustomClass generates a custom class using AI.
 func (s *CharacterService) GenerateCustomClass(ctx context.Context, userID, name, description, role, style, features string) (*models.CustomClass, error) {
 	req := CustomClassRequest{
 		Name:        name,
@@ -593,16 +591,16 @@ func (s *CharacterService) GenerateCustomClass(ctx context.Context, userID, name
 		Features:    features,
 	}
 
-	// Generate the custom class
+	// Generate the custom class.
 	customClass, err := s.classGenerator.GenerateCustomClass(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	// Set the user ID
+	// Set the user ID.
 	customClass.UserID = userID
 
-	// Save to database
+	// Save to database.
 	if err := s.customClassRepo.Create(customClass); err != nil {
 		return nil, fmt.Errorf("failed to save custom class: %w", err)
 	}
@@ -610,17 +608,17 @@ func (s *CharacterService) GenerateCustomClass(ctx context.Context, userID, name
 	return customClass, nil
 }
 
-// GetUserCustomClasses gets all custom classes for a user
+// GetUserCustomClasses gets all custom classes for a user.
 func (s *CharacterService) GetUserCustomClasses(ctx context.Context, userID string, includeUnapproved bool) ([]*models.CustomClass, error) {
 	return s.customClassRepo.GetByUserID(userID, includeUnapproved)
 }
 
-// GetCustomClass gets a custom class by ID
+// GetCustomClass gets a custom class by ID.
 func (s *CharacterService) GetCustomClass(ctx context.Context, classID string) (*models.CustomClass, error) {
 	return s.customClassRepo.GetByID(classID)
 }
 
-// GetApprovedCustomClasses gets all approved custom classes
+// GetApprovedCustomClasses gets all approved custom classes.
 func (s *CharacterService) GetApprovedCustomClasses(ctx context.Context) ([]*models.CustomClass, error) {
 	return s.customClassRepo.GetApproved()
 }

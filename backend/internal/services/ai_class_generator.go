@@ -43,12 +43,12 @@ Your responses must be valid JSON matching the specified format exactly. Do not 
 		return nil, fmt.Errorf("failed to parse class response: %w", err)
 	}
 
-	// Validate and balance the class
+	// Validate and balance the class.
 	if err := g.validateClass(class); err != nil {
 		return nil, fmt.Errorf("class validation failed: %w", err)
 	}
 
-	// Calculate balance score
+	// Calculate balance score.
 	class.BalanceScore = g.calculateBalanceScore(class)
 	class.PowerLevel = req.Style
 
@@ -148,7 +148,7 @@ For non-spellcasters, omit the spellcasting fields. Ensure all features are bala
 }
 
 func (g *AIClassGenerator) parseClassResponse(response string) (*models.CustomClass, error) {
-	// Clean up the response to extract JSON
+	// Clean up the response to extract JSON.
 	jsonStart := strings.Index(response, "{")
 	jsonEnd := strings.LastIndex(response, "}")
 	if jsonStart == -1 || jsonEnd == -1 {
@@ -212,7 +212,7 @@ func (g *AIClassGenerator) parseClassResponse(response string) (*models.CustomCl
 		DMNotes:                  classData.DMNotes,
 	}
 
-	// Generate spell slots progression for spellcasters
+	// Generate spell slots progression for spellcasters.
 	if customClass.SpellcastingAbility != "" {
 		customClass.SpellSlotsProgression = g.generateSpellSlotProgression(customClass)
 	}
@@ -221,8 +221,8 @@ func (g *AIClassGenerator) parseClassResponse(response string) (*models.CustomCl
 }
 
 func (g *AIClassGenerator) generateSpellSlotProgression(class *models.CustomClass) map[string]interface{} {
-	// Basic spell slot progression for full casters
-	// This can be customized based on the class type
+	// Basic spell slot progression for full casters.
+	// This can be customized based on the class type.
 	fullCasterProgression := map[string]interface{}{
 		"1":  []int{2, 0, 0, 0, 0, 0, 0, 0, 0},
 		"2":  []int{3, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -250,13 +250,13 @@ func (g *AIClassGenerator) generateSpellSlotProgression(class *models.CustomClas
 }
 
 func (g *AIClassGenerator) validateClass(class *models.CustomClass) error {
-	// Validate hit die
+	// Validate hit die.
 	validHitDice := map[int]bool{6: true, 8: true, 10: true, 12: true}
 	if !validHitDice[class.HitDie] {
 		return fmt.Errorf("invalid hit die: %d", class.HitDie)
 	}
 
-	// Validate primary ability
+	// Validate primary ability.
 	validAbilities := map[string]bool{
 		"Strength": true, "Dexterity": true, "Constitution": true,
 		"Intelligence": true, "Wisdom": true, "Charisma": true,
@@ -265,17 +265,17 @@ func (g *AIClassGenerator) validateClass(class *models.CustomClass) error {
 		return fmt.Errorf("invalid primary ability: %s", class.PrimaryAbility)
 	}
 
-	// Validate saving throws (should have exactly 2)
+	// Validate saving throws (should have exactly 2).
 	if len(class.SavingThrowProficiencies) != 2 {
 		return fmt.Errorf("classes must have exactly 2 saving throw proficiencies")
 	}
 
-	// Validate skill choices
+	// Validate skill choices.
 	if class.SkillChoices < 2 || class.SkillChoices > 4 {
 		class.SkillChoices = 2 // Default to 2 if out of range
 	}
 
-	// Ensure there are features for at least levels 1-3
+	// Ensure there are features for at least levels 1-3.
 	hasLevel1Feature := false
 	for _, feature := range class.ClassFeatures {
 		if feature.Level == 1 {
@@ -293,18 +293,18 @@ func (g *AIClassGenerator) validateClass(class *models.CustomClass) error {
 func (g *AIClassGenerator) calculateBalanceScore(class *models.CustomClass) int {
 	score := 5 // Start with average score
 
-	// Hit die scoring
+	// Hit die scoring.
 	hitDieScores := map[int]int{6: -2, 8: 0, 10: 1, 12: 2}
 	score += hitDieScores[class.HitDie]
 
-	// Armor proficiency scoring
+	// Armor proficiency scoring.
 	if containsInClassGen(class.ArmorProficiencies, "Heavy armor") {
 		score += 2
 	} else if containsInClassGen(class.ArmorProficiencies, "Medium armor") {
 		score += 1
 	}
 
-	// Spellcasting scoring
+	// Spellcasting scoring.
 	if class.SpellcastingAbility != "" {
 		score += 2 // Spellcasters are generally more versatile
 		if class.RitualCasting {
@@ -312,7 +312,7 @@ func (g *AIClassGenerator) calculateBalanceScore(class *models.CustomClass) int 
 		}
 	}
 
-	// Feature count scoring
+	// Feature count scoring.
 	level5Features := 0
 	for _, feature := range class.ClassFeatures {
 		if feature.Level <= 5 {
@@ -325,12 +325,12 @@ func (g *AIClassGenerator) calculateBalanceScore(class *models.CustomClass) int 
 		score -= 1 // Few early features
 	}
 
-	// Skill choices scoring
+	// Skill choices scoring.
 	if class.SkillChoices >= 4 {
 		score += 1
 	}
 
-	// Cap the score between 1 and 10
+	// Cap the score between 1 and 10.
 	if score < 1 {
 		score = 1
 	} else if score > 10 {

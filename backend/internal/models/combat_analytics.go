@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// CombatAnalytics represents detailed combat statistics
+// CombatAnalytics represents detailed combat statistics.
 type CombatAnalytics struct {
 	ID               uuid.UUID `json:"id" db:"id"`
 	CombatID         uuid.UUID `json:"combat_id" db:"combat_id"`
@@ -23,7 +23,7 @@ type CombatAnalytics struct {
 	UpdatedAt        time.Time `json:"updated_at" db:"updated_at"`
 }
 
-// CombatSummary represents a summary of combat analytics
+// CombatSummary represents a summary of combat analytics.
 type CombatSummary struct {
 	CombatID         uuid.UUID            `json:"combat_id"`
 	Duration         int                  `json:"duration"`
@@ -35,7 +35,7 @@ type CombatSummary struct {
 	Highlights       []string             `json:"highlights"`
 }
 
-// CombatantAnalytics represents individual performance metrics
+// CombatantAnalytics represents individual performance metrics.
 type CombatantAnalytics struct {
 	ID                 uuid.UUID `json:"id" db:"id"`
 	CombatAnalyticsID  uuid.UUID `json:"combat_analytics_id" db:"combat_analytics_id"`
@@ -61,7 +61,7 @@ type CombatantAnalytics struct {
 	CreatedAt          time.Time `json:"created_at" db:"created_at"`
 }
 
-// AutoCombatResolution represents a quick combat resolution
+// AutoCombatResolution represents a quick combat resolution.
 type AutoCombatResolution struct {
 	ID                  uuid.UUID `json:"id" db:"id"`
 	GameSessionID       uuid.UUID `json:"game_session_id" db:"game_session_id"`
@@ -78,7 +78,7 @@ type AutoCombatResolution struct {
 	CreatedAt           time.Time `json:"created_at" db:"created_at"`
 }
 
-// BattleMap represents a generated tactical map
+// BattleMap represents a generated tactical map.
 type BattleMap struct {
 	ID                  uuid.UUID  `json:"id" db:"id"`
 	CombatID            *uuid.UUID `json:"combat_id,omitempty" db:"combat_id"`
@@ -98,7 +98,7 @@ type BattleMap struct {
 	UpdatedAt           time.Time  `json:"updated_at" db:"updated_at"`
 }
 
-// SmartInitiativeRule represents initiative bonuses and special rules
+// SmartInitiativeRule represents initiative bonuses and special rules.
 type SmartInitiativeRule struct {
 	ID                    uuid.UUID `json:"id" db:"id"`
 	GameSessionID         uuid.UUID `json:"game_session_id" db:"game_session_id"`
@@ -112,7 +112,7 @@ type SmartInitiativeRule struct {
 	UpdatedAt             time.Time `json:"updated_at" db:"updated_at"`
 }
 
-// CombatActionLog represents detailed action tracking
+// CombatActionLog represents detailed action tracking.
 type CombatActionLog struct {
 	ID                uuid.UUID `json:"id" db:"id"`
 	CombatID          uuid.UUID `json:"combat_id" db:"combat_id"`
@@ -132,8 +132,7 @@ type CombatActionLog struct {
 	Timestamp         time.Time `json:"timestamp" db:"timestamp"`
 }
 
-// Request/Response types
-
+// Request/Response types.
 type AutoResolveRequest struct {
 	EncounterDifficulty string      `json:"encounter_difficulty" binding:"required"`
 	EnemyTypes          []EnemyInfo `json:"enemy_types" binding:"required"`
@@ -188,8 +187,7 @@ type TacticalAnalysis struct {
 	MissedOpportunities  []string `json:"missed_opportunities"`
 }
 
-// Battle Map structures
-
+// Battle Map structures.
 type BattleMapTerrainFeature struct {
 	Type       string       `json:"type"` // wall, pillar, tree, water, etc.
 	Position   GridPosition `json:"position"`
@@ -219,7 +217,7 @@ type TacticalNote struct {
 	Importance string       `json:"importance"` // high, medium, low
 }
 
-// InitiativeEntry represents a combatant's initiative result
+// InitiativeEntry represents a combatant's initiative result.
 type InitiativeEntry struct {
 	ID         string `json:"id"`
 	Type       string `json:"type"`
@@ -229,7 +227,7 @@ type InitiativeEntry struct {
 	Bonus      int    `json:"bonus"`
 }
 
-// PlayerCombatStats represents a player's combat statistics across all sessions
+// PlayerCombatStats represents a player's combat statistics across all sessions.
 type PlayerCombatStats struct {
 	PlayerID         uuid.UUID `json:"player_id"`
 	CharacterID      uuid.UUID `json:"character_id"`
@@ -243,7 +241,7 @@ type PlayerCombatStats struct {
 	MVPCount         int       `json:"mvp_count"`
 }
 
-// SessionCombatStats represents combat statistics for a game session
+// SessionCombatStats represents combat statistics for a game session.
 type SessionCombatStats struct {
 	SessionID        uuid.UUID `json:"session_id"`
 	TotalCombats     int       `json:"total_combats"`
@@ -254,7 +252,7 @@ type SessionCombatStats struct {
 	EnemyDeaths      int       `json:"enemy_deaths"`
 }
 
-// CombatTrends represents trends in combat over time
+// CombatTrends represents trends in combat over time.
 type CombatTrends struct {
 	SessionID           uuid.UUID `json:"session_id"`
 	AverageCombatLength float64   `json:"average_combat_length"`

@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
-// WorldBuildingHandlers handles world building related requests
+// WorldBuildingHandlers handles world building related requests.
 type WorldBuildingHandlers struct {
 	settlementGen    *services.SettlementGeneratorService
 	factionSystem    *services.FactionSystemService
@@ -21,7 +21,7 @@ type WorldBuildingHandlers struct {
 	worldRepo        services.WorldBuildingRepository
 }
 
-// NewWorldBuildingHandlers creates a new world building handlers instance
+// NewWorldBuildingHandlers creates a new world building handlers instance.
 func NewWorldBuildingHandlers(
 	settlementGen *services.SettlementGeneratorService,
 	factionSystem *services.FactionSystemService,
@@ -38,9 +38,8 @@ func NewWorldBuildingHandlers(
 	}
 }
 
-// Settlement handlers
-
-// GenerateSettlement handles settlement generation requests
+// Settlement handlers.
+// GenerateSettlement handles settlement generation requests.
 func (h *WorldBuildingHandlers) GenerateSettlement(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -55,8 +54,7 @@ func (h *WorldBuildingHandlers) GenerateSettlement(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// TODO: Verify user is DM of this session
-
+	// TODO: Verify user is DM of this session.
 	var req models.SettlementGenerationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, r, "Invalid request body")
@@ -72,7 +70,7 @@ func (h *WorldBuildingHandlers) GenerateSettlement(w http.ResponseWriter, r *htt
 	response.JSON(w, r, http.StatusCreated, settlement)
 }
 
-// GetSettlements retrieves all settlements for a game session
+// GetSettlements retrieves all settlements for a game session.
 func (h *WorldBuildingHandlers) GetSettlements(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -96,7 +94,7 @@ func (h *WorldBuildingHandlers) GetSettlements(w http.ResponseWriter, r *http.Re
 	response.JSON(w, r, http.StatusOK, settlements)
 }
 
-// GetSettlement retrieves a specific settlement
+// GetSettlement retrieves a specific settlement.
 func (h *WorldBuildingHandlers) GetSettlement(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -120,7 +118,7 @@ func (h *WorldBuildingHandlers) GetSettlement(w http.ResponseWriter, r *http.Req
 	response.JSON(w, r, http.StatusOK, settlement)
 }
 
-// CalculateItemPrice calculates the price of an item in a settlement's market
+// CalculateItemPrice calculates the price of an item in a settlement's market.
 func (h *WorldBuildingHandlers) CalculateItemPrice(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -160,9 +158,8 @@ func (h *WorldBuildingHandlers) CalculateItemPrice(w http.ResponseWriter, r *htt
 	response.JSON(w, r, http.StatusOK, resp)
 }
 
-// Faction handlers
-
-// CreateFaction handles faction creation requests
+// Faction handlers.
+// CreateFaction handles faction creation requests.
 func (h *WorldBuildingHandlers) CreateFaction(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -177,8 +174,7 @@ func (h *WorldBuildingHandlers) CreateFaction(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// TODO: Verify user is DM of this session
-
+	// TODO: Verify user is DM of this session.
 	var req models.FactionCreationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, r, "Invalid request body")
@@ -194,7 +190,7 @@ func (h *WorldBuildingHandlers) CreateFaction(w http.ResponseWriter, r *http.Req
 	response.JSON(w, r, http.StatusCreated, faction)
 }
 
-// GetFactions retrieves all factions for a game session
+// GetFactions retrieves all factions for a game session.
 func (h *WorldBuildingHandlers) GetFactions(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -218,7 +214,7 @@ func (h *WorldBuildingHandlers) GetFactions(w http.ResponseWriter, r *http.Reque
 	response.JSON(w, r, http.StatusOK, factions)
 }
 
-// UpdateFactionRelationship updates the relationship between two factions
+// UpdateFactionRelationship updates the relationship between two factions.
 func (h *WorldBuildingHandlers) UpdateFactionRelationship(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -239,8 +235,7 @@ func (h *WorldBuildingHandlers) UpdateFactionRelationship(w http.ResponseWriter,
 		return
 	}
 
-	// TODO: Verify user is DM and factions belong to their session
-
+	// TODO: Verify user is DM and factions belong to their session.
 	var req struct {
 		Change int    `json:"change"`
 		Reason string `json:"reason"`
@@ -259,7 +254,7 @@ func (h *WorldBuildingHandlers) UpdateFactionRelationship(w http.ResponseWriter,
 	response.JSON(w, r, http.StatusOK, map[string]string{"status": "updated"})
 }
 
-// SimulateFactionConflicts triggers faction conflict simulation
+// SimulateFactionConflicts triggers faction conflict simulation.
 func (h *WorldBuildingHandlers) SimulateFactionConflicts(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -274,8 +269,7 @@ func (h *WorldBuildingHandlers) SimulateFactionConflicts(w http.ResponseWriter, 
 		return
 	}
 
-	// TODO: Verify user is DM of this session
-
+	// TODO: Verify user is DM of this session.
 	events, err := h.factionSystem.SimulateFactionConflicts(r.Context(), sessionID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -285,9 +279,8 @@ func (h *WorldBuildingHandlers) SimulateFactionConflicts(w http.ResponseWriter, 
 	response.JSON(w, r, http.StatusOK, events)
 }
 
-// World Event handlers
-
-// CreateWorldEvent generates a new world event
+// World Event handlers.
+// CreateWorldEvent generates a new world event.
 func (h *WorldBuildingHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -302,8 +295,7 @@ func (h *WorldBuildingHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// TODO: Verify user is DM of this session
-
+	// TODO: Verify user is DM of this session.
 	var req struct {
 		EventType models.WorldEventType `json:"eventType"`
 	}
@@ -321,7 +313,7 @@ func (h *WorldBuildingHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.
 	response.JSON(w, r, http.StatusCreated, event)
 }
 
-// GetActiveWorldEvents retrieves all active world events
+// GetActiveWorldEvents retrieves all active world events.
 func (h *WorldBuildingHandlers) GetActiveWorldEvents(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -345,7 +337,7 @@ func (h *WorldBuildingHandlers) GetActiveWorldEvents(w http.ResponseWriter, r *h
 	response.JSON(w, r, http.StatusOK, events)
 }
 
-// ProgressWorldEvents advances the world event simulation
+// ProgressWorldEvents advances the world event simulation.
 func (h *WorldBuildingHandlers) ProgressWorldEvents(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -360,8 +352,7 @@ func (h *WorldBuildingHandlers) ProgressWorldEvents(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// TODO: Verify user is DM of this session
-
+	// TODO: Verify user is DM of this session.
 	err = h.worldEventEngine.SimulateEventProgression(r.Context(), sessionID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -371,9 +362,8 @@ func (h *WorldBuildingHandlers) ProgressWorldEvents(w http.ResponseWriter, r *ht
 	response.JSON(w, r, http.StatusOK, map[string]string{"status": "progressed"})
 }
 
-// Trade Route handlers
-
-// CreateTradeRoute creates a new trade route between settlements
+// Trade Route handlers.
+// CreateTradeRoute creates a new trade route between settlements.
 func (h *WorldBuildingHandlers) CreateTradeRoute(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -381,8 +371,7 @@ func (h *WorldBuildingHandlers) CreateTradeRoute(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// TODO: Verify user is DM
-
+	// TODO: Verify user is DM.
 	var req struct {
 		StartSettlementID string `json:"startSettlementId"`
 		EndSettlementID   string `json:"endSettlementId"`
@@ -413,7 +402,7 @@ func (h *WorldBuildingHandlers) CreateTradeRoute(w http.ResponseWriter, r *http.
 	response.JSON(w, r, http.StatusCreated, route)
 }
 
-// SimulateEconomics runs the economic simulation
+// SimulateEconomics runs the economic simulation.
 func (h *WorldBuildingHandlers) SimulateEconomics(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
@@ -428,8 +417,7 @@ func (h *WorldBuildingHandlers) SimulateEconomics(w http.ResponseWriter, r *http
 		return
 	}
 
-	// TODO: Verify user is DM of this session
-
+	// TODO: Verify user is DM of this session.
 	err = h.economicSim.SimulateEconomicCycle(r.Context(), sessionID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -439,7 +427,7 @@ func (h *WorldBuildingHandlers) SimulateEconomics(w http.ResponseWriter, r *http
 	response.JSON(w, r, http.StatusOK, map[string]string{"status": "simulated"})
 }
 
-// GetSettlementMarket retrieves market conditions for a settlement
+// GetSettlementMarket retrieves market conditions for a settlement.
 func (h *WorldBuildingHandlers) GetSettlementMarket(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserFromContext(r.Context())
 	if !ok {

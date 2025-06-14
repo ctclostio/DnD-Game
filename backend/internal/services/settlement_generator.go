@@ -7,59 +7,59 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
-// WorldBuildingRepository interface for world building data operations
+// WorldBuildingRepository interface for world building data operations.
 type WorldBuildingRepository interface {
-	// Settlement operations
+	// Settlement operations.
 	CreateSettlement(settlement *models.Settlement) error
 	GetSettlement(id uuid.UUID) (*models.Settlement, error)
 	GetSettlementsByGameSession(gameSessionID uuid.UUID) ([]*models.Settlement, error)
 
-	// NPC operations
+	// NPC operations.
 	CreateSettlementNPC(npc *models.SettlementNPC) error
 	GetSettlementNPCs(settlementID uuid.UUID) ([]models.SettlementNPC, error)
 
-	// Shop operations
+	// Shop operations.
 	CreateSettlementShop(shop *models.SettlementShop) error
 	GetSettlementShops(settlementID uuid.UUID) ([]models.SettlementShop, error)
 
-	// Faction operations
+	// Faction operations.
 	CreateFaction(faction *models.Faction) error
 	GetFaction(id uuid.UUID) (*models.Faction, error)
 	GetFactionsByGameSession(gameSessionID uuid.UUID) ([]*models.Faction, error)
 	UpdateFactionRelationship(faction1ID, faction2ID uuid.UUID, standing int, relationType string) error
 
-	// World Event operations
+	// World Event operations.
 	CreateWorldEvent(event *models.WorldEvent) error
 	GetActiveWorldEvents(gameSessionID uuid.UUID) ([]*models.WorldEvent, error)
 	ProgressWorldEvent(eventID uuid.UUID) error
 
-	// Market operations
+	// Market operations.
 	CreateOrUpdateMarket(market *models.Market) error
 	GetMarketBySettlement(settlementID uuid.UUID) (*models.Market, error)
 
-	// Trade Route operations
+	// Trade Route operations.
 	CreateTradeRoute(route *models.TradeRoute) error
 	GetTradeRoutesBySettlement(settlementID uuid.UUID) ([]*models.TradeRoute, error)
 
-	// Ancient Site operations
+	// Ancient Site operations.
 	CreateAncientSite(site *models.AncientSite) error
 	GetAncientSitesByGameSession(gameSessionID uuid.UUID) ([]*models.AncientSite, error)
 
-	// Economic simulation
+	// Economic simulation.
 	SimulateEconomicChanges(gameSessionID uuid.UUID) error
 }
 
-// SettlementGeneratorService handles AI-powered settlement generation
+// SettlementGeneratorService handles AI-powered settlement generation.
 type SettlementGeneratorService struct {
 	llmProvider LLMProvider
 	worldRepo   WorldBuildingRepository
 }
 
-// NewSettlementGeneratorService creates a new settlement generator service
+// NewSettlementGeneratorService creates a new settlement generator service.
 func NewSettlementGeneratorService(llmProvider LLMProvider, worldRepo WorldBuildingRepository) *SettlementGeneratorService {
 	return &SettlementGeneratorService{
 		llmProvider: llmProvider,
@@ -67,25 +67,25 @@ func NewSettlementGeneratorService(llmProvider LLMProvider, worldRepo WorldBuild
 	}
 }
 
-// GenerateSettlement creates a complete settlement with NPCs, shops, and plot hooks
+// GenerateSettlement creates a complete settlement with NPCs, shops, and plot hooks.
 func (s *SettlementGeneratorService) GenerateSettlement(ctx context.Context, gameSessionID uuid.UUID, req models.SettlementGenerationRequest) (*models.Settlement, error) {
-	// Determine settlement size if not specified
+	// Determine settlement size if not specified.
 	if req.PopulationSize == "" {
 		req.PopulationSize = s.determinePopulationSize(req.Type)
 	}
 
-	// Generate the base settlement
+	// Generate the base settlement.
 	settlement, err := s.generateBaseSettlement(ctx, gameSessionID, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate base settlement: %w", err)
 	}
 
-	// Save the settlement
+	// Save the settlement.
 	if err := s.worldRepo.CreateSettlement(settlement); err != nil {
 		return nil, fmt.Errorf("failed to save settlement: %w", err)
 	}
 
-	// Generate NPCs
+	// Generate NPCs.
 	npcCount := s.calculateNPCCount(settlement.Type)
 	for i := 0; i < npcCount; i++ {
 		npc := s.generateNPC(ctx, settlement)
@@ -94,7 +94,7 @@ func (s *SettlementGeneratorService) GenerateSettlement(ctx context.Context, gam
 		}
 	}
 
-	// Generate shops
+	// Generate shops.
 	shopCount := s.calculateShopCount(settlement.Type)
 	for i := 0; i < shopCount; i++ {
 		shop := s.generateShop(ctx, settlement)
@@ -103,7 +103,7 @@ func (s *SettlementGeneratorService) GenerateSettlement(ctx context.Context, gam
 		}
 	}
 
-	// Generate initial market conditions
+	// Generate initial market conditions.
 	market := s.generateMarketConditions(settlement)
 	_ = s.worldRepo.CreateOrUpdateMarket(market)
 
@@ -198,10 +198,10 @@ Respond in JSON format:
 		return nil, fmt.Errorf("failed to parse LLM response: %w", err)
 	}
 
-	// Calculate population based on type and size
+	// Calculate population based on type and size.
 	population := s.calculatePopulation(req.Type, req.PopulationSize)
 
-	// Build the settlement model
+	// Build the settlement model.
 	settlement := &models.Settlement{
 		GameSessionID:      gameSessionID,
 		Name:               generatedData.Name,
@@ -223,7 +223,7 @@ Respond in JSON format:
 		LeyLineConnection:  rand.Float32() < 0.3 && generatedData.EldritchInfluence > 5,
 	}
 
-	// Convert arrays to JSONB
+	// Convert arrays to JSONB.
 	notableLocations, _ := json.Marshal(generatedData.NotableLocations)
 	settlement.NotableLocations = models.JSONB(notableLocations)
 
@@ -242,10 +242,10 @@ Respond in JSON format:
 	imports, _ := json.Marshal(generatedData.PrimaryImports)
 	settlement.PrimaryImports = models.JSONB(imports)
 
-	// Empty trade routes initially
+	// Empty trade routes initially.
 	settlement.TradeRoutes = models.JSONB("[]")
 
-	// Generate coordinates (simplified - would be more complex in production)
+	// Generate coordinates (simplified - would be more complex in production).
 	coords := map[string]int{
 		"x": rand.Intn(1000),
 		"y": rand.Intn(1000),
@@ -257,7 +257,7 @@ Respond in JSON format:
 }
 
 func (s *SettlementGeneratorService) generateNPC(ctx context.Context, settlement *models.Settlement) *models.SettlementNPC {
-	// Determine NPC role based on settlement needs
+	// Determine NPC role based on settlement needs.
 	roles := s.getNPCRoles(settlement.Type)
 	role := roles[rand.Intn(len(roles))]
 
@@ -303,7 +303,7 @@ Respond in JSON format:
 
 	response, err := s.llmProvider.GenerateCompletion(ctx, userPrompt, systemPrompt)
 	if err != nil {
-		// Fallback to procedural generation
+		// Fallback to procedural generation.
 		return s.generateProceduralNPC(settlement, role)
 	}
 
@@ -342,7 +342,7 @@ Respond in JSON format:
 		TrueAge:           npcData.TrueAge,
 	}
 
-	// Convert arrays to JSONB
+	// Convert arrays to JSONB.
 	traits, _ := json.Marshal(npcData.PersonalityTraits)
 	npc.PersonalityTraits = models.JSONB(traits)
 
@@ -358,7 +358,7 @@ Respond in JSON format:
 	plotHooks, _ := json.Marshal(npcData.PlotHooks)
 	npc.PlotHooks = models.JSONB(plotHooks)
 
-	// Empty fields
+	// Empty fields.
 	npc.FactionAffiliations = models.JSONB("[]")
 	npc.Relationships = models.JSONB("{}")
 	npc.Stats = models.JSONB("{}")
@@ -369,7 +369,7 @@ Respond in JSON format:
 }
 
 func (s *SettlementGeneratorService) generateShop(ctx context.Context, settlement *models.Settlement) *models.SettlementShop {
-	// Determine shop type based on settlement
+	// Determine shop type based on settlement.
 	shopTypes := s.getShopTypes(settlement.Type)
 	shopType := shopTypes[rand.Intn(len(shopTypes))]
 
@@ -406,7 +406,7 @@ Respond in JSON format:
 
 	response, err := s.llmProvider.GenerateCompletion(ctx, userPrompt, systemPrompt)
 	if err != nil {
-		// Fallback to procedural generation
+		// Fallback to procedural generation.
 		return s.generateProceduralShop(settlement, shopType)
 	}
 
@@ -437,7 +437,7 @@ Respond in JSON format:
 		ReputationRequired: 0,
 	}
 
-	// Convert arrays to JSONB
+	// Convert arrays to JSONB.
 	specialItems, _ := json.Marshal(shopData.SpecialItems)
 	shop.SpecialItems = models.JSONB(specialItems)
 
@@ -447,7 +447,7 @@ Respond in JSON format:
 	crafting, _ := json.Marshal(shopData.CraftingSpecialties)
 	shop.CraftingSpecialties = models.JSONB(crafting)
 
-	// Empty fields
+	// Empty fields.
 	shop.AvailableItems = models.JSONB("[]")
 	shop.FactionDiscount = models.JSONB("{}")
 	shop.OperatingHours = models.JSONB(`{"open": "dawn", "close": "dusk"}`)
@@ -455,8 +455,7 @@ Respond in JSON format:
 	return shop
 }
 
-// Helper functions
-
+// Helper functions.
 func (s *SettlementGeneratorService) determinePopulationSize(settlementType models.SettlementType) string {
 	switch settlementType {
 	case models.SettlementHamlet:
@@ -493,7 +492,7 @@ func (s *SettlementGeneratorService) calculatePopulation(settlementType models.S
 	base := basePopulation[settlementType]
 	multiplier := sizeMultiplier[size]
 
-	// Add some randomness
+	// Add some randomness.
 	variance := rand.Float64()*0.4 + 0.8 // 0.8 to 1.2
 
 	return int(float64(base) * multiplier * variance)
@@ -534,12 +533,12 @@ func (s *SettlementGeneratorService) calculateWealthLevel(settlementType models.
 	}
 
 	wealth := baseWealth[settlementType]
-	// Larger populations tend to be wealthier
+	// Larger populations tend to be wealthier.
 	if population > 10000 {
 		wealth++
 	}
 
-	// Add some randomness
+	// Add some randomness.
 	wealth += rand.Intn(3) - 1 // -1 to +1
 
 	if wealth < 1 {
@@ -553,7 +552,7 @@ func (s *SettlementGeneratorService) calculateWealthLevel(settlementType models.
 }
 
 func (s *SettlementGeneratorService) inferTerrainType(region string) string {
-	// Simple inference based on region name
+	// Simple inference based on region name.
 	region = strings.ToLower(region)
 
 	switch {
@@ -631,7 +630,7 @@ func (s *SettlementGeneratorService) generateMarketConditions(settlement *models
 		AncientArtifactsModifier: 2.0,
 	}
 
-	// Adjust based on settlement characteristics
+	// Adjust based on settlement characteristics.
 	if settlement.WealthLevel < 3 {
 		market.CommonGoodsModifier *= 1.2
 		market.MagicalItemsModifier *= 1.5
@@ -640,18 +639,18 @@ func (s *SettlementGeneratorService) generateMarketConditions(settlement *models
 		market.MagicalItemsModifier *= 0.8
 	}
 
-	// Ancient ruins increase artifact availability but also price
+	// Ancient ruins increase artifact availability but also price.
 	if settlement.AncientRuinsNearby {
 		market.ArtifactDealerPresent = rand.Float32() < 0.6
 		market.AncientArtifactsModifier *= 0.8 // Slightly cheaper due to supply
 	}
 
-	// Corruption affects black market
+	// Corruption affects black market.
 	if settlement.CorruptionLevel > 5 {
 		market.BlackMarketActive = true
 	}
 
-	// Random economic conditions
+	// Random economic conditions.
 	if rand.Float32() < 0.1 {
 		market.EconomicBoom = true
 		market.CommonGoodsModifier *= 0.9
@@ -660,7 +659,7 @@ func (s *SettlementGeneratorService) generateMarketConditions(settlement *models
 		market.CommonGoodsModifier *= 1.3
 	}
 
-	// Empty arrays for now
+	// Empty arrays for now.
 	market.HighDemandItems = models.JSONB("[]")
 	market.SurplusItems = models.JSONB("[]")
 	market.BannedItems = models.JSONB("[]")
@@ -668,8 +667,7 @@ func (s *SettlementGeneratorService) generateMarketConditions(settlement *models
 	return market
 }
 
-// Procedural fallback generators
-
+// Procedural fallback generators.
 func (s *SettlementGeneratorService) generateProceduralNPC(settlement *models.Settlement, role string) *models.SettlementNPC {
 	names := []string{"Aldric", "Mira", "Thorne", "Elara", "Grimm", "Lyssa", "Darius", "Nyx"}
 	races := []string{"human", "dwarf", "elf", "halfling", "tiefling", "half-orc"}
@@ -686,13 +684,13 @@ func (s *SettlementGeneratorService) generateProceduralNPC(settlement *models.Se
 		CorruptionTouched: settlement.CorruptionLevel > 5 && rand.Float32() < 0.2,
 	}
 
-	// Generate basic traits
+	// Generate basic traits.
 	traits := []string{"gruff", "friendly", "suspicious", "weary", "jovial", "secretive"}
 	selectedTraits := []string{traits[rand.Intn(len(traits))]}
 	traitsJSON, _ := json.Marshal(selectedTraits)
 	npc.PersonalityTraits = models.JSONB(traitsJSON)
 
-	// Empty other fields
+	// Empty other fields.
 	npc.Ideals = models.JSONB("[]")
 	npc.Bonds = models.JSONB("[]")
 	npc.Flaws = models.JSONB("[]")
@@ -732,7 +730,7 @@ func (s *SettlementGeneratorService) generateProceduralShop(settlement *models.S
 		AncientArtifacts: settlement.AncientRuinsNearby && rand.Float32() < 0.4,
 	}
 
-	// Empty arrays
+	// Empty arrays.
 	shop.AvailableItems = models.JSONB("[]")
 	shop.SpecialItems = models.JSONB("[]")
 	shop.CraftingSpecialties = models.JSONB("[]")

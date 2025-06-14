@@ -21,7 +21,7 @@ func NewCombatEngine() *CombatEngine {
 	}
 }
 
-// Initiative and Turn Order
+// Initiative and Turn Order.
 func (ce *CombatEngine) RollInitiative(dexterityModifier int) (int, int, error) {
 	result, err := ce.roller.Roll("1d20")
 	if err != nil {
@@ -33,7 +33,7 @@ func (ce *CombatEngine) RollInitiative(dexterityModifier int) (int, int, error) 
 }
 
 func (ce *CombatEngine) StartCombat(gameSessionID string, combatants []models.Combatant) (*models.Combat, error) {
-	// Roll initiative for each combatant
+	// Roll initiative for each combatant.
 	for i := range combatants {
 		if combatants[i].Initiative == 0 {
 			dexMod := (combatants[i].Abilities["dexterity"] - 10) / 2
@@ -44,28 +44,28 @@ func (ce *CombatEngine) StartCombat(gameSessionID string, combatants []models.Co
 			combatants[i].InitiativeRoll = roll
 			combatants[i].Initiative = total
 		}
-		// Only generate ID if not provided
+		// Only generate ID if not provided.
 		if combatants[i].ID == "" {
 			combatants[i].ID = uuid.New().String()
 		}
 
-		// Reset action economy
+		// Reset action economy.
 		combatants[i].Actions = 1
 		combatants[i].BonusActions = 1
 		combatants[i].Reactions = 1
 		combatants[i].Movement = combatants[i].Speed
 	}
 
-	// Sort by initiative (descending)
+	// Sort by initiative (descending).
 	sort.Slice(combatants, func(i, j int) bool {
 		if combatants[i].Initiative == combatants[j].Initiative {
-			// Tie-breaker: higher dexterity goes first
+			// Tie-breaker: higher dexterity goes first.
 			return combatants[i].Abilities["dexterity"] > combatants[j].Abilities["dexterity"]
 		}
 		return combatants[i].Initiative > combatants[j].Initiative
 	})
 
-	// Create turn order
+	// Create turn order.
 	turnOrder := make([]string, len(combatants))
 	for i, c := range combatants {
 		turnOrder[i] = c.ID
@@ -91,26 +91,26 @@ func (ce *CombatEngine) NextTurn(combat *models.Combat) (*models.Combatant, bool
 		return nil, false
 	}
 
-	// Increment turn
+	// Increment turn.
 	combat.CurrentTurn++
 
-	// Check if we need to start a new round
+	// Check if we need to start a new round.
 	if combat.CurrentTurn >= len(combat.TurnOrder) {
 		combat.CurrentTurn = 0
 		combat.Round++
 		ce.StartNewRound(combat)
 	}
 
-	// Get current combatant
+	// Get current combatant.
 	currentID := combat.TurnOrder[combat.CurrentTurn]
 	for i := range combat.Combatants {
 		if combat.Combatants[i].ID == currentID {
-			// Skip unconscious/dead combatants
+			// Skip unconscious/dead combatants.
 			if combat.Combatants[i].HP <= 0 && !combat.Combatants[i].DeathSaves.IsStable {
 				return ce.NextTurn(combat)
 			}
 
-			// Reset action economy for the combatant
+			// Reset action economy for the combatant.
 			combat.Combatants[i].Actions = 1
 			combat.Combatants[i].BonusActions = 1
 			combat.Combatants[i].Movement = combat.Combatants[i].Speed
@@ -123,24 +123,24 @@ func (ce *CombatEngine) NextTurn(combat *models.Combat) (*models.Combatant, bool
 }
 
 func (ce *CombatEngine) StartNewRound(combat *models.Combat) {
-	// Update effect durations
+	// Update effect durations.
 	for i := 0; i < len(combat.ActiveEffects); {
 		combat.ActiveEffects[i].RemainingTime--
 		if combat.ActiveEffects[i].RemainingTime <= 0 {
-			// Remove expired effects
+			// Remove expired effects.
 			combat.ActiveEffects = append(combat.ActiveEffects[:i], combat.ActiveEffects[i+1:]...)
 			continue
 		}
 		i++
 	}
 
-	// Reset reactions for all combatants
+	// Reset reactions for all combatants.
 	for i := range combat.Combatants {
 		combat.Combatants[i].Reactions = 1
 	}
 }
 
-// Attack System
+// Attack System.
 func (ce *CombatEngine) AttackRoll(attackBonus int, advantage, disadvantage bool) (*models.Roll, error) {
 	var result *dice.RollResult
 	var err error
@@ -175,7 +175,7 @@ func (ce *CombatEngine) AttackRoll(attackBonus int, advantage, disadvantage bool
 func (ce *CombatEngine) DamageRoll(damageDice string, damageModifier int, damageType models.DamageType, isCritical bool) (*models.Roll, []models.Damage, error) {
 	finalDice := damageDice
 	if isCritical {
-		// Double the number of dice on critical
+		// Double the number of dice on critical.
 		var numDice, dieSize int
 		if _, err := fmt.Sscanf(damageDice, "%dd%d", &numDice, &dieSize); err != nil {
 			return nil, nil, fmt.Errorf("invalid damage dice format: %v", err)
@@ -211,7 +211,7 @@ func (ce *CombatEngine) ApplyDamage(combatant *models.Combatant, damage []models
 	for _, d := range damage {
 		finalDamage := d.Amount
 
-		// Check resistances
+		// Check resistances.
 		for _, resistance := range combatant.Resistances {
 			if resistance == d.Type {
 				finalDamage = int(math.Floor(float64(finalDamage) / 2))
@@ -219,7 +219,7 @@ func (ce *CombatEngine) ApplyDamage(combatant *models.Combatant, damage []models
 			}
 		}
 
-		// Check immunities
+		// Check immunities.
 		for _, immunity := range combatant.Immunities {
 			if immunity == d.Type {
 				finalDamage = 0
@@ -227,7 +227,7 @@ func (ce *CombatEngine) ApplyDamage(combatant *models.Combatant, damage []models
 			}
 		}
 
-		// Check vulnerabilities
+		// Check vulnerabilities.
 		for _, vulnerability := range combatant.Vulnerabilities {
 			if vulnerability == d.Type {
 				finalDamage *= 2
@@ -238,7 +238,7 @@ func (ce *CombatEngine) ApplyDamage(combatant *models.Combatant, damage []models
 		totalDamage += finalDamage
 	}
 
-	// Apply damage to temp HP first
+	// Apply damage to temp HP first.
 	if combatant.TempHP > 0 {
 		if totalDamage <= combatant.TempHP {
 			combatant.TempHP -= totalDamage
@@ -249,7 +249,7 @@ func (ce *CombatEngine) ApplyDamage(combatant *models.Combatant, damage []models
 		}
 	}
 
-	// Apply remaining damage to HP
+	// Apply remaining damage to HP.
 	combatant.HP -= totalDamage
 	if combatant.HP < 0 {
 		combatant.HP = 0
@@ -258,7 +258,7 @@ func (ce *CombatEngine) ApplyDamage(combatant *models.Combatant, damage []models
 	return totalDamage
 }
 
-// Saving Throws
+// Saving Throws.
 func (ce *CombatEngine) SavingThrow(combatant *models.Combatant, ability string, dc int, advantage, disadvantage bool) (*models.Roll, bool, error) {
 	modifier := combatant.SavingThrows[ability]
 
@@ -294,15 +294,15 @@ func (ce *CombatEngine) SavingThrow(combatant *models.Combatant, ability string,
 	return roll, success, nil
 }
 
-// Concentration
+// Concentration.
 func (ce *CombatEngine) ConcentrationCheck(combatant *models.Combatant, damageTaken int) (*models.Roll, bool, error) {
-	// DC is 10 or half the damage taken, whichever is higher
+	// DC is 10 or half the damage taken, whichever is higher.
 	dc := 10
 	if damageTaken/2 > dc {
 		dc = damageTaken / 2
 	}
 
-	// Constitution saving throw
+	// Constitution saving throw.
 	return ce.SavingThrow(combatant, "constitution", dc, false, false)
 }
 
@@ -311,7 +311,7 @@ func (ce *CombatEngine) BreakConcentration(combatant *models.Combatant) {
 	combatant.ConcentrationSpell = ""
 }
 
-// Death Saves
+// Death Saves.
 func (ce *CombatEngine) DeathSavingThrow(combatant *models.Combatant) (*models.Roll, error) {
 	if combatant.HP > 0 || combatant.DeathSaves.IsStable || combatant.DeathSaves.IsDead {
 		return nil, fmt.Errorf("character does not need death saves")
@@ -332,14 +332,14 @@ func (ce *CombatEngine) DeathSavingThrow(combatant *models.Combatant) (*models.R
 		CriticalMiss: result.Dice[0] == 1,
 	}
 
-	// Natural 20: regain 1 HP
+	// Natural 20: regain 1 HP.
 	if roll.Critical {
 		combatant.HP = 1
 		combatant.DeathSaves = models.DeathSaves{}
 		return roll, nil
 	}
 
-	// Natural 1: two failures
+	// Natural 1: two failures.
 	if roll.CriticalMiss {
 		combatant.DeathSaves.Failures += 2
 	} else if roll.Result >= 10 {
@@ -348,7 +348,7 @@ func (ce *CombatEngine) DeathSavingThrow(combatant *models.Combatant) (*models.R
 		combatant.DeathSaves.Failures++
 	}
 
-	// Check for stabilization or death
+	// Check for stabilization or death.
 	if combatant.DeathSaves.Successes >= 3 {
 		combatant.DeathSaves.IsStable = true
 		combatant.DeathSaves.Successes = 0
@@ -360,7 +360,7 @@ func (ce *CombatEngine) DeathSavingThrow(combatant *models.Combatant) (*models.R
 	return roll, nil
 }
 
-// Action Economy
+// Action Economy.
 func (ce *CombatEngine) UseAction(combatant *models.Combatant, actionType models.ActionType) error {
 	switch actionType {
 	case models.ActionTypeAttack, models.ActionTypeCast, models.ActionTypeDash,
@@ -384,10 +384,9 @@ func (ce *CombatEngine) UseAction(combatant *models.Combatant, actionType models
 		combatant.Reactions--
 
 	case models.ActionTypeMove:
-		// Movement is tracked separately
-
+		// Movement is tracked separately.
 	default:
-		// Free actions don't consume resources
+		// Free actions don't consume resources.
 	}
 
 	return nil
@@ -401,9 +400,9 @@ func (ce *CombatEngine) UseMovement(combatant *models.Combatant, distance int) e
 	return nil
 }
 
-// Conditions
+// Conditions.
 func (ce *CombatEngine) ApplyCondition(combatant *models.Combatant, condition models.Condition) {
-	// Check if condition already exists
+	// Check if condition already exists.
 	for _, c := range combatant.Conditions {
 		if c == condition {
 			return
@@ -430,7 +429,7 @@ func (ce *CombatEngine) HasCondition(combatant *models.Combatant, condition mode
 	return false
 }
 
-// Helper function to check if combatant has disadvantage on attack rolls
+// Helper function to check if combatant has disadvantage on attack rolls.
 func (ce *CombatEngine) HasAttackDisadvantage(combatant *models.Combatant) bool {
 	disadvantageConditions := []models.Condition{
 		models.ConditionBlinded,
@@ -449,7 +448,7 @@ func (ce *CombatEngine) HasAttackDisadvantage(combatant *models.Combatant) bool 
 	return false
 }
 
-// Helper function to check if attacks against combatant have advantage
+// Helper function to check if attacks against combatant have advantage.
 func (ce *CombatEngine) AttacksHaveAdvantage(target *models.Combatant) bool {
 	advantageConditions := []models.Condition{
 		models.ConditionBlinded,

@@ -26,7 +26,7 @@ func NewAICampaignManager(provider LLMProvider, config *AIConfig, log *logger.Lo
 	}
 }
 
-// GenerateStoryArc creates an interconnected story arc based on player actions and context
+// GenerateStoryArc creates an interconnected story arc based on player actions and context.
 func (acm *AICampaignManager) GenerateStoryArc(ctx context.Context, req models.GenerateStoryArcRequest) (*models.GeneratedStoryArc, error) {
 	if !acm.config.Enabled {
 		return acm.generateDefaultStoryArc(req), nil
@@ -91,7 +91,7 @@ func (acm *AICampaignManager) GenerateSessionRecap(ctx context.Context, memories
 	return &recap, nil
 }
 
-// GenerateForeshadowing creates subtle hints about future plot elements
+// GenerateForeshadowing creates subtle hints about future plot elements.
 func (acm *AICampaignManager) GenerateForeshadowing(ctx context.Context, req models.GenerateForeshadowingRequest, plotThread *models.PlotThread, storyArc *models.StoryArc) (*models.GeneratedForeshadowing, error) {
 	if !acm.config.Enabled {
 		return acm.generateDefaultForeshadowing(req), nil
@@ -124,7 +124,7 @@ func (acm *AICampaignManager) GenerateForeshadowing(ctx context.Context, req mod
 	return &foreshadowing, nil
 }
 
-// AnalyzeSessionForMemory processes a session's events to create a structured memory
+// AnalyzeSessionForMemory processes a session's events to create a structured memory.
 func (acm *AICampaignManager) AnalyzeSessionForMemory(ctx context.Context, events []interface{}) (*models.SessionMemory, error) {
 	if !acm.config.Enabled {
 		return acm.createBasicSessionMemory(events), nil
@@ -160,8 +160,7 @@ func (acm *AICampaignManager) AnalyzeSessionForMemory(ctx context.Context, event
 	return &memory, nil
 }
 
-// Helper methods for building prompts
-
+// Helper methods for building prompts.
 func (acm *AICampaignManager) buildStoryArcPrompt(req models.GenerateStoryArcRequest) string {
 	return fmt.Sprintf(`Generate a compelling D&D 5e story arc with the following parameters:
 
@@ -215,7 +214,7 @@ func (acm *AICampaignManager) buildRecapPrompt(memories []*models.SessionMemory)
 		if memory.RecapSummary != "" {
 			sessionInfo += memory.RecapSummary
 		} else {
-			// Extract key events from JSONB
+			// Extract key events from JSONB.
 			sessionInfo += "Key events from this session"
 		}
 		sessionsText = append(sessionsText, sessionInfo)
@@ -313,10 +312,9 @@ Format as JSON matching the SessionMemory structure:
 }`, string(eventsJSON))
 }
 
-// Default/fallback generators
-
+// Default/fallback generators.
 func (acm *AICampaignManager) generateDefaultStoryArc(req models.GenerateStoryArcRequest) *models.GeneratedStoryArc {
-	// Simple title case conversion
+	// Simple title case conversion.
 	titleCased := strings.ToUpper(req.ArcType[:1]) + strings.ToLower(req.ArcType[1:])
 	return &models.GeneratedStoryArc{
 		Title:           fmt.Sprintf("The %s Quest", titleCased),
@@ -376,7 +374,6 @@ func (acm *AICampaignManager) createBasicSessionMemory(events []interface{}) *mo
 		UpdatedAt:        time.Now(),
 	}
 
-	// Basic analysis of events could be added here
-
+	// Basic analysis of events could be added here.
 	return memory
 }

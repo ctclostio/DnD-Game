@@ -27,15 +27,15 @@ func TestCombatFlow_Integration(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 	t.Skip("integration environment not available")
-	// Setup test context
+	// Setup test context.
 	ctx, cleanup := testutil.SetupIntegrationTest(t)
 	defer cleanup()
 
-	// Create logger
+	// Create logger.
 	log, err := logger.NewV2(logger.DefaultConfig())
 	require.NoError(t, err)
 
-	// Create services
+	// Create services.
 	userService := services.NewUserService(ctx.Repos.Users)
 	characterService := services.NewCharacterService(ctx.Repos.Characters, ctx.Repos.CustomClasses, nil)
 	gameSessionService := services.NewGameSessionService(ctx.Repos.GameSessions)
@@ -53,36 +53,36 @@ func TestCombatFlow_Integration(t *testing.T) {
 		JWTManager:   ctx.JWTManager,
 	}
 
-	// Create WebSocket hub for combat broadcasts
+	// Create WebSocket hub for combat broadcasts.
 	hub := websocket.NewHub()
 	go hub.Run()
 
-	// Create handlers and setup routes
+	// Create handlers and setup routes.
 	h := handlers.NewHandlers(svc, ctx.DB, hub)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
 
-	// Apply middleware
+	// Apply middleware.
 	api.Use(middleware.RequestIDMiddleware)
 	api.Use(middleware.LoggingMiddleware(log))
 
 	authMiddleware := auth.NewMiddleware(ctx.JWTManager)
 
-	// Combat routes
+	// Combat routes.
 	api.HandleFunc("/combat/start", authMiddleware.Authenticate(h.StartCombat)).Methods("POST")
 	api.HandleFunc("/combat/{combatId}", authMiddleware.Authenticate(h.GetCombat)).Methods("GET")
 	api.HandleFunc("/combat/{combatId}/action", authMiddleware.Authenticate(h.ProcessCombatAction)).Methods("POST")
 	api.HandleFunc("/combat/{combatId}/end", authMiddleware.Authenticate(h.EndCombat)).Methods("POST")
 
-	// Create test data
+	// Create test data.
 	dmID := ctx.CreateTestUser("dm_combat", "dm@combat.com", "password123")
 	playerID := ctx.CreateTestUser("player_combat", "player@combat.com", "password123")
 
-	// Create characters
+	// Create characters.
 	pcID := ctx.CreateTestCharacter(playerID, "Aragorn")
 
-	// Update character stats for combat
+	// Update character stats for combat.
 	_, err = ctx.SQLXDB.Exec(`
 		UPDATE characters 
 		SET level = 5, 
@@ -93,16 +93,16 @@ func TestCombatFlow_Integration(t *testing.T) {
 		WHERE id = ?`, pcID)
 	require.NoError(t, err)
 
-	// Create game session
+	// Create game session.
 	sessionID := ctx.CreateTestGameSession(dmID, "Combat Test Session", "COMBAT01")
 
-	// Verify session exists
+	// Verify session exists.
 	var sessionCount int
 	err = ctx.SQLXDB.Get(&sessionCount, "SELECT COUNT(*) FROM game_sessions WHERE id = ?", sessionID)
 	require.NoError(t, err)
 	require.Equal(t, 1, sessionCount, "Session should exist")
 
-	// Create NPCs for combat
+	// Create NPCs for combat.
 	goblin := &models.NPC{
 		ID:           "npc-goblin-" + sessionID,
 		Name:         "Goblin",
@@ -136,7 +136,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 	err = ctx.Repos.NPCs.Create(context.Background(), goblin)
 	require.NoError(t, err)
 
-	// Create auth header
+	// Create auth header.
 	dmToken, _ := ctx.JWTManager.GenerateTokenPair(dmID, "dm_combat", "dm@combat.com", "dm")
 	playerToken, _ := ctx.JWTManager.GenerateTokenPair(playerID, "player_combat", "player@combat.com", "player")
 
@@ -194,12 +194,12 @@ func TestCombatFlow_Integration(t *testing.T) {
 		assert.NotEmpty(t, combatID)
 		assert.True(t, combatData["isActive"].(bool))
 
-		// Verify turn order
+		// Verify turn order.
 		combatants, ok := combatData["combatants"].([]interface{})
 		require.True(t, ok)
 		assert.Len(t, combatants, 2)
 
-		// Check turn order array instead
+		// Check turn order array instead.
 		turnOrder, ok := combatData["turnOrder"].([]interface{})
 		require.True(t, ok)
 		assert.Len(t, turnOrder, 2)
@@ -228,7 +228,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("Execute Attack Action", func(t *testing.T) {
-		// Aragorn attacks the goblin
+		// Aragorn attacks the goblin.
 		actionReq := models.CombatRequest{
 			ActorID:     pcID,
 			Action:      models.ActionTypeAttack,
@@ -252,13 +252,13 @@ func TestCombatFlow_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, resp.Success)
 
-		// Check action response
+		// Check action response.
 		actionData, ok := resp.Data.(map[string]interface{})
 		require.True(t, ok)
 		assert.Equal(t, pcID, actionData["actorId"])
 		assert.Equal(t, "attack", actionData["actionType"])
 
-		// Get updated combat state
+		// Get updated combat state.
 		req2 := httptest.NewRequest("GET", "/api/v1/combat/"+combatID, nil)
 		req2.Header.Set("Authorization", "Bearer "+playerToken.AccessToken)
 		req2 = mux.SetURLVars(req2, map[string]string{"combatId": combatID})
@@ -272,18 +272,18 @@ func TestCombatFlow_Integration(t *testing.T) {
 		combatData, ok := combatResp.Data.(map[string]interface{})
 		require.True(t, ok)
 
-		// Should have advanced turn
+		// Should have advanced turn.
 		assert.Equal(t, float64(1), combatData["currentTurn"])
 
-		// Check goblin's HP
+		// Check goblin's HP.
 		combatants := combatData["combatants"].([]interface{})
 		var goblinFound bool
 		for _, p := range combatants {
 			combatant := p.(map[string]interface{})
-			// The goblin ID was regenerated, so check by name
+			// The goblin ID was regenerated, so check by name.
 			if combatant["name"] == "Goblin" {
 				goblinFound = true
-				// Goblin might have taken damage (attack could miss)
+				// Goblin might have taken damage (attack could miss).
 				hp := combatant["hp"].(float64)
 				assert.LessOrEqual(t, hp, float64(7))
 				break
@@ -293,7 +293,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("End Turn Action", func(t *testing.T) {
-		// Goblin's turn - but it's dead, so just end turn
+		// Goblin's turn - but it's dead, so just end turn.
 		actionReq := models.CombatRequest{
 			ActorID: goblin.ID,
 			Action:  models.ActionTypeEndTurn,
@@ -315,12 +315,12 @@ func TestCombatFlow_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, resp.Success)
 
-		// Check action response
+		// Check action response.
 		actionData, ok := resp.Data.(map[string]interface{})
 		require.True(t, ok)
 		assert.Equal(t, "endTurn", actionData["actionType"])
 
-		// Get updated combat state to verify round advancement
+		// Get updated combat state to verify round advancement.
 		req2 := httptest.NewRequest("GET", "/api/v1/combat/"+combatID, nil)
 		req2.Header.Set("Authorization", "Bearer "+dmToken.AccessToken)
 		req2 = mux.SetURLVars(req2, map[string]string{"combatId": combatID})
@@ -352,7 +352,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, resp.Success)
 
-		// Verify combat is ended - it should be removed from memory
+		// Verify combat is ended - it should be removed from memory.
 		req = httptest.NewRequest("GET", "/api/v1/combat/"+combatID, nil)
 		req.Header.Set("Authorization", "Bearer "+dmToken.AccessToken)
 		req = mux.SetURLVars(req, map[string]string{"combatId": combatID})
@@ -360,7 +360,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 		w = httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
-		// Combat should be removed after ending, so we expect 404
+		// Combat should be removed after ending, so we expect 404.
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 }
@@ -371,7 +371,7 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 
 	log, _ := logger.NewV2(logger.DefaultConfig())
 
-	// Create services
+	// Create services.
 	svc := &services.Services{
 		DB:           ctx.DB,
 		Users:        services.NewUserService(ctx.Repos.Users),
@@ -391,19 +391,18 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 	authMiddleware := auth.NewMiddleware(ctx.JWTManager)
 	api.HandleFunc("/combat/start", authMiddleware.Authenticate(h.StartCombat)).Methods("POST")
 
-	// Create test users
+	// Create test users.
 	dmID := ctx.CreateTestUser("auth_dm", "auth_dm@test.com", "password123")
 	playerID := ctx.CreateTestUser("auth_player", "auth_player@test.com", "password123")
 	// otherPlayerID := ctx.CreateTestUser("other_player", "other@test.com", "password123") // not used
 
-	// Create session and character
+	// Create session and character.
 	sessionID := ctx.CreateTestGameSession(dmID, "Auth Test Session", "AUTH01")
 	charID := ctx.CreateTestCharacter(playerID, "AuthHero")
 
-	// Generate tokens
+	// Generate tokens.
 	playerToken, _ := ctx.JWTManager.GenerateTokenPair(playerID, "auth_player", "auth_player@test.com", "player")
-	// otherToken not used in tests
-
+	// otherToken not used in tests.
 	t.Run("Non-DM Cannot Start Combat", func(t *testing.T) {
 		startReq := struct {
 			GameSessionID string             `json:"gameSessionId"`
@@ -433,12 +432,12 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
-		// Should fail - only DM can start combat
+		// Should fail - only DM can start combat.
 		assert.NotEqual(t, http.StatusOK, w.Code)
 	})
 
 	t.Run("Cannot Start Combat in Another DM's Session", func(t *testing.T) {
-		// Create another DM
+		// Create another DM.
 		otherDMID := ctx.CreateTestUser("other_dm", "other_dm@test.com", "password123")
 		otherDMToken, _ := ctx.JWTManager.GenerateTokenPair(otherDMID, "other_dm", "other_dm@test.com", "dm")
 
@@ -468,13 +467,13 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
-		// Should fail - wrong DM
+		// Should fail - wrong DM.
 		assert.NotEqual(t, http.StatusOK, w.Code)
 	})
 
 	t.Run("Player Cannot Act for Another Player's Character", func(t *testing.T) {
-		// This would be tested in the ExecuteCombatAction endpoint
-		// Skipping for now as it requires a running combat
+		// This would be tested in the ExecuteCombatAction endpoint.
+		// Skipping for now as it requires a running combat.
 		t.Skip("Requires combat to be started first")
 	})
 }
@@ -484,11 +483,10 @@ func TestCombatConditions_Integration(t *testing.T) {
 	defer cleanup()
 
 	// Setup similar to TestCombatFlow_Integration...
-	// Testing specific conditions like:
-	// - Death saving throws
+	// Testing specific conditions like:.
+	// - Death saving throws.
 	// - Status effects (poisoned, stunned, etc.)
-	// - Healing
-	// - Area of effect attacks
-
+	// - Healing.
+	// - Area of effect attacks.
 	t.Skip("Advanced combat conditions not yet implemented")
 }

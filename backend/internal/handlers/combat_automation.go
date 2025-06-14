@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type CombatAutomationHandler struct {
@@ -38,7 +38,7 @@ func NewCombatAutomationHandler(
 	}
 }
 
-// AutoResolveCombat handles quick combat resolution
+// AutoResolveCombat handles quick combat resolution.
 func (h *CombatAutomationHandler) AutoResolveCombat(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := auth.GetUserFromContext(ctx)
@@ -54,7 +54,7 @@ func (h *CombatAutomationHandler) AutoResolveCombat(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.ErrorWithCode(w, r, errors.ErrCodeSessionNotFound)
@@ -72,7 +72,7 @@ func (h *CombatAutomationHandler) AutoResolveCombat(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Get party characters
+	// Get party characters.
 	participants, err := h.gameService.GetSessionParticipants(ctx, sessionID.String())
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -94,7 +94,7 @@ func (h *CombatAutomationHandler) AutoResolveCombat(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Auto-resolve the combat
+	// Auto-resolve the combat.
 	resolution, err := h.combatAutomation.AutoResolveCombat(ctx, sessionID, characters, req)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -104,7 +104,7 @@ func (h *CombatAutomationHandler) AutoResolveCombat(w http.ResponseWriter, r *ht
 	response.JSON(w, r, http.StatusOK, resolution)
 }
 
-// SmartInitiative handles automatic initiative rolling
+// SmartInitiative handles automatic initiative rolling.
 func (h *CombatAutomationHandler) SmartInitiative(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := auth.GetUserFromContext(ctx)
@@ -120,14 +120,14 @@ func (h *CombatAutomationHandler) SmartInitiative(w http.ResponseWriter, r *http
 		return
 	}
 
-	// Verify user is in session
+	// Verify user is in session.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.ErrorWithCode(w, r, errors.ErrCodeSessionNotFound)
 		return
 	}
 
-	// Check if user is participant or DM
+	// Check if user is participant or DM.
 	isParticipant := session.DMID == claims.UserID
 	if !isParticipant {
 		participants, _ := h.gameService.GetSessionParticipants(ctx, sessionID.String())
@@ -150,7 +150,7 @@ func (h *CombatAutomationHandler) SmartInitiative(w http.ResponseWriter, r *http
 		return
 	}
 
-	// Calculate initiative for all combatants
+	// Calculate initiative for all combatants.
 	initiatives, err := h.combatAutomation.SmartInitiative(ctx, sessionID, req)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -160,7 +160,7 @@ func (h *CombatAutomationHandler) SmartInitiative(w http.ResponseWriter, r *http
 	response.JSON(w, r, http.StatusOK, initiatives)
 }
 
-// GenerateBattleMap creates a tactical map
+// GenerateBattleMap creates a tactical map.
 func (h *CombatAutomationHandler) GenerateBattleMap(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := auth.GetUserFromContext(ctx)
@@ -176,7 +176,7 @@ func (h *CombatAutomationHandler) GenerateBattleMap(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.ErrorWithCode(w, r, errors.ErrCodeSessionNotFound)
@@ -194,14 +194,14 @@ func (h *CombatAutomationHandler) GenerateBattleMap(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Generate the battle map
+	// Generate the battle map.
 	battleMap, err := h.mapGenerator.GenerateBattleMap(ctx, req)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Save to database
+	// Save to database.
 	battleMap.GameSessionID = sessionID
 	if err := h.combatAutomation.SaveBattleMap(ctx, battleMap); err != nil {
 		response.InternalServerError(w, r, err)
@@ -211,7 +211,7 @@ func (h *CombatAutomationHandler) GenerateBattleMap(w http.ResponseWriter, r *ht
 	response.JSON(w, r, http.StatusCreated, battleMap)
 }
 
-// GetCombatAnalytics retrieves combat analytics report
+// GetCombatAnalytics retrieves combat analytics report.
 func (h *CombatAutomationHandler) GetCombatAnalytics(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -222,21 +222,21 @@ func (h *CombatAutomationHandler) GetCombatAnalytics(w http.ResponseWriter, r *h
 		return
 	}
 
-	// Get combat analytics
+	// Get combat analytics.
 	analytics, err := h.combatAnalytics.GetCombatAnalytics(ctx, combatID)
 	if err != nil {
 		response.NotFound(w, r, "Combat analytics")
 		return
 	}
 
-	// Get combatant reports
+	// Get combatant reports.
 	combatantAnalytics, err := h.combatAnalytics.GetCombatantAnalytics(ctx, analytics.ID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Build full report
+	// Build full report.
 	report := models.CombatAnalyticsReport{
 		Analytics:        analytics,
 		CombatantReports: h.buildCombatantReports(combatantAnalytics),
@@ -245,7 +245,7 @@ func (h *CombatAutomationHandler) GetCombatAnalytics(w http.ResponseWriter, r *h
 	response.JSON(w, r, http.StatusOK, report)
 }
 
-// GetSessionCombatHistory retrieves combat history for a session
+// GetSessionCombatHistory retrieves combat history for a session.
 func (h *CombatAutomationHandler) GetSessionCombatHistory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -256,14 +256,14 @@ func (h *CombatAutomationHandler) GetSessionCombatHistory(w http.ResponseWriter,
 		return
 	}
 
-	// Get all combat analytics for session
+	// Get all combat analytics for session.
 	analytics, err := h.combatAnalytics.GetCombatAnalyticsBySession(ctx, sessionID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Get auto-resolutions
+	// Get auto-resolutions.
 	resolutions, err := h.combatAutomation.GetAutoResolutionsBySession(ctx, sessionID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -279,7 +279,7 @@ func (h *CombatAutomationHandler) GetSessionCombatHistory(w http.ResponseWriter,
 	response.JSON(w, r, http.StatusOK, result)
 }
 
-// GetBattleMaps retrieves battle maps for a session
+// GetBattleMaps retrieves battle maps for a session.
 func (h *CombatAutomationHandler) GetBattleMaps(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -299,7 +299,7 @@ func (h *CombatAutomationHandler) GetBattleMaps(w http.ResponseWriter, r *http.R
 	response.JSON(w, r, http.StatusOK, maps)
 }
 
-// GetBattleMap retrieves a specific battle map
+// GetBattleMap retrieves a specific battle map.
 func (h *CombatAutomationHandler) GetBattleMap(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -319,7 +319,7 @@ func (h *CombatAutomationHandler) GetBattleMap(w http.ResponseWriter, r *http.Re
 	response.JSON(w, r, http.StatusOK, battleMap)
 }
 
-// SetInitiativeRules sets special initiative rules for entities
+// SetInitiativeRules sets special initiative rules for entities.
 func (h *CombatAutomationHandler) SetInitiativeRules(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := auth.GetUserFromContext(ctx)
@@ -335,7 +335,7 @@ func (h *CombatAutomationHandler) SetInitiativeRules(w http.ResponseWriter, r *h
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.ErrorWithCode(w, r, errors.ErrCodeSessionNotFound)
@@ -362,8 +362,7 @@ func (h *CombatAutomationHandler) SetInitiativeRules(w http.ResponseWriter, r *h
 	response.JSON(w, r, http.StatusOK, rule)
 }
 
-// Helper methods
-
+// Helper methods.
 func (h *CombatAutomationHandler) buildCombatantReports(analytics []*models.CombatantAnalytics) []*models.CombatantReport {
 	reports := make([]*models.CombatantReport, len(analytics))
 

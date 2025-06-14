@@ -18,7 +18,7 @@ func NewCustomClassRepository(db *DB) *CustomClassRepository {
 }
 
 func (r *CustomClassRepository) Create(class *models.CustomClass) error {
-	// Convert complex types to JSON
+	// Convert complex types to JSON.
 	classFeatures, err := json.Marshal(class.ClassFeatures)
 	if err != nil {
 		return fmt.Errorf("failed to marshal class features: %w", err)
@@ -136,7 +136,7 @@ func (r *CustomClassRepository) GetByID(id string) (*models.CustomClass, error) 
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	if err := json.Unmarshal(classFeatures, &class.ClassFeatures); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal class features: %w", err)
 	}

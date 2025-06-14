@@ -1,6 +1,6 @@
 package constants
 
-// D&D ability scores
+// D&D ability scores.
 const (
 	AbilityStrength     = "strength"
 	AbilityDexterity    = "dexterity"
@@ -10,28 +10,28 @@ const (
 	AbilityCharisma     = "charisma"
 )
 
-// Environment constants
+// Environment constants.
 const (
 	EnvDevelopment = "development"
 	EnvProduction  = "production"
 )
 
-// Authentication constants
+// Authentication constants.
 const (
 	AuthType = "auth"
 )
 
-// Logger output constants
+// Logger output constants.
 const (
 	LoggerStdout = "stdout"
 )
 
-// Boolean string constants
+// Boolean string constants.
 const (
 	TrueString = "true"
 )
 
-// SQL query fragments
+// SQL query fragments.
 const (
 	LimitClause = " LIMIT ?"
 )

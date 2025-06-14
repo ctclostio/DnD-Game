@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-// MockLLMProvider is a mock implementation of LLMProvider for testing
+// MockLLMProvider is a mock implementation of LLMProvider for testing.
 type MockLLMProvider struct {
 	ResponseFunc func(context.Context, string, string) (string, error)
 	Responses    map[string]string
@@ -16,7 +16,7 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 		return m.ResponseFunc(ctx, systemPrompt, prompt)
 	}
 
-	// Default responses for common AI requests
+	// Default responses for common AI requests.
 	if m.Responses != nil {
 		for key, response := range m.Responses {
 			if contains(prompt, key) || contains(systemPrompt, key) {
@@ -25,7 +25,7 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 		}
 	}
 
-	// Default mock responses based on content
+	// Default mock responses based on content.
 	switch {
 	case contains(prompt, "race") || contains(systemPrompt, "race"):
 		return mockRaceResponse(), nil
@@ -56,7 +56,7 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 	}
 }
 
-// GenerateContent is an alias for GenerateCompletion to satisfy the interface
+// GenerateContent is an alias for GenerateCompletion to satisfy the interface.
 func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
 	return m.GenerateCompletion(ctx, prompt, systemPrompt)
 }
@@ -204,12 +204,12 @@ func mockRecapResponse() string {
 	return string(data)
 }
 
-// NewMockLLMProvider creates a new mock LLM provider
+// NewMockLLMProvider creates a new mock LLM provider.
 func NewMockLLMProvider() *MockLLMProvider {
 	return &MockLLMProvider{}
 }
 
-// WithResponse adds a specific response for testing
+// WithResponse adds a specific response for testing.
 func (m *MockLLMProvider) WithResponse(key, response string) *MockLLMProvider {
 	if m.Responses == nil {
 		m.Responses = make(map[string]string)
@@ -218,7 +218,7 @@ func (m *MockLLMProvider) WithResponse(key, response string) *MockLLMProvider {
 	return m
 }
 
-// WithError returns an error for testing error cases
+// WithError returns an error for testing error cases.
 func (m *MockLLMProvider) WithError(err error) *MockLLMProvider {
 	m.ResponseFunc = func(ctx context.Context, system, user string) (string, error) {
 		return "", err
@@ -226,7 +226,7 @@ func (m *MockLLMProvider) WithError(err error) *MockLLMProvider {
 	return m
 }
 
-// Reset clears all configured responses
+// Reset clears all configured responses.
 func (m *MockLLMProvider) Reset() {
 	m.ResponseFunc = nil
 	m.Responses = nil

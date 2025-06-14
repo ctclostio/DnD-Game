@@ -6,19 +6,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/google/uuid"
 )
 
-// DMAssistantMessage represents a DM Assistant WebSocket message
+// DMAssistantMessage represents a DM Assistant WebSocket message.
 type DMAssistantMessage struct {
 	Type      string                 `json:"type"`
 	RequestID string                 `json:"requestId"`
 	Data      map[string]interface{} `json:"data"`
 }
 
-// DMAssistantResponse represents a DM Assistant response
+// DMAssistantResponse represents a DM Assistant response.
 type DMAssistantResponse struct {
 	Type      string      `json:"type"`
 	RequestID string      `json:"requestId"`
@@ -28,7 +28,7 @@ type DMAssistantResponse struct {
 	Complete  bool        `json:"complete"`
 }
 
-// HandleDMAssistantMessage processes DM Assistant messages over WebSocket
+// HandleDMAssistantMessage processes DM Assistant messages over WebSocket.
 func (c *Client) HandleDMAssistantMessage(message []byte, dmAssistant *services.DMAssistantService) {
 	var msg DMAssistantMessage
 	if err := json.Unmarshal(message, &msg); err != nil {
@@ -36,7 +36,7 @@ func (c *Client) HandleDMAssistantMessage(message []byte, dmAssistant *services.
 		return
 	}
 
-	// Ensure user is DM
+	// Ensure user is DM.
 	if c.role != "dm" {
 		c.sendError(msg.RequestID, "DM privileges required")
 		return
@@ -61,7 +61,7 @@ func (c *Client) HandleDMAssistantMessage(message []byte, dmAssistant *services.
 }
 
 func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
-	// Parse the request
+	// Parse the request.
 	requestType, _ := msg.Data["type"].(string)
 	gameSessionID, _ := msg.Data["gameSessionId"].(string)
 	parameters, _ := msg.Data["parameters"].(map[string]interface{})
@@ -75,7 +75,7 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 		StreamResponse: true,
 	}
 
-	// Send initial response
+	// Send initial response.
 	c.sendDMAssistantResponse(DMAssistantResponse{
 		Type:      "dm_assistant_response",
 		RequestID: msg.RequestID,
@@ -86,7 +86,7 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 		},
 	})
 
-	// Process the request
+	// Process the request.
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -97,7 +97,7 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 		return
 	}
 
-	// Send the result
+	// Send the result.
 	c.sendDMAssistantResponse(DMAssistantResponse{
 		Type:      "dm_assistant_response",
 		RequestID: msg.RequestID,
@@ -106,7 +106,7 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 		Complete:  true,
 	})
 
-	// Broadcast certain results to the game session
+	// Broadcast certain results to the game session.
 	if requestType == models.RequestTypeLocationDesc || requestType == models.RequestTypeEnvironmentalHazard {
 		contentData, _ := json.Marshal(map[string]interface{}{
 			"contentType": requestType,
@@ -120,11 +120,11 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 }
 
 func (c *Client) handleNPCDialogue(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
-	// Stream NPC dialogue as it's generated
+	// Stream NPC dialogue as it's generated.
 	npcName, _ := msg.Data["npcName"].(string)
 	playerInput, _ := msg.Data["playerInput"].(string)
 
-	// Send typing indicator
+	// Send typing indicator.
 	c.sendDMAssistantResponse(DMAssistantResponse{
 		Type:      "npc_dialogue_stream",
 		RequestID: msg.RequestID,
@@ -136,8 +136,8 @@ func (c *Client) handleNPCDialogue(msg DMAssistantMessage, dmAssistant *services
 		},
 	})
 
-	// In a real implementation, you would stream the response
-	// For now, we'll simulate with a complete response
+	// In a real implementation, you would stream the response.
+	// For now, we'll simulate with a complete response.
 	time.Sleep(500 * time.Millisecond) // Simulate thinking
 
 	dialogue := fmt.Sprintf("'%s? Well, that's an interesting question...'", playerInput)
@@ -158,7 +158,7 @@ func (c *Client) handleLocationGeneration(msg DMAssistantMessage, dmAssistant *s
 	locationType, _ := msg.Data["locationType"].(string)
 	locationName, _ := msg.Data["locationName"].(string)
 
-	// Send progress updates
+	// Send progress updates.
 	c.sendDMAssistantResponse(DMAssistantResponse{
 		Type:      "location_generation",
 		RequestID: msg.RequestID,
@@ -199,8 +199,8 @@ func (c *Client) handleLocationGeneration(msg DMAssistantMessage, dmAssistant *s
 		},
 	})
 
-	// Final result would come from the DM Assistant service
-	// This is just a placeholder
+	// Final result would come from the DM Assistant service.
+	// This is just a placeholder.
 	location := map[string]interface{}{
 		"name":        locationName,
 		"type":        locationType,
@@ -217,7 +217,7 @@ func (c *Client) handleLocationGeneration(msg DMAssistantMessage, dmAssistant *s
 }
 
 func (c *Client) handleCombatNarration(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
-	// Quick combat narration without streaming
+	// Quick combat narration without streaming.
 	attackerName, _ := msg.Data["attackerName"].(string)
 	targetName, _ := msg.Data["targetName"].(string)
 	damage, _ := msg.Data["damage"].(float64)
@@ -234,7 +234,7 @@ func (c *Client) handleCombatNarration(msg DMAssistantMessage, dmAssistant *serv
 		Complete: true,
 	})
 
-	// Broadcast to all players in the session
+	// Broadcast to all players in the session.
 	if sessionID, ok := msg.Data["gameSessionId"].(string); ok {
 		combatData, _ := json.Marshal(map[string]interface{}{
 			"narration": narration,
@@ -250,7 +250,7 @@ func (c *Client) handleCombatNarration(msg DMAssistantMessage, dmAssistant *serv
 }
 
 func (c *Client) handlePlotTwist(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
-	// Generate a plot twist based on current context
+	// Generate a plot twist based on current context.
 	c.sendDMAssistantResponse(DMAssistantResponse{
 		Type:      "plot_twist_generation",
 		RequestID: msg.RequestID,
@@ -261,7 +261,7 @@ func (c *Client) handlePlotTwist(msg DMAssistantMessage, dmAssistant *services.D
 		},
 	})
 
-	// Simulate generation
+	// Simulate generation.
 	time.Sleep(1 * time.Second)
 
 	plotTwist := map[string]interface{}{
@@ -284,7 +284,7 @@ func (c *Client) handlePlotTwist(msg DMAssistantMessage, dmAssistant *services.D
 }
 
 func (c *Client) handleEnvironmentalHazard(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
-	// Extract parameters (not used in this example implementation)
+	// Extract parameters (not used in this example implementation).
 	// locationType, _ := msg.Data["locationType"].(string)
 	// difficulty, _ := msg.Data["difficulty"].(float64)
 
@@ -320,8 +320,8 @@ func (c *Client) sendError(requestID string, errorMsg string) {
 }
 
 func (c *Client) broadcastToSession(sessionID string, message Message) {
-	// This would broadcast to all clients in the same game session
-	// Implementation depends on your hub structure
+	// This would broadcast to all clients in the same game session.
+	// Implementation depends on your hub structure.
 	message.RoomID = sessionID
 	data, _ := json.Marshal(message)
 	c.hub.broadcast <- data

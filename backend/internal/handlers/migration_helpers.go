@@ -7,15 +7,14 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
-// DEPRECATED: These functions are kept for backward compatibility during migration
-// They now redirect to the new standardized response package
-
+// DEPRECATED: These functions are kept for backward compatibility during migration.
+// They now redirect to the new standardized response package.
 // sendJSONResponse sends a JSON response (DEPRECATED - use response.JSON)
 // Deprecated: Use response.JSON instead
 //
-//lint:ignore U1000 retained for backward compatibility
+//lint:ignore U1000 retained for backward compatibility.
 func deprecatedSendJSONResponse(w http.ResponseWriter, status int, data interface{}) {
-	// Create a minimal request with empty context for backward compatibility
+	// Create a minimal request with empty context for backward compatibility.
 	r, _ := http.NewRequest("", "", nil)
 	response.JSON(w, r, status, data)
 }
@@ -23,9 +22,9 @@ func deprecatedSendJSONResponse(w http.ResponseWriter, status int, data interfac
 // sendErrorResponse sends an error response (DEPRECATED - use response.Error)
 // Deprecated: Use response.Error or response.ErrorWithCode instead
 //
-//lint:ignore U1000 retained for backward compatibility
+//lint:ignore U1000 retained for backward compatibility.
 func deprecatedSendErrorResponse(w http.ResponseWriter, status int, message string) {
-	// Create a minimal request with empty context for backward compatibility
+	// Create a minimal request with empty context for backward compatibility.
 	r, _ := http.NewRequest("", "", nil)
 	response.BadRequest(w, r, message)
 }
@@ -33,9 +32,9 @@ func deprecatedSendErrorResponse(w http.ResponseWriter, status int, message stri
 // respondWithJSON sends a JSON response (DEPRECATED - use response.JSON)
 // Deprecated: Use response.JSON instead
 //
-//lint:ignore U1000 retained for backward compatibility
+//lint:ignore U1000 retained for backward compatibility.
 func deprecatedRespondWithJSON(w http.ResponseWriter, status int, data interface{}) {
-	// Create a minimal request with empty context for backward compatibility
+	// Create a minimal request with empty context for backward compatibility.
 	r, _ := http.NewRequest("", "", nil)
 	response.JSON(w, r, status, data)
 }
@@ -43,9 +42,9 @@ func deprecatedRespondWithJSON(w http.ResponseWriter, status int, data interface
 // respondWithError sends an error response (DEPRECATED - use response.Error)
 // Deprecated: Use response.Error or response.ErrorWithCode instead
 //
-//lint:ignore U1000 retained for backward compatibility
+//lint:ignore U1000 retained for backward compatibility.
 func deprecatedRespondWithError(w http.ResponseWriter, status int, message string) {
-	// Create a minimal request with empty context for backward compatibility
+	// Create a minimal request with empty context for backward compatibility.
 	r, _ := http.NewRequest("", "", nil)
 
 	switch status {
@@ -62,9 +61,9 @@ func deprecatedRespondWithError(w http.ResponseWriter, status int, message strin
 	}
 }
 
-// parseJSON parses JSON request body (kept for compatibility)
+// parseJSON parses JSON request body (kept for compatibility).
 //
-//lint:ignore U1000 retained for backward compatibility
+//lint:ignore U1000 retained for backward compatibility.
 func parseJSON(r *http.Request, v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
 }

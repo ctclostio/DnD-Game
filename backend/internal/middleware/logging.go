@@ -4,23 +4,23 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/google/uuid"
 )
 
-// RequestLogger middleware logs all HTTP requests
+// RequestLogger middleware logs all HTTP requests.
 func RequestLogger(log *logger.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
-			// Generate request ID
+			// Generate request ID.
 			requestID := r.Header.Get("X-Request-ID")
 			if requestID == "" {
 				requestID = uuid.New().String()
 			}
 
-			// Add request ID and correlation ID to context
+			// Add request ID and correlation ID to context.
 			ctx := logger.ContextWithRequestID(r.Context(), requestID)
 
 			correlationID := r.Header.Get("X-Correlation-ID")
@@ -30,14 +30,14 @@ func RequestLogger(log *logger.Logger) func(http.Handler) http.Handler {
 			ctx = logger.ContextWithCorrelationID(ctx, correlationID)
 			r = r.WithContext(ctx)
 
-			// Create a response writer wrapper to capture status code
+			// Create a response writer wrapper to capture status code.
 			rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 
-			// Add IDs to response header
+			// Add IDs to response header.
 			w.Header().Set("X-Request-ID", requestID)
 			w.Header().Set("X-Correlation-ID", correlationID)
 
-			// Log request start
+			// Log request start.
 			log.WithRequestID(requestID).
 				WithCorrelationID(correlationID).
 				WithFields(map[string]interface{}{
@@ -50,10 +50,10 @@ func RequestLogger(log *logger.Logger) func(http.Handler) http.Handler {
 				Info().
 				Msg("Request started")
 
-			// Process request
+			// Process request.
 			next.ServeHTTP(rw, r)
 
-			// Log request completion
+			// Log request completion.
 			duration := time.Since(start)
 			log.WithRequestID(requestID).
 				WithCorrelationID(correlationID).
@@ -88,49 +88,49 @@ func (rw *responseWriter) Write(data []byte) (int, error) {
 	return n, err
 }
 
-// CorrelationID middleware ensures all requests have a correlation ID
+// CorrelationID middleware ensures all requests have a correlation ID.
 func CorrelationID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check for existing correlation ID
+		// Check for existing correlation ID.
 		correlationID := r.Header.Get("X-Correlation-ID")
 		if correlationID == "" {
 			correlationID = uuid.New().String()
 		}
 
-		// Add to context
+		// Add to context.
 		ctx := logger.ContextWithCorrelationID(r.Context(), correlationID)
 		r = r.WithContext(ctx)
 
-		// Add to response header
+		// Add to response header.
 		w.Header().Set("X-Correlation-ID", correlationID)
 
 		next.ServeHTTP(w, r)
 	})
 }
 
-// getClientIP extracts the client IP address from the request
+// getClientIP extracts the client IP address from the request.
 func getClientIP(r *http.Request) string {
-	// Check X-Forwarded-For header
+	// Check X-Forwarded-For header.
 	forwarded := r.Header.Get("X-Forwarded-For")
 	if forwarded != "" {
 		return forwarded
 	}
 
-	// Check X-Real-IP header
+	// Check X-Real-IP header.
 	realIP := r.Header.Get("X-Real-IP")
 	if realIP != "" {
 		return realIP
 	}
 
-	// Fall back to RemoteAddr
+	// Fall back to RemoteAddr.
 	return r.RemoteAddr
 }
 
-// ErrorLogger logs errors with context
+// ErrorLogger logs errors with context.
 func ErrorLogger(log *logger.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Create custom response writer to intercept errors
+			// Create custom response writer to intercept errors.
 			rw := &errorResponseWriter{
 				ResponseWriter: w,
 				log:            log.WithContext(r.Context()),
@@ -141,7 +141,7 @@ func ErrorLogger(log *logger.Logger) func(http.Handler) http.Handler {
 	}
 }
 
-// errorResponseWriter logs errors when status code >= 400
+// errorResponseWriter logs errors when status code >= 400.
 type errorResponseWriter struct {
 	http.ResponseWriter
 	log         *logger.Logger
@@ -154,7 +154,7 @@ func (w *errorResponseWriter) WriteHeader(code int) {
 		w.statusCode = code
 		w.wroteHeader = true
 
-		// Log errors
+		// Log errors.
 		if code >= 400 {
 			w.log.WithField("status_code", code).
 				Error().

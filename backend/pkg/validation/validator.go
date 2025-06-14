@@ -13,16 +13,16 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// Validator wraps the go-playground validator
+// Validator wraps the go-playground validator.
 type Validator struct {
 	validator *validator.Validate
 }
 
-// New creates a new validator instance
+// New creates a new validator instance.
 func New() *Validator {
 	v := validator.New()
 
-	// Register custom tag name function
+	// Register custom tag name function.
 	v.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
 		if name == "-" {
@@ -31,7 +31,7 @@ func New() *Validator {
 		return name
 	})
 
-	// Register custom validations
+	// Register custom validations.
 	registerCustomValidations(v)
 
 	return &Validator{
@@ -39,16 +39,16 @@ func New() *Validator {
 	}
 }
 
-// registerCustomValidations registers custom validation rules
+// registerCustomValidations registers custom validation rules.
 func registerCustomValidations(v *validator.Validate) {
-	// D&D specific validations
+	// D&D specific validations.
 	_ = v.RegisterValidation("dndname", validateDnDName)
 	_ = v.RegisterValidation("dicenotation", validateDiceNotation)
 	_ = v.RegisterValidation("alignment", validateAlignment)
 	_ = v.RegisterValidation("ability", validateAbilityScore)
 }
 
-// Validate validates a struct
+// Validate validates a struct.
 func (v *Validator) Validate(i interface{}) error {
 	if err := v.validator.Struct(i); err != nil {
 		return v.formatValidationError(err)
@@ -56,9 +56,9 @@ func (v *Validator) Validate(i interface{}) error {
 	return nil
 }
 
-// ValidateRequest validates and decodes a request body
+// ValidateRequest validates and decodes a request body.
 func (v *Validator) ValidateRequest(r *http.Request, dst interface{}) error {
-	// Decode request body
+	// Decode request body.
 	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
 		if err == io.EOF {
 			return errors.NewBadRequestError("Request body is empty")
@@ -66,11 +66,11 @@ func (v *Validator) ValidateRequest(r *http.Request, dst interface{}) error {
 		return errors.NewBadRequestError("Invalid JSON format").WithInternal(err)
 	}
 
-	// Validate struct
+	// Validate struct.
 	return v.Validate(dst)
 }
 
-// formatValidationError formats validation errors into AppError
+// formatValidationError formats validation errors into AppError.
 func (v *Validator) formatValidationError(err error) error {
 	validationErrors := &errors.ValidationErrors{}
 
@@ -88,7 +88,7 @@ func (v *Validator) formatValidationError(err error) error {
 	return validationErrors.ToAppError()
 }
 
-// getErrorMessage returns a user-friendly error message
+// getErrorMessage returns a user-friendly error message.
 func (v *Validator) getErrorMessage(field, tag, param string) string {
 	messages := map[string]string{
 		"required":     fmt.Sprintf("%s is required", field),
@@ -111,16 +111,15 @@ func (v *Validator) getErrorMessage(field, tag, param string) string {
 	return fmt.Sprintf("%s failed %s validation", field, tag)
 }
 
-// Custom validation functions
-
-// validateDnDName validates D&D character names
+// Custom validation functions.
+// validateDnDName validates D&D character names.
 func validateDnDName(fl validator.FieldLevel) bool {
 	name := fl.Field().String()
 	if len(name) < 3 || len(name) > 50 {
 		return false
 	}
 
-	// Allow letters, spaces, hyphens, and apostrophes
+	// Allow letters, spaces, hyphens, and apostrophes.
 	for _, char := range name {
 		valid := (char >= 'a' && char <= 'z') ||
 			(char >= 'A' && char <= 'Z') ||
@@ -141,7 +140,7 @@ func validateDiceNotation(fl validator.FieldLevel) bool {
 	return diceNotationRegex.MatchString(notation)
 }
 
-// validateAlignment validates D&D alignments
+// validateAlignment validates D&D alignments.
 func validateAlignment(fl validator.FieldLevel) bool {
 	alignment := fl.Field().String()
 	validAlignments := []string{
@@ -159,15 +158,14 @@ func validateAlignment(fl validator.FieldLevel) bool {
 	return false
 }
 
-// validateAbilityScore validates ability scores (1-30)
+// validateAbilityScore validates ability scores (1-30).
 func validateAbilityScore(fl validator.FieldLevel) bool {
 	score := fl.Field().Int()
 	return score >= 1 && score <= 30
 }
 
-// Request DTOs with validation tags
-
-// CreateCharacterRequest represents a character creation request
+// Request DTOs with validation tags.
+// CreateCharacterRequest represents a character creation request.
 type CreateCharacterRequest struct {
 	Name       string                 `json:"name" validate:"required,dndname"`
 	Race       string                 `json:"race" validate:"required"`
@@ -181,7 +179,7 @@ type CreateCharacterRequest struct {
 	Traits     map[string]interface{} `json:"traits"`
 }
 
-// UpdateCharacterRequest represents a character update request
+// UpdateCharacterRequest represents a character update request.
 type UpdateCharacterRequest struct {
 	Name       string                 `json:"name,omitempty" validate:"omitempty,dndname"`
 	Background string                 `json:"background,omitempty"`
@@ -193,21 +191,21 @@ type UpdateCharacterRequest struct {
 	Traits     map[string]interface{} `json:"traits,omitempty"`
 }
 
-// DiceRollRequest represents a dice roll request
+// DiceRollRequest represents a dice roll request.
 type DiceRollRequest struct {
 	Notation string `json:"notation" validate:"required,dicenotation"`
 	Purpose  string `json:"purpose,omitempty" validate:"max=100"`
 }
 
-// Global validator instance
+// Global validator instance.
 var defaultValidator *Validator
 
-// Init initializes the global validator
+// Init initializes the global validator.
 func Init() {
 	defaultValidator = New()
 }
 
-// GetValidator returns the global validator instance
+// GetValidator returns the global validator instance.
 func GetValidator() *Validator {
 	if defaultValidator == nil {
 		Init()
@@ -215,12 +213,12 @@ func GetValidator() *Validator {
 	return defaultValidator
 }
 
-// ValidateStruct validates a struct using the global validator
+// ValidateStruct validates a struct using the global validator.
 func ValidateStruct(s interface{}) error {
 	return GetValidator().Validate(s)
 }
 
-// ValidateRequestBody validates and decodes a request body using the global validator
+// ValidateRequestBody validates and decodes a request body using the global validator.
 func ValidateRequestBody(r *http.Request, dst interface{}) error {
 	return GetValidator().ValidateRequest(r, dst)
 }

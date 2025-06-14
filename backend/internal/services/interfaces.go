@@ -8,10 +8,9 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// Service interfaces to prevent circular dependencies
-// These interfaces define contracts that services can depend on without creating circular imports
-
-// CombatServiceInterface defines the combat service contract
+// Service interfaces to prevent circular dependencies.
+// These interfaces define contracts that services can depend on without creating circular imports.
+// CombatServiceInterface defines the combat service contract.
 type CombatServiceInterface interface {
 	StartCombat(ctx context.Context, sessionID string, participants []models.Combatant) (*models.Combat, error)
 	GetCombatState(ctx context.Context, combatID string) (*models.Combat, error)
@@ -23,50 +22,50 @@ type CombatServiceInterface interface {
 	SetCombatState(combat *models.Combat)
 }
 
-// RuleEngineInterface defines the rule engine contract
+// RuleEngineInterface defines the rule engine contract.
 type RuleEngineInterface interface {
 	EvaluateRule(ctx context.Context, rule *models.Rule, context map[string]interface{}) (bool, error)
 	ExecuteAction(ctx context.Context, action *models.RuleAction, context map[string]interface{}) error
 	ValidateRule(rule *models.Rule) error
 }
 
-// DiceRollServiceInterface defines the dice rolling contract
+// DiceRollServiceInterface defines the dice rolling contract.
 type DiceRollServiceInterface interface {
 	Roll(notation string) (*models.DiceRollResult, error)
 	RollWithAdvantage(notation string, advantage bool) (*models.DiceRollResult, error)
 }
 
-// FactionSystemInterface defines the faction system contract
+// FactionSystemInterface defines the faction system contract.
 type FactionSystemInterface interface {
 	GetFaction(ctx context.Context, factionID string) (*models.Faction, error)
 	UpdateFactionRelationship(ctx context.Context, faction1ID, faction2ID string, change float64) error
 	GetFactionRelationship(ctx context.Context, faction1ID, faction2ID string) (float64, error)
 }
 
-// EventBus for decoupled communication between services
+// EventBus for decoupled communication between services.
 type EventBus interface {
 	Publish(ctx context.Context, event Event) error
 	Subscribe(eventType string, handler EventHandler) error
 }
 
-// JWTManagerInterface defines the JWT manager contract
+// JWTManagerInterface defines the JWT manager contract.
 type JWTManagerInterface interface {
 	GenerateTokenPair(userID, username, email, role string) (*auth.TokenPair, error)
 	ValidateToken(tokenString string, expectedType auth.TokenType) (*auth.Claims, error)
 	RefreshToken(refreshToken string) (*auth.TokenPair, error)
 }
 
-// Event represents a domain event
+// Event represents a domain event.
 type Event interface {
 	Type() string
 	Timestamp() time.Time
 	Data() interface{}
 }
 
-// EventHandler processes events
+// EventHandler processes events.
 type EventHandler func(ctx context.Context, event Event) error
 
-// BaseEvent provides common event functionality
+// BaseEvent provides common event functionality.
 type BaseEvent struct {
 	EventType string      `json:"type"`
 	EventTime time.Time   `json:"timestamp"`
@@ -77,7 +76,7 @@ func (e BaseEvent) Type() string         { return e.EventType }
 func (e BaseEvent) Timestamp() time.Time { return e.EventTime }
 func (e BaseEvent) Data() interface{}    { return e.EventData }
 
-// Common event types
+// Common event types.
 const (
 	EventCombatStarted          = "combat.started"
 	EventCombatEnded            = "combat.ended"
@@ -86,19 +85,19 @@ const (
 	EventFactionRelationChanged = "faction.relation.changed"
 )
 
-// AIRaceGeneratorInterface defines the AI race generation contract
+// AIRaceGeneratorInterface defines the AI race generation contract.
 type AIRaceGeneratorInterface interface {
 	GenerateCustomRace(ctx context.Context, request models.CustomRaceRequest) (*models.CustomRaceGenerationResult, error)
 }
 
-// AICampaignManagerInterface defines the AI campaign management contract
+// AICampaignManagerInterface defines the AI campaign management contract.
 type AICampaignManagerInterface interface {
 	GenerateStoryArc(ctx context.Context, req models.GenerateStoryArcRequest) (*models.GeneratedStoryArc, error)
 	GenerateSessionRecap(ctx context.Context, memories []*models.SessionMemory) (*models.GeneratedRecap, error)
 	GenerateForeshadowing(ctx context.Context, req models.GenerateForeshadowingRequest, plotThread *models.PlotThread, storyArc *models.StoryArc) (*models.GeneratedForeshadowing, error)
 }
 
-// AIDMAssistantInterface defines the AI DM assistant contract
+// AIDMAssistantInterface defines the AI DM assistant contract.
 type AIDMAssistantInterface interface {
 	GenerateNPCDialogue(ctx context.Context, req models.NPCDialogueRequest) (string, error)
 	GenerateLocationDescription(ctx context.Context, req models.LocationDescriptionRequest) (*models.AILocation, error)
@@ -108,7 +107,7 @@ type AIDMAssistantInterface interface {
 	GenerateNPC(ctx context.Context, role string, context map[string]interface{}) (*models.AINPC, error)
 }
 
-// Shutdowner defines a service that can be gracefully shut down
+// Shutdowner defines a service that can be gracefully shut down.
 type Shutdowner interface {
 	Shutdown(ctx context.Context) error
 }

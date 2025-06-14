@@ -41,7 +41,7 @@ func TestCharacterService_CreateCharacter(t *testing.T) {
 				},
 			},
 			setupMock: func(charRepo *mocks.MockCharacterRepository, llm *mocks.MockLLMProvider) {
-				// Just accept any character since the service modifies it
+				// Just accept any character since the service modifies it.
 				charRepo.On("Create", ctx, mock.Anything).Return(nil)
 			},
 			validate: func(t *testing.T, char *models.Character) {
@@ -221,7 +221,7 @@ func TestCharacterService_UpdateCharacter(t *testing.T) {
 				Level: 2,         // And level
 			},
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				// Get existing character
+				// Get existing character.
 				existing := mocks.CreateTestCharacter("char-123", "user-123", "Aragorn", "Human", "Ranger")
 				m.On("GetByID", ctx, "char-123").Return(existing, nil)
 
@@ -373,7 +373,7 @@ func TestCharacterService_AddExperience(t *testing.T) {
 				}
 				charRepo.On("GetByID", ctx, "char-123").Return(char, nil)
 
-				// XP increases but no level up (need 300 for level 2)
+				// XP increases but no level up (need 300 for level 2).
 				charRepo.On("Update", ctx, mock.Anything).Return(nil)
 			},
 		},
@@ -393,10 +393,10 @@ func TestCharacterService_AddExperience(t *testing.T) {
 						Constitution: 14,
 					},
 				}
-				// Mock GetByID to return character for all calls (AddExperience and LevelUp need it)
+				// Mock GetByID to return character for all calls (AddExperience and LevelUp need it).
 				charRepo.On("GetByID", ctx, "char-123").Return(char, nil)
 
-				// Update will be called after level up
+				// Update will be called after level up.
 				charRepo.On("Update", ctx, mock.Anything).Return(nil)
 			},
 		},
@@ -529,7 +529,7 @@ func TestCharacterService_UseSpellSlot(t *testing.T) {
 				}
 				m.On("GetByID", ctx, "char-123").Return(char, nil)
 
-				// Verify slot was decremented
+				// Verify slot was decremented.
 				m.On("Update", ctx, mock.Anything).Return(nil)
 			},
 		},

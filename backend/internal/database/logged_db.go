@@ -9,13 +9,13 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// LoggedDB wraps DB with query logging
+// LoggedDB wraps DB with query logging.
 type LoggedDB struct {
 	*DB
 	logger *logger.LoggerV2
 }
 
-// NewLoggedDB creates a new LoggedDB wrapper
+// NewLoggedDB creates a new LoggedDB wrapper.
 func NewLoggedDB(db *DB, logger *logger.LoggerV2) *LoggedDB {
 	return &LoggedDB{
 		DB:     db,
@@ -23,11 +23,11 @@ func NewLoggedDB(db *DB, logger *logger.LoggerV2) *LoggedDB {
 	}
 }
 
-// logQuery logs a database query with timing and context
+// logQuery logs a database query with timing and context.
 func (ldb *LoggedDB) logQuery(ctx context.Context, query string, args []interface{}, err error, duration time.Duration) {
 	log := ldb.logger.WithContext(ctx)
 
-	// Truncate query for logging
+	// Truncate query for logging.
 	truncatedQuery := truncateQuery(query)
 
 	event := log.Debug().
@@ -36,7 +36,7 @@ func (ldb *LoggedDB) logQuery(ctx context.Context, query string, args []interfac
 		Int64("duration_ms", duration.Milliseconds()).
 		Int("args_count", len(args))
 
-	// Add first few args for debugging (be careful not to log sensitive data)
+	// Add first few args for debugging (be careful not to log sensitive data).
 	if len(args) > 0 && len(args) <= 3 {
 		event = event.Interface("args", args)
 	}
@@ -52,16 +52,16 @@ func (ldb *LoggedDB) logQuery(ctx context.Context, query string, args []interfac
 	}
 }
 
-// QueryRowContext executes a query with context that is expected to return at most one row
+// QueryRowContext executes a query with context that is expected to return at most one row.
 func (ldb *LoggedDB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	start := time.Now()
 	row := ldb.DB.QueryRowContext(ctx, query, args...)
-	// Note: We can't get the error here until Scan is called
+	// Note: We can't get the error here until Scan is called.
 	ldb.logQuery(ctx, query, args, nil, time.Since(start))
 	return row
 }
 
-// ExecContext executes a query with context without returning any rows
+// ExecContext executes a query with context without returning any rows.
 func (ldb *LoggedDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	start := time.Now()
 	result, err := ldb.DB.ExecContext(ctx, query, args...)
@@ -69,7 +69,7 @@ func (ldb *LoggedDB) ExecContext(ctx context.Context, query string, args ...inte
 	return result, err
 }
 
-// QueryContext executes a query with context that returns rows
+// QueryContext executes a query with context that returns rows.
 func (ldb *LoggedDB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	start := time.Now()
 	rows, err := ldb.DB.QueryContext(ctx, query, args...)
@@ -77,7 +77,7 @@ func (ldb *LoggedDB) QueryContext(ctx context.Context, query string, args ...int
 	return rows, err
 }
 
-// GetContext executes a query with context and scans the result into dest
+// GetContext executes a query with context and scans the result into dest.
 func (ldb *LoggedDB) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
 	start := time.Now()
 	err := ldb.DB.GetContext(ctx, dest, query, args...)
@@ -85,7 +85,7 @@ func (ldb *LoggedDB) GetContext(ctx context.Context, dest interface{}, query str
 	return err
 }
 
-// SelectContext executes a query with context and scans the results into dest
+// SelectContext executes a query with context and scans the results into dest.
 func (ldb *LoggedDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
 	start := time.Now()
 	err := ldb.DB.SelectContext(ctx, dest, query, args...)
@@ -93,7 +93,7 @@ func (ldb *LoggedDB) SelectContext(ctx context.Context, dest interface{}, query 
 	return err
 }
 
-// QueryRowContextRebind executes a query with context after rebinding placeholders
+// QueryRowContextRebind executes a query with context after rebinding placeholders.
 func (ldb *LoggedDB) QueryRowContextRebind(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	start := time.Now()
 	row := ldb.DB.QueryRowContextRebind(ctx, query, args...)
@@ -101,7 +101,7 @@ func (ldb *LoggedDB) QueryRowContextRebind(ctx context.Context, query string, ar
 	return row
 }
 
-// ExecContextRebind executes a query with context after rebinding placeholders
+// ExecContextRebind executes a query with context after rebinding placeholders.
 func (ldb *LoggedDB) ExecContextRebind(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	start := time.Now()
 	result, err := ldb.DB.ExecContextRebind(ctx, query, args...)
@@ -109,7 +109,7 @@ func (ldb *LoggedDB) ExecContextRebind(ctx context.Context, query string, args .
 	return result, err
 }
 
-// QueryContextRebind executes a query with context after rebinding placeholders
+// QueryContextRebind executes a query with context after rebinding placeholders.
 func (ldb *LoggedDB) QueryContextRebind(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	start := time.Now()
 	rows, err := ldb.DB.QueryContextRebind(ctx, query, args...)
@@ -117,7 +117,7 @@ func (ldb *LoggedDB) QueryContextRebind(ctx context.Context, query string, args 
 	return rows, err
 }
 
-// WithTx executes a function within a database transaction with logging
+// WithTx executes a function within a database transaction with logging.
 func (ldb *LoggedDB) WithTx(fn func(*sqlx.Tx) error) error {
 	start := time.Now()
 	ctx := context.Background()
@@ -142,7 +142,7 @@ func (ldb *LoggedDB) WithTx(fn func(*sqlx.Tx) error) error {
 	return err
 }
 
-// WithTxContext executes a function within a database transaction with context and logging
+// WithTxContext executes a function within a database transaction with context and logging.
 func (ldb *LoggedDB) WithTxContext(ctx context.Context, fn func(*sqlx.Tx) error) error {
 	start := time.Now()
 
@@ -185,7 +185,7 @@ func (ldb *LoggedDB) WithTxContext(ctx context.Context, fn func(*sqlx.Tx) error)
 	return nil
 }
 
-// truncateQuery truncates long queries for logging
+// truncateQuery truncates long queries for logging.
 func truncateQuery(query string) string {
 	const maxLength = 500
 	if len(query) > maxLength {

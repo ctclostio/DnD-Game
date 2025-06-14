@@ -13,13 +13,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Rule Template Handlers
-
-// GetRuleTemplates handles GET /api/rules/templates
+// Rule Template Handlers.
+// GetRuleTemplates handles GET /api/rules/templates.
 func (h *Handlers) GetRuleTemplates(w http.ResponseWriter, r *http.Request) {
 	userID, _ := auth.GetUserIDFromContext(r.Context())
 
-	// Get query parameters
+	// Get query parameters.
 	category := r.URL.Query().Get("category")
 	isPublic := r.URL.Query().Get("public") == "true"
 
@@ -32,7 +31,7 @@ func (h *Handlers) GetRuleTemplates(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, templates)
 }
 
-// GetRuleTemplate handles GET /api/rules/templates/{id}
+// GetRuleTemplate handles GET /api/rules/templates/{id}.
 func (h *Handlers) GetRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	templateID := mux.Vars(r)["id"]
 
@@ -45,7 +44,7 @@ func (h *Handlers) GetRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, template)
 }
 
-// CreateRuleTemplate handles POST /api/rules/templates
+// CreateRuleTemplate handles POST /api/rules/templates.
 func (h *Handlers) CreateRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	userID, _ := auth.GetUserIDFromContext(r.Context())
 
@@ -66,7 +65,7 @@ func (h *Handlers) CreateRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusCreated, createdTemplate)
 }
 
-// UpdateRuleTemplate handles PUT /api/rules/templates/{id}
+// UpdateRuleTemplate handles PUT /api/rules/templates/{id}.
 func (h *Handlers) UpdateRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	templateID := mux.Vars(r)["id"]
 	userID, _ := auth.GetUserIDFromContext(r.Context())
@@ -77,7 +76,7 @@ func (h *Handlers) UpdateRuleTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify ownership
+	// Verify ownership.
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
 		response.NotFound(w, r, "Rule template not found")
@@ -98,12 +97,12 @@ func (h *Handlers) UpdateRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, updatedTemplate)
 }
 
-// DeleteRuleTemplate handles DELETE /api/rules/templates/{id}
+// DeleteRuleTemplate handles DELETE /api/rules/templates/{id}.
 func (h *Handlers) DeleteRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	templateID := mux.Vars(r)["id"]
 	userID, _ := auth.GetUserIDFromContext(r.Context())
 
-	// Verify ownership
+	// Verify ownership.
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
 		response.NotFound(w, r, "Rule template not found")
@@ -123,7 +122,7 @@ func (h *Handlers) DeleteRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusNoContent, nil)
 }
 
-// CompileRuleTemplate handles POST /api/rules/templates/{id}/compile
+// CompileRuleTemplate handles POST /api/rules/templates/{id}/compile.
 func (h *Handlers) CompileRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	templateID := mux.Vars(r)["id"]
 
@@ -136,14 +135,14 @@ func (h *Handlers) CompileRuleTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the template first
+	// Get the template first.
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
 		response.NotFound(w, r, "Rule template not found")
 		return
 	}
 
-	// Compile the template
+	// Compile the template.
 	compiled, err := h.ruleEngine.CompileRule(template)
 	if err != nil {
 		response.BadRequest(w, r, err.Error())
@@ -153,7 +152,7 @@ func (h *Handlers) CompileRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, compiled)
 }
 
-// ValidateRuleTemplate handles POST /api/rules/templates/{id}/validate
+// ValidateRuleTemplate handles POST /api/rules/templates/{id}/validate.
 func (h *Handlers) ValidateRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	templateID := mux.Vars(r)["id"]
 
@@ -172,7 +171,7 @@ func (h *Handlers) ValidateRuleTemplate(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Validate the rule by attempting to compile it
+	// Validate the rule by attempting to compile it.
 	compiled, err := h.ruleEngine.CompileRule(template)
 	validationResult := &services.ValidationResult{
 		IsValid: err == nil,
@@ -182,17 +181,17 @@ func (h *Handlers) ValidateRuleTemplate(w http.ResponseWriter, r *http.Request) 
 		validationResult.Errors = append(validationResult.Errors, err.Error())
 	}
 
-	// If valid, try to execute with test scenario
+	// If valid, try to execute with test scenario.
 	var executionResult interface{}
 	if validationResult.IsValid && validateRequest.TestScenario != nil {
-		// Create a test instance for validation
+		// Create a test instance for validation.
 		testInstance := &models.RuleInstance{
 			ID:              "test-" + templateID,
 			TemplateID:      templateID,
 			ParameterValues: validateRequest.TestScenario,
 		}
 
-		// Create test trigger data
+		// Create test trigger data.
 		testTrigger := services.TriggerData{
 			Type:       "test",
 			Properties: validateRequest.TestScenario,
@@ -214,7 +213,7 @@ func (h *Handlers) ValidateRuleTemplate(w http.ResponseWriter, r *http.Request) 
 	response.JSON(w, r, http.StatusOK, resp)
 }
 
-// AnalyzeRuleBalance handles POST /api/rules/templates/{id}/analyze
+// AnalyzeRuleBalance handles POST /api/rules/templates/{id}/analyze.
 func (h *Handlers) AnalyzeRuleBalance(w http.ResponseWriter, r *http.Request) {
 	templateID := mux.Vars(r)["id"]
 
@@ -225,7 +224,7 @@ func (h *Handlers) AnalyzeRuleBalance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&analysisRequest); err != nil {
-		// Use defaults
+		// Use defaults.
 		analysisRequest.SimulationCount = 1000
 		analysisRequest.LevelRange = models.LevelRange{Min: 1, Max: 20}
 		analysisRequest.Scenarios = []string{"pvp", "pve", "exploration", "roleplay"}
@@ -237,7 +236,7 @@ func (h *Handlers) AnalyzeRuleBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Call the balance analyzer with the template
+	// Call the balance analyzer with the template.
 	analysis, err := h.balanceAnalyzer.AnalyzeRuleBalance(r.Context(), template)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -247,7 +246,7 @@ func (h *Handlers) AnalyzeRuleBalance(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, analysis)
 }
 
-// GetNodeTemplates handles GET /api/rules/nodes/templates
+// GetNodeTemplates handles GET /api/rules/nodes/templates.
 func (h *Handlers) GetNodeTemplates(w http.ResponseWriter, r *http.Request) {
 	templates, err := h.ruleEngine.GetNodeTemplates()
 	if err != nil {
@@ -258,9 +257,8 @@ func (h *Handlers) GetNodeTemplates(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, templates)
 }
 
-// Rule Instance Handlers
-
-// GetActiveRules handles GET /api/rules/active
+// Rule Instance Handlers.
+// GetActiveRules handles GET /api/rules/active.
 func (h *Handlers) GetActiveRules(w http.ResponseWriter, r *http.Request) {
 	gameSessionID := r.URL.Query().Get("game_session_id")
 	characterID := r.URL.Query().Get("character_id")
@@ -279,7 +277,7 @@ func (h *Handlers) GetActiveRules(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, rules)
 }
 
-// ActivateRule handles POST /api/rules/activate
+// ActivateRule handles POST /api/rules/activate.
 func (h *Handlers) ActivateRule(w http.ResponseWriter, r *http.Request) {
 	var activateRequest struct {
 		TemplateID    string                 `json:"template_id"`
@@ -308,7 +306,7 @@ func (h *Handlers) ActivateRule(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusCreated, activeRule)
 }
 
-// DeactivateRule handles DELETE /api/rules/active/{id}
+// DeactivateRule handles DELETE /api/rules/active/{id}.
 func (h *Handlers) DeactivateRule(w http.ResponseWriter, r *http.Request) {
 	ruleID := mux.Vars(r)["id"]
 
@@ -320,7 +318,7 @@ func (h *Handlers) DeactivateRule(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusNoContent, nil)
 }
 
-// ExecuteRule handles POST /api/rules/execute
+// ExecuteRule handles POST /api/rules/execute.
 func (h *Handlers) ExecuteRule(w http.ResponseWriter, r *http.Request) {
 	var executeRequest struct {
 		RuleID  string                 `json:"rule_id"`
@@ -332,7 +330,7 @@ func (h *Handlers) ExecuteRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the rule instance and template
+	// Get the rule instance and template.
 	ruleInstance, err := h.ruleEngine.GetRuleInstance(executeRequest.RuleID)
 	if err != nil {
 		response.NotFound(w, r, "Rule instance not found")
@@ -345,20 +343,20 @@ func (h *Handlers) ExecuteRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Compile the rule
+	// Compile the rule.
 	compiled, err := h.ruleEngine.CompileRule(template)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Create trigger data from context
+	// Create trigger data from context.
 	trigger := services.TriggerData{
 		Type:       "manual",
 		Properties: executeRequest.Context,
 	}
 
-	// Execute the rule
+	// Execute the rule.
 	result, err := h.ruleEngine.ExecuteRule(r.Context(), compiled, ruleInstance, trigger)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -368,7 +366,7 @@ func (h *Handlers) ExecuteRule(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, result)
 }
 
-// GetConditionalModifiers handles GET /api/rules/conditional/{id}
+// GetConditionalModifiers handles GET /api/rules/conditional/{id}.
 func (h *Handlers) GetConditionalModifiers(w http.ResponseWriter, r *http.Request) {
 	ruleID := mux.Vars(r)["id"]
 
@@ -381,7 +379,7 @@ func (h *Handlers) GetConditionalModifiers(w http.ResponseWriter, r *http.Reques
 		MoonPhase string `json:"moon_phase"`
 	}
 
-	// Get context from query parameters
+	// Get context from query parameters.
 	context.Plane = r.URL.Query().Get("plane")
 	context.Weather = r.URL.Query().Get("weather")
 	context.Emotion = r.URL.Query().Get("emotion")
@@ -389,14 +387,14 @@ func (h *Handlers) GetConditionalModifiers(w http.ResponseWriter, r *http.Reques
 	context.Time = r.URL.Query().Get("time")
 	context.MoonPhase = r.URL.Query().Get("moon_phase")
 
-	// Get the rule template
+	// Get the rule template.
 	template, err := h.ruleEngine.GetRuleTemplate(ruleID)
 	if err != nil {
 		response.NotFound(w, r, "Rule template not found")
 		return
 	}
 
-	// Create contexts from the provided parameters
+	// Create contexts from the provided parameters.
 	contexts := []models.ConditionalContext{}
 	if context.Plane != "" {
 		contexts = append(contexts, models.ConditionalContext{
@@ -414,7 +412,7 @@ func (h *Handlers) GetConditionalModifiers(w http.ResponseWriter, r *http.Reques
 	}
 	// Add other contexts similarly...
 
-	// Apply conditional rules to see what modifications would be made
+	// Apply conditional rules to see what modifications would be made.
 	testInstance := &models.RuleInstance{
 		ID:         "test-" + ruleID,
 		TemplateID: ruleID,
@@ -426,7 +424,7 @@ func (h *Handlers) GetConditionalModifiers(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Return the differences between original and modified template
+	// Return the differences between original and modified template.
 	modifiers := map[string]interface{}{
 		"original":    template,
 		"modified":    modifiedTemplate,
@@ -437,7 +435,7 @@ func (h *Handlers) GetConditionalModifiers(w http.ResponseWriter, r *http.Reques
 	response.JSON(w, r, http.StatusOK, modifiers)
 }
 
-// ExportRuleTemplate handles GET /api/rules/templates/{id}/export
+// ExportRuleTemplate handles GET /api/rules/templates/{id}/export.
 func (h *Handlers) ExportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	templateID := mux.Vars(r)["id"]
 	format := r.URL.Query().Get("format")
@@ -464,7 +462,7 @@ func (h *Handlers) ExportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ImportRuleTemplate handles POST /api/rules/templates/import
+// ImportRuleTemplate handles POST /api/rules/templates/import.
 func (h *Handlers) ImportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	userID, _ := auth.GetUserIDFromContext(r.Context())
 
@@ -474,7 +472,7 @@ func (h *Handlers) ImportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Clear ID and set creator
+	// Clear ID and set creator.
 	template.ID = ""
 	template.CreatedByID = userID
 
@@ -487,7 +485,7 @@ func (h *Handlers) ImportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusCreated, imported)
 }
 
-// GetRuleHistory handles GET /api/rules/history
+// GetRuleHistory handles GET /api/rules/history.
 func (h *Handlers) GetRuleHistory(w http.ResponseWriter, r *http.Request) {
 	gameSessionID := r.URL.Query().Get("game_session_id")
 	characterID := r.URL.Query().Get("character_id")

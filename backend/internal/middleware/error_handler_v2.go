@@ -6,17 +6,17 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/google/uuid"
 )
 
-// ErrorHandlerV2 is the enhanced error handling middleware
+// ErrorHandlerV2 is the enhanced error handling middleware.
 func ErrorHandlerV2(log *logger.LoggerV2) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Add request ID to context if not present
+			// Add request ID to context if not present.
 			ctx := r.Context()
 			requestID := r.Header.Get("X-Request-ID")
 			if requestID == "" {
@@ -25,17 +25,17 @@ func ErrorHandlerV2(log *logger.LoggerV2) func(http.Handler) http.Handler {
 			ctx = context.WithValue(ctx, response.RequestIDKey, requestID)
 			r = r.WithContext(ctx)
 
-			// Add request ID to response header
+			// Add request ID to response header.
 			w.Header().Set("X-Request-ID", requestID)
 
-			// Create a custom response writer to capture panic
+			// Create a custom response writer to capture panic.
 			rw := &panicCapturingResponseWriter{
 				ResponseWriter: w,
 				log:            log,
 				requestID:      requestID,
 			}
 
-			// Defer panic recovery
+			// Defer panic recovery.
 			defer func() {
 				if rec := recover(); rec != nil {
 					rw.handlePanic(rec, r)
@@ -47,7 +47,7 @@ func ErrorHandlerV2(log *logger.LoggerV2) func(http.Handler) http.Handler {
 	}
 }
 
-// panicCapturingResponseWriter captures panics and converts them to proper error responses
+// panicCapturingResponseWriter captures panics and converts them to proper error responses.
 type panicCapturingResponseWriter struct {
 	http.ResponseWriter
 	log       *logger.LoggerV2
@@ -55,7 +55,7 @@ type panicCapturingResponseWriter struct {
 }
 
 func (w *panicCapturingResponseWriter) handlePanic(rec interface{}, r *http.Request) {
-	// Log the panic with stack trace
+	// Log the panic with stack trace.
 	stackTrace := string(debug.Stack())
 	w.log.WithContext(r.Context()).
 		Error().
@@ -66,15 +66,15 @@ func (w *panicCapturingResponseWriter) handlePanic(rec interface{}, r *http.Requ
 		Str("stack_trace", stackTrace).
 		Msg("Panic recovered in request handler")
 
-	// Create internal error
+	// Create internal error.
 	err := errors.NewInternalError("An unexpected error occurred", fmt.Errorf("panic: %v", rec)).
 		WithCode(string(errors.ErrCodeInternalError))
 
-	// Send error response using the standard response package
+	// Send error response using the standard response package.
 	response.Error(w, r, err)
 }
 
-// RequestIDMiddleware ensures every request has a unique ID
+// RequestIDMiddleware ensures every request has a unique ID.
 func RequestIDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestID := r.Header.Get("X-Request-ID")
@@ -82,21 +82,21 @@ func RequestIDMiddleware(next http.Handler) http.Handler {
 			requestID = uuid.New().String()
 		}
 
-		// Add to context
+		// Add to context.
 		ctx := context.WithValue(r.Context(), response.RequestIDKey, requestID)
 		r = r.WithContext(ctx)
 
-		// Add to response header
+		// Add to response header.
 		w.Header().Set("X-Request-ID", requestID)
 
 		next.ServeHTTP(w, r)
 	})
 }
 
-// HandlerFunc is an enhanced handler function that can return an error
+// HandlerFunc is an enhanced handler function that can return an error.
 type HandlerFunc func(w http.ResponseWriter, r *http.Request) error
 
-// Handler wraps a HandlerFunc to handle errors consistently
+// Handler wraps a HandlerFunc to handle errors consistently.
 func Handler(h HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := h(w, r); err != nil {
@@ -105,13 +105,13 @@ func Handler(h HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// AuthenticatedHandler wraps a handler that requires authentication
+// AuthenticatedHandler wraps a handler that requires authentication.
 type AuthenticatedHandlerFunc func(w http.ResponseWriter, r *http.Request, userID uuid.UUID) error
 
-// AuthenticatedHandler wraps an authenticated handler function
+// AuthenticatedHandler wraps an authenticated handler function.
 func AuthenticatedHandler(h AuthenticatedHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Extract user ID from context (set by auth middleware)
+		// Extract user ID from context (set by auth middleware).
 		userID, ok := r.Context().Value("user_id").(uuid.UUID)
 		if !ok {
 			response.Unauthorized(w, r, "Authentication required")
@@ -124,20 +124,20 @@ func AuthenticatedHandler(h AuthenticatedHandlerFunc) http.HandlerFunc {
 	}
 }
 
-// GameSessionHandler wraps a handler that requires game session context
+// GameSessionHandler wraps a handler that requires game session context.
 type GameSessionHandlerFunc func(w http.ResponseWriter, r *http.Request, userID, sessionID uuid.UUID) error
 
-// GameSessionHandler wraps a game session handler function
+// GameSessionHandler wraps a game session handler function.
 func GameSessionHandler(h GameSessionHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Extract user ID from context
+		// Extract user ID from context.
 		userID, ok := r.Context().Value("user_id").(uuid.UUID)
 		if !ok {
 			response.Unauthorized(w, r, "Authentication required")
 			return
 		}
 
-		// Extract session ID from context (set by game session middleware)
+		// Extract session ID from context (set by game session middleware).
 		sessionID, ok := r.Context().Value("session_id").(uuid.UUID)
 		if !ok {
 			response.ErrorWithCode(w, r, errors.ErrCodeNotInSession)
@@ -150,27 +150,27 @@ func GameSessionHandler(h GameSessionHandlerFunc) http.HandlerFunc {
 	}
 }
 
-// DMOnlyHandler wraps a handler that requires DM privileges
+// DMOnlyHandler wraps a handler that requires DM privileges.
 type DMOnlyHandlerFunc func(w http.ResponseWriter, r *http.Request, userID, sessionID uuid.UUID) error
 
-// DMOnlyHandler wraps a DM-only handler function
+// DMOnlyHandler wraps a DM-only handler function.
 func DMOnlyHandler(h DMOnlyHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Extract user ID from context
+		// Extract user ID from context.
 		userID, ok := r.Context().Value("user_id").(uuid.UUID)
 		if !ok {
 			response.Unauthorized(w, r, "Authentication required")
 			return
 		}
 
-		// Extract session ID from context
+		// Extract session ID from context.
 		sessionID, ok := r.Context().Value("session_id").(uuid.UUID)
 		if !ok {
 			response.ErrorWithCode(w, r, errors.ErrCodeNotInSession)
 			return
 		}
 
-		// Check if user is DM (set by game session middleware)
+		// Check if user is DM (set by game session middleware).
 		isDM, ok := r.Context().Value("is_dm").(bool)
 		if !ok || !isDM {
 			response.ErrorWithCode(w, r, errors.ErrCodeNotDM)

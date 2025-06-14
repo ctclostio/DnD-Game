@@ -13,45 +13,45 @@ import (
 	"github.com/google/uuid"
 )
 
-// LoggingMiddleware logs all HTTP requests with enhanced context
+// LoggingMiddleware logs all HTTP requests with enhanced context.
 func LoggingMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
-			// Extract or generate request ID
+			// Extract or generate request ID.
 			requestID := r.Header.Get("X-Request-ID")
 			if requestID == "" {
 				requestID = uuid.New().String()
 			}
 
-			// Extract correlation ID
+			// Extract correlation ID.
 			correlationID := r.Header.Get("X-Correlation-ID")
 			if correlationID == "" {
 				correlationID = requestID // Use request ID as correlation ID if not provided
 			}
 
-			// Add IDs to context
+			// Add IDs to context.
 			ctx := r.Context()
 			ctx = logger.ContextWithRequestID(ctx, requestID)
 			ctx = logger.ContextWithCorrelationID(ctx, correlationID)
 			r = r.WithContext(ctx)
 
-			// Create logger with context
+			// Create logger with context.
 			reqLog := log.WithContext(ctx)
 
-			// Create response writer wrapper
+			// Create response writer wrapper.
 			rw := &loggingResponseWriter{
 				ResponseWriter: w,
 				statusCode:     http.StatusOK,
 				startTime:      start,
 			}
 
-			// Add IDs to response headers
+			// Add IDs to response headers.
 			w.Header().Set("X-Request-ID", requestID)
 			w.Header().Set("X-Correlation-ID", correlationID)
 
-			// Log request start
+			// Log request start.
 			reqLog.Info().
 				Str("method", r.Method).
 				Str("path", r.URL.Path).
@@ -62,13 +62,13 @@ func LoggingMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 				Int64("content_length", r.ContentLength).
 				Msg("HTTP request started")
 
-			// Process request
+			// Process request.
 			next.ServeHTTP(rw, r)
 
-			// Calculate duration
+			// Calculate duration.
 			duration := time.Since(start)
 
-			// Determine log level based on status code and duration
+			// Determine log level based on status code and duration.
 			event := reqLog.Info()
 			if rw.statusCode >= 500 {
 				event = reqLog.Error()
@@ -78,7 +78,7 @@ func LoggingMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 				event = reqLog.Warn()
 			}
 
-			// Log request completion
+			// Log request completion.
 			event.
 				Str("method", r.Method).
 				Str("path", r.URL.Path).
@@ -92,7 +92,7 @@ func LoggingMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 	}
 }
 
-// loggingResponseWriter captures response details
+// loggingResponseWriter captures response details.
 type loggingResponseWriter struct {
 	http.ResponseWriter
 	statusCode   int
@@ -126,17 +126,17 @@ func (rw *loggingResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	return nil, nil, fmt.Errorf("response writer does not support hijacking")
 }
 
-// RequestContextMiddleware adds request context values
+// RequestContextMiddleware adds request context values.
 func RequestContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Extract user ID from auth token if present
+		// Extract user ID from auth token if present.
 		userID := extractUserIDFromRequest(r)
 		if userID != "" {
 			ctx := logger.ContextWithUserID(r.Context(), userID)
 			r = r.WithContext(ctx)
 		}
 
-		// Extract session ID from headers or query
+		// Extract session ID from headers or query.
 		sessionID := r.Header.Get("X-Session-ID")
 		if sessionID == "" {
 			sessionID = r.URL.Query().Get("session_id")
@@ -146,7 +146,7 @@ func RequestContextMiddleware(next http.Handler) http.Handler {
 			r = r.WithContext(ctx)
 		}
 
-		// Extract character ID from headers or path
+		// Extract character ID from headers or path.
 		characterID := r.Header.Get("X-Character-ID")
 		if characterID == "" {
 			// Try to extract from path (e.g., /characters/{id})
@@ -193,29 +193,28 @@ func (d *DatabaseQueryLogger) LogQuery(ctx context.Context, query string, args [
 	}
 }
 
-// Helper functions
-
+// Helper functions.
 func getClientIPV2(r *http.Request) string {
-	// Check CF-Connecting-IP for Cloudflare
+	// Check CF-Connecting-IP for Cloudflare.
 	if ip := r.Header.Get("CF-Connecting-IP"); ip != "" {
 		return ip
 	}
 
-	// Check X-Forwarded-For
+	// Check X-Forwarded-For.
 	if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
-		// Take the first IP if there are multiple
+		// Take the first IP if there are multiple.
 		if idx := strings.Index(forwarded, ","); idx != -1 {
 			return strings.TrimSpace(forwarded[:idx])
 		}
 		return forwarded
 	}
 
-	// Check X-Real-IP
+	// Check X-Real-IP.
 	if realIP := r.Header.Get("X-Real-IP"); realIP != "" {
 		return realIP
 	}
 
-	// Fall back to RemoteAddr
+	// Fall back to RemoteAddr.
 	if idx := strings.LastIndex(r.RemoteAddr, ":"); idx != -1 {
 		return r.RemoteAddr[:idx]
 	}
@@ -227,7 +226,7 @@ func sanitizeQuery(query string) string {
 		return ""
 	}
 
-	// Remove sensitive parameters
+	// Remove sensitive parameters.
 	sensitiveParams := []string{"password", "token", "secret", "api_key", "access_token", "refresh_token"}
 
 	params := strings.Split(query, "&")
@@ -286,8 +285,8 @@ func getRequestMessage(statusCode int) string {
 }
 
 func extractUserIDFromRequest(r *http.Request) string {
-	// This would typically extract from JWT token
-	// For now, check context if auth middleware has already set it
+	// This would typically extract from JWT token.
+	// For now, check context if auth middleware has already set it.
 	if userID, ok := r.Context().Value("user_id").(string); ok {
 		return userID
 	}

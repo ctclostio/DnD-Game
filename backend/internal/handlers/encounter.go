@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/gorilla/mux"
 )
 
-// GenerateEncounter creates a new AI-generated encounter
+// GenerateEncounter creates a new AI-generated encounter.
 func (h *Handlers) GenerateEncounter(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(string)
 	if !ok {
@@ -18,7 +18,7 @@ func (h *Handlers) GenerateEncounter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get user role to check if they're a DM
+	// Get user role to check if they're a DM.
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
 		response.Forbidden(w, r, "Only DMs can create encounters")
@@ -42,13 +42,13 @@ func (h *Handlers) GenerateEncounter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate required fields
+	// Validate required fields.
 	if req.GameSessionID == "" || req.PartyLevel < 1 || req.PartySize < 1 {
 		response.BadRequest(w, r, "Missing required fields")
 		return
 	}
 
-	// Set defaults
+	// Set defaults.
 	if req.Difficulty == "" {
 		req.Difficulty = "medium"
 	}
@@ -56,7 +56,7 @@ func (h *Handlers) GenerateEncounter(w http.ResponseWriter, r *http.Request) {
 		req.EncounterType = "combat"
 	}
 
-	// Create encounter request
+	// Create encounter request.
 	encounterReq := services.EncounterRequest{
 		PartyLevel:       req.PartyLevel,
 		PartySize:        req.PartySize,
@@ -68,7 +68,7 @@ func (h *Handlers) GenerateEncounter(w http.ResponseWriter, r *http.Request) {
 		SpecialRequests:  req.SpecialRequests,
 	}
 
-	// Generate encounter
+	// Generate encounter.
 	encounter, err := h.encounterService.GenerateEncounter(r.Context(), encounterReq, req.GameSessionID, userID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -78,7 +78,7 @@ func (h *Handlers) GenerateEncounter(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, encounter)
 }
 
-// GetEncounter retrieves an encounter by ID
+// GetEncounter retrieves an encounter by ID.
 func (h *Handlers) GetEncounter(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encounterID := vars["id"]
@@ -92,7 +92,7 @@ func (h *Handlers) GetEncounter(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, encounter)
 }
 
-// GetSessionEncounters retrieves all encounters for a game session
+// GetSessionEncounters retrieves all encounters for a game session.
 func (h *Handlers) GetSessionEncounters(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["sessionId"]
@@ -106,12 +106,12 @@ func (h *Handlers) GetSessionEncounters(w http.ResponseWriter, r *http.Request) 
 	response.JSON(w, r, http.StatusOK, encounters)
 }
 
-// StartEncounter begins an encounter
+// StartEncounter begins an encounter.
 func (h *Handlers) StartEncounter(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encounterID := vars["id"]
 
-	// Check if user is DM
+	// Check if user is DM.
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
 		response.Forbidden(w, r, "Only DMs can start encounters")
@@ -123,17 +123,17 @@ func (h *Handlers) StartEncounter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return updated encounter
+	// Return updated encounter.
 	encounter, _ := h.encounterService.GetEncounter(r.Context(), encounterID)
 	response.JSON(w, r, http.StatusOK, encounter)
 }
 
-// CompleteEncounter marks an encounter as completed
+// CompleteEncounter marks an encounter as completed.
 func (h *Handlers) CompleteEncounter(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encounterID := vars["id"]
 
-	// Check if user is DM
+	// Check if user is DM.
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
 		response.Forbidden(w, r, "Only DMs can complete encounters")
@@ -157,12 +157,12 @@ func (h *Handlers) CompleteEncounter(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, map[string]string{"status": "completed"})
 }
 
-// ScaleEncounter adjusts encounter difficulty
+// ScaleEncounter adjusts encounter difficulty.
 func (h *Handlers) ScaleEncounter(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encounterID := vars["id"]
 
-	// Check if user is DM
+	// Check if user is DM.
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
 		response.Forbidden(w, r, "Only DMs can scale encounters")
@@ -187,12 +187,12 @@ func (h *Handlers) ScaleEncounter(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, encounter)
 }
 
-// GetTacticalSuggestion provides AI tactical advice
+// GetTacticalSuggestion provides AI tactical advice.
 func (h *Handlers) GetTacticalSuggestion(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encounterID := vars["id"]
 
-	// Check if user is DM
+	// Check if user is DM.
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
 		response.Forbidden(w, r, "Only DMs can request tactical suggestions")
@@ -219,7 +219,7 @@ func (h *Handlers) GetTacticalSuggestion(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-// LogEncounterEvent records an event during the encounter
+// LogEncounterEvent records an event during the encounter.
 func (h *Handlers) LogEncounterEvent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encounterID := vars["id"]
@@ -259,7 +259,7 @@ func (h *Handlers) LogEncounterEvent(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, map[string]string{"status": "logged"})
 }
 
-// GetEncounterEvents retrieves encounter events
+// GetEncounterEvents retrieves encounter events.
 func (h *Handlers) GetEncounterEvents(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encounterID := vars["id"]
@@ -281,12 +281,12 @@ func (h *Handlers) GetEncounterEvents(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, events)
 }
 
-// UpdateEnemyStatus updates an enemy during combat
+// UpdateEnemyStatus updates an enemy during combat.
 func (h *Handlers) UpdateEnemyStatus(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	enemyID := vars["enemyId"]
 
-	// Check if user is DM
+	// Check if user is DM.
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
 		response.Forbidden(w, r, "Only DMs can update enemy status")
@@ -307,12 +307,12 @@ func (h *Handlers) UpdateEnemyStatus(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, map[string]string{"status": "updated"})
 }
 
-// TriggerReinforcements activates a reinforcement wave
+// TriggerReinforcements activates a reinforcement wave.
 func (h *Handlers) TriggerReinforcements(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encounterID := vars["id"]
 
-	// Check if user is DM
+	// Check if user is DM.
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
 		response.Forbidden(w, r, "Only DMs can trigger reinforcements")
@@ -333,17 +333,17 @@ func (h *Handlers) TriggerReinforcements(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Return updated encounter
+	// Return updated encounter.
 	encounter, _ := h.encounterService.GetEncounter(r.Context(), encounterID)
 	response.JSON(w, r, http.StatusOK, encounter)
 }
 
-// CheckObjectives evaluates encounter objectives
+// CheckObjectives evaluates encounter objectives.
 func (h *Handlers) CheckObjectives(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encounterID := vars["id"]
 
-	// Check if user is DM
+	// Check if user is DM.
 	isDM := r.Context().Value("isDM").(bool)
 	if !isDM {
 		response.Forbidden(w, r, "Only DMs can check objectives")

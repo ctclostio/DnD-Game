@@ -5,28 +5,28 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 type CampaignRepository interface {
-	// Story Arc methods
+	// Story Arc methods.
 	CreateStoryArc(arc *models.StoryArc) error
 	GetStoryArc(id uuid.UUID) (*models.StoryArc, error)
 	GetStoryArcsBySession(sessionID uuid.UUID) ([]*models.StoryArc, error)
 	UpdateStoryArc(id uuid.UUID, updates map[string]interface{}) error
 	DeleteStoryArc(id uuid.UUID) error
 
-	// Session Memory methods
+	// Session Memory methods.
 	CreateSessionMemory(memory *models.SessionMemory) error
 	GetSessionMemory(id uuid.UUID) (*models.SessionMemory, error)
 	GetSessionMemories(sessionID uuid.UUID, limit int) ([]*models.SessionMemory, error)
 	GetLatestSessionMemory(sessionID uuid.UUID) (*models.SessionMemory, error)
 	UpdateSessionMemory(id uuid.UUID, updates map[string]interface{}) error
 
-	// Plot Thread methods
+	// Plot Thread methods.
 	CreatePlotThread(thread *models.PlotThread) error
 	GetPlotThread(id uuid.UUID) (*models.PlotThread, error)
 	GetPlotThreadsBySession(sessionID uuid.UUID) ([]*models.PlotThread, error)
@@ -34,17 +34,17 @@ type CampaignRepository interface {
 	UpdatePlotThread(id uuid.UUID, updates map[string]interface{}) error
 	DeletePlotThread(id uuid.UUID) error
 
-	// Foreshadowing methods
+	// Foreshadowing methods.
 	CreateForeshadowingElement(element *models.ForeshadowingElement) error
 	GetForeshadowingElement(id uuid.UUID) (*models.ForeshadowingElement, error)
 	GetUnrevealedForeshadowing(sessionID uuid.UUID) ([]*models.ForeshadowingElement, error)
 	RevealForeshadowing(id uuid.UUID, sessionNumber int) error
 
-	// Timeline methods
+	// Timeline methods.
 	CreateTimelineEvent(event *models.CampaignTimeline) error
 	GetTimelineEvents(sessionID uuid.UUID, startDate, endDate time.Time) ([]*models.CampaignTimeline, error)
 
-	// NPC Relationship methods
+	// NPC Relationship methods.
 	CreateOrUpdateNPCRelationship(relationship *models.NPCRelationship) error
 	GetNPCRelationships(sessionID uuid.UUID, npcID uuid.UUID) ([]*models.NPCRelationship, error)
 	UpdateRelationshipScore(sessionID, npcID, targetID uuid.UUID, scoreDelta int) error
@@ -58,8 +58,7 @@ func NewCampaignRepository(db *sqlx.DB) CampaignRepository {
 	return &campaignRepository{db: db}
 }
 
-// Story Arc methods
-
+// Story Arc methods.
 func (r *campaignRepository) CreateStoryArc(arc *models.StoryArc) error {
 	query := `
 		INSERT INTO story_arcs (
@@ -121,8 +120,7 @@ func (r *campaignRepository) DeleteStoryArc(id uuid.UUID) error {
 	return err
 }
 
-// Session Memory methods
-
+// Session Memory methods.
 func (r *campaignRepository) CreateSessionMemory(memory *models.SessionMemory) error {
 	query := `
 		INSERT INTO session_memories (
@@ -189,8 +187,7 @@ func (r *campaignRepository) UpdateSessionMemory(id uuid.UUID, updates map[strin
 	return err
 }
 
-// Plot Thread methods
-
+// Plot Thread methods.
 func (r *campaignRepository) CreatePlotThread(thread *models.PlotThread) error {
 	query := `
 		INSERT INTO plot_threads (
@@ -267,8 +264,7 @@ func (r *campaignRepository) DeletePlotThread(id uuid.UUID) error {
 	return err
 }
 
-// Foreshadowing methods
-
+// Foreshadowing methods.
 func (r *campaignRepository) CreateForeshadowingElement(element *models.ForeshadowingElement) error {
 	query := `
 		INSERT INTO foreshadowing_elements (
@@ -324,8 +320,7 @@ func (r *campaignRepository) RevealForeshadowing(id uuid.UUID, sessionNumber int
 	return err
 }
 
-// Timeline methods
-
+// Timeline methods.
 func (r *campaignRepository) CreateTimelineEvent(event *models.CampaignTimeline) error {
 	query := `
 		INSERT INTO campaign_timeline (
@@ -361,14 +356,13 @@ func (r *campaignRepository) GetTimelineEvents(sessionID uuid.UUID, startDate, e
 	return events, err
 }
 
-// NPC Relationship methods
-
+// NPC Relationship methods.
 func (r *campaignRepository) CreateOrUpdateNPCRelationship(relationship *models.NPCRelationship) error {
 	if relationship.ID == uuid.Nil {
 		relationship.ID = uuid.New()
 	}
 
-	// First, try to find existing relationship
+	// First, try to find existing relationship.
 	var existingID uuid.UUID
 	checkQuery := `
 		SELECT id FROM npc_relationships 
@@ -377,7 +371,7 @@ func (r *campaignRepository) CreateOrUpdateNPCRelationship(relationship *models.
 	err := r.db.Get(&existingID, checkQuery, relationship.GameSessionID, relationship.NPCID, relationship.TargetID)
 
 	if err == sql.ErrNoRows {
-		// Insert new relationship
+		// Insert new relationship.
 		insertQuery := `
 			INSERT INTO npc_relationships (
 				id, game_session_id, npc_id, target_type, target_id,
@@ -394,7 +388,7 @@ func (r *campaignRepository) CreateOrUpdateNPCRelationship(relationship *models.
 		return err
 	}
 
-	// Update existing relationship
+	// Update existing relationship.
 	updateQuery := `
 		UPDATE npc_relationships SET
 			relationship_type = ?,
@@ -437,7 +431,7 @@ func (r *campaignRepository) UpdateRelationshipScore(sessionID, npcID, targetID 
 	return err
 }
 
-// Helper function to build dynamic update queries
+// Helper function to build dynamic update queries.
 func buildUpdateQuery(table string, id uuid.UUID, updates map[string]interface{}) (string, []interface{}) {
 	setClauses := make([]string, 0, len(updates))
 	args := make([]interface{}, 0, len(updates)+1)

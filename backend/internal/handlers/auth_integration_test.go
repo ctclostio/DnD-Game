@@ -21,15 +21,15 @@ import (
 )
 
 func TestAuthFlow_Integration(t *testing.T) {
-	// Setup test context
+	// Setup test context.
 	ctx, cleanup := testutil.SetupIntegrationTest(t)
 	defer cleanup()
 
-	// Create logger
+	// Create logger.
 	log, err := logger.NewV2(logger.DefaultConfig())
 	require.NoError(t, err)
 
-	// Create services
+	// Create services.
 	userService := services.NewUserService(ctx.Repos.Users)
 	refreshTokenService := services.NewRefreshTokenService(ctx.Repos.RefreshTokens, ctx.JWTManager)
 
@@ -40,24 +40,24 @@ func TestAuthFlow_Integration(t *testing.T) {
 		JWTManager:    ctx.JWTManager,
 	}
 
-	// Create handlers and setup routes
+	// Create handlers and setup routes.
 	h := handlers.NewHandlers(svc, ctx.DB, nil)
 
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api/v1").Subrouter()
 
-	// Apply middleware
+	// Apply middleware.
 	api.Use(middleware.RequestIDMiddleware)
 	api.Use(middleware.LoggingMiddleware(log))
 
-	// Auth routes
+	// Auth routes.
 	api.HandleFunc("/auth/register", h.Register).Methods("POST")
 	api.HandleFunc("/auth/login", h.Login).Methods("POST")
 	api.HandleFunc("/auth/refresh", h.RefreshToken).Methods("POST")
 	api.HandleFunc("/auth/logout", auth.NewMiddleware(ctx.JWTManager).Authenticate(h.Logout)).Methods("POST")
 	api.HandleFunc("/auth/me", auth.NewMiddleware(ctx.JWTManager).Authenticate(h.GetCurrentUser)).Methods("GET")
 
-	// Test data
+	// Test data.
 	testUser := models.RegisterRequest{
 		Username: "testuser",
 		Email:    "test@example.com",
@@ -79,14 +79,14 @@ func TestAuthFlow_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, resp.Success)
 
-		// Verify response has auth tokens
+		// Verify response has auth tokens.
 		authData, ok := resp.Data.(map[string]interface{})
 		require.True(t, ok)
 		assert.NotEmpty(t, authData["access_token"])
 		assert.NotEmpty(t, authData["refresh_token"])
 		assert.NotNil(t, authData["user"])
 
-		// Verify user in database
+		// Verify user in database.
 		var count int
 		err = ctx.SQLXDB.Get(&count, "SELECT COUNT(*) FROM users WHERE username = ?", testUser.Username)
 		require.NoError(t, err)
@@ -94,7 +94,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("Cannot Register Duplicate Username", func(t *testing.T) {
-		// First register a user
+		// First register a user.
 		duplicateUser := models.RegisterRequest{
 			Username: "duplicateuser",
 			Email:    "duplicate@example.com",
@@ -109,7 +109,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 		router.ServeHTTP(w, req)
 		require.Equal(t, http.StatusCreated, w.Code)
 
-		// Try to register the same username again
+		// Try to register the same username again.
 		body, _ = json.Marshal(duplicateUser)
 		req = httptest.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -175,7 +175,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("Get Current User", func(t *testing.T) {
-		// First login to get token
+		// First login to get token.
 		loginReq := models.LoginRequest{
 			Username: testUser.Username,
 			Password: testUser.Password,
@@ -196,7 +196,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 		authData := loginResp.Data.(map[string]interface{})
 		accessToken := authData["access_token"].(string)
 
-		// Now test /me endpoint
+		// Now test /me endpoint.
 		req = httptest.NewRequest("GET", "/api/v1/auth/me", nil)
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 
@@ -217,7 +217,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("Refresh Token", func(t *testing.T) {
-		// First login to get tokens
+		// First login to get tokens.
 		loginReq := models.LoginRequest{
 			Username: testUser.Username,
 			Password: testUser.Password,
@@ -238,7 +238,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 		authData := loginResp.Data.(map[string]interface{})
 		refreshToken := authData["refresh_token"].(string)
 
-		// Now test refresh
+		// Now test refresh.
 		refreshReq := models.RefreshTokenRequest{
 			RefreshToken: refreshToken,
 		}
@@ -265,7 +265,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("Logout", func(t *testing.T) {
-		// First login to get tokens
+		// First login to get tokens.
 		loginReq := models.LoginRequest{
 			Username: testUser.Username,
 			Password: testUser.Password,
@@ -287,7 +287,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 		accessToken := authData["access_token"].(string)
 		refreshToken := authData["refresh_token"].(string)
 
-		// Now logout
+		// Now logout.
 		req = httptest.NewRequest("POST", "/api/v1/auth/logout", nil)
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 
@@ -296,7 +296,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
-		// Verify refresh token is invalidated
+		// Verify refresh token is invalidated.
 		refreshReq := models.RefreshTokenRequest{
 			RefreshToken: refreshToken,
 		}
@@ -331,13 +331,13 @@ func TestAuthFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("Expired Token", func(t *testing.T) {
-		// Create an expired token
+		// Create an expired token.
 		_, err := ctx.JWTManager.GenerateTokenPair("test-id", "test", "test@example.com", "player")
 		require.NoError(t, err)
 
-		// Wait for token to expire (if access token duration is short enough for testing)
-		// Or mock the time if your JWT manager supports it
-		// For now, we'll skip the actual expiration test
+		// Wait for token to expire (if access token duration is short enough for testing).
+		// Or mock the time if your JWT manager supports it.
+		// For now, we'll skip the actual expiration test.
 		t.Skip("Skipping expired token test - requires time manipulation")
 	})
 }
@@ -402,7 +402,7 @@ func TestPasswordValidation_Integration(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Use unique username for each test
+			// Use unique username for each test.
 			user := models.RegisterRequest{
 				Username: "testuser" + string(rune('0'+i)),
 				Email:    "test" + string(rune('0'+i)) + "@example.com",
@@ -419,11 +419,11 @@ func TestPasswordValidation_Integration(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			if tt.expectedError != "" {
-				// Print the actual response for debugging
+				// Print the actual response for debugging.
 				body := w.Body.String()
 				t.Logf("Response body: %s", body)
 
-				// For 500 errors, the middleware returns a different format
+				// For 500 errors, the middleware returns a different format.
 				if w.Code == http.StatusInternalServerError {
 					var errResp map[string]interface{}
 					err := json.Unmarshal([]byte(body), &errResp)
@@ -450,10 +450,10 @@ func TestPasswordValidation_Integration(t *testing.T) {
 func TestRateLimiting_Integration(t *testing.T) {
 	t.Skip("Rate limiting not yet implemented")
 
-	// This test would verify that:
+	// This test would verify that:.
 	// 1. Multiple rapid login attempts are rate limited
 	// 2. Rate limit resets after time window
 	// 3. Different endpoints have different rate limits
 }
 
-// Helper to create authenticated request
+// Helper to create authenticated request.

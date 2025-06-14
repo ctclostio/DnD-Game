@@ -8,25 +8,24 @@ import (
 	"github.com/google/uuid"
 )
 
-// WorldBuildingRepository handles all world building data operations
+// WorldBuildingRepository handles all world building data operations.
 type WorldBuildingRepository struct {
 	db *DB
 }
 
-// NewWorldBuildingRepository creates a new world building repository
+// NewWorldBuildingRepository creates a new world building repository.
 func NewWorldBuildingRepository(db *DB) *WorldBuildingRepository {
 	return &WorldBuildingRepository{db: db}
 }
 
-// Settlement operations
-
-// CreateSettlement creates a new settlement
+// Settlement operations.
+// CreateSettlement creates a new settlement.
 func (r *WorldBuildingRepository) CreateSettlement(settlement *models.Settlement) error {
 	settlement.ID = uuid.New()
 	settlement.CreatedAt = time.Now()
 	settlement.UpdatedAt = time.Now()
 
-	// Marshal JSONB fields
+	// Marshal JSONB fields.
 	coordinates, _ := json.Marshal(settlement.Coordinates)
 	primaryExports, _ := json.Marshal(settlement.PrimaryExports)
 	primaryImports, _ := json.Marshal(settlement.PrimaryImports)
@@ -66,7 +65,7 @@ func (r *WorldBuildingRepository) CreateSettlement(settlement *models.Settlement
 	return err
 }
 
-// GetSettlement retrieves a settlement by ID
+// GetSettlement retrieves a settlement by ID.
 func (r *WorldBuildingRepository) GetSettlement(id uuid.UUID) (*models.Settlement, error) {
 	var settlement models.Settlement
 	var coordinates, primaryExports, primaryImports, tradeRoutes,
@@ -98,7 +97,7 @@ func (r *WorldBuildingRepository) GetSettlement(id uuid.UUID) (*models.Settlemen
 		return nil, err
 	}
 
-	// Unmarshal JSONB fields
+	// Unmarshal JSONB fields.
 	settlement.Coordinates = models.JSONB(coordinates)
 	settlement.PrimaryExports = models.JSONB(primaryExports)
 	settlement.PrimaryImports = models.JSONB(primaryImports)
@@ -108,14 +107,14 @@ func (r *WorldBuildingRepository) GetSettlement(id uuid.UUID) (*models.Settlemen
 	settlement.Problems = models.JSONB(problems)
 	settlement.Secrets = models.JSONB(secrets)
 
-	// Load related NPCs and shops
+	// Load related NPCs and shops.
 	settlement.NPCs, _ = r.GetSettlementNPCs(id)
 	settlement.Shops, _ = r.GetSettlementShops(id)
 
 	return &settlement, nil
 }
 
-// GetSettlementsByGameSession retrieves all settlements for a game session
+// GetSettlementsByGameSession retrieves all settlements for a game session.
 func (r *WorldBuildingRepository) GetSettlementsByGameSession(gameSessionID uuid.UUID) ([]*models.Settlement, error) {
 	query := `
 		SELECT id, name, type, population, region, danger_level, corruption_level
@@ -145,14 +144,13 @@ func (r *WorldBuildingRepository) GetSettlementsByGameSession(gameSessionID uuid
 	return settlements, nil
 }
 
-// NPC operations
-
-// CreateSettlementNPC creates a new NPC in a settlement
+// NPC operations.
+// CreateSettlementNPC creates a new NPC in a settlement.
 func (r *WorldBuildingRepository) CreateSettlementNPC(npc *models.SettlementNPC) error {
 	npc.ID = uuid.New()
 	npc.CreatedAt = time.Now()
 
-	// Marshal JSONB fields
+	// Marshal JSONB fields.
 	personalityTraits, _ := json.Marshal(npc.PersonalityTraits)
 	ideals, _ := json.Marshal(npc.Ideals)
 	bonds, _ := json.Marshal(npc.Bonds)
@@ -187,7 +185,7 @@ func (r *WorldBuildingRepository) CreateSettlementNPC(npc *models.SettlementNPC)
 	return err
 }
 
-// GetSettlementNPCs retrieves all NPCs in a settlement
+// GetSettlementNPCs retrieves all NPCs in a settlement.
 func (r *WorldBuildingRepository) GetSettlementNPCs(settlementID uuid.UUID) ([]models.SettlementNPC, error) {
 	query := `
 		SELECT id, name, race, class, level, role, occupation,
@@ -218,14 +216,13 @@ func (r *WorldBuildingRepository) GetSettlementNPCs(settlementID uuid.UUID) ([]m
 	return npcs, nil
 }
 
-// Shop operations
-
-// CreateSettlementShop creates a new shop in a settlement
+// Shop operations.
+// CreateSettlementShop creates a new shop in a settlement.
 func (r *WorldBuildingRepository) CreateSettlementShop(shop *models.SettlementShop) error {
 	shop.ID = uuid.New()
 	shop.CreatedAt = time.Now()
 
-	// Marshal JSONB fields
+	// Marshal JSONB fields.
 	availableItems, _ := json.Marshal(shop.AvailableItems)
 	specialItems, _ := json.Marshal(shop.SpecialItems)
 	craftingSpecialties, _ := json.Marshal(shop.CraftingSpecialties)
@@ -254,7 +251,7 @@ func (r *WorldBuildingRepository) CreateSettlementShop(shop *models.SettlementSh
 	return err
 }
 
-// GetSettlementShops retrieves all shops in a settlement
+// GetSettlementShops retrieves all shops in a settlement.
 func (r *WorldBuildingRepository) GetSettlementShops(settlementID uuid.UUID) ([]models.SettlementShop, error) {
 	query := `
 		SELECT id, name, type, owner_npc_id, quality_level, price_modifier,
@@ -286,15 +283,14 @@ func (r *WorldBuildingRepository) GetSettlementShops(settlementID uuid.UUID) ([]
 	return shops, nil
 }
 
-// Faction operations
-
-// CreateFaction creates a new faction
+// Faction operations.
+// CreateFaction creates a new faction.
 func (r *WorldBuildingRepository) CreateFaction(faction *models.Faction) error {
 	faction.ID = uuid.New()
 	faction.CreatedAt = time.Now()
 	faction.UpdatedAt = time.Now()
 
-	// Marshal JSONB fields
+	// Marshal JSONB fields.
 	publicGoals, _ := json.Marshal(faction.PublicGoals)
 	secretGoals, _ := json.Marshal(faction.SecretGoals)
 	motivations, _ := json.Marshal(faction.Motivations)
@@ -334,7 +330,7 @@ func (r *WorldBuildingRepository) CreateFaction(faction *models.Faction) error {
 	return err
 }
 
-// GetFaction retrieves a faction by ID
+// GetFaction retrieves a faction by ID.
 func (r *WorldBuildingRepository) GetFaction(id uuid.UUID) (*models.Faction, error) {
 	var faction models.Faction
 	var publicGoals, secretGoals, motivations, territoryControl,
@@ -367,7 +363,7 @@ func (r *WorldBuildingRepository) GetFaction(id uuid.UUID) (*models.Faction, err
 		return nil, err
 	}
 
-	// Unmarshal JSONB fields
+	// Unmarshal JSONB fields.
 	faction.PublicGoals = models.JSONB(publicGoals)
 	faction.SecretGoals = models.JSONB(secretGoals)
 	faction.Motivations = models.JSONB(motivations)
@@ -380,7 +376,7 @@ func (r *WorldBuildingRepository) GetFaction(id uuid.UUID) (*models.Faction, err
 	return &faction, nil
 }
 
-// GetFactionsByGameSession retrieves all factions for a game session
+// GetFactionsByGameSession retrieves all factions for a game session.
 func (r *WorldBuildingRepository) GetFactionsByGameSession(gameSessionID uuid.UUID) ([]*models.Faction, error) {
 	query := `
 		SELECT id, name, type, influence_level, corrupted
@@ -408,15 +404,15 @@ func (r *WorldBuildingRepository) GetFactionsByGameSession(gameSessionID uuid.UU
 	return factions, nil
 }
 
-// UpdateFactionRelationship updates the relationship between two factions
+// UpdateFactionRelationship updates the relationship between two factions.
 func (r *WorldBuildingRepository) UpdateFactionRelationship(faction1ID, faction2ID uuid.UUID, standing int, relationType string) error {
-	// Get faction 1
+	// Get faction 1.
 	faction1, err := r.GetFaction(faction1ID)
 	if err != nil {
 		return err
 	}
 
-	// Update relationships
+	// Update relationships.
 	var relationships map[string]interface{}
 	_ = json.Unmarshal([]byte(faction1.FactionRelationships), &relationships)
 	if relationships == nil {
@@ -430,11 +426,11 @@ func (r *WorldBuildingRepository) UpdateFactionRelationship(faction1ID, faction2
 
 	updatedRelationships, _ := json.Marshal(relationships)
 
-	// Update in database
+	// Update in database.
 	query := `UPDATE factions SET faction_relationships = ?, updated_at = ? WHERE id = ?`
 	_, err = r.db.ExecRebind(query, updatedRelationships, time.Now(), faction1ID)
 
-	// Also update faction 2's relationship with faction 1
+	// Also update faction 2's relationship with faction 1.
 	if err == nil {
 		faction2, err := r.GetFaction(faction2ID)
 		if err == nil {
@@ -457,15 +453,14 @@ func (r *WorldBuildingRepository) UpdateFactionRelationship(faction1ID, faction2
 	return err
 }
 
-// World Event operations
-
-// CreateWorldEvent creates a new world event
+// World Event operations.
+// CreateWorldEvent creates a new world event.
 func (r *WorldBuildingRepository) CreateWorldEvent(event *models.WorldEvent) error {
 	event.ID = uuid.New()
 	event.CreatedAt = time.Now()
 	event.UpdatedAt = time.Now()
 
-	// Marshal JSONB fields
+	// Marshal JSONB fields.
 	affectedRegions, _ := json.Marshal(event.AffectedRegions)
 	affectedSettlements, _ := json.Marshal(event.AffectedSettlements)
 	affectedFactions, _ := json.Marshal(event.AffectedFactions)
@@ -504,7 +499,7 @@ func (r *WorldBuildingRepository) CreateWorldEvent(event *models.WorldEvent) err
 	return err
 }
 
-// GetActiveWorldEvents retrieves all active world events for a game session
+// GetActiveWorldEvents retrieves all active world events for a game session.
 func (r *WorldBuildingRepository) GetActiveWorldEvents(gameSessionID uuid.UUID) ([]*models.WorldEvent, error) {
 	query := `
 		SELECT id, name, type, severity, description, current_stage,
@@ -537,7 +532,7 @@ func (r *WorldBuildingRepository) GetActiveWorldEvents(gameSessionID uuid.UUID) 
 	return events, nil
 }
 
-// ProgressWorldEvent advances a world event to the next stage
+// ProgressWorldEvent advances a world event to the next stage.
 func (r *WorldBuildingRepository) ProgressWorldEvent(eventID uuid.UUID) error {
 	query := `
 		UPDATE world_events 
@@ -548,16 +543,15 @@ func (r *WorldBuildingRepository) ProgressWorldEvent(eventID uuid.UUID) error {
 	return err
 }
 
-// Market operations
-
-// CreateOrUpdateMarket creates or updates market conditions for a settlement
+// Market operations.
+// CreateOrUpdateMarket creates or updates market conditions for a settlement.
 func (r *WorldBuildingRepository) CreateOrUpdateMarket(market *models.Market) error {
 	if market.ID == uuid.Nil {
 		market.ID = uuid.New()
 	}
 	market.LastUpdated = time.Now()
 
-	// Marshal JSONB fields
+	// Marshal JSONB fields.
 	highDemandItems, _ := json.Marshal(market.HighDemandItems)
 	surplusItems, _ := json.Marshal(market.SurplusItems)
 	bannedItems, _ := json.Marshal(market.BannedItems)
@@ -591,7 +585,7 @@ func (r *WorldBuildingRepository) CreateOrUpdateMarket(market *models.Market) er
 	return err
 }
 
-// GetMarketBySettlement retrieves market conditions for a settlement
+// GetMarketBySettlement retrieves market conditions for a settlement.
 func (r *WorldBuildingRepository) GetMarketBySettlement(settlementID uuid.UUID) (*models.Market, error) {
 	var market models.Market
 	var highDemandItems, surplusItems, bannedItems []byte
@@ -617,7 +611,7 @@ func (r *WorldBuildingRepository) GetMarketBySettlement(settlementID uuid.UUID) 
 		return nil, err
 	}
 
-	// Unmarshal JSONB fields
+	// Unmarshal JSONB fields.
 	market.HighDemandItems = models.JSONB(highDemandItems)
 	market.SurplusItems = models.JSONB(surplusItems)
 	market.BannedItems = models.JSONB(bannedItems)
@@ -625,15 +619,14 @@ func (r *WorldBuildingRepository) GetMarketBySettlement(settlementID uuid.UUID) 
 	return &market, nil
 }
 
-// Trade Route operations
-
-// CreateTradeRoute creates a new trade route
+// Trade Route operations.
+// CreateTradeRoute creates a new trade route.
 func (r *WorldBuildingRepository) CreateTradeRoute(route *models.TradeRoute) error {
 	route.ID = uuid.New()
 	route.CreatedAt = time.Now()
 	route.UpdatedAt = time.Now()
 
-	// Marshal JSONB fields
+	// Marshal JSONB fields.
 	environmentalHazards, _ := json.Marshal(route.EnvironmentalHazards)
 	primaryGoods, _ := json.Marshal(route.PrimaryGoods)
 	disruptionEvents, _ := json.Marshal(route.DisruptionEvents)
@@ -667,7 +660,7 @@ func (r *WorldBuildingRepository) CreateTradeRoute(route *models.TradeRoute) err
 	return err
 }
 
-// GetTradeRoutesBySettlement retrieves all trade routes connected to a settlement
+// GetTradeRoutesBySettlement retrieves all trade routes connected to a settlement.
 func (r *WorldBuildingRepository) GetTradeRoutesBySettlement(settlementID uuid.UUID) ([]*models.TradeRoute, error) {
 	query := `
 		SELECT id, name, start_settlement_id, end_settlement_id,
@@ -697,15 +690,14 @@ func (r *WorldBuildingRepository) GetTradeRoutesBySettlement(settlementID uuid.U
 	return routes, nil
 }
 
-// Ancient Site operations
-
-// CreateAncientSite creates a new ancient site
+// Ancient Site operations.
+// CreateAncientSite creates a new ancient site.
 func (r *WorldBuildingRepository) CreateAncientSite(site *models.AncientSite) error {
 	site.ID = uuid.New()
 	site.CreatedAt = time.Now()
 	site.UpdatedAt = time.Now()
 
-	// Marshal JSONB fields
+	// Marshal JSONB fields.
 	coordinates, _ := json.Marshal(site.Coordinates)
 	treasures, _ := json.Marshal(site.Treasures)
 	artifacts, _ := json.Marshal(site.Artifacts)
@@ -742,7 +734,7 @@ func (r *WorldBuildingRepository) CreateAncientSite(site *models.AncientSite) er
 	return err
 }
 
-// GetAncientSitesByGameSession retrieves all ancient sites for a game session
+// GetAncientSitesByGameSession retrieves all ancient sites for a game session.
 func (r *WorldBuildingRepository) GetAncientSitesByGameSession(gameSessionID uuid.UUID) ([]*models.AncientSite, error) {
 	query := `
 		SELECT id, name, type, age_category, corruption_level, exploration_level
@@ -773,12 +765,12 @@ func (r *WorldBuildingRepository) GetAncientSitesByGameSession(gameSessionID uui
 	return sites, nil
 }
 
-// SimulateEconomicChanges updates market prices based on world events and trade disruptions
+// SimulateEconomicChanges updates market prices based on world events and trade disruptions.
 func (r *WorldBuildingRepository) SimulateEconomicChanges(gameSessionID uuid.UUID) error {
-	// This would be called periodically to update market conditions
+	// This would be called periodically to update market conditions.
 	// based on active world events, trade route disruptions, etc.
 
-	// Get all active events that have economic impacts
+	// Get all active events that have economic impacts.
 	query := `
 		SELECT id, economic_impacts 
 		FROM world_events 
@@ -790,7 +782,7 @@ func (r *WorldBuildingRepository) SimulateEconomicChanges(gameSessionID uuid.UUI
 	}
 	defer func() { _ = rows.Close() }()
 
-	// Process each event's economic impacts
+	// Process each event's economic impacts.
 	for rows.Next() {
 		var eventID uuid.UUID
 		var economicImpacts []byte
@@ -799,22 +791,22 @@ func (r *WorldBuildingRepository) SimulateEconomicChanges(gameSessionID uuid.UUI
 			continue
 		}
 
-		// Parse impacts and apply to relevant markets
+		// Parse impacts and apply to relevant markets.
 		var impacts map[string]interface{}
 		if err := json.Unmarshal(economicImpacts, &impacts); err != nil {
 			continue
 		}
 
-		// Apply impacts to settlements mentioned in the event
-		// This is a simplified version - a full implementation would be more complex
+		// Apply impacts to settlements mentioned in the event.
+		// This is a simplified version - a full implementation would be more complex.
 		if settlementIDs, ok := impacts["affected_settlements"].([]interface{}); ok {
 			for _, settlementID := range settlementIDs {
 				if sidStr, ok := settlementID.(string); ok {
 					if sid, err := uuid.Parse(sidStr); err == nil {
-						// Get and update the market
+						// Get and update the market.
 						market, err := r.GetMarketBySettlement(sid)
 						if err == nil && market != nil {
-							// Apply economic modifiers based on event type
+							// Apply economic modifiers based on event type.
 							if modifier, ok := impacts["price_modifier"].(float64); ok {
 								market.CommonGoodsModifier *= modifier
 								market.FoodPriceModifier *= modifier

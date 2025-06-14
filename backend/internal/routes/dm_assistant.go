@@ -4,11 +4,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// RegisterDMAssistantRoutes registers all DM Assistant-related routes
+// RegisterDMAssistantRoutes registers all DM Assistant-related routes.
 func RegisterDMAssistantRoutes(api *mux.Router, cfg *Config) {
 	dmOnly := cfg.AuthMiddleware.RequireDM()
 
-	// DM Assistant content generation
+	// DM Assistant content generation.
 	api.HandleFunc("/dm/assistant/generate",
 		dmOnly(cfg.Handlers.GenerateDMContent)).Methods("POST")
 	api.HandleFunc("/dm/assistant/npc/generate",
@@ -20,7 +20,7 @@ func RegisterDMAssistantRoutes(api *mux.Router, cfg *Config) {
 	api.HandleFunc("/dm/assistant/quest/generate",
 		dmOnly(cfg.Handlers.GenerateQuest)).Methods("POST")
 
-	// DM notes and session management
+	// DM notes and session management.
 	api.HandleFunc("/dm/assistant/sessions/{sessionId}/notes",
 		dmOnly(cfg.Handlers.GetDMNotes)).Methods("GET")
 	api.HandleFunc("/dm/assistant/sessions/{sessionId}/notes",
@@ -30,7 +30,7 @@ func RegisterDMAssistantRoutes(api *mux.Router, cfg *Config) {
 	api.HandleFunc("/dm/assistant/sessions/{sessionId}/notes/{noteId}",
 		dmOnly(cfg.Handlers.DeleteDMNote)).Methods("DELETE")
 
-	// Story elements
+	// Story elements.
 	api.HandleFunc("/dm/assistant/story/generate",
 		dmOnly(cfg.Handlers.GenerateStoryHook)).Methods("POST")
 	api.HandleFunc("/dm/assistant/dialogue/generate",

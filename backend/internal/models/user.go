@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// User represents a user in the system
+// User represents a user in the system.
 type User struct {
 	ID           string    `json:"id" db:"id"`
 	Username     string    `json:"username" db:"username"`
@@ -16,13 +16,13 @@ type User struct {
 	UpdatedAt    time.Time `json:"updatedAt" db:"updated_at"`
 }
 
-// UserWithCharacters includes a user's characters
+// UserWithCharacters includes a user's characters.
 type UserWithCharacters struct {
 	User
 	Characters []Character `json:"characters"`
 }
 
-// ParticipantRole represents the role of a game participant
+// ParticipantRole represents the role of a game participant.
 type ParticipantRole string
 
 const (
@@ -30,7 +30,7 @@ const (
 	ParticipantRolePlayer ParticipantRole = "player"
 )
 
-// GameParticipant represents a user participating in a game session
+// GameParticipant represents a user participating in a game session.
 type GameParticipant struct {
 	SessionID   string          `json:"sessionId" db:"game_session_id"`
 	UserID      string          `json:"userId" db:"user_id"`
@@ -42,20 +42,20 @@ type GameParticipant struct {
 	Character   *Character      `json:"character,omitempty"`
 }
 
-// LoginRequest represents a login request
+// LoginRequest represents a login request.
 type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-// RegisterRequest represents a registration request
+// RegisterRequest represents a registration request.
 type RegisterRequest struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-// AuthResponse represents an authentication response
+// AuthResponse represents an authentication response.
 type AuthResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
@@ -64,23 +64,23 @@ type AuthResponse struct {
 	User         User   `json:"user"`
 }
 
-// PasswordResetRequest represents a password reset request
+// PasswordResetRequest represents a password reset request.
 type PasswordResetRequest struct {
 	Email string `json:"email"`
 }
 
-// PasswordResetConfirm represents password reset confirmation
+// PasswordResetConfirm represents password reset confirmation.
 type PasswordResetConfirm struct {
 	Token       string `json:"token"`
 	NewPassword string `json:"newPassword"`
 }
 
-// RefreshTokenRequest represents a token refresh request
+// RefreshTokenRequest represents a token refresh request.
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// RefreshToken represents a stored refresh token
+// RefreshToken represents a stored refresh token.
 type RefreshToken struct {
 	ID        string     `json:"id" db:"id"`
 	UserID    string     `json:"userId" db:"user_id"`
@@ -90,26 +90,26 @@ type RefreshToken struct {
 	RevokedAt *time.Time `json:"revokedAt,omitempty" db:"revoked_at"`
 }
 
-// RegisterInput represents the input for user registration
+// RegisterInput represents the input for user registration.
 type RegisterInput struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-// LoginInput represents the input for user login
+// LoginInput represents the input for user login.
 type LoginInput struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-// UpdateUserInput represents the input for updating user information
+// UpdateUserInput represents the input for updating user information.
 type UpdateUserInput struct {
 	Email    string `json:"email,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 
-// Validate performs validation on User
+// Validate performs validation on User.
 func (u *User) Validate() error {
 	if u.Username == "" {
 		return ErrInvalidUsername
@@ -120,7 +120,7 @@ func (u *User) Validate() error {
 	return nil
 }
 
-// Custom errors for user operations
+// Custom errors for user operations.
 var (
 	ErrUserNotFound      = fmt.Errorf("user not found")
 	ErrDuplicateUsername = fmt.Errorf("username already exists")

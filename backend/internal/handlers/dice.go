@@ -27,26 +27,26 @@ func (h *Handlers) RollDice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get user ID from auth context
+	// Get user ID from auth context.
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Validate game session ID
+	// Validate game session ID.
 	if req.GameSessionID == "" {
 		response.BadRequest(w, r, "Game session ID is required")
 		return
 	}
 
-	// Validate user is in the game session
+	// Validate user is in the game session.
 	if err := h.gameService.ValidateUserInSession(r.Context(), req.GameSessionID, userID); err != nil {
 		response.Forbidden(w, r, "User is not a participant in this game session")
 		return
 	}
 
-	// Create dice roll
+	// Create dice roll.
 	roll := &models.DiceRoll{
 		GameSessionID: req.GameSessionID,
 		UserID:        userID,
@@ -68,15 +68,14 @@ func (h *Handlers) RollDice(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) GetDiceRolls(w http.ResponseWriter, r *http.Request) {
-	// Get query parameters
+	// Get query parameters.
 	gameSessionID := r.URL.Query().Get("game_session_id")
 	userID := r.URL.Query().Get("user_id")
 	offset := 0
 	limit := 50 // Default limit
 
-	// Parse offset and limit
-	// TODO: Add proper parsing for offset and limit
-
+	// Parse offset and limit.
+	// TODO: Add proper parsing for offset and limit.
 	var rolls []*models.DiceRoll
 	var err error
 

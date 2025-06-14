@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
-	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
 func TestCombatAnalytics_TrackCombatAction(t *testing.T) {
@@ -393,7 +393,7 @@ func TestCombatAnalytics_GetCombatAnalyticsBySession(t *testing.T) {
 	})
 }
 
-// Mock repository for combat analytics
+// Mock repository for combat analytics.
 type MockCombatAnalyticsRepository struct {
 	mock.Mock
 }
@@ -450,12 +450,12 @@ func (m *MockCombatAnalyticsRepository) GetCombatAnalyticsBySession(sessionID uu
 	return args.Get(0).([]*models.CombatAnalytics), args.Error(1)
 }
 
-// Mock combat service
+// Mock combat service.
 type MockCombatService struct {
 	mock.Mock
 }
 
-// Add missing methods for CombatAnalyticsRepository
+// Add missing methods for CombatAnalyticsRepository.
 func (m *MockCombatAnalyticsRepository) UpdateCombatantAnalytics(id uuid.UUID, updates map[string]interface{}) error {
 	args := m.Called(id, updates)
 	return args.Error(0)

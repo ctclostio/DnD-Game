@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-// LLMProvider defines the interface for Large Language Model providers
+// LLMProvider defines the interface for Large Language Model providers.
 type LLMProvider interface {
 	GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error)
 	GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error)
 }
 
-// AIConfig holds configuration for AI services
+// AIConfig holds configuration for AI services.
 type AIConfig struct {
 	Provider string
 	APIKey   string
@@ -24,7 +24,7 @@ type AIConfig struct {
 	Enabled  bool
 }
 
-// LLMRequest represents a request to the LLM
+// LLMRequest represents a request to the LLM.
 type LLMRequest struct {
 	Prompt       string
 	SystemPrompt string
@@ -32,20 +32,20 @@ type LLMRequest struct {
 	MaxTokens    int
 }
 
-// LLMResponse represents a response from the LLM
+// LLMResponse represents a response from the LLM.
 type LLMResponse struct {
 	Content string
 	Error   error
 }
 
-// OpenAIProvider implements LLMProvider using OpenAI's API
+// OpenAIProvider implements LLMProvider using OpenAI's API.
 type OpenAIProvider struct {
 	apiKey     string
 	model      string
 	httpClient *http.Client
 }
 
-// NewOpenAIProvider creates a new OpenAI LLM provider
+// NewOpenAIProvider creates a new OpenAI LLM provider.
 func NewOpenAIProvider(apiKey string, model string) *OpenAIProvider {
 	return &OpenAIProvider{
 		apiKey: apiKey,
@@ -56,7 +56,7 @@ func NewOpenAIProvider(apiKey string, model string) *OpenAIProvider {
 	}
 }
 
-// GenerateCompletion sends a request to OpenAI and returns the completion
+// GenerateCompletion sends a request to OpenAI and returns the completion.
 func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
 	requestBody := map[string]interface{}{
 		"model": p.model,
@@ -112,19 +112,19 @@ func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, prompt string, 
 	return response.Choices[0].Message.Content, nil
 }
 
-// GenerateContent is an alias for GenerateCompletion
+// GenerateContent is an alias for GenerateCompletion.
 func (p *OpenAIProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
 	return p.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 
-// AnthropicProvider implements LLMProvider using Anthropic's Claude API
+// AnthropicProvider implements LLMProvider using Anthropic's Claude API.
 type AnthropicProvider struct {
 	apiKey     string
 	model      string
 	httpClient *http.Client
 }
 
-// NewAnthropicProvider creates a new Anthropic LLM provider
+// NewAnthropicProvider creates a new Anthropic LLM provider.
 func NewAnthropicProvider(apiKey string, model string) *AnthropicProvider {
 	return &AnthropicProvider{
 		apiKey: apiKey,
@@ -135,7 +135,7 @@ func NewAnthropicProvider(apiKey string, model string) *AnthropicProvider {
 	}
 }
 
-// GenerateCompletion sends a request to Anthropic and returns the completion
+// GenerateCompletion sends a request to Anthropic and returns the completion.
 func (p *AnthropicProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
 	requestBody := map[string]interface{}{
 		"model":      p.model,
@@ -189,19 +189,19 @@ func (p *AnthropicProvider) GenerateCompletion(ctx context.Context, prompt strin
 	return response.Content[0].Text, nil
 }
 
-// GenerateContent is an alias for GenerateCompletion
+// GenerateContent is an alias for GenerateCompletion.
 func (p *AnthropicProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
 	return p.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 
-// OpenRouterProvider implements LLMProvider using OpenRouter's API
+// OpenRouterProvider implements LLMProvider using OpenRouter's API.
 type OpenRouterProvider struct {
 	apiKey     string
 	model      string
 	httpClient *http.Client
 }
 
-// NewOpenRouterProvider creates a new OpenRouter LLM provider
+// NewOpenRouterProvider creates a new OpenRouter LLM provider.
 func NewOpenRouterProvider(apiKey string, model string) *OpenRouterProvider {
 	return &OpenRouterProvider{
 		apiKey: apiKey,
@@ -212,7 +212,7 @@ func NewOpenRouterProvider(apiKey string, model string) *OpenRouterProvider {
 	}
 }
 
-// GenerateCompletion sends a request to OpenRouter and returns the completion
+// GenerateCompletion sends a request to OpenRouter and returns the completion.
 func (p *OpenRouterProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
 	requestBody := map[string]interface{}{
 		"model": p.model,
@@ -269,24 +269,24 @@ func (p *OpenRouterProvider) GenerateCompletion(ctx context.Context, prompt stri
 	return response.Choices[0].Message.Content, nil
 }
 
-// GenerateContent is an alias for GenerateCompletion
+// GenerateContent is an alias for GenerateCompletion.
 func (p *OpenRouterProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
 	return p.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 
-// MockLLMProvider for testing
+// MockLLMProvider for testing.
 type MockLLMProvider struct {
 	Response string
 	Error    error
 }
 
-// GenerateCompletion returns a mock response
+// GenerateCompletion returns a mock response.
 func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
 	if m.Error != nil {
 		return "", m.Error
 	}
 
-	// Return a sample balanced race for testing
+	// Return a sample balanced race for testing.
 	if m.Response == "" {
 		return `{
 			"name": "Crystalborn",
@@ -315,12 +315,12 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 	return m.Response, nil
 }
 
-// GenerateContent is an alias for GenerateCompletion
+// GenerateContent is an alias for GenerateCompletion.
 func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
 	return m.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 
-// NewLLMProvider creates a new LLM provider based on configuration
+// NewLLMProvider creates a new LLM provider based on configuration.
 func NewLLMProvider(config AIConfig) LLMProvider {
 	if !config.Enabled {
 		return &MockLLMProvider{}
@@ -332,7 +332,7 @@ func NewLLMProvider(config AIConfig) LLMProvider {
 	case "anthropic":
 		return NewAnthropicProvider(config.APIKey, config.Model)
 	default:
-		// Default to mock provider if unknown
+		// Default to mock provider if unknown.
 		return &MockLLMProvider{}
 	}
 }

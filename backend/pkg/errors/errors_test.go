@@ -168,7 +168,7 @@ func TestGetAppError(t *testing.T) {
 func TestValidationErrors(t *testing.T) {
 	ve := &ValidationErrors{}
 
-	// Test adding errors
+	// Test adding errors.
 	ve.Add("email", "is required")
 	ve.Add("email", "must be valid format")
 	ve.Add("password", "is too short")
@@ -178,7 +178,7 @@ func TestValidationErrors(t *testing.T) {
 	assert.Len(t, ve.Errors["email"], 2)
 	assert.Len(t, ve.Errors["password"], 1)
 
-	// Test error string
+	// Test error string.
 	errStr := ve.Error()
 	assert.Contains(t, errStr, "email")
 	assert.Contains(t, errStr, "password")
@@ -187,10 +187,10 @@ func TestValidationErrors(t *testing.T) {
 func TestValidationErrors_ToAppError(t *testing.T) {
 	ve := &ValidationErrors{}
 
-	// Test with no errors
+	// Test with no errors.
 	assert.Nil(t, ve.ToAppError())
 
-	// Test with errors
+	// Test with errors.
 	ve.Add("name", "is required")
 	ve.Add("age", "must be positive")
 
@@ -202,7 +202,7 @@ func TestValidationErrors_ToAppError(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, appErr.StatusCode)
 	assert.NotNil(t, appErr.Details)
 
-	// Check details
+	// Check details.
 	nameErrors, ok := appErr.Details["name"].([]string)
 	require.True(t, ok)
 	assert.Contains(t, nameErrors, "is required")

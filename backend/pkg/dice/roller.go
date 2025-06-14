@@ -24,9 +24,9 @@ func NewRoller() *Roller {
 	}
 }
 
-// Roll parses dice notation like "2d6+3" or "1d20-2"
+// Roll parses dice notation like "2d6+3" or "1d20-2".
 func (r *Roller) Roll(notation string) (*RollResult, error) {
-	// Parse dice notation using regex
+	// Parse dice notation using regex.
 	re := regexp.MustCompile(`^(\d+)d(\d+)([+-]\d+)?$`)
 	matches := re.FindStringSubmatch(notation)
 
@@ -65,7 +65,7 @@ func (r *Roller) Roll(notation string) (*RollResult, error) {
 	return result, nil
 }
 
-// RollAdvantage rolls with advantage (roll twice, take higher)
+// RollAdvantage rolls with advantage (roll twice, take higher).
 func (r *Roller) RollAdvantage() (*RollResult, error) {
 	roll1, _ := r.Roll("1d20")
 	roll2, _ := r.Roll("1d20")
@@ -76,7 +76,7 @@ func (r *Roller) RollAdvantage() (*RollResult, error) {
 	return roll2, nil
 }
 
-// RollDisadvantage rolls with disadvantage (roll twice, take lower)
+// RollDisadvantage rolls with disadvantage (roll twice, take lower).
 func (r *Roller) RollDisadvantage() (*RollResult, error) {
 	roll1, _ := r.Roll("1d20")
 	roll2, _ := r.Roll("1d20")

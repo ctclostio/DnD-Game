@@ -56,7 +56,7 @@ func (r *inventoryRepository) GetItem(itemID string) (*models.Item, error) {
 		return nil, err
 	}
 
-	// Handle nullable fields
+	// Handle nullable fields.
 	if attunementReq.Valid {
 		item.AttunementRequirements = attunementReq.String
 	}
@@ -97,7 +97,7 @@ func (r *inventoryRepository) GetItemsByType(itemType models.ItemType) ([]*model
 			return nil, err
 		}
 
-		// Handle nullable fields
+		// Handle nullable fields.
 		if attunementReq.Valid {
 			item.AttunementRequirements = attunementReq.String
 		}
@@ -115,7 +115,7 @@ func (r *inventoryRepository) AddItemToInventory(characterID, itemID string, qua
 	id := uuid.New().String()
 	now := time.Now()
 
-	// SQLite requires different syntax for upsert
+	// SQLite requires different syntax for upsert.
 	query := `
 		INSERT INTO character_inventory (id, character_id, item_id, quantity, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?)
@@ -209,7 +209,7 @@ func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*mode
 			return nil, err
 		}
 
-		// Handle nullable fields
+		// Handle nullable fields.
 		if invNotes.Valid {
 			inv.Notes = invNotes.String
 		}
@@ -228,9 +228,9 @@ func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*mode
 }
 
 func (r *inventoryRepository) EquipItem(characterID, itemID string, equip bool) error {
-	// Use ? placeholders and rebind for database compatibility
+	// Use ? placeholders and rebind for database compatibility.
 	query := `UPDATE character_inventory SET equipped = ?, updated_at = ? WHERE character_id = ? AND item_id = ?`
-	// Rebind the query to match the database driver's placeholder style
+	// Rebind the query to match the database driver's placeholder style.
 	query = r.db.Rebind(query)
 	result, err := r.db.Exec(query, equip, time.Now(), characterID, itemID)
 	if err != nil {

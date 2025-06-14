@@ -13,14 +13,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// HTTPTestClient provides utilities for testing HTTP endpoints
+// HTTPTestClient provides utilities for testing HTTP endpoints.
 type HTTPTestClient struct {
 	t      *testing.T
 	router *gin.Engine
 	token  string
 }
 
-// NewHTTPTestClient creates a new HTTP test client
+// NewHTTPTestClient creates a new HTTP test client.
 func NewHTTPTestClient(t *testing.T) *HTTPTestClient {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
@@ -31,19 +31,19 @@ func NewHTTPTestClient(t *testing.T) *HTTPTestClient {
 	}
 }
 
-// SetRouter sets the gin router for testing
+// SetRouter sets the gin router for testing.
 func (c *HTTPTestClient) SetRouter(router *gin.Engine) *HTTPTestClient {
 	c.router = router
 	return c
 }
 
-// WithAuth sets an authentication token
+// WithAuth sets an authentication token.
 func (c *HTTPTestClient) WithAuth(token string) *HTTPTestClient {
 	c.token = token
 	return c
 }
 
-// WithUser creates a JWT token for the given user ID
+// WithUser creates a JWT token for the given user ID.
 func (c *HTTPTestClient) WithUser(userID int64) *HTTPTestClient {
 	jwtManager := TestJWTManager()
 	tokenPair, err := jwtManager.GenerateTokenPair(fmt.Sprintf("%d", userID), "testuser", "test@example.com", "player")
@@ -52,7 +52,7 @@ func (c *HTTPTestClient) WithUser(userID int64) *HTTPTestClient {
 	return c
 }
 
-// Request makes an HTTP request and returns the response
+// Request makes an HTTP request and returns the response.
 func (c *HTTPTestClient) Request(method, path string, body interface{}) *httptest.ResponseRecorder {
 	var reqBody io.Reader
 	if body != nil {
@@ -74,38 +74,38 @@ func (c *HTTPTestClient) Request(method, path string, body interface{}) *httptes
 	return w
 }
 
-// GET makes a GET request
+// GET makes a GET request.
 func (c *HTTPTestClient) GET(path string) *HTTPTestResponse {
 	w := c.Request(http.MethodGet, path, nil)
 	return NewHTTPTestResponse(c.t, w)
 }
 
-// POST makes a POST request
+// POST makes a POST request.
 func (c *HTTPTestClient) POST(path string, body interface{}) *HTTPTestResponse {
 	w := c.Request(http.MethodPost, path, body)
 	return NewHTTPTestResponse(c.t, w)
 }
 
-// PUT makes a PUT request
+// PUT makes a PUT request.
 func (c *HTTPTestClient) PUT(path string, body interface{}) *HTTPTestResponse {
 	w := c.Request(http.MethodPut, path, body)
 	return NewHTTPTestResponse(c.t, w)
 }
 
-// DELETE makes a DELETE request
+// DELETE makes a DELETE request.
 func (c *HTTPTestClient) DELETE(path string) *HTTPTestResponse {
 	w := c.Request(http.MethodDelete, path, nil)
 	return NewHTTPTestResponse(c.t, w)
 }
 
-// HTTPTestResponse wraps the response for easy assertions
+// HTTPTestResponse wraps the response for easy assertions.
 type HTTPTestResponse struct {
 	t        *testing.T
 	recorder *httptest.ResponseRecorder
 	body     []byte
 }
 
-// NewHTTPTestResponse creates a new test response wrapper
+// NewHTTPTestResponse creates a new test response wrapper.
 func NewHTTPTestResponse(t *testing.T, recorder *httptest.ResponseRecorder) *HTTPTestResponse {
 	return &HTTPTestResponse{
 		t:        t,
@@ -114,7 +114,7 @@ func NewHTTPTestResponse(t *testing.T, recorder *httptest.ResponseRecorder) *HTT
 	}
 }
 
-// AssertStatus asserts the response status code
+// AssertStatus asserts the response status code.
 func (r *HTTPTestResponse) AssertStatus(expected int) *HTTPTestResponse {
 	require.Equal(r.t, expected, r.recorder.Code,
 		"Expected status %d, got %d. Body: %s",
@@ -122,37 +122,37 @@ func (r *HTTPTestResponse) AssertStatus(expected int) *HTTPTestResponse {
 	return r
 }
 
-// AssertOK asserts status 200
+// AssertOK asserts status 200.
 func (r *HTTPTestResponse) AssertOK() *HTTPTestResponse {
 	return r.AssertStatus(http.StatusOK)
 }
 
-// AssertCreated asserts status 201
+// AssertCreated asserts status 201.
 func (r *HTTPTestResponse) AssertCreated() *HTTPTestResponse {
 	return r.AssertStatus(http.StatusCreated)
 }
 
-// AssertBadRequest asserts status 400
+// AssertBadRequest asserts status 400.
 func (r *HTTPTestResponse) AssertBadRequest() *HTTPTestResponse {
 	return r.AssertStatus(http.StatusBadRequest)
 }
 
-// AssertUnauthorized asserts status 401
+// AssertUnauthorized asserts status 401.
 func (r *HTTPTestResponse) AssertUnauthorized() *HTTPTestResponse {
 	return r.AssertStatus(http.StatusUnauthorized)
 }
 
-// AssertForbidden asserts status 403
+// AssertForbidden asserts status 403.
 func (r *HTTPTestResponse) AssertForbidden() *HTTPTestResponse {
 	return r.AssertStatus(http.StatusForbidden)
 }
 
-// AssertNotFound asserts status 404
+// AssertNotFound asserts status 404.
 func (r *HTTPTestResponse) AssertNotFound() *HTTPTestResponse {
 	return r.AssertStatus(http.StatusNotFound)
 }
 
-// AssertHeader asserts a response header value
+// AssertHeader asserts a response header value.
 func (r *HTTPTestResponse) AssertHeader(key, value string) *HTTPTestResponse {
 	actual := r.recorder.Header().Get(key)
 	require.Equal(r.t, value, actual,
@@ -160,7 +160,7 @@ func (r *HTTPTestResponse) AssertHeader(key, value string) *HTTPTestResponse {
 	return r
 }
 
-// AssertJSON asserts the response body matches the expected JSON
+// AssertJSON asserts the response body matches the expected JSON.
 func (r *HTTPTestResponse) AssertJSON(expected interface{}) *HTTPTestResponse {
 	expectedJSON, err := json.Marshal(expected)
 	require.NoError(r.t, err)
@@ -169,48 +169,48 @@ func (r *HTTPTestResponse) AssertJSON(expected interface{}) *HTTPTestResponse {
 	return r
 }
 
-// AssertJSONPath asserts a specific path in the JSON response
+// AssertJSONPath asserts a specific path in the JSON response.
 func (r *HTTPTestResponse) AssertJSONPath(path string, expected interface{}) *HTTPTestResponse {
 	var data map[string]interface{}
 	err := json.Unmarshal(r.body, &data)
 	require.NoError(r.t, err)
 
-	// Simple path implementation (can be enhanced with a proper JSON path library)
+	// Simple path implementation (can be enhanced with a proper JSON path library).
 	actual := data[path]
 	require.Equal(r.t, expected, actual)
 	return r
 }
 
-// AssertBodyContains asserts the response body contains a string
+// AssertBodyContains asserts the response body contains a string.
 func (r *HTTPTestResponse) AssertBodyContains(substr string) *HTTPTestResponse {
 	require.Contains(r.t, string(r.body), substr)
 	return r
 }
 
-// AssertBodyNotContains asserts the response body does not contain a string
+// AssertBodyNotContains asserts the response body does not contain a string.
 func (r *HTTPTestResponse) AssertBodyNotContains(substr string) *HTTPTestResponse {
 	require.NotContains(r.t, string(r.body), substr)
 	return r
 }
 
-// DecodeJSON decodes the response body into the given interface
+// DecodeJSON decodes the response body into the given interface.
 func (r *HTTPTestResponse) DecodeJSON(v interface{}) *HTTPTestResponse {
 	err := json.Unmarshal(r.body, v)
 	require.NoError(r.t, err, "Failed to decode JSON: %s", string(r.body))
 	return r
 }
 
-// GetBody returns the response body as bytes
+// GetBody returns the response body as bytes.
 func (r *HTTPTestResponse) GetBody() []byte {
 	return r.body
 }
 
-// GetBodyString returns the response body as a string
+// GetBodyString returns the response body as a string.
 func (r *HTTPTestResponse) GetBodyString() string {
 	return string(r.body)
 }
 
-// HTTPTestCase represents a single HTTP test case
+// HTTPTestCase represents a single HTTP test case.
 type HTTPTestCase struct {
 	Name           string
 	Method         string
@@ -226,7 +226,7 @@ type HTTPTestCase struct {
 	Cleanup        func()
 }
 
-// RunHTTPTestCases runs multiple HTTP test cases
+// RunHTTPTestCases runs multiple HTTP test cases.
 func RunHTTPTestCases(t *testing.T, router *gin.Engine, cases []HTTPTestCase) {
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
@@ -243,19 +243,19 @@ func RunHTTPTestCases(t *testing.T, router *gin.Engine, cases []HTTPTestCase) {
 				client = client.WithUser(tc.UserID)
 			}
 
-			// Make request
+			// Make request.
 			resp := client.Request(tc.Method, tc.Path, tc.Body)
 			testResp := NewHTTPTestResponse(t, resp)
 
-			// Assert status
+			// Assert status.
 			testResp.AssertStatus(tc.ExpectedStatus)
 
-			// Assert body if provided
+			// Assert body if provided.
 			if tc.ExpectedBody != nil {
 				testResp.AssertJSON(tc.ExpectedBody)
 			}
 
-			// Assert error message if provided
+			// Assert error message if provided.
 			if tc.ExpectedError != "" {
 				testResp.AssertBodyContains(tc.ExpectedError)
 			}
@@ -263,7 +263,7 @@ func RunHTTPTestCases(t *testing.T, router *gin.Engine, cases []HTTPTestCase) {
 	}
 }
 
-// MockHTTPContext creates a mock gin context for unit testing
+// MockHTTPContext creates a mock gin context for unit testing.
 func MockHTTPContext(method, path string, body interface{}) (*gin.Context, *httptest.ResponseRecorder) {
 	gin.SetMode(gin.TestMode)
 
@@ -283,17 +283,17 @@ func MockHTTPContext(method, path string, body interface{}) (*gin.Context, *http
 	return c, w
 }
 
-// SetContextUser sets a user ID in the gin context
+// SetContextUser sets a user ID in the gin context.
 func SetContextUser(c *gin.Context, userID int64) {
 	c.Set("user_id", userID)
 }
 
-// SetContextValue sets a value in the gin context
+// SetContextValue sets a value in the gin context.
 func SetContextValue(c *gin.Context, key string, value interface{}) {
 	c.Set(key, value)
 }
 
-// AssertErrorResponse asserts an error response structure
+// AssertErrorResponse asserts an error response structure.
 func AssertErrorResponseWithCode(t *testing.T, w *httptest.ResponseRecorder, expectedCode string, expectedStatus int) {
 	require.Equal(t, expectedStatus, w.Code)
 

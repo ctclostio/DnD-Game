@@ -10,24 +10,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
-// RuleEngine handles compilation and execution of visual logic rules
+// RuleEngine handles compilation and execution of visual logic rules.
 type RuleEngine struct {
 	nodeExecutors map[string]NodeExecutor
 	diceRoller    *DiceRollService
 	repository    *database.RuleBuilderRepository
 }
 
-// NodeExecutor defines the interface for executing different node types
+// NodeExecutor defines the interface for executing different node types.
 type NodeExecutor interface {
 	Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error)
 }
 
-// ExecutionState tracks the state during rule execution
+// ExecutionState tracks the state during rule execution.
 type ExecutionState struct {
 	Variables     map[string]interface{}
 	ExecutedNodes []string
@@ -38,7 +38,7 @@ type ExecutionState struct {
 	ExecutionPath []ExecutionStep
 }
 
-// ExecutionStep records a step in the execution path for debugging
+// ExecutionStep records a step in the execution path for debugging.
 type ExecutionStep struct {
 	NodeID    string
 	NodeType  string
@@ -48,7 +48,7 @@ type ExecutionStep struct {
 	Timestamp time.Time
 }
 
-// CompiledRule represents a compiled rule ready for execution
+// CompiledRule represents a compiled rule ready for execution.
 type CompiledRule struct {
 	TemplateID     string
 	Graph          *models.LogicGraph
@@ -57,7 +57,7 @@ type CompiledRule struct {
 	CompiledAt     time.Time
 }
 
-// TriggerData represents data that triggered rule execution
+// TriggerData represents data that triggered rule execution.
 type TriggerData struct {
 	Type       string
 	Source     interface{}
@@ -65,7 +65,7 @@ type TriggerData struct {
 	Properties map[string]interface{}
 }
 
-// ExecutionResult represents the result of rule execution
+// ExecutionResult represents the result of rule execution.
 type ExecutionResult struct {
 	Success       bool
 	Duration      time.Duration
@@ -75,14 +75,14 @@ type ExecutionResult struct {
 	ExecutionPath []ExecutionStep
 }
 
-// ValidationResult represents the result of rule validation
+// ValidationResult represents the result of rule validation.
 type ValidationResult struct {
 	IsValid  bool
 	Errors   []string
 	Warnings []string
 }
 
-// NewRuleEngine creates a new rule engine instance
+// NewRuleEngine creates a new rule engine instance.
 func NewRuleEngine(repository *database.RuleBuilderRepository, diceRoller *DiceRollService) *RuleEngine {
 	engine := &RuleEngine{
 		nodeExecutors: make(map[string]NodeExecutor),
@@ -90,26 +90,26 @@ func NewRuleEngine(repository *database.RuleBuilderRepository, diceRoller *DiceR
 		repository:    repository,
 	}
 
-	// Register all node executors
+	// Register all node executors.
 	engine.registerNodeExecutors()
 
 	return engine
 }
 
-// CompileRule validates and optimizes a rule template
+// CompileRule validates and optimizes a rule template.
 func (re *RuleEngine) CompileRule(template *models.RuleTemplate) (*CompiledRule, error) {
-	// Validate the logic graph
+	// Validate the logic graph.
 	if err := re.validateLogicGraph(&template.LogicGraph); err != nil {
 		return nil, fmt.Errorf("invalid logic graph: %w", err)
 	}
 
-	// Build execution order
+	// Build execution order.
 	executionOrder, err := re.buildExecutionOrder(&template.LogicGraph)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build execution order: %w", err)
 	}
 
-	// Optimize the graph
+	// Optimize the graph.
 	optimizedGraph := re.optimizeGraph(&template.LogicGraph)
 
 	return &CompiledRule{
@@ -121,7 +121,7 @@ func (re *RuleEngine) CompileRule(template *models.RuleTemplate) (*CompiledRule,
 	}, nil
 }
 
-// ExecuteRule executes a compiled rule with given parameters
+// ExecuteRule executes a compiled rule with given parameters.
 func (re *RuleEngine) ExecuteRule(ctx context.Context, compiled *CompiledRule, instance *models.RuleInstance, trigger TriggerData) (*ExecutionResult, error) {
 	state := &ExecutionState{
 		Variables:     make(map[string]interface{}),
@@ -132,29 +132,29 @@ func (re *RuleEngine) ExecuteRule(ctx context.Context, compiled *CompiledRule, i
 		ExecutionPath: []ExecutionStep{},
 	}
 
-	// Initialize variables from instance parameters
+	// Initialize variables from instance parameters.
 	for name, value := range instance.ParameterValues {
 		state.Variables[name] = value
 	}
 
-	// Add trigger data to context
+	// Add trigger data to context.
 	state.Context["trigger"] = trigger
 	state.Context["instance"] = instance
 
-	// Execute nodes in order
+	// Execute nodes in order.
 	for _, nodeID := range compiled.ExecutionOrder {
 		node := re.findNode(compiled.Graph, nodeID)
 		if node == nil {
 			continue
 		}
 
-		// Check if node should execute based on incoming connections
+		// Check if node should execute based on incoming connections.
 		inputs, shouldExecute := re.gatherNodeInputs(node, compiled.Graph, state)
 		if !shouldExecute {
 			continue
 		}
 
-		// Execute the node
+		// Execute the node.
 		stepStart := time.Now()
 		outputs, err := re.executeNode(ctx, node, inputs, state)
 
@@ -176,7 +176,7 @@ func (re *RuleEngine) ExecuteRule(ctx context.Context, compiled *CompiledRule, i
 			continue
 		}
 
-		// Store outputs for connected nodes
+		// Store outputs for connected nodes.
 		state.Context[node.ID] = outputs
 		state.ExecutedNodes = append(state.ExecutedNodes, node.ID)
 	}
@@ -191,14 +191,14 @@ func (re *RuleEngine) ExecuteRule(ctx context.Context, compiled *CompiledRule, i
 	}, nil
 }
 
-// validateLogicGraph ensures the graph is valid and executable
+// validateLogicGraph ensures the graph is valid and executable.
 func (re *RuleEngine) validateLogicGraph(graph *models.LogicGraph) error {
-	// Check for start node
+	// Check for start node.
 	if graph.StartNodeID == "" {
 		return fmt.Errorf("no start node defined")
 	}
 
-	// Validate all connections
+	// Validate all connections.
 	nodeMap := make(map[string]*models.LogicNode)
 	for i := range graph.Nodes {
 		node := &graph.Nodes[i]
@@ -206,19 +206,19 @@ func (re *RuleEngine) validateLogicGraph(graph *models.LogicGraph) error {
 	}
 
 	for _, conn := range graph.Connections {
-		// Validate source node and port
+		// Validate source node and port.
 		fromNode, ok := nodeMap[conn.FromNodeID]
 		if !ok {
 			return fmt.Errorf("connection references non-existent node: %s", conn.FromNodeID)
 		}
 
-		// Validate target node and port
+		// Validate target node and port.
 		toNode, ok := nodeMap[conn.ToNodeID]
 		if !ok {
 			return fmt.Errorf("connection references non-existent node: %s", conn.ToNodeID)
 		}
 
-		// Validate ports exist
+		// Validate ports exist.
 		if !re.hasPort(fromNode.Outputs, conn.FromPortID) {
 			return fmt.Errorf("invalid output port %s on node %s", conn.FromPortID, conn.FromNodeID)
 		}
@@ -228,7 +228,7 @@ func (re *RuleEngine) validateLogicGraph(graph *models.LogicGraph) error {
 		}
 	}
 
-	// Check for cycles
+	// Check for cycles.
 	if re.hasCycles(graph) {
 		return fmt.Errorf("logic graph contains cycles")
 	}
@@ -236,9 +236,9 @@ func (re *RuleEngine) validateLogicGraph(graph *models.LogicGraph) error {
 	return nil
 }
 
-// buildExecutionOrder creates a topologically sorted execution order
+// buildExecutionOrder creates a topologically sorted execution order.
 func (re *RuleEngine) buildExecutionOrder(graph *models.LogicGraph) ([]string, error) {
-	// Build adjacency list
+	// Build adjacency list.
 	adjacency := make(map[string][]string)
 	inDegree := make(map[string]int)
 
@@ -252,10 +252,10 @@ func (re *RuleEngine) buildExecutionOrder(graph *models.LogicGraph) ([]string, e
 		inDegree[conn.ToNodeID]++
 	}
 
-	// Topological sort using Kahn's algorithm
+	// Topological sort using Kahn's algorithm.
 	queue := []string{}
 
-	// Start with nodes that have no incoming connections
+	// Start with nodes that have no incoming connections.
 	for nodeID, degree := range inDegree {
 		if degree == 0 {
 			queue = append(queue, nodeID)
@@ -283,31 +283,30 @@ func (re *RuleEngine) buildExecutionOrder(graph *models.LogicGraph) ([]string, e
 	return order, nil
 }
 
-// registerNodeExecutors sets up all the node type executors
+// registerNodeExecutors sets up all the node type executors.
 func (re *RuleEngine) registerNodeExecutors() {
-	// Trigger executors
+	// Trigger executors.
 	re.nodeExecutors[models.NodeTypeTriggerAction] = &ActionTriggerExecutor{}
 	re.nodeExecutors[models.NodeTypeTriggerDamage] = &DamageTriggerExecutor{}
 	re.nodeExecutors[models.NodeTypeTriggerTime] = &TimeTriggerExecutor{}
 
-	// Condition executors
+	// Condition executors.
 	re.nodeExecutors[models.NodeTypeConditionCheck] = &ConditionCheckExecutor{}
 	re.nodeExecutors[models.NodeTypeConditionCompare] = &CompareExecutor{}
 	re.nodeExecutors[models.NodeTypeConditionRoll] = &RollCheckExecutor{diceRoller: re.diceRoller}
 
-	// Action executors
+	// Action executors.
 	re.nodeExecutors[models.NodeTypeActionDamage] = &DamageActionExecutor{}
 	re.nodeExecutors[models.NodeTypeActionHeal] = &HealActionExecutor{}
 	re.nodeExecutors[models.NodeTypeActionEffect] = &EffectActionExecutor{}
 	re.nodeExecutors[models.NodeTypeActionResource] = &ResourceActionExecutor{}
 
-	// Calculation executors
+	// Calculation executors.
 	re.nodeExecutors[models.NodeTypeCalcMath] = &MathExecutor{}
 	re.nodeExecutors[models.NodeTypeCalcRandom] = &RandomExecutor{diceRoller: re.diceRoller}
 }
 
-// Helper methods
-
+// Helper methods.
 func (re *RuleEngine) executeNode(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	executor, ok := re.nodeExecutors[node.Type]
 	if !ok {
@@ -336,7 +335,7 @@ func (re *RuleEngine) hasPort(ports []models.NodePort, portID string) bool {
 }
 
 func (re *RuleEngine) hasCycles(graph *models.LogicGraph) bool {
-	// Simple cycle detection using DFS
+	// Simple cycle detection using DFS.
 	visited := make(map[string]bool)
 	recStack := make(map[string]bool)
 
@@ -353,7 +352,7 @@ func (re *RuleEngine) hasCyclesDFS(nodeID string, graph *models.LogicGraph, visi
 	visited[nodeID] = true
 	recStack[nodeID] = true
 
-	// Find all connections from this node
+	// Find all connections from this node.
 	for _, conn := range graph.Connections {
 		if conn.FromNodeID == nodeID {
 			if !visited[conn.ToNodeID] {
@@ -373,23 +372,23 @@ func (re *RuleEngine) hasCyclesDFS(nodeID string, graph *models.LogicGraph, visi
 func (re *RuleEngine) gatherNodeInputs(node *models.LogicNode, graph *models.LogicGraph, state *ExecutionState) (map[string]interface{}, bool) {
 	inputs := make(map[string]interface{})
 
-	// Find all connections to this node
+	// Find all connections to this node.
 	for _, conn := range graph.Connections {
 		if conn.ToNodeID == node.ID {
-			// Get output from source node
+			// Get output from source node.
 			sourceOutputs, ok := state.Context[conn.FromNodeID].(map[string]interface{})
 			if !ok {
 				continue
 			}
 
-			// Map the specific output port to input port
+			// Map the specific output port to input port.
 			if value, ok := sourceOutputs[conn.FromPortID]; ok {
 				inputs[conn.ToPortID] = value
 			}
 		}
 	}
 
-	// Check if all required inputs are present
+	// Check if all required inputs are present.
 	for _, inputPort := range node.Inputs {
 		if inputPort.Required {
 			if _, ok := inputs[inputPort.ID]; !ok {
@@ -402,21 +401,19 @@ func (re *RuleEngine) gatherNodeInputs(node *models.LogicNode, graph *models.Log
 }
 
 func (re *RuleEngine) optimizeGraph(graph *models.LogicGraph) *models.LogicGraph {
-	// Simple optimizations
-	// TODO: Implement graph optimizations like constant folding, dead code elimination
+	// Simple optimizations.
+	// TODO: Implement graph optimizations like constant folding, dead code elimination.
 	return graph
 }
 
 func (re *RuleEngine) isCriticalError(err error) bool {
-	// Determine if an error should stop execution
+	// Determine if an error should stop execution.
 	return strings.Contains(err.Error(), "critical") || strings.Contains(err.Error(), "fatal")
 }
 
-// Supporting types
-
-// Node Executor Implementations
-
-// MathExecutor handles mathematical operations
+// Supporting types.
+// Node Executor Implementations.
+// MathExecutor handles mathematical operations.
 type MathExecutor struct{}
 
 func (e *MathExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
@@ -468,7 +465,7 @@ func (e *MathExecutor) Execute(ctx context.Context, node *models.LogicNode, inpu
 	}, nil
 }
 
-// RandomExecutor handles dice rolls and random number generation
+// RandomExecutor handles dice rolls and random number generation.
 type RandomExecutor struct {
 	diceRoller *DiceRollService
 }
@@ -476,7 +473,7 @@ type RandomExecutor struct {
 func (e *RandomExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	diceNotation, _ := node.Properties["dice_notation"].(string)
 	if diceNotation == "" {
-		// Random number between min and max
+		// Random number between min and max.
 		min, _ := node.Properties["min"].(float64)
 		max, _ := node.Properties["max"].(float64)
 
@@ -490,7 +487,7 @@ func (e *RandomExecutor) Execute(ctx context.Context, node *models.LogicNode, in
 		}, nil
 	}
 
-	// Parse dice notation
+	// Parse dice notation.
 	result, details, err := e.parseDiceNotation(diceNotation)
 	if err != nil {
 		return nil, err
@@ -539,7 +536,7 @@ func (e *RandomExecutor) parseDiceNotation(notation string) (int, map[string]int
 	return total, details, nil
 }
 
-// ConditionCheckExecutor handles if/else branching
+// ConditionCheckExecutor handles if/else branching.
 type ConditionCheckExecutor struct{}
 
 func (e *ConditionCheckExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
@@ -559,7 +556,7 @@ func (e *ConditionCheckExecutor) Execute(ctx context.Context, node *models.Logic
 	return outputs, nil
 }
 
-// CompareExecutor handles number comparisons
+// CompareExecutor handles number comparisons.
 type CompareExecutor struct{}
 
 func (e *CompareExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
@@ -590,7 +587,7 @@ func (e *CompareExecutor) Execute(ctx context.Context, node *models.LogicNode, i
 	}, nil
 }
 
-// Helper function to convert interface{} to float64
+// Helper function to convert interface{} to float64.
 func toFloat64(v interface{}) float64 {
 	switch val := v.(type) {
 	case float64:
@@ -607,7 +604,7 @@ func toFloat64(v interface{}) float64 {
 	}
 }
 
-// Placeholder implementations for other executors
+// Placeholder implementations for other executors.
 type ActionTriggerExecutor struct{}
 
 func (e *ActionTriggerExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
@@ -656,37 +653,36 @@ func (e *ResourceActionExecutor) Execute(ctx context.Context, node *models.Logic
 	return map[string]interface{}{"out": true}, nil
 }
 
-// Repository wrapper methods
-
-// GetRuleTemplates gets rule templates with filters
+// Repository wrapper methods.
+// GetRuleTemplates gets rule templates with filters.
 func (re *RuleEngine) GetRuleTemplates(userID, category string, isPublic bool) ([]models.RuleTemplate, error) {
 	return re.repository.GetRuleTemplates(userID, category, isPublic)
 }
 
-// GetRuleTemplate gets a rule template by ID
+// GetRuleTemplate gets a rule template by ID.
 func (re *RuleEngine) GetRuleTemplate(templateID string) (*models.RuleTemplate, error) {
 	return re.repository.GetRuleTemplate(templateID)
 }
 
-// CreateRuleTemplate creates a new rule template
+// CreateRuleTemplate creates a new rule template.
 func (re *RuleEngine) CreateRuleTemplate(template *models.RuleTemplate) (*models.RuleTemplate, error) {
-	// Generate ID if not provided
+	// Generate ID if not provided.
 	if template.ID == "" {
 		template.ID = uuid.New().String()
 	}
 
-	// Set timestamps
+	// Set timestamps.
 	now := time.Now()
 	template.CreatedAt = now
 	template.UpdatedAt = now
 
-	// Validate and compile the template
+	// Validate and compile the template.
 	_, err := re.CompileRule(template)
 	if err != nil {
 		return nil, fmt.Errorf("invalid rule template: %w", err)
 	}
 
-	// Save to repository
+	// Save to repository.
 	if err := re.repository.CreateRuleTemplate(template); err != nil {
 		return nil, err
 	}
@@ -694,28 +690,28 @@ func (re *RuleEngine) CreateRuleTemplate(template *models.RuleTemplate) (*models
 	return template, nil
 }
 
-// UpdateRuleTemplate updates a rule template
+// UpdateRuleTemplate updates a rule template.
 func (re *RuleEngine) UpdateRuleTemplate(templateID string, updates map[string]interface{}) (*models.RuleTemplate, error) {
-	// Update in repository
+	// Update in repository.
 	if err := re.repository.UpdateRuleTemplate(templateID, updates); err != nil {
 		return nil, err
 	}
 
-	// Return updated template
+	// Return updated template.
 	return re.repository.GetRuleTemplate(templateID)
 }
 
-// GetRuleInstance retrieves a rule instance by ID
+// GetRuleInstance retrieves a rule instance by ID.
 func (re *RuleEngine) GetRuleInstance(instanceID string) (*models.RuleInstance, error) {
 	return re.repository.GetRuleInstance(instanceID)
 }
 
-// DeactivateRule deactivates a rule instance
+// DeactivateRule deactivates a rule instance.
 func (re *RuleEngine) DeactivateRule(instanceID string) error {
 	return re.repository.DeactivateRuleInstance(instanceID)
 }
 
-// ValidateRule validates a logic graph
+// ValidateRule validates a logic graph.
 func (re *RuleEngine) ValidateRule(graph models.LogicGraph) (*ValidationResult, error) {
 	err := re.validateLogicGraph(&graph)
 	result := &ValidationResult{
@@ -731,24 +727,24 @@ func (re *RuleEngine) ValidateRule(graph models.LogicGraph) (*ValidationResult, 
 	return result, nil
 }
 
-// DeleteRuleTemplate deletes a rule template
+// DeleteRuleTemplate deletes a rule template.
 func (re *RuleEngine) DeleteRuleTemplate(templateID string) error {
 	return re.repository.DeleteRuleTemplate(templateID)
 }
 
-// GetNodeTemplates gets all available node templates
+// GetNodeTemplates gets all available node templates.
 func (re *RuleEngine) GetNodeTemplates() ([]models.NodeTemplate, error) {
 	return re.repository.GetNodeTemplates()
 }
 
-// ActivateRule creates an active instance of a rule
+// ActivateRule creates an active instance of a rule.
 func (re *RuleEngine) ActivateRule(templateID, gameSessionID, characterID string, parameters map[string]interface{}) (*models.ActiveRule, error) {
 	template, err := re.repository.GetRuleTemplate(templateID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Compile the rule
+	// Compile the rule.
 	compiled, err := re.CompileRule(template)
 	if err != nil {
 		return nil, err
@@ -770,18 +766,18 @@ func (re *RuleEngine) ActivateRule(templateID, gameSessionID, characterID string
 		return nil, err
 	}
 
-	// Increment usage count
+	// Increment usage count.
 	_ = re.repository.IncrementUsageCount(templateID)
 
 	return activeRule, nil
 }
 
-// GetActiveRules gets active rules for a session or character
+// GetActiveRules gets active rules for a session or character.
 func (re *RuleEngine) GetActiveRules(gameSessionID, characterID string) ([]models.ActiveRule, error) {
 	return re.repository.GetActiveRules(gameSessionID, characterID)
 }
 
-// GetRuleExecutionHistory gets rule execution history
+// GetRuleExecutionHistory gets rule execution history.
 func (re *RuleEngine) GetRuleExecutionHistory(gameSessionID, characterID string, limit int) ([]models.RuleExecution, error) {
 	return re.repository.GetRuleExecutionHistory(gameSessionID, characterID, limit)
 }

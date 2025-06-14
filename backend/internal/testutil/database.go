@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// NewMockDB creates a new mock database for testing
+// NewMockDB creates a new mock database for testing.
 func NewMockDB(t *testing.T) (*sqlx.DB, sqlmock.Sqlmock) {
 	mockDB, mock, err := sqlmock.New()
 	require.NoError(t, err)
@@ -18,21 +18,21 @@ func NewMockDB(t *testing.T) (*sqlx.DB, sqlmock.Sqlmock) {
 	return sqlxDB, mock
 }
 
-// SetupTestDB creates an in-memory SQLite database for integration tests
+// SetupTestDB creates an in-memory SQLite database for integration tests.
 func SetupTestDB(t *testing.T) *sqlx.DB {
-	// Use shared cache mode for better concurrency support
+	// Use shared cache mode for better concurrency support.
 	db, err := sqlx.Open("sqlite3", ":memory:?cache=shared&mode=rwc")
 	require.NoError(t, err)
 
-	// Set connection pool settings for better concurrency
+	// Set connection pool settings for better concurrency.
 	db.SetMaxOpenConns(1) // SQLite can only have one writer at a time
 	db.SetMaxIdleConns(1)
 
-	// Enable foreign keys
+	// Enable foreign keys.
 	_, err = db.Exec("PRAGMA foreign_keys = ON")
 	require.NoError(t, err)
 
-	// Create test schema
+	// Create test schema.
 	schema := `
 	CREATE TABLE IF NOT EXISTS users (
 		id TEXT PRIMARY KEY,
@@ -207,14 +207,14 @@ func SetupTestDB(t *testing.T) *sqlx.DB {
 	return db
 }
 
-// CleanupDB closes the database connection
+// CleanupDB closes the database connection.
 func CleanupDB(db *sqlx.DB) {
 	if db != nil {
 		_ = db.Close()
 	}
 }
 
-// TruncateTables clears all data from tables for test isolation
+// TruncateTables clears all data from tables for test isolation.
 func TruncateTables(t *testing.T, db *sqlx.DB) {
 	tables := []string{
 		"dice_rolls",
@@ -235,7 +235,7 @@ func TruncateTables(t *testing.T, db *sqlx.DB) {
 	}
 }
 
-// SeedTestUser creates a test user
+// SeedTestUser creates a test user.
 func SeedTestUser(t *testing.T, db *sqlx.DB, id, username, email, role string) {
 	query := `
 		INSERT INTO users (id, username, email, password_hash, role)
@@ -245,7 +245,7 @@ func SeedTestUser(t *testing.T, db *sqlx.DB, id, username, email, role string) {
 	require.NoError(t, err)
 }
 
-// SeedTestCharacter creates a test character
+// SeedTestCharacter creates a test character.
 func SeedTestCharacter(t *testing.T, db *sqlx.DB, id, userID, name string) {
 	query := `
 		INSERT INTO characters (
@@ -263,7 +263,7 @@ func SeedTestCharacter(t *testing.T, db *sqlx.DB, id, userID, name string) {
 	require.NoError(t, err)
 }
 
-// SeedTestItem creates a test item
+// SeedTestItem creates a test item.
 func SeedTestItem(t *testing.T, db *sqlx.DB, id, name, itemType string, value int) {
 	query := `
 		INSERT INTO items (id, name, type, value, weight, properties)
@@ -273,7 +273,7 @@ func SeedTestItem(t *testing.T, db *sqlx.DB, id, name, itemType string, value in
 	require.NoError(t, err)
 }
 
-// AssertRowExists checks if a row exists in a table
+// AssertRowExists checks if a row exists in a table.
 func AssertRowExists(t *testing.T, db *sqlx.DB, table, column, value string) {
 	var count int
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = $1", table, column)
@@ -282,7 +282,7 @@ func AssertRowExists(t *testing.T, db *sqlx.DB, table, column, value string) {
 	require.Equal(t, 1, count, "Expected row with %s='%s' in table %s", column, value, table)
 }
 
-// AssertRowNotExists checks if a row does not exist in a table
+// AssertRowNotExists checks if a row does not exist in a table.
 func AssertRowNotExists(t *testing.T, db *sqlx.DB, table, column, value string) {
 	var count int
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = $1", table, column)

@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 func TestCombatService_BasicOperations(t *testing.T) {
@@ -38,7 +38,7 @@ func TestCombatService_BasicOperations(t *testing.T) {
 			},
 		}
 
-		// Start combat
+		// Start combat.
 		combat, err := service.StartCombat(ctx, gameSessionID, combatants)
 		assert.NoError(t, err)
 		assert.NotNil(t, combat)
@@ -46,7 +46,7 @@ func TestCombatService_BasicOperations(t *testing.T) {
 		assert.Equal(t, gameSessionID, combat.GameSessionID)
 		assert.True(t, combat.IsActive)
 
-		// Retrieve combat
+		// Retrieve combat.
 		retrieved, err := service.GetCombat(ctx, combat.ID)
 		assert.NoError(t, err)
 		assert.NotNil(t, retrieved)
@@ -66,11 +66,11 @@ func TestCombatService_BasicOperations(t *testing.T) {
 			},
 		}
 
-		// Start combat
+		// Start combat.
 		combat, err := service.StartCombat(ctx, gameSessionID, combatants)
 		assert.NoError(t, err)
 
-		// Get by session
+		// Get by session.
 		found, err := service.GetCombatBySession(ctx, gameSessionID)
 		assert.NoError(t, err)
 		assert.NotNil(t, found)
@@ -88,7 +88,7 @@ func TestCombatService_TurnManagement(t *testing.T) {
 	service := NewCombatService()
 	ctx := context.Background()
 
-	// Setup combat
+	// Setup combat.
 	gameSessionID := uuid.New().String()
 	combatants := []models.Combatant{
 		{
@@ -115,14 +115,14 @@ func TestCombatService_TurnManagement(t *testing.T) {
 	assert.NoError(t, err)
 
 	t.Run("next turn progression", func(t *testing.T) {
-		// Get next turn
+		// Get next turn.
 		combatant, err := service.NextTurn(ctx, combat.ID)
-		// Just verify the method works without errors
+		// Just verify the method works without errors.
 		if err == nil {
 			assert.NotNil(t, combatant)
 			assert.NotEmpty(t, combatant.Name)
 		}
-		// If NextTurn is not implemented, that's okay for this test
+		// If NextTurn is not implemented, that's okay for this test.
 	})
 }
 
@@ -130,7 +130,7 @@ func TestCombatService_CombatActions(t *testing.T) {
 	service := NewCombatService()
 	ctx := context.Background()
 
-	// Setup combat
+	// Setup combat.
 	gameSessionID := uuid.New().String()
 	fighterID := uuid.New().String()
 	goblinID := uuid.New().String()
@@ -169,10 +169,10 @@ func TestCombatService_CombatActions(t *testing.T) {
 			Description: "Fighter attacks Goblin",
 		}
 
-		// Try to process action
+		// Try to process action.
 		action, err := service.ProcessAction(ctx, combat.ID, request)
-		// The actual implementation might handle this differently
-		// Just check that the method exists and can be called
+		// The actual implementation might handle this differently.
+		// Just check that the method exists and can be called.
 		if err == nil {
 			assert.NotNil(t, action)
 		}
@@ -190,7 +190,7 @@ func TestCombatModels_Validation(t *testing.T) {
 			AC:    16,
 		}
 
-		// Basic validations
+		// Basic validations.
 		assert.NotEmpty(t, validCombatant.ID)
 		assert.NotEmpty(t, validCombatant.Name)
 		assert.Greater(t, validCombatant.HP, -1)
@@ -208,7 +208,7 @@ func TestCombatModels_Validation(t *testing.T) {
 		assert.NotEmpty(t, validRequest.ActorID)
 		assert.NotEmpty(t, validRequest.Action)
 
-		// Test different action types
+		// Test different action types.
 		actionTypes := []models.ActionType{
 			models.ActionTypeAttack,
 			models.ActionTypeMove,
@@ -253,7 +253,7 @@ func TestCombatModels_Validation(t *testing.T) {
 
 func TestCombatService_CombatState(t *testing.T) {
 	t.Run("combat status transitions", func(t *testing.T) {
-		// Test valid status values
+		// Test valid status values.
 		validStatuses := []models.CombatStatus{
 			models.CombatStatusActive,
 			models.CombatStatusPaused,
@@ -273,25 +273,25 @@ func TestCombatService_CombatState(t *testing.T) {
 			IsDead:    false,
 		}
 
-		// Test death save progression
+		// Test death save progression.
 		assert.Equal(t, 0, deathSaves.Successes)
 		assert.Equal(t, 0, deathSaves.Failures)
 		assert.False(t, deathSaves.IsStable)
 		assert.False(t, deathSaves.IsDead)
 
-		// Test stabilized
+		// Test stabilized.
 		deathSaves.Successes = 3
 		deathSaves.IsStable = true
 		assert.True(t, deathSaves.IsStable)
 
-		// Test death
+		// Test death.
 		deathSaves.Failures = 3
 		deathSaves.IsDead = true
 		assert.True(t, deathSaves.IsDead)
 	})
 
 	t.Run("conditions", func(t *testing.T) {
-		// Test common conditions
+		// Test common conditions.
 		conditions := []string{
 			"blinded",
 			"charmed",
@@ -326,7 +326,7 @@ func TestCombatService_Positions(t *testing.T) {
 		assert.Equal(t, 10, position.X)
 		assert.Equal(t, 15, position.Y)
 
-		// Test movement
+		// Test movement.
 		newX := position.X + 5
 		newY := position.Y - 5
 

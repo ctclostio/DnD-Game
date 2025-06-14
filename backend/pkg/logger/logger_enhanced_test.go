@@ -103,7 +103,7 @@ func TestNewV2(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
 
-			// Override output for testing
+			// Override output for testing.
 			if tt.config.Output == "" || tt.config.Output == "stdout" {
 				tt.config.Output = "stdout"
 			}
@@ -116,7 +116,7 @@ func TestNewV2(t *testing.T) {
 
 			require.NoError(t, err)
 
-			// Replace logger output with buffer for testing
+			// Replace logger output with buffer for testing.
 			level, _ := zerolog.ParseLevel(tt.config.Level)
 			if level == zerolog.NoLevel {
 				level = zerolog.InfoLevel
@@ -340,7 +340,7 @@ func TestLoggerV2_LogDatabaseQuery(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
 			zl := zerolog.New(&buf).With().Timestamp().Logger()
-			// Set to debug level to capture database queries
+			// Set to debug level to capture database queries.
 			zl = zl.Level(zerolog.DebugLevel)
 			logger := &LoggerV2{
 				Logger: &zl,
@@ -349,7 +349,7 @@ func TestLoggerV2_LogDatabaseQuery(t *testing.T) {
 
 			logger.LogDatabaseQuery(tt.query, tt.duration, tt.err, tt.args...)
 
-			// Check if buffer is empty (debug logs might be filtered)
+			// Check if buffer is empty (debug logs might be filtered).
 			if buf.Len() == 0 {
 				t.Skip("No log output generated - debug level might be filtered")
 			}
@@ -428,7 +428,7 @@ func TestLoggerV2_LogAIOperation(t *testing.T) {
 func TestLoggerV2_LogWebSocketEvent(t *testing.T) {
 	var buf bytes.Buffer
 	zl := zerolog.New(&buf).With().Timestamp().Logger()
-	// Set to debug level to capture WebSocket events
+	// Set to debug level to capture WebSocket events.
 	zl = zl.Level(zerolog.DebugLevel)
 	logger := &LoggerV2{
 		Logger: &zl,
@@ -442,7 +442,7 @@ func TestLoggerV2_LogWebSocketEvent(t *testing.T) {
 
 	logger.LogWebSocketEvent("dice_roll", "client-123", eventData)
 
-	// Check if buffer is empty (debug logs might be filtered)
+	// Check if buffer is empty (debug logs might be filtered).
 	if buf.Len() == 0 {
 		t.Skip("No log output generated - debug level might be filtered")
 	}
@@ -531,21 +531,21 @@ func TestGetCaller(t *testing.T) {
 func TestContextFunctions(t *testing.T) {
 	ctx := context.Background()
 
-	// Test adding values to context
+	// Test adding values to context.
 	ctx = ContextWithRequestID(ctx, "req-123")
 	ctx = ContextWithUserID(ctx, "user-456")
 	ctx = ContextWithCorrelationID(ctx, "corr-789")
 	ctx = ContextWithSessionID(ctx, "sess-012")
 	ctx = ContextWithCharacterID(ctx, "char-345")
 
-	// Test retrieving values from context
+	// Test retrieving values from context.
 	assert.Equal(t, "req-123", GetRequestIDFromContext(ctx))
 	assert.Equal(t, "user-456", GetUserIDFromContext(ctx))
 	assert.Equal(t, "corr-789", ctx.Value(CorrelationIDKey))
 	assert.Equal(t, "sess-012", ctx.Value(SessionIDKey))
 	assert.Equal(t, "char-345", ctx.Value(CharacterIDKey))
 
-	// Test with empty context
+	// Test with empty context.
 	emptyCtx := context.Background()
 	assert.Equal(t, "", GetRequestIDFromContext(emptyCtx))
 	assert.Equal(t, "", GetUserIDFromContext(emptyCtx))
@@ -563,8 +563,8 @@ func TestLoggerV2_PrettyPrinting(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, logger)
 
-	// Pretty printing is harder to test without capturing console output
-	// Just verify the logger was created successfully
+	// Pretty printing is harder to test without capturing console output.
+	// Just verify the logger was created successfully.
 }
 
 func TestLoggerV2_CallerInfo(t *testing.T) {
@@ -577,7 +577,7 @@ func TestLoggerV2_CallerInfo(t *testing.T) {
 	logger, err := NewV2(cfg)
 	require.NoError(t, err)
 
-	// Replace output for testing
+	// Replace output for testing.
 	zl := zerolog.New(&buf).With().Timestamp().Caller().Logger()
 	logger.Logger = &zl
 
@@ -597,7 +597,7 @@ func TestLoggerV2_EmptyGameContext(t *testing.T) {
 		config: DefaultConfig(),
 	}
 
-	// Test with empty session and character IDs
+	// Test with empty session and character IDs.
 	gameLogger := logger.WithGameContext("", "")
 	gameLogger.Info().Msg("empty game context")
 

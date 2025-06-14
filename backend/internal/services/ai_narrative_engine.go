@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
-// NarrativeEngine orchestrates the AI-powered dynamic storytelling system
+// NarrativeEngine orchestrates the AI-powered dynamic storytelling system.
 type NarrativeEngine struct {
 	llm               LLMProvider
 	cfg               *config.Config
@@ -23,25 +23,25 @@ type NarrativeEngine struct {
 	PerspectiveGen    *PerspectiveGenerator
 }
 
-// PlayerProfileService manages player narrative preferences and patterns
+// PlayerProfileService manages player narrative preferences and patterns.
 type PlayerProfileService struct {
 	llm LLMProvider
 	cfg *config.Config
 }
 
-// ConsequenceEngine calculates and manages ripple effects from player actions
+// ConsequenceEngine calculates and manages ripple effects from player actions.
 type ConsequenceEngine struct {
 	llm LLMProvider
 	cfg *config.Config
 }
 
-// PerspectiveGenerator creates multiple viewpoints of the same events
+// PerspectiveGenerator creates multiple viewpoints of the same events.
 type PerspectiveGenerator struct {
 	llm LLMProvider
 	cfg *config.Config
 }
 
-// NewNarrativeEngine creates a new narrative engine instance
+// NewNarrativeEngine creates a new narrative engine instance.
 func NewNarrativeEngine(cfg *config.Config) (*NarrativeEngine, error) {
 	llm := NewLLMProvider(AIConfig{
 		Provider: cfg.AI.Provider,
@@ -59,10 +59,10 @@ func NewNarrativeEngine(cfg *config.Config) (*NarrativeEngine, error) {
 	}, nil
 }
 
-// AnalyzePlayerDecision updates player profile based on a decision
+// AnalyzePlayerDecision updates player profile based on a decision.
 func (ps *PlayerProfileService) AnalyzePlayerDecision(ctx context.Context, profile *models.NarrativeProfile, decision models.DecisionRecord) (*models.NarrativeProfile, error) {
 	if !ps.cfg.AI.Enabled {
-		// Simple analysis without AI
+		// Simple analysis without AI.
 		profile.DecisionHistory = append(profile.DecisionHistory, decision)
 		return profile, nil
 	}
@@ -106,7 +106,7 @@ Provide analysis in JSON format with:
 		return profile, fmt.Errorf("failed to analyze decision: %w", err)
 	}
 
-	// Parse AI response and update profile
+	// Parse AI response and update profile.
 	var analysis struct {
 		UpdatedThemes      []string `json:"updated_themes"`
 		UpdatedTone        []string `json:"updated_tone"`
@@ -116,7 +116,7 @@ Provide analysis in JSON format with:
 	}
 
 	if err := json.Unmarshal([]byte(response), &analysis); err == nil {
-		// Update preferences
+		// Update preferences.
 		profile.Preferences.Themes = mergeUnique(profile.Preferences.Themes, analysis.UpdatedThemes)
 		profile.Preferences.Tone = mergeUnique(profile.Preferences.Tone, analysis.UpdatedTone)
 		profile.Preferences.MoralAlignment = analysis.MoralTendency
@@ -125,7 +125,7 @@ Provide analysis in JSON format with:
 			profile.PlayStyle = analysis.PlayStyleUpdate
 		}
 
-		// Update analytics
+		// Update analytics.
 		if profile.Analytics == nil {
 			profile.Analytics = make(map[string]interface{})
 		}
@@ -133,17 +133,17 @@ Provide analysis in JSON format with:
 		profile.Analytics["last_analysis"] = time.Now()
 	}
 
-	// Add decision to history
+	// Add decision to history.
 	profile.DecisionHistory = append(profile.DecisionHistory, decision)
 	profile.UpdatedAt = time.Now()
 
 	return profile, nil
 }
 
-// GeneratePersonalizedNarrative creates a narrative tailored to a specific player
+// GeneratePersonalizedNarrative creates a narrative tailored to a specific player.
 func (ne *NarrativeEngine) GeneratePersonalizedNarrative(ctx context.Context, baseEvent models.NarrativeEvent, profile *models.NarrativeProfile, backstory []models.BackstoryElement) (*models.PersonalizedNarrative, error) {
 	if !ne.cfg.AI.Enabled {
-		// Return basic narrative without personalization
+		// Return basic narrative without personalization.
 		return &models.PersonalizedNarrative{
 			ID:          uuid.New().String(),
 			BaseEventID: baseEvent.ID,
@@ -152,7 +152,7 @@ func (ne *NarrativeEngine) GeneratePersonalizedNarrative(ctx context.Context, ba
 		}, nil
 	}
 
-	// Select relevant backstory elements
+	// Select relevant backstory elements.
 	relevantBackstory := ne.selectRelevantBackstory(backstory, baseEvent)
 
 	prompt := fmt.Sprintf(`Create a personalized narrative for this player based on their profile and the current event:
@@ -227,7 +227,7 @@ Provide the narrative in JSON format with:
 		return nil, fmt.Errorf("failed to parse narrative data: %w", err)
 	}
 
-	// Build personalized narrative
+	// Build personalized narrative.
 	narrative := &models.PersonalizedNarrative{
 		ID:                 uuid.New().String(),
 		BaseEventID:        baseEvent.ID,
@@ -241,7 +241,7 @@ Provide the narrative in JSON format with:
 		},
 	}
 
-	// Convert hooks
+	// Convert hooks.
 	for _, hook := range narrativeData.NarrativeHooks {
 		narrative.PersonalizedHooks = append(narrative.PersonalizedHooks, models.NarrativeHook{
 			Type:        hook.Type,
@@ -251,7 +251,7 @@ Provide the narrative in JSON format with:
 		})
 	}
 
-	// Convert backstory callbacks
+	// Convert backstory callbacks.
 	for _, callback := range narrativeData.BackstoryCallbacks {
 		narrative.BackstoryCallbacks = append(narrative.BackstoryCallbacks, models.BackstoryIntegration{
 			BackstoryElementID: callback.BackstoryElementID,
@@ -261,16 +261,16 @@ Provide the narrative in JSON format with:
 		})
 	}
 
-	// Calculate predicted impacts
+	// Calculate predicted impacts.
 	narrative.PredictedImpact = ne.calculatePredictedImpacts(profile, narrativeData.EmotionalResonance)
 
 	return narrative, nil
 }
 
-// CalculateConsequences determines the ripple effects of a player action
+// CalculateConsequences determines the ripple effects of a player action.
 func (ce *ConsequenceEngine) CalculateConsequences(ctx context.Context, action models.PlayerAction, worldState map[string]interface{}) ([]models.ConsequenceEvent, error) {
 	if !ce.cfg.AI.Enabled {
-		// Return minimal consequences without AI
+		// Return minimal consequences without AI.
 		return []models.ConsequenceEvent{}, nil
 	}
 
@@ -356,7 +356,7 @@ Provide consequences in JSON format as an array of:
 		return nil, fmt.Errorf("failed to parse consequence data: %w", err)
 	}
 
-	// Build consequence events
+	// Build consequence events.
 	consequences := make([]models.ConsequenceEvent, 0, len(consequenceData))
 	for _, data := range consequenceData {
 		consequence := models.ConsequenceEvent{
@@ -373,7 +373,7 @@ Provide consequences in JSON format as an array of:
 			},
 		}
 
-		// Convert affected entities
+		// Convert affected entities.
 		for _, entity := range data.AffectedEntities {
 			consequence.AffectedEntities = append(consequence.AffectedEntities, models.AffectedEntity{
 				EntityType:     entity.EntityType,
@@ -385,7 +385,7 @@ Provide consequences in JSON format as an array of:
 			})
 		}
 
-		// Convert cascade effects
+		// Convert cascade effects.
 		for _, cascade := range data.CascadeEffects {
 			consequence.CascadeEffects = append(consequence.CascadeEffects, models.CascadeEffect{
 				ID:          uuid.New().String(),
@@ -400,7 +400,7 @@ Provide consequences in JSON format as an array of:
 		consequences = append(consequences, consequence)
 	}
 
-	// Sort by severity and delay
+	// Sort by severity and delay.
 	sort.Slice(consequences, func(i, j int) bool {
 		if consequences[i].Delay != consequences[j].Delay {
 			return getDelayPriority(consequences[i].Delay) < getDelayPriority(consequences[j].Delay)
@@ -411,10 +411,10 @@ Provide consequences in JSON format as an array of:
 	return consequences, nil
 }
 
-// GenerateMultiplePerspectives creates different viewpoints of the same event
+// GenerateMultiplePerspectives creates different viewpoints of the same event.
 func (pg *PerspectiveGenerator) GenerateMultiplePerspectives(ctx context.Context, event models.NarrativeEvent, sources []models.PerspectiveSource) ([]models.PerspectiveNarrative, error) {
 	if !pg.cfg.AI.Enabled {
-		// Return single neutral perspective without AI
+		// Return single neutral perspective without AI.
 		return []models.PerspectiveNarrative{{
 			ID:              uuid.New().String(),
 			EventID:         event.ID,
@@ -529,16 +529,15 @@ Provide the perspective in JSON format:
 		perspectives = append(perspectives, perspective)
 	}
 
-	// Find contradictions between perspectives
+	// Find contradictions between perspectives.
 	pg.findContradictions(perspectives)
 
 	return perspectives, nil
 }
 
-// Helper functions
-
+// Helper functions.
 func (ne *NarrativeEngine) selectRelevantBackstory(backstory []models.BackstoryElement, event models.NarrativeEvent) []models.BackstoryElement {
-	// Select up to 3 most relevant backstory elements based on tags and type
+	// Select up to 3 most relevant backstory elements based on tags and type.
 	relevant := make([]models.BackstoryElement, 0)
 
 	for _, element := range backstory {
@@ -546,7 +545,7 @@ func (ne *NarrativeEngine) selectRelevantBackstory(backstory []models.BackstoryE
 			continue // Don't overuse elements
 		}
 
-		// Check relevance based on event type and tags
+		// Check relevance based on event type and tags.
 		relevanceScore := 0.0
 		eventTags := extractEventTags(event)
 
@@ -564,7 +563,7 @@ func (ne *NarrativeEngine) selectRelevantBackstory(backstory []models.BackstoryE
 		}
 	}
 
-	// Sort by relevance and take top 3
+	// Sort by relevance and take top 3.
 	sort.Slice(relevant, func(i, j int) bool {
 		return relevant[i].Weight > relevant[j].Weight
 	})
@@ -586,7 +585,7 @@ func (ne *NarrativeEngine) calculatePredictedImpacts(profile *models.NarrativePr
 		},
 	}
 
-	// Add more impacts based on profile
+	// Add more impacts based on profile.
 	if profile.PlayStyle == "combat-focused" && resonance > 0.6 {
 		impacts = append(impacts, models.PredictedImpact{
 			Type:        "mechanical",
@@ -609,10 +608,10 @@ func (ne *NarrativeEngine) calculatePredictedImpacts(profile *models.NarrativePr
 }
 
 func (pg *PerspectiveGenerator) findContradictions(perspectives []models.PerspectiveNarrative) {
-	// Compare perspectives to find contradictions
+	// Compare perspectives to find contradictions.
 	for i := 0; i < len(perspectives); i++ {
 		for j := i + 1; j < len(perspectives); j++ {
-			// Simple contradiction detection based on bias and truth level
+			// Simple contradiction detection based on bias and truth level.
 			if math.Abs(perspectives[i].TruthLevel-perspectives[j].TruthLevel) > 0.3 {
 				contradiction := models.Contradiction{
 					OtherPerspectiveID: perspectives[j].ID,
@@ -627,8 +626,7 @@ func (pg *PerspectiveGenerator) findContradictions(perspectives []models.Perspec
 	}
 }
 
-// Utility functions
-
+// Utility functions.
 func mergeUnique(existing, new []string) []string {
 	seen := make(map[string]bool)
 	for _, item := range existing {
@@ -660,17 +658,17 @@ func formatBackstoryElements(elements []models.BackstoryElement) string {
 }
 
 func formatWorldState(state map[string]interface{}) string {
-	// Format world state for AI context
+	// Format world state for AI context.
 	formatted, _ := json.MarshalIndent(state, "", "  ")
 	return string(formatted)
 }
 
 func extractEventTags(event models.NarrativeEvent) []string {
-	// Extract relevant tags from event for matching
+	// Extract relevant tags from event for matching.
 	tags := []string{event.Type}
 	tags = append(tags, strings.Fields(event.Name)...)
 
-	// Add location-based tags
+	// Add location-based tags.
 	if event.Location != "" {
 		tags = append(tags, strings.Fields(event.Location)...)
 	}
@@ -692,7 +690,7 @@ func getDelayPriority(delay string) int {
 	return 5
 }
 
-// PerspectiveSource represents an entity that can have a perspective
+// PerspectiveSource represents an entity that can have a perspective.
 type PerspectiveSource struct {
 	ID              string
 	Type            string // "npc", "faction", "deity", "historical"

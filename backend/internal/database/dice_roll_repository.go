@@ -9,17 +9,17 @@ import (
 	"github.com/lib/pq"
 )
 
-// diceRollRepository implements DiceRollRepository interface
+// diceRollRepository implements DiceRollRepository interface.
 type diceRollRepository struct {
 	db *DB
 }
 
-// NewDiceRollRepository creates a new dice roll repository
+// NewDiceRollRepository creates a new dice roll repository.
 func NewDiceRollRepository(db *DB) DiceRollRepository {
 	return &diceRollRepository{db: db}
 }
 
-// Create creates a new dice roll
+// Create creates a new dice roll.
 func (r *diceRollRepository) Create(ctx context.Context, roll *models.DiceRoll) error {
 	query := `
 		INSERT INTO dice_rolls (
@@ -40,7 +40,7 @@ func (r *diceRollRepository) Create(ctx context.Context, roll *models.DiceRoll) 
 	return nil
 }
 
-// GetByID retrieves a dice roll by ID
+// GetByID retrieves a dice roll by ID.
 func (r *diceRollRepository) GetByID(ctx context.Context, id string) (*models.DiceRoll, error) {
 	var roll models.DiceRoll
 	query := `
@@ -63,7 +63,7 @@ func (r *diceRollRepository) GetByID(ctx context.Context, id string) (*models.Di
 	return &roll, nil
 }
 
-// GetByGameSession retrieves dice rolls for a game session
+// GetByGameSession retrieves dice rolls for a game session.
 func (r *diceRollRepository) GetByGameSession(ctx context.Context, sessionID string, offset, limit int) ([]*models.DiceRoll, error) {
 	query := `
 		SELECT id, game_session_id, user_id, dice_type, count, modifier,
@@ -99,7 +99,7 @@ func (r *diceRollRepository) GetByGameSession(ctx context.Context, sessionID str
 	return rolls, nil
 }
 
-// GetByUser retrieves dice rolls for a user
+// GetByUser retrieves dice rolls for a user.
 func (r *diceRollRepository) GetByUser(ctx context.Context, userID string, offset, limit int) ([]*models.DiceRoll, error) {
 	query := `
 		SELECT id, game_session_id, user_id, dice_type, count, modifier,
@@ -135,7 +135,7 @@ func (r *diceRollRepository) GetByUser(ctx context.Context, userID string, offse
 	return rolls, nil
 }
 
-// GetByGameSessionAndUser retrieves dice rolls for a specific user in a game session
+// GetByGameSessionAndUser retrieves dice rolls for a specific user in a game session.
 func (r *diceRollRepository) GetByGameSessionAndUser(ctx context.Context, sessionID, userID string, offset, limit int) ([]*models.DiceRoll, error) {
 	query := `
 		SELECT id, game_session_id, user_id, dice_type, count, modifier,
@@ -171,7 +171,7 @@ func (r *diceRollRepository) GetByGameSessionAndUser(ctx context.Context, sessio
 	return rolls, nil
 }
 
-// Delete deletes a dice roll
+// Delete deletes a dice roll.
 func (r *diceRollRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM dice_rolls WHERE id = ?`
 

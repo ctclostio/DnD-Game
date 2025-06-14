@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Settlement types
+// Settlement types.
 type SettlementType string
 
 const (
@@ -18,7 +18,7 @@ const (
 	SettlementRuins      SettlementType = "ruins"
 )
 
-// Settlement represents a populated location in the world
+// Settlement represents a populated location in the world.
 type Settlement struct {
 	ID              uuid.UUID      `json:"id" db:"id"`
 	GameSessionID   uuid.UUID      `json:"gameSessionId" db:"game_session_id"`
@@ -33,24 +33,24 @@ type Settlement struct {
 	DangerLevel     int            `json:"dangerLevel" db:"danger_level"`
 	CorruptionLevel int            `json:"corruptionLevel" db:"corruption_level"`
 
-	// Location
+	// Location.
 	Region      string `json:"region" db:"region"`
 	Coordinates JSONB  `json:"coordinates" db:"coordinates"`
 	TerrainType string `json:"terrainType" db:"terrain_type"`
 	Climate     string `json:"climate" db:"climate"`
 
-	// Economic data
+	// Economic data.
 	WealthLevel    int   `json:"wealthLevel" db:"wealth_level"`
 	PrimaryExports JSONB `json:"primaryExports" db:"primary_exports"`
 	PrimaryImports JSONB `json:"primaryImports" db:"primary_imports"`
 	TradeRoutes    JSONB `json:"tradeRoutes" db:"trade_routes"`
 
-	// Ancient connections
+	// Ancient connections.
 	AncientRuinsNearby bool `json:"ancientRuinsNearby" db:"ancient_ruins_nearby"`
 	EldritchInfluence  int  `json:"eldritchInfluence" db:"eldritch_influence"`
 	LeyLineConnection  bool `json:"leyLineConnection" db:"ley_line_connection"`
 
-	// Features
+	// Features.
 	NotableLocations JSONB `json:"notableLocations" db:"notable_locations"`
 	Defenses         JSONB `json:"defenses" db:"defenses"`
 	Problems         JSONB `json:"problems" db:"problems"`
@@ -59,12 +59,12 @@ type Settlement struct {
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
 
-	// Related data (not stored in main table)
+	// Related data (not stored in main table).
 	NPCs  []SettlementNPC  `json:"npcs,omitempty"`
 	Shops []SettlementShop `json:"shops,omitempty"`
 }
 
-// SettlementNPC represents a non-player character in a settlement
+// SettlementNPC represents a non-player character in a settlement.
 type SettlementNPC struct {
 	ID                uuid.UUID `json:"id" db:"id"`
 	SettlementID      uuid.UUID `json:"settlementId" db:"settlement_id"`
@@ -79,17 +79,17 @@ type SettlementNPC struct {
 	Bonds             JSONB     `json:"bonds" db:"bonds"`
 	Flaws             JSONB     `json:"flaws" db:"flaws"`
 
-	// Ancient connections
+	// Ancient connections.
 	AncientKnowledge  bool   `json:"ancientKnowledge" db:"ancient_knowledge"`
 	CorruptionTouched bool   `json:"corruptionTouched" db:"corruption_touched"`
 	SecretAgenda      string `json:"secretAgenda" db:"secret_agenda"`
 	TrueAge           *int   `json:"trueAge" db:"true_age"`
 
-	// Relationships
+	// Relationships.
 	FactionAffiliations JSONB `json:"factionAffiliations" db:"faction_affiliations"`
 	Relationships       JSONB `json:"relationships" db:"relationships"`
 
-	// Mechanical data
+	// Mechanical data.
 	Stats     JSONB `json:"stats" db:"stats"`
 	Skills    JSONB `json:"skills" db:"skills"`
 	Inventory JSONB `json:"inventory" db:"inventory"`
@@ -98,7 +98,7 @@ type SettlementNPC struct {
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 }
 
-// SettlementShop represents a shop or service in a settlement
+// SettlementShop represents a shop or service in a settlement.
 type SettlementShop struct {
 	ID            uuid.UUID  `json:"id" db:"id"`
 	SettlementID  uuid.UUID  `json:"settlementId" db:"settlement_id"`
@@ -108,13 +108,13 @@ type SettlementShop struct {
 	QualityLevel  int        `json:"qualityLevel" db:"quality_level"`
 	PriceModifier float64    `json:"priceModifier" db:"price_modifier"`
 
-	// Inventory
+	// Inventory.
 	AvailableItems      JSONB `json:"availableItems" db:"available_items"`
 	SpecialItems        JSONB `json:"specialItems" db:"special_items"`
 	CanCraft            bool  `json:"canCraft" db:"can_craft"`
 	CraftingSpecialties JSONB `json:"craftingSpecialties" db:"crafting_specialties"`
 
-	// Special features
+	// Special features.
 	BlackMarket      bool  `json:"blackMarket" db:"black_market"`
 	AncientArtifacts bool  `json:"ancientArtifacts" db:"ancient_artifacts"`
 	FactionDiscount  JSONB `json:"factionDiscount" db:"faction_discount"`
@@ -125,11 +125,11 @@ type SettlementShop struct {
 
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 
-	// Related data
+	// Related data.
 	Owner *SettlementNPC `json:"owner,omitempty"`
 }
 
-// FactionType represents the type of faction
+// FactionType represents the type of faction.
 type FactionType string
 
 const (
@@ -142,7 +142,7 @@ const (
 	FactionAncientOrder FactionType = "ancient_order"
 )
 
-// Faction represents an organization with goals and influence
+// Faction represents an organization with goals and influence.
 type Faction struct {
 	ID            uuid.UUID   `json:"id" db:"id"`
 	GameSessionID uuid.UUID   `json:"gameSessionId" db:"game_session_id"`
@@ -151,30 +151,30 @@ type Faction struct {
 	Description   string      `json:"description" db:"description"`
 	FoundingDate  string      `json:"foundingDate" db:"founding_date"`
 
-	// Goals
+	// Goals.
 	PublicGoals JSONB `json:"publicGoals" db:"public_goals"`
 	SecretGoals JSONB `json:"secretGoals" db:"secret_goals"`
 	Motivations JSONB `json:"motivations" db:"motivations"`
 
-	// Ancient connections
+	// Ancient connections.
 	AncientKnowledgeLevel int  `json:"ancientKnowledgeLevel" db:"ancient_knowledge_level"`
 	SeeksAncientPower     bool `json:"seeksAncientPower" db:"seeks_ancient_power"`
 	GuardsAncientSecrets  bool `json:"guardsAncientSecrets" db:"guards_ancient_secrets"`
 	Corrupted             bool `json:"corrupted" db:"corrupted"`
 
-	// Power levels
+	// Power levels.
 	InfluenceLevel   int `json:"influenceLevel" db:"influence_level"`
 	MilitaryStrength int `json:"militaryStrength" db:"military_strength"`
 	EconomicPower    int `json:"economicPower" db:"economic_power"`
 	MagicalResources int `json:"magicalResources" db:"magical_resources"`
 
-	// Organization
+	// Organization.
 	LeadershipStructure  string `json:"leadershipStructure" db:"leadership_structure"`
 	HeadquartersLocation string `json:"headquartersLocation" db:"headquarters_location"`
 	MemberCount          int    `json:"memberCount" db:"member_count"`
 	TerritoryControl     JSONB  `json:"territoryControl" db:"territory_control"`
 
-	// Relationships
+	// Relationships.
 	FactionRelationships JSONB `json:"factionRelationships" db:"faction_relationships"`
 
 	Symbols   JSONB `json:"symbols" db:"symbols"`
@@ -185,7 +185,7 @@ type Faction struct {
 	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
 }
 
-// WorldEventType represents the type of world event
+// WorldEventType represents the type of world event.
 type WorldEventType string
 
 const (
@@ -197,7 +197,7 @@ const (
 	EventPlanar           WorldEventType = "planar"
 )
 
-// WorldEventSeverity represents how severe an event is
+// WorldEventSeverity represents how severe an event is.
 type WorldEventSeverity string
 
 const (
@@ -207,7 +207,7 @@ const (
 	SeverityCatastrophic WorldEventSeverity = "catastrophic"
 )
 
-// WorldEvent represents a significant event happening in the world
+// WorldEvent represents a significant event happening in the world.
 type WorldEvent struct {
 	ID            uuid.UUID          `json:"id" db:"id"`
 	GameSessionID uuid.UUID          `json:"gameSessionId" db:"game_session_id"`
@@ -218,31 +218,31 @@ type WorldEvent struct {
 	Description string `json:"description" db:"description"`
 	Cause       string `json:"cause" db:"cause"`
 
-	// Timing
+	// Timing.
 	StartDate  string `json:"startDate" db:"start_date"`
 	Duration   string `json:"duration" db:"duration"`
 	IsActive   bool   `json:"isActive" db:"is_active"`
 	IsResolved bool   `json:"isResolved" db:"is_resolved"`
 
-	// Ancient connections
+	// Ancient connections.
 	AncientCause       bool `json:"ancientCause" db:"ancient_cause"`
 	AwakensAncientEvil bool `json:"awakensAncientEvil" db:"awakens_ancient_evil"`
 	ProphecyRelated    bool `json:"prophecyRelated" db:"prophecy_related"`
 
-	// Effects
+	// Effects.
 	AffectedRegions     JSONB `json:"affectedRegions" db:"affected_regions"`
 	AffectedSettlements JSONB `json:"affectedSettlements" db:"affected_settlements"`
 	AffectedFactions    JSONB `json:"affectedFactions" db:"affected_factions"`
 	EconomicImpacts     JSONB `json:"economicImpacts" db:"economic_impacts"`
 	PoliticalImpacts    JSONB `json:"politicalImpacts" db:"political_impacts"`
 
-	// Progression
+	// Progression.
 	CurrentStage         int   `json:"currentStage" db:"current_stage"`
 	Stages               JSONB `json:"stages" db:"stages"`
 	ResolutionConditions JSONB `json:"resolutionConditions" db:"resolution_conditions"`
 	Consequences         JSONB `json:"consequences" db:"consequences"`
 
-	// Player interaction
+	// Player interaction.
 	PartyAware    bool  `json:"partyAware" db:"party_aware"`
 	PartyInvolved bool  `json:"partyInvolved" db:"party_involved"`
 	PartyActions  JSONB `json:"partyActions" db:"party_actions"`
@@ -251,24 +251,24 @@ type WorldEvent struct {
 	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
 }
 
-// Market represents economic conditions in a settlement
+// Market represents economic conditions in a settlement.
 type Market struct {
 	ID           uuid.UUID `json:"id" db:"id"`
 	SettlementID uuid.UUID `json:"settlementId" db:"settlement_id"`
 
-	// Price modifiers
+	// Price modifiers.
 	FoodPriceModifier        float64 `json:"foodPriceModifier" db:"food_price_modifier"`
 	CommonGoodsModifier      float64 `json:"commonGoodsModifier" db:"common_goods_modifier"`
 	WeaponsArmorModifier     float64 `json:"weaponsArmorModifier" db:"weapons_armor_modifier"`
 	MagicalItemsModifier     float64 `json:"magicalItemsModifier" db:"magical_items_modifier"`
 	AncientArtifactsModifier float64 `json:"ancientArtifactsModifier" db:"ancient_artifacts_modifier"`
 
-	// Supply and demand
+	// Supply and demand.
 	HighDemandItems JSONB `json:"highDemandItems" db:"high_demand_items"`
 	SurplusItems    JSONB `json:"surplusItems" db:"surplus_items"`
 	BannedItems     JSONB `json:"bannedItems" db:"banned_items"`
 
-	// Special conditions
+	// Special conditions.
 	BlackMarketActive     bool `json:"blackMarketActive" db:"black_market_active"`
 	ArtifactDealerPresent bool `json:"artifactDealerPresent" db:"artifact_dealer_present"`
 	EconomicBoom          bool `json:"economicBoom" db:"economic_boom"`
@@ -277,7 +277,7 @@ type Market struct {
 	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
 }
 
-// TradeRoute represents a connection between settlements
+// TradeRoute represents a connection between settlements.
 type TradeRoute struct {
 	ID                uuid.UUID `json:"id" db:"id"`
 	GameSessionID     uuid.UUID `json:"gameSessionId" db:"game_session_id"`
@@ -289,18 +289,18 @@ type TradeRoute struct {
 	Distance         int    `json:"distance" db:"distance"`
 	DifficultyRating int    `json:"difficultyRating" db:"difficulty_rating"`
 
-	// Threats
+	// Threats.
 	BanditThreatLevel    int   `json:"banditThreatLevel" db:"bandit_threat_level"`
 	MonsterThreatLevel   int   `json:"monsterThreatLevel" db:"monster_threat_level"`
 	AncientHazards       bool  `json:"ancientHazards" db:"ancient_hazards"`
 	EnvironmentalHazards JSONB `json:"environmentalHazards" db:"environmental_hazards"`
 
-	// Economics
+	// Economics.
 	TradeVolume  int     `json:"tradeVolume" db:"trade_volume"`
 	PrimaryGoods JSONB   `json:"primaryGoods" db:"primary_goods"`
 	TariffRate   float64 `json:"tariffRate" db:"tariff_rate"`
 
-	// Control
+	// Control.
 	ControllingFactionID *uuid.UUID `json:"controllingFactionId" db:"controlling_faction_id"`
 	ProtectionFee        float64    `json:"protectionFee" db:"protection_fee"`
 
@@ -311,7 +311,7 @@ type TradeRoute struct {
 	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
 }
 
-// AncientSite represents a location from the old world
+// AncientSite represents a location from the old world.
 type AncientSite struct {
 	ID            uuid.UUID `json:"id" db:"id"`
 	GameSessionID uuid.UUID `json:"gameSessionId" db:"game_session_id"`
@@ -324,12 +324,12 @@ type AncientSite struct {
 	NearestSettlementID *uuid.UUID `json:"nearestSettlementId" db:"nearest_settlement_id"`
 	Coordinates         JSONB      `json:"coordinates" db:"coordinates"`
 
-	// State
+	// State.
 	ExplorationLevel    int `json:"explorationLevel" db:"exploration_level"`
 	CorruptionLevel     int `json:"corruptionLevel" db:"corruption_level"`
 	StructuralIntegrity int `json:"structuralIntegrity" db:"structural_integrity"`
 
-	// Dangers and treasures
+	// Dangers and treasures.
 	GuardianType       *string `json:"guardianType" db:"guardian_type"`
 	GuardianDefeated   bool    `json:"guardianDefeated" db:"guardian_defeated"`
 	SealsIntact        bool    `json:"sealsIntact" db:"seals_intact"`
@@ -337,12 +337,12 @@ type AncientSite struct {
 	Artifacts          JSONB   `json:"artifacts" db:"artifacts"`
 	ForbiddenKnowledge JSONB   `json:"forbiddenKnowledge" db:"forbidden_knowledge"`
 
-	// World effects
+	// World effects.
 	LeyLineNexus      bool  `json:"leyLineNexus" db:"ley_line_nexus"`
 	RealityWeakness   int   `json:"realityWeakness" db:"reality_weakness"`
 	PlanarConnections JSONB `json:"planarConnections" db:"planar_connections"`
 
-	// History
+	// History.
 	OriginalPurpose string `json:"originalPurpose" db:"original_purpose"`
 	FallDescription string `json:"fallDescription" db:"fall_description"`
 	Prophecies      JSONB  `json:"prophecies" db:"prophecies"`
@@ -351,9 +351,8 @@ type AncientSite struct {
 	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
 }
 
-// Request/Response types for API
-
-// SettlementGenerationRequest for generating a new settlement
+// Request/Response types for API.
+// SettlementGenerationRequest for generating a new settlement.
 type SettlementGenerationRequest struct {
 	Name             string         `json:"name,omitempty"`
 	Type             SettlementType `json:"type"`
@@ -364,7 +363,7 @@ type SettlementGenerationRequest struct {
 	SpecialFeatures  []string       `json:"specialFeatures,omitempty"`
 }
 
-// FactionCreationRequest for creating a new faction
+// FactionCreationRequest for creating a new faction.
 type FactionCreationRequest struct {
 	Name        string      `json:"name"`
 	Type        FactionType `json:"type"`
@@ -373,7 +372,7 @@ type FactionCreationRequest struct {
 	AncientTies bool        `json:"ancientTies"`
 }
 
-// WorldEventCreationRequest for creating world events
+// WorldEventCreationRequest for creating world events.
 type WorldEventCreationRequest struct {
 	Type              WorldEventType     `json:"type"`
 	Severity          WorldEventSeverity `json:"severity"`

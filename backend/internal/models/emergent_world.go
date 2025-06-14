@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// WorldState represents the current state of the living world
+// WorldState represents the current state of the living world.
 type WorldState struct {
 	ID            string                 `json:"id" db:"id"`
 	SessionID     string                 `json:"session_id" db:"session_id"`
@@ -16,7 +16,7 @@ type WorldState struct {
 	UpdatedAt     time.Time              `json:"updated_at" db:"updated_at"`
 }
 
-// NPCGoal represents an autonomous goal for an NPC
+// NPCGoal represents an autonomous goal for an NPC.
 type NPCGoal struct {
 	ID          string                 `json:"id" db:"id"`
 	NPCID       string                 `json:"npc_id" db:"npc_id"`
@@ -30,7 +30,7 @@ type NPCGoal struct {
 	CompletedAt *time.Time             `json:"completed_at,omitempty" db:"completed_at"`
 }
 
-// NPCSchedule represents daily routines and activities
+// NPCSchedule represents daily routines and activities.
 type NPCSchedule struct {
 	ID         string                 `json:"id" db:"id"`
 	NPCID      string                 `json:"npc_id" db:"npc_id"`
@@ -40,7 +40,7 @@ type NPCSchedule struct {
 	Parameters map[string]interface{} `json:"parameters" db:"parameters"`
 }
 
-// FactionPersonality represents the AI personality of a faction
+// FactionPersonality represents the AI personality of a faction.
 type FactionPersonality struct {
 	ID               string                 `json:"id" db:"id"`
 	FactionID        string                 `json:"faction_id" db:"faction_id"`
@@ -53,7 +53,7 @@ type FactionPersonality struct {
 	LastLearningTime time.Time              `json:"last_learning_time" db:"last_learning_time"`
 }
 
-// FactionMemory represents a significant event in faction history
+// FactionMemory represents a significant event in faction history.
 type FactionMemory struct {
 	ID           string                 `json:"id"`
 	EventType    string                 `json:"event_type"`
@@ -65,7 +65,7 @@ type FactionMemory struct {
 	Decay        float64                `json:"decay"` // How quickly the memory fades
 }
 
-// FactionAgenda represents long-term faction goals
+// FactionAgenda represents long-term faction goals.
 type FactionAgenda struct {
 	ID          string                 `json:"id" db:"id"`
 	FactionID   string                 `json:"faction_id" db:"faction_id"`
@@ -80,7 +80,7 @@ type FactionAgenda struct {
 	CreatedAt   time.Time              `json:"created_at" db:"created_at"`
 }
 
-// AgendaStage represents a step in achieving a faction agenda
+// AgendaStage represents a step in achieving a faction agenda.
 type AgendaStage struct {
 	ID          string                 `json:"id"`
 	Name        string                 `json:"name"`
@@ -91,7 +91,7 @@ type AgendaStage struct {
 	CompletedAt *time.Time             `json:"completed_at,omitempty"`
 }
 
-// ProceduralCulture represents a generated culture with unique characteristics
+// ProceduralCulture represents a generated culture with unique characteristics.
 type ProceduralCulture struct {
 	ID                string                 `json:"id" db:"id"`
 	Name              string                 `json:"name" db:"name"`
@@ -112,7 +112,7 @@ type ProceduralCulture struct {
 	CreatedAt         time.Time              `json:"created_at" db:"created_at"`
 }
 
-// CultureLanguage represents linguistic characteristics
+// CultureLanguage represents linguistic characteristics.
 type CultureLanguage struct {
 	Name           string            `json:"name"`
 	Phonemes       []string          `json:"phonemes"`
@@ -123,7 +123,7 @@ type CultureLanguage struct {
 	HonorificRules []string          `json:"honorific_rules"`
 }
 
-// LanguageIdiom represents a cultural expression
+// LanguageIdiom represents a cultural expression.
 type LanguageIdiom struct {
 	Expression string `json:"expression"`
 	Meaning    string `json:"meaning"`
@@ -131,7 +131,7 @@ type LanguageIdiom struct {
 	Formality  string `json:"formality"`
 }
 
-// CultureCustom represents a cultural practice or tradition
+// CultureCustom represents a cultural practice or tradition.
 type CultureCustom struct {
 	Name         string                 `json:"name"`
 	Type         string                 `json:"type"` // ceremony, daily_practice, seasonal, lifecycle
@@ -142,7 +142,7 @@ type CultureCustom struct {
 	Requirements map[string]interface{} `json:"requirements"`
 }
 
-// CultureArtStyle represents artistic preferences
+// CultureArtStyle represents artistic preferences.
 type CultureArtStyle struct {
 	PrimaryMediums   []string               `json:"primary_mediums"`
 	CommonMotifs     []string               `json:"common_motifs"`
@@ -154,7 +154,7 @@ type CultureArtStyle struct {
 	Influences       map[string]interface{} `json:"influences"`
 }
 
-// ArtSymbol represents a meaningful symbol in the culture
+// ArtSymbol represents a meaningful symbol in the culture.
 type ArtSymbol struct {
 	Name         string `json:"name"`
 	Description  string `json:"description"`
@@ -163,7 +163,7 @@ type ArtSymbol struct {
 	Restrictions string `json:"restrictions"`
 }
 
-// CultureBeliefSystem represents religious/philosophical beliefs
+// CultureBeliefSystem represents religious/philosophical beliefs.
 type CultureBeliefSystem struct {
 	Name         string                 `json:"name"`
 	Type         string                 `json:"type"` // monotheistic, polytheistic, animistic, philosophical
@@ -179,7 +179,7 @@ type CultureBeliefSystem struct {
 	Miracles     map[string]interface{} `json:"miracles"`
 }
 
-// CultureDeity represents a deity in the belief system
+// CultureDeity represents a deity in the belief system.
 type CultureDeity struct {
 	Name        string   `json:"name"`
 	Title       string   `json:"title"`
@@ -190,7 +190,7 @@ type CultureDeity struct {
 	Followers   string   `json:"followers"`
 }
 
-// ReligiousPractice represents a religious ritual or practice
+// ReligiousPractice represents a religious ritual or practice.
 type ReligiousPractice struct {
 	Name        string                 `json:"name"`
 	Type        string                 `json:"type"`
@@ -201,7 +201,7 @@ type ReligiousPractice struct {
 	Effects     map[string]interface{} `json:"effects"`
 }
 
-// HolyDay represents a religious holiday
+// HolyDay represents a religious holiday.
 type HolyDay struct {
 	Name         string   `json:"name"`
 	Date         string   `json:"date"` // Can be seasonal or calendar-based
@@ -211,7 +211,7 @@ type HolyDay struct {
 	Traditions   []string `json:"traditions"`
 }
 
-// ArchitectureStyle represents building preferences
+// ArchitectureStyle represents building preferences.
 type ArchitectureStyle struct {
 	Name              string                   `json:"name"`
 	Materials         []string                 `json:"materials"`
@@ -222,7 +222,7 @@ type ArchitectureStyle struct {
 	TypicalLayout     string                   `json:"typical_layout"`
 }
 
-// BuildingStyle represents specific building characteristics
+// BuildingStyle represents specific building characteristics.
 type BuildingStyle struct {
 	Purpose     string   `json:"purpose"`
 	Size        string   `json:"size"`
@@ -231,7 +231,7 @@ type BuildingStyle struct {
 	Inhabitants string   `json:"inhabitants"`
 }
 
-// CuisineElement represents food culture
+// CuisineElement represents food culture.
 type CuisineElement struct {
 	Name         string   `json:"name"`
 	Type         string   `json:"type"` // staple, delicacy, ceremonial, everyday
@@ -242,7 +242,7 @@ type CuisineElement struct {
 	Taboos       []string `json:"taboos"`
 }
 
-// MusicStyle represents musical traditions
+// MusicStyle represents musical traditions.
 type MusicStyle struct {
 	Name        string   `json:"name"`
 	Instruments []string `json:"instruments"`
@@ -253,7 +253,7 @@ type MusicStyle struct {
 	DanceStyles []string `json:"dance_styles"`
 }
 
-// ClothingStyle represents fashion and dress
+// ClothingStyle represents fashion and dress.
 type ClothingStyle struct {
 	EverydayWear   map[string]ClothingItem `json:"everyday_wear"`
 	FormalWear     map[string]ClothingItem `json:"formal_wear"`
@@ -264,7 +264,7 @@ type ClothingStyle struct {
 	StatusMarkers  map[string]string       `json:"status_markers"`
 }
 
-// ClothingItem represents a piece of clothing
+// ClothingItem represents a piece of clothing.
 type ClothingItem struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
@@ -274,7 +274,7 @@ type ClothingItem struct {
 	Decorations []string `json:"decorations"`
 }
 
-// NamingConventions represents how people are named
+// NamingConventions represents how people are named.
 type NamingConventions struct {
 	GivenNamePatterns  []string          `json:"given_name_patterns"`
 	FamilyNamePatterns []string          `json:"family_name_patterns"`
@@ -285,7 +285,7 @@ type NamingConventions struct {
 	NamingCeremonies   []string          `json:"naming_ceremonies"`
 }
 
-// SocialStructure represents societal organization
+// SocialStructure represents societal organization.
 type SocialStructure struct {
 	Type        string            `json:"type"` // caste, class, egalitarian, etc.
 	Classes     []SocialClass     `json:"classes"`
@@ -297,7 +297,7 @@ type SocialStructure struct {
 	Outsiders   string            `json:"outsiders"` // How strangers are treated
 }
 
-// SocialClass represents a social stratum
+// SocialClass represents a social stratum.
 type SocialClass struct {
 	Name         string   `json:"name"`
 	Rank         int      `json:"rank"`
@@ -307,7 +307,7 @@ type SocialClass struct {
 	Markers      []string `json:"markers"` // Visual or behavioral markers
 }
 
-// EmergentWorldEvent represents a significant event in the living world simulation
+// EmergentWorldEvent represents a significant event in the living world simulation.
 type EmergentWorldEvent struct {
 	ID               string                 `json:"id" db:"id"`
 	SessionID        string                 `json:"session_id" db:"session_id"`
@@ -321,7 +321,7 @@ type EmergentWorldEvent struct {
 	OccurredAt       time.Time              `json:"occurred_at" db:"occurred_at"`
 }
 
-// EventConsequence represents the outcome of a world event
+// EventConsequence represents the outcome of a world event.
 type EventConsequence struct {
 	Type       string                 `json:"type"`
 	Target     string                 `json:"target"`
@@ -331,7 +331,7 @@ type EventConsequence struct {
 	Parameters map[string]interface{} `json:"parameters"`
 }
 
-// SimulationLog tracks world simulation activities
+// SimulationLog tracks world simulation activities.
 type SimulationLog struct {
 	ID             string                 `json:"id" db:"id"`
 	SessionID      string                 `json:"session_id" db:"session_id"`

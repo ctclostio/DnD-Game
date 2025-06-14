@@ -5,11 +5,11 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
-	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
 func TestDMAssistantService_ProcessRequest(t *testing.T) {
@@ -351,7 +351,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 			GameSessionID: sessionID.String(),
 			Context:       map[string]interface{}{},
 			Parameters:    map[string]interface{}{
-				// Missing required npcName
+				// Missing required npcName.
 			},
 		}
 

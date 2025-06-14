@@ -26,7 +26,7 @@ type ValidationMiddlewareV2 struct {
 func NewValidationMiddlewareV2() *ValidationMiddlewareV2 {
 	v := validator.New()
 
-	// Register custom tag name function
+	// Register custom tag name function.
 	v.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
 		if name == "-" {
@@ -35,7 +35,7 @@ func NewValidationMiddlewareV2() *ValidationMiddlewareV2 {
 		return name
 	})
 
-	// Register custom validators
+	// Register custom validators.
 	registerCustomValidators(v)
 
 	return &ValidationMiddlewareV2{
@@ -47,13 +47,13 @@ func NewValidationMiddlewareV2() *ValidationMiddlewareV2 {
 func (vm *ValidationMiddlewareV2) ValidateRequest(structType interface{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Only validate for methods with body
+			// Only validate for methods with body.
 			if r.Method != http.MethodPost && r.Method != http.MethodPut && r.Method != http.MethodPatch {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// Create new instance of the struct type
+			// Create new instance of the struct type.
 			reqType := reflect.TypeOf(structType)
 			if reqType.Kind() == reflect.Ptr {
 				reqType = reqType.Elem()
@@ -61,21 +61,21 @@ func (vm *ValidationMiddlewareV2) ValidateRequest(structType interface{}) func(h
 			reqValue := reflect.New(reqType)
 			req := reqValue.Interface()
 
-			// Decode JSON body
+			// Decode JSON body.
 			if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 				response.BadRequest(w, r, "Invalid JSON in request body")
 				return
 			}
 
-			// Validate struct
+			// Validate struct.
 			if err := vm.validator.Struct(req); err != nil {
-				// Convert validation errors to our format
+				// Convert validation errors to our format.
 				validationErrors := vm.formatValidationErrors(err)
 				response.ValidationError(w, r, validationErrors)
 				return
 			}
 
-			// Store validated request in context for handler use
+			// Store validated request in context for handler use.
 			ctx := context.WithValue(r.Context(), validatedRequestKey, req)
 			r = r.WithContext(ctx)
 
@@ -94,7 +94,7 @@ func (vm *ValidationMiddlewareV2) formatValidationErrors(err error) *errors.Vali
 			tag := e.Tag()
 			param := e.Param()
 
-			// Generate user-friendly error message
+			// Generate user-friendly error message.
 			message := vm.getErrorMessage(field, tag, param, e.Value())
 			validationErrors.Add(field, message)
 		}
@@ -161,7 +161,7 @@ func (vm *ValidationMiddlewareV2) getErrorMessage(field, tag, param string, valu
 	case "datetime":
 		return field + " must be a valid datetime"
 
-	// D&D specific validators
+	// D&D specific validators.
 	case "dnd_ability_score":
 		return field + " must be between 3 and 20"
 	case "dnd_level":
@@ -182,7 +182,7 @@ func (vm *ValidationMiddlewareV2) getErrorMessage(field, tag, param string, valu
 
 // registerCustomValidators registers D&D-specific validators.
 func registerCustomValidators(v *validator.Validate) {
-	// D&D ability score (3-20)
+	// D&D ability score (3-20).
 	_ = v.RegisterValidation("dnd_ability_score", func(fl validator.FieldLevel) bool {
 		if value, ok := fl.Field().Interface().(int); ok {
 			return value >= 3 && value <= 20
@@ -190,7 +190,7 @@ func registerCustomValidators(v *validator.Validate) {
 		return false
 	})
 
-	// D&D level (1-20)
+	// D&D level (1-20).
 	_ = v.RegisterValidation("dnd_level", func(fl validator.FieldLevel) bool {
 		if value, ok := fl.Field().Interface().(int); ok {
 			return value >= 1 && value <= 20
@@ -198,7 +198,7 @@ func registerCustomValidators(v *validator.Validate) {
 		return false
 	})
 
-	// D&D alignment
+	// D&D alignment.
 	_ = v.RegisterValidation("dnd_alignment", func(fl validator.FieldLevel) bool {
 		validAlignments := map[string]bool{
 			"lawful good":     true,
@@ -221,14 +221,14 @@ func registerCustomValidators(v *validator.Validate) {
 	// D&D dice notation (e.g., 2d6+3)
 	_ = v.RegisterValidation("dnd_dice_notation", func(fl validator.FieldLevel) bool {
 		if value, ok := fl.Field().Interface().(string); ok {
-			// Simple regex for dice notation
+			// Simple regex for dice notation.
 			pattern := `^\d+d\d+([+-]\d+)?$`
 			return regexp.MustCompile(pattern).MatchString(value)
 		}
 		return false
 	})
 
-	// D&D skill
+	// D&D skill.
 	_ = v.RegisterValidation("dnd_skill", func(fl validator.FieldLevel) bool {
 		validSkills := map[string]bool{
 			"acrobatics":      true,
@@ -257,7 +257,7 @@ func registerCustomValidators(v *validator.Validate) {
 		return false
 	})
 
-	// D&D ability
+	// D&D ability.
 	_ = v.RegisterValidation("dnd_ability", func(fl validator.FieldLevel) bool {
 		validAbilities := map[string]bool{
 			"strength":     true,
@@ -292,7 +292,7 @@ func GetValidatedRequest[T any](r *http.Request) (T, error) {
 
 	typed, ok := val.(T)
 	if !ok {
-		// Try pointer type
+		// Try pointer type.
 		if ptr, ok := val.(*T); ok {
 			return *ptr, nil
 		}
@@ -302,7 +302,7 @@ func GetValidatedRequest[T any](r *http.Request) (T, error) {
 	return typed, nil
 }
 
-// Example usage with struct tags:
+// Example usage with struct tags:.
 /*
 type CreateCharacterRequest struct {
     Name       string `json:"name" validate:"required,min=1,max=50"`

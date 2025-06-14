@@ -6,14 +6,14 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
-	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
-// Mock implementation of WorldBuildingRepository
+// Mock implementation of WorldBuildingRepository.
 type MockWorldBuildingRepositoryImpl struct {
 	mock.Mock
 }
@@ -179,7 +179,7 @@ func TestSettlementGeneratorService_GenerateSettlement(t *testing.T) {
 			SpecialFeatures:  []string{"trade hub", "mining"},
 		}
 
-		// Mock AI response for settlement
+		// Mock AI response for settlement.
 		settlementResponse := `{
 			"name": "Ironhold",
 			"description": "A fortified town carved into the mountainside",
@@ -204,14 +204,14 @@ func TestSettlementGeneratorService_GenerateSettlement(t *testing.T) {
 			"eldritchInfluence": 4
 		}`
 
-		// Note: In a real implementation, you'd need to mock multiple LLM calls
+		// Note: In a real implementation, you'd need to mock multiple LLM calls.
 		// for NPCs and shops. For this test, we're focusing on the settlement generation.
 
-		// For simplicity in this test, we'll use the settlement response only
-		// In a real scenario, you'd need to mock multiple calls differently
+		// For simplicity in this test, we'll use the settlement response only.
+		// In a real scenario, you'd need to mock multiple calls differently.
 		mockLLM.Response = settlementResponse
 
-		// Mock repository calls
+		// Mock repository calls.
 		mockRepo.On("CreateSettlement", mock.AnythingOfType("*models.Settlement")).Run(func(args mock.Arguments) {
 			settlement := args.Get(0).(*models.Settlement)
 			settlement.ID = uuid.New()
@@ -223,11 +223,11 @@ func TestSettlementGeneratorService_GenerateSettlement(t *testing.T) {
 
 		service := NewSettlementGeneratorService(mockLLM, mockRepo)
 
-		// Execute
+		// Execute.
 		ctx := testutil.TestContext()
 		settlement, err := service.GenerateSettlement(ctx, gameSessionID, req)
 
-		// Assert
+		// Assert.
 		require.NoError(t, err)
 		require.NotNil(t, settlement)
 		require.Equal(t, "Ironhold", settlement.Name)
@@ -325,7 +325,7 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				// Run multiple times to check randomness
+				// Run multiple times to check randomness.
 				for i := 0; i < 10; i++ {
 					result := service.calculatePopulation(tt.settlementType, tt.size)
 					require.GreaterOrEqual(t, result, tt.minExpected)
@@ -393,7 +393,7 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				// Run multiple times due to randomness
+				// Run multiple times due to randomness.
 				for i := 0; i < 10; i++ {
 					result := service.calculateWealthLevel(tt.settlementType, tt.population)
 					require.GreaterOrEqual(t, result, tt.minExpected)
@@ -467,12 +467,12 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 		for _, tt := range tests {
 			result := service.getNPCRoles(tt.settlementType)
 
-			// Check base roles are included
+			// Check base roles are included.
 			for _, role := range baseRoles {
 				require.Contains(t, result, role)
 			}
 
-			// Check specific roles are included
+			// Check specific roles are included.
 			for _, role := range tt.expectedRoles {
 				require.Contains(t, result, role)
 			}
@@ -503,12 +503,12 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 		for _, tt := range tests {
 			result := service.getShopTypes(tt.settlementType)
 
-			// Check base shops are included
+			// Check base shops are included.
 			for _, shop := range baseShops {
 				require.Contains(t, result, shop)
 			}
 
-			// Check specific shops are included
+			// Check specific shops are included.
 			for _, shop := range tt.expectedShops {
 				require.Contains(t, result, shop)
 			}
@@ -581,7 +581,7 @@ func TestSettlementGeneratorService_GenerateMarketConditions(t *testing.T) {
 			AncientRuinsNearby: true,
 		}
 
-		// Run multiple times due to randomness
+		// Run multiple times due to randomness.
 		hasArtifactDealer := false
 		for i := 0; i < 20; i++ {
 			market := service.generateMarketConditions(settlement)
@@ -615,7 +615,7 @@ func TestSettlementGeneratorService_ProceduralGenerators(t *testing.T) {
 		require.GreaterOrEqual(t, npc.Level, 1)
 		require.LessOrEqual(t, npc.Level, 5)
 
-		// Check JSONB fields are initialized
+		// Check JSONB fields are initialized.
 		require.NotNil(t, npc.PersonalityTraits)
 		require.NotNil(t, npc.Ideals)
 		require.NotNil(t, npc.Bonds)
@@ -640,7 +640,7 @@ func TestSettlementGeneratorService_ProceduralGenerators(t *testing.T) {
 		require.GreaterOrEqual(t, shop.PriceModifier, 0.9)
 		require.LessOrEqual(t, shop.PriceModifier, 1.2)
 
-		// Check JSONB fields are initialized
+		// Check JSONB fields are initialized.
 		require.NotNil(t, shop.AvailableItems)
 		require.NotNil(t, shop.SpecialItems)
 		require.NotNil(t, shop.CurrentRumors)
@@ -653,7 +653,7 @@ func TestSettlementGeneratorService_ConcurrentGeneration(t *testing.T) {
 	}
 	mockRepo := &MockWorldBuildingRepositoryImpl{}
 
-	// Mock all repository calls to succeed
+	// Mock all repository calls to succeed.
 	mockRepo.On("CreateSettlement", mock.AnythingOfType("*models.Settlement")).Return(nil)
 	mockRepo.On("CreateSettlementNPC", mock.AnythingOfType("*models.SettlementNPC")).Return(nil).Maybe()
 	mockRepo.On("CreateSettlementShop", mock.AnythingOfType("*models.SettlementShop")).Return(nil).Maybe()
@@ -661,7 +661,7 @@ func TestSettlementGeneratorService_ConcurrentGeneration(t *testing.T) {
 
 	service := NewSettlementGeneratorService(mockLLM, mockRepo)
 
-	// Run multiple generations concurrently
+	// Run multiple generations concurrently.
 	const numGoroutines = 5
 	errors := make(chan error, numGoroutines)
 	settlements := make(chan *models.Settlement, numGoroutines)
@@ -684,7 +684,7 @@ func TestSettlementGeneratorService_ConcurrentGeneration(t *testing.T) {
 		}(i)
 	}
 
-	// Collect results
+	// Collect results.
 	successCount := 0
 	for i := 0; i < numGoroutines; i++ {
 		select {
@@ -699,7 +699,7 @@ func TestSettlementGeneratorService_ConcurrentGeneration(t *testing.T) {
 	require.Equal(t, numGoroutines, successCount)
 }
 
-// Integration test
+// Integration test.
 func TestSettlementGeneratorService_Integration(t *testing.T) {
 	t.Run("complete settlement generation flow", func(t *testing.T) {
 		mockLLM := &MockLLMProvider{}
@@ -715,7 +715,7 @@ func TestSettlementGeneratorService_Integration(t *testing.T) {
 			SpecialFeatures:  []string{"port", "ancient temple", "thieves guild"},
 		}
 
-		// Complex settlement response
+		// Complex settlement response.
 		settlementResponse := `{
 			"name": "Port Dagon",
 			"description": "A sprawling port city built atop sunken ruins",
@@ -744,10 +744,10 @@ func TestSettlementGeneratorService_Integration(t *testing.T) {
 			"eldritchInfluence": 9
 		}`
 
-		// Set response
+		// Set response.
 		mockLLM.Response = settlementResponse
 
-		// Mock repository
+		// Mock repository.
 		var createdSettlement *models.Settlement
 		mockRepo.On("CreateSettlement", mock.AnythingOfType("*models.Settlement")).Run(func(args mock.Arguments) {
 			createdSettlement = args.Get(0).(*models.Settlement)
@@ -760,11 +760,11 @@ func TestSettlementGeneratorService_Integration(t *testing.T) {
 
 		service := NewSettlementGeneratorService(mockLLM, mockRepo)
 
-		// Execute
+		// Execute.
 		ctx := testutil.TestContext()
 		settlement, err := service.GenerateSettlement(ctx, gameSessionID, req)
 
-		// Assert
+		// Assert.
 		require.NoError(t, err)
 		require.NotNil(t, settlement)
 		require.Equal(t, "Port Dagon", settlement.Name)
@@ -774,7 +774,7 @@ func TestSettlementGeneratorService_Integration(t *testing.T) {
 		require.True(t, settlement.AncientRuinsNearby)
 		require.Equal(t, "coastal", settlement.TerrainType)
 
-		// Verify JSONB fields
+		// Verify JSONB fields.
 		var notableLocations []map[string]string
 		err = json.Unmarshal(settlement.NotableLocations, &notableLocations)
 		require.NoError(t, err)
@@ -784,7 +784,7 @@ func TestSettlementGeneratorService_Integration(t *testing.T) {
 	})
 }
 
-// Benchmark tests
+// Benchmark tests.
 func BenchmarkSettlementGeneratorService_GenerateSettlement(b *testing.B) {
 	mockLLM := &MockLLMProvider{
 		Response: `{"name": "Benchmark Town", "description": "Test"}`,

@@ -9,7 +9,7 @@ import (
 func SecurityHeaders(isDevelopment bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Content Security Policy
+			// Content Security Policy.
 			cspDirectives := []string{
 				"default-src 'self'",
 				"script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Allow inline scripts for development
@@ -22,7 +22,7 @@ func SecurityHeaders(isDevelopment bool) func(http.Handler) http.Handler {
 				"form-action 'self'",
 			}
 
-			// In production, tighten CSP
+			// In production, tighten CSP.
 			if !isDevelopment {
 				cspDirectives = []string{
 					"default-src 'self'",
@@ -40,19 +40,19 @@ func SecurityHeaders(isDevelopment bool) func(http.Handler) http.Handler {
 
 			w.Header().Set("Content-Security-Policy", strings.Join(cspDirectives, "; "))
 
-			// Other security headers
+			// Other security headers.
 			w.Header().Set("X-Content-Type-Options", "nosniff")
 			w.Header().Set("X-Frame-Options", "DENY")
 			w.Header().Set("X-XSS-Protection", "1; mode=block")
 			w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 			w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
 
-			// HSTS (HTTP Strict Transport Security) - only in production
+			// HSTS (HTTP Strict Transport Security) - only in production.
 			if !isDevelopment {
 				w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 			}
 
-			// Remove server header
+			// Remove server header.
 			w.Header().Del("Server")
 
 			next.ServeHTTP(w, r)
@@ -73,7 +73,7 @@ func ValidateOrigin(allowedOrigins []string, origin string) bool {
 		if allowed == origin {
 			return true
 		}
-		// Handle wildcard subdomains
+		// Handle wildcard subdomains.
 		if strings.HasPrefix(allowed, "*.") {
 			domain := allowed[2:]
 			if strings.HasSuffix(origin, domain) {

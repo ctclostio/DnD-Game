@@ -24,14 +24,14 @@ func NewDiceRollService(repo database.DiceRollRepository) *DiceRollService {
 	}
 }
 
-// SetGameSessionRepo sets the game session repository (to avoid circular dependency)
+// SetGameSessionRepo sets the game session repository (to avoid circular dependency).
 func (s *DiceRollService) SetGameSessionRepo(repo database.GameSessionRepository) {
 	s.gameSessionRepo = repo
 }
 
-// RollDice performs a dice roll and saves it to the database
+// RollDice performs a dice roll and saves it to the database.
 func (s *DiceRollService) RollDice(ctx context.Context, roll *models.DiceRoll) error {
-	// Validate input
+	// Validate input.
 	if roll.GameSessionID == "" {
 		return fmt.Errorf("game session ID is required")
 	}
@@ -42,7 +42,7 @@ func (s *DiceRollService) RollDice(ctx context.Context, roll *models.DiceRoll) e
 		return fmt.Errorf("roll notation is required")
 	}
 
-	// Parse roll notation
+	// Parse roll notation.
 	count, diceType, modifier, err := parseRollNotation(roll.RollNotation)
 	if err != nil {
 		return fmt.Errorf("invalid roll notation: %w", err)
@@ -52,11 +52,11 @@ func (s *DiceRollService) RollDice(ctx context.Context, roll *models.DiceRoll) e
 	roll.DiceType = diceType
 	roll.Modifier = modifier
 
-	// Perform the rolls
+	// Perform the rolls.
 	roll.Results = make([]int, count)
 	roll.Total = modifier
 
-	// Create a local random generator
+	// Create a local random generator.
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	diceMax := getDiceMax(diceType)
 
@@ -66,38 +66,38 @@ func (s *DiceRollService) RollDice(ctx context.Context, roll *models.DiceRoll) e
 		roll.Total += result
 	}
 
-	// Save to database
+	// Save to database.
 	return s.repo.Create(ctx, roll)
 }
 
-// GetRollByID retrieves a dice roll by ID
+// GetRollByID retrieves a dice roll by ID.
 func (s *DiceRollService) GetRollByID(ctx context.Context, id string) (*models.DiceRoll, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-// GetRollsBySession retrieves dice rolls for a game session
+// GetRollsBySession retrieves dice rolls for a game session.
 func (s *DiceRollService) GetRollsBySession(ctx context.Context, sessionID string, offset, limit int) ([]*models.DiceRoll, error) {
 	return s.repo.GetByGameSession(ctx, sessionID, offset, limit)
 }
 
-// GetRollsByUser retrieves dice rolls for a user
+// GetRollsByUser retrieves dice rolls for a user.
 func (s *DiceRollService) GetRollsByUser(ctx context.Context, userID string, offset, limit int) ([]*models.DiceRoll, error) {
 	return s.repo.GetByUser(ctx, userID, offset, limit)
 }
 
-// GetRollsBySessionAndUser retrieves dice rolls for a specific user in a game session
+// GetRollsBySessionAndUser retrieves dice rolls for a specific user in a game session.
 func (s *DiceRollService) GetRollsBySessionAndUser(ctx context.Context, sessionID, userID string, offset, limit int) ([]*models.DiceRoll, error) {
 	return s.repo.GetByGameSessionAndUser(ctx, sessionID, userID, offset, limit)
 }
 
-// DeleteRoll deletes a dice roll
+// DeleteRoll deletes a dice roll.
 func (s *DiceRollService) DeleteRoll(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-// SimulateRoll simulates a dice roll without saving to the database
+// SimulateRoll simulates a dice roll without saving to the database.
 func (s *DiceRollService) SimulateRoll(notation string) (*models.DiceRoll, error) {
-	// Parse roll notation
+	// Parse roll notation.
 	count, diceType, modifier, err := parseRollNotation(notation)
 	if err != nil {
 		return nil, err
@@ -112,8 +112,8 @@ func (s *DiceRollService) SimulateRoll(notation string) (*models.DiceRoll, error
 		Total:        modifier,
 	}
 
-	// Perform the rolls
-	// Create a local random generator
+	// Perform the rolls.
+	// Create a local random generator.
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	diceMax := getDiceMax(diceType)
 
@@ -126,9 +126,9 @@ func (s *DiceRollService) SimulateRoll(notation string) (*models.DiceRoll, error
 	return roll, nil
 }
 
-// parseRollNotation parses a dice roll notation like "2d20+5" or "1d6-2"
+// parseRollNotation parses a dice roll notation like "2d20+5" or "1d6-2".
 func parseRollNotation(notation string) (count int, diceType string, modifier int, err error) {
-	// Regular expression to match dice notation
+	// Regular expression to match dice notation.
 	re := regexp.MustCompile(`^(\d+)?d(\d+|%)([+-]\d+)?$`)
 	matches := re.FindStringSubmatch(strings.ToLower(notation))
 
@@ -136,7 +136,7 @@ func parseRollNotation(notation string) (count int, diceType string, modifier in
 		return 0, "", 0, fmt.Errorf("invalid dice notation format")
 	}
 
-	// Parse count (default to 1 if not specified)
+	// Parse count (default to 1 if not specified).
 	if matches[1] == "" {
 		count = 1
 	} else {
@@ -146,7 +146,7 @@ func parseRollNotation(notation string) (count int, diceType string, modifier in
 		}
 	}
 
-	// Parse dice type
+	// Parse dice type.
 	if matches[2] == "%" {
 		diceType = "d100"
 	} else {
@@ -155,7 +155,7 @@ func parseRollNotation(notation string) (count int, diceType string, modifier in
 			return 0, "", 0, fmt.Errorf("invalid dice type")
 		}
 
-		// Validate dice type
+		// Validate dice type.
 		validDice := map[int]bool{4: true, 6: true, 8: true, 10: true, 12: true, 20: true, 100: true}
 		if !validDice[diceNum] {
 			return 0, "", 0, fmt.Errorf("invalid dice type: d%d", diceNum)
@@ -164,7 +164,7 @@ func parseRollNotation(notation string) (count int, diceType string, modifier in
 		diceType = fmt.Sprintf("d%d", diceNum)
 	}
 
-	// Parse modifier
+	// Parse modifier.
 	if matches[3] != "" {
 		modifier, err = strconv.Atoi(matches[3])
 		if err != nil {
@@ -175,7 +175,7 @@ func parseRollNotation(notation string) (count int, diceType string, modifier in
 	return count, diceType, modifier, nil
 }
 
-// getDiceMax returns the maximum value for a dice type
+// getDiceMax returns the maximum value for a dice type.
 func getDiceMax(diceType string) int {
 	switch diceType {
 	case "d4":
@@ -197,7 +197,7 @@ func getDiceMax(diceType string) int {
 	}
 }
 
-// RollInitiative rolls initiative for multiple participants
+// RollInitiative rolls initiative for multiple participants.
 func (s *DiceRollService) RollInitiative(ctx context.Context, sessionID string, participants []struct {
 	UserID      string
 	CharacterID string
@@ -214,7 +214,7 @@ func (s *DiceRollService) RollInitiative(ctx context.Context, sessionID string, 
 	}, len(participants))
 
 	for i, p := range participants {
-		// Roll 1d20 + dexterity modifier
+		// Roll 1d20 + dexterity modifier.
 		rollNotation := "1d20"
 		if p.DexModifier > 0 {
 			rollNotation = fmt.Sprintf("1d20+%d", p.DexModifier)

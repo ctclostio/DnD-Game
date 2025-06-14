@@ -1,14 +1,14 @@
-// Package mocks provides mock implementations of repository interfaces for testing
+// Package mocks provides mock implementations of repository interfaces for testing.
 package mocks
 
 import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/mock"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 )
 
 // MockUserRepository is a mock implementation of database.UserRepository

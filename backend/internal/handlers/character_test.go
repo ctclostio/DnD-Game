@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Helper function to create a test context with auth claims
+// Helper function to create a test context with auth claims.
 func createAuthContext(userID, role string) context.Context {
 	claims := &auth.Claims{
 		UserID:   userID,
@@ -103,28 +103,27 @@ func TestCharacterHandler_RequestValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
+			// Create request.
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(tt.method, tt.path, bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 
-			// Add auth context if userID is provided (placeholder for middleware)
-
-			// For this test, we'll just verify the request structure
+			// Add auth context if userID is provided (placeholder for middleware).
+			// For this test, we'll just verify the request structure.
 			if tt.body != nil {
 				var decoded map[string]interface{}
 				err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 				assert.NoError(t, err)
 
-				// Validate character creation requirements
+				// Validate character creation requirements.
 				if tt.method == http.MethodPost && tt.path == "/api/characters" {
 					if tt.expectedStatus == http.StatusBadRequest {
-						// Check for missing required fields
+						// Check for missing required fields.
 						if _, ok := decoded["name"]; !ok && tt.name == "invalid character creation - missing name" {
 							assert.True(t, true, "Name is correctly missing")
 						}
 
-						// Check for invalid ability scores
+						// Check for invalid ability scores.
 						if abilities, ok := decoded["abilities"].(map[string]interface{}); ok {
 							if str, ok := abilities["strength"].(float64); ok && str > 20 {
 								assert.True(t, true, "Strength is correctly too high")
@@ -184,17 +183,16 @@ func TestCharacterHandler_UpdateCharacter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
+			// Create request.
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPut, "/api/characters/"+tt.characterID, bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 
-			// Add route vars
+			// Add route vars.
 			_ = mux.SetURLVars(req, map[string]string{"id": tt.characterID})
 
-			// Add auth context (placeholder)
-
-			// Verify request can be parsed
+			// Add auth context (placeholder).
+			// Verify request can be parsed.
 			var decoded map[string]interface{}
 			err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 			assert.NoError(t, err)
@@ -249,7 +247,7 @@ func TestCharacterHandler_SpellSlots(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
+			// Create request.
 			body, _ := json.Marshal(tt.body)
 			var path string
 			if tt.action == "use" {
@@ -262,16 +260,16 @@ func TestCharacterHandler_SpellSlots(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 			_ = mux.SetURLVars(req, map[string]string{"id": characterID})
 
-			// Add auth context
+			// Add auth context.
 			ctx := createAuthContext(userID, "player")
 			_ = req.WithContext(ctx)
 
-			// Verify request structure
+			// Verify request structure.
 			var decoded map[string]interface{}
 			err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 			assert.NoError(t, err)
 
-			// Validate spell level if using spell slot
+			// Validate spell level if using spell slot.
 			if tt.action == "use" {
 				if spellLevel, ok := decoded["spellLevel"].(float64); ok {
 					if spellLevel > 9 && tt.expectError {
@@ -297,12 +295,12 @@ func TestCharacterHandler_CustomClass(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/characters/custom-class/generate", bytes.NewReader(bodyBytes))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Add auth context
-		// Context would be added by auth middleware in real handler
-		// ctx := createAuthContext(userID, "player")
+		// Add auth context.
+		// Context would be added by auth middleware in real handler.
+		// ctx := createAuthContext(userID, "player").
 		// req = req.WithContext(ctx)
 
-		// Verify request structure
+		// Verify request structure.
 		var decoded map[string]interface{}
 		err := json.NewDecoder(bytes.NewReader(bodyBytes)).Decode(&decoded)
 		assert.NoError(t, err)
@@ -314,19 +312,19 @@ func TestCharacterHandler_CustomClass(t *testing.T) {
 	t.Run("list custom classes", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/characters/custom-classes?includeUnapproved=true", nil)
 
-		// Add auth context
-		// Context would be added by auth middleware in real handler
-		// ctx := createAuthContext(userID, "player")
+		// Add auth context.
+		// Context would be added by auth middleware in real handler.
+		// ctx := createAuthContext(userID, "player").
 		// req = req.WithContext(ctx)
 
-		// Verify query parameter
+		// Verify query parameter.
 		includeUnapproved := req.URL.Query().Get("includeUnapproved")
 		assert.Equal(t, "true", includeUnapproved)
 	})
 }
 
 func TestCharacterHandler_CharacterValidation(t *testing.T) {
-	// Test D&D-specific validation rules
+	// Test D&D-specific validation rules.
 	validationTests := []struct {
 		name        string
 		character   models.Character
@@ -396,7 +394,7 @@ func TestCharacterHandler_CharacterValidation(t *testing.T) {
 
 	for _, tt := range validationTests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Validate character attributes
+			// Validate character attributes.
 			if tt.character.Name == "" && tt.shouldError {
 				assert.Equal(t, "character name is required", tt.errorMsg)
 			}

@@ -65,28 +65,26 @@ func TestDiceHandler_RollDice(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
+			// Create request.
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPost, "/api/dice/roll", bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 
-			// Add auth context (placeholder)
-
-			// For this test, we'll just verify the request structure
-			// A full test would need the handler with all dependencies
-
-			// Verify we can decode the request
+			// Add auth context (placeholder).
+			// For this test, we'll just verify the request structure.
+			// A full test would need the handler with all dependencies.
+			// Verify we can decode the request.
 			var decoded DiceRollRequest
 			err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 			assert.NoError(t, err)
 
-			// Basic validation that would be done by handler
+			// Basic validation that would be done by handler.
 			if decoded.GameSessionID == "" && tt.expectedError == "Game session ID is required" {
 				assert.Empty(t, decoded.GameSessionID)
 			}
 
 			if decoded.RollNotation == "invalid" && tt.expectedError == "Invalid dice notation" {
-				// In real handler, this would be validated by dice parser
+				// In real handler, this would be validated by dice parser.
 				assert.Equal(t, "invalid", decoded.RollNotation)
 			}
 		})
@@ -135,26 +133,25 @@ func TestDiceHandler_GetRollHistory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
+			// Create request.
 			url := "/api/sessions/" + tt.sessionID + "/dice/history"
 			if tt.limit != "" {
 				url += "?limit=" + tt.limit
 			}
 			req := httptest.NewRequest(http.MethodGet, url, nil)
 
-			// Add auth context (placeholder)
-
-			// For this test, verify query parameter parsing
+			// Add auth context (placeholder).
+			// For this test, verify query parameter parsing.
 			limit := req.URL.Query().Get("limit")
 			if limit == "invalid" && tt.expectedError == "Invalid limit parameter" {
-				// In real handler, this would fail integer parsing
+				// In real handler, this would fail integer parsing.
 				assert.Equal(t, "invalid", limit)
 			}
 		})
 	}
 }
 
-// TestDiceNotationValidation tests various dice notation formats
+// TestDiceNotationValidation tests various dice notation formats.
 func TestDiceNotationValidation(t *testing.T) {
 	validNotations := []string{
 		"d20",
@@ -187,7 +184,7 @@ func TestDiceNotationValidation(t *testing.T) {
 
 	for _, notation := range validNotations {
 		t.Run("valid_"+notation, func(t *testing.T) {
-			// This would be validated by the dice parser
+			// This would be validated by the dice parser.
 			assert.NotEmpty(t, notation)
 			// In real implementation, parser.ParseNotation(notation) should not error
 		})
@@ -195,7 +192,7 @@ func TestDiceNotationValidation(t *testing.T) {
 
 	for _, notation := range invalidNotations {
 		t.Run("invalid_"+notation, func(t *testing.T) {
-			// This would be rejected by the dice parser
+			// This would be rejected by the dice parser.
 			// In real implementation, parser.ParseNotation(notation) should error
 			if notation == "" {
 				assert.Empty(t, notation)
@@ -206,7 +203,7 @@ func TestDiceNotationValidation(t *testing.T) {
 	}
 }
 
-// TestDiceRollPurposes tests different roll purposes
+// TestDiceRollPurposes tests different roll purposes.
 func TestDiceRollPurposes(t *testing.T) {
 	purposes := []struct {
 		purpose     string
@@ -257,7 +254,7 @@ func TestDiceRollPurposes(t *testing.T) {
 
 	for _, p := range purposes {
 		t.Run(p.purpose, func(t *testing.T) {
-			// Create a dice roll with this purpose
+			// Create a dice roll with this purpose.
 			roll := &models.DiceRoll{
 				ID:            uuid.New().String(),
 				UserID:        uuid.New().String(),
@@ -268,7 +265,7 @@ func TestDiceRollPurposes(t *testing.T) {
 				Results:       []int{10},
 			}
 
-			// Verify the roll has required fields
+			// Verify the roll has required fields.
 			assert.NotEmpty(t, roll.ID)
 			assert.NotEmpty(t, roll.UserID)
 			assert.NotEmpty(t, roll.RollNotation)
@@ -279,7 +276,7 @@ func TestDiceRollPurposes(t *testing.T) {
 	}
 }
 
-// TestAdvantageDisadvantage tests advantage/disadvantage mechanics
+// TestAdvantageDisadvantage tests advantage/disadvantage mechanics.
 func TestAdvantageDisadvantage(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -309,7 +306,7 @@ func TestAdvantageDisadvantage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// This demonstrates the notation for advantage/disadvantage
+			// This demonstrates the notation for advantage/disadvantage.
 			assert.Contains(t, tt.notation, "d20")
 			switch tt.rollType {
 			case "advantage":

@@ -14,7 +14,7 @@ import (
 func TestValidationMiddleware_Validate(t *testing.T) {
 	vm := NewValidationMiddleware()
 
-	// Test struct for validation
+	// Test struct for validation.
 	type CreateCharacterRequest struct {
 		Name  string `json:"name" validate:"required,min=1,max=50"`
 		Race  string `json:"race" validate:"required"`
@@ -47,7 +47,7 @@ func TestValidationMiddleware_Validate(t *testing.T) {
 			body: map[string]interface{}{
 				"race":  "Human",
 				"class": "Fighter",
-				// Missing name
+				// Missing name.
 			},
 			targetStruct:   &CreateCharacterRequest{},
 			expectedStatus: http.StatusBadRequest,
@@ -77,7 +77,7 @@ func TestValidationMiddleware_Validate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
+			// Create request.
 			var body []byte
 			var err error
 			if tt.body != nil {
@@ -90,22 +90,22 @@ func TestValidationMiddleware_Validate(t *testing.T) {
 				req.Header.Set("Content-Type", "application/json")
 			}
 
-			// Create response recorder
+			// Create response recorder.
 			rec := httptest.NewRecorder()
 
-			// Create handler with validation middleware
+			// Create handler with validation middleware.
 			handler := vm.Validate(tt.targetStruct)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte("OK"))
 			}))
 
-			// Execute request
+			// Execute request.
 			handler.ServeHTTP(rec, req)
 
-			// Check response
+			// Check response.
 			if tt.expectedError {
 				assert.Equal(t, tt.expectedStatus, rec.Code)
-				// Error responses contain "message" and "type" fields, not "error"
+				// Error responses contain "message" and "type" fields, not "error".
 				assert.Contains(t, rec.Body.String(), "message")
 				assert.Contains(t, rec.Body.String(), "type")
 			} else {

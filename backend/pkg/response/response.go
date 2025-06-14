@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/google/uuid"
 )
 
-// Response represents a standard API response
+// Response represents a standard API response.
 type Response struct {
 	Success   bool        `json:"success"`
 	Data      interface{} `json:"data,omitempty"`
@@ -20,7 +20,7 @@ type Response struct {
 	Timestamp time.Time   `json:"timestamp"`
 }
 
-// ErrorInfo represents error information in the response
+// ErrorInfo represents error information in the response.
 type ErrorInfo struct {
 	Type    errors.ErrorType `json:"type"`
 	Code    string           `json:"code"`
@@ -28,7 +28,7 @@ type ErrorInfo struct {
 	Details interface{}      `json:"details,omitempty"`
 }
 
-// Meta contains pagination and other metadata
+// Meta contains pagination and other metadata.
 type Meta struct {
 	Page       int   `json:"page,omitempty"`
 	PerPage    int   `json:"per_page,omitempty"`
@@ -36,23 +36,23 @@ type Meta struct {
 	TotalPages int   `json:"total_pages,omitempty"`
 }
 
-// RequestIDKey is the context key for request ID
+// RequestIDKey is the context key for request ID.
 type contextKey string
 
 const RequestIDKey contextKey = "request_id"
 
-// getRequestID extracts request ID from the request context
+// getRequestID extracts request ID from the request context.
 func getRequestID(r *http.Request) string {
 	if id := r.Context().Value(RequestIDKey); id != nil {
 		if reqID, ok := id.(string); ok {
 			return reqID
 		}
 	}
-	// Generate new ID if not found
+	// Generate new ID if not found.
 	return uuid.New().String()
 }
 
-// JSON sends a successful JSON response
+// JSON sends a successful JSON response.
 func JSON(w http.ResponseWriter, r *http.Request, status int, data interface{}) {
 	response := Response{
 		Success:   true,
@@ -64,7 +64,7 @@ func JSON(w http.ResponseWriter, r *http.Request, status int, data interface{}) 
 	sendJSON(w, status, response)
 }
 
-// JSONWithMeta sends a successful JSON response with metadata
+// JSONWithMeta sends a successful JSON response with metadata.
 func JSONWithMeta(w http.ResponseWriter, r *http.Request, status int, data interface{}, meta *Meta) {
 	response := Response{
 		Success:   true,
@@ -77,15 +77,15 @@ func JSONWithMeta(w http.ResponseWriter, r *http.Request, status int, data inter
 	sendJSON(w, status, response)
 }
 
-// Error sends an error response
+// Error sends an error response.
 func Error(w http.ResponseWriter, r *http.Request, err error) {
 	appErr := errors.GetAppError(err)
 
-	// Log the error with context
+	// Log the error with context.
 	log := logger.GetLogger()
 	requestID := getRequestID(r)
 
-	// Log at appropriate level
+	// Log at appropriate level.
 	switch appErr.StatusCode {
 	case http.StatusInternalServerError, http.StatusServiceUnavailable:
 		log.Error().
@@ -118,14 +118,14 @@ func Error(w http.ResponseWriter, r *http.Request, err error) {
 	sendJSON(w, appErr.StatusCode, response)
 }
 
-// ErrorWithCode sends an error response with a specific error code
+// ErrorWithCode sends an error response with a specific error code.
 func ErrorWithCode(w http.ResponseWriter, r *http.Request, code errors.ErrorCode, customMessage ...string) {
 	message := errors.GetErrorMessage(code)
 	if len(customMessage) > 0 && customMessage[0] != "" {
 		message = customMessage[0]
 	}
 
-	// Determine error type and status code based on error code
+	// Determine error type and status code based on error code.
 	var errType errors.ErrorType
 	var statusCode int
 
@@ -166,7 +166,7 @@ func ErrorWithCode(w http.ResponseWriter, r *http.Request, code errors.ErrorCode
 	Error(w, r, appErr)
 }
 
-// ValidationError sends a validation error response
+// ValidationError sends a validation error response.
 func ValidationError(w http.ResponseWriter, r *http.Request, validationErrors *errors.ValidationErrors) {
 	if validationErrors == nil || !validationErrors.HasErrors() {
 		return
@@ -175,12 +175,12 @@ func ValidationError(w http.ResponseWriter, r *http.Request, validationErrors *e
 	Error(w, r, validationErrors.ToAppError().WithCode(string(errors.ErrCodeValidationFailed)))
 }
 
-// NotFound sends a not found error response
+// NotFound sends a not found error response.
 func NotFound(w http.ResponseWriter, r *http.Request, resource string) {
 	Error(w, r, errors.NewNotFoundError(resource).WithCode(string(errors.ErrCodeCharacterNotFound)))
 }
 
-// Unauthorized sends an unauthorized error response
+// Unauthorized sends an unauthorized error response.
 func Unauthorized(w http.ResponseWriter, r *http.Request, message string) {
 	if message == "" {
 		message = "Unauthorized"
@@ -188,7 +188,7 @@ func Unauthorized(w http.ResponseWriter, r *http.Request, message string) {
 	Error(w, r, errors.NewAuthenticationError(message).WithCode(string(errors.ErrCodeTokenInvalid)))
 }
 
-// Forbidden sends a forbidden error response
+// Forbidden sends a forbidden error response.
 func Forbidden(w http.ResponseWriter, r *http.Request, message string) {
 	if message == "" {
 		message = "Forbidden"
@@ -196,18 +196,17 @@ func Forbidden(w http.ResponseWriter, r *http.Request, message string) {
 	Error(w, r, errors.NewAuthorizationError(message).WithCode(string(errors.ErrCodeInsufficientPrivilege)))
 }
 
-// BadRequest sends a bad request error response
+// BadRequest sends a bad request error response.
 func BadRequest(w http.ResponseWriter, r *http.Request, message string) {
 	Error(w, r, errors.NewBadRequestError(message).WithCode(string(errors.ErrCodeInvalidInput)))
 }
 
-// InternalServerError sends an internal server error response
+// InternalServerError sends an internal server error response.
 func InternalServerError(w http.ResponseWriter, r *http.Request, err error) {
 	Error(w, r, errors.NewInternalError("An unexpected error occurred", err).WithCode(string(errors.ErrCodeInternalError)))
 }
 
-// Helper functions
-
+// Helper functions.
 func appErrorToErrorInfo(appErr *errors.AppError) *ErrorInfo {
 	return &ErrorInfo{
 		Type:    appErr.Type,

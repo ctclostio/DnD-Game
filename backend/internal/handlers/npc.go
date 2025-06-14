@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/gorilla/mux"
 )
 
-// CreateNPC handles NPC creation (DM only)
+// CreateNPC handles NPC creation (DM only).
 func (h *Handlers) CreateNPC(w http.ResponseWriter, r *http.Request) {
-	// Get user claims from auth context
+	// Get user claims from auth context.
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
@@ -27,7 +27,7 @@ func (h *Handlers) CreateNPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user is DM of the game session
+	// Verify user is DM of the game session.
 	session, err := h.gameService.GetSession(r.Context(), npc.GameSessionID)
 	if err != nil {
 		response.NotFound(w, r, "game session")
@@ -39,7 +39,7 @@ func (h *Handlers) CreateNPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set creator
+	// Set creator.
 	npc.CreatedBy = claims.UserID
 
 	if err := h.npcService.CreateNPC(r.Context(), &npc); err != nil {
@@ -50,12 +50,12 @@ func (h *Handlers) CreateNPC(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusCreated, npc)
 }
 
-// GetNPC retrieves an NPC by ID
+// GetNPC retrieves an NPC by ID.
 func (h *Handlers) GetNPC(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	npcID := vars["id"]
 
-	// Get user ID from auth context
+	// Get user ID from auth context.
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
@@ -68,7 +68,7 @@ func (h *Handlers) GetNPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user has access to this NPC's game session
+	// Verify user has access to this NPC's game session.
 	if err := h.gameService.ValidateUserInSession(r.Context(), npc.GameSessionID, userID); err != nil {
 		response.Forbidden(w, r, "You don't have access to this NPC")
 		return
@@ -77,19 +77,19 @@ func (h *Handlers) GetNPC(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, npc)
 }
 
-// GetNPCsBySession retrieves all NPCs for a game session
+// GetNPCsBySession retrieves all NPCs for a game session.
 func (h *Handlers) GetNPCsBySession(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["sessionId"]
 
-	// Get user ID from auth context
+	// Get user ID from auth context.
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Verify user has access to this game session
+	// Verify user has access to this game session.
 	if err := h.gameService.ValidateUserInSession(r.Context(), sessionID, userID); err != nil {
 		response.Forbidden(w, r, "You don't have access to this game session")
 		return
@@ -104,26 +104,26 @@ func (h *Handlers) GetNPCsBySession(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, npcs)
 }
 
-// UpdateNPC updates an NPC (DM only)
+// UpdateNPC updates an NPC (DM only).
 func (h *Handlers) UpdateNPC(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	npcID := vars["id"]
 
-	// Get user claims from auth context
+	// Get user claims from auth context.
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Get existing NPC
+	// Get existing NPC.
 	existingNPC, err := h.npcService.GetNPC(r.Context(), npcID)
 	if err != nil {
 		response.NotFound(w, r, "NPC")
 		return
 	}
 
-	// Verify user is DM of the game session
+	// Verify user is DM of the game session.
 	session, err := h.gameService.GetSession(r.Context(), existingNPC.GameSessionID)
 	if err != nil {
 		response.NotFound(w, r, "game session")
@@ -141,7 +141,7 @@ func (h *Handlers) UpdateNPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Ensure ID and GameSessionID can't be changed
+	// Ensure ID and GameSessionID can't be changed.
 	npc.ID = npcID
 	npc.GameSessionID = existingNPC.GameSessionID
 	npc.CreatedBy = existingNPC.CreatedBy
@@ -154,26 +154,26 @@ func (h *Handlers) UpdateNPC(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, npc)
 }
 
-// DeleteNPC deletes an NPC (DM only)
+// DeleteNPC deletes an NPC (DM only).
 func (h *Handlers) DeleteNPC(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	npcID := vars["id"]
 
-	// Get user claims from auth context
+	// Get user claims from auth context.
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Get NPC to verify permissions
+	// Get NPC to verify permissions.
 	npc, err := h.npcService.GetNPC(r.Context(), npcID)
 	if err != nil {
 		response.NotFound(w, r, "NPC")
 		return
 	}
 
-	// Verify user is DM of the game session
+	// Verify user is DM of the game session.
 	session, err := h.gameService.GetSession(r.Context(), npc.GameSessionID)
 	if err != nil {
 		response.NotFound(w, r, "game session")
@@ -193,16 +193,16 @@ func (h *Handlers) DeleteNPC(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusNoContent, nil)
 }
 
-// SearchNPCs searches for NPCs
+// SearchNPCs searches for NPCs.
 func (h *Handlers) SearchNPCs(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from auth context
+	// Get user ID from auth context.
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Parse query parameters
+	// Parse query parameters.
 	filter := models.NPCSearchFilter{
 		GameSessionID:    r.URL.Query().Get("gameSessionId"),
 		Name:             r.URL.Query().Get("name"),
@@ -211,7 +211,7 @@ func (h *Handlers) SearchNPCs(w http.ResponseWriter, r *http.Request) {
 		IncludeTemplates: r.URL.Query().Get("includeTemplates") == "true",
 	}
 
-	// Parse CR range
+	// Parse CR range.
 	if minCR := r.URL.Query().Get("minCR"); minCR != "" {
 		if cr, err := strconv.ParseFloat(minCR, 64); err == nil {
 			filter.MinCR = cr
@@ -224,7 +224,7 @@ func (h *Handlers) SearchNPCs(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// If searching within a game session, verify access
+	// If searching within a game session, verify access.
 	if filter.GameSessionID != "" {
 		if err := h.gameService.ValidateUserInSession(r.Context(), filter.GameSessionID, userID); err != nil {
 			response.Forbidden(w, r, "You don't have access to this game session")
@@ -241,7 +241,7 @@ func (h *Handlers) SearchNPCs(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, npcs)
 }
 
-// GetNPCTemplates retrieves all available NPC templates
+// GetNPCTemplates retrieves all available NPC templates.
 func (h *Handlers) GetNPCTemplates(w http.ResponseWriter, r *http.Request) {
 	templates, err := h.npcService.GetTemplates(r.Context())
 	if err != nil {
@@ -252,9 +252,9 @@ func (h *Handlers) GetNPCTemplates(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, templates)
 }
 
-// CreateNPCFromTemplate creates an NPC from a template (DM only)
+// CreateNPCFromTemplate creates an NPC from a template (DM only).
 func (h *Handlers) CreateNPCFromTemplate(w http.ResponseWriter, r *http.Request) {
-	// Get user claims from auth context
+	// Get user claims from auth context.
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
@@ -271,7 +271,7 @@ func (h *Handlers) CreateNPCFromTemplate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Verify user is DM of the game session
+	// Verify user is DM of the game session.
 	session, err := h.gameService.GetSession(r.Context(), req.GameSessionID)
 	if err != nil {
 		response.NotFound(w, r, "game session")
@@ -298,21 +298,21 @@ func (h *Handlers) NPCQuickActions(w http.ResponseWriter, r *http.Request) {
 	npcID := vars["id"]
 	action := vars["action"]
 
-	// Get user claims from auth context
+	// Get user claims from auth context.
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Get NPC to verify permissions
+	// Get NPC to verify permissions.
 	npc, err := h.npcService.GetNPC(r.Context(), npcID)
 	if err != nil {
 		response.NotFound(w, r, "NPC")
 		return
 	}
 
-	// Verify user is DM of the game session
+	// Verify user is DM of the game session.
 	session, err := h.gameService.GetSession(r.Context(), npc.GameSessionID)
 	if err != nil {
 		response.NotFound(w, r, "game session")
@@ -369,7 +369,7 @@ func (h *Handlers) NPCQuickActions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return updated NPC
+	// Return updated NPC.
 	updatedNPC, err := h.npcService.GetNPC(r.Context(), npcID)
 	if err != nil {
 		response.InternalServerError(w, r, errors.New("failed to retrieve updated NPC"))

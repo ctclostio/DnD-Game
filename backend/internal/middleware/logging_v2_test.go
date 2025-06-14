@@ -5,14 +5,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLoggingMiddleware_CorrelationID(t *testing.T) {
-	// Create logger for testing
+	// Create logger for testing.
 	logConfig := logger.ConfigV2{
 		Level:        "debug",
 		Pretty:       false,
@@ -23,16 +23,16 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 	log, err := logger.NewV2(logConfig)
 	require.NoError(t, err)
 
-	// Create test handler
+	// Create test handler.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Verify context has IDs
+		// Verify context has IDs.
 		ctx := r.Context()
 
-		// Get IDs from context using logger functions
+		// Get IDs from context using logger functions.
 		reqID := logger.GetRequestIDFromContext(ctx)
 		corrID := logger.GetCorrelationIDFromContext(ctx)
 
-		// Write them to response for verification
+		// Write them to response for verification.
 		w.Header().Set("X-Context-Request-ID", reqID)
 		w.Header().Set("X-Context-Correlation-ID", corrID)
 
@@ -40,7 +40,7 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 		_, _ = w.Write([]byte("OK"))
 	})
 
-	// Apply logging middleware
+	// Apply logging middleware.
 	mw := middleware.LoggingMiddleware(log)
 	wrappedHandler := mw(handler)
 
@@ -80,7 +80,7 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
+			// Create request.
 			req := httptest.NewRequest("GET", "/test", nil)
 			if tt.requestID != "" {
 				req.Header.Set("X-Request-ID", tt.requestID)
@@ -89,13 +89,13 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 				req.Header.Set("X-Correlation-ID", tt.correlationID)
 			}
 
-			// Create response recorder
+			// Create response recorder.
 			rr := httptest.NewRecorder()
 
-			// Serve request
+			// Serve request.
 			wrappedHandler.ServeHTTP(rr, req)
 
-			// Check response headers
+			// Check response headers.
 			respReqID := rr.Header().Get("X-Request-ID")
 			respCorrID := rr.Header().Get("X-Correlation-ID")
 
@@ -112,7 +112,7 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 				assert.Equal(t, respReqID, respCorrID, "Correlation ID should equal Request ID when not provided")
 			}
 
-			// Verify context propagation
+			// Verify context propagation.
 			ctxReqID := rr.Header().Get("X-Context-Request-ID")
 			ctxCorrID := rr.Header().Get("X-Context-Correlation-ID")
 
@@ -123,17 +123,17 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 }
 
 func TestRequestContextMiddleware(t *testing.T) {
-	// Create test handler that checks context
+	// Create test handler that checks context.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Context should be enriched by middleware
+		// Context should be enriched by middleware.
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("OK"))
 	})
 
-	// Apply middleware
+	// Apply middleware.
 	wrappedHandler := middleware.RequestContextMiddleware(handler)
 
-	// Basic test to ensure middleware doesn't break
+	// Basic test to ensure middleware doesn't break.
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("X-Session-ID", "session-123")
 	req.Header.Set("X-Character-ID", "char-789")

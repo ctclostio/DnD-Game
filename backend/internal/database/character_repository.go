@@ -10,24 +10,24 @@ import (
 	"github.com/google/uuid"
 )
 
-// characterRepository implements CharacterRepository interface
+// characterRepository implements CharacterRepository interface.
 type characterRepository struct {
 	db *DB
 }
 
-// NewCharacterRepository creates a new character repository
+// NewCharacterRepository creates a new character repository.
 func NewCharacterRepository(db *DB) CharacterRepository {
 	return &characterRepository{db: db}
 }
 
-// Create creates a new character
+// Create creates a new character.
 func (r *characterRepository) Create(ctx context.Context, character *models.Character) error {
-	// Generate ID if not provided (for SQLite compatibility)
+	// Generate ID if not provided (for SQLite compatibility).
 	if character.ID == "" {
 		character.ID = uuid.New().String()
 	}
 
-	// Convert complex types to JSON
+	// Convert complex types to JSON.
 	attributesJSON, err := json.Marshal(character.Attributes)
 	if err != nil {
 		return fmt.Errorf("failed to marshal attributes: %w", err)
@@ -69,7 +69,7 @@ func (r *characterRepository) Create(ctx context.Context, character *models.Char
 	return nil
 }
 
-// GetByID retrieves a character by ID
+// GetByID retrieves a character by ID.
 func (r *characterRepository) GetByID(ctx context.Context, id string) (*models.Character, error) {
 	var character models.Character
 	var attributesJSON, skillsJSON, equipmentJSON, spellsJSON []byte
@@ -96,7 +96,7 @@ func (r *characterRepository) GetByID(ctx context.Context, id string) (*models.C
 		return nil, fmt.Errorf("failed to scan character data: %w", err)
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	if err := json.Unmarshal(attributesJSON, &character.Attributes); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal attributes: %w", err)
 	}
@@ -110,9 +110,9 @@ func (r *characterRepository) GetByID(ctx context.Context, id string) (*models.C
 		return nil, fmt.Errorf("failed to unmarshal spells: %w", err)
 	}
 
-	// Initialize fields that might not be in the database
-	// Note: We don't need to check if SavingThrows is empty since it only contains basic types
-	// Initialize empty slices and maps
+	// Initialize fields that might not be in the database.
+	// Note: We don't need to check if SavingThrows is empty since it only contains basic types.
+	// Initialize empty slices and maps.
 	if character.Proficiencies.Languages == nil {
 		character.Proficiencies.Languages = []string{}
 	}
@@ -135,7 +135,7 @@ func (r *characterRepository) GetByID(ctx context.Context, id string) (*models.C
 	return &character, nil
 }
 
-// GetByUserID retrieves all characters for a user
+// GetByUserID retrieves all characters for a user.
 func (r *characterRepository) GetByUserID(ctx context.Context, userID string) ([]*models.Character, error) {
 	query := `
 		SELECT id, user_id, name, race, class, level, experience_points,
@@ -167,7 +167,7 @@ func (r *characterRepository) GetByUserID(ctx context.Context, userID string) ([
 			return nil, fmt.Errorf("failed to scan character: %w", err)
 		}
 
-		// Unmarshal JSON fields
+		// Unmarshal JSON fields.
 		if err := json.Unmarshal(attributesJSON, &character.Attributes); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal attributes: %w", err)
 		}
@@ -191,9 +191,9 @@ func (r *characterRepository) GetByUserID(ctx context.Context, userID string) ([
 	return characters, nil
 }
 
-// Update updates a character
+// Update updates a character.
 func (r *characterRepository) Update(ctx context.Context, character *models.Character) error {
-	// Convert complex types to JSON
+	// Convert complex types to JSON.
 	attributesJSON, err := json.Marshal(character.Attributes)
 	if err != nil {
 		return fmt.Errorf("failed to marshal attributes: %w", err)
@@ -214,7 +214,7 @@ func (r *characterRepository) Update(ctx context.Context, character *models.Char
 		return fmt.Errorf("failed to marshal spells: %w", err)
 	}
 
-	// Use ? placeholders and rebind for database compatibility
+	// Use ? placeholders and rebind for database compatibility.
 	query := `
 		UPDATE characters
 		SET name = ?, race = ?, class = ?, level = ?, experience_points = ?,
@@ -245,7 +245,7 @@ func (r *characterRepository) Update(ctx context.Context, character *models.Char
 	return nil
 }
 
-// Delete deletes a character
+// Delete deletes a character.
 func (r *characterRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM characters WHERE id = ?`
 
@@ -266,7 +266,7 @@ func (r *characterRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// List retrieves a paginated list of characters
+// List retrieves a paginated list of characters.
 func (r *characterRepository) List(ctx context.Context, offset, limit int) ([]*models.Character, error) {
 	query := `
 		SELECT id, user_id, name, race, class, level, experience_points,
@@ -298,7 +298,7 @@ func (r *characterRepository) List(ctx context.Context, offset, limit int) ([]*m
 			return nil, fmt.Errorf("failed to scan character: %w", err)
 		}
 
-		// Unmarshal JSON fields
+		// Unmarshal JSON fields.
 		if err := json.Unmarshal(attributesJSON, &character.Attributes); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal attributes: %w", err)
 		}

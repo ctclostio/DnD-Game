@@ -34,11 +34,11 @@ func TestUserService_Register(t *testing.T) {
 				Password: "SecurePass123!",
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
-				// Check that username doesn't exist
+				// Check that username doesn't exist.
 				m.On("GetByUsername", ctx, "testuser").Return(nil, nil)
-				// Check that email doesn't exist
+				// Check that email doesn't exist.
 				m.On("GetByEmail", ctx, "test@example.com").Return(nil, nil)
-				// Create user
+				// Create user.
 				m.On("Create", ctx, mock.MatchedBy(func(u *models.User) bool {
 					return u.Username == "testuser" &&
 						u.Email == "test@example.com" &&
@@ -46,7 +46,7 @@ func TestUserService_Register(t *testing.T) {
 						u.ID == "" && // ID should be empty, repository will set it
 						u.Role == "" // Role should be empty, repository will set it
 				})).Return(nil).Run(func(args mock.Arguments) {
-					// Simulate repository setting the ID and role
+					// Simulate repository setting the ID and role.
 					user := args.Get(1).(*models.User)
 					user.ID = "generated-id"
 					user.Role = "player"
@@ -60,7 +60,7 @@ func TestUserService_Register(t *testing.T) {
 				assert.NotEmpty(t, user.PasswordHash)
 				assert.NotEqual(t, "SecurePass123!", user.PasswordHash) // Should be hashed
 
-				// Verify password was hashed correctly
+				// Verify password was hashed correctly.
 				err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte("SecurePass123!"))
 				assert.NoError(t, err)
 			},
@@ -172,7 +172,7 @@ func TestUserService_Register(t *testing.T) {
 func TestUserService_Login(t *testing.T) {
 	ctx := context.Background()
 
-	// Create a test password and hash
+	// Create a test password and hash.
 	testPassword := "SecurePass123!"
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(testPassword), bcrypt.DefaultCost)
 
@@ -448,7 +448,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 				}
 				m.On("GetByID", ctx, "user-123").Return(user, nil)
 				m.On("Update", ctx, mock.MatchedBy(func(u *models.User) bool {
-					// Verify new password hash is different
+					// Verify new password hash is different.
 					return u.ID == "user-123" && u.PasswordHash != string(oldHash)
 				})).Return(nil)
 			},

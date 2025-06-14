@@ -7,7 +7,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// UserRepository defines the interface for user data operations
+// UserRepository defines the interface for user data operations.
 type UserRepository interface {
 	Create(ctx context.Context, user *models.User) error
 	GetByID(ctx context.Context, id string) (*models.User, error)
@@ -18,7 +18,7 @@ type UserRepository interface {
 	List(ctx context.Context, offset, limit int) ([]*models.User, error)
 }
 
-// CharacterRepository defines the interface for character data operations
+// CharacterRepository defines the interface for character data operations.
 type CharacterRepository interface {
 	Create(ctx context.Context, character *models.Character) error
 	GetByID(ctx context.Context, id string) (*models.Character, error)
@@ -28,7 +28,7 @@ type CharacterRepository interface {
 	List(ctx context.Context, offset, limit int) ([]*models.Character, error)
 }
 
-// GameSessionRepository defines the interface for game session data operations
+// GameSessionRepository defines the interface for game session data operations.
 type GameSessionRepository interface {
 	Create(ctx context.Context, session *models.GameSession) error
 	GetByID(ctx context.Context, id string) (*models.GameSession, error)
@@ -38,14 +38,14 @@ type GameSessionRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, offset, limit int) ([]*models.GameSession, error)
 
-	// Participant management
+	// Participant management.
 	AddParticipant(ctx context.Context, sessionID, userID string, characterID *string) error
 	RemoveParticipant(ctx context.Context, sessionID, userID string) error
 	GetParticipants(ctx context.Context, sessionID string) ([]*models.GameParticipant, error)
 	UpdateParticipantOnlineStatus(ctx context.Context, sessionID, userID string, isOnline bool) error
 }
 
-// DiceRollRepository defines the interface for dice roll data operations
+// DiceRollRepository defines the interface for dice roll data operations.
 type DiceRollRepository interface {
 	Create(ctx context.Context, roll *models.DiceRoll) error
 	GetByID(ctx context.Context, id string) (*models.DiceRoll, error)
@@ -55,14 +55,14 @@ type DiceRollRepository interface {
 	Delete(ctx context.Context, id string) error
 }
 
-// InventoryRepository defines the interface for inventory data operations
+// InventoryRepository defines the interface for inventory data operations.
 type InventoryRepository interface {
-	// Item operations
+	// Item operations.
 	CreateItem(item *models.Item) error
 	GetItem(itemID string) (*models.Item, error)
 	GetItemsByType(itemType models.ItemType) ([]*models.Item, error)
 
-	// Inventory operations
+	// Inventory operations.
 	AddItemToInventory(characterID, itemID string, quantity int) error
 	RemoveItemFromInventory(characterID, itemID string, quantity int) error
 	GetCharacterInventory(characterID string) ([]*models.InventoryItem, error)
@@ -70,16 +70,16 @@ type InventoryRepository interface {
 	AttuneItem(characterID, itemID string) error
 	UnattuneItem(characterID, itemID string) error
 
-	// Currency operations
+	// Currency operations.
 	GetCharacterCurrency(characterID string) (*models.Currency, error)
 	CreateCharacterCurrency(currency *models.Currency) error
 	UpdateCharacterCurrency(currency *models.Currency) error
 
-	// Weight operations
+	// Weight operations.
 	GetCharacterWeight(characterID string) (*models.InventoryWeight, error)
 }
 
-// RefreshTokenRepository defines the interface for refresh token data operations
+// RefreshTokenRepository defines the interface for refresh token data operations.
 type RefreshTokenRepository interface {
 	Create(userID, tokenID string, token string, expiresAt time.Time) error
 	ValidateAndGet(token string) (*RefreshToken, error)
@@ -88,7 +88,7 @@ type RefreshTokenRepository interface {
 	CleanupExpired() error
 }
 
-// NPCRepository defines the interface for NPC data operations
+// NPCRepository defines the interface for NPC data operations.
 type NPCRepository interface {
 	Create(ctx context.Context, npc *models.NPC) error
 	GetByID(ctx context.Context, id string) (*models.NPC, error)
@@ -97,13 +97,13 @@ type NPCRepository interface {
 	Delete(ctx context.Context, id string) error
 	Search(ctx context.Context, filter models.NPCSearchFilter) ([]*models.NPC, error)
 
-	// Template operations
+	// Template operations.
 	GetTemplates(ctx context.Context) ([]*models.NPCTemplate, error)
 	GetTemplateByID(ctx context.Context, id string) (*models.NPCTemplate, error)
 	CreateFromTemplate(ctx context.Context, templateID, gameSessionID, createdBy string) (*models.NPC, error)
 }
 
-// Repositories aggregates all repository interfaces
+// Repositories aggregates all repository interfaces.
 type Repositories struct {
 	Users           UserRepository
 	Characters      CharacterRepository

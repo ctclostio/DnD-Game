@@ -6,12 +6,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCustomRaceService_CreateCustomRace(t *testing.T) {
@@ -712,7 +712,7 @@ func TestCustomRaceService_IncrementUsage(t *testing.T) {
 	})
 }
 
-// MockAIRaceGeneratorService is a mock implementation for AI race generation
+// MockAIRaceGeneratorService is a mock implementation for AI race generation.
 type MockAIRaceGeneratorService struct {
 	mock.Mock
 }

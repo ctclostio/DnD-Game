@@ -37,7 +37,7 @@ func TestNew(t *testing.T) {
 			},
 			verify: func(t *testing.T, logger *Logger) {
 				assert.NotNil(t, logger)
-				// Debug level should be set
+				// Debug level should be set.
 				assert.Equal(t, zerolog.DebugLevel, zerolog.GlobalLevel())
 			},
 		},
@@ -208,7 +208,7 @@ func TestLogger_WithFields(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	// Reset global logger
+	// Reset global logger.
 	defaultLogger = nil
 
 	cfg := Config{
@@ -223,12 +223,12 @@ func TestInit(t *testing.T) {
 }
 
 func TestGetLogger(t *testing.T) {
-	// Test with uninitialized logger
+	// Test with uninitialized logger.
 	defaultLogger = nil
 	logger := GetLogger()
 	assert.NotNil(t, logger)
 
-	// Test with initialized logger
+	// Test with initialized logger.
 	Init(Config{Level: "warn"})
 	logger2 := GetLogger()
 	assert.NotNil(t, logger2)
@@ -238,12 +238,12 @@ func TestGetLogger(t *testing.T) {
 func TestGlobalLoggerFunctions(t *testing.T) {
 	var buf bytes.Buffer
 
-	// Initialize with a buffer logger for testing
-	// Use SyncWriter to ensure all writes are captured
+	// Initialize with a buffer logger for testing.
+	// Use SyncWriter to ensure all writes are captured.
 	writer := zerolog.SyncWriter(&buf)
 	zl := zerolog.New(writer).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	defaultLogger = &Logger{&zl}
-	// Ensure global log level allows debug messages
+	// Ensure global log level allows debug messages.
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
 	tests := []struct {
@@ -283,7 +283,7 @@ func TestGlobalLoggerFunctions(t *testing.T) {
 			buf.Reset()
 			tt.logFunc().Msg(tt.message)
 
-			// Check if buffer is empty (could happen if logger isn't properly initialized)
+			// Check if buffer is empty (could happen if logger isn't properly initialized).
 			if buf.Len() == 0 {
 				t.Fatal("No log output generated")
 			}
@@ -299,7 +299,7 @@ func TestGlobalLoggerFunctions(t *testing.T) {
 
 func TestWithContext_Global(t *testing.T) {
 	var buf bytes.Buffer
-	// Create a sync writer to ensure all writes go to the same buffer
+	// Create a sync writer to ensure all writes go to the same buffer.
 	writer := zerolog.SyncWriter(&buf)
 	zl := zerolog.New(writer).With().Timestamp().Logger().Level(zerolog.InfoLevel)
 	defaultLogger = &Logger{&zl}
@@ -308,7 +308,7 @@ func TestWithContext_Global(t *testing.T) {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, RequestIDKey, "global-request-id")
 
-	// Use WithContext to add context fields
+	// Use WithContext to add context fields.
 	WithContext(ctx).Info().Msg("context message")
 
 	var logEntry map[string]interface{}
@@ -320,7 +320,7 @@ func TestWithContext_Global(t *testing.T) {
 
 func TestLogger_ChainedOperations(t *testing.T) {
 	var buf bytes.Buffer
-	// Use SyncWriter to ensure all writes complete
+	// Use SyncWriter to ensure all writes complete.
 	writer := zerolog.SyncWriter(&buf)
 	zl := zerolog.New(writer).With().Timestamp().Logger().Level(zerolog.InfoLevel)
 	logger := &Logger{
@@ -328,7 +328,7 @@ func TestLogger_ChainedOperations(t *testing.T) {
 	}
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	// Test chaining multiple operations
+	// Test chaining multiple operations.
 	logger.
 		WithRequestID("req-chain").
 		WithUserID("user-chain").
@@ -356,7 +356,7 @@ func TestLogger_EmptyContext(t *testing.T) {
 		Logger: func() *zerolog.Logger { zl := zerolog.New(&buf).With().Timestamp().Logger(); return &zl }(),
 	}
 
-	// Test with empty context values
+	// Test with empty context values.
 	ctx := context.Background()
 	contextLogger := logger.WithContext(ctx)
 	contextLogger.Info().Msg("empty context")
@@ -374,23 +374,23 @@ func TestLogger_NilError(t *testing.T) {
 	}
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	// Test with nil error - WithError should handle nil gracefully
+	// Test with nil error - WithError should handle nil gracefully.
 	errorLogger := logger.WithError(nil)
 	errorLogger.Info().Msg("nil error test")
 
-	// Parse the log output
+	// Parse the log output.
 	var logEntry map[string]interface{}
 	err := json.Unmarshal(buf.Bytes(), &logEntry)
 	require.NoError(t, err)
 
 	assert.Equal(t, "nil error test", logEntry["message"])
-	// When error is nil, the error field should not be present
+	// When error is nil, the error field should not be present.
 	_, hasError := logEntry["error"]
 	assert.False(t, hasError, "error field should not be present when error is nil")
 }
 
 func TestLogger_MultipleLogLevels(t *testing.T) {
-	// Test that log level filtering works correctly
+	// Test that log level filtering works correctly.
 	levels := []struct {
 		configLevel string
 		testLevel   zerolog.Level
@@ -410,17 +410,17 @@ func TestLogger_MultipleLogLevels(t *testing.T) {
 		t.Run(test.configLevel+"_"+test.testLevel.String(), func(t *testing.T) {
 			var buf bytes.Buffer
 
-			// Create logger with specific level
+			// Create logger with specific level.
 			logger := New(Config{
 				Level:  test.configLevel,
 				Pretty: false,
 			})
 
-			// Override the writer for testing
+			// Override the writer for testing.
 			zl := zerolog.New(&buf).Level(test.testLevel)
 			logger.Logger = &zl
 
-			// Log at test level
+			// Log at test level.
 			switch test.testLevel {
 			case zerolog.DebugLevel:
 				logger.Debug().Msg("test")

@@ -26,13 +26,13 @@ func NewAIBattleMapGenerator(provider LLMProvider, config *AIConfig, log *logger
 	}
 }
 
-// GenerateBattleMap creates a tactical map based on location description
+// GenerateBattleMap creates a tactical map based on location description.
 func (abmg *AIBattleMapGenerator) GenerateBattleMap(ctx context.Context, req models.GenerateBattleMapRequest) (*models.BattleMap, error) {
 	if !abmg.config.Enabled {
 		return abmg.generateDefaultBattleMap(req), nil
 	}
 
-	// Determine grid size based on desired size
+	// Determine grid size based on desired size.
 	gridX, gridY := abmg.determineGridSize(req.DesiredSize)
 
 	prompt := abmg.buildBattleMapPrompt(req, gridX, gridY)
@@ -60,7 +60,7 @@ func (abmg *AIBattleMapGenerator) GenerateBattleMap(ctx context.Context, req mod
 		return abmg.generateDefaultBattleMap(req), nil
 	}
 
-	// Convert to database model
+	// Convert to database model.
 	return abmg.convertToBattleMap(generatedMap, req, gridX, gridY), nil
 }
 
@@ -196,13 +196,13 @@ func (abmg *AIBattleMapGenerator) inferMapType(description string) string {
 func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBattleMapRequest) *models.BattleMap {
 	gridX, gridY := abmg.determineGridSize(req.DesiredSize)
 
-	// Generate some basic terrain features
+	// Generate some basic terrain features.
 	var terrainFeatures []models.BattleMapTerrainFeature
 
-	// Add some walls or trees based on map type
+	// Add some walls or trees based on map type.
 	switch req.MapType {
 	case "dungeon":
-		// Add walls around the edges
+		// Add walls around the edges.
 		for x := 0; x < gridX; x++ {
 			terrainFeatures = append(terrainFeatures,
 				models.BattleMapTerrainFeature{
@@ -220,7 +220,7 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 			)
 		}
 	case "outdoor":
-		// Add some trees
+		// Add some trees.
 		for i := 0; i < 5; i++ {
 			terrainFeatures = append(terrainFeatures, models.BattleMapTerrainFeature{
 				Type:       "tree",
@@ -231,7 +231,7 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 		}
 	}
 
-	// Add some cover positions
+	// Add some cover positions.
 	coverPositions := make([]map[string]interface{}, 0, 10)
 	for i := 0; i < 3; i++ {
 		coverPositions = append(coverPositions, map[string]interface{}{
@@ -241,7 +241,7 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 		})
 	}
 
-	// Basic spawn points
+	// Basic spawn points.
 	spawnPoints := map[string][]map[string]interface{}{
 		"party": {
 			{
@@ -279,7 +279,7 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 	}
 }
 
-// GeneratedBattleMap represents the AI-generated battle map structure
+// GeneratedBattleMap represents the AI-generated battle map structure.
 type GeneratedBattleMap struct {
 	TerrainFeatures      []models.BattleMapTerrainFeature `json:"terrain_features"`
 	ObstaclePositions    []ObstaclePosition               `json:"obstacle_positions"`

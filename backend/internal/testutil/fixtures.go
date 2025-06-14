@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
-// UserFixture creates a test user
+// UserFixture creates a test user.
 func UserFixture(t *testing.T) *models.User {
 	t.Helper()
 	return &models.User{
@@ -22,7 +22,7 @@ func UserFixture(t *testing.T) *models.User {
 	}
 }
 
-// CharacterFixture creates a test character
+// CharacterFixture creates a test character.
 func CharacterFixture(t *testing.T, userID string) *models.Character {
 	t.Helper()
 	return &models.Character{
@@ -73,7 +73,7 @@ func CharacterFixture(t *testing.T, userID string) *models.Character {
 	}
 }
 
-// GameSessionFixture creates a test game session
+// GameSessionFixture creates a test game session.
 func GameSessionFixture(t *testing.T, dmID string) *models.GameSession {
 	t.Helper()
 	return &models.GameSession{
@@ -87,7 +87,7 @@ func GameSessionFixture(t *testing.T, dmID string) *models.GameSession {
 	}
 }
 
-// NPCFixture creates a test NPC
+// NPCFixture creates a test NPC.
 func NPCFixture(t *testing.T, sessionID string) *models.NPC {
 	t.Helper()
 	return &models.NPC{
@@ -130,8 +130,8 @@ func NPCFixture(t *testing.T, sessionID string) *models.NPC {
 	}
 }
 
-// CampaignFixture creates a test campaign
-// TODO: Campaign model doesn't exist yet
+// CampaignFixture creates a test campaign.
+// TODO: Campaign model doesn't exist yet.
 /*
 func CampaignFixture(t *testing.T, dmID uuid.UUID) *models.Campaign {
 	t.Helper()
@@ -161,7 +161,7 @@ func CampaignFixture(t *testing.T, dmID uuid.UUID) *models.Campaign {
 }
 */
 
-// DiceRollFixture creates a test dice roll
+// DiceRollFixture creates a test dice roll.
 func DiceRollFixture(t *testing.T, userID, sessionID uuid.UUID) *models.DiceRoll {
 	t.Helper()
 	return &models.DiceRoll{
@@ -179,7 +179,7 @@ func DiceRollFixture(t *testing.T, userID, sessionID uuid.UUID) *models.DiceRoll
 	}
 }
 
-// InventoryItemFixture creates a test inventory item
+// InventoryItemFixture creates a test inventory item.
 func InventoryItemFixture(t *testing.T, characterID string) *models.InventoryItem {
 	t.Helper()
 	return &models.InventoryItem{
@@ -209,7 +209,7 @@ func InventoryItemFixture(t *testing.T, characterID string) *models.InventoryIte
 	}
 }
 
-// EncounterFixture creates a test encounter
+// EncounterFixture creates a test encounter.
 func EncounterFixture(t *testing.T, sessionID string) *models.Encounter {
 	t.Helper()
 	return &models.Encounter{

@@ -20,9 +20,9 @@ func NewUserService(repo database.UserRepository) *UserService {
 	}
 }
 
-// Register creates a new user account
+// Register creates a new user account.
 func (s *UserService) Register(ctx context.Context, req models.RegisterRequest) (*models.User, error) {
-	// Validate input
+	// Validate input.
 	if req.Username == "" {
 		return nil, fmt.Errorf("username is required")
 	}
@@ -36,7 +36,7 @@ func (s *UserService) Register(ctx context.Context, req models.RegisterRequest) 
 		return nil, fmt.Errorf("password must be at least 8 characters long")
 	}
 
-	// Check if username already exists
+	// Check if username already exists.
 	existingUser, _ := s.repo.GetByUsername(ctx, req.Username)
 	if existingUser != nil {
 		logger.Warn().
@@ -45,7 +45,7 @@ func (s *UserService) Register(ctx context.Context, req models.RegisterRequest) 
 		return nil, fmt.Errorf("username already taken")
 	}
 
-	// Check if email already exists
+	// Check if email already exists.
 	existingUser, _ = s.repo.GetByEmail(ctx, req.Email)
 	if existingUser != nil {
 		logger.Warn().
@@ -54,13 +54,13 @@ func (s *UserService) Register(ctx context.Context, req models.RegisterRequest) 
 		return nil, fmt.Errorf("email already registered")
 	}
 
-	// Hash password
+	// Hash password.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Create user
+	// Create user.
 	user := &models.User{
 		Username:     req.Username,
 		Email:        req.Email,
@@ -84,9 +84,9 @@ func (s *UserService) Register(ctx context.Context, req models.RegisterRequest) 
 	return user, nil
 }
 
-// Login authenticates a user and returns a token
+// Login authenticates a user and returns a token.
 func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*models.AuthResponse, error) {
-	// Get user by username
+	// Get user by username.
 	user, err := s.repo.GetByUsername(ctx, req.Username)
 	if err != nil {
 		logger.Warn().
@@ -95,7 +95,7 @@ func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*mode
 		return nil, fmt.Errorf("invalid username or password")
 	}
 
-	// Verify password
+	// Verify password.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 		logger.Warn().
 			Str("username", req.Username).
@@ -109,8 +109,8 @@ func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*mode
 		Str("username", user.Username).
 		Msg("User logged in successfully")
 
-	// This should be handled by the auth handler, not here
-	// Just return the user for now
+	// This should be handled by the auth handler, not here.
+	// Just return the user for now.
 	return &models.AuthResponse{
 		AccessToken:  "", // Will be filled by auth handler
 		RefreshToken: "", // Will be filled by auth handler
@@ -120,7 +120,7 @@ func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*mode
 	}, nil
 }
 
-// GetUserByID retrieves a user by ID
+// GetUserByID retrieves a user by ID.
 func (s *UserService) GetUserByID(ctx context.Context, id string) (*models.User, error) {
 	if id == "" {
 		return nil, fmt.Errorf("user ID is required")
@@ -128,56 +128,56 @@ func (s *UserService) GetUserByID(ctx context.Context, id string) (*models.User,
 	return s.repo.GetByID(ctx, id)
 }
 
-// UpdateUser updates user information
+// UpdateUser updates user information.
 func (s *UserService) UpdateUser(ctx context.Context, user *models.User) error {
-	// Validate user ID
+	// Validate user ID.
 	if user.ID == "" {
 		return fmt.Errorf("user ID is required")
 	}
 
-	// Check if user exists
+	// Check if user exists.
 	existing, err := s.repo.GetByID(ctx, user.ID)
 	if err != nil {
 		return fmt.Errorf("user not found: %w", err)
 	}
 
-	// Preserve password hash and created at
+	// Preserve password hash and created at.
 	user.PasswordHash = existing.PasswordHash
 	user.CreatedAt = existing.CreatedAt
 
 	return s.repo.Update(ctx, user)
 }
 
-// ChangePassword updates user password
+// ChangePassword updates user password.
 func (s *UserService) ChangePassword(ctx context.Context, userID, oldPassword, newPassword string) error {
-	// Get user
+	// Get user.
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("user not found: %w", err)
 	}
 
-	// Verify old password
+	// Verify old password.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(oldPassword)); err != nil {
 		return fmt.Errorf("invalid password")
 	}
 
-	// Validate new password
+	// Validate new password.
 	if len(newPassword) < 8 {
 		return fmt.Errorf("password must be at least 8 characters long")
 	}
 
-	// Hash new password
+	// Hash new password.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Update password
+	// Update password.
 	user.PasswordHash = string(hashedPassword)
 	return s.repo.Update(ctx, user)
 }
 
-// DeleteUser deletes a user account
+// DeleteUser deletes a user account.
 func (s *UserService) DeleteUser(ctx context.Context, id string) error {
 	if id == "" {
 		return fmt.Errorf("user ID is required")
@@ -185,12 +185,12 @@ func (s *UserService) DeleteUser(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-// GetByUsername retrieves a user by username
+// GetByUsername retrieves a user by username.
 func (s *UserService) GetByUsername(ctx context.Context, username string) (*models.User, error) {
 	return s.repo.GetByUsername(ctx, username)
 }
 
-// GetByID retrieves a user by ID (alias for GetUserByID)
+// GetByID retrieves a user by ID (alias for GetUserByID).
 func (s *UserService) GetByID(ctx context.Context, id string) (*models.User, error) {
 	return s.GetUserByID(ctx, id)
 }

@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// GameStatus represents the status of a game session
+// GameStatus represents the status of a game session.
 type GameStatus string
 
 const (
@@ -62,7 +62,7 @@ type GameEvent struct {
 	Timestamp time.Time              `json:"timestamp" db:"timestamp"`
 }
 
-// GameInvite represents an invitation to join a game session
+// GameInvite represents an invitation to join a game session.
 type GameInvite struct {
 	ID           string     `json:"id" db:"id"`
 	SessionID    string     `json:"sessionId" db:"session_id"`

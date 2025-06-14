@@ -10,7 +10,7 @@ import (
 )
 
 func TestLoad(t *testing.T) {
-	// Save original env vars
+	// Save original env vars.
 	originalEnv := make(map[string]string)
 	envVars := []string{
 		"PORT", "ENV",
@@ -25,7 +25,7 @@ func TestLoad(t *testing.T) {
 		require.NoError(t, os.Unsetenv(key))
 	}
 	defer func() {
-		// Restore original env vars
+		// Restore original env vars.
 		for key, value := range originalEnv {
 			if value != "" {
 				require.NoError(t, os.Setenv(key, value))
@@ -39,7 +39,7 @@ func TestLoad(t *testing.T) {
 		cfg, err := Load()
 		require.NoError(t, err)
 
-		// Check default values
+		// Check default values.
 		assert.Equal(t, "8080", cfg.Server.Port)
 		assert.Equal(t, "development", cfg.Server.Environment)
 
@@ -69,7 +69,7 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("loads from environment variables", func(t *testing.T) {
-		// Set test env vars
+		// Set test env vars.
 		require.NoError(t, os.Setenv("PORT", "3000"))
 		require.NoError(t, os.Setenv("ENV", "production"))
 		require.NoError(t, os.Setenv("DB_HOST", "test-host"))
@@ -125,7 +125,7 @@ func TestLoad(t *testing.T) {
 
 		cfg, err := Load()
 		require.NoError(t, err)
-		// Should fall back to default
+		// Should fall back to default.
 		assert.Equal(t, 5432, cfg.Database.Port)
 	})
 
@@ -134,7 +134,7 @@ func TestLoad(t *testing.T) {
 
 		cfg, err := Load()
 		require.NoError(t, err)
-		// Should fall back to default
+		// Should fall back to default.
 		assert.Equal(t, 15*time.Minute, cfg.Auth.AccessTokenDuration)
 	})
 }

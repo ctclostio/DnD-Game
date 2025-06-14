@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 )
 
-// Enhanced context keys
+// Enhanced context keys.
 const (
 	SessionIDKey   contextKey = "session_id"
 	CharacterIDKey contextKey = "character_id"
@@ -22,13 +22,13 @@ const (
 	MethodKey      contextKey = "method"
 )
 
-// LoggerV2 is an enhanced logger with additional features
+// LoggerV2 is an enhanced logger with additional features.
 type LoggerV2 struct {
 	*zerolog.Logger
 	config ConfigV2
 }
 
-// ConfigV2 holds enhanced logger configuration
+// ConfigV2 holds enhanced logger configuration.
 type ConfigV2 struct {
 	Level        string  // Log level: debug, info, warn, error, fatal
 	Pretty       bool    // Pretty print for development
@@ -46,10 +46,10 @@ type ConfigV2 struct {
 	Fields       Fields  // Default fields to include in all logs
 }
 
-// Fields represents default fields
+// Fields represents default fields.
 type Fields map[string]interface{}
 
-// DefaultConfig returns a default configuration
+// DefaultConfig returns a default configuration.
 func DefaultConfig() ConfigV2 {
 	return ConfigV2{
 		Level:        "info",
@@ -64,26 +64,26 @@ func DefaultConfig() ConfigV2 {
 	}
 }
 
-// NewV2 creates a new enhanced logger
+// NewV2 creates a new enhanced logger.
 func NewV2(cfg ConfigV2) (*LoggerV2, error) {
-	// Parse log level
+	// Parse log level.
 	level, err := zerolog.ParseLevel(cfg.Level)
 	if err != nil {
 		level = zerolog.InfoLevel
 	}
 	zerolog.SetGlobalLevel(level)
 
-	// Configure time format
+	// Configure time format.
 	if cfg.TimeFormat != "" {
 		zerolog.TimeFieldFormat = cfg.TimeFormat
 	}
 
-	// Enable stack trace marshaling
+	// Enable stack trace marshaling.
 	if cfg.StackTrace {
 		zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 	}
 
-	// Configure output
+	// Configure output.
 	var output io.Writer
 	switch cfg.Output {
 	case "stdout":
@@ -91,12 +91,12 @@ func NewV2(cfg ConfigV2) (*LoggerV2, error) {
 	case "stderr":
 		output = os.Stderr
 	default:
-		// File output with rotation would require additional setup
-		// For now, fallback to stdout
+		// File output with rotation would require additional setup.
+		// For now, fallback to stdout.
 		output = os.Stdout
 	}
 
-	// Create logger with pretty printing if needed
+	// Create logger with pretty printing if needed.
 	var zl zerolog.Logger
 	if cfg.Pretty {
 		output = zerolog.ConsoleWriter{
@@ -111,10 +111,10 @@ func NewV2(cfg ConfigV2) (*LoggerV2, error) {
 		}
 	}
 
-	// Create base logger
+	// Create base logger.
 	zl = zerolog.New(output).With().Timestamp().Logger()
 
-	// Add default fields
+	// Add default fields.
 	if cfg.ServiceName != "" {
 		zl = zl.With().Str("service", cfg.ServiceName).Logger()
 	}
@@ -122,22 +122,22 @@ func NewV2(cfg ConfigV2) (*LoggerV2, error) {
 		zl = zl.With().Str("env", cfg.Environment).Logger()
 	}
 
-	// Add hostname
+	// Add hostname.
 	if hostname, err := os.Hostname(); err == nil {
 		zl = zl.With().Str("hostname", hostname).Logger()
 	}
 
-	// Add custom default fields
+	// Add custom default fields.
 	for k, v := range cfg.Fields {
 		zl = zl.With().Interface(k, v).Logger()
 	}
 
-	// Add caller info if enabled
+	// Add caller info if enabled.
 	if cfg.CallerInfo {
 		zl = zl.With().CallerWithSkipFrameCount(3).Logger()
 	}
 
-	// Configure sampling for debug logs
+	// Configure sampling for debug logs.
 	if cfg.SamplingRate < 1.0 && level == zerolog.DebugLevel {
 		sampled := zl.Sample(&zerolog.BasicSampler{N: uint32(1.0 / cfg.SamplingRate)})
 		zl = sampled
@@ -149,11 +149,11 @@ func NewV2(cfg ConfigV2) (*LoggerV2, error) {
 	}, nil
 }
 
-// WithContext enriches the logger with context values
+// WithContext enriches the logger with context values.
 func (l *LoggerV2) WithContext(ctx context.Context) *LoggerV2 {
 	zl := l.With()
 
-	// Add all context values
+	// Add all context values.
 	contextKeys := []struct {
 		key  contextKey
 		name string
@@ -177,7 +177,7 @@ func (l *LoggerV2) WithContext(ctx context.Context) *LoggerV2 {
 	return &LoggerV2{Logger: &logger, config: l.config}
 }
 
-// WithOperation adds operation context
+// WithOperation adds operation context.
 func (l *LoggerV2) WithOperation(service, method string) *LoggerV2 {
 	logger := l.With().
 		Str("service", service).
@@ -186,7 +186,7 @@ func (l *LoggerV2) WithOperation(service, method string) *LoggerV2 {
 	return &LoggerV2{Logger: &logger, config: l.config}
 }
 
-// WithGameContext adds game-specific context
+// WithGameContext adds game-specific context.
 func (l *LoggerV2) WithGameContext(sessionID, characterID string) *LoggerV2 {
 	zl := l.With()
 	if sessionID != "" {
@@ -199,7 +199,7 @@ func (l *LoggerV2) WithGameContext(sessionID, characterID string) *LoggerV2 {
 	return &LoggerV2{Logger: &logger, config: l.config}
 }
 
-// LogHTTPRequest logs HTTP request details
+// LogHTTPRequest logs HTTP request details.
 func (l *LoggerV2) LogHTTPRequest(method, path string, statusCode int, duration time.Duration, fields ...map[string]interface{}) {
 	event := l.Info().
 		Str("method", method).
@@ -207,14 +207,14 @@ func (l *LoggerV2) LogHTTPRequest(method, path string, statusCode int, duration 
 		Int("status", statusCode).
 		Dur("duration", duration)
 
-	// Add additional fields if provided
+	// Add additional fields if provided.
 	if len(fields) > 0 {
 		for k, v := range fields[0] {
 			event = event.Interface(k, v)
 		}
 	}
 
-	// Log with appropriate level based on status code
+	// Log with appropriate level based on status code.
 	switch {
 	case statusCode >= 500:
 		event.Msg("HTTP request failed")
@@ -227,7 +227,7 @@ func (l *LoggerV2) LogHTTPRequest(method, path string, statusCode int, duration 
 	}
 }
 
-// LogDatabaseQuery logs database query details
+// LogDatabaseQuery logs database query details.
 func (l *LoggerV2) LogDatabaseQuery(query string, duration time.Duration, err error, args ...interface{}) {
 	event := l.Debug().
 		Str("query", truncateQuery(query)).
@@ -241,7 +241,7 @@ func (l *LoggerV2) LogDatabaseQuery(query string, duration time.Duration, err er
 	}
 }
 
-// LogAIOperation logs AI operation details
+// LogAIOperation logs AI operation details.
 func (l *LoggerV2) LogAIOperation(operation string, provider string, duration time.Duration, tokens int, err error) {
 	event := l.Info().
 		Str("operation", operation).
@@ -256,7 +256,7 @@ func (l *LoggerV2) LogAIOperation(operation string, provider string, duration ti
 	}
 }
 
-// LogWebSocketEvent logs WebSocket events
+// LogWebSocketEvent logs WebSocket events.
 func (l *LoggerV2) LogWebSocketEvent(eventType string, clientID string, data interface{}) {
 	l.Debug().
 		Str("event_type", eventType).
@@ -265,7 +265,7 @@ func (l *LoggerV2) LogWebSocketEvent(eventType string, clientID string, data int
 		Msg("WebSocket event")
 }
 
-// LogGameEvent logs game-specific events
+// LogGameEvent logs game-specific events.
 func (l *LoggerV2) LogGameEvent(eventType string, sessionID string, details map[string]interface{}) {
 	event := l.Info().
 		Str("event_type", eventType).
@@ -278,9 +278,8 @@ func (l *LoggerV2) LogGameEvent(eventType string, sessionID string, details map[
 	event.Msg("Game event occurred")
 }
 
-// Helper functions
-
-// truncateQuery truncates long queries for logging
+// Helper functions.
+// truncateQuery truncates long queries for logging.
 func truncateQuery(query string) string {
 	const maxLength = 200
 	query = strings.TrimSpace(query)
@@ -294,7 +293,7 @@ func truncateQuery(query string) string {
 	return query
 }
 
-// GetCaller returns the caller information
+// GetCaller returns the caller information.
 func GetCaller(skip int) string {
 	_, file, line, ok := runtime.Caller(skip)
 	if !ok {
@@ -303,22 +302,22 @@ func GetCaller(skip int) string {
 	return fmt.Sprintf("%s:%d", filepath.Base(file), line)
 }
 
-// ContextWithUserID adds user ID to context
+// ContextWithUserID adds user ID to context.
 func ContextWithUserID(ctx context.Context, userID string) context.Context {
 	return context.WithValue(ctx, UserIDKey, userID)
 }
 
-// ContextWithSessionID adds session ID to context
+// ContextWithSessionID adds session ID to context.
 func ContextWithSessionID(ctx context.Context, sessionID string) context.Context {
 	return context.WithValue(ctx, SessionIDKey, sessionID)
 }
 
-// ContextWithCharacterID adds character ID to context
+// ContextWithCharacterID adds character ID to context.
 func ContextWithCharacterID(ctx context.Context, characterID string) context.Context {
 	return context.WithValue(ctx, CharacterIDKey, characterID)
 }
 
-// GetRequestIDFromContext retrieves request ID from context
+// GetRequestIDFromContext retrieves request ID from context.
 func GetRequestIDFromContext(ctx context.Context) string {
 	if id, ok := ctx.Value(RequestIDKey).(string); ok {
 		return id
@@ -326,7 +325,7 @@ func GetRequestIDFromContext(ctx context.Context) string {
 	return ""
 }
 
-// GetUserIDFromContext retrieves user ID from context
+// GetUserIDFromContext retrieves user ID from context.
 func GetUserIDFromContext(ctx context.Context) string {
 	if id, ok := ctx.Value(UserIDKey).(string); ok {
 		return id

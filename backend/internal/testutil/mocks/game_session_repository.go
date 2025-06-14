@@ -1,12 +1,12 @@
 package mocks
 
 import (
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// MockGameSessionRepository is a mock implementation of GameSessionRepository
+// MockGameSessionRepository is a mock implementation of GameSessionRepository.
 type MockGameSessionRepository struct {
 	mock.Mock
 }

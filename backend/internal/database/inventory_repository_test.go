@@ -150,15 +150,15 @@ func TestInventoryRepository_AddItemToInventory(t *testing.T) {
 		itemID := "item-456"
 		quantity := 1
 
-		// Expect the insert/update query
+		// Expect the insert/update query.
 		mock.ExpectExec(
 			`INSERT INTO character_inventory \(id, character_id, item_id, quantity, created_at, updated_at\)`,
 		).WithArgs(
 			sqlmock.AnyArg(), characterID, itemID, quantity, sqlmock.AnyArg(), sqlmock.AnyArg(),
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
-		// Expect the weight update query from updateCharacterWeight
-		// Need to match the full query including WHERE clause
+		// Expect the weight update query from updateCharacterWeight.
+		// Need to match the full query including WHERE clause.
 		mock.ExpectExec(
 			`UPDATE characters SET current_weight = \(\s*SELECT COALESCE\(SUM\(i\.weight \* ci\.quantity\), 0\)\s*FROM character_inventory ci\s*JOIN items i ON ci\.item_id = i\.id\s*WHERE ci\.character_id = \?\s*\)\s*WHERE id = \?`,
 		).WithArgs(characterID, characterID).WillReturnResult(sqlmock.NewResult(0, 1))
@@ -181,7 +181,7 @@ func TestInventoryRepository_GetCharacterInventory(t *testing.T) {
 	t.Run("get character inventory with items", func(t *testing.T) {
 		characterID := "char-123"
 
-		// Mock the query that joins character_inventory with items
+		// Mock the query that joins character_inventory with items.
 		rows := sqlmock.NewRows([]string{
 			"id", "character_id", "item_id", "quantity", "equipped", "attuned",
 			"custom_properties", "notes", "created_at", "updated_at",
@@ -255,7 +255,7 @@ func TestInventoryRepository_GetCharacterCurrency(t *testing.T) {
 			WithArgs(characterID).
 			WillReturnError(sql.ErrNoRows)
 
-		// Expect insert of default currency
+		// Expect insert of default currency.
 		mock.ExpectExec(`INSERT INTO character_currency`).
 			WithArgs(characterID, 0, 0, 0, 0, 0, sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))

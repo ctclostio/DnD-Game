@@ -1,14 +1,14 @@
 package constants
 
-// Database query fragments
+// Database query fragments.
 const (
-	// Common JSON values
+	// Common JSON values.
 	EmptyJSON = "{}"
-	
-	// Query fragments
+
+	// Query fragments.
 	AndGameSessionIDClause = " AND game_session_id = ?"
 	AndCharacterIDClause   = " AND character_id = ?"
-	
-	// Status values
+
+	// Status values.
 	StatusActive = "active"
 )

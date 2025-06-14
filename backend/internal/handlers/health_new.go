@@ -9,7 +9,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/health"
 )
 
-// HealthResponse represents the health check response
+// HealthResponse represents the health check response.
 type HealthResponse struct {
 	Status    string                       `json:"status"`
 	Timestamp string                       `json:"timestamp"`
@@ -19,19 +19,19 @@ type HealthResponse struct {
 	Checks    map[string]HealthCheckResult `json:"checks,omitempty"`
 }
 
-// HealthCheckResult represents an individual component health check
+// HealthCheckResult represents an individual component health check.
 type HealthCheckResult struct {
 	Status  string `json:"status"`
 	Message string `json:"message,omitempty"`
 }
 
-// DetailedHealthResponse includes system metrics
+// DetailedHealthResponse includes system metrics.
 type DetailedHealthResponse struct {
 	HealthResponse
 	System SystemInfo `json:"system"`
 }
 
-// SystemInfo contains system metrics
+// SystemInfo contains system metrics.
 type SystemInfo struct {
 	GoVersion    string `json:"go_version"`
 	NumGoroutine int    `json:"num_goroutine"`
@@ -39,7 +39,7 @@ type SystemInfo struct {
 	Memory       Memory `json:"memory"`
 }
 
-// Memory contains memory usage information
+// Memory contains memory usage information.
 type Memory struct {
 	Alloc      uint64 `json:"alloc_mb"`
 	TotalAlloc uint64 `json:"total_alloc_mb"`
@@ -49,14 +49,14 @@ type Memory struct {
 
 var startTime = time.Now()
 
-// Health is a simple health check endpoint
-// @Summary Basic health check
-// @Description Check if the service is running
-// @Tags health
-// @Accept json
-// @Produce json
-// @Success 200 {object} HealthResponse "Service is healthy"
-// @Router /health [get]
+// Health is a simple health check endpoint.
+// @Summary Basic health check.
+// @Description Check if the service is running.
+// @Tags health.
+// @Accept json.
+// @Produce json.
+// @Success 200 {object} HealthResponse "Service is healthy".
+// @Router /health [get].
 func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
 	response := HealthResponse{
 		Status:    "healthy",
@@ -73,17 +73,17 @@ func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// LivenessProbe is used by orchestrators to check if the service should be restarted
-// @Summary Liveness probe
-// @Description Check if the service is alive and should not be restarted
-// @Tags health
-// @Accept json
-// @Produce json
-// @Success 200 {object} map[string]string "Service is alive"
-// @Failure 503 {object} map[string]string "Service is not alive"
-// @Router /health/live [get]
+// LivenessProbe is used by orchestrators to check if the service should be restarted.
+// @Summary Liveness probe.
+// @Description Check if the service is alive and should not be restarted.
+// @Tags health.
+// @Accept json.
+// @Produce json.
+// @Success 200 {object} map[string]string "Service is alive".
+// @Failure 503 {object} map[string]string "Service is not alive".
+// @Router /health/live [get].
 func (h *Handlers) LivenessProbe(w http.ResponseWriter, r *http.Request) {
-	// Basic liveness check - if we can respond, we're alive
+	// Basic liveness check - if we can respond, we're alive.
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]string{
 		"status":    "alive",
@@ -94,20 +94,20 @@ func (h *Handlers) LivenessProbe(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ReadinessProbe checks if the service is ready to accept traffic
-// @Summary Readiness probe
-// @Description Check if the service is ready to accept traffic
-// @Tags health
-// @Accept json
-// @Produce json
-// @Success 200 {object} HealthResponse "Service is ready"
-// @Failure 503 {object} HealthResponse "Service is not ready"
-// @Router /health/ready [get]
+// ReadinessProbe checks if the service is ready to accept traffic.
+// @Summary Readiness probe.
+// @Description Check if the service is ready to accept traffic.
+// @Tags health.
+// @Accept json.
+// @Produce json.
+// @Success 200 {object} HealthResponse "Service is ready".
+// @Failure 503 {object} HealthResponse "Service is not ready".
+// @Router /health/ready [get].
 func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 	checks := make(map[string]HealthCheckResult)
 	allHealthy := true
 
-	// Dependency checks
+	// Dependency checks.
 	results := health.RunChecks(r.Context(), &health.DBChecker{DB: h.db})
 	for name, res := range results {
 		checks[name] = HealthCheckResult{Status: res.Status, Message: res.Message}
@@ -116,7 +116,7 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Check if we have required services
+	// Check if we have required services.
 	if h.userService == nil || h.characterService == nil {
 		checks["services"] = HealthCheckResult{
 			Status:  "unhealthy",
@@ -129,7 +129,7 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Check JWT manager
+	// Check JWT manager.
 	if h.jwtManager == nil {
 		checks["auth"] = HealthCheckResult{
 			Status:  "unhealthy",
@@ -163,34 +163,34 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// DetailedHealth provides detailed health information including system metrics
-// @Summary Detailed health check
-// @Description Get detailed health information including system metrics
-// @Tags health
-// @Accept json
-// @Produce json
-// @Security Bearer
-// @Success 200 {object} DetailedHealthResponse "Detailed health information"
-// @Failure 401 {object} map[string]string "Unauthorized"
-// @Router /health/detailed [get]
+// DetailedHealth provides detailed health information including system metrics.
+// @Summary Detailed health check.
+// @Description Get detailed health information including system metrics.
+// @Tags health.
+// @Accept json.
+// @Produce json.
+// @Security Bearer.
+// @Success 200 {object} DetailedHealthResponse "Detailed health information".
+// @Failure 401 {object} map[string]string "Unauthorized".
+// @Router /health/detailed [get].
 func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
-	// Get basic health info
+	// Get basic health info.
 	checks := make(map[string]HealthCheckResult)
 
-	// Check database if available
+	// Check database if available.
 	dbResults := health.RunChecks(r.Context(), &health.DBChecker{DB: h.db})
 	if res, ok := dbResults["database"]; ok {
 		checks["database"] = HealthCheckResult{Status: res.Status, Message: res.Message}
 	}
 
-	// Check services
+	// Check services.
 	if h.userService != nil && h.characterService != nil {
 		checks["services"] = HealthCheckResult{
 			Status: "healthy",
 		}
 	}
 
-	// Get memory stats
+	// Get memory stats.
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
@@ -223,7 +223,7 @@ func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Standalone HealthCheckV2 function for backward compatibility
+// Standalone HealthCheckV2 function for backward compatibility.
 func HealthCheckV2(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]string{

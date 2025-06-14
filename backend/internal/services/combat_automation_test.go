@@ -17,7 +17,7 @@ import (
 
 // Using MockCombatAnalyticsRepository from combat_analytics_test.go
 
-// Test helpers
+// Test helpers.
 func createTestCombatAutomationService() (*CombatAutomationService, *MockCombatAnalyticsRepository, *mocks.MockCharacterRepository, *mocks.MockNPCRepository) {
 	mockCombatRepo := new(MockCombatAnalyticsRepository)
 	mockCharRepo := new(mocks.MockCharacterRepository)
@@ -50,8 +50,7 @@ func createTestCharacters(count int, level int) []*models.Character {
 	return chars
 }
 
-// Tests
-
+// Tests.
 func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 	sessionID := uuid.New()
 	characters := createTestCharacters(4, 5)
@@ -86,7 +85,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 				assert.True(t, result.ExperienceAwarded > 0)
 				assert.NotEmpty(t, result.NarrativeSummary)
 
-				// Check that resources were used
+				// Check that resources were used.
 				var resources map[string]interface{}
 				err := json.Unmarshal([]byte(result.PartyResourcesUsed), &resources)
 				assert.NoError(t, err)
@@ -214,10 +213,10 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 			expectError: false,
 			validateResult: func(t *testing.T, entries []models.InitiativeEntry) {
 				assert.Len(t, entries, 2)
-				// Check that entries are sorted (highest first)
+				// Check that entries are sorted (highest first).
 				assert.GreaterOrEqual(t, entries[0].Initiative, entries[1].Initiative)
 
-				// Bonuses should be 2 and 1 in any order
+				// Bonuses should be 2 and 1 in any order.
 				bonuses := []int{entries[0].Bonus, entries[1].Bonus}
 				sort.Ints(bonuses)
 				assert.Equal(t, []int{1, 2}, bonuses)
@@ -247,7 +246,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 			expectError: false,
 			validateResult: func(t *testing.T, entries []models.InitiativeEntry) {
 				assert.Len(t, entries, 1)
-				// Base 4 + Alert 5 + Bonus 2 = 11
+				// Base 4 + Alert 5 + Bonus 2 = 11.
 				assert.Equal(t, 11, entries[0].Bonus)
 			},
 		},
@@ -273,7 +272,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 			expectError: false,
 			validateResult: func(t *testing.T, entries []models.InitiativeEntry) {
 				assert.Len(t, entries, 1)
-				// Just check that it doesn't error with advantage
+				// Just check that it doesn't error with advantage.
 				assert.True(t, entries[0].Initiative >= entries[0].Bonus)
 			},
 		},
@@ -300,7 +299,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 			expectError: false,
 			validateResult: func(t *testing.T, entries []models.InitiativeEntry) {
 				assert.Len(t, entries, 1)
-				// Priority should boost initiative significantly
+				// Priority should boost initiative significantly.
 				assert.Greater(t, entries[0].Initiative, 100)
 			},
 		},
@@ -330,20 +329,20 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 				},
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
-				// First combatant has no special rules
+				// First combatant has no special rules.
 				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(nil, nil).Once()
 
-				// Second combatant has alert feat
+				// Second combatant has alert feat.
 				rule := &models.SmartInitiativeRule{AlertFeat: true}
 				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(rule, nil).Once()
 
-				// Third combatant has no special rules
+				// Third combatant has no special rules.
 				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(nil, nil).Once()
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, entries []models.InitiativeEntry) {
 				assert.Len(t, entries, 3)
-				// Should be sorted by initiative
+				// Should be sorted by initiative.
 				for i := 0; i < len(entries)-1; i++ {
 					assert.GreaterOrEqual(t, entries[i].Initiative, entries[i+1].Initiative)
 				}
@@ -489,8 +488,7 @@ func TestCombatAutomationService_GetAutoResolutionsBySession(t *testing.T) {
 	mockCombatRepo.AssertExpectations(t)
 }
 
-// Helper method tests
-
+// Helper method tests.
 func TestCombatAutomationService_CalculateAveragePartyLevel(t *testing.T) {
 	service, _, _, _ := createTestCombatAutomationService()
 
@@ -609,8 +607,7 @@ func TestCombatAutomationService_CalculateEncounterCR(t *testing.T) {
 	}
 }
 
-// Benchmark tests
-
+// Benchmark tests.
 func BenchmarkCombatAutomationService_AutoResolveCombat(b *testing.B) {
 	service, mockCombatRepo, _, _ := createTestCombatAutomationService()
 	sessionID := uuid.New()
@@ -638,7 +635,7 @@ func BenchmarkCombatAutomationService_SmartInitiative(b *testing.B) {
 	service, mockCombatRepo, _, _ := createTestCombatAutomationService()
 	sessionID := uuid.New()
 
-	// Setup mocks to return quickly
+	// Setup mocks to return quickly.
 	mockCombatRepo.On("GetInitiativeRule", sessionID, mock.Anything).Return(nil, nil)
 
 	request := models.SmartInitiativeRequest{

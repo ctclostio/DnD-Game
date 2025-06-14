@@ -6,57 +6,56 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// DMAssistantRepository defines the interface for DM Assistant database operations
+// DMAssistantRepository defines the interface for DM Assistant database operations.
 type DMAssistantRepository interface {
-	// NPC operations
+	// NPC operations.
 	SaveNPC(ctx context.Context, npc *models.AINPC) error
 	GetNPCByID(ctx context.Context, id uuid.UUID) (*models.AINPC, error)
 	GetNPCsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AINPC, error)
 	UpdateNPC(ctx context.Context, npc *models.AINPC) error
 	AddNPCDialogue(ctx context.Context, npcID uuid.UUID, dialogue models.DialogueEntry) error
 
-	// Location operations
+	// Location operations.
 	SaveLocation(ctx context.Context, location *models.AILocation) error
 	GetLocationByID(ctx context.Context, id uuid.UUID) (*models.AILocation, error)
 	GetLocationsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AILocation, error)
 	UpdateLocation(ctx context.Context, location *models.AILocation) error
 
-	// Narration operations
+	// Narration operations.
 	SaveNarration(ctx context.Context, narration *models.AINarration) error
 	GetNarrationsByType(ctx context.Context, sessionID uuid.UUID, narrationType string) ([]*models.AINarration, error)
 
-	// Story element operations
+	// Story element operations.
 	SaveStoryElement(ctx context.Context, element *models.AIStoryElement) error
 	GetUnusedStoryElements(ctx context.Context, sessionID uuid.UUID) ([]*models.AIStoryElement, error)
 	MarkStoryElementUsed(ctx context.Context, elementID uuid.UUID) error
 
-	// Environmental hazard operations
+	// Environmental hazard operations.
 	SaveEnvironmentalHazard(ctx context.Context, hazard *models.AIEnvironmentalHazard) error
 	GetActiveHazardsByLocation(ctx context.Context, locationID uuid.UUID) ([]*models.AIEnvironmentalHazard, error)
 	TriggerHazard(ctx context.Context, hazardID uuid.UUID) error
 
-	// History operations
+	// History operations.
 	SaveHistory(ctx context.Context, history *models.DMAssistantHistory) error
 	GetHistoryBySession(ctx context.Context, sessionID uuid.UUID, limit int) ([]*models.DMAssistantHistory, error)
 }
 
-// dmAssistantRepository implements DMAssistantRepository
+// dmAssistantRepository implements DMAssistantRepository.
 type dmAssistantRepository struct {
 	db *sqlx.DB
 }
 
-// NewDMAssistantRepository creates a new DM assistant repository
+// NewDMAssistantRepository creates a new DM assistant repository.
 func NewDMAssistantRepository(db *sqlx.DB) DMAssistantRepository {
 	return &dmAssistantRepository{db: db}
 }
 
-// NPC operations
-
+// NPC operations.
 func (r *dmAssistantRepository) SaveNPC(ctx context.Context, npc *models.AINPC) error {
 	personalityJSON, err := json.Marshal(npc.PersonalityTraits)
 	if err != nil {
@@ -126,7 +125,7 @@ func (r *dmAssistantRepository) GetNPCByID(ctx context.Context, id uuid.UUID) (*
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	if err := json.Unmarshal(personalityJSON, &npc.PersonalityTraits); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal personality traits: %w", err)
 	}
@@ -205,21 +204,20 @@ func (r *dmAssistantRepository) UpdateNPC(ctx context.Context, npc *models.AINPC
 }
 
 func (r *dmAssistantRepository) AddNPCDialogue(ctx context.Context, npcID uuid.UUID, dialogue models.DialogueEntry) error {
-	// First get existing dialogue
+	// First get existing dialogue.
 	npc, err := r.GetNPCByID(ctx, npcID)
 	if err != nil {
 		return err
 	}
 
-	// Add new dialogue entry
+	// Add new dialogue entry.
 	npc.GeneratedDialogue = append(npc.GeneratedDialogue, dialogue)
 
-	// Update the NPC
+	// Update the NPC.
 	return r.UpdateNPC(ctx, npc)
 }
 
-// Location operations
-
+// Location operations.
 func (r *dmAssistantRepository) SaveLocation(ctx context.Context, location *models.AILocation) error {
 	featuresJSON, _ := json.Marshal(location.NotableFeatures)
 	npcsJSON, _ := json.Marshal(location.NPCsPresent)
@@ -279,7 +277,7 @@ func (r *dmAssistantRepository) GetLocationByID(ctx context.Context, id uuid.UUI
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	_ = json.Unmarshal(featuresJSON, &location.NotableFeatures)
 	_ = json.Unmarshal(npcsJSON, &location.NPCsPresent)
 	_ = json.Unmarshal(actionsJSON, &location.AvailableActions)
@@ -610,8 +608,7 @@ func (r *dmAssistantRepository) GetHistoryBySession(ctx context.Context, session
 	return history, rows.Err()
 }
 
-// Helper scan functions
-
+// Helper scan functions.
 func (r *dmAssistantRepository) scanNPC(rows *sql.Rows) (*models.AINPC, error) {
 	var npc models.AINPC
 	var personalityJSON, statBlockJSON, dialogueJSON []byte

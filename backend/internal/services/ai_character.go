@@ -40,17 +40,17 @@ func (s *AICharacterService) GenerateCustomCharacter(req CustomCharacterRequest)
 		return nil, fmt.Errorf("AI character generation is not enabled")
 	}
 
-	// Build the prompt
+	// Build the prompt.
 	prompt := s.buildCharacterPrompt(req)
 	systemPrompt := "You are a D&D character creation assistant. Create balanced, interesting characters that follow game rules. Your response must be valid JSON matching the specified format."
 
-	// Call AI API
+	// Call AI API.
 	response, err := s.llmProvider.GenerateCompletion(context.Background(), prompt, systemPrompt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate character: %w", err)
 	}
 
-	// Parse AI response into character
+	// Parse AI response into character.
 	character, err := s.parseAIResponse(response, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse AI response: %w", err)
@@ -61,7 +61,7 @@ func (s *AICharacterService) GenerateCustomCharacter(req CustomCharacterRequest)
 
 func (s *AICharacterService) ValidateCustomContent(character *models.Character) error {
 	if !s.IsEnabled() {
-		// Skip validation if AI is not enabled
+		// Skip validation if AI is not enabled.
 		return nil
 	}
 
@@ -89,7 +89,7 @@ Is this character balanced for play? If not, suggest adjustments. Respond with J
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
-	// Parse validation response
+	// Parse validation response.
 	var validation struct {
 		Balanced    bool     `json:"balanced"`
 		Issues      []string `json:"issues"`
@@ -97,7 +97,7 @@ Is this character balanced for play? If not, suggest adjustments. Respond with J
 	}
 
 	if err := json.Unmarshal([]byte(response), &validation); err != nil {
-		// If parsing fails, assume it's balanced
+		// If parsing fails, assume it's balanced.
 		return nil
 	}
 
@@ -199,7 +199,7 @@ Respond with a JSON object in this format:
 }
 
 func (s *AICharacterService) parseAIResponse(aiResponse string, req CustomCharacterRequest) (*models.Character, error) {
-	// Try to extract JSON from the response
+	// Try to extract JSON from the response.
 	startIdx := strings.Index(aiResponse, "{")
 	endIdx := strings.LastIndex(aiResponse, "}")
 
@@ -238,7 +238,7 @@ func (s *AICharacterService) parseAIResponse(aiResponse string, req CustomCharac
 		return nil, err
 	}
 
-	// Build the character model
+	// Build the character model.
 	character := &models.Character{
 		Name:          req.Name,
 		Race:          aiChar.Race,
@@ -260,19 +260,19 @@ func (s *AICharacterService) parseAIResponse(aiResponse string, req CustomCharac
 		character.Level = 1
 	}
 
-	// Calculate derived stats
+	// Calculate derived stats.
 	character.ProficiencyBonus = ((character.Level - 1) / 4) + 2
 	character.Initiative = s.calculateModifier(character.Attributes.Dexterity)
 
-	// Calculate HP
+	// Calculate HP.
 	hitDiceValue := s.getHitDiceValue(aiChar.HitDice)
 	character.MaxHitPoints = hitDiceValue + s.calculateModifier(character.Attributes.Constitution)
 	character.HitPoints = character.MaxHitPoints
 
-	// Calculate saving throws
+	// Calculate saving throws.
 	character.SavingThrows = s.calculateSavingThrows(character)
 
-	// Store personality and backstory in resources
+	// Store personality and backstory in resources.
 	character.Resources = map[string]interface{}{
 		"personality": aiChar.Personality,
 		"backstory":   aiChar.Backstory,
@@ -301,8 +301,8 @@ func (s *AICharacterService) getHitDiceValue(hitDice string) int {
 }
 
 func (s *AICharacterService) calculateSavingThrows(character *models.Character) models.SavingThrows {
-	// Basic saving throws without class proficiencies
-	// In a full implementation, this would check class data
+	// Basic saving throws without class proficiencies.
+	// In a full implementation, this would check class data.
 	return models.SavingThrows{
 		Strength: models.SavingThrow{
 			Modifier:    s.calculateModifier(character.Attributes.Strength),
@@ -331,9 +331,9 @@ func (s *AICharacterService) calculateSavingThrows(character *models.Character) 
 	}
 }
 
-// GenerateFallbackCharacter creates a character without AI when the service is disabled
+// GenerateFallbackCharacter creates a character without AI when the service is disabled.
 func (s *AICharacterService) GenerateFallbackCharacter(req CustomCharacterRequest) (*models.Character, error) {
-	// Create a basic character based on the concept
+	// Create a basic character based on the concept.
 	character := &models.Character{
 		Name:       req.Name,
 		Race:       "Custom",
@@ -367,7 +367,7 @@ func (s *AICharacterService) GenerateFallbackCharacter(req CustomCharacterReques
 		},
 	}
 
-	// Override with provided values
+	// Override with provided values.
 	if req.Race != "" {
 		character.Race = req.Race
 	}
@@ -381,7 +381,7 @@ func (s *AICharacterService) GenerateFallbackCharacter(req CustomCharacterReques
 		character.Level = req.Level
 	}
 
-	// Calculate derived stats
+	// Calculate derived stats.
 	character.ProficiencyBonus = ((character.Level - 1) / 4) + 2
 	character.Initiative = s.calculateModifier(character.Attributes.Dexterity)
 	character.MaxHitPoints = 8 + s.calculateModifier(character.Attributes.Constitution)

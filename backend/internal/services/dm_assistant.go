@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/google/uuid"
 )
 
-// DMAssistantService handles DM assistance operations
+// DMAssistantService handles DM assistance operations.
 type DMAssistantService struct {
 	repo        database.DMAssistantRepository
 	aiAssistant AIDMAssistantInterface
 }
 
-// NewDMAssistantService creates a new DM assistant service
+// NewDMAssistantService creates a new DM assistant service.
 func NewDMAssistantService(repo database.DMAssistantRepository, aiAssistant AIDMAssistantInterface) *DMAssistantService {
 	return &DMAssistantService{
 		repo:        repo,
@@ -25,14 +25,14 @@ func NewDMAssistantService(repo database.DMAssistantRepository, aiAssistant AIDM
 	}
 }
 
-// ProcessRequest handles a DM assistant request
+// ProcessRequest handles a DM assistant request.
 func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUID, req models.DMAssistantRequest) (interface{}, error) {
 	gameSessionID, err := uuid.Parse(req.GameSessionID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid game session ID: %w", err)
 	}
 
-	// Record the request
+	// Record the request.
 	historyEntry := &models.DMAssistantHistory{
 		ID:             uuid.New(),
 		GameSessionID:  gameSessionID,
@@ -76,7 +76,7 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 		location.GameSessionID = gameSessionID
 		location.CreatedBy = userID
 
-		// Save to database
+		// Save to database.
 		if err := s.repo.SaveLocation(ctx, location); err != nil {
 			return nil, fmt.Errorf("failed to save location: %w", err)
 		}
@@ -93,7 +93,7 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 			return nil, err
 		}
 
-		// Save narration for reuse
+		// Save narration for reuse.
 		narrationEntry := &models.AINarration{
 			ID:            uuid.New(),
 			GameSessionID: gameSessionID,
@@ -159,58 +159,57 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 		return nil, fmt.Errorf("unknown request type: %s", req.Type)
 	}
 
-	// Save history
+	// Save history.
 	historyEntry.Prompt = prompt
 	if err := s.repo.SaveHistory(ctx, historyEntry); err != nil {
-		// Log error but don't fail the request
+		// Log error but don't fail the request.
 		logger.WithContext(ctx).WithError(err).Error().Msg("Failed to save history")
 	}
 
 	return result, nil
 }
 
-// GetNPCByID retrieves an NPC by ID
+// GetNPCByID retrieves an NPC by ID.
 func (s *DMAssistantService) GetNPCByID(ctx context.Context, npcID uuid.UUID) (*models.AINPC, error) {
 	return s.repo.GetNPCByID(ctx, npcID)
 }
 
-// GetNPCsBySession retrieves all NPCs for a game session
+// GetNPCsBySession retrieves all NPCs for a game session.
 func (s *DMAssistantService) GetNPCsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AINPC, error) {
 	return s.repo.GetNPCsBySession(ctx, sessionID)
 }
 
-// GetLocationByID retrieves a location by ID
+// GetLocationByID retrieves a location by ID.
 func (s *DMAssistantService) GetLocationByID(ctx context.Context, locationID uuid.UUID) (*models.AILocation, error) {
 	return s.repo.GetLocationByID(ctx, locationID)
 }
 
-// GetLocationsBySession retrieves all locations for a game session
+// GetLocationsBySession retrieves all locations for a game session.
 func (s *DMAssistantService) GetLocationsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AILocation, error) {
 	return s.repo.GetLocationsBySession(ctx, sessionID)
 }
 
-// GetUnusedStoryElements retrieves unused story elements for a session
+// GetUnusedStoryElements retrieves unused story elements for a session.
 func (s *DMAssistantService) GetUnusedStoryElements(ctx context.Context, sessionID uuid.UUID) ([]*models.AIStoryElement, error) {
 	return s.repo.GetUnusedStoryElements(ctx, sessionID)
 }
 
-// MarkStoryElementUsed marks a story element as used
+// MarkStoryElementUsed marks a story element as used.
 func (s *DMAssistantService) MarkStoryElementUsed(ctx context.Context, elementID uuid.UUID) error {
 	return s.repo.MarkStoryElementUsed(ctx, elementID)
 }
 
-// GetActiveHazards retrieves active environmental hazards
+// GetActiveHazards retrieves active environmental hazards.
 func (s *DMAssistantService) GetActiveHazards(ctx context.Context, locationID uuid.UUID) ([]*models.AIEnvironmentalHazard, error) {
 	return s.repo.GetActiveHazardsByLocation(ctx, locationID)
 }
 
-// TriggerHazard marks a hazard as triggered
+// TriggerHazard marks a hazard as triggered.
 func (s *DMAssistantService) TriggerHazard(ctx context.Context, hazardID uuid.UUID) error {
 	return s.repo.TriggerHazard(ctx, hazardID)
 }
 
-// Helper methods
-
+// Helper methods.
 func (s *DMAssistantService) parseNPCDialogueRequest(params map[string]interface{}) (*models.NPCDialogueRequest, error) {
 	req := &models.NPCDialogueRequest{}
 
@@ -299,7 +298,7 @@ func (s *DMAssistantService) getCombatNarrationType(req *models.CombatNarrationR
 	return models.NarrationTypeCombatHit
 }
 
-// CreateNPC generates and saves a new NPC
+// CreateNPC generates and saves a new NPC.
 func (s *DMAssistantService) CreateNPC(ctx context.Context, sessionID uuid.UUID, userID uuid.UUID, role string, context map[string]interface{}) (*models.AINPC, error) {
 	npc, err := s.aiAssistant.GenerateNPC(ctx, role, context)
 	if err != nil {
@@ -318,7 +317,7 @@ func (s *DMAssistantService) CreateNPC(ctx context.Context, sessionID uuid.UUID,
 	return npc, nil
 }
 
-// UpdateNPCDialogue adds new dialogue to an NPC's history
+// UpdateNPCDialogue adds new dialogue to an NPC's history.
 func (s *DMAssistantService) UpdateNPCDialogue(ctx context.Context, npcID uuid.UUID, dialogue string, context string) error {
 	entry := models.DialogueEntry{
 		Context:   context,

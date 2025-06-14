@@ -22,7 +22,7 @@ import (
 )
 
 func main() {
-	// Initialize logger first
+	// Initialize logger first.
 	logConfig := logger.ConfigV2{
 		Level:        getEnvOrDefault("LOG_LEVEL", "info"),
 		Pretty:       getEnvOrDefault("LOG_PRETTY", "false") == "true",
@@ -40,23 +40,23 @@ func main() {
 
 	log, err := logger.NewV2(logConfig)
 	if err != nil {
-		// Fallback to standard library if logger fails
+		// Fallback to standard library if logger fails.
 		panic("Failed to initialize logger: " + err.Error())
 	}
 
-	// Log startup
+	// Log startup.
 	log.Info().
 		Str("service", logConfig.ServiceName).
 		Str("environment", logConfig.Environment).
 		Msg("Starting D&D Game Backend")
 
-	// Load configuration
+	// Load configuration.
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load configuration")
 	}
 
-	// Validate configuration
+	// Validate configuration.
 	if err := cfg.Validate(); err != nil {
 		log.Fatal().Err(err).Msg("Invalid configuration")
 	}
@@ -67,7 +67,7 @@ func main() {
 		Bool("ai_enabled", cfg.AI.Provider != "mock").
 		Msg("Configuration loaded successfully")
 
-	// Initialize database with logging
+	// Initialize database with logging.
 	log.Info().Msg("Initializing database connection")
 	db, repos, err := database.InitializeWithLogging(cfg, log)
 	if err != nil {
@@ -80,7 +80,7 @@ func main() {
 	}()
 	log.Info().Msg("Database initialized successfully")
 
-	// Create JWT manager
+	// Create JWT manager.
 	jwtManager := auth.NewJWTManager(
 		cfg.Auth.JWTSecret,
 		cfg.Auth.AccessTokenDuration,
@@ -88,7 +88,7 @@ func main() {
 	)
 	log.Info().Msg("JWT manager initialized")
 
-	// Create AI provider
+	// Create AI provider.
 	var llmProvider services.LLMProvider
 	switch cfg.AI.Provider {
 	case "openai":
@@ -105,7 +105,7 @@ func main() {
 		log.Warn().Msg("Using mock LLM provider")
 	}
 
-	// Create AI services
+	// Create AI services.
 	log.Info().Msg("Initializing AI services")
 	aiRaceGenerator := services.NewAIRaceGeneratorService(llmProvider)
 	aiDMAssistant := services.NewAIDMAssistantService(llmProvider)
@@ -113,27 +113,27 @@ func main() {
 	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"}, log)
 	aiBattleMapGenerator := services.NewAIBattleMapGenerator(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"}, log)
 
-	// Create services
+	// Create services.
 	log.Info().Msg("Initializing core services")
 
-	// Token service with cleanup
+	// Token service with cleanup.
 	refreshTokenService := services.NewRefreshTokenService(repos.RefreshTokens, jwtManager)
 	refreshTokenService.StartCleanupTask(1 * time.Hour)
 	log.Info().Msg("Refresh token cleanup task started")
 
-	// Combat services
+	// Combat services.
 	combatService := services.NewCombatService()
 	combatAutomationService := services.NewCombatAutomationService(repos.CombatAnalytics, repos.Characters, repos.NPCs)
 	combatAnalyticsService := services.NewCombatAnalyticsService(repos.CombatAnalytics, combatService)
 
-	// World building services
+	// World building services.
 	worldBuildingRepo := database.NewWorldBuildingRepository(db)
 	settlementGenerator := services.NewSettlementGeneratorService(llmProvider, worldBuildingRepo)
 	factionSystem := services.NewFactionSystemService(llmProvider, worldBuildingRepo)
 	worldEventEngine := services.NewWorldEventEngineService(llmProvider, worldBuildingRepo, factionSystem)
 	economicSimulator := services.NewEconomicSimulatorService(worldBuildingRepo)
 
-	// Narrative engine
+	// Narrative engine.
 	narrativeEngine, err := services.NewNarrativeEngine(cfg)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create narrative engine - continuing without it")
@@ -142,18 +142,18 @@ func main() {
 		log.Info().Msg("Narrative engine initialized")
 	}
 
-	// Rule builder services
+	// Rule builder services.
 	diceRollService := services.NewDiceRollService(repos.DiceRolls)
 	ruleEngine := services.NewRuleEngine(repos.RuleBuilder, diceRollService)
 	balanceAnalyzer := services.NewAIBalanceAnalyzer(cfg, llmProvider, ruleEngine, combatService)
 	conditionalReality := services.NewConditionalRealitySystem(ruleEngine)
 
-	// Create game session service with security dependencies
+	// Create game session service with security dependencies.
 	gameSessionService := services.NewGameSessionService(repos.GameSessions)
 	gameSessionService.SetCharacterRepository(repos.Characters)
 	gameSessionService.SetUserRepository(repos.Users)
 
-	// Aggregate all services
+	// Aggregate all services.
 	svc := &services.Services{
 		DB:                 db,
 		Users:              services.NewUserService(repos.Users),
@@ -186,39 +186,39 @@ func main() {
 		BattleMapGen:       aiBattleMapGenerator,
 	}
 
-	// Initialize WebSocket hub
+	// Initialize WebSocket hub.
 	hub := websocket.InitHub()
 	websocket.SetJWTManager(jwtManager)
 	log.Info().Msg("WebSocket hub started")
 
-	// Create handlers
+	// Create handlers.
 	h := handlers.NewHandlers(svc, db, hub)
 	log.Info().Msg("Handlers initialized")
 
-	// Setup routes
+	// Setup routes.
 	r := mux.NewRouter()
 
-	// Add middleware
+	// Add middleware.
 	r.Use(middleware.RequestIDMiddleware)
 	r.Use(middleware.RequestContextMiddleware) // Add context enrichment
 	r.Use(middleware.LoggingMiddleware(log))   // This now uses the V2 version
 	r.Use(middleware.ErrorHandlerV2(log))      // Enable error handler with LoggerV2
-	// TODO: Create LoggerV2 version of RecoveryMiddleware
+	// TODO: Create LoggerV2 version of RecoveryMiddleware.
 	// r.Use(middleware.RecoveryMiddleware(log))
 	isDevelopment := cfg.Server.Environment == "development"
 	r.Use(middleware.SecurityHeaders(isDevelopment))
 
-	// Create CSRF store
+	// Create CSRF store.
 	csrfStore := auth.NewCSRFStore()
 
-	// Create auth middleware
+	// Create auth middleware.
 	authMiddleware := auth.NewMiddleware(jwtManager)
 
-	// Create rate limiters
+	// Create rate limiters.
 	authRateLimiter := middleware.NewRateLimiter(15, time.Minute) // 15 requests per minute
 	apiRateLimiter := middleware.NewRateLimiter(200, time.Minute) // 200 requests per minute
 
-	// Setup route config
+	// Setup route config.
 	routeConfig := &routes.Config{
 		Handlers:        h,
 		AuthMiddleware:  authMiddleware,
@@ -227,11 +227,11 @@ func main() {
 		APIRateLimiter:  apiRateLimiter,
 	}
 
-	// Setup all routes
+	// Setup all routes.
 	routes.RegisterRoutes(r, routeConfig)
 	log.Info().Msg("Routes configured")
 
-	// Setup CORS
+	// Setup CORS.
 	allowedOrigins := []string{"http://localhost:3000", "http://localhost:8080", "http://192.168.1.161:3000"}
 	if cfg.Server.Environment == "production" {
 		allowedOrigins = []string{"https://yourdomain.com"}
@@ -248,7 +248,7 @@ func main() {
 
 	handler := c.Handler(r)
 
-	// Create server
+	// Create server.
 	srv := &http.Server{
 		Addr:         ":" + cfg.Server.Port,
 		Handler:      handler,
@@ -257,7 +257,7 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// Start server
+	// Start server.
 	go func() {
 		log.Info().
 			Str("port", cfg.Server.Port).
@@ -273,7 +273,7 @@ func main() {
 		Str("port", cfg.Server.Port).
 		Msg("D&D Game Backend is running")
 
-	// Wait for interrupt signal to gracefully shutdown the server
+	// Wait for interrupt signal to gracefully shutdown the server.
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-quit
@@ -282,19 +282,19 @@ func main() {
 		Str("signal", sig.String()).
 		Msg("Shutdown signal received")
 
-	// Graceful shutdown
+	// Graceful shutdown.
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Shutdown server
+	// Shutdown server.
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Error().Err(err).Msg("Server forced to shutdown")
 	}
 
-	// Stop refresh token cleanup
+	// Stop refresh token cleanup.
 	refreshTokenService.StopCleanupTask()
 
-	// Close WebSocket hub
+	// Close WebSocket hub.
 	if err := hub.Shutdown(ctx); err != nil {
 		log.Error().Err(err).Msg("Failed to shutdown websocket hub")
 	}
@@ -302,7 +302,7 @@ func main() {
 	log.Info().Msg("Server shutdown complete")
 }
 
-// Helper function to get environment variable with default
+// Helper function to get environment variable with default.
 func getEnvOrDefault(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value

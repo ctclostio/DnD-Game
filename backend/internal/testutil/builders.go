@@ -17,17 +17,17 @@ const (
 	userIDKey    ctxKey = "user_id"
 )
 
-// Builder interface for all test builders
+// Builder interface for all test builders.
 type Builder interface {
 	Build() interface{}
 }
 
-// UserBuilder provides a fluent interface for creating test users
+// UserBuilder provides a fluent interface for creating test users.
 type UserBuilder struct {
 	user models.User
 }
 
-// NewUserBuilder creates a new UserBuilder with sensible defaults
+// NewUserBuilder creates a new UserBuilder with sensible defaults.
 func NewUserBuilder() *UserBuilder {
 	return &UserBuilder{
 		user: models.User{
@@ -64,12 +64,12 @@ func (b *UserBuilder) Build() *models.User {
 	return &b.user
 }
 
-// CharacterBuilder provides a fluent interface for creating test characters
+// CharacterBuilder provides a fluent interface for creating test characters.
 type CharacterBuilder struct {
 	character models.Character
 }
 
-// NewCharacterBuilder creates a new CharacterBuilder with D&D defaults
+// NewCharacterBuilder creates a new CharacterBuilder with D&D defaults.
 func NewCharacterBuilder() *CharacterBuilder {
 	return &CharacterBuilder{
 		character: models.Character{
@@ -148,12 +148,12 @@ func (b *CharacterBuilder) Build() *models.Character {
 	return &b.character
 }
 
-// GameSessionBuilder provides a fluent interface for creating test game sessions
+// GameSessionBuilder provides a fluent interface for creating test game sessions.
 type GameSessionBuilder struct {
 	session models.GameSession
 }
 
-// NewGameSessionBuilder creates a new GameSessionBuilder
+// NewGameSessionBuilder creates a new GameSessionBuilder.
 func NewGameSessionBuilder() *GameSessionBuilder {
 	return &GameSessionBuilder{
 		session: models.GameSession{
@@ -192,12 +192,12 @@ func (b *GameSessionBuilder) Build() *models.GameSession {
 	return &b.session
 }
 
-// CombatBuilder provides a fluent interface for creating test combat scenarios
+// CombatBuilder provides a fluent interface for creating test combat scenarios.
 type CombatBuilder struct {
 	combat models.Combat
 }
 
-// NewCombatBuilder creates a new CombatBuilder
+// NewCombatBuilder creates a new CombatBuilder.
 func NewCombatBuilder() *CombatBuilder {
 	return &CombatBuilder{
 		combat: models.Combat{
@@ -228,7 +228,7 @@ func (b *CombatBuilder) WithGameSession(sessionID string) *CombatBuilder {
 
 func (b *CombatBuilder) WithParticipants(participants ...models.Combatant) *CombatBuilder {
 	b.combat.Combatants = participants
-	// Set turn order based on participant IDs
+	// Set turn order based on participant IDs.
 	turnOrder := make([]string, len(participants))
 	for i, p := range participants {
 		turnOrder[i] = p.ID
@@ -246,12 +246,12 @@ func (b *CombatBuilder) Build() *models.Combat {
 	return &b.combat
 }
 
-// CombatantBuilder for creating combat participants
+// CombatantBuilder for creating combat participants.
 type CombatantBuilder struct {
 	participant models.Combatant
 }
 
-// NewCombatantBuilder creates a new participant builder
+// NewCombatantBuilder creates a new participant builder.
 func NewCombatantBuilder() *CombatantBuilder {
 	return &CombatantBuilder{
 		participant: models.Combatant{
@@ -304,12 +304,12 @@ func (b *CombatantBuilder) Build() models.Combatant {
 	return b.participant
 }
 
-// DiceRollBuilder for creating test dice rolls
+// DiceRollBuilder for creating test dice rolls.
 type DiceRollBuilder struct {
 	roll models.DiceRoll
 }
 
-// NewDiceRollBuilder creates a new dice roll builder
+// NewDiceRollBuilder creates a new dice roll builder.
 func NewDiceRollBuilder() *DiceRollBuilder {
 	return &DiceRollBuilder{
 		roll: models.DiceRoll{
@@ -348,12 +348,12 @@ func (b *DiceRollBuilder) Build() *models.DiceRoll {
 	return &b.roll
 }
 
-// InventoryItemBuilder for creating test inventory items
+// InventoryItemBuilder for creating test inventory items.
 type InventoryItemBuilder struct {
 	item models.InventoryItem
 }
 
-// NewInventoryItemBuilder creates a new inventory item builder
+// NewInventoryItemBuilder creates a new inventory item builder.
 func NewInventoryItemBuilder() *InventoryItemBuilder {
 	return &InventoryItemBuilder{
 		item: models.InventoryItem{
@@ -431,7 +431,7 @@ func (b *InventoryItemBuilder) Build() *models.InventoryItem {
 	return &b.item
 }
 
-// TestScenario provides a complete test scenario with related entities
+// TestScenario provides a complete test scenario with related entities.
 type TestScenario struct {
 	t           *testing.T
 	Users       []*models.User
@@ -441,7 +441,7 @@ type TestScenario struct {
 	Items       []*models.InventoryItem
 }
 
-// NewTestScenario creates a complete test scenario
+// NewTestScenario creates a complete test scenario.
 func NewTestScenario(t *testing.T) *TestScenario {
 	dm := NewUserBuilder().WithID(1).WithUsername("dm_user").Build()
 	player1 := NewUserBuilder().WithID(2).WithUsername("player1").Build()
@@ -483,7 +483,7 @@ func NewTestScenario(t *testing.T) *TestScenario {
 	}
 }
 
-// WithCombat adds a combat scenario
+// WithCombat adds a combat scenario.
 func (s *TestScenario) WithCombat() *TestScenario {
 	participants := []models.Combatant{
 		NewCombatantBuilder().
@@ -513,7 +513,7 @@ func (s *TestScenario) WithCombat() *TestScenario {
 	return s
 }
 
-// WithItems adds inventory items
+// WithItems adds inventory items.
 func (s *TestScenario) WithItems() *TestScenario {
 	s.Items = []*models.InventoryItem{
 		NewInventoryItemBuilder().
@@ -533,7 +533,7 @@ func (s *TestScenario) WithItems() *TestScenario {
 	return s
 }
 
-// AssertValid validates the test scenario
+// AssertValid validates the test scenario.
 func (s *TestScenario) AssertValid() {
 	require.NotNil(s.t, s.Users)
 	require.NotNil(s.t, s.Characters)
@@ -542,7 +542,7 @@ func (s *TestScenario) AssertValid() {
 	require.Greater(s.t, len(s.Characters), 0)
 }
 
-// TestContext creates a context with common test values
+// TestContext creates a context with common test values.
 func TestContext() context.Context {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, requestIDKey, "test-request-123")

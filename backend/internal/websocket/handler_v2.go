@@ -13,51 +13,51 @@ import (
 )
 
 const (
-	// Time allowed to write a message to the peer
-	//lint:ignore U1000 retained for future use
+	// Time allowed to write a message to the peer.
+	//lint:ignore U1000 retained for future use.
 	writeWait = 10 * time.Second
 
-	// Time allowed to read the next pong message from the peer
-	//lint:ignore U1000 retained for future use
+	// Time allowed to read the next pong message from the peer.
+	//lint:ignore U1000 retained for future use.
 	pongWait = 60 * time.Second
 
 	// Send pings to peer with this period. Must be less than pongWait
-	//lint:ignore U1000 retained for future use
+	//lint:ignore U1000 retained for future use.
 	pingPeriod = (pongWait * 9) / 10
 
-	// Maximum message size allowed from peer
-	//lint:ignore U1000 retained for future use
+	// Maximum message size allowed from peer.
+	//lint:ignore U1000 retained for future use.
 	maxMessageSize = 512 * 1024 // 512KB
 )
 
 var (
-	//lint:ignore U1000 retained for future use
+	//lint:ignore U1000 retained for future use.
 	newline = []byte{'\n'}
-	//lint:ignore U1000 retained for future use
+	//lint:ignore U1000 retained for future use.
 	space = []byte{' '}
 )
 
-// AuthMessageV2 represents the authentication message
+// AuthMessageV2 represents the authentication message.
 type AuthMessageV2 struct {
 	Type  string `json:"type"`
 	Token string `json:"token"`
 	Room  string `json:"room"`
 }
 
-// MessageV2 represents a WebSocket message
+// MessageV2 represents a WebSocket message.
 type MessageV2 struct {
 	Type string                 `json:"type"`
 	Data map[string]interface{} `json:"data"`
 }
 
-// BroadcastMessage represents a message to broadcast
+// BroadcastMessage represents a message to broadcast.
 type BroadcastMessage struct {
 	Room    string
 	Message MessageV2
 	Sender  string
 }
 
-// HandlerV2 is the enhanced WebSocket handler with structured logging
+// HandlerV2 is the enhanced WebSocket handler with structured logging.
 type HandlerV2 struct {
 	hub            *Hub
 	jwtManager     *auth.JWTManager
@@ -66,15 +66,15 @@ type HandlerV2 struct {
 	allowedOrigins []string
 }
 
-// NewHandlerV2 creates a new WebSocket handler with logging
+// NewHandlerV2 creates a new WebSocket handler with logging.
 func NewHandlerV2(hub *Hub, jwtManager *auth.JWTManager, log *logger.LoggerV2) *HandlerV2 {
-	// Configure allowed origins
+	// Configure allowed origins.
 	allowedOrigins := []string{
 		"http://localhost:3000",
 		"http://localhost:8080",
 	}
 
-	// Add production origin from environment
+	// Add production origin from environment.
 	if prodOrigin := os.Getenv("PRODUCTION_ORIGIN"); prodOrigin != "" {
 		allowedOrigins = append(allowedOrigins, prodOrigin)
 	}
@@ -86,7 +86,7 @@ func NewHandlerV2(hub *Hub, jwtManager *auth.JWTManager, log *logger.LoggerV2) *
 		allowedOrigins: allowedOrigins,
 	}
 
-	// Configure upgrader
+	// Configure upgrader.
 	h.upgrader = websocket.Upgrader{
 		CheckOrigin:       h.checkOrigin,
 		EnableCompression: true,
@@ -98,23 +98,23 @@ func NewHandlerV2(hub *Hub, jwtManager *auth.JWTManager, log *logger.LoggerV2) *
 	return h
 }
 
-// checkOrigin validates the origin of WebSocket connections
+// checkOrigin validates the origin of WebSocket connections.
 func (h *HandlerV2) checkOrigin(r *http.Request) bool {
 	origin := r.Header.Get("Origin")
 
-	// Log origin check
+	// Log origin check.
 	h.log.WithContext(r.Context()).Debug().
 		Str("origin", origin).
 		Strs("allowed_origins", h.allowedOrigins).
 		Msg("Checking WebSocket origin")
 
-	// In development, allow empty origin
+	// In development, allow empty origin.
 	if os.Getenv("GO_ENV") == "development" && origin == "" {
 		h.log.Debug().Msg("Allowing empty origin in development")
 		return true
 	}
 
-	// Check against allowed origins
+	// Check against allowed origins.
 	allowed := middleware.ValidateOrigin(h.allowedOrigins, origin)
 
 	if !allowed {
@@ -126,24 +126,24 @@ func (h *HandlerV2) checkOrigin(r *http.Request) bool {
 	return allowed
 }
 
-// HandleWebSocket handles WebSocket connections with structured logging
+// HandleWebSocket handles WebSocket connections with structured logging.
 func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
-	// Get request context with IDs
+	// Get request context with IDs.
 	ctx := r.Context()
 	log := h.log.WithContext(ctx)
 
-	// Extract connection metadata
+	// Extract connection metadata.
 	clientIP := r.RemoteAddr
 	userAgent := r.UserAgent()
 
-	// Log connection attempt
+	// Log connection attempt.
 	log.Info().
 		Str("client_ip", clientIP).
 		Str("user_agent", userAgent).
 		Str("origin", r.Header.Get("Origin")).
 		Msg("WebSocket connection attempt")
 
-	// Upgrade connection
+	// Upgrade connection.
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Error().
@@ -153,16 +153,16 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate client ID
+	// Generate client ID.
 	clientID := "ws-" + time.Now().Format("20060102150405")
 
-	// Log successful upgrade
+	// Log successful upgrade.
 	log.Info().
 		Str("client_id", clientID).
 		Str("client_ip", clientIP).
 		Msg("WebSocket connection established")
 
-	// Configure connection
+	// Configure connection.
 	_ = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 	conn.SetPongHandler(func(string) error {
 		_ = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
@@ -172,11 +172,11 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 
-	// Create temporary client for authentication
-	// Using a minimal client for authentication phase
+	// Create temporary client for authentication.
+	// Using a minimal client for authentication phase.
 	tempConn := conn
 
-	// Send authentication request
+	// Send authentication request.
 	authRequest := map[string]string{
 		"type":    "auth_required",
 		"message": "Please authenticate",
@@ -192,7 +192,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Wait for authentication
+	// Wait for authentication.
 	_ = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 
 	var authMsg AuthMessageV2
@@ -208,7 +208,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate authentication
+	// Validate authentication.
 	if authMsg.Type != "auth" || authMsg.Token == "" {
 		log.Warn().
 			Str("client_id", clientID).
@@ -222,7 +222,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify JWT token
+	// Verify JWT token.
 	claims, err := h.jwtManager.ValidateToken(authMsg.Token, auth.AccessToken)
 	if err != nil {
 		log.Warn().
@@ -237,7 +237,7 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	userID := claims.UserID
 
-	// Create authenticated client
+	// Create authenticated client.
 	client := &Client{
 		id:       clientID,
 		username: claims.Username,
@@ -247,21 +247,20 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		role:     claims.Role,
 	}
 
-	// Join room if specified
+	// Join room if specified.
 	if authMsg.Room != "" {
 		client.roomID = authMsg.Room
-		// Logger already has room context from creation
-
+		// Logger already has room context from creation.
 		log.Info().
 			Str("room", authMsg.Room).
 			Str("client_id", clientID).
 			Msg("Client joining room")
 	}
 
-	// Register client
+	// Register client.
 	client.hub.register <- client
 
-	// Send success message
+	// Send success message.
 	successMsg := map[string]interface{}{
 		"type":      "auth_success",
 		"message":   "Authentication successful",
@@ -276,20 +275,20 @@ func (h *HandlerV2) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Msg("Failed to send auth success")
 	}
 
-	// Log successful authentication
+	// Log successful authentication.
 	log.Info().
 		Str("client_id", clientID).
 		Str("user_id", userID).
 		Str("room", client.roomID).
 		Msg("WebSocket client authenticated and registered")
 
-	// Reset read deadline for normal operation
+	// Reset read deadline for normal operation.
 	_ = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 
-	// Start client goroutines
+	// Start client goroutines.
 	go client.WritePump()
 	go client.ReadPump()
 }
 
 // Handler V2 uses the standard Client type from hub.go
-// All WebSocket communication is handled by the standard Client ReadPump and WritePump methods
+// All WebSocket communication is handled by the standard Client ReadPump and WritePump methods.

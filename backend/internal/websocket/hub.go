@@ -93,7 +93,7 @@ func (h *Hub) Run() {
 				continue
 			}
 
-			// Broadcast to room
+			// Broadcast to room.
 			if msg.RoomID != "" && h.rooms[msg.RoomID] != nil {
 				for client := range h.rooms[msg.RoomID] {
 					select {
@@ -140,12 +140,12 @@ func (c *Client) WritePump() {
 	_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 }
 
-// Broadcast sends a message to the hub's broadcast channel
+// Broadcast sends a message to the hub's broadcast channel.
 func (h *Hub) Broadcast(message []byte) {
 	h.broadcast <- message
 }
 
-// Shutdown gracefully stops the hub and closes all connections
+// Shutdown gracefully stops the hub and closes all connections.
 func (h *Hub) Shutdown(ctx context.Context) error {
 	close(h.shutdown)
 	return nil

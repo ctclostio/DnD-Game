@@ -23,7 +23,7 @@ func NewValidationMiddleware() *ValidationMiddleware {
 func (vm *ValidationMiddleware) Validate(targetStruct interface{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Only validate for methods with body
+			// Only validate for methods with body.
 			if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch {
 				if err := vm.validator.ValidateRequest(r, targetStruct); err != nil {
 					SendError(w, err, logger.GetLogger().WithContext(r.Context()))

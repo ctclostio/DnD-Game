@@ -12,19 +12,19 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// getAllowedOrigins returns the list of allowed origins for CORS
+// getAllowedOrigins returns the list of allowed origins for CORS.
 func getAllowedOrigins() []string {
-	// Default development origins
+	// Default development origins.
 	origins := []string{
 		"http://localhost:3000",
 		"http://localhost:8080",
 	}
 
-	// Add production origin from environment
+	// Add production origin from environment.
 	if prodOrigin := os.Getenv("PRODUCTION_ORIGIN"); prodOrigin != "" {
 		origins = append(origins, prodOrigin)
 	}
-	
+
 	return origins
 }
 
@@ -32,14 +32,14 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
 
-		// In development, also allow empty origin
+		// In development, also allow empty origin.
 		if os.Getenv("GO_ENV") == constants.EnvDevelopment && origin == "" {
 			return true
 		}
 
 		return middleware.ValidateOrigin(getAllowedOrigins(), origin)
 	},
-	// Enable compression
+	// Enable compression.
 	EnableCompression: true,
 }
 
@@ -48,7 +48,7 @@ var (
 	jwtManager *auth.JWTManager
 )
 
-// InitHub initializes and starts the websocket hub
+// InitHub initializes and starts the websocket hub.
 func InitHub() *Hub {
 	if hub == nil {
 		hub = NewHub()
@@ -57,7 +57,7 @@ func InitHub() *Hub {
 	return hub
 }
 
-// GetHub returns the websocket hub instance
+// GetHub returns the websocket hub instance.
 func GetHub() *Hub {
 	if hub == nil {
 		return InitHub()
@@ -65,12 +65,12 @@ func GetHub() *Hub {
 	return hub
 }
 
-// SetJWTManager sets the JWT manager for WebSocket authentication
+// SetJWTManager sets the JWT manager for WebSocket authentication.
 func SetJWTManager(manager *auth.JWTManager) {
 	jwtManager = manager
 }
 
-// AuthMessage represents the authentication message
+// AuthMessage represents the authentication message.
 type AuthMessage struct {
 	Type  string `json:"type"`
 	Token string `json:"token"`
@@ -78,14 +78,14 @@ type AuthMessage struct {
 }
 
 func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
-	// Log the connection attempt
+	// Log the connection attempt.
 	logger.Info().
 		Str("origin", r.Header.Get("Origin")).
 		Str("remote_addr", r.RemoteAddr).
 		Str("user_agent", r.Header.Get("User-Agent")).
 		Msg("WebSocket connection attempt")
 
-	// Upgrade connection first
+	// Upgrade connection first.
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logger.Error().
@@ -96,20 +96,20 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set initial timeouts
+	// Set initial timeouts.
 	_ = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 	conn.SetPongHandler(func(string) error {
 		_ = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 		return nil
 	})
 
-	// Create temporary client for authentication
+	// Create temporary client for authentication.
 	tempClient := &Client{
 		conn: conn,
 		send: make(chan []byte, 256),
 	}
 
-	// Send authentication request
+	// Send authentication request.
 	authRequest := map[string]string{
 		"type":    "auth_required",
 		"message": "Please authenticate",
@@ -123,7 +123,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Wait for authentication message
+	// Wait for authentication message.
 	var authMsg AuthMessage
 	if err := conn.ReadJSON(&authMsg); err != nil {
 		logger.Error().
@@ -137,7 +137,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate authentication message
+	// Validate authentication message.
 	if authMsg.Type != constants.AuthType || authMsg.Token == "" {
 		_ = conn.WriteJSON(map[string]string{
 			"type":  "error",
@@ -147,7 +147,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate token
+	// Validate token.
 	if jwtManager == nil {
 		logger.Error().
 			Msg("JWT manager not initialized")
@@ -173,10 +173,10 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate room ID
+	// Validate room ID.
 	roomID := authMsg.Room
 	if roomID == "" {
-		// Try to get from query params as fallback
+		// Try to get from query params as fallback.
 		roomID = r.URL.Query().Get("room")
 		if roomID == "" {
 			_ = conn.WriteJSON(map[string]string{
@@ -188,7 +188,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Create authenticated client
+	// Create authenticated client.
 	client := &Client{
 		hub:      hub,
 		conn:     conn,
@@ -199,7 +199,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		role:     claims.Role,
 	}
 
-	// Send authentication success
+	// Send authentication success.
 	_ = conn.WriteJSON(map[string]string{
 		"type":     "auth_success",
 		"message":  "Authentication successful",
@@ -207,13 +207,13 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		"role":     client.role,
 	})
 
-	// Remove read deadline after successful auth
+	// Remove read deadline after successful auth.
 	_ = conn.SetReadDeadline(time.Time{})
 
-	// Register client with hub
+	// Register client with hub.
 	client.hub.register <- client
 
-	// Start client pumps
+	// Start client pumps.
 	go client.WritePump()
 	go client.ReadPump()
 }

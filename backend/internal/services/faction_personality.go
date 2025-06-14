@@ -13,14 +13,14 @@ import (
 	"github.com/google/uuid"
 )
 
-// FactionPersonalityService manages AI-driven faction personalities
+// FactionPersonalityService manages AI-driven faction personalities.
 type FactionPersonalityService struct {
 	worldRepo   *database.EmergentWorldRepository
 	factionRepo *database.WorldBuildingRepository
 	llm         LLMProvider
 }
 
-// NewFactionPersonalityService creates a new faction personality service
+// NewFactionPersonalityService creates a new faction personality service.
 func NewFactionPersonalityService(
 	worldRepo *database.EmergentWorldRepository,
 	factionRepo *database.WorldBuildingRepository,
@@ -33,13 +33,13 @@ func NewFactionPersonalityService(
 	}
 }
 
-// InitializeFactionPersonality creates an AI personality for a faction
+// InitializeFactionPersonality creates an AI personality for a faction.
 func (fps *FactionPersonalityService) InitializeFactionPersonality(ctx context.Context, faction *models.Faction) (*models.FactionPersonality, error) {
-	// Generate personality traits based on faction type and description
+	// Generate personality traits based on faction type and description.
 	traits := fps.generatePersonalityTraits(faction)
 	values := fps.generateFactionValues(faction)
 
-	// Use AI to enhance personality
+	// Use AI to enhance personality.
 	prompt := fmt.Sprintf(`Analyze this faction and provide personality insights:
 Faction: %s
 Type: %s
@@ -58,7 +58,7 @@ Provide a JSON response with:
 
 	response, err := fps.llm.GenerateContent(ctx, prompt, "You are a D&D faction personality generator focused on creating complex organizational behaviors.")
 	if err != nil {
-		// Use defaults if AI fails
+		// Use defaults if AI fails.
 		response = `{
 			"mood": "neutral",
 			"decision_style": "pragmatic",
@@ -69,7 +69,7 @@ Provide a JSON response with:
 		}`
 	}
 
-	// Parse AI response
+	// Parse AI response.
 	var aiInsights map[string]interface{}
 	_ = json.Unmarshal([]byte(response), &aiInsights)
 
@@ -85,7 +85,7 @@ Provide a JSON response with:
 		LastLearningTime: time.Now(),
 	}
 
-	// Save personality
+	// Save personality.
 	if err := fps.worldRepo.CreateFactionPersonality(personality); err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ Provide a JSON response with:
 	return personality, nil
 }
 
-// generatePersonalityTraits creates base personality traits
+// generatePersonalityTraits creates base personality traits.
 func (fps *FactionPersonalityService) generatePersonalityTraits(faction *models.Faction) map[string]float64 {
 	traits := map[string]float64{
 		"aggressive":    rand.Float64(),
@@ -114,7 +114,7 @@ func (fps *FactionPersonalityService) generatePersonalityTraits(faction *models.
 		"libertarian":   rand.Float64(),
 	}
 
-	// Adjust based on faction type
+	// Adjust based on faction type.
 	switch faction.Type {
 	case "kingdom":
 		traits["traditional"] += 0.3
@@ -133,7 +133,7 @@ func (fps *FactionPersonalityService) generatePersonalityTraits(faction *models.
 		traits["progressive"] += 0.3
 	}
 
-	// Normalize traits
+	// Normalize traits.
 	for k, v := range traits {
 		traits[k] = math.Max(0, math.Min(1, v))
 	}
@@ -141,7 +141,7 @@ func (fps *FactionPersonalityService) generatePersonalityTraits(faction *models.
 	return traits
 }
 
-// generateFactionValues creates core values
+// generateFactionValues creates core values.
 func (fps *FactionPersonalityService) generateFactionValues(faction *models.Faction) map[string]float64 {
 	values := map[string]float64{
 		"honor":        rand.Float64(),
@@ -162,7 +162,7 @@ func (fps *FactionPersonalityService) generateFactionValues(faction *models.Fact
 		"survival":     rand.Float64(),
 	}
 
-	// Ensure some values are prioritized
+	// Ensure some values are prioritized.
 	topValues := 3 + rand.Intn(3)
 	for i := 0; i < topValues; i++ {
 		keys := make([]string, 0, len(values))
@@ -176,7 +176,7 @@ func (fps *FactionPersonalityService) generateFactionValues(faction *models.Fact
 	return values
 }
 
-// generateDecisionWeights creates weights for different decision factors
+// generateDecisionWeights creates weights for different decision factors.
 func (fps *FactionPersonalityService) generateDecisionWeights(traits, values map[string]float64) map[string]float64 {
 	weights := map[string]float64{
 		"economic_benefit":    values["wealth"]*0.5 + traits["mercantile"]*0.5,
@@ -191,7 +191,7 @@ func (fps *FactionPersonalityService) generateDecisionWeights(traits, values map
 		"alliance_strength":   values["loyalty"]*0.5 + traits["diplomatic"]*0.5,
 	}
 
-	// Normalize weights
+	// Normalize weights.
 	total := 0.0
 	for _, w := range weights {
 		total += w
@@ -205,14 +205,14 @@ func (fps *FactionPersonalityService) generateDecisionWeights(traits, values map
 	return weights
 }
 
-// RecordMemory adds a significant event to faction memory
+// RecordMemory adds a significant event to faction memory.
 func (fps *FactionPersonalityService) RecordMemory(ctx context.Context, factionID string, event models.WorldEvent) error {
 	personality, err := fps.worldRepo.GetFactionPersonality(factionID)
 	if err != nil {
 		return err
 	}
 
-	// Determine impact based on event
+	// Determine impact based on event.
 	impact := fps.calculateEventImpact(personality, event)
 
 	memory := models.FactionMemory{
@@ -228,23 +228,23 @@ func (fps *FactionPersonalityService) RecordMemory(ctx context.Context, factionI
 
 	personality.Memories = append(personality.Memories, memory)
 
-	// Limit memories to most recent/impactful 100
+	// Limit memories to most recent/impactful 100.
 	if len(personality.Memories) > 100 {
-		// Sort by impact and recency
+		// Sort by impact and recency.
 		personality.Memories = fps.pruneMemories(personality.Memories)
 	}
 
-	// Update learning data based on memory
+	// Update learning data based on memory.
 	fps.updateLearningFromMemory(personality, memory)
 
 	return fps.worldRepo.UpdateFactionPersonality(personality)
 }
 
-// calculateEventImpact determines how much an event affects a faction
+// calculateEventImpact determines how much an event affects a faction.
 func (fps *FactionPersonalityService) calculateEventImpact(personality *models.FactionPersonality, event models.WorldEvent) float64 {
 	impact := 0.0
 
-	// Base impact from event type
+	// Base impact from event type.
 	impactMap := map[string]float64{
 		"faction_interaction": 0.5,
 		"political_milestone": 0.7,
@@ -262,19 +262,19 @@ func (fps *FactionPersonalityService) calculateEventImpact(personality *models.F
 		impact = 0.3
 	}
 
-	// Modify based on faction values
-	// Note: EconomicImpacts and PoliticalImpacts are JSONB fields
-	// Would need proper JSONB handling here
+	// Modify based on faction values.
+	// Note: EconomicImpacts and PoliticalImpacts are JSONB fields.
+	// Would need proper JSONB handling here.
 	impact += 0.2 * personality.Values["wealth"]
 	impact += 0.2 * personality.Values["power"]
 
-	// Normalize to -1 to 1 range
+	// Normalize to -1 to 1 range.
 	impact = math.Max(-1, math.Min(1, impact))
 
 	return impact
 }
 
-// MakeFactionDecision uses AI personality to make strategic decisions
+// MakeFactionDecision uses AI personality to make strategic decisions.
 func (fps *FactionPersonalityService) MakeFactionDecision(ctx context.Context, factionID string, decision models.FactionDecision) (*models.FactionDecisionResult, error) {
 	personality, err := fps.worldRepo.GetFactionPersonality(factionID)
 	if err != nil {
@@ -291,17 +291,17 @@ func (fps *FactionPersonalityService) MakeFactionDecision(ctx context.Context, f
 		return nil, err
 	}
 
-	// Analyze options based on personality
+	// Analyze options based on personality.
 	optionScores := make(map[string]float64)
 	for _, option := range decision.Options {
 		score := fps.scoreOption(personality, option)
 		optionScores[option.ID] = score
 	}
 
-	// Get recent memories that might influence decision
+	// Get recent memories that might influence decision.
 	relevantMemories := fps.getRelevantMemories(personality, decision)
 
-	// Use AI to make nuanced decision
+	// Use AI to make nuanced decision.
 	prompt := fmt.Sprintf(`A faction must make a strategic decision:
 
 Faction: %s
@@ -336,22 +336,22 @@ Provide a JSON response with:
 
 	response, err := fps.llm.GenerateContent(ctx, prompt, "You are a D&D faction decision-making AI that analyzes faction personalities and makes strategic choices.")
 	if err != nil {
-		// Fallback to highest scored option
+		// Fallback to highest scored option.
 		return fps.makeDefaultDecision(personality, decision, optionScores), nil
 	}
 
-	// Parse AI response
+	// Parse AI response.
 	var aiDecision map[string]interface{}
 	if err := json.Unmarshal([]byte(response), &aiDecision); err != nil {
 		return fps.makeDefaultDecision(personality, decision, optionScores), nil
 	}
 
-	// Update personality based on decision
+	// Update personality based on decision.
 	if moodChange, ok := aiDecision["mood_change"].(string); ok {
 		personality.CurrentMood = moodChange
 	}
 
-	// Record decision as memory
+	// Record decision as memory.
 	decisionMemory := models.FactionMemory{
 		ID:           uuid.New().String(),
 		EventType:    "strategic_decision",
@@ -383,28 +383,28 @@ Provide a JSON response with:
 	}, nil
 }
 
-// scoreOption calculates how well an option aligns with faction personality
+// scoreOption calculates how well an option aligns with faction personality.
 func (fps *FactionPersonalityService) scoreOption(personality *models.FactionPersonality, option models.DecisionOption) float64 {
 	score := 0.0
 
-	// Score based on benefits
+	// Score based on benefits.
 	score += float64(len(option.Benefits)) * 0.5
 
-	// Adjust based on risks
+	// Adjust based on risks.
 	riskLevel := float64(len(option.Risks))
-	// Risk-averse personalities penalize high-risk options
+	// Risk-averse personalities penalize high-risk options.
 	if personality.Traits["pragmatic"] > 0.6 {
 		score -= riskLevel * 0.3
 	}
-	// Risk-taking personalities favor high-risk options
+	// Risk-taking personalities favor high-risk options.
 	if personality.Traits["aggressive"] > 0.6 {
 		score += riskLevel * 0.1
 	}
 
-	// Consider requirements
+	// Consider requirements.
 	requirementsPenalty := 0.0
 	for _, value := range option.Requirements {
-		// Penalize if requirements are high relative to personality
+		// Penalize if requirements are high relative to personality.
 		if reqValue, ok := value.(float64); ok {
 			requirementsPenalty += reqValue * 0.1
 		}
@@ -414,13 +414,13 @@ func (fps *FactionPersonalityService) scoreOption(personality *models.FactionPer
 	return score
 }
 
-// getRelevantMemories retrieves memories that might influence a decision
+// getRelevantMemories retrieves memories that might influence a decision.
 func (fps *FactionPersonalityService) getRelevantMemories(personality *models.FactionPersonality, decision models.FactionDecision) []models.FactionMemory {
 	relevant := []models.FactionMemory{}
 
-	// Look for memories involving same entities or similar contexts
+	// Look for memories involving same entities or similar contexts.
 	for _, memory := range personality.Memories {
-		// Apply memory decay
+		// Apply memory decay.
 		age := time.Since(memory.Timestamp).Hours() / 24.0 // Days
 		decayedImpact := memory.Impact * math.Pow(memory.Decay, age)
 
@@ -428,10 +428,10 @@ func (fps *FactionPersonalityService) getRelevantMemories(personality *models.Fa
 			continue // Memory too faded
 		}
 
-		// Check if memory is relevant to decision
+		// Check if memory is relevant to decision.
 		isRelevant := false
 
-		// Check if faction is involved
+		// Check if faction is involved.
 		for _, participant := range memory.Participants {
 			if participant == decision.FactionID {
 				isRelevant = true
@@ -439,7 +439,7 @@ func (fps *FactionPersonalityService) getRelevantMemories(personality *models.Fa
 			}
 		}
 
-		// Check if event type is relevant
+		// Check if event type is relevant.
 		if decision.DecisionType == "diplomatic" && memory.EventType == "faction_interaction" {
 			isRelevant = true
 		} else if decision.DecisionType == "military" && memory.EventType == "military_conflict" {
@@ -451,7 +451,7 @@ func (fps *FactionPersonalityService) getRelevantMemories(personality *models.Fa
 		}
 	}
 
-	// Return most impactful memories
+	// Return most impactful memories.
 	if len(relevant) > 5 {
 		relevant = relevant[:5]
 	}
@@ -459,14 +459,14 @@ func (fps *FactionPersonalityService) getRelevantMemories(personality *models.Fa
 	return relevant
 }
 
-// UpdateFactionMood adjusts faction mood based on recent events
+// UpdateFactionMood adjusts faction mood based on recent events.
 func (fps *FactionPersonalityService) UpdateFactionMood(ctx context.Context, factionID string) error {
 	personality, err := fps.worldRepo.GetFactionPersonality(factionID)
 	if err != nil {
 		return err
 	}
 
-	// Calculate mood from recent memories
+	// Calculate mood from recent memories.
 	recentImpact := 0.0
 	memoryCount := 0
 
@@ -482,7 +482,7 @@ func (fps *FactionPersonalityService) UpdateFactionMood(ctx context.Context, fac
 	if memoryCount > 0 {
 		avgImpact := recentImpact / float64(memoryCount)
 
-		// Determine new mood based on average impact
+		// Determine new mood based on average impact.
 		if avgImpact > 0.5 {
 			personality.CurrentMood = "triumphant"
 		} else if avgImpact > 0.2 {
@@ -499,20 +499,20 @@ func (fps *FactionPersonalityService) UpdateFactionMood(ctx context.Context, fac
 	return fps.worldRepo.UpdateFactionPersonality(personality)
 }
 
-// LearnFromInteraction updates faction personality based on player interactions
+// LearnFromInteraction updates faction personality based on player interactions.
 func (fps *FactionPersonalityService) LearnFromInteraction(ctx context.Context, factionID string, interaction models.PlayerInteraction) error {
 	personality, err := fps.worldRepo.GetFactionPersonality(factionID)
 	if err != nil {
 		return err
 	}
 
-	// Update learning data
+	// Update learning data.
 	if personality.LearningData == nil {
 		personality.LearningData = make(map[string]interface{})
 	}
 
-	// Track interaction patterns
-	// Extract outcome from context
+	// Track interaction patterns.
+	// Extract outcome from context.
 	outcome := "neutral"
 	if outcomeVal, ok := interaction.Context["outcome"].(string); ok {
 		outcome = outcomeVal
@@ -525,13 +525,13 @@ func (fps *FactionPersonalityService) LearnFromInteraction(ctx context.Context, 
 		"timestamp": time.Now(),
 	})
 
-	// Keep last 50 interactions
+	// Keep last 50 interactions.
 	if len(interactions) > 50 {
 		interactions = interactions[len(interactions)-50:]
 	}
 	personality.LearningData["player_interactions"] = interactions
 
-	// Adjust personality traits based on successful interactions
+	// Adjust personality traits based on successful interactions.
 	if outcome == "positive" {
 		switch interaction.Type {
 		case "diplomatic":
@@ -549,38 +549,36 @@ func (fps *FactionPersonalityService) LearnFromInteraction(ctx context.Context, 
 	return fps.worldRepo.UpdateFactionPersonality(personality)
 }
 
-// Helper functions
-
+// Helper functions.
 func (fps *FactionPersonalityService) pruneMemories(memories []models.FactionMemory) []models.FactionMemory {
-	// Keep most impactful and recent memories
-	// Simple implementation - in production would use better algorithm
+	// Keep most impactful and recent memories.
+	// Simple implementation - in production would use better algorithm.
 	if len(memories) <= 100 {
 		return memories
 	}
 
-	// Keep last 50 and top 50 by impact
+	// Keep last 50 and top 50 by impact.
 	recent := memories[len(memories)-50:]
 
-	// Sort remaining by impact (simplified)
+	// Sort remaining by impact (simplified).
 	remaining := memories[:len(memories)-50]
-	// Would implement proper sorting here
-
+	// Would implement proper sorting here.
 	combined := append(remaining[:50], recent...)
 	return combined
 }
 
 func (fps *FactionPersonalityService) updateLearningFromMemory(personality *models.FactionPersonality, memory models.FactionMemory) {
-	// Update learning patterns based on memory type and impact
+	// Update learning patterns based on memory type and impact.
 	patterns, _ := personality.LearningData["event_patterns"].(map[string]interface{})
 	if patterns == nil {
 		patterns = make(map[string]interface{})
 	}
 
-	// Track event outcomes
+	// Track event outcomes.
 	eventOutcomes, _ := patterns[memory.EventType].([]float64)
 	eventOutcomes = append(eventOutcomes, memory.Impact)
 
-	// Keep last 20 outcomes per event type
+	// Keep last 20 outcomes per event type.
 	if len(eventOutcomes) > 20 {
 		eventOutcomes = eventOutcomes[len(eventOutcomes)-20:]
 	}
@@ -613,7 +611,7 @@ func (fps *FactionPersonalityService) formatMemories(memories []models.FactionMe
 }
 
 func (fps *FactionPersonalityService) makeDefaultDecision(personality *models.FactionPersonality, decision models.FactionDecision, scores map[string]float64) *models.FactionDecisionResult {
-	// Find highest scored option
+	// Find highest scored option.
 	var bestOption string
 	bestScore := -999.0
 	for id, score := range scores {
@@ -636,7 +634,7 @@ func (fps *FactionPersonalityService) makeDefaultDecision(personality *models.Fa
 	}
 }
 
-//lint:ignore U1000 retained for future feature work
+//lint:ignore U1000 retained for future feature work.
 func (fps *FactionPersonalityService) parseRelationshipImpacts(impacts interface{}) map[string]float64 {
 	result := make(map[string]float64)
 
@@ -651,8 +649,7 @@ func (fps *FactionPersonalityService) parseRelationshipImpacts(impacts interface
 	return result
 }
 
-// Additional types for decision making
-
+// Additional types for decision making.
 type FactionDecision struct {
 	ID               string           `json:"id"`
 	Type             string           `json:"type"`

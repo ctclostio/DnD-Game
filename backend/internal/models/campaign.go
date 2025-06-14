@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// StoryArc represents a narrative arc in the campaign
+// StoryArc represents a narrative arc in the campaign.
 type StoryArc struct {
 	ID              uuid.UUID  `json:"id" db:"id"`
 	GameSessionID   uuid.UUID  `json:"game_session_id" db:"game_session_id"`
@@ -22,7 +22,7 @@ type StoryArc struct {
 	Metadata        JSONB      `json:"metadata" db:"metadata"`
 }
 
-// SessionMemory represents the record of a game session
+// SessionMemory represents the record of a game session.
 type SessionMemory struct {
 	ID               uuid.UUID `json:"id" db:"id"`
 	GameSessionID    uuid.UUID `json:"game_session_id" db:"game_session_id"`
@@ -40,7 +40,7 @@ type SessionMemory struct {
 	UpdatedAt        time.Time `json:"updated_at" db:"updated_at"`
 }
 
-// PlotThread represents an ongoing narrative thread
+// PlotThread represents an ongoing narrative thread.
 type PlotThread struct {
 	ID                   uuid.UUID  `json:"id" db:"id"`
 	GameSessionID        uuid.UUID  `json:"game_session_id" db:"game_session_id"`
@@ -60,7 +60,7 @@ type PlotThread struct {
 	UpdatedAt            time.Time  `json:"updated_at" db:"updated_at"`
 }
 
-// ForeshadowingElement represents a hint or clue about future events
+// ForeshadowingElement represents a hint or clue about future events.
 type ForeshadowingElement struct {
 	ID                   uuid.UUID  `json:"id" db:"id"`
 	GameSessionID        uuid.UUID  `json:"game_session_id" db:"game_session_id"`
@@ -76,7 +76,7 @@ type ForeshadowingElement struct {
 	UpdatedAt            time.Time  `json:"updated_at" db:"updated_at"`
 }
 
-// CampaignTimeline represents an event in the campaign's chronology
+// CampaignTimeline represents an event in the campaign's chronology.
 type CampaignTimeline struct {
 	ID               uuid.UUID  `json:"id" db:"id"`
 	GameSessionID    uuid.UUID  `json:"game_session_id" db:"game_session_id"`
@@ -92,7 +92,7 @@ type CampaignTimeline struct {
 	CreatedAt        time.Time  `json:"created_at" db:"created_at"`
 }
 
-// NPCRelationship tracks how NPCs relate to the party and each other
+// NPCRelationship tracks how NPCs relate to the party and each other.
 type NPCRelationship struct {
 	ID                     uuid.UUID `json:"id" db:"id"`
 	GameSessionID          uuid.UUID `json:"game_session_id" db:"game_session_id"`
@@ -107,8 +107,7 @@ type NPCRelationship struct {
 	UpdatedAt              time.Time `json:"updated_at" db:"updated_at"`
 }
 
-// Campaign-related request/response types
-
+// Campaign-related request/response types.
 type CreateStoryArcRequest struct {
 	Title           string     `json:"title" binding:"required"`
 	Description     string     `json:"description"`
@@ -165,8 +164,7 @@ type GenerateForeshadowingRequest struct {
 	ElementType   string     `json:"element_type"`   // prophecy, rumor, symbol, etc.
 }
 
-// AI-generated content structures
-
+// AI-generated content structures.
 type GeneratedStoryArc struct {
 	Title               string           `json:"title"`
 	Description         string           `json:"description"`

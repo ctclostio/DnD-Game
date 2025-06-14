@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// RuleTemplate represents a reusable rule pattern created through the visual builder
+// RuleTemplate represents a reusable rule pattern created through the visual builder.
 type RuleTemplate struct {
 	ID                   string                 `json:"id" db:"id"`
 	Name                 string                 `json:"name" db:"name"`
@@ -28,7 +28,7 @@ type RuleTemplate struct {
 	UpdatedAt            time.Time              `json:"updated_at" db:"updated_at"`
 }
 
-// LogicGraph represents the visual node-based logic structure
+// LogicGraph represents the visual node-based logic structure.
 type LogicGraph struct {
 	Nodes       []LogicNode         `json:"nodes"`
 	Connections []NodeConnection    `json:"connections"`
@@ -36,7 +36,7 @@ type LogicGraph struct {
 	Variables   map[string]Variable `json:"variables"`
 }
 
-// LogicNode represents a single node in the visual logic builder
+// LogicNode represents a single node in the visual logic builder.
 type LogicNode struct {
 	ID         string                 `json:"id"`
 	Type       string                 `json:"type"`    // trigger, condition, action, effect, calculation, variable
@@ -47,7 +47,7 @@ type LogicNode struct {
 	Outputs    []NodePort             `json:"outputs"`
 }
 
-// NodePort represents an input or output connection point on a node
+// NodePort represents an input or output connection point on a node.
 type NodePort struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
@@ -56,7 +56,7 @@ type NodePort struct {
 	Multiple bool   `json:"multiple"` // Can accept multiple connections
 }
 
-// NodeConnection represents a connection between two nodes
+// NodeConnection represents a connection between two nodes.
 type NodeConnection struct {
 	ID          string `json:"id"`
 	FromNodeID  string `json:"from_node_id"`
@@ -66,13 +66,13 @@ type NodeConnection struct {
 	DataMapping string `json:"data_mapping"` // How data transforms between nodes
 }
 
-// EditorPosition represents x,y coordinates in the visual editor
+// EditorPosition represents x,y coordinates in the visual editor.
 type EditorPosition struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 }
 
-// Variable represents a variable used in the logic graph
+// Variable represents a variable used in the logic graph.
 type Variable struct {
 	Name         string      `json:"name"`
 	Type         string      `json:"type"`
@@ -80,7 +80,7 @@ type Variable struct {
 	Scope        string      `json:"scope"` // local, character, session, global
 }
 
-// RuleParameter represents a customizable parameter for a rule template
+// RuleParameter represents a customizable parameter for a rule template.
 type RuleParameter struct {
 	Name         string      `json:"name"`
 	DisplayName  string      `json:"display_name"`
@@ -90,7 +90,7 @@ type RuleParameter struct {
 	Description  string      `json:"description"`
 }
 
-// Constraints defines validation rules for parameters
+// Constraints defines validation rules for parameters.
 type Constraints struct {
 	Min        *float64 `json:"min,omitempty"`
 	Max        *float64 `json:"max,omitempty"`
@@ -100,7 +100,7 @@ type Constraints struct {
 	EntityType string   `json:"entity_type,omitempty"` // For entity references
 }
 
-// BalanceMetrics contains AI-analyzed balance information
+// BalanceMetrics contains AI-analyzed balance information.
 type BalanceMetrics struct {
 	PowerLevel           float64              `json:"power_level"`    // 0-10 scale
 	ActionEconomy        float64              `json:"action_economy"` // How many actions it requires/grants
@@ -113,7 +113,7 @@ type BalanceMetrics struct {
 	MetaImpactPrediction MetaImpactPrediction `json:"meta_impact_prediction"`
 }
 
-// DamageExpectation represents predicted damage output
+// DamageExpectation represents predicted damage output.
 type DamageExpectation struct {
 	MinDamage      float64            `json:"min_damage"`
 	MaxDamage      float64            `json:"max_damage"`
@@ -123,7 +123,7 @@ type DamageExpectation struct {
 	TargetCount    float64            `json:"target_count"`
 }
 
-// SimulationResult represents the outcome of a balance simulation
+// SimulationResult represents the outcome of a balance simulation.
 type SimulationResult struct {
 	ScenarioName    string                 `json:"scenario_name"`
 	Level           int                    `json:"level"`
@@ -133,7 +133,7 @@ type SimulationResult struct {
 	ComparisonScore float64                `json:"comparison_score"` // vs similar abilities
 }
 
-// BalanceSuggestion represents an AI-generated balance adjustment
+// BalanceSuggestion represents an AI-generated balance adjustment.
 type BalanceSuggestion struct {
 	Type       string  `json:"type"`   // nerf, buff, rework, restriction
 	Target     string  `json:"target"` // What aspect to change
@@ -143,7 +143,7 @@ type BalanceSuggestion struct {
 	Priority   string  `json:"priority"` // high, medium, low
 }
 
-// MetaImpactPrediction predicts how this rule will affect the game meta
+// MetaImpactPrediction predicts how this rule will affect the game meta.
 type MetaImpactPrediction struct {
 	PopularityScore    float64  `json:"popularity_score"`
 	ComboBreaker       bool     `json:"combo_breaker"`
@@ -154,7 +154,7 @@ type MetaImpactPrediction struct {
 	MetaShiftPotential float64  `json:"meta_shift_potential"`
 }
 
-// ConditionalRule represents a rule that applies under specific conditions
+// ConditionalRule represents a rule that applies under specific conditions.
 type ConditionalRule struct {
 	ID                 string                 `json:"id"`
 	Name               string                 `json:"name"`
@@ -165,7 +165,7 @@ type ConditionalRule struct {
 	Description        string                 `json:"description"`
 }
 
-// RuleCondition represents a single condition that must be met
+// RuleCondition represents a single condition that must be met.
 type RuleCondition struct {
 	Type       string      `json:"type"`     // location, character_state, time, narrative
 	Operator   string      `json:"operator"` // equals, contains, greater_than, etc.
@@ -173,7 +173,7 @@ type RuleCondition struct {
 	Contextual bool        `json:"contextual"` // If true, value is evaluated at runtime
 }
 
-// RuleInstance represents an active instance of a rule in play
+// RuleInstance represents an active instance of a rule in play.
 type RuleInstance struct {
 	ID               string                 `json:"id" db:"id"`
 	TemplateID       string                 `json:"template_id" db:"template_id"`
@@ -190,22 +190,22 @@ type RuleInstance struct {
 	CreatedAt        time.Time              `json:"created_at" db:"created_at"`
 }
 
-// NodeType constants
+// NodeType constants.
 const (
-	// Trigger nodes - what starts the rule
+	// Trigger nodes - what starts the rule.
 	NodeTypeTriggerAction    = "trigger_action"
 	NodeTypeTriggerTime      = "trigger_time"
 	NodeTypeTriggerCondition = "trigger_condition"
 	NodeTypeTriggerDamage    = "trigger_damage"
 	NodeTypeTriggerMovement  = "trigger_movement"
 
-	// Condition nodes - decision making
+	// Condition nodes - decision making.
 	NodeTypeConditionCheck   = "condition_check"
 	NodeTypeConditionCompare = "condition_compare"
 	NodeTypeConditionRoll    = "condition_roll"
 	NodeTypeConditionState   = "condition_state"
 
-	// Action nodes - what happens
+	// Action nodes - what happens.
 	NodeTypeActionDamage   = "action_damage"
 	NodeTypeActionHeal     = "action_heal"
 	NodeTypeActionEffect   = "action_effect"
@@ -213,19 +213,19 @@ const (
 	NodeTypeActionResource = "action_resource"
 	NodeTypeActionRoll     = "action_roll"
 
-	// Calculation nodes - math and logic
+	// Calculation nodes - math and logic.
 	NodeTypeCalcMath      = "calc_math"
 	NodeTypeCalcRandom    = "calc_random"
 	NodeTypeCalcAggregate = "calc_aggregate"
 
-	// Flow control
+	// Flow control.
 	NodeTypeFlowSplit = "flow_split"
 	NodeTypeFlowMerge = "flow_merge"
 	NodeTypeFlowLoop  = "flow_loop"
 	NodeTypeFlowDelay = "flow_delay"
 )
 
-// ConditionType constants for Conditional Reality System
+// ConditionType constants for Conditional Reality System.
 const (
 	ConditionTypePlane        = "plane"
 	ConditionTypeEmotion      = "emotion"
@@ -237,7 +237,7 @@ const (
 	ConditionTypeWeather      = "weather"
 )
 
-// ActiveRule represents an active instance of a rule in play
+// ActiveRule represents an active instance of a rule in play.
 type ActiveRule struct {
 	ID            string                 `json:"id" db:"id"`
 	TemplateID    string                 `json:"template_id" db:"template_id"`
@@ -250,7 +250,7 @@ type ActiveRule struct {
 	UpdatedAt     time.Time              `json:"updated_at" db:"updated_at"`
 }
 
-// RuleExecution represents a record of rule execution
+// RuleExecution represents a record of rule execution.
 type RuleExecution struct {
 	ID              string                 `json:"id" db:"id"`
 	RuleID          string                 `json:"rule_id" db:"rule_id"`
@@ -263,7 +263,7 @@ type RuleExecution struct {
 	ExecutedAt      time.Time              `json:"executed_at" db:"executed_at"`
 }
 
-// NodeTemplate represents a template for creating logic nodes
+// NodeTemplate represents a template for creating logic nodes.
 type NodeTemplate struct {
 	ID                string                 `json:"id" db:"id"`
 	NodeType          string                 `json:"node_type" db:"node_type"`
@@ -278,7 +278,7 @@ type NodeTemplate struct {
 	DefaultProperties map[string]interface{} `json:"default_properties" db:"default_properties"`
 }
 
-// ConditionalContext represents an active conditional context
+// ConditionalContext represents an active conditional context.
 type ConditionalContext struct {
 	ID           string                 `json:"id"`
 	SessionID    string                 `json:"session_id"`
@@ -289,7 +289,7 @@ type ConditionalContext struct {
 	EndedAt      *time.Time             `json:"ended_at,omitempty"`
 }
 
-// ConditionalModifier represents a modifier that applies under specific conditions
+// ConditionalModifier represents a modifier that applies under specific conditions.
 type ConditionalModifier struct {
 	ID           string                 `json:"id"`
 	Name         string                 `json:"name"`
@@ -300,13 +300,13 @@ type ConditionalModifier struct {
 	Description  string                 `json:"description"`
 }
 
-// LevelRange represents a range of character levels
+// LevelRange represents a range of character levels.
 type LevelRange struct {
 	Min int `json:"min"`
 	Max int `json:"max"`
 }
 
-// CustomRule represents a custom rule created by users
+// CustomRule represents a custom rule created by users.
 type CustomRule struct {
 	ID          string                 `json:"id" db:"id"`
 	Name        string                 `json:"name" db:"name"`

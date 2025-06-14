@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type CampaignHandler struct {
@@ -27,8 +27,7 @@ func NewCampaignHandler(campaignService *services.CampaignService, gameService *
 	}
 }
 
-// Story Arc Handlers
-
+// Story Arc Handlers.
 func (h *CampaignHandler) CreateStoryArc(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := auth.GetUserFromContext(ctx)
@@ -44,7 +43,7 @@ func (h *CampaignHandler) CreateStoryArc(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.NotFound(w, r, "Session not found")
@@ -86,7 +85,7 @@ func (h *CampaignHandler) GenerateStoryArc(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.NotFound(w, r, "Session not found")
@@ -153,7 +152,7 @@ func (h *CampaignHandler) UpdateStoryArc(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.NotFound(w, r, "Session not found")
@@ -179,8 +178,7 @@ func (h *CampaignHandler) UpdateStoryArc(w http.ResponseWriter, r *http.Request)
 	response.JSON(w, r, http.StatusOK, map[string]string{"message": "Story arc updated successfully"})
 }
 
-// Session Memory Handlers
-
+// Session Memory Handlers.
 func (h *CampaignHandler) CreateSessionMemory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := auth.GetUserFromContext(ctx)
@@ -196,7 +194,7 @@ func (h *CampaignHandler) CreateSessionMemory(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.NotFound(w, r, "Session not found")
@@ -261,7 +259,7 @@ func (h *CampaignHandler) GenerateRecap(w http.ResponseWriter, r *http.Request) 
 
 	var req models.GenerateRecapRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		// Default to 3 sessions if no body provided
+		// Default to 3 sessions if no body provided.
 		req.SessionCount = 3
 	}
 
@@ -274,8 +272,7 @@ func (h *CampaignHandler) GenerateRecap(w http.ResponseWriter, r *http.Request) 
 	response.JSON(w, r, http.StatusOK, recap)
 }
 
-// Plot Thread Handlers
-
+// Plot Thread Handlers.
 func (h *CampaignHandler) CreatePlotThread(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := auth.GetUserFromContext(ctx)
@@ -291,7 +288,7 @@ func (h *CampaignHandler) CreatePlotThread(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.NotFound(w, r, "Session not found")
@@ -338,8 +335,7 @@ func (h *CampaignHandler) GetPlotThreads(w http.ResponseWriter, r *http.Request)
 	response.JSON(w, r, http.StatusOK, threads)
 }
 
-// Foreshadowing Handlers
-
+// Foreshadowing Handlers.
 func (h *CampaignHandler) GenerateForeshadowing(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := auth.GetUserFromContext(ctx)
@@ -355,7 +351,7 @@ func (h *CampaignHandler) GenerateForeshadowing(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.NotFound(w, r, "Session not found")
@@ -397,7 +393,7 @@ func (h *CampaignHandler) GetUnrevealedForeshadowing(w http.ResponseWriter, r *h
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.NotFound(w, r, "Session not found")
@@ -433,14 +429,14 @@ func (h *CampaignHandler) RevealForeshadowing(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Get session ID from query params
+	// Get session ID from query params.
 	sessionID, err := uuid.Parse(r.URL.Query().Get("sessionId"))
 	if err != nil {
 		response.BadRequest(w, r, "Invalid session ID")
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.NotFound(w, r, "Session not found")
@@ -468,8 +464,7 @@ func (h *CampaignHandler) RevealForeshadowing(w http.ResponseWriter, r *http.Req
 	response.JSON(w, r, http.StatusOK, map[string]string{"message": "Foreshadowing revealed"})
 }
 
-// Timeline Handlers
-
+// Timeline Handlers.
 func (h *CampaignHandler) AddTimelineEvent(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := auth.GetUserFromContext(ctx)
@@ -485,14 +480,14 @@ func (h *CampaignHandler) AddTimelineEvent(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Verify user is in session
+	// Verify user is in session.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.NotFound(w, r, "Session not found")
 		return
 	}
 
-	// Check if user is participant or DM
+	// Check if user is participant or DM.
 	isParticipant := false
 	if session.DMID == claims.UserID {
 		isParticipant = true
@@ -540,7 +535,7 @@ func (h *CampaignHandler) GetTimeline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse date range from query params
+	// Parse date range from query params.
 	startStr := r.URL.Query().Get("start")
 	endStr := r.URL.Query().Get("end")
 
@@ -576,8 +571,7 @@ func (h *CampaignHandler) GetTimeline(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, events)
 }
 
-// NPC Relationship Handlers
-
+// NPC Relationship Handlers.
 func (h *CampaignHandler) UpdateNPCRelationship(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := auth.GetUserFromContext(ctx)
@@ -593,7 +587,7 @@ func (h *CampaignHandler) UpdateNPCRelationship(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
 		response.NotFound(w, r, "Session not found")

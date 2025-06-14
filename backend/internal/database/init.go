@@ -8,14 +8,14 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
-// Initialize creates and initializes the database connection and repositories
+// Initialize creates and initializes the database connection and repositories.
 func Initialize(cfg *config.Config) (*DB, *Repositories, error) {
 	return InitializeWithLogging(cfg, nil)
 }
 
-// InitializeWithLogging creates and initializes the database connection and repositories with optional logging
+// InitializeWithLogging creates and initializes the database connection and repositories with optional logging.
 func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repositories, error) {
-	// Create database configuration
+	// Create database configuration.
 	dbConfig := Config{
 		Host:         cfg.Database.Host,
 		Port:         cfg.Database.Port,
@@ -28,7 +28,7 @@ func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repo
 		MaxLifetime:  cfg.Database.MaxLifetime,
 	}
 
-	// Connect to database with retry logic
+	// Connect to database with retry logic.
 	var db *DB
 	var err error
 
@@ -63,7 +63,7 @@ func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repo
 			Msg("Successfully connected to database")
 	}
 
-	// Run migrations
+	// Run migrations.
 	if err := RunMigrations(db); err != nil {
 		if cerr := db.Close(); cerr != nil && log != nil {
 			log.Error().Err(cerr).Msg("failed to close db after migrations")
@@ -76,12 +76,12 @@ func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repo
 			Msg("Database migrations completed successfully")
 	}
 
-	// Set logger on database connection if provided
+	// Set logger on database connection if provided.
 	if log != nil {
 		db.SetLogger(log)
 	}
 
-	// Create repositories
+	// Create repositories.
 	repos := &Repositories{
 		Users:           NewUserRepository(db),
 		Characters:      NewCharacterRepository(db),
@@ -104,7 +104,7 @@ func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repo
 	return db, repos, nil
 }
 
-// Ping checks if the database connection is alive
+// Ping checks if the database connection is alive.
 func Ping(db *DB) error {
 	return db.Ping()
 }

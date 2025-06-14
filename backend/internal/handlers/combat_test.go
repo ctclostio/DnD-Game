@@ -8,14 +8,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// MockCombatService for testing
+// MockCombatService for testing.
 type MockCombatService struct {
 	mock.Mock
 }
@@ -61,10 +61,10 @@ func (m *MockCombatService) EndCombat(ctx context.Context, combatID string) erro
 // For integration tests with actual database operations, see auth_integration_test.go as a reference.
 
 func TestCombatHandler_ProcessAction(t *testing.T) {
-	// This test demonstrates the basic structure but would need full handler setup
+	// This test demonstrates the basic structure but would need full handler setup.
 	// with all required services to work properly.
 	t.Run("valid action request structure", func(t *testing.T) {
-		// Test request body structure
+		// Test request body structure.
 		actionRequest := map[string]interface{}{
 			"actionType": "attack",
 			"actorId":    uuid.New().String(),
@@ -81,7 +81,7 @@ func TestCombatHandler_ProcessAction(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/combat/test-combat-id/action", bytes.NewReader(body))
 		req = mux.SetURLVars(req, map[string]string{"id": "test-combat-id"})
 
-		// Verify request can be parsed
+		// Verify request can be parsed.
 		var parsed struct {
 			ActionType string                 `json:"actionType"`
 			ActorID    string                 `json:"actorId"`
@@ -145,7 +145,7 @@ func TestCombatHandler_RequestValidation(t *testing.T) {
 				"gameSessionId": "session-123",
 				"combatants": []map[string]interface{}{
 					{
-						// Missing required fields
+						// Missing required fields.
 						"initiative": 15,
 					},
 				},
@@ -157,15 +157,15 @@ func TestCombatHandler_RequestValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Marshal body to JSON
+			// Marshal body to JSON.
 			bodyBytes, err := json.Marshal(tt.body)
 			assert.NoError(t, err)
 
-			// Create request
+			// Create request.
 			req := httptest.NewRequest(http.MethodPost, "/api/combat/start", bytes.NewReader(bodyBytes))
 			req.Header.Set("Content-Type", "application/json")
 
-			// Parse and validate request body
+			// Parse and validate request body.
 			var reqData struct {
 				GameSessionID string             `json:"gameSessionId"`
 				Combatants    []models.Combatant `json:"combatants"`
@@ -176,7 +176,7 @@ func TestCombatHandler_RequestValidation(t *testing.T) {
 				t.Errorf("unexpected error decoding request: %v", err)
 			}
 
-			// Perform validation
+			// Perform validation.
 			if reqData.GameSessionID == "" && !tt.shouldError {
 				t.Error("expected gameSessionId to be present")
 			}
@@ -188,7 +188,7 @@ func TestCombatHandler_RequestValidation(t *testing.T) {
 	}
 }
 
-// TestCombatActionTypes verifies different combat action types
+// TestCombatActionTypes verifies different combat action types.
 func TestCombatActionTypes(t *testing.T) {
 	actionTypes := []struct {
 		actionType string
@@ -224,11 +224,11 @@ func TestCombatActionTypes(t *testing.T) {
 
 	for _, at := range actionTypes {
 		t.Run(at.actionType, func(t *testing.T) {
-			// Verify action type structure
+			// Verify action type structure.
 			assert.NotEmpty(t, at.actionType)
 			assert.NotEmpty(t, at.required)
 
-			// Log expected structure for documentation
+			// Log expected structure for documentation.
 			t.Logf("Action type '%s' requires: %v, optional: %v",
 				at.actionType, at.required, at.optional)
 		})

@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"context"
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/gorilla/mux"
 )
 
 func (h *Handlers) StartCombat(w http.ResponseWriter, r *http.Request) {
@@ -31,14 +31,14 @@ func (h *Handlers) StartCombat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user is in the game session
+	// Verify user is in the game session.
 	session, err := h.gameService.GetGameSession(r.Context(), req.GameSessionID)
 	if err != nil {
 		response.ErrorWithCode(w, r, errors.ErrCodeSessionNotFound)
 		return
 	}
 
-	// Check if user is DM
+	// Check if user is DM.
 	if session.DMID != claims.UserID {
 		response.ErrorWithCode(w, r, errors.ErrCodeNotDM, "Only the DM can start combat")
 		return
@@ -50,7 +50,7 @@ func (h *Handlers) StartCombat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Broadcast combat start
+	// Broadcast combat start.
 	h.broadcastCombatUpdate(req.GameSessionID, models.CombatUpdate{
 		Type:    models.UpdateTypeCombatStart,
 		Combat:  combat,
@@ -101,7 +101,7 @@ func (h *Handlers) NextTurn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetGameSession(r.Context(), combat.GameSessionID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -119,10 +119,10 @@ func (h *Handlers) NextTurn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get updated combat state
+	// Get updated combat state.
 	updatedCombat, _ := h.combatService.GetCombat(r.Context(), combatID)
 
-	// Broadcast turn change
+	// Broadcast turn change.
 	h.broadcastCombatUpdate(combat.GameSessionID, models.CombatUpdate{
 		Type:    models.UpdateTypeTurnStart,
 		Combat:  updatedCombat,
@@ -156,7 +156,7 @@ func (h *Handlers) ProcessCombatAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user can control the actor
+	// Verify user can control the actor.
 	if !h.canControlCombatant(r.Context(), claims.UserID, combat, request.ActorID) {
 		response.ErrorWithCode(w, r, errors.ErrCodeInsufficientPrivilege, "You cannot control this combatant")
 		return
@@ -168,10 +168,10 @@ func (h *Handlers) ProcessCombatAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get updated combat state
+	// Get updated combat state.
 	updatedCombat, _ := h.combatService.GetCombat(r.Context(), combatID)
 
-	// Broadcast action
+	// Broadcast action.
 	h.broadcastCombatUpdate(combat.GameSessionID, models.CombatUpdate{
 		Type:    models.UpdateTypeAction,
 		Combat:  updatedCombat,
@@ -197,7 +197,7 @@ func (h *Handlers) EndCombat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user is DM
+	// Verify user is DM.
 	session, err := h.gameService.GetGameSession(r.Context(), combat.GameSessionID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -214,7 +214,7 @@ func (h *Handlers) EndCombat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Broadcast combat end
+	// Broadcast combat end.
 	h.broadcastCombatUpdate(combat.GameSessionID, models.CombatUpdate{
 		Type:    models.UpdateTypeCombatEnd,
 		Message: "Combat has ended",
@@ -251,7 +251,7 @@ func (h *Handlers) MakeSavingThrow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user can control the combatant
+	// Verify user can control the combatant.
 	if !h.canControlCombatant(r.Context(), claims.UserID, combat, combatantID) {
 		response.ErrorWithCode(w, r, errors.ErrCodeInsufficientPrivilege, "You cannot control this combatant")
 		return
@@ -296,7 +296,7 @@ func (h *Handlers) ApplyDamage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user is DM or damage is self-inflicted
+	// Verify user is DM or damage is self-inflicted.
 	session, _ := h.gameService.GetGameSession(r.Context(), combat.GameSessionID)
 	if session.DMID != claims.UserID && !h.canControlCombatant(r.Context(), claims.UserID, combat, combatantID) {
 		response.ErrorWithCode(w, r, errors.ErrCodeInsufficientPrivilege)
@@ -309,10 +309,10 @@ func (h *Handlers) ApplyDamage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get updated combat state
+	// Get updated combat state.
 	updatedCombat, _ := h.combatService.GetCombat(r.Context(), combatID)
 
-	// Find combatant name
+	// Find combatant name.
 	var combatantName string
 	for _, c := range updatedCombat.Combatants {
 		if c.ID == combatantID {
@@ -321,7 +321,7 @@ func (h *Handlers) ApplyDamage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Broadcast HP change
+	// Broadcast HP change.
 	h.broadcastCombatUpdate(combat.GameSessionID, models.CombatUpdate{
 		Type:    models.UpdateTypeHPChange,
 		Combat:  updatedCombat,
@@ -356,7 +356,7 @@ func (h *Handlers) HealCombatant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user is DM or healing is self-inflicted
+	// Verify user is DM or healing is self-inflicted.
 	session, _ := h.gameService.GetGameSession(r.Context(), combat.GameSessionID)
 	if session.DMID != claims.UserID && !h.canControlCombatant(r.Context(), claims.UserID, combat, combatantID) {
 		response.ErrorWithCode(w, r, errors.ErrCodeInsufficientPrivilege)
@@ -368,10 +368,10 @@ func (h *Handlers) HealCombatant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get updated combat state
+	// Get updated combat state.
 	updatedCombat, _ := h.combatService.GetCombat(r.Context(), combatID)
 
-	// Find combatant name
+	// Find combatant name.
 	var combatantName string
 	for _, c := range updatedCombat.Combatants {
 		if c.ID == combatantID {
@@ -380,7 +380,7 @@ func (h *Handlers) HealCombatant(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Broadcast HP change
+	// Broadcast HP change.
 	h.broadcastCombatUpdate(combat.GameSessionID, models.CombatUpdate{
 		Type:    models.UpdateTypeHPChange,
 		Combat:  updatedCombat,
@@ -390,9 +390,9 @@ func (h *Handlers) HealCombatant(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, map[string]string{"message": "Healing applied"})
 }
 
-// Helper function to check if a user can control a combatant
+// Helper function to check if a user can control a combatant.
 func (h *Handlers) canControlCombatant(ctx context.Context, userID string, combat *models.Combat, combatantID string) bool {
-	// Find the combatant
+	// Find the combatant.
 	var combatant *models.Combatant
 	for i := range combat.Combatants {
 		if combat.Combatants[i].ID == combatantID {
@@ -405,13 +405,13 @@ func (h *Handlers) canControlCombatant(ctx context.Context, userID string, comba
 		return false
 	}
 
-	// DM can control all combatants
+	// DM can control all combatants.
 	session, err := h.gameService.GetGameSession(ctx, combat.GameSessionID)
 	if err == nil && session.DMID == userID {
 		return true
 	}
 
-	// Players can only control their own characters
+	// Players can only control their own characters.
 	if combatant.IsPlayerCharacter && combatant.CharacterID != "" {
 		character, err := h.characterService.GetCharacter(ctx, combatant.CharacterID)
 		if err == nil && character.UserID == userID {
@@ -422,7 +422,7 @@ func (h *Handlers) canControlCombatant(ctx context.Context, userID string, comba
 	return false
 }
 
-// Helper function to broadcast combat updates
+// Helper function to broadcast combat updates.
 func (h *Handlers) broadcastCombatUpdate(gameSessionID string, update models.CombatUpdate) {
 	message := websocket.Message{
 		Type:   "combat",

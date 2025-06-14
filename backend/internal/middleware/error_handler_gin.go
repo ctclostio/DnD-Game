@@ -4,21 +4,21 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/gin-gonic/gin"
 )
 
-// ErrorHandlerGin returns a Gin middleware for handling errors
+// ErrorHandlerGin returns a Gin middleware for handling errors.
 func ErrorHandlerGin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Process the request
+		// Process the request.
 		c.Next()
 
-		// Check if there are any errors
+		// Check if there are any errors.
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last().Err
 
-			// Get request ID from context
+			// Get request ID from context.
 			requestID, _ := c.Get("request_id")
 			if requestID == nil {
 				requestID = c.GetHeader("X-Request-ID")
@@ -27,10 +27,10 @@ func ErrorHandlerGin() gin.HandlerFunc {
 				}
 			}
 
-			// Handle different error types
+			// Handle different error types.
 			switch e := err.(type) {
 			case *errors.AppError:
-				// Handle AppError
+				// Handle AppError.
 				response := gin.H{
 					"code":       e.Code,
 					"message":    e.Message,
@@ -43,7 +43,7 @@ func ErrorHandlerGin() gin.HandlerFunc {
 					}
 				}
 
-				// Check for rate limit error and add retry header
+				// Check for rate limit error and add retry header.
 				if e.Type == errors.ErrorTypeRateLimit {
 					if retryAfter, ok := e.Details["retry_after"].(int); ok {
 						c.Header("Retry-After", strconv.Itoa(retryAfter))
@@ -54,7 +54,7 @@ func ErrorHandlerGin() gin.HandlerFunc {
 				return
 
 			case *errors.ValidationErrors:
-				// Handle validation errors
+				// Handle validation errors.
 				response := gin.H{
 					"code":         string(errors.ErrCodeValidationFailed),
 					"message":      "Validation failed",
@@ -66,7 +66,7 @@ func ErrorHandlerGin() gin.HandlerFunc {
 				return
 
 			default:
-				// Handle generic errors
+				// Handle generic errors.
 				response := gin.H{
 					"code":       string(errors.ErrCodeInternalError),
 					"message":    "Internal server error",

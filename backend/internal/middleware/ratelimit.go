@@ -32,7 +32,7 @@ func NewRateLimiter(rate int, window time.Duration) *RateLimiter {
 		window:   window,
 	}
 
-	// Start cleanup goroutine
+	// Start cleanup goroutine.
 	go rl.cleanupVisitors()
 
 	return rl
@@ -80,27 +80,27 @@ func (rl *RateLimiter) isAllowed(ip string) bool {
 
 	now := time.Now()
 
-	// Check if visitor is blocked
+	// Check if visitor is blocked.
 	if v.blocked {
-		// Check if block period has expired (exponential backoff)
+		// Check if block period has expired (exponential backoff).
 		if now.Sub(v.blockTime) < rl.window*10 {
 			return false
 		}
-		// Unblock
+		// Unblock.
 		v.blocked = false
 		v.count = 0
 	}
 
-	// Reset count if window has passed
+	// Reset count if window has passed.
 	if now.Sub(v.lastSeen) > rl.window {
 		v.count = 0
 		v.lastSeen = now
 	}
 
-	// Increment count
+	// Increment count.
 	v.count++
 
-	// Check if limit exceeded
+	// Check if limit exceeded.
 	if v.count > rl.rate {
 		v.blocked = true
 		v.blockTime = now
@@ -136,23 +136,23 @@ func (rl *RateLimiter) Middleware() func(http.Handler) http.Handler {
 
 // getIP extracts the real IP address from the request.
 func getIP(r *http.Request) string {
-	// Check X-Forwarded-For header
+	// Check X-Forwarded-For header.
 	forwarded := r.Header.Get("X-Forwarded-For")
 	if forwarded != "" {
-		// Get the first IP in the chain
+		// Get the first IP in the chain.
 		if ip := net.ParseIP(forwarded); ip != nil {
 			return ip.String()
 		}
 	}
 
-	// Check X-Real-IP header
+	// Check X-Real-IP header.
 	if realIP := r.Header.Get("X-Real-IP"); realIP != "" {
 		if ip := net.ParseIP(realIP); ip != nil {
 			return ip.String()
 		}
 	}
 
-	// Fall back to RemoteAddr
+	// Fall back to RemoteAddr.
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		return r.RemoteAddr
@@ -163,12 +163,12 @@ func getIP(r *http.Request) string {
 
 // AuthRateLimiter creates a rate limiter specifically for auth endpoints.
 func AuthRateLimiter() *RateLimiter {
-	// Allow 5 requests per minute for auth endpoints
+	// Allow 5 requests per minute for auth endpoints.
 	return NewRateLimiter(5, 1*time.Minute)
 }
 
 // APIRateLimiter creates a general rate limiter for API endpoints.
 func APIRateLimiter() *RateLimiter {
-	// Allow 100 requests per minute for general API endpoints
+	// Allow 100 requests per minute for general API endpoints.
 	return NewRateLimiter(100, 1*time.Minute)
 }

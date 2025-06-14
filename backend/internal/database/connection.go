@@ -11,7 +11,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// Config holds the database configuration
+// Config holds the database configuration.
 type Config struct {
 	Host         string
 	Port         int
@@ -24,7 +24,7 @@ type Config struct {
 	MaxLifetime  time.Duration
 }
 
-// DB wraps the database connection
+// DB wraps the database connection.
 type DB struct {
 	*sqlx.DB
 	config Config
@@ -36,19 +36,19 @@ func (db *DB) StdDB() *sql.DB {
 	return db.DB.DB
 }
 
-// NewConnection creates a new database connection
+// NewConnection creates a new database connection.
 func NewConnection(cfg Config) (*DB, error) {
-	// Construct DSN
+	// Construct DSN.
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DatabaseName, cfg.SSLMode)
 
-	// Open database connection
+	// Open database connection.
 	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
-	// Set connection pool settings
+	// Set connection pool settings.
 	if cfg.MaxOpenConns > 0 {
 		db.SetMaxOpenConns(cfg.MaxOpenConns)
 	}
@@ -59,7 +59,7 @@ func NewConnection(cfg Config) (*DB, error) {
 		db.SetConnMaxLifetime(cfg.MaxLifetime)
 	}
 
-	// Test the connection
+	// Test the connection.
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
@@ -71,12 +71,12 @@ func NewConnection(cfg Config) (*DB, error) {
 	}, nil
 }
 
-// SetLogger sets the logger for the database connection
+// SetLogger sets the logger for the database connection.
 func (db *DB) SetLogger(logger *logger.LoggerV2) {
 	db.logger = logger
 }
 
-// logQuery logs a database query with timing and context
+// logQuery logs a database query with timing and context.
 func (db *DB) logQuery(ctx context.Context, query string, args []interface{}, err error, duration time.Duration) {
 	if db.logger == nil {
 		return
@@ -84,7 +84,7 @@ func (db *DB) logQuery(ctx context.Context, query string, args []interface{}, er
 
 	log := db.logger.WithContext(ctx)
 
-	// Truncate query for logging
+	// Truncate query for logging.
 	const maxQueryLength = 200
 	truncatedQuery := query
 	if len(query) > maxQueryLength {
@@ -97,7 +97,7 @@ func (db *DB) logQuery(ctx context.Context, query string, args []interface{}, er
 		Int64("duration_ms", duration.Milliseconds()).
 		Int("args_count", len(args))
 
-	// Add first few args for debugging (be careful not to log sensitive data)
+	// Add first few args for debugging (be careful not to log sensitive data).
 	if len(args) > 0 && len(args) <= 3 {
 		event = event.Interface("args", args)
 	}
@@ -113,12 +113,12 @@ func (db *DB) logQuery(ctx context.Context, query string, args []interface{}, er
 	}
 }
 
-// Close closes the database connection
+// Close closes the database connection.
 func (db *DB) Close() error {
 	return db.DB.Close()
 }
 
-// WithTx executes a function within a database transaction
+// WithTx executes a function within a database transaction.
 func (db *DB) WithTx(fn func(*sqlx.Tx) error) error {
 	tx, err := db.Beginx()
 	if err != nil {
@@ -144,7 +144,7 @@ func (db *DB) GetDB() *sqlx.DB {
 	return db.DB
 }
 
-// QueryRowContext executes a query with context that is expected to return at most one row
+// QueryRowContext executes a query with context that is expected to return at most one row.
 func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	if db.logger != nil {
 		start := time.Now()
@@ -155,7 +155,7 @@ func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interfa
 	return db.DB.QueryRowContext(ctx, query, args...)
 }
 
-// ExecContext executes a query with context without returning any rows
+// ExecContext executes a query with context without returning any rows.
 func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	if db.logger != nil {
 		start := time.Now()
@@ -166,53 +166,53 @@ func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}
 	return db.DB.ExecContext(ctx, query, args...)
 }
 
-// GetConfig returns the database configuration
+// GetConfig returns the database configuration.
 func (db *DB) GetConfig() Config {
 	return db.config
 }
 
-// Exec executes a query without returning any rows
+// Exec executes a query without returning any rows.
 func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 	return db.DB.Exec(query, args...)
 }
 
-// Query executes a query that returns rows
+// Query executes a query that returns rows.
 func (db *DB) Query(query string, args ...interface{}) (*sqlx.Rows, error) {
 	return db.Queryx(query, args...)
 }
 
-// QueryRow executes a query that is expected to return at most one row
+// QueryRow executes a query that is expected to return at most one row.
 func (db *DB) QueryRow(query string, args ...interface{}) *sqlx.Row {
 	return db.QueryRowx(query, args...)
 }
 
-// Get executes a query and scans the result into dest
+// Get executes a query and scans the result into dest.
 func (db *DB) Get(dest interface{}, query string, args ...interface{}) error {
 	return db.DB.Get(dest, query, args...)
 }
 
-// Select executes a query and scans the results into dest
+// Select executes a query and scans the results into dest.
 func (db *DB) Select(dest interface{}, query string, args ...interface{}) error {
 	return db.DB.Select(dest, query, args...)
 }
 
-// Rebind transforms a query from QUESTION to the DB driver's bindvar type
-// This allows us to write queries with ? placeholders that work with both SQLite and PostgreSQL
+// Rebind transforms a query from QUESTION to the DB driver's bindvar type.
+// This allows us to write queries with ? placeholders that work with both SQLite and PostgreSQL.
 func (db *DB) Rebind(query string) string {
 	return db.DB.Rebind(query)
 }
 
-// ExecRebind executes a query after rebinding placeholders
+// ExecRebind executes a query after rebinding placeholders.
 func (db *DB) ExecRebind(query string, args ...interface{}) (sql.Result, error) {
 	return db.DB.Exec(db.Rebind(query), args...)
 }
 
-// QueryRowRebind executes a query after rebinding placeholders
+// QueryRowRebind executes a query after rebinding placeholders.
 func (db *DB) QueryRowRebind(query string, args ...interface{}) *sql.Row {
 	return db.DB.QueryRow(db.Rebind(query), args...)
 }
 
-// ExecContextRebind executes a query with context after rebinding placeholders
+// ExecContextRebind executes a query with context after rebinding placeholders.
 func (db *DB) ExecContextRebind(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	reboundQuery := db.Rebind(query)
 	if db.logger != nil {
@@ -224,7 +224,7 @@ func (db *DB) ExecContextRebind(ctx context.Context, query string, args ...inter
 	return db.DB.ExecContext(ctx, reboundQuery, args...)
 }
 
-// QueryRowContextRebind executes a query with context after rebinding placeholders
+// QueryRowContextRebind executes a query with context after rebinding placeholders.
 func (db *DB) QueryRowContextRebind(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	reboundQuery := db.Rebind(query)
 	if db.logger != nil {
@@ -236,7 +236,7 @@ func (db *DB) QueryRowContextRebind(ctx context.Context, query string, args ...i
 	return db.DB.QueryRowContext(ctx, reboundQuery, args...)
 }
 
-// QueryContextRebind executes a query with context after rebinding placeholders
+// QueryContextRebind executes a query with context after rebinding placeholders.
 func (db *DB) QueryContextRebind(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	reboundQuery := db.Rebind(query)
 	if db.logger != nil {

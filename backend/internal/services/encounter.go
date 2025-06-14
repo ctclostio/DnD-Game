@@ -22,50 +22,50 @@ func NewEncounterService(repo *database.EncounterRepository, builder *AIEncounte
 	}
 }
 
-// GenerateEncounter creates a new AI-generated encounter
+// GenerateEncounter creates a new AI-generated encounter.
 func (s *EncounterService) GenerateEncounter(ctx context.Context, req EncounterRequest, gameSessionID, userID string) (*models.Encounter, error) {
-	// Generate the encounter using AI
+	// Generate the encounter using AI.
 	encounter, err := s.encounterBuilder.GenerateEncounter(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate encounter: %w", err)
 	}
 
-	// Set metadata
+	// Set metadata.
 	encounter.GameSessionID = gameSessionID
 	encounter.CreatedBy = userID
 	encounter.Status = "planned"
 
-	// Save to database
+	// Save to database.
 	if err := s.repo.Create(encounter); err != nil {
 		return nil, fmt.Errorf("failed to save encounter: %w", err)
 	}
 
-	// Create default objectives based on encounter type
+	// Create default objectives based on encounter type.
 	s.createDefaultObjectives(encounter)
 
 	return encounter, nil
 }
 
-// GetEncounter retrieves an encounter by ID
+// GetEncounter retrieves an encounter by ID.
 func (s *EncounterService) GetEncounter(ctx context.Context, encounterID string) (*models.Encounter, error) {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
 		return nil, fmt.Errorf("encounter not found: %w", err)
 	}
 
-	// Load objectives
+	// Load objectives.
 	objectives, _ := s.repo.GetObjectives(encounterID)
 	_ = objectives // placeholder for future objective handling
 
 	return encounter, nil
 }
 
-// GetEncountersBySession retrieves all encounters for a game session
+// GetEncountersBySession retrieves all encounters for a game session.
 func (s *EncounterService) GetEncountersBySession(ctx context.Context, gameSessionID string) ([]*models.Encounter, error) {
 	return s.repo.GetByGameSession(gameSessionID)
 }
 
-// StartEncounter begins an encounter
+// StartEncounter begins an encounter.
 func (s *EncounterService) StartEncounter(ctx context.Context, encounterID string) error {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
@@ -76,12 +76,12 @@ func (s *EncounterService) StartEncounter(ctx context.Context, encounterID strin
 		return fmt.Errorf("encounter already started or completed")
 	}
 
-	// Update status
+	// Update status.
 	if err := s.repo.StartEncounter(encounterID); err != nil {
 		return fmt.Errorf("failed to start encounter: %w", err)
 	}
 
-	// Log event
+	// Log event.
 	event := &models.EncounterEvent{
 		EncounterID: encounterID,
 		RoundNumber: 0,
@@ -95,13 +95,13 @@ func (s *EncounterService) StartEncounter(ctx context.Context, encounterID strin
 	return nil
 }
 
-// CompleteEncounter marks an encounter as completed
+// CompleteEncounter marks an encounter as completed.
 func (s *EncounterService) CompleteEncounter(ctx context.Context, encounterID string, outcome string) error {
 	if err := s.repo.CompleteEncounter(encounterID, outcome); err != nil {
 		return fmt.Errorf("failed to complete encounter: %w", err)
 	}
 
-	// Log event
+	// Log event.
 	event := &models.EncounterEvent{
 		EncounterID: encounterID,
 		RoundNumber: 0,
@@ -115,7 +115,7 @@ func (s *EncounterService) CompleteEncounter(ctx context.Context, encounterID st
 	return nil
 }
 
-// ScaleEncounter adjusts the difficulty of an encounter
+// ScaleEncounter adjusts the difficulty of an encounter.
 func (s *EncounterService) ScaleEncounter(ctx context.Context, encounterID string, newDifficulty string) (*models.Encounter, error) {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
@@ -126,7 +126,7 @@ func (s *EncounterService) ScaleEncounter(ctx context.Context, encounterID strin
 		return encounter, fmt.Errorf("encounter has no scaling options")
 	}
 
-	// Apply scaling based on new difficulty
+	// Apply scaling based on new difficulty.
 	var adjustment models.ScalingAdjustment
 	switch newDifficulty {
 	case "easy":
@@ -141,17 +141,16 @@ func (s *EncounterService) ScaleEncounter(ctx context.Context, encounterID strin
 		return encounter, fmt.Errorf("invalid difficulty: %s", newDifficulty)
 	}
 
-	// Apply adjustments
+	// Apply adjustments.
 	s.applyScalingAdjustment(encounter, adjustment)
 
-	// Recalculate XP
+	// Recalculate XP.
 	s.encounterBuilder.calculateEncounterXP(encounter)
 
-	// Update in database
+	// Update in database.
 	encounter.Difficulty = newDifficulty
-	// TODO: Update encounter in database
-
-	// Log event
+	// TODO: Update encounter in database.
+	// Log event.
 	event := &models.EncounterEvent{
 		EncounterID: encounterID,
 		RoundNumber: 0,
@@ -165,7 +164,7 @@ func (s *EncounterService) ScaleEncounter(ctx context.Context, encounterID strin
 	return encounter, nil
 }
 
-// GetTacticalSuggestion provides AI-generated tactical advice
+// GetTacticalSuggestion provides AI-generated tactical advice.
 func (s *EncounterService) GetTacticalSuggestion(ctx context.Context, encounterID string, situation string) (string, error) {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
@@ -177,7 +176,7 @@ func (s *EncounterService) GetTacticalSuggestion(ctx context.Context, encounterI
 		return "", fmt.Errorf("failed to generate suggestion: %w", err)
 	}
 
-	// Log the suggestion
+	// Log the suggestion.
 	event := &models.EncounterEvent{
 		EncounterID:  encounterID,
 		RoundNumber:  0, // Should be passed in
@@ -192,7 +191,7 @@ func (s *EncounterService) GetTacticalSuggestion(ctx context.Context, encounterI
 	return suggestion, nil
 }
 
-// LogCombatEvent records an event during combat
+// LogCombatEvent records an event during combat.
 func (s *EncounterService) LogCombatEvent(ctx context.Context, encounterID string, round int, eventType, actorType, actorID, actorName, description string, mechanicalEffect map[string]interface{}) error {
 	event := &models.EncounterEvent{
 		EncounterID:      encounterID,
@@ -208,17 +207,17 @@ func (s *EncounterService) LogCombatEvent(ctx context.Context, encounterID strin
 	return s.repo.CreateEvent(event)
 }
 
-// GetEncounterEvents retrieves recent events for an encounter
+// GetEncounterEvents retrieves recent events for an encounter.
 func (s *EncounterService) GetEncounterEvents(ctx context.Context, encounterID string, limit int) ([]*models.EncounterEvent, error) {
 	return s.repo.GetEvents(encounterID, limit)
 }
 
-// UpdateEnemyStatus updates an enemy's status during combat
+// UpdateEnemyStatus updates an enemy's status during combat.
 func (s *EncounterService) UpdateEnemyStatus(ctx context.Context, enemyID string, updates map[string]interface{}) error {
 	return s.repo.UpdateEnemyStatus(enemyID, updates)
 }
 
-// TriggerReinforcements activates a reinforcement wave
+// TriggerReinforcements activates a reinforcement wave.
 func (s *EncounterService) TriggerReinforcements(ctx context.Context, encounterID string, waveIndex int) error {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
@@ -231,7 +230,7 @@ func (s *EncounterService) TriggerReinforcements(ctx context.Context, encounterI
 
 	wave := encounter.ReinforcementWaves[waveIndex]
 
-	// Add reinforcement enemies to the encounter
+	// Add reinforcement enemies to the encounter.
 	for _, enemy := range wave.Enemies {
 		enemy.EncounterID = encounterID
 		if err := s.repo.CreateEncounterEnemy(&enemy); err != nil {
@@ -239,7 +238,7 @@ func (s *EncounterService) TriggerReinforcements(ctx context.Context, encounterI
 		}
 	}
 
-	// Log event
+	// Log event.
 	event := &models.EncounterEvent{
 		EncounterID: encounterID,
 		RoundNumber: wave.Round,
@@ -253,7 +252,7 @@ func (s *EncounterService) TriggerReinforcements(ctx context.Context, encounterI
 	return nil
 }
 
-// CheckObjectives evaluates and updates objective completion
+// CheckObjectives evaluates and updates objective completion.
 func (s *EncounterService) CheckObjectives(ctx context.Context, encounterID string) error {
 	objectives, err := s.repo.GetObjectives(encounterID)
 	if err != nil {
@@ -270,13 +269,13 @@ func (s *EncounterService) CheckObjectives(ctx context.Context, encounterID stri
 			continue
 		}
 
-		// Check success conditions based on type
+		// Check success conditions based on type.
 		completed := false
 		failed := false
 
 		switch objective.Type {
 		case "defeat_all":
-			// Check if all enemies are defeated
+			// Check if all enemies are defeated.
 			allDefeated := true
 			for _, enemy := range encounter.Enemies {
 				if enemy.IsAlive && !enemy.Fled {
@@ -287,14 +286,12 @@ func (s *EncounterService) CheckObjectives(ctx context.Context, encounterID stri
 			completed = allDefeated
 
 		case "survive_rounds":
-			// This would need round tracking
-			// completed = currentRound >= targetRounds
-
+			// This would need round tracking.
+			// completed = currentRound >= targetRounds.
 		case "protect_npc":
-			// Check if protected NPC is still alive
-			// This would need NPC tracking
-
-			// Add more objective types as needed
+			// Check if protected NPC is still alive.
+			// This would need NPC tracking.
+			// Add more objective types as needed.
 		}
 
 		if completed {
@@ -308,10 +305,9 @@ func (s *EncounterService) CheckObjectives(ctx context.Context, encounterID stri
 	return nil
 }
 
-// Helper functions
-
+// Helper functions.
 func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) {
-	// Create primary objective based on encounter type
+	// Create primary objective based on encounter type.
 	primaryObjective := &models.EncounterObjective{
 		EncounterID: encounter.ID,
 		Type:        "custom",
@@ -337,7 +333,7 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 
 	_ = s.repo.CreateObjective(primaryObjective)
 
-	// Create optional objectives for non-combat resolution
+	// Create optional objectives for non-combat resolution.
 	if encounter.EncounterType == "combat" && len(encounter.SocialSolutions) > 0 {
 		bonusObjective := &models.EncounterObjective{
 			EncounterID:  encounter.ID,
@@ -351,11 +347,9 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 }
 
 func (s *EncounterService) applyScalingAdjustment(encounter *models.Encounter, adjustment models.ScalingAdjustment) {
-	// Remove enemies - logic to remove specified enemies could be added here
-
-	// Add enemies - placeholder for future logic
-
-	// Adjust HP for all enemies
+	// Remove enemies - logic to remove specified enemies could be added here.
+	// Add enemies - placeholder for future logic.
+	// Adjust HP for all enemies.
 	if adjustment.HPModifier != 0 {
 		for i := range encounter.Enemies {
 			encounter.Enemies[i].HitPoints += adjustment.HPModifier
@@ -365,25 +359,22 @@ func (s *EncounterService) applyScalingAdjustment(encounter *models.Encounter, a
 		}
 	}
 
-	// Adjust damage (would need to modify actions)
+	// Adjust damage (would need to modify actions).
 	_ = adjustment.DamageModifier // Placeholder for future damage modification
 
-	// Add hazards - future enhancement
-
-	// Add terrain - future enhancement
+	// Add hazards - future enhancement.
+	// Add terrain - future enhancement.
 }
 
 func (s *EncounterService) awardObjectiveRewards(ctx context.Context, objective *models.EncounterObjective, gameSessionID string) {
-	// Award XP to party members
-	// This would integrate with character service to add XP
-
-	// Award gold
-	// This would integrate with inventory service
-
-	// Award items
+	// Award XP to party members.
+	// This would integrate with character service to add XP.
+	// Award gold.
+	// This would integrate with inventory service.
+	// Award items.
 	_ = objective.ItemRewards // Placeholder for item rewards integration
 
-	// Log the rewards
+	// Log the rewards.
 	event := &models.EncounterEvent{
 		EncounterID: objective.EncounterID,
 		RoundNumber: 0,

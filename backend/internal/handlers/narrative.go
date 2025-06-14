@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/gorilla/mux"
 )
 
-// NarrativeHandlers manages narrative-related HTTP endpoints
+// NarrativeHandlers manages narrative-related HTTP endpoints.
 type NarrativeHandlers struct {
 	narrativeEngine *services.NarrativeEngine
 	narrativeRepo   *database.NarrativeRepository
@@ -21,7 +21,7 @@ type NarrativeHandlers struct {
 	gameRepo        database.GameSessionRepository
 }
 
-// NewNarrativeHandlers creates a new narrative handlers instance
+// NewNarrativeHandlers creates a new narrative handlers instance.
 func NewNarrativeHandlers(
 	narrativeEngine *services.NarrativeEngine,
 	narrativeRepo *database.NarrativeRepository,
@@ -36,48 +36,48 @@ func NewNarrativeHandlers(
 	}
 }
 
-// RegisterRoutes registers all narrative-related routes
+// RegisterRoutes registers all narrative-related routes.
 func (h *NarrativeHandlers) RegisterRoutes(router *mux.Router, authMiddleware func(http.HandlerFunc) http.HandlerFunc) {
-	// Profile management
+	// Profile management.
 	router.HandleFunc("/api/narrative/profile/{characterId}", authMiddleware(h.GetNarrativeProfile)).Methods("GET")
 	router.HandleFunc("/api/narrative/profile", authMiddleware(h.CreateNarrativeProfile)).Methods("POST")
 	router.HandleFunc("/api/narrative/profile/{characterId}", authMiddleware(h.UpdateNarrativeProfile)).Methods("PUT")
 
-	// Backstory management
+	// Backstory management.
 	router.HandleFunc("/api/narrative/backstory/{characterId}", authMiddleware(h.GetBackstoryElements)).Methods("GET")
 	router.HandleFunc("/api/narrative/backstory", authMiddleware(h.CreateBackstoryElement)).Methods("POST")
 
-	// Player actions and consequences
+	// Player actions and consequences.
 	router.HandleFunc("/api/narrative/action", authMiddleware(h.RecordPlayerAction)).Methods("POST")
 	router.HandleFunc("/api/narrative/consequences/{sessionId}", authMiddleware(h.GetPendingConsequences)).Methods("GET")
 	router.HandleFunc("/api/narrative/consequences/{consequenceId}/trigger", authMiddleware(h.TriggerConsequence)).Methods("POST")
 
-	// World events and perspectives
+	// World events and perspectives.
 	router.HandleFunc("/api/narrative/event", authMiddleware(h.CreateWorldEvent)).Methods("POST")
 	router.HandleFunc("/api/narrative/event/{eventId}", authMiddleware(h.GetWorldEvent)).Methods("GET")
 	router.HandleFunc("/api/narrative/event/{eventId}/perspectives", authMiddleware(h.GetEventPerspectives)).Methods("GET")
 	router.HandleFunc("/api/narrative/event/{eventId}/personalize/{characterId}", authMiddleware(h.PersonalizeEvent)).Methods("POST")
 
-	// Narrative generation
+	// Narrative generation.
 	router.HandleFunc("/api/narrative/generate/story", authMiddleware(h.GeneratePersonalizedStory)).Methods("POST")
 	router.HandleFunc("/api/narrative/generate/perspectives", authMiddleware(h.GenerateMultiplePerspectives)).Methods("POST")
 
-	// Memory management
+	// Memory management.
 	router.HandleFunc("/api/narrative/memory/{characterId}", authMiddleware(h.GetCharacterMemories)).Methods("GET")
 	router.HandleFunc("/api/narrative/memory", authMiddleware(h.CreateMemory)).Methods("POST")
 
-	// Narrative threads
+	// Narrative threads.
 	router.HandleFunc("/api/narrative/threads", authMiddleware(h.GetActiveThreads)).Methods("GET")
 	router.HandleFunc("/api/narrative/threads", authMiddleware(h.CreateThread)).Methods("POST")
 }
 
-// GetNarrativeProfile retrieves a character's narrative profile
+// GetNarrativeProfile retrieves a character's narrative profile.
 func (h *NarrativeHandlers) GetNarrativeProfile(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 	vars := mux.Vars(r)
 	characterID := vars["characterId"]
 
-	// Verify character ownership
+	// Verify character ownership.
 	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
@@ -91,7 +91,7 @@ func (h *NarrativeHandlers) GetNarrativeProfile(w http.ResponseWriter, r *http.R
 
 	profile, err := h.narrativeRepo.GetNarrativeProfile(characterID)
 	if err != nil {
-		// Create default profile if none exists
+		// Create default profile if none exists.
 		profile = &models.NarrativeProfile{
 			UserID:      claims.UserID,
 			CharacterID: characterID,
@@ -121,7 +121,7 @@ func (h *NarrativeHandlers) GetNarrativeProfile(w http.ResponseWriter, r *http.R
 	}
 }
 
-// CreateNarrativeProfile creates a new narrative profile
+// CreateNarrativeProfile creates a new narrative profile.
 func (h *NarrativeHandlers) CreateNarrativeProfile(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 
@@ -131,7 +131,7 @@ func (h *NarrativeHandlers) CreateNarrativeProfile(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Verify character ownership
+	// Verify character ownership.
 	character, err := h.characterRepo.GetByID(r.Context(), profile.CharacterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
@@ -157,13 +157,13 @@ func (h *NarrativeHandlers) CreateNarrativeProfile(w http.ResponseWriter, r *htt
 	}
 }
 
-// UpdateNarrativeProfile updates an existing narrative profile
+// UpdateNarrativeProfile updates an existing narrative profile.
 func (h *NarrativeHandlers) UpdateNarrativeProfile(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 	vars := mux.Vars(r)
 	characterID := vars["characterId"]
 
-	// Verify character ownership
+	// Verify character ownership.
 	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
@@ -187,9 +187,9 @@ func (h *NarrativeHandlers) UpdateNarrativeProfile(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Apply updates
+	// Apply updates.
 	if preferences, ok := updates["preferences"].(map[string]interface{}); ok {
-		// Update preferences fields
+		// Update preferences fields.
 		if themes, ok := preferences["themes"].([]interface{}); ok {
 			profile.Preferences.Themes = interfaceSliceToStringSlice(themes)
 		}
@@ -226,13 +226,13 @@ func (h *NarrativeHandlers) UpdateNarrativeProfile(w http.ResponseWriter, r *htt
 	}
 }
 
-// GetBackstoryElements retrieves backstory elements for a character
+// GetBackstoryElements retrieves backstory elements for a character.
 func (h *NarrativeHandlers) GetBackstoryElements(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 	vars := mux.Vars(r)
 	characterID := vars["characterId"]
 
-	// Verify character ownership
+	// Verify character ownership.
 	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
@@ -257,7 +257,7 @@ func (h *NarrativeHandlers) GetBackstoryElements(w http.ResponseWriter, r *http.
 	}
 }
 
-// CreateBackstoryElement creates a new backstory element
+// CreateBackstoryElement creates a new backstory element.
 func (h *NarrativeHandlers) CreateBackstoryElement(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 
@@ -267,7 +267,7 @@ func (h *NarrativeHandlers) CreateBackstoryElement(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Verify character ownership
+	// Verify character ownership.
 	character, err := h.characterRepo.GetByID(r.Context(), element.CharacterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
@@ -292,7 +292,7 @@ func (h *NarrativeHandlers) CreateBackstoryElement(w http.ResponseWriter, r *htt
 	}
 }
 
-// RecordPlayerAction records a significant player action
+// RecordPlayerAction records a significant player action.
 func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 
@@ -302,7 +302,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Verify character ownership
+	// Verify character ownership.
 	character, err := h.characterRepo.GetByID(r.Context(), action.CharacterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
@@ -314,7 +314,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Verify session participation
+	// Verify session participation.
 	participants, err := h.gameRepo.GetParticipants(r.Context(), action.SessionID)
 	if err != nil {
 		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
@@ -334,13 +334,13 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Record the action
+	// Record the action.
 	if err := h.narrativeRepo.CreatePlayerAction(&action); err != nil {
 		http.Error(w, "Failed to record action", http.StatusInternalServerError)
 		return
 	}
 
-	// Calculate consequences asynchronously
+	// Calculate consequences asynchronously.
 	go func() {
 		ctx := r.Context()
 		worldState := h.buildWorldState(ctx, action.SessionID)
@@ -354,7 +354,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 		}
 	}()
 
-	// Update narrative profile with decision
+	// Update narrative profile with decision.
 	profile, err := h.narrativeRepo.GetNarrativeProfile(action.CharacterID)
 	if err == nil {
 		decision := models.DecisionRecord{
@@ -380,13 +380,13 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 	}
 }
 
-// GetPendingConsequences retrieves consequences ready to trigger
+// GetPendingConsequences retrieves consequences ready to trigger.
 func (h *NarrativeHandlers) GetPendingConsequences(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 	vars := mux.Vars(r)
 	sessionID := vars["sessionId"]
 
-	// Verify session participation
+	// Verify session participation.
 	participants, err := h.gameRepo.GetParticipants(r.Context(), sessionID)
 	if err != nil {
 		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
@@ -419,7 +419,7 @@ func (h *NarrativeHandlers) GetPendingConsequences(w http.ResponseWriter, r *htt
 	}
 }
 
-// TriggerConsequence triggers a specific consequence
+// TriggerConsequence triggers a specific consequence.
 func (h *NarrativeHandlers) TriggerConsequence(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 	vars := mux.Vars(r)
@@ -433,7 +433,7 @@ func (h *NarrativeHandlers) TriggerConsequence(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Verify DM role
+	// Verify DM role.
 	participants, err := h.gameRepo.GetParticipants(r.Context(), triggerData.SessionID)
 	if err != nil {
 		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
@@ -466,7 +466,7 @@ func (h *NarrativeHandlers) TriggerConsequence(w http.ResponseWriter, r *http.Re
 	}
 }
 
-// CreateWorldEvent creates a new world event
+// CreateWorldEvent creates a new world event.
 func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 
@@ -476,7 +476,7 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Verify DM role for the session
+	// Verify DM role for the session.
 	if sessionID, ok := event.Metadata["session_id"].(string); ok {
 		participants, err := h.gameRepo.GetParticipants(r.Context(), sessionID)
 		if err != nil {
@@ -503,7 +503,7 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Generate perspectives asynchronously
+	// Generate perspectives asynchronously.
 	go func() {
 		ctx := r.Context()
 		sources := h.getRelevantPerspectiveSources(event)
@@ -523,7 +523,7 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-// GetWorldEvent retrieves a specific world event
+// GetWorldEvent retrieves a specific world event.
 func (h *NarrativeHandlers) GetWorldEvent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	eventID := vars["eventId"]
@@ -541,7 +541,7 @@ func (h *NarrativeHandlers) GetWorldEvent(w http.ResponseWriter, r *http.Request
 	}
 }
 
-// GetEventPerspectives retrieves all perspectives for an event
+// GetEventPerspectives retrieves all perspectives for an event.
 func (h *NarrativeHandlers) GetEventPerspectives(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	eventID := vars["eventId"]
@@ -559,14 +559,14 @@ func (h *NarrativeHandlers) GetEventPerspectives(w http.ResponseWriter, r *http.
 	}
 }
 
-// PersonalizeEvent creates a personalized version of an event for a character
+// PersonalizeEvent creates a personalized version of an event for a character.
 func (h *NarrativeHandlers) PersonalizeEvent(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 	vars := mux.Vars(r)
 	eventID := vars["eventId"]
 	characterID := vars["characterId"]
 
-	// Verify character ownership
+	// Verify character ownership.
 	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
@@ -578,14 +578,14 @@ func (h *NarrativeHandlers) PersonalizeEvent(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Get event
+	// Get event.
 	event, err := h.narrativeRepo.GetWorldEvent(eventID)
 	if err != nil {
 		http.Error(w, "Event not found", http.StatusNotFound)
 		return
 	}
 
-	// Get profile and backstory
+	// Get profile and backstory.
 	profile, err := h.narrativeRepo.GetNarrativeProfile(characterID)
 	if err != nil {
 		http.Error(w, "Profile not found", http.StatusNotFound)
@@ -597,20 +597,20 @@ func (h *NarrativeHandlers) PersonalizeEvent(w http.ResponseWriter, r *http.Requ
 		backstory = []models.BackstoryElement{}
 	}
 
-	// Generate personalized narrative
+	// Generate personalized narrative.
 	narrative, err := h.narrativeEngine.GeneratePersonalizedNarrative(r.Context(), *event, profile, backstory)
 	if err != nil {
 		http.Error(w, "Failed to personalize event", http.StatusInternalServerError)
 		return
 	}
 
-	// Save personalized narrative
+	// Save personalized narrative.
 	if err := h.narrativeRepo.CreatePersonalizedNarrative(narrative); err != nil {
 		http.Error(w, "Failed to save personalized narrative", http.StatusInternalServerError)
 		return
 	}
 
-	// Update backstory usage
+	// Update backstory usage.
 	for _, callback := range narrative.BackstoryCallbacks {
 		_ = h.narrativeRepo.IncrementBackstoryUsage(callback.BackstoryElementID)
 	}
@@ -622,7 +622,7 @@ func (h *NarrativeHandlers) PersonalizeEvent(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-// GeneratePersonalizedStory generates a new personalized story
+// GeneratePersonalizedStory generates a new personalized story.
 func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 
@@ -637,7 +637,7 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 		return
 	}
 
-	// Verify character ownership
+	// Verify character ownership.
 	character, err := h.characterRepo.GetByID(r.Context(), request.CharacterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
@@ -649,7 +649,7 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 		return
 	}
 
-	// Create base event
+	// Create base event.
 	event := models.NarrativeEvent{
 		Type:        request.EventType,
 		Name:        "Generated Story Event",
@@ -658,7 +658,7 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 		Metadata:    request.Context,
 	}
 
-	// Get profile and backstory
+	// Get profile and backstory.
 	profile, err := h.narrativeRepo.GetNarrativeProfile(request.CharacterID)
 	if err != nil {
 		http.Error(w, "Profile not found", http.StatusNotFound)
@@ -670,7 +670,7 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 		backstory = []models.BackstoryElement{}
 	}
 
-	// Generate narrative
+	// Generate narrative.
 	narrative, err := h.narrativeEngine.GeneratePersonalizedNarrative(r.Context(), event, profile, backstory)
 	if err != nil {
 		http.Error(w, "Failed to generate story", http.StatusInternalServerError)
@@ -684,7 +684,7 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 	}
 }
 
-// GenerateMultiplePerspectives generates perspectives for an event
+// GenerateMultiplePerspectives generates perspectives for an event.
 func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 
@@ -699,7 +699,7 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 		return
 	}
 
-	// Verify DM role
+	// Verify DM role.
 	participants, err := h.gameRepo.GetParticipants(r.Context(), request.SessionID)
 	if err != nil {
 		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
@@ -719,21 +719,21 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 		return
 	}
 
-	// Get event
+	// Get event.
 	event, err := h.narrativeRepo.GetWorldEvent(request.EventID)
 	if err != nil {
 		http.Error(w, "Event not found", http.StatusNotFound)
 		return
 	}
 
-	// Generate perspectives
+	// Generate perspectives.
 	perspectives, err := h.narrativeEngine.PerspectiveGen.GenerateMultiplePerspectives(r.Context(), *event, request.Sources)
 	if err != nil {
 		http.Error(w, "Failed to generate perspectives", http.StatusInternalServerError)
 		return
 	}
 
-	// Save perspectives
+	// Save perspectives.
 	for _, perspective := range perspectives {
 		if err := h.narrativeRepo.CreatePerspectiveNarrative(&perspective); err != nil {
 			continue
@@ -747,13 +747,13 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 	}
 }
 
-// GetCharacterMemories retrieves narrative memories for a character
+// GetCharacterMemories retrieves narrative memories for a character.
 func (h *NarrativeHandlers) GetCharacterMemories(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 	vars := mux.Vars(r)
 	characterID := vars["characterId"]
 
-	// Verify character ownership
+	// Verify character ownership.
 	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
@@ -778,7 +778,7 @@ func (h *NarrativeHandlers) GetCharacterMemories(w http.ResponseWriter, r *http.
 	}
 }
 
-// CreateMemory creates a new narrative memory
+// CreateMemory creates a new narrative memory.
 func (h *NarrativeHandlers) CreateMemory(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 
@@ -788,7 +788,7 @@ func (h *NarrativeHandlers) CreateMemory(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Verify character ownership
+	// Verify character ownership.
 	character, err := h.characterRepo.GetByID(r.Context(), memory.CharacterID)
 	if err != nil {
 		http.Error(w, "Character not found", http.StatusNotFound)
@@ -813,7 +813,7 @@ func (h *NarrativeHandlers) CreateMemory(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-// GetActiveThreads retrieves active narrative threads
+// GetActiveThreads retrieves active narrative threads.
 func (h *NarrativeHandlers) GetActiveThreads(w http.ResponseWriter, r *http.Request) {
 	threads, err := h.narrativeRepo.GetActiveNarrativeThreads()
 	if err != nil {
@@ -828,7 +828,7 @@ func (h *NarrativeHandlers) GetActiveThreads(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-// CreateThread creates a new narrative thread
+// CreateThread creates a new narrative thread.
 func (h *NarrativeHandlers) CreateThread(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaimsFromContext(r.Context())
 
@@ -838,7 +838,7 @@ func (h *NarrativeHandlers) CreateThread(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Verify DM role if session is specified
+	// Verify DM role if session is specified.
 	if sessionID, ok := thread.Metadata["session_id"].(string); ok {
 		participants, err := h.gameRepo.GetParticipants(r.Context(), sessionID)
 		if err != nil {
@@ -873,28 +873,27 @@ func (h *NarrativeHandlers) CreateThread(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-// Helper functions
-
+// Helper functions.
 func (h *NarrativeHandlers) buildWorldState(ctx context.Context, sessionID string) map[string]interface{} {
-	// Build world state from various sources
+	// Build world state from various sources.
 	worldState := make(map[string]interface{})
 
-	// Add session info
+	// Add session info.
 	session, err := h.gameRepo.GetByID(ctx, sessionID)
 	if err == nil {
 		worldState["session"] = session
 	}
 
-	// Add active threads
+	// Add active threads.
 	threads, err := h.narrativeRepo.GetActiveNarrativeThreads()
 	if err == nil {
 		worldState["active_threads"] = threads
 	}
 
-	// Additional world state data can be added here
-	// - Faction relationships
-	// - Economic data
-	// - Environmental conditions
+	// Additional world state data can be added here.
+	// - Faction relationships.
+	// - Economic data.
+	// - Environmental conditions.
 	// - etc.
 
 	return worldState
@@ -904,7 +903,7 @@ func (h *NarrativeHandlers) getRelevantPerspectiveSources(event models.Narrative
 	// Get relevant NPCs, factions, etc. that might have perspectives
 	sources := []models.PerspectiveSource{}
 
-	// Add participants as sources
+	// Add participants as sources.
 	for _, participantID := range event.Participants {
 		sources = append(sources, models.PerspectiveSource{
 			ID:   participantID,
@@ -913,7 +912,7 @@ func (h *NarrativeHandlers) getRelevantPerspectiveSources(event models.Narrative
 		})
 	}
 
-	// Add witnesses
+	// Add witnesses.
 	for _, witnessID := range event.Witnesses {
 		sources = append(sources, models.PerspectiveSource{
 			ID:   witnessID,
@@ -922,7 +921,7 @@ func (h *NarrativeHandlers) getRelevantPerspectiveSources(event models.Narrative
 		})
 	}
 
-	// Add a neutral historian perspective
+	// Add a neutral historian perspective.
 	sources = append(sources, models.PerspectiveSource{
 		ID:          "historian",
 		Type:        "historical",

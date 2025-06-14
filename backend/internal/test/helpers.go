@@ -11,7 +11,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 )
 
-// NewMockDB creates a mock database for testing
+// NewMockDB creates a mock database for testing.
 func NewMockDB(t *testing.T) (*database.DB, sqlmock.Sqlmock, func()) {
 	mockDB, mock, err := sqlmock.New()
 	require.NoError(t, err)
@@ -29,9 +29,9 @@ func NewMockDB(t *testing.T) (*database.DB, sqlmock.Sqlmock, func()) {
 	return db, mock, cleanup
 }
 
-// NewTestDB creates an in-memory SQLite database for integration tests
+// NewTestDB creates an in-memory SQLite database for integration tests.
 func NewTestDB(t *testing.T) (*database.DB, func()) {
-	// Create in-memory SQLite database
+	// Create in-memory SQLite database.
 	sqlxDB, err := sqlx.Open("sqlite3", ":memory:")
 	require.NoError(t, err)
 
@@ -39,7 +39,7 @@ func NewTestDB(t *testing.T) (*database.DB, func()) {
 		DB: sqlxDB,
 	}
 
-	// Create tables
+	// Create tables.
 	err = createTestTables(db)
 	require.NoError(t, err)
 
@@ -50,10 +50,10 @@ func NewTestDB(t *testing.T) (*database.DB, func()) {
 	return db, cleanup
 }
 
-// createTestTables creates the necessary tables for testing
+// createTestTables creates the necessary tables for testing.
 func createTestTables(db *database.DB) error {
 	schemas := []string{
-		// Users table
+		// Users table.
 		`CREATE TABLE IF NOT EXISTS users (
 			id TEXT PRIMARY KEY,
 			username TEXT UNIQUE NOT NULL,
@@ -65,7 +65,7 @@ func createTestTables(db *database.DB) error {
 			last_login TIMESTAMP
 		)`,
 
-		// Characters table
+		// Characters table.
 		`CREATE TABLE IF NOT EXISTS characters (
 			id TEXT PRIMARY KEY,
 			user_id TEXT NOT NULL,
@@ -100,7 +100,7 @@ func createTestTables(db *database.DB) error {
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		)`,
 
-		// Game sessions table
+		// Game sessions table.
 		`CREATE TABLE IF NOT EXISTS game_sessions (
 			id TEXT PRIMARY KEY,
 			dm_user_id TEXT NOT NULL,
@@ -114,7 +114,7 @@ func createTestTables(db *database.DB) error {
 			FOREIGN KEY (dm_user_id) REFERENCES users(id) ON DELETE CASCADE
 		)`,
 
-		// Game participants table
+		// Game participants table.
 		`CREATE TABLE IF NOT EXISTS game_participants (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			game_session_id TEXT NOT NULL,
@@ -129,7 +129,7 @@ func createTestTables(db *database.DB) error {
 			UNIQUE(game_session_id, user_id)
 		)`,
 
-		// Dice rolls table
+		// Dice rolls table.
 		`CREATE TABLE IF NOT EXISTS dice_rolls (
 			id TEXT PRIMARY KEY,
 			game_session_id TEXT,
@@ -145,7 +145,7 @@ func createTestTables(db *database.DB) error {
 			FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE SET NULL
 		)`,
 
-		// Refresh tokens table
+		// Refresh tokens table.
 		`CREATE TABLE IF NOT EXISTS refresh_tokens (
 			id TEXT PRIMARY KEY,
 			user_id TEXT NOT NULL,
@@ -156,7 +156,7 @@ func createTestTables(db *database.DB) error {
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		)`,
 
-		// NPCs table
+		// NPCs table.
 		`CREATE TABLE IF NOT EXISTS npcs (
 			id TEXT PRIMARY KEY,
 			game_session_id TEXT NOT NULL,
@@ -172,7 +172,7 @@ func createTestTables(db *database.DB) error {
 			FOREIGN KEY (game_session_id) REFERENCES game_sessions(id) ON DELETE CASCADE
 		)`,
 
-		// Items table
+		// Items table.
 		`CREATE TABLE IF NOT EXISTS items (
 			id TEXT PRIMARY KEY,
 			name TEXT NOT NULL,
@@ -186,7 +186,7 @@ func createTestTables(db *database.DB) error {
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)`,
 
-		// Character inventory table
+		// Character inventory table.
 		`CREATE TABLE IF NOT EXISTS character_inventory (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			character_id TEXT NOT NULL,
@@ -201,7 +201,7 @@ func createTestTables(db *database.DB) error {
 			FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 		)`,
 
-		// Character currency table
+		// Character currency table.
 		`CREATE TABLE IF NOT EXISTS character_currency (
 			character_id TEXT PRIMARY KEY,
 			copper INTEGER DEFAULT 0,
@@ -222,9 +222,9 @@ func createTestTables(db *database.DB) error {
 	return nil
 }
 
-// SeedTestData adds test data to the database
+// SeedTestData adds test data to the database.
 func SeedTestData(t *testing.T, db *database.DB) {
-	// Add test users
+	// Add test users.
 	_, err := db.Exec(`
 		INSERT INTO users (id, username, email, password_hash, role)
 		VALUES 
@@ -233,7 +233,7 @@ func SeedTestData(t *testing.T, db *database.DB) {
 	`)
 	require.NoError(t, err)
 
-	// Add test characters
+	// Add test characters.
 	_, err = db.Exec(`
 		INSERT INTO characters (id, user_id, name, race, class, level, hp, max_hp, armor_class, abilities, skills, saving_throws)
 		VALUES 
@@ -242,7 +242,7 @@ func SeedTestData(t *testing.T, db *database.DB) {
 	`)
 	require.NoError(t, err)
 
-	// Add test items
+	// Add test items.
 	_, err = db.Exec(`
 		INSERT INTO items (id, name, type, rarity, weight, value, requires_attunement)
 		VALUES 
@@ -253,7 +253,7 @@ func SeedTestData(t *testing.T, db *database.DB) {
 	require.NoError(t, err)
 }
 
-// TruncateTables clears all data from tables
+// TruncateTables clears all data from tables.
 func TruncateTables(t *testing.T, db *database.DB) {
 	tables := []string{
 		"character_currency",

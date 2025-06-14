@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
+	"github.com/google/uuid"
 )
 
 type CharacterCreationHandler struct {
@@ -27,9 +27,9 @@ func NewCharacterCreationHandler(cs *services.CharacterService, crs *services.Cu
 	}
 }
 
-// GetCharacterOptions returns available races, classes, backgrounds for character creation
+// GetCharacterOptions returns available races, classes, backgrounds for character creation.
 func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from context
+	// Get user ID from context.
 	userID, ok := r.Context().Value("userID").(string)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -42,11 +42,11 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 		return
 	}
 
-	// Add user's custom races
+	// Add user's custom races.
 	if h.customRaceService != nil {
 		userUUID, err := uuid.Parse(userID)
 		if err == nil {
-			// Get user's own custom races
+			// Get user's own custom races.
 			userRaces, err := h.customRaceService.GetUserCustomRaces(r.Context(), userUUID)
 			if err == nil {
 				customRaceOptions := make([]map[string]interface{}, 0)
@@ -62,7 +62,7 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 					}
 				}
 
-				// Get public custom races
+				// Get public custom races.
 				publicRaces, err := h.customRaceService.GetPublicCustomRaces(r.Context())
 				if err == nil {
 					for _, race := range publicRaces {
@@ -82,7 +82,7 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 		}
 	}
 
-	// Add AI availability status
+	// Add AI availability status.
 	options["aiEnabled"] = h.aiCharService.IsEnabled()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -92,9 +92,9 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 	}
 }
 
-// CreateCharacter handles standard D&D character creation
+// CreateCharacter handles standard D&D character creation.
 func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from context
+	// Get user ID from context.
 	userID, ok := r.Context().Value("userID").(string)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -119,7 +119,7 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Build character using character builder
+	// Build character using character builder.
 	params := map[string]interface{}{
 		"name":          req.Name,
 		"race":          req.Race,
@@ -131,7 +131,7 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 		"abilityScores": req.AbilityScores,
 	}
 
-	// If using a custom race, validate and get race data
+	// If using a custom race, validate and get race data.
 	if req.CustomRaceID != "" {
 		customRaceUUID, err := uuid.Parse(req.CustomRaceID)
 		if err != nil {
@@ -145,7 +145,7 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 			return
 		}
 
-		// Get custom race stats and add to params
+		// Get custom race stats and add to params.
 		raceStats, err := h.customRaceService.GetCustomRaceStats(r.Context(), customRaceUUID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -153,7 +153,7 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 		}
 		params["customRaceStats"] = raceStats
 
-		// Increment usage counter
+		// Increment usage counter.
 		go func() { _ = h.customRaceService.IncrementUsage(r.Context(), customRaceUUID) }()
 	}
 
@@ -163,11 +163,11 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Set user ID and generate character ID
+	// Set user ID and generate character ID.
 	character.ID = uuid.New().String()
 	character.UserID = userID
 
-	// Save character to database
+	// Save character to database.
 	if err := h.characterService.CreateCharacter(r.Context(), character); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -180,9 +180,9 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 	}
 }
 
-// CreateCustomCharacter handles AI-assisted custom character creation
+// CreateCustomCharacter handles AI-assisted custom character creation.
 func (h *CharacterCreationHandler) CreateCustomCharacter(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from context
+	// Get user ID from context.
 	userID, ok := r.Context().Value("userID").(string)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -195,7 +195,7 @@ func (h *CharacterCreationHandler) CreateCustomCharacter(w http.ResponseWriter, 
 		return
 	}
 
-	// Validate required fields
+	// Validate required fields.
 	if req.Name == "" || req.Concept == "" {
 		http.Error(w, "Name and concept are required", http.StatusBadRequest)
 		return
@@ -204,15 +204,15 @@ func (h *CharacterCreationHandler) CreateCustomCharacter(w http.ResponseWriter, 
 	var character *models.Character
 	var err error
 
-	// Try AI generation first if enabled
+	// Try AI generation first if enabled.
 	if h.aiCharService.IsEnabled() {
 		character, err = h.aiCharService.GenerateCustomCharacter(req)
 		if err != nil {
-			// Fall back to basic generation
+			// Fall back to basic generation.
 			character, err = h.aiCharService.GenerateFallbackCharacter(req)
 		}
 	} else {
-		// Use fallback if AI is not enabled
+		// Use fallback if AI is not enabled.
 		character, err = h.aiCharService.GenerateFallbackCharacter(req)
 	}
 
@@ -221,17 +221,17 @@ func (h *CharacterCreationHandler) CreateCustomCharacter(w http.ResponseWriter, 
 		return
 	}
 
-	// Validate the custom character
+	// Validate the custom character.
 	if err := h.aiCharService.ValidateCustomContent(character); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Set user ID and generate character ID
+	// Set user ID and generate character ID.
 	character.ID = uuid.New().String()
 	character.UserID = userID
 
-	// Save character to database
+	// Save character to database.
 	if err := h.characterService.CreateCharacter(r.Context(), character); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -244,7 +244,7 @@ func (h *CharacterCreationHandler) CreateCustomCharacter(w http.ResponseWriter, 
 	}
 }
 
-// RollAbilityScores generates ability scores using specified method
+// RollAbilityScores generates ability scores using specified method.
 func (h *CharacterCreationHandler) RollAbilityScores(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Method string `json:"method"`
@@ -271,7 +271,7 @@ func (h *CharacterCreationHandler) RollAbilityScores(w http.ResponseWriter, r *h
 	}
 }
 
-// ValidateCharacter validates a character build
+// ValidateCharacter validates a character build.
 func (h *CharacterCreationHandler) ValidateCharacter(w http.ResponseWriter, r *http.Request) {
 	var character models.Character
 	if err := json.NewDecoder(r.Body).Decode(&character); err != nil {
@@ -279,7 +279,7 @@ func (h *CharacterCreationHandler) ValidateCharacter(w http.ResponseWriter, r *h
 		return
 	}
 
-	// Perform validation
+	// Perform validation.
 	errors := h.validateCharacterBuild(&character)
 
 	response := map[string]interface{}{
@@ -297,7 +297,7 @@ func (h *CharacterCreationHandler) ValidateCharacter(w http.ResponseWriter, r *h
 func (h *CharacterCreationHandler) validateCharacterBuild(character *models.Character) []string {
 	var errors []string
 
-	// Validate ability scores
+	// Validate ability scores.
 	attrs := character.Attributes
 	if attrs.Strength < 3 || attrs.Strength > 20 ||
 		attrs.Dexterity < 3 || attrs.Dexterity > 20 ||
@@ -308,12 +308,12 @@ func (h *CharacterCreationHandler) validateCharacterBuild(character *models.Char
 		errors = append(errors, "Ability scores must be between 3 and 20")
 	}
 
-	// Validate level
+	// Validate level.
 	if character.Level < 1 || character.Level > 20 {
 		errors = append(errors, "Level must be between 1 and 20")
 	}
 
-	// Validate required fields
+	// Validate required fields.
 	if character.Name == "" {
 		errors = append(errors, "Character name is required")
 	}

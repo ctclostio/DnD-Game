@@ -12,44 +12,44 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
-// createTestServices creates a complete services instance for testing
+// createTestServices creates a complete services instance for testing.
 func createTestServices(t *testing.T, db *database.DB, repos *database.Repositories, jwtManager *auth.JWTManager, cfg *config.Config, log *logger.LoggerV2) *services.Services {
-	// Create mock LLM provider
+	// Create mock LLM provider.
 	llmProvider := &services.MockLLMProvider{}
 
-	// Create services
+	// Create services.
 	userService := services.NewUserService(repos.Users)
 	refreshTokenService := services.NewRefreshTokenService(repos.RefreshTokens, jwtManager)
 
-	// Create AI services with enhanced logger
+	// Create AI services with enhanced logger.
 	aiConfig := &services.AIConfig{Enabled: cfg.AI.Provider != "mock"}
 	aiBattleMapGen := services.NewAIBattleMapGenerator(llmProvider, aiConfig, log)
 	aiCampaignManager := services.NewAICampaignManager(llmProvider, aiConfig, log)
 
-	// Create event bus with logger
+	// Create event bus with logger.
 	eventBus := services.NewEventBus(log) // eventBus - can be used if needed
 	_ = eventBus                          // Mark as intentionally unused for now
 
-	// Combat services
+	// Combat services.
 	combatService := services.NewCombatService()
 	combatAutomationService := services.NewCombatAutomationService(repos.CombatAnalytics, repos.Characters, repos.NPCs)
 	combatAnalyticsService := services.NewCombatAnalyticsService(repos.CombatAnalytics, combatService)
 
-	// World building services
+	// World building services.
 	settlementGenerator := services.NewSettlementGeneratorService(llmProvider, repos.WorldBuilding)
 	factionSystem := services.NewFactionSystemService(llmProvider, repos.WorldBuilding)
 	worldEventEngine := services.NewWorldEventEngineService(llmProvider, repos.WorldBuilding, factionSystem)
 	economicSimulator := services.NewEconomicSimulatorService(repos.WorldBuilding)
 
-	// Rule engine services
+	// Rule engine services.
 	diceRollService := services.NewDiceRollService(repos.DiceRolls)
 	ruleEngine := services.NewRuleEngine(repos.RuleBuilder, diceRollService)
 
-	// Create game session service with character repository
+	// Create game session service with character repository.
 	gameSessionService := services.NewGameSessionService(repos.GameSessions)
 	gameSessionService.SetCharacterRepository(repos.Characters)
 
-	// Create service container
+	// Create service container.
 	return &services.Services{
 		DB:                 db,
 		Users:              userService,
@@ -83,31 +83,31 @@ func createTestServices(t *testing.T, db *database.DB, repos *database.Repositor
 	}
 }
 
-// SetupTestHandlers sets up handlers with all dependencies for integration testing
+// SetupTestHandlers sets up handlers with all dependencies for integration testing.
 func SetupTestHandlers(t *testing.T, testCtx *testutil.IntegrationTestContext) (*Handlers, *websocket.Hub) {
-	// Create WebSocket hub
+	// Create WebSocket hub.
 	hub := websocket.NewHub()
 	go hub.Run()
 
-	// Set JWT manager for WebSocket authentication
+	// Set JWT manager for WebSocket authentication.
 	websocket.SetJWTManager(testCtx.JWTManager)
 
-	// Create services if not already provided
+	// Create services if not already provided.
 	var svc *services.Services
 	if testCtx.Services != nil {
-		// Type assertion if services were provided
+		// Type assertion if services were provided.
 		var ok bool
 		svc, ok = testCtx.Services.(*services.Services)
 		if !ok {
 			t.Fatal("Services type assertion failed")
 		}
 	} else {
-		// Create services
+		// Create services.
 		svc = createTestServices(t, testCtx.DB, testCtx.Repos, testCtx.JWTManager, testCtx.Config, testCtx.Logger)
 		testCtx.Services = svc
 	}
 
-	// Create handlers
+	// Create handlers.
 	h := NewHandlers(svc, testCtx.DB, hub)
 
 	return h, hub

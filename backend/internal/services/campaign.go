@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 type CampaignService struct {
@@ -29,8 +29,7 @@ func NewCampaignService(
 	}
 }
 
-// Story Arc Management
-
+// Story Arc Management.
 func (cs *CampaignService) CreateStoryArc(ctx context.Context, sessionID uuid.UUID, req models.CreateStoryArcRequest) (*models.StoryArc, error) {
 	arc := &models.StoryArc{
 		ID:              uuid.New(),
@@ -58,13 +57,13 @@ func (cs *CampaignService) CreateStoryArc(ctx context.Context, sessionID uuid.UU
 }
 
 func (cs *CampaignService) GenerateStoryArc(ctx context.Context, sessionID uuid.UUID, req models.GenerateStoryArcRequest) (*models.StoryArc, error) {
-	// Generate the arc using AI
+	// Generate the arc using AI.
 	generated, err := cs.aiManager.GenerateStoryArc(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate story arc: %w", err)
 	}
 
-	// Convert generated arc to database model
+	// Convert generated arc to database model.
 	metadata, _ := json.Marshal(generated)
 	arc := &models.StoryArc{
 		ID:              uuid.New(),
@@ -116,10 +115,9 @@ func (cs *CampaignService) UpdateStoryArc(ctx context.Context, arcID uuid.UUID, 
 	return cs.campaignRepo.UpdateStoryArc(arcID, updates)
 }
 
-// Session Memory Management
-
+// Session Memory Management.
 func (cs *CampaignService) CreateSessionMemory(ctx context.Context, sessionID uuid.UUID, req models.CreateSessionMemoryRequest) (*models.SessionMemory, error) {
-	// Convert request data to JSONB
+	// Convert request data to JSONB.
 	keyEventsJSON, _ := json.Marshal(req.KeyEvents)
 	npcsJSON, _ := json.Marshal(req.NPCsEncountered)
 	decisionsJSON, _ := json.Marshal(req.DecisionsMade)
@@ -142,7 +140,7 @@ func (cs *CampaignService) CreateSessionMemory(ctx context.Context, sessionID uu
 		UpdatedAt:        time.Now(),
 	}
 
-	// Generate AI recap if we have the data
+	// Generate AI recap if we have the data.
 	if len(req.KeyEvents) > 0 {
 		recap := cs.generateRecapFromEvents(req)
 		memory.RecapSummary = recap
@@ -167,7 +165,7 @@ func (cs *CampaignService) GenerateRecap(ctx context.Context, sessionID uuid.UUI
 		sessionCount = 3
 	}
 
-	// Get recent session memories
+	// Get recent session memories.
 	memories, err := cs.campaignRepo.GetSessionMemories(sessionID, sessionCount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get session memories: %w", err)
@@ -180,12 +178,11 @@ func (cs *CampaignService) GenerateRecap(ctx context.Context, sessionID uuid.UUI
 		}, nil
 	}
 
-	// Generate recap using AI
+	// Generate recap using AI.
 	return cs.aiManager.GenerateSessionRecap(ctx, memories)
 }
 
-// Plot Thread Management
-
+// Plot Thread Management.
 func (cs *CampaignService) CreatePlotThread(ctx context.Context, sessionID uuid.UUID, thread *models.PlotThread) error {
 	thread.ID = uuid.New()
 	thread.GameSessionID = sessionID
@@ -213,14 +210,13 @@ func (cs *CampaignService) UpdatePlotThread(ctx context.Context, threadID uuid.U
 	return cs.campaignRepo.UpdatePlotThread(threadID, updates)
 }
 
-// Foreshadowing Management
-
+// Foreshadowing Management.
 func (cs *CampaignService) GenerateForeshadowing(ctx context.Context, sessionID uuid.UUID, req models.GenerateForeshadowingRequest) (*models.ForeshadowingElement, error) {
 	var plotThread *models.PlotThread
 	var storyArc *models.StoryArc
 	var err error
 
-	// Get the associated plot thread or story arc for context
+	// Get the associated plot thread or story arc for context.
 	if req.PlotThreadID != nil {
 		plotThread, err = cs.campaignRepo.GetPlotThread(*req.PlotThreadID)
 		if err != nil {
@@ -234,13 +230,13 @@ func (cs *CampaignService) GenerateForeshadowing(ctx context.Context, sessionID 
 		}
 	}
 
-	// Generate foreshadowing using AI
+	// Generate foreshadowing using AI.
 	generated, err := cs.aiManager.GenerateForeshadowing(ctx, req, plotThread, storyArc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate foreshadowing: %w", err)
 	}
 
-	// Create database entry
+	// Create database entry.
 	placementJSON, _ := json.Marshal(generated.PlacementSuggestions)
 	element := &models.ForeshadowingElement{
 		ID:                   uuid.New(),
@@ -271,8 +267,7 @@ func (cs *CampaignService) RevealForeshadowing(ctx context.Context, elementID uu
 	return cs.campaignRepo.RevealForeshadowing(elementID, sessionNumber)
 }
 
-// Timeline Management
-
+// Timeline Management.
 func (cs *CampaignService) AddTimelineEvent(ctx context.Context, event *models.CampaignTimeline) error {
 	event.ID = uuid.New()
 	event.CreatedAt = time.Now()
@@ -288,8 +283,7 @@ func (cs *CampaignService) GetTimeline(ctx context.Context, sessionID uuid.UUID,
 	return cs.campaignRepo.GetTimelineEvents(sessionID, startDate, endDate)
 }
 
-// NPC Relationship Management
-
+// NPC Relationship Management.
 func (cs *CampaignService) UpdateNPCRelationship(ctx context.Context, relationship *models.NPCRelationship) error {
 	relationship.ID = uuid.New()
 	relationship.CreatedAt = time.Now()
@@ -306,8 +300,7 @@ func (cs *CampaignService) AdjustRelationshipScore(ctx context.Context, sessionI
 	return cs.campaignRepo.UpdateRelationshipScore(sessionID, npcID, targetID, scoreDelta)
 }
 
-// Helper methods
-
+// Helper methods.
 func (cs *CampaignService) generateRecapFromEvents(req models.CreateSessionMemoryRequest) string {
 	recap := fmt.Sprintf("In session %d, the party ", req.SessionNumber)
 

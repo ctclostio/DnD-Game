@@ -15,7 +15,7 @@ func Recovery(log *logger.LoggerV2) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
-					// Log the error with context and stack trace
+					// Log the error with context and stack trace.
 					if log != nil {
 						log.WithContext(r.Context()).
 							Error().
@@ -26,11 +26,11 @@ func Recovery(log *logger.LoggerV2) func(http.Handler) http.Handler {
 							Msg("Panic recovered in HTTP handler")
 					}
 
-					// Return 500 Internal Server Error
+					// Return 500 Internal Server Error.
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusInternalServerError)
 
-					// Send a generic error message (don't expose internal details)
+					// Send a generic error message (don't expose internal details).
 					if _, err := fmt.Fprintf(w, `{"error":"Internal server error"}`); err != nil {
 						fmt.Printf("failed to write error response: %v\n", err)
 					}
@@ -52,7 +52,7 @@ type RecoveryConfig struct {
 
 // RecoveryWithConfig creates a recovery middleware with custom configuration.
 func RecoveryWithConfig(config RecoveryConfig) func(http.Handler) http.Handler {
-	// Set defaults
+	// Set defaults.
 	if config.StackSize == 0 {
 		config.StackSize = 4 << 10 // 4KB
 	}
@@ -61,12 +61,12 @@ func RecoveryWithConfig(config RecoveryConfig) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
-					// Get stack trace
+					// Get stack trace.
 					stack := make([]byte, config.StackSize)
 					length := runtime.Stack(stack, config.PrintStack)
 					stack = stack[:length]
 
-					// Log the error with structured logging
+					// Log the error with structured logging.
 					if config.Logger != nil {
 						config.Logger.WithContext(r.Context()).
 							Error().
@@ -80,11 +80,11 @@ func RecoveryWithConfig(config RecoveryConfig) func(http.Handler) http.Handler {
 							Msg("Panic recovered in HTTP handler")
 					}
 
-					// Handle the error
+					// Handle the error.
 					if config.ErrorHandler != nil {
 						config.ErrorHandler(w, r, err)
 					} else {
-						// Default error handling
+						// Default error handling.
 						w.Header().Set("Content-Type", "application/json")
 						w.WriteHeader(http.StatusInternalServerError)
 						if _, err := fmt.Fprintf(w, `{"error":"Internal server error"}`); err != nil {

@@ -6,36 +6,36 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
-// ConditionalRealitySystem manages context-aware rule modifications
+// ConditionalRealitySystem manages context-aware rule modifications.
 type ConditionalRealitySystem struct {
 	contextManager *ContextManager
 	ruleEngine     *RuleEngine
 	modifiers      map[string][]RuleModifier
 }
 
-// ContextManager tracks active contexts in the game world
+// ContextManager tracks active contexts in the game world.
 type ContextManager struct {
 	activeContexts map[string][]models.ConditionalContext
 	subscribers    map[string][]ContextSubscriber
 }
 
-// ContextSubscriber interface for entities that respond to context changes
+// ContextSubscriber interface for entities that respond to context changes.
 type ContextSubscriber interface {
 	OnContextChange(ctx context.Context, contextType string, newContext models.ConditionalContext)
 }
 
-// RuleModifier defines how a rule changes under specific conditions
+// RuleModifier defines how a rule changes under specific conditions.
 type RuleModifier struct {
 	ConditionType string
 	Conditions    []models.RuleCondition
 	Modifications ModificationSet
 }
 
-// ModificationSet contains all modifications to apply
+// ModificationSet contains all modifications to apply.
 type ModificationSet struct {
 	NodeOverrides      map[string]map[string]interface{} // nodeID -> property overrides
 	ParameterOverrides map[string]interface{}
@@ -44,7 +44,7 @@ type ModificationSet struct {
 	Description        string
 }
 
-// NewConditionalRealitySystem creates a new conditional reality system
+// NewConditionalRealitySystem creates a new conditional reality system.
 func NewConditionalRealitySystem(ruleEngine *RuleEngine) *ConditionalRealitySystem {
 	return &ConditionalRealitySystem{
 		contextManager: &ContextManager{
@@ -56,7 +56,7 @@ func NewConditionalRealitySystem(ruleEngine *RuleEngine) *ConditionalRealitySyst
 	}
 }
 
-// RegisterContext adds a new active context to the system
+// RegisterContext adds a new active context to the system.
 func (crs *ConditionalRealitySystem) RegisterContext(ctx context.Context, sessionID string, contextType string, contextValue interface{}) error {
 	context := models.ConditionalContext{
 		ID:          uuid.New().String(),
@@ -69,48 +69,48 @@ func (crs *ConditionalRealitySystem) RegisterContext(ctx context.Context, sessio
 		StartedAt: time.Now(),
 	}
 
-	// Add to active contexts
+	// Add to active contexts.
 	if crs.contextManager.activeContexts[sessionID] == nil {
 		crs.contextManager.activeContexts[sessionID] = []models.ConditionalContext{}
 	}
 	crs.contextManager.activeContexts[sessionID] = append(crs.contextManager.activeContexts[sessionID], context)
 
-	// Notify subscribers
+	// Notify subscribers.
 	crs.contextManager.notifySubscribers(ctx, sessionID, contextType, context)
 
 	return nil
 }
 
-// GetActiveContexts returns all active contexts for a session
+// GetActiveContexts returns all active contexts for a session.
 func (crs *ConditionalRealitySystem) GetActiveContexts(sessionID string) []models.ConditionalContext {
 	return crs.contextManager.activeContexts[sessionID]
 }
 
-// ApplyConditionalRules modifies a rule based on active contexts
+// ApplyConditionalRules modifies a rule based on active contexts.
 func (crs *ConditionalRealitySystem) ApplyConditionalRules(
 	template *models.RuleTemplate,
 	instance *models.RuleInstance,
 	activeContexts []models.ConditionalContext,
 ) (*models.RuleTemplate, error) {
-	// Create a copy of the template to modify
+	// Create a copy of the template to modify.
 	modifiedTemplate := *template
 
-	// Check each conditional rule in the template
+	// Check each conditional rule in the template.
 	for _, conditionalRule := range template.ConditionalRules {
 		if crs.conditionsMet(conditionalRule.Conditions, activeContexts, instance) {
-			// Apply modifications
+			// Apply modifications.
 			if conditionalRule.ModifiedLogic != nil {
 				modifiedTemplate.LogicGraph = *conditionalRule.ModifiedLogic
 			}
 
-			// Apply parameter overrides
+			// Apply parameter overrides.
 			for param, value := range conditionalRule.ParameterOverrides {
 				instance.ParameterValues[param] = value
 			}
 		}
 	}
 
-	// Apply global modifiers based on context types
+	// Apply global modifiers based on context types.
 	for _, context := range activeContexts {
 		modifiers := crs.getModifiersForContext(context.ContextType, context.ContextValue)
 		for _, modifier := range modifiers {
@@ -121,7 +121,7 @@ func (crs *ConditionalRealitySystem) ApplyConditionalRules(
 	return &modifiedTemplate, nil
 }
 
-// conditionsMet checks if all conditions are satisfied
+// conditionsMet checks if all conditions are satisfied.
 func (crs *ConditionalRealitySystem) conditionsMet(
 	conditions []models.RuleCondition,
 	activeContexts []models.ConditionalContext,
@@ -135,7 +135,7 @@ func (crs *ConditionalRealitySystem) conditionsMet(
 	return true
 }
 
-// evaluateCondition checks a single condition
+// evaluateCondition checks a single condition.
 func (crs *ConditionalRealitySystem) evaluateCondition(
 	condition models.RuleCondition,
 	activeContexts []models.ConditionalContext,
@@ -161,8 +161,7 @@ func (crs *ConditionalRealitySystem) evaluateCondition(
 	}
 }
 
-// Specific condition evaluators
-
+// Specific condition evaluators.
 func (crs *ConditionalRealitySystem) evaluateLocationCondition(condition models.RuleCondition, contexts []models.ConditionalContext) bool {
 	for _, ctx := range contexts {
 		if ctx.ContextType == models.ConditionTypeEnvironment {
@@ -212,7 +211,7 @@ func (crs *ConditionalRealitySystem) evaluatePlaneCondition(condition models.Rul
 }
 
 func (crs *ConditionalRealitySystem) evaluateEmotionCondition(condition models.RuleCondition, instance *models.RuleInstance) bool {
-	// Check character's emotional state
+	// Check character's emotional state.
 	if emotionalState, ok := instance.State["emotional_state"].(map[string]interface{}); ok {
 		emotion, ok := emotionalState["current"].(string)
 		if !ok {
@@ -233,12 +232,12 @@ func (crs *ConditionalRealitySystem) evaluateEmotionCondition(condition models.R
 
 func (crs *ConditionalRealitySystem) evaluateCharacterStateCondition(condition models.RuleCondition, instance *models.RuleInstance) bool {
 	// This would check character conditions like HP, status effects, etc.
-	// Simplified for now
+	// Simplified for now.
 	return true
 }
 
 func (crs *ConditionalRealitySystem) evaluateTimeCondition(condition models.RuleCondition) bool {
-	// Check time-based conditions
+	// Check time-based conditions.
 	now := time.Now()
 
 	switch condition.Operator {
@@ -273,7 +272,7 @@ func (crs *ConditionalRealitySystem) evaluateNarrativeCondition(condition models
 	for _, ctx := range contexts {
 		if ctx.ContextType == models.ConditionTypeNarrative {
 			if storyProgress, ok := ctx.ContextValue["story_progress"].(map[string]interface{}); ok {
-				// Check various narrative conditions
+				// Check various narrative conditions.
 				switch condition.Operator {
 				case "quest_completed":
 					questName, _ := condition.Value.(string)
@@ -293,7 +292,7 @@ func (crs *ConditionalRealitySystem) evaluateNarrativeCondition(condition models
 func (crs *ConditionalRealitySystem) evaluateEnvironmentCondition(condition models.RuleCondition, contexts []models.ConditionalContext) bool {
 	for _, ctx := range contexts {
 		if ctx.ContextType == models.ConditionTypeEnvironment || ctx.ContextType == models.ConditionTypeWeather {
-			// Check environmental conditions
+			// Check environmental conditions.
 			switch condition.Operator {
 			case "weather_is":
 				weather, _ := ctx.ContextValue["weather"].(string)
@@ -310,9 +309,9 @@ func (crs *ConditionalRealitySystem) evaluateEnvironmentCondition(condition mode
 	return false
 }
 
-// getModifiersForContext returns modifiers that apply to a specific context
+// getModifiersForContext returns modifiers that apply to a specific context.
 func (crs *ConditionalRealitySystem) getModifiersForContext(contextType string, contextValue map[string]interface{}) []RuleModifier {
-	// Predefined modifiers for different contexts
+	// Predefined modifiers for different contexts.
 	modifiers := []RuleModifier{}
 
 	switch contextType {
@@ -331,13 +330,13 @@ func (crs *ConditionalRealitySystem) getModifiersForContext(contextType string, 
 	return modifiers
 }
 
-// Plane-specific modifiers
+// Plane-specific modifiers.
 func (crs *ConditionalRealitySystem) getPlaneModifiers(plane string) []RuleModifier {
 	modifiers := []RuleModifier{}
 
 	switch plane {
 	case "Feywild":
-		// Magic is chaotic in the Feywild
+		// Magic is chaotic in the Feywild.
 		modifiers = append(modifiers, RuleModifier{
 			ConditionType: models.ConditionTypePlane,
 			Modifications: ModificationSet{
@@ -350,7 +349,7 @@ func (crs *ConditionalRealitySystem) getPlaneModifiers(plane string) []RuleModif
 			},
 		})
 	case "Shadowfell":
-		// Necrotic damage enhanced, radiant weakened
+		// Necrotic damage enhanced, radiant weakened.
 		modifiers = append(modifiers, RuleModifier{
 			ConditionType: models.ConditionTypePlane,
 			Modifications: ModificationSet{
@@ -364,7 +363,7 @@ func (crs *ConditionalRealitySystem) getPlaneModifiers(plane string) []RuleModif
 			},
 		})
 	case "Elemental Plane of Fire":
-		// Fire damage enhanced, cold weakened
+		// Fire damage enhanced, cold weakened.
 		modifiers = append(modifiers, RuleModifier{
 			ConditionType: models.ConditionTypePlane,
 			Modifications: ModificationSet{
@@ -382,13 +381,13 @@ func (crs *ConditionalRealitySystem) getPlaneModifiers(plane string) []RuleModif
 	return modifiers
 }
 
-// Weather-specific modifiers
+// Weather-specific modifiers.
 func (crs *ConditionalRealitySystem) getWeatherModifiers(weather string) []RuleModifier {
 	modifiers := []RuleModifier{}
 
 	switch weather {
 	case "storm":
-		// Lightning damage enhanced, ranged attacks hindered
+		// Lightning damage enhanced, ranged attacks hindered.
 		modifiers = append(modifiers, RuleModifier{
 			ConditionType: models.ConditionTypeWeather,
 			Modifications: ModificationSet{
@@ -404,7 +403,7 @@ func (crs *ConditionalRealitySystem) getWeatherModifiers(weather string) []RuleM
 			},
 		})
 	case "fog":
-		// Visibility reduced, stealth enhanced
+		// Visibility reduced, stealth enhanced.
 		modifiers = append(modifiers, RuleModifier{
 			ConditionType: models.ConditionTypeWeather,
 			Modifications: ModificationSet{
@@ -420,13 +419,13 @@ func (crs *ConditionalRealitySystem) getWeatherModifiers(weather string) []RuleM
 	return modifiers
 }
 
-// Emotion-specific modifiers
+// Emotion-specific modifiers.
 func (crs *ConditionalRealitySystem) getEmotionModifiers(emotion string, intensity float64) []RuleModifier {
 	modifiers := []RuleModifier{}
 
 	switch emotion {
 	case "rage":
-		// Damage increased, defense decreased
+		// Damage increased, defense decreased.
 		modifiers = append(modifiers, RuleModifier{
 			ConditionType: models.ConditionTypeEmotion,
 			Modifications: ModificationSet{
@@ -439,7 +438,7 @@ func (crs *ConditionalRealitySystem) getEmotionModifiers(emotion string, intensi
 			},
 		})
 	case "fear":
-		// Disadvantage on attacks, movement restricted
+		// Disadvantage on attacks, movement restricted.
 		modifiers = append(modifiers, RuleModifier{
 			ConditionType: models.ConditionTypeEmotion,
 			Modifications: ModificationSet{
@@ -452,7 +451,7 @@ func (crs *ConditionalRealitySystem) getEmotionModifiers(emotion string, intensi
 			},
 		})
 	case "determination":
-		// Bonus to saves, resistance to conditions
+		// Bonus to saves, resistance to conditions.
 		modifiers = append(modifiers, RuleModifier{
 			ConditionType: models.ConditionTypeEmotion,
 			Modifications: ModificationSet{
@@ -468,16 +467,16 @@ func (crs *ConditionalRealitySystem) getEmotionModifiers(emotion string, intensi
 	return modifiers
 }
 
-// applyModifier applies a modifier to a rule template
+// applyModifier applies a modifier to a rule template.
 func (crs *ConditionalRealitySystem) applyModifier(template *models.RuleTemplate, modifier RuleModifier) {
-	// Apply node overrides
+	// Apply node overrides.
 	for nodePattern, overrides := range modifier.Modifications.NodeOverrides {
 		for i := range template.LogicGraph.Nodes {
 			node := &template.LogicGraph.Nodes[i]
 
-			// Check if node matches pattern
+			// Check if node matches pattern.
 			if nodePattern == "*" || strings.Contains(node.Type, nodePattern) {
-				// Apply property overrides
+				// Apply property overrides.
 				if node.Properties == nil {
 					node.Properties = make(map[string]interface{})
 				}
@@ -488,9 +487,9 @@ func (crs *ConditionalRealitySystem) applyModifier(template *models.RuleTemplate
 		}
 	}
 
-	// Apply parameter overrides
+	// Apply parameter overrides.
 	for param, value := range modifier.Modifications.ParameterOverrides {
-		// Find and update parameter
+		// Find and update parameter.
 		for i := range template.Parameters {
 			if template.Parameters[i].Name == param {
 				template.Parameters[i].DefaultValue = value
@@ -499,21 +498,21 @@ func (crs *ConditionalRealitySystem) applyModifier(template *models.RuleTemplate
 		}
 	}
 
-	// Disable specified nodes
+	// Disable specified nodes.
 	for _, nodeID := range modifier.Modifications.DisabledNodes {
 		for i := range template.LogicGraph.Nodes {
 			if template.LogicGraph.Nodes[i].ID == nodeID {
-				// Mark node as disabled
+				// Mark node as disabled.
 				template.LogicGraph.Nodes[i].Properties["disabled"] = true
 			}
 		}
 	}
 
-	// Add additional nodes
+	// Add additional nodes.
 	template.LogicGraph.Nodes = append(template.LogicGraph.Nodes, modifier.Modifications.AdditionalNodes...)
 }
 
-// Subscribe adds a subscriber for context changes
+// Subscribe adds a subscriber for context changes.
 func (cm *ContextManager) Subscribe(sessionID string, subscriber ContextSubscriber) {
 	if cm.subscribers[sessionID] == nil {
 		cm.subscribers[sessionID] = []ContextSubscriber{}
@@ -521,7 +520,7 @@ func (cm *ContextManager) Subscribe(sessionID string, subscriber ContextSubscrib
 	cm.subscribers[sessionID] = append(cm.subscribers[sessionID], subscriber)
 }
 
-// notifySubscribers notifies all subscribers of a context change
+// notifySubscribers notifies all subscribers of a context change.
 func (cm *ContextManager) notifySubscribers(ctx context.Context, sessionID string, contextType string, newContext models.ConditionalContext) {
 	subscribers := cm.subscribers[sessionID]
 	for _, subscriber := range subscribers {
@@ -529,8 +528,7 @@ func (cm *ContextManager) notifySubscribers(ctx context.Context, sessionID strin
 	}
 }
 
-// PredefinedContexts contains common game contexts
-
+// PredefinedContexts contains common game contexts.
 var PredefinedPlanes = []string{
 	"Material Plane",
 	"Feywild",

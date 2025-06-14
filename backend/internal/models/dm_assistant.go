@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// AINPC represents an AI-generated NPC with personality and dialogue
+// AINPC represents an AI-generated NPC with personality and dialogue.
 type AINPC struct {
 	ID                  uuid.UUID              `json:"id" db:"id"`
 	GameSessionID       uuid.UUID              `json:"gameSessionId" db:"game_session_id"`
@@ -30,14 +30,14 @@ type AINPC struct {
 	UpdatedAt           time.Time              `json:"updatedAt" db:"updated_at"`
 }
 
-// DialogueEntry represents a single piece of dialogue from an NPC
+// DialogueEntry represents a single piece of dialogue from an NPC.
 type DialogueEntry struct {
 	Context   string    `json:"context"`
 	Dialogue  string    `json:"dialogue"`
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// AILocation represents an AI-generated location
+// AILocation represents an AI-generated location.
 type AILocation struct {
 	ID                   uuid.UUID      `json:"id" db:"id"`
 	GameSessionID        uuid.UUID      `json:"gameSessionId" db:"game_session_id"`
@@ -57,14 +57,14 @@ type AILocation struct {
 	UpdatedAt            time.Time      `json:"updatedAt" db:"updated_at"`
 }
 
-// SecretDetail represents a hidden element in a location
+// SecretDetail represents a hidden element in a location.
 type SecretDetail struct {
 	Description   string `json:"description"`
 	DiscoveryDC   int    `json:"discoveryDC"`
 	DiscoveryHint string `json:"discoveryHint"`
 }
 
-// AINarration represents combat narration or dramatic moments
+// AINarration represents combat narration or dramatic moments.
 type AINarration struct {
 	ID             uuid.UUID              `json:"id" db:"id"`
 	GameSessionID  uuid.UUID              `json:"gameSessionId" db:"game_session_id"`
@@ -78,7 +78,7 @@ type AINarration struct {
 	CreatedAt      time.Time              `json:"createdAt" db:"created_at"`
 }
 
-// AIStoryElement represents plot twists and story hooks
+// AIStoryElement represents plot twists and story hooks.
 type AIStoryElement struct {
 	ID                 uuid.UUID              `json:"id" db:"id"`
 	GameSessionID      uuid.UUID              `json:"gameSessionId" db:"game_session_id"`
@@ -97,7 +97,7 @@ type AIStoryElement struct {
 	CreatedAt          time.Time              `json:"createdAt" db:"created_at"`
 }
 
-// AIEnvironmentalHazard represents environmental challenges
+// AIEnvironmentalHazard represents environmental challenges.
 type AIEnvironmentalHazard struct {
 	ID                uuid.UUID              `json:"id" db:"id"`
 	GameSessionID     uuid.UUID              `json:"gameSessionId" db:"game_session_id"`
@@ -119,7 +119,7 @@ type AIEnvironmentalHazard struct {
 	CreatedAt         time.Time              `json:"createdAt" db:"created_at"`
 }
 
-// DMAssistantHistory tracks all DM assistant interactions
+// DMAssistantHistory tracks all DM assistant interactions.
 type DMAssistantHistory struct {
 	ID             uuid.UUID              `json:"id" db:"id"`
 	GameSessionID  uuid.UUID              `json:"gameSessionId" db:"game_session_id"`
@@ -132,7 +132,7 @@ type DMAssistantHistory struct {
 	CreatedAt      time.Time              `json:"createdAt" db:"created_at"`
 }
 
-// Request types for DM Assistant
+// Request types for DM Assistant.
 const (
 	RequestTypeNPCDialogue         = "npc_dialogue"
 	RequestTypeLocationDesc        = "location_description"
@@ -143,7 +143,7 @@ const (
 	RequestTypeStoryHook           = "story_hook"
 )
 
-// Location types
+// Location types.
 const (
 	LocationTypeTavern     = "tavern"
 	LocationTypeDungeon    = "dungeon"
@@ -154,7 +154,7 @@ const (
 	LocationTypeCastle     = "castle"
 )
 
-// Narration types
+// Narration types.
 const (
 	NarrationTypeCombatHit      = "combat_hit"
 	NarrationTypeCombatMiss     = "combat_miss"
@@ -163,7 +163,7 @@ const (
 	NarrationTypeDramatic       = "dramatic_moment"
 )
 
-// Story element types
+// Story element types.
 const (
 	StoryElementPlotTwist    = "plot_twist"
 	StoryElementStoryHook    = "story_hook"
@@ -171,7 +171,7 @@ const (
 	StoryElementComplication = "complication"
 )
 
-// Impact levels
+// Impact levels.
 const (
 	ImpactLevelMinor            = "minor"
 	ImpactLevelModerate         = "moderate"
@@ -179,7 +179,7 @@ const (
 	ImpactLevelCampaignChanging = "campaign-changing"
 )
 
-// DMAssistantRequest represents a request to the DM Assistant
+// DMAssistantRequest represents a request to the DM Assistant.
 type DMAssistantRequest struct {
 	Type           string                 `json:"type" validate:"required"`
 	GameSessionID  string                 `json:"gameSessionId" validate:"required"`
@@ -188,7 +188,7 @@ type DMAssistantRequest struct {
 	StreamResponse bool                   `json:"streamResponse"`
 }
 
-// NPCDialogueRequest for generating NPC dialogue
+// NPCDialogueRequest for generating NPC dialogue.
 type NPCDialogueRequest struct {
 	NPCName         string   `json:"npcName"`
 	NPCPersonality  []string `json:"npcPersonality"`
@@ -198,7 +198,7 @@ type NPCDialogueRequest struct {
 	PreviousContext string   `json:"previousContext"`
 }
 
-// LocationDescriptionRequest for generating location descriptions
+// LocationDescriptionRequest for generating location descriptions.
 type LocationDescriptionRequest struct {
 	LocationType    string   `json:"locationType"`
 	LocationName    string   `json:"locationName"`
@@ -208,7 +208,7 @@ type LocationDescriptionRequest struct {
 	Weather         string   `json:"weather"`
 }
 
-// CombatNarrationRequest for combat descriptions
+// CombatNarrationRequest for combat descriptions.
 type CombatNarrationRequest struct {
 	AttackerName  string `json:"attackerName"`
 	TargetName    string `json:"targetName"`
@@ -221,7 +221,7 @@ type CombatNarrationRequest struct {
 	TargetMaxHP   int    `json:"targetMaxHP"`
 }
 
-// EnvironmentRequest for generating environment descriptions
+// EnvironmentRequest for generating environment descriptions.
 type EnvironmentRequest struct {
 	Location    string   `json:"location"`
 	Type        string   `json:"type"`
@@ -232,7 +232,7 @@ type EnvironmentRequest struct {
 	KeyFeatures []string `json:"keyFeatures,omitempty"`
 }
 
-// EnvironmentDescription represents generated environment details
+// EnvironmentDescription represents generated environment details.
 type EnvironmentDescription struct {
 	Description      string         `json:"description"`
 	SensoryDetails   SensoryDetails `json:"sensoryDetails"`
@@ -243,7 +243,7 @@ type EnvironmentDescription struct {
 	PotentialHazards []string       `json:"potentialHazards,omitempty"`
 }
 
-// SensoryDetails represents the sensory aspects of an environment
+// SensoryDetails represents the sensory aspects of an environment.
 type SensoryDetails struct {
 	Sight string `json:"sight"`
 	Sound string `json:"sound"`
@@ -252,7 +252,7 @@ type SensoryDetails struct {
 	Taste string `json:"taste"`
 }
 
-// PlotHookRequest for generating plot hooks
+// PlotHookRequest for generating plot hooks.
 type PlotHookRequest struct {
 	CurrentSituation string   `json:"currentSituation"`
 	PlayerGoals      []string `json:"playerGoals"`
@@ -264,7 +264,7 @@ type PlotHookRequest struct {
 	PartyComposition []string `json:"partyComposition,omitempty"`
 }
 
-// PlotHook represents a generated plot hook
+// PlotHook represents a generated plot hook.
 type PlotHook struct {
 	Title            string    `json:"title"`
 	Hook             string    `json:"hook"`
@@ -279,14 +279,14 @@ type PlotHook struct {
 	Consequences     string    `json:"consequences"`
 }
 
-// PlotNPC represents an NPC involved in a plot hook
+// PlotNPC represents an NPC involved in a plot hook.
 type PlotNPC struct {
 	Name       string `json:"name"`
 	Role       string `json:"role"`
 	Motivation string `json:"motivation"`
 }
 
-// RulingRequest for DM rulings
+// RulingRequest for DM rulings.
 type RulingRequest struct {
 	Situation      string `json:"situation"`
 	RuleInQuestion string `json:"ruleInQuestion"`
@@ -296,7 +296,7 @@ type RulingRequest struct {
 	PlayerIntent   string `json:"playerIntent,omitempty"`
 }
 
-// RulingSuggestion represents a suggested ruling
+// RulingSuggestion represents a suggested ruling.
 type RulingSuggestion struct {
 	Ruling                string   `json:"ruling"`
 	Reasoning             string   `json:"reasoning"`
@@ -307,7 +307,7 @@ type RulingSuggestion struct {
 	BalanceConsiderations string   `json:"balanceConsiderations,omitempty"`
 }
 
-// TreasureRequest for generating treasure
+// TreasureRequest for generating treasure.
 type TreasureRequest struct {
 	ChallengeRating int    `json:"challengeRating"`
 	TreasureType    string `json:"treasureType"`
@@ -316,7 +316,7 @@ type TreasureRequest struct {
 	PartySize       int    `json:"partySize,omitempty"`
 }
 
-// TreasureHoard represents generated treasure
+// TreasureHoard represents generated treasure.
 type TreasureHoard struct {
 	Currency         map[string]int   `json:"currency"`
 	Items            []string         `json:"items"`
@@ -329,7 +329,7 @@ type TreasureHoard struct {
 	MagicItemDetails []MagicItem      `json:"magicItemDetails,omitempty"`
 }
 
-// CoinageBreakdown represents the breakdown of coins in treasure
+// CoinageBreakdown represents the breakdown of coins in treasure.
 type CoinageBreakdown struct {
 	Copper   int `json:"copper"`
 	Silver   int `json:"silver"`
@@ -337,7 +337,7 @@ type CoinageBreakdown struct {
 	Platinum int `json:"platinum"`
 }
 
-// Gem represents a gem found in treasure
+// Gem represents a gem found in treasure.
 type Gem struct {
 	Name        string `json:"name"`
 	Value       int    `json:"value"`
@@ -345,14 +345,14 @@ type Gem struct {
 	Description string `json:"description"`
 }
 
-// ArtObject represents an art object found in treasure
+// ArtObject represents an art object found in treasure.
 type ArtObject struct {
 	Name        string `json:"name"`
 	Value       int    `json:"value"`
 	Description string `json:"description"`
 }
 
-// MagicItem represents a magic item with detailed properties
+// MagicItem represents a magic item with detailed properties.
 type MagicItem struct {
 	Name        string   `json:"name"`
 	Rarity      string   `json:"rarity"`

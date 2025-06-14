@@ -82,13 +82,13 @@ func TestValidateToken(t *testing.T) {
 	})
 
 	t.Run("expired token", func(t *testing.T) {
-		// Create manager with very short duration
+		// Create manager with very short duration.
 		shortManager := NewJWTManager("test-secret", 1*time.Millisecond, 1*time.Millisecond)
 
 		tokenPair, err := shortManager.GenerateTokenPair("user-123", "testuser", "test@example.com", "player")
 		require.NoError(t, err)
 
-		// Wait for token to expire
+		// Wait for token to expire.
 		time.Sleep(10 * time.Millisecond)
 
 		_, err = shortManager.ValidateToken(tokenPair.AccessToken, AccessToken)
@@ -97,12 +97,12 @@ func TestValidateToken(t *testing.T) {
 	})
 
 	t.Run("wrong secret", func(t *testing.T) {
-		// Generate token with one secret
+		// Generate token with one secret.
 		manager1 := NewJWTManager("secret1", 15*time.Minute, 24*time.Hour)
 		tokenPair, err := manager1.GenerateTokenPair("user-123", "testuser", "test@example.com", "player")
 		require.NoError(t, err)
 
-		// Try to validate with different secret
+		// Try to validate with different secret.
 		manager2 := NewJWTManager("secret2", 15*time.Minute, 24*time.Hour)
 		_, err = manager2.ValidateToken(tokenPair.AccessToken, AccessToken)
 		assert.Error(t, err)
@@ -112,7 +112,7 @@ func TestValidateToken(t *testing.T) {
 		tokenPair, err := manager.GenerateTokenPair("user-123", "testuser", "test@example.com", "player")
 		require.NoError(t, err)
 
-		// Try to validate access token as refresh token
+		// Try to validate access token as refresh token.
 		_, err = manager.ValidateToken(tokenPair.AccessToken, RefreshToken)
 		assert.Error(t, err)
 		assert.Equal(t, ErrInvalidTokenType, err)
@@ -136,7 +136,7 @@ func TestRefreshAccessToken(t *testing.T) {
 		assert.NotEmpty(t, newTokenPair.AccessToken)
 		assert.NotEmpty(t, newTokenPair.RefreshToken)
 
-		// Validate new access token
+		// Validate new access token.
 		claims, err := manager.ValidateToken(newTokenPair.AccessToken, AccessToken)
 		require.NoError(t, err)
 		assert.Equal(t, userID, claims.UserID)
@@ -162,7 +162,7 @@ func TestRefreshAccessToken(t *testing.T) {
 }
 
 func TestGenerateTokenID(t *testing.T) {
-	// Test multiple times to ensure uniqueness
+	// Test multiple times to ensure uniqueness.
 	ids := make(map[string]bool)
 	for i := 0; i < 100; i++ {
 		id := GenerateTokenID()
@@ -251,7 +251,7 @@ func TestNewClaims(t *testing.T) {
 	assert.NotNil(t, claims.IssuedAt)
 	assert.NotNil(t, claims.NotBefore)
 
-	// Check expiration is set correctly
+	// Check expiration is set correctly.
 	expectedExpiry := time.Now().Add(duration)
 	actualExpiry := claims.ExpiresAt.Time
 	assert.WithinDuration(t, expectedExpiry, actualExpiry, 1*time.Second)

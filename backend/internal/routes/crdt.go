@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/crdt"
+	"github.com/gorilla/mux"
 )
 
 func RegisterCRDTRoutes(router *mux.Router) {

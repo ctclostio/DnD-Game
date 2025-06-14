@@ -11,32 +11,32 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// gameSessionRepository implements GameSessionRepository interface
+// gameSessionRepository implements GameSessionRepository interface.
 type gameSessionRepository struct {
 	db *DB
 }
 
-// NewGameSessionRepository creates a new game session repository
+// NewGameSessionRepository creates a new game session repository.
 func NewGameSessionRepository(db *DB) GameSessionRepository {
 	return &gameSessionRepository{db: db}
 }
 
-// Create creates a new game session
+// Create creates a new game session.
 func (r *gameSessionRepository) Create(ctx context.Context, session *models.GameSession) error {
-	// Generate a unique ID if not provided
+	// Generate a unique ID if not provided.
 	if session.ID == "" {
 		session.ID = fmt.Sprintf("session-%s-%d", session.Code, time.Now().UnixNano())
 	}
 
-	// Set timestamps
+	// Set timestamps.
 	now := time.Now()
 	session.CreatedAt = now
 	session.UpdatedAt = now
 
-	// Convert state to JSON string for storage
+	// Convert state to JSON string for storage.
 	stateJSON := "{}"
 	if len(session.State) > 0 {
-		// In production, handle JSON marshaling properly
+		// In production, handle JSON marshaling properly.
 		stateJSON = constants.EmptyJSON
 	}
 
@@ -62,7 +62,7 @@ func (r *gameSessionRepository) Create(ctx context.Context, session *models.Game
 	return nil
 }
 
-// GetByID retrieves a game session by ID with participants
+// GetByID retrieves a game session by ID with participants.
 func (r *gameSessionRepository) GetByID(ctx context.Context, id string) (*models.GameSession, error) {
 	var session models.GameSession
 	var stateJSON string
@@ -88,7 +88,7 @@ func (r *gameSessionRepository) GetByID(ctx context.Context, id string) (*models
 		return nil, fmt.Errorf("failed to get game session by id: %w", err)
 	}
 
-	// Parse state JSON (in production, handle this properly)
+	// Parse state JSON (in production, handle this properly).
 	if stateJSON != "" && stateJSON != "{}" {
 		// Parse JSON into session.State
 		session.State = make(map[string]interface{})
@@ -99,7 +99,7 @@ func (r *gameSessionRepository) GetByID(ctx context.Context, id string) (*models
 	return &session, nil
 }
 
-// GetByDMUserID retrieves all game sessions for a DM
+// GetByDMUserID retrieves all game sessions for a DM.
 func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID string) ([]*models.GameSession, error) {
 	sessions := make([]*models.GameSession, 0, 20)
 	query := `
@@ -110,7 +110,7 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 		WHERE dm_user_id = ?
 		ORDER BY created_at DESC`
 
-	// For SQLite compatibility, we need to handle this differently
+	// For SQLite compatibility, we need to handle this differently.
 	rows, err := r.db.QueryContext(ctx, r.db.Rebind(query), dmUserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get game sessions by dm user id: %w", err)
@@ -133,7 +133,7 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 			return nil, fmt.Errorf("failed to scan game session: %w", err)
 		}
 
-		// Initialize state
+		// Initialize state.
 		session.State = make(map[string]interface{})
 
 		sessions = append(sessions, &session)
@@ -146,7 +146,7 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 	return sessions, nil
 }
 
-// GetByParticipantUserID retrieves all game sessions where user is a participant
+// GetByParticipantUserID retrieves all game sessions where user is a participant.
 func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, userID string) ([]*models.GameSession, error) {
 	sessions := make([]*models.GameSession, 0, 20)
 	query := `
@@ -180,7 +180,7 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 			return nil, fmt.Errorf("failed to scan game session: %w", err)
 		}
 
-		// Initialize state
+		// Initialize state.
 		session.State = make(map[string]interface{})
 
 		sessions = append(sessions, &session)
@@ -193,7 +193,7 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 	return sessions, nil
 }
 
-// Update updates a game session
+// Update updates a game session.
 func (r *gameSessionRepository) Update(ctx context.Context, session *models.GameSession) error {
 	query := `
 		UPDATE game_sessions
@@ -216,7 +216,7 @@ func (r *gameSessionRepository) Update(ctx context.Context, session *models.Game
 	return nil
 }
 
-// Delete deletes a game session
+// Delete deletes a game session.
 func (r *gameSessionRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM game_sessions WHERE id = ?`
 
@@ -237,7 +237,7 @@ func (r *gameSessionRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// List retrieves a paginated list of game sessions
+// List retrieves a paginated list of game sessions.
 func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]*models.GameSession, error) {
 	sessions := make([]*models.GameSession, 0, limit)
 	query := `
@@ -270,7 +270,7 @@ func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]
 			return nil, fmt.Errorf("failed to scan game session: %w", err)
 		}
 
-		// Initialize state
+		// Initialize state.
 		session.State = make(map[string]interface{})
 
 		sessions = append(sessions, &session)
@@ -283,9 +283,9 @@ func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]
 	return sessions, nil
 }
 
-// AddParticipant adds a participant to a game session
+// AddParticipant adds a participant to a game session.
 func (r *gameSessionRepository) AddParticipant(ctx context.Context, sessionID, userID string, characterID *string) error {
-	// Generate an ID for the participant
+	// Generate an ID for the participant.
 	participantID := fmt.Sprintf("participant-%s-%s-%d", userID, sessionID, time.Now().UnixNano())
 
 	query := `
@@ -294,7 +294,7 @@ func (r *gameSessionRepository) AddParticipant(ctx context.Context, sessionID, u
 
 	_, err := r.db.ExecContext(ctx, r.db.Rebind(query), participantID, sessionID, userID, characterID, false)
 	if err != nil {
-		// Check if it's a duplicate entry error
+		// Check if it's a duplicate entry error.
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return fmt.Errorf("user already in session")
 		}
@@ -304,7 +304,7 @@ func (r *gameSessionRepository) AddParticipant(ctx context.Context, sessionID, u
 	return nil
 }
 
-// RemoveParticipant removes a participant from a game session
+// RemoveParticipant removes a participant from a game session.
 func (r *gameSessionRepository) RemoveParticipant(ctx context.Context, sessionID, userID string) error {
 	query := `
 		DELETE FROM game_participants
@@ -327,7 +327,7 @@ func (r *gameSessionRepository) RemoveParticipant(ctx context.Context, sessionID
 	return nil
 }
 
-// GetParticipants retrieves all participants for a game session
+// GetParticipants retrieves all participants for a game session.
 func (r *gameSessionRepository) GetParticipants(ctx context.Context, sessionID string) ([]*models.GameParticipant, error) {
 	query := `
 		SELECT 
@@ -364,7 +364,7 @@ func (r *gameSessionRepository) GetParticipants(ctx context.Context, sessionID s
 	return participants, nil
 }
 
-// UpdateParticipantOnlineStatus updates the online status of a participant
+// UpdateParticipantOnlineStatus updates the online status of a participant.
 func (r *gameSessionRepository) UpdateParticipantOnlineStatus(ctx context.Context, sessionID, userID string, isOnline bool) error {
 	query := `
 		UPDATE game_participants

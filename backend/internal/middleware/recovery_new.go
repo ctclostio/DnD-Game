@@ -16,7 +16,7 @@ func RecoveryMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
-					// Log the panic with structured logging
+					// Log the panic with structured logging.
 					log.WithContext(r.Context()).
 						Error().
 						Interface("panic", err).
@@ -27,7 +27,7 @@ func RecoveryMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 						Str("user_agent", r.UserAgent()).
 						Msg("Panic recovered")
 
-					// Send error response
+					// Send error response.
 					appErr := errors.NewInternalError("Internal server error", nil)
 					response.Error(w, r, appErr)
 				}
@@ -48,7 +48,7 @@ type RecoveryConfigNew struct {
 
 // RecoveryWithConfigNew creates a recovery middleware with custom configuration.
 func RecoveryWithConfigNew(config RecoveryConfigNew) func(http.Handler) http.Handler {
-	// Set defaults
+	// Set defaults.
 	if config.StackSize == 0 {
 		config.StackSize = 4 << 10 // 4KB
 	}
@@ -57,12 +57,12 @@ func RecoveryWithConfigNew(config RecoveryConfigNew) func(http.Handler) http.Han
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
-					// Get stack trace
+					// Get stack trace.
 					stack := make([]byte, config.StackSize)
 					length := runtime.Stack(stack, config.PrintStack)
 					stack = stack[:length]
 
-					// Create log entry
+					// Create log entry.
 					logEvent := config.Logger.WithContext(r.Context()).
 						Error().
 						Interface("panic", err).
@@ -75,14 +75,14 @@ func RecoveryWithConfigNew(config RecoveryConfigNew) func(http.Handler) http.Han
 						logEvent = logEvent.Str("stack_trace", string(stack))
 					}
 
-					// Log the panic
+					// Log the panic.
 					logEvent.Msg("Panic recovered")
 
-					// Handle the error
+					// Handle the error.
 					if config.ErrorHandler != nil {
 						config.ErrorHandler(w, r, err, config.Logger.WithContext(r.Context()))
 					} else {
-						// Default error handling
+						// Default error handling.
 						appErr := errors.NewInternalError("Internal server error", nil)
 						response.Error(w, r, appErr)
 					}

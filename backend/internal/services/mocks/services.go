@@ -3,10 +3,10 @@ package mocks
 import (
 	"context"
 
-	"github.com/stretchr/testify/mock"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/stretchr/testify/mock"
 )
 
 // MockJWTManager is a mock implementation of auth.JWTManager
@@ -38,7 +38,7 @@ func (m *MockJWTManager) RefreshToken(refreshToken string) (*auth.TokenPair, err
 	return args.Get(0).(*auth.TokenPair), args.Error(1)
 }
 
-// MockLLMProvider is a mock implementation of LLMProvider interface
+// MockLLMProvider is a mock implementation of LLMProvider interface.
 type MockLLMProvider struct {
 	mock.Mock
 }
@@ -63,7 +63,7 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 	return args.String(0), args.Error(1)
 }
 
-// MockCustomClassRepository is a mock implementation
+// MockCustomClassRepository is a mock implementation.
 type MockCustomClassRepository struct {
 	mock.Mock
 }
@@ -112,7 +112,7 @@ func (m *MockCustomClassRepository) Approve(id string, approvedBy string) error 
 	return args.Error(0)
 }
 
-// MockCombatService is a mock implementation of combat service
+// MockCombatService is a mock implementation of combat service.
 type MockCombatService struct {
 	mock.Mock
 }
@@ -146,7 +146,7 @@ func (m *MockCombatService) EndCombat(ctx context.Context, combatID string) erro
 	return args.Error(0)
 }
 
-// Helper function to create a test user
+// Helper function to create a test user.
 func CreateTestUser(id, username, email, role string) *models.User {
 	return &models.User{
 		ID:           id,
@@ -157,7 +157,7 @@ func CreateTestUser(id, username, email, role string) *models.User {
 	}
 }
 
-// Helper function to create a test character
+// Helper function to create a test character.
 func CreateTestCharacter(id, userID, name, race, class string) *models.Character {
 	return &models.Character{
 		ID:           id,
@@ -181,7 +181,7 @@ func CreateTestCharacter(id, userID, name, race, class string) *models.Character
 	}
 }
 
-// Helper function to create a test dice roll
+// Helper function to create a test dice roll.
 func CreateTestDiceRoll(sessionID, userID, notation string) *models.DiceRoll {
 	return &models.DiceRoll{
 		GameSessionID: sessionID,
@@ -191,7 +191,7 @@ func CreateTestDiceRoll(sessionID, userID, notation string) *models.DiceRoll {
 	}
 }
 
-// Helper function to create test item
+// Helper function to create test item.
 func CreateTestItem(id, name string, itemType models.ItemType, value int, weight float64) *models.Item {
 	return &models.Item{
 		ID:         id,
@@ -203,7 +203,7 @@ func CreateTestItem(id, name string, itemType models.ItemType, value int, weight
 	}
 }
 
-// Helper function to create test inventory item
+// Helper function to create test inventory item.
 func CreateTestInventoryItem(characterID, itemID string, quantity int, equipped, attuned bool, item *models.Item) *models.InventoryItem {
 	return &models.InventoryItem{
 		CharacterID: characterID,
@@ -215,7 +215,7 @@ func CreateTestInventoryItem(characterID, itemID string, quantity int, equipped,
 	}
 }
 
-// Helper function to create a test game session
+// Helper function to create a test game session.
 func CreateTestGameSession(id, dmID, name string) *models.GameSession {
 	return &models.GameSession{
 		ID:          id,
@@ -226,7 +226,7 @@ func CreateTestGameSession(id, dmID, name string) *models.GameSession {
 	}
 }
 
-// MockDiceRollService is a mock implementation of DiceRollService
+// MockDiceRollService is a mock implementation of DiceRollService.
 type MockDiceRollService struct {
 	mock.Mock
 }
@@ -285,7 +285,7 @@ func (m *MockDiceRollService) SimulateRoll(notation string) (*models.DiceRoll, e
 	return args.Get(0).(*models.DiceRoll), args.Error(1)
 }
 
-// MockAIDMAssistantService is a mock implementation of AIDMAssistantInterface
+// MockAIDMAssistantService is a mock implementation of AIDMAssistantInterface.
 type MockAIDMAssistantService struct {
 	mock.Mock
 }

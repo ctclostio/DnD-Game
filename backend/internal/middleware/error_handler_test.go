@@ -64,8 +64,8 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 			expectedCode:   string(errors.ErrCodeInternalError),
 			expectedMsg:    "Internal server error",
 		},
-		// Note: Panic recovery is handled by Gin's recovery middleware
-		// Our error handler doesn't see panics directly
+		// Note: Panic recovery is handled by Gin's recovery middleware.
+		// Our error handler doesn't see panics directly.
 		{
 			name: "preserves request ID",
 			handler: func(c *gin.Context) {
@@ -97,9 +97,9 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 			gin.SetMode(gin.TestMode)
 			router := gin.New()
 
-			// Add recovery middleware first
+			// Add recovery middleware first.
 			router.Use(gin.Recovery())
-			// Add error handler middleware
+			// Add error handler middleware.
 			router.Use(ErrorHandlerGin())
 
 			router.GET("/test", tt.handler)
@@ -118,7 +118,7 @@ func TestErrorHandlerMiddleware(t *testing.T) {
 				require.Contains(t, response["message"], tt.expectedMsg)
 			}
 
-			// Verify request ID is present
+			// Verify request ID is present.
 			require.NotEmpty(t, response["request_id"])
 		})
 	}
@@ -147,8 +147,8 @@ func TestErrorHandlerMiddleware_ContextEnrichment(t *testing.T) {
 		var response map[string]interface{}
 		resp.DecodeJSON(&response)
 
-		// In production, user context might be logged but not returned
-		// This test verifies the middleware has access to context
+		// In production, user context might be logged but not returned.
+		// This test verifies the middleware has access to context.
 		require.Equal(t, string(errors.ErrCodeInsufficientPrivilege), response["code"])
 	})
 
@@ -200,11 +200,11 @@ func TestErrorHandlerMiddleware_ValidationErrors(t *testing.T) {
 
 		require.Equal(t, string(errors.ErrCodeValidationFailed), response["code"])
 
-		// Check for field errors
+		// Check for field errors.
 		fieldErrors, ok := response["field_errors"].(map[string]interface{})
 		require.True(t, ok)
 
-		// The ValidationErrors struct stores errors as arrays of strings
+		// The ValidationErrors struct stores errors as arrays of strings.
 		nameErrors, ok := fieldErrors["name"].([]interface{})
 		require.True(t, ok)
 		require.Contains(t, nameErrors, "is required")
@@ -285,7 +285,7 @@ func TestErrorHandlerMiddleware_DatabaseErrors(t *testing.T) {
 			router.Use(ErrorHandlerGin())
 
 			router.GET("/test", func(c *gin.Context) {
-				// Convert database error to app error
+				// Convert database error to app error.
 				var err error
 				if stderrors.Is(tt.dbError, sql.ErrNoRows) {
 					err = errors.NewNotFoundError("Resource").WithCode(string(errors.ErrCodeCharacterNotFound))
@@ -320,7 +320,7 @@ func TestErrorHandlerMiddleware_SecurityErrors(t *testing.T) {
 		router.Use(ErrorHandlerGin())
 
 		router.GET("/test", func(c *gin.Context) {
-			// Error containing sensitive info
+			// Error containing sensitive info.
 			err := stderrors.New("invalid password: expected 'secret123' but got 'wrongpass'")
 			_ = c.Error(err)
 			c.Abort()
@@ -334,7 +334,7 @@ func TestErrorHandlerMiddleware_SecurityErrors(t *testing.T) {
 		var response map[string]interface{}
 		resp.DecodeJSON(&response)
 
-		// Should not expose sensitive information
+		// Should not expose sensitive information.
 		require.NotContains(t, response["message"], "secret123")
 		require.NotContains(t, response["message"], "wrongpass")
 		require.Equal(t, "Internal server error", response["message"])

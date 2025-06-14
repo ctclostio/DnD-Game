@@ -36,35 +36,35 @@ func NewAIBalanceAnalyzer(cfg *config.Config, llm LLMProvider, ruleEngine *RuleE
 
 // AnalyzeRuleBalance performs comprehensive balance analysis on a rule template.
 func (ba *AIBalanceAnalyzer) AnalyzeRuleBalance(ctx context.Context, template *models.RuleTemplate) (*models.BalanceMetrics, error) {
-	// Run simulations across different scenarios
+	// Run simulations across different scenarios.
 	simResults := ba.runSimulations(ctx, template)
 
-	// Calculate damage expectations if applicable
+	// Calculate damage expectations if applicable.
 	damageExpectation := ba.calculateDamageExpectation(template)
 
-	// Analyze action economy impact
+	// Analyze action economy impact.
 	actionEconomy := ba.analyzeActionEconomy(template)
 
-	// Calculate resource costs
+	// Calculate resource costs.
 	resourceCost := ba.calculateResourceCost(template)
 
-	// Determine utility score
+	// Determine utility score.
 	utilityScore := ba.calculateUtilityScore(template)
 
-	// Analyze synergy potential
+	// Analyze synergy potential.
 	synergyPotential := ba.analyzeSynergyPotential(template)
 
-	// Generate AI balance suggestions
+	// Generate AI balance suggestions.
 	suggestions, err := ba.generateBalanceSuggestions(ctx, template, simResults)
 	if err != nil {
-		// Non-critical error, continue without suggestions
+		// Non-critical error, continue without suggestions.
 		suggestions = []models.BalanceSuggestion{}
 	}
 
-	// Predict meta impact
+	// Predict meta impact.
 	metaImpact := ba.predictMetaImpact(ctx, template, simResults)
 
-	// Calculate overall power level
+	// Calculate overall power level.
 	powerLevel := ba.calculatePowerLevel(
 		damageExpectation,
 		actionEconomy,
@@ -95,7 +95,7 @@ func (ba *AIBalanceAnalyzer) runSimulations(ctx context.Context, template *model
 	for _, scenario := range scenarios {
 		result, err := ba.simulateScenario(ctx, template, scenario)
 		if err != nil {
-			// Log error but continue with other scenarios
+			// Log error but continue with other scenarios.
 			continue
 		}
 		results = append(results, result)
@@ -110,7 +110,7 @@ func (ba *AIBalanceAnalyzer) simulateScenario(ctx context.Context, template *mod
 	outcomes := []map[string]interface{}{}
 	edgeCases := []string{}
 
-	// Run multiple iterations
+	// Run multiple iterations.
 	iterations := 1000
 	for i := 0; i < iterations; i++ {
 		outcome, success, edgeCase := ba.runSingleSimulation(ctx, template, scenario)
@@ -123,10 +123,10 @@ func (ba *AIBalanceAnalyzer) simulateScenario(ctx context.Context, template *mod
 		}
 	}
 
-	// Calculate average outcome
+	// Calculate average outcome.
 	avgOutcome := ba.calculateAverageOutcome(outcomes)
 
-	// Compare to baseline abilities
+	// Compare to baseline abilities.
 	comparisonScore := ba.compareToBaseline(template, scenario, avgOutcome)
 
 	return models.SimulationResult{
@@ -145,27 +145,27 @@ func (ba *AIBalanceAnalyzer) calculateDamageExpectation(template *models.RuleTem
 		DamageTypes: make(map[string]float64),
 	}
 
-	// Analyze logic graph for damage nodes
+	// Analyze logic graph for damage nodes.
 	for _, node := range template.LogicGraph.Nodes {
 		if node.Type == models.NodeTypeActionDamage {
 			dice, _ := node.Properties["damage_dice"].(string)
 			damageType, _ := node.Properties["damage_type"].(string)
 
-			// Parse dice notation to get average damage
+			// Parse dice notation to get average damage.
 			avgDamage := ba.calculateAverageDiceRoll(dice)
 			expectation.DamageTypes[damageType] += avgDamage
 			expectation.AverageDamage += avgDamage
 		}
 	}
 
-	// Calculate min/max based on dice
+	// Calculate min/max based on dice.
 	expectation.MinDamage = expectation.AverageDamage * 0.5
 	expectation.MaxDamage = expectation.AverageDamage * 1.5
 
-	// Estimate targets affected
+	// Estimate targets affected.
 	expectation.TargetCount = ba.estimateTargetCount(template)
 
-	// Calculate damage per round
+	// Calculate damage per round.
 	actionCost := ba.analyzeActionEconomy(template)
 	if actionCost > 0 {
 		expectation.DamagePerRound = expectation.AverageDamage / actionCost
@@ -180,7 +180,7 @@ func (ba *AIBalanceAnalyzer) generateBalanceSuggestions(ctx context.Context, tem
 		return ba.generateDefaultSuggestions(template, simResults), nil
 	}
 
-	// Prepare context for AI
+	// Prepare context for AI.
 	prompt := fmt.Sprintf(`Analyze this custom D&D rule for balance issues and suggest adjustments:
 
 Rule Name: %s
@@ -240,7 +240,7 @@ Consider:
 
 	var suggestions []models.BalanceSuggestion
 	if err := json.Unmarshal([]byte(response), &suggestions); err != nil {
-		// Try to parse as best as possible
+		// Try to parse as best as possible.
 		return ba.generateDefaultSuggestions(template, simResults), nil
 	}
 
@@ -255,20 +255,20 @@ func (ba *AIBalanceAnalyzer) predictMetaImpact(ctx context.Context, template *mo
 		Counters:      []string{},
 	}
 
-	// Analyze potential combos
+	// Analyze potential combos.
 	if template.Category == "spell" || template.Category == "ability" {
-		// Check for action surge potential
+		// Check for action surge potential.
 		if ba.analyzeActionEconomy(template) < 1 {
 			prediction.EnablesCombos = append(prediction.EnablesCombos, "Action Surge combos")
 		}
 
-		// Check for metamagic potential
+		// Check for metamagic potential.
 		if ba.hasSpellProperties(template) {
 			prediction.EnablesCombos = append(prediction.EnablesCombos, "Metamagic enhancement")
 		}
 	}
 
-	// Predict counters based on damage types and effects
+	// Predict counters based on damage types and effects.
 	damageTypes := ba.getDamageTypes(template)
 	for damageType := range damageTypes {
 		switch damageType {
@@ -279,25 +279,24 @@ func (ba *AIBalanceAnalyzer) predictMetaImpact(ctx context.Context, template *mo
 		}
 	}
 
-	// Check if it's a counter to existing strategies
+	// Check if it's a counter to existing strategies.
 	if ba.hasCounterspellProperties(template) {
 		prediction.Counters = append(prediction.Counters, "Spellcasting strategies")
 		prediction.ComboBreaker = true
 	}
 
-	// Calculate popularity and usage predictions
+	// Calculate popularity and usage predictions.
 	prediction.PopularityScore = ba.calculatePopularityScore(template, simResults)
 	prediction.ExpectedUsageRate = prediction.PopularityScore * 0.8
 
-	// Meta shift potential based on power and uniqueness
+	// Meta shift potential based on power and uniqueness.
 	uniqueness := ba.calculateUniqueness(template)
 	prediction.MetaShiftPotential = (template.BalanceMetrics.PowerLevel/10 + uniqueness) / 2
 
 	return prediction
 }
 
-// Helper methods
-
+// Helper methods.
 func (ba *AIBalanceAnalyzer) getSimulationScenarios(category string) []SimulationScenario {
 	baseScenarios := []SimulationScenario{
 		{Name: "Level 1 Solo", Level: 1, PartySize: 1, EnemyCount: 1},
@@ -307,7 +306,7 @@ func (ba *AIBalanceAnalyzer) getSimulationScenarios(category string) []Simulatio
 		{Name: "Level 20 Epic", Level: 20, PartySize: 4, EnemyCount: 2},
 	}
 
-	// Add category-specific scenarios
+	// Add category-specific scenarios.
 	switch category {
 	case "spell":
 		baseScenarios = append(baseScenarios, SimulationScenario{
@@ -330,7 +329,7 @@ func (ba *AIBalanceAnalyzer) calculatePowerLevel(
 	synergyPotential float64,
 	simResults []models.SimulationResult,
 ) float64 {
-	// Weight different factors
+	// Weight different factors.
 	weights := map[string]float64{
 		"damage":     0.3,
 		"action":     0.2,
@@ -340,16 +339,16 @@ func (ba *AIBalanceAnalyzer) calculatePowerLevel(
 		"simulation": 0.05,
 	}
 
-	// Normalize damage (assume 50 damage per round is max expected)
+	// Normalize damage (assume 50 damage per round is max expected).
 	normalizedDamage := math.Min(damage.DamagePerRound/50, 1.0) * 10
 
-	// Normalize action economy (lower is better, 0 = free action)
+	// Normalize action economy (lower is better, 0 = free action).
 	normalizedAction := (2 - math.Min(actionEconomy, 2)) / 2 * 10
 
-	// Normalize resource cost (lower is better)
+	// Normalize resource cost (lower is better).
 	normalizedResource := (1 - math.Min(resourceCost, 1)) * 10
 
-	// Calculate average simulation success
+	// Calculate average simulation success.
 	avgSimSuccess := 0.0
 	for _, result := range simResults {
 		avgSimSuccess += result.ComparisonScore
@@ -369,7 +368,7 @@ func (ba *AIBalanceAnalyzer) calculatePowerLevel(
 }
 
 func (ba *AIBalanceAnalyzer) analyzeActionEconomy(template *models.RuleTemplate) float64 {
-	// Analyze trigger nodes to determine action cost
+	// Analyze trigger nodes to determine action cost.
 	actionCost := 1.0 // Default to 1 action
 
 	for _, node := range template.LogicGraph.Nodes {
@@ -394,7 +393,7 @@ func (ba *AIBalanceAnalyzer) analyzeActionEconomy(template *models.RuleTemplate)
 func (ba *AIBalanceAnalyzer) calculateResourceCost(template *models.RuleTemplate) float64 {
 	cost := 0.0
 
-	// Check for spell slot usage
+	// Check for spell slot usage.
 	for _, param := range template.Parameters {
 		if param.Name == "spell_slot_level" {
 			if level, ok := param.DefaultValue.(float64); ok {
@@ -403,7 +402,7 @@ func (ba *AIBalanceAnalyzer) calculateResourceCost(template *models.RuleTemplate
 		}
 	}
 
-	// Check for other resource consumption
+	// Check for other resource consumption.
 	for _, node := range template.LogicGraph.Nodes {
 		if node.Type == models.NodeTypeActionResource {
 			amount, _ := node.Properties["amount"].(float64)
@@ -426,7 +425,7 @@ func (ba *AIBalanceAnalyzer) calculateResourceCost(template *models.RuleTemplate
 func (ba *AIBalanceAnalyzer) calculateUtilityScore(template *models.RuleTemplate) float64 {
 	score := 0.0
 
-	// Award points for different utility effects
+	// Award points for different utility effects.
 	utilityEffects := map[string]float64{
 		"movement":      2.0,
 		"invisibility":  3.0,
@@ -440,7 +439,7 @@ func (ba *AIBalanceAnalyzer) calculateUtilityScore(template *models.RuleTemplate
 		"transform":     4.0,
 	}
 
-	// Scan nodes for utility effects
+	// Scan nodes for utility effects.
 	for _, node := range template.LogicGraph.Nodes {
 		effectType, _ := node.Properties["effect_type"].(string)
 		if points, ok := utilityEffects[effectType]; ok {
@@ -454,12 +453,12 @@ func (ba *AIBalanceAnalyzer) calculateUtilityScore(template *models.RuleTemplate
 func (ba *AIBalanceAnalyzer) analyzeSynergyPotential(template *models.RuleTemplate) float64 {
 	potential := 5.0 // Base synergy
 
-	// Check for concentration (limits synergy)
+	// Check for concentration (limits synergy).
 	if ba.requiresConcentration(template) {
 		potential -= 2.0
 	}
 
-	// Check for combo-enabling properties
+	// Check for combo-enabling properties.
 	if ba.grantsAdvantage(template) {
 		potential += 1.5
 	}
@@ -468,7 +467,7 @@ func (ba *AIBalanceAnalyzer) analyzeSynergyPotential(template *models.RuleTempla
 		potential += 2.0
 	}
 
-	// Check for stacking potential
+	// Check for stacking potential.
 	if ba.isStackable(template) {
 		potential += 1.0
 	}
@@ -479,7 +478,7 @@ func (ba *AIBalanceAnalyzer) analyzeSynergyPotential(template *models.RuleTempla
 func (ba *AIBalanceAnalyzer) generateDefaultSuggestions(template *models.RuleTemplate, simResults []models.SimulationResult) []models.BalanceSuggestion {
 	suggestions := []models.BalanceSuggestion{}
 
-	// Check if overpowered
+	// Check if overpowered.
 	if template.BalanceMetrics.PowerLevel > 7.5 {
 		suggestions = append(suggestions, models.BalanceSuggestion{
 			Type:       "nerf",
@@ -491,7 +490,7 @@ func (ba *AIBalanceAnalyzer) generateDefaultSuggestions(template *models.RuleTem
 		})
 	}
 
-	// Check if underpowered
+	// Check if underpowered.
 	if template.BalanceMetrics.PowerLevel < 3.0 {
 		suggestions = append(suggestions, models.BalanceSuggestion{
 			Type:       "buff",
@@ -506,25 +505,24 @@ func (ba *AIBalanceAnalyzer) generateDefaultSuggestions(template *models.RuleTem
 	return suggestions
 }
 
-// Utility functions
-
+// Utility functions.
 func (ba *AIBalanceAnalyzer) calculateAverageDiceRoll(diceNotation string) float64 {
-	// Simple average calculation for dice
-	// Format: XdY+Z
+	// Simple average calculation for dice.
+	// Format: XdY+Z.
 	if diceNotation == "" {
 		return 0
 	}
 
-	// TODO: Implement proper dice notation parsing
-	// For now, return a placeholder
+	// TODO: Implement proper dice notation parsing.
+	// For now, return a placeholder.
 	return 10.5
 }
 
 func (ba *AIBalanceAnalyzer) estimateTargetCount(template *models.RuleTemplate) float64 {
-	// Check for area effects
+	// Check for area effects.
 	for _, node := range template.LogicGraph.Nodes {
 		if areaSize, ok := node.Properties["area_size"].(float64); ok {
-			// Estimate targets based on area
+			// Estimate targets based on area.
 			return math.Ceil(areaSize / 5) // 5ft per target estimate
 		}
 	}
@@ -558,7 +556,7 @@ func containsInBalancer(slice []string, item string) bool {
 	return false
 }
 
-// Additional helper methods for meta prediction
+// Additional helper methods for meta prediction.
 func (ba *AIBalanceAnalyzer) hasSpellProperties(template *models.RuleTemplate) bool {
 	return template.Category == "spell" || strings.Contains(template.Description, "spell")
 }
@@ -585,26 +583,26 @@ func (ba *AIBalanceAnalyzer) hasCounterspellProperties(template *models.RuleTemp
 }
 
 func (ba *AIBalanceAnalyzer) calculatePopularityScore(template *models.RuleTemplate, simResults []models.SimulationResult) float64 {
-	// Base popularity on power, fun factor, and ease of use
+	// Base popularity on power, fun factor, and ease of use.
 	power := template.BalanceMetrics.PowerLevel / 10
 
-	// Fun factor based on variety of effects
+	// Fun factor based on variety of effects.
 	funFactor := float64(len(template.LogicGraph.Nodes)) / 20
 
-	// Ease of use (fewer parameters = easier)
+	// Ease of use (fewer parameters = easier).
 	easeOfUse := 1.0 - (float64(len(template.Parameters)) / 10)
 
 	return (power*0.4 + funFactor*0.3 + easeOfUse*0.3) * 10
 }
 
 func (ba *AIBalanceAnalyzer) calculateUniqueness(template *models.RuleTemplate) float64 {
-	// Calculate based on unusual node combinations
+	// Calculate based on unusual node combinations.
 	nodeTypes := make(map[string]int)
 	for _, node := range template.LogicGraph.Nodes {
 		nodeTypes[node.Type]++
 	}
 
-	// More variety = more unique
+	// More variety = more unique.
 	return math.Min(float64(len(nodeTypes))/5, 1.0)
 }
 
@@ -640,7 +638,7 @@ func (ba *AIBalanceAnalyzer) grantsExtraActions(template *models.RuleTemplate) b
 }
 
 func (ba *AIBalanceAnalyzer) isStackable(template *models.RuleTemplate) bool {
-	// Check if effects can stack
+	// Check if effects can stack.
 	for _, param := range template.Parameters {
 		if param.Name == "stacking" && param.DefaultValue == false {
 			return false
@@ -650,10 +648,9 @@ func (ba *AIBalanceAnalyzer) isStackable(template *models.RuleTemplate) bool {
 }
 
 func (ba *AIBalanceAnalyzer) runSingleSimulation(ctx context.Context, template *models.RuleTemplate, scenario SimulationScenario) (map[string]interface{}, bool, string) {
-	// Placeholder for actual simulation
-	// In a real implementation, this would create mock combat scenarios
-	// and test the rule's effectiveness
-
+	// Placeholder for actual simulation.
+	// In a real implementation, this would create mock combat scenarios.
+	// and test the rule's effectiveness.
 	outcome := map[string]interface{}{
 		"damage_dealt":     15.5,
 		"actions_used":     1,
@@ -672,7 +669,7 @@ func (ba *AIBalanceAnalyzer) calculateAverageOutcome(outcomes []map[string]inter
 		return map[string]interface{}{}
 	}
 
-	// Calculate averages for numeric values
+	// Calculate averages for numeric values.
 	avgOutcome := make(map[string]interface{})
 	totals := make(map[string]float64)
 	counts := make(map[string]int)
@@ -696,20 +693,19 @@ func (ba *AIBalanceAnalyzer) calculateAverageOutcome(outcomes []map[string]inter
 }
 
 func (ba *AIBalanceAnalyzer) compareToBaseline(template *models.RuleTemplate, scenario SimulationScenario, outcome map[string]interface{}) float64 {
-	// Compare to baseline abilities at this level
-	// This would normally reference a database of baseline abilities
-
+	// Compare to baseline abilities at this level.
+	// This would normally reference a database of baseline abilities.
 	baselineDamage := float64(scenario.Level) * 5.0 // Simplified baseline
 	actualDamage, _ := outcome["damage_dealt"].(float64)
 
-	// Score from 0-10 based on comparison
+	// Score from 0-10 based on comparison.
 	ratio := actualDamage / baselineDamage
 	score := math.Min(ratio*5, 10)
 
 	return score
 }
 
-// SimulationScenario defines a test scenario for balance simulation
+// SimulationScenario defines a test scenario for balance simulation.
 type SimulationScenario struct {
 	Name              string
 	Level             int

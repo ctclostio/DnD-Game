@@ -7,17 +7,17 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// TokenType represents the type of JWT token
+// TokenType represents the type of JWT token.
 type TokenType string
 
 const (
-	// AccessToken is used for API authentication
+	// AccessToken is used for API authentication.
 	AccessToken TokenType = "access"
-	// RefreshToken is used to refresh access tokens
+	// RefreshToken is used to refresh access tokens.
 	RefreshToken TokenType = "refresh"
 )
 
-// Claims represents the custom JWT claims for our application
+// Claims represents the custom JWT claims for our application.
 type Claims struct {
 	UserID   string    `json:"user_id"`
 	Username string    `json:"username"`
@@ -27,7 +27,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-// NewClaims creates a new Claims instance
+// NewClaims creates a new Claims instance.
 func NewClaims(userID, username, email, role string, tokenType TokenType, duration time.Duration) *Claims {
 	now := time.Now()
 	return &Claims{
@@ -45,9 +45,9 @@ func NewClaims(userID, username, email, role string, tokenType TokenType, durati
 	}
 }
 
-// Valid validates the claims
+// Valid validates the claims.
 func (c *Claims) Validate() error {
-	// Check custom claims
+	// Check custom claims.
 	if c.UserID == "" {
 		return fmt.Errorf("user_id is required")
 	}
@@ -59,7 +59,7 @@ func (c *Claims) Validate() error {
 	return nil
 }
 
-// TokenPair represents an access and refresh token pair
+// TokenPair represents an access and refresh token pair.
 type TokenPair struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`

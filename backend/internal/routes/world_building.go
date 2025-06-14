@@ -4,12 +4,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// RegisterWorldBuildingRoutes registers all world building-related routes
+// RegisterWorldBuildingRoutes registers all world building-related routes.
 func RegisterWorldBuildingRoutes(api *mux.Router, cfg *Config) {
 	auth := cfg.AuthMiddleware.Authenticate
 	dmOnly := cfg.AuthMiddleware.RequireDM()
 
-	// Settlement management
+	// Settlement management.
 	api.HandleFunc("/world/settlements", auth(cfg.Handlers.GetSettlements)).Methods("GET")
 	api.HandleFunc("/world/settlements", dmOnly(cfg.Handlers.CreateSettlement)).Methods("POST")
 	api.HandleFunc("/world/settlements/{id}", auth(cfg.Handlers.GetSettlement)).Methods("GET")
@@ -17,7 +17,7 @@ func RegisterWorldBuildingRoutes(api *mux.Router, cfg *Config) {
 	api.HandleFunc("/world/settlements/{id}", dmOnly(cfg.Handlers.DeleteSettlement)).Methods("DELETE")
 	api.HandleFunc("/world/settlements/generate", dmOnly(cfg.Handlers.GenerateSettlement)).Methods("POST")
 
-	// Faction management
+	// Faction management.
 	api.HandleFunc("/world/factions", auth(cfg.Handlers.GetFactions)).Methods("GET")
 	api.HandleFunc("/world/factions", dmOnly(cfg.Handlers.CreateFaction)).Methods("POST")
 	api.HandleFunc("/world/factions/{id}", auth(cfg.Handlers.GetFaction)).Methods("GET")
@@ -26,19 +26,19 @@ func RegisterWorldBuildingRoutes(api *mux.Router, cfg *Config) {
 	api.HandleFunc("/world/factions/relationships", auth(cfg.Handlers.GetFactionRelationships)).Methods("GET")
 	api.HandleFunc("/world/factions/relationships", dmOnly(cfg.Handlers.UpdateFactionRelationship)).Methods("PUT")
 
-	// World events
+	// World events.
 	api.HandleFunc("/world/events", auth(cfg.Handlers.GetWorldEvents)).Methods("GET")
 	api.HandleFunc("/world/events/active", auth(cfg.Handlers.GetActiveWorldEvents)).Methods("GET")
 	api.HandleFunc("/world/events/trigger", dmOnly(cfg.Handlers.TriggerWorldEvent)).Methods("POST")
 	api.HandleFunc("/world/events/{id}/resolve", dmOnly(cfg.Handlers.ResolveWorldEvent)).Methods("POST")
 
-	// Culture and lore
+	// Culture and lore.
 	api.HandleFunc("/world/cultures", auth(cfg.Handlers.GetCultures)).Methods("GET")
 	api.HandleFunc("/world/cultures", dmOnly(cfg.Handlers.CreateCulture)).Methods("POST")
 	api.HandleFunc("/world/cultures/{id}", auth(cfg.Handlers.GetCulture)).Methods("GET")
 	api.HandleFunc("/world/cultures/{id}", dmOnly(cfg.Handlers.UpdateCulture)).Methods("PUT")
 
-	// Economic simulation
+	// Economic simulation.
 	api.HandleFunc("/world/economy/simulate", dmOnly(cfg.Handlers.SimulateEconomy)).Methods("POST")
 	api.HandleFunc("/world/economy/status", auth(cfg.Handlers.GetEconomicStatus)).Methods("GET")
 }

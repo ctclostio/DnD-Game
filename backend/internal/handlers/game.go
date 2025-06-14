@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/gorilla/mux"
 )
 
 func (h *Handlers) CreateGameSession(w http.ResponseWriter, r *http.Request) {
@@ -17,14 +17,14 @@ func (h *Handlers) CreateGameSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get user claims from auth context (DM role is enforced by middleware)
+	// Get user claims from auth context (DM role is enforced by middleware).
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Set the DM user ID
+	// Set the DM user ID.
 	session.DMID = claims.UserID
 
 	if err := h.gameService.CreateSession(r.Context(), &session); err != nil {
@@ -39,7 +39,7 @@ func (h *Handlers) GetGameSession(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// Get user ID from auth context
+	// Get user ID from auth context.
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
@@ -52,10 +52,10 @@ func (h *Handlers) GetGameSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user is either DM or a participant
+	// Verify user is either DM or a participant.
 	isAuthorized := session.DMID == userID
 	if !isAuthorized {
-		// Check if user is a participant
+		// Check if user is a participant.
 		if err := h.gameService.ValidateUserInSession(r.Context(), id, userID); err == nil {
 			isAuthorized = true
 		}
@@ -73,14 +73,14 @@ func (h *Handlers) UpdateGameSession(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// Get user claims from auth context (DM role is enforced by middleware)
+	// Get user claims from auth context (DM role is enforced by middleware).
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Verify the session exists and user is the DM
+	// Verify the session exists and user is the DM.
 	existing, err := h.gameService.GetSession(r.Context(), id)
 	if err != nil {
 		response.NotFound(w, r, "Game session not found")
@@ -92,21 +92,21 @@ func (h *Handlers) UpdateGameSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Decode into a map to handle partial updates
+	// Decode into a map to handle partial updates.
 	var updateData map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&updateData); err != nil {
 		response.BadRequest(w, r, "Invalid request body")
 		return
 	}
 
-	// Apply only the fields that were provided
+	// Apply only the fields that were provided.
 	if name, ok := updateData["name"].(string); ok {
 		existing.Name = name
 	}
 	if desc, ok := updateData["description"].(string); ok {
 		existing.Description = desc
 	}
-	// Check both snake_case and camelCase for compatibility
+	// Check both snake_case and camelCase for compatibility.
 	if isActive, ok := updateData["is_active"].(bool); ok {
 		existing.IsActive = isActive
 	} else if isActive, ok := updateData["isActive"].(bool); ok {
@@ -133,7 +133,7 @@ func (h *Handlers) UpdateGameSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch updated session
+	// Fetch updated session.
 	updated, err := h.gameService.GetSession(r.Context(), id)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -155,7 +155,7 @@ func (h *Handlers) JoinGameSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get user ID from auth context
+	// Get user ID from auth context.
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
@@ -174,7 +174,7 @@ func (h *Handlers) LeaveGameSession(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["id"]
 
-	// Get user ID from auth context
+	// Get user ID from auth context.
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
@@ -190,14 +190,14 @@ func (h *Handlers) LeaveGameSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) GetUserGameSessions(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from auth context
+	// Get user ID from auth context.
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Get sessions where user is participant
+	// Get sessions where user is participant.
 	sessions, err := h.gameService.GetSessionsByPlayer(r.Context(), userID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -207,23 +207,23 @@ func (h *Handlers) GetUserGameSessions(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, sessions)
 }
 
-// GetActiveSessions returns all active game sessions (public or user is participant)
+// GetActiveSessions returns all active game sessions (public or user is participant).
 func (h *Handlers) GetActiveSessions(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from auth context
+	// Get user ID from auth context.
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Get all sessions where user is participant
+	// Get all sessions where user is participant.
 	sessions, err := h.gameService.GetSessionsByPlayer(r.Context(), userID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Filter for active sessions only
+	// Filter for active sessions only.
 	activeSessions := make([]*models.GameSession, 0)
 	for _, session := range sessions {
 		if session.IsActive && session.Status != models.GameStatusCompleted {
@@ -234,25 +234,25 @@ func (h *Handlers) GetActiveSessions(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, activeSessions)
 }
 
-// GetSessionPlayers returns all players in a game session
+// GetSessionPlayers returns all players in a game session.
 func (h *Handlers) GetSessionPlayers(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["id"]
 
-	// Get user ID from auth context
+	// Get user ID from auth context.
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Verify user is in the session
+	// Verify user is in the session.
 	if err := h.gameService.ValidateUserInSession(r.Context(), sessionID, userID); err != nil {
 		response.Forbidden(w, r, "You are not a participant in this session")
 		return
 	}
 
-	// Get all participants
+	// Get all participants.
 	participants, err := h.gameService.GetSessionParticipants(r.Context(), sessionID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -262,20 +262,20 @@ func (h *Handlers) GetSessionPlayers(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, participants)
 }
 
-// KickPlayer removes a player from the game session (DM only)
+// KickPlayer removes a player from the game session (DM only).
 func (h *Handlers) KickPlayer(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["id"]
 	playerID := vars["playerId"]
 
-	// Get user claims from auth context (DM role is enforced by middleware)
+	// Get user claims from auth context (DM role is enforced by middleware).
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
 		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	// Verify the session exists and user is the DM
+	// Verify the session exists and user is the DM.
 	session, err := h.gameService.GetSession(r.Context(), sessionID)
 	if err != nil {
 		response.NotFound(w, r, "Game session not found")
@@ -287,13 +287,13 @@ func (h *Handlers) KickPlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Prevent DM from kicking themselves
+	// Prevent DM from kicking themselves.
 	if playerID == claims.UserID {
 		response.BadRequest(w, r, "DM cannot kick themselves")
 		return
 	}
 
-	// Remove the player
+	// Remove the player.
 	if err := h.gameService.KickPlayer(r.Context(), sessionID, playerID); err != nil {
 		response.BadRequest(w, r, err.Error())
 		return

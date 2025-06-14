@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// ContextKey for storing request ID in context
+// ContextKey for storing request ID in context.
 type contextKey string
 
 const (
@@ -19,35 +19,35 @@ const (
 	UserIDKey        contextKey = "user_id"
 )
 
-// Logger wraps zerolog logger with additional functionality
+// Logger wraps zerolog logger with additional functionality.
 type Logger struct {
 	*zerolog.Logger
 }
 
-// Config holds logger configuration
+// Config holds logger configuration.
 type Config struct {
 	Level      string
 	Pretty     bool
 	TimeFormat string
 }
 
-// New creates a new logger instance
+// New creates a new logger instance.
 func New(cfg Config) *Logger {
-	// Set log level
+	// Set log level.
 	level, err := zerolog.ParseLevel(cfg.Level)
 	if err != nil {
 		level = zerolog.InfoLevel
 	}
 	zerolog.SetGlobalLevel(level)
 
-	// Configure time format
+	// Configure time format.
 	if cfg.TimeFormat != "" {
 		zerolog.TimeFieldFormat = cfg.TimeFormat
 	} else {
 		zerolog.TimeFieldFormat = time.RFC3339
 	}
 
-	// Create logger
+	// Create logger.
 	var zl zerolog.Logger
 	if cfg.Pretty {
 		output := zerolog.ConsoleWriter{
@@ -62,21 +62,21 @@ func New(cfg Config) *Logger {
 	return &Logger{&zl}
 }
 
-// WithContext returns a logger with context values
+// WithContext returns a logger with context values.
 func (l *Logger) WithContext(ctx context.Context) *Logger {
 	zl := l.With()
 
-	// Add request ID if present
+	// Add request ID if present.
 	if requestID, ok := ctx.Value(RequestIDKey).(string); ok && requestID != "" {
 		zl = zl.Str("request_id", requestID)
 	}
 
-	// Add correlation ID if present
+	// Add correlation ID if present.
 	if corrID, ok := ctx.Value(CorrelationIDKey).(string); ok && corrID != "" {
 		zl = zl.Str("correlation_id", corrID)
 	}
 
-	// Add user ID if present
+	// Add user ID if present.
 	if userID, ok := ctx.Value(UserIDKey).(string); ok && userID != "" {
 		zl = zl.Str("user_id", userID)
 	}
@@ -85,37 +85,37 @@ func (l *Logger) WithContext(ctx context.Context) *Logger {
 	return &Logger{&logger}
 }
 
-// WithRequestID adds request ID to logger
+// WithRequestID adds request ID to logger.
 func (l *Logger) WithRequestID(requestID string) *Logger {
 	logger := l.With().Str("request_id", requestID).Logger()
 	return &Logger{&logger}
 }
 
-// WithCorrelationID adds correlation ID to logger
+// WithCorrelationID adds correlation ID to logger.
 func (l *Logger) WithCorrelationID(correlationID string) *Logger {
 	logger := l.With().Str("correlation_id", correlationID).Logger()
 	return &Logger{&logger}
 }
 
-// WithUserID adds user ID to logger
+// WithUserID adds user ID to logger.
 func (l *Logger) WithUserID(userID string) *Logger {
 	logger := l.With().Str("user_id", userID).Logger()
 	return &Logger{&logger}
 }
 
-// WithError adds error to logger
+// WithError adds error to logger.
 func (l *Logger) WithError(err error) *Logger {
 	logger := l.With().Err(err).Logger()
 	return &Logger{&logger}
 }
 
-// WithField adds a field to logger
+// WithField adds a field to logger.
 func (l *Logger) WithField(key string, value interface{}) *Logger {
 	logger := l.With().Interface(key, value).Logger()
 	return &Logger{&logger}
 }
 
-// WithFields adds multiple fields to logger
+// WithFields adds multiple fields to logger.
 func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
 	logContext := l.With()
 	for k, v := range fields {
@@ -125,82 +125,81 @@ func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
 	return &Logger{&logger}
 }
 
-// Global logger instance
+// Global logger instance.
 var (
 	defaultLogger *Logger
 	loggerMutex   sync.Mutex
 )
 
-// Init initializes the global logger
+// Init initializes the global logger.
 func Init(cfg Config) {
 	loggerMutex.Lock()
 	defer loggerMutex.Unlock()
 
 	defaultLogger = New(cfg)
-	// Set global logger for zerolog
+	// Set global logger for zerolog.
 	log.Logger = *defaultLogger.Logger
 }
 
-// GetLogger returns the global logger instance
+// GetLogger returns the global logger instance.
 func GetLogger() *Logger {
 	loggerMutex.Lock()
 	defer loggerMutex.Unlock()
 
 	if defaultLogger == nil {
-		// Initialize with default config if not set
+		// Initialize with default config if not set.
 		defaultLogger = New(Config{
 			Level:  "info",
 			Pretty: false,
 		})
-		// Set global logger for zerolog
+		// Set global logger for zerolog.
 		log.Logger = *defaultLogger.Logger
 	}
 	return defaultLogger
 }
 
-// Helper functions for global logger
-
-// Debug logs a debug message
+// Helper functions for global logger.
+// Debug logs a debug message.
 func Debug() *zerolog.Event {
 	return GetLogger().Debug()
 }
 
-// Info logs an info message
+// Info logs an info message.
 func Info() *zerolog.Event {
 	return GetLogger().Info()
 }
 
-// Warn logs a warning message
+// Warn logs a warning message.
 func Warn() *zerolog.Event {
 	return GetLogger().Warn()
 }
 
-// Error logs an error message
+// Error logs an error message.
 func Error() *zerolog.Event {
 	return GetLogger().Error()
 }
 
-// Fatal logs a fatal message and exits
+// Fatal logs a fatal message and exits.
 func Fatal() *zerolog.Event {
 	return GetLogger().Fatal()
 }
 
-// WithContext returns a logger with context
+// WithContext returns a logger with context.
 func WithContext(ctx context.Context) *Logger {
 	return GetLogger().WithContext(ctx)
 }
 
-// ContextWithRequestID adds request ID to context
+// ContextWithRequestID adds request ID to context.
 func ContextWithRequestID(ctx context.Context, requestID string) context.Context {
 	return context.WithValue(ctx, RequestIDKey, requestID)
 }
 
-// ContextWithCorrelationID adds correlation ID to context
+// ContextWithCorrelationID adds correlation ID to context.
 func ContextWithCorrelationID(ctx context.Context, correlationID string) context.Context {
 	return context.WithValue(ctx, CorrelationIDKey, correlationID)
 }
 
-// GetCorrelationIDFromContext retrieves correlation ID from context
+// GetCorrelationIDFromContext retrieves correlation ID from context.
 func GetCorrelationIDFromContext(ctx context.Context) string {
 	if id, ok := ctx.Value(CorrelationIDKey).(string); ok {
 		return id

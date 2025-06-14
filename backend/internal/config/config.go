@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Config holds all configuration for the application
+// Config holds all configuration for the application.
 type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
@@ -16,13 +16,13 @@ type Config struct {
 	AI       AIConfig
 }
 
-// ServerConfig holds server-related configuration
+// ServerConfig holds server-related configuration.
 type ServerConfig struct {
 	Port        string
 	Environment string
 }
 
-// DatabaseConfig holds database-related configuration
+// DatabaseConfig holds database-related configuration.
 type DatabaseConfig struct {
 	Host         string
 	Port         int
@@ -35,7 +35,7 @@ type DatabaseConfig struct {
 	MaxLifetime  time.Duration
 }
 
-// RedisConfig holds Redis-related configuration
+// RedisConfig holds Redis-related configuration.
 type RedisConfig struct {
 	Host     string
 	Port     int
@@ -43,7 +43,7 @@ type RedisConfig struct {
 	DB       int
 }
 
-// AuthConfig holds authentication-related configuration
+// AuthConfig holds authentication-related configuration.
 type AuthConfig struct {
 	JWTSecret            string
 	AccessTokenDuration  time.Duration
@@ -51,7 +51,7 @@ type AuthConfig struct {
 	BcryptCost           int
 }
 
-// AIConfig holds AI/LLM-related configuration
+// AIConfig holds AI/LLM-related configuration.
 type AIConfig struct {
 	Provider string // "openai", "anthropic", or "mock"
 	APIKey   string
@@ -59,15 +59,15 @@ type AIConfig struct {
 	Enabled  bool
 }
 
-// Load loads configuration from environment variables
+// Load loads configuration from environment variables.
 func Load() (*Config, error) {
 	cfg := &Config{}
 
-	// Server configuration
+	// Server configuration.
 	cfg.Server.Port = getEnv("PORT", "8080")
 	cfg.Server.Environment = getEnv("ENV", "development")
 
-	// Database configuration
+	// Database configuration.
 	cfg.Database.Host = getEnv("DB_HOST", "localhost")
 	cfg.Database.Port = getEnvAsInt("DB_PORT", 5432)
 	cfg.Database.User = getEnv("DB_USER", "dndgame")
@@ -78,19 +78,19 @@ func Load() (*Config, error) {
 	cfg.Database.MaxIdleConns = getEnvAsInt("DB_MAX_IDLE_CONNS", 25)
 	cfg.Database.MaxLifetime = getEnvAsDuration("DB_MAX_LIFETIME", 5*time.Minute)
 
-	// Redis configuration
+	// Redis configuration.
 	cfg.Redis.Host = getEnv("REDIS_HOST", "localhost")
 	cfg.Redis.Port = getEnvAsInt("REDIS_PORT", 6379)
 	cfg.Redis.Password = getEnv("REDIS_PASSWORD", "")
 	cfg.Redis.DB = getEnvAsInt("REDIS_DB", 0)
 
-	// Auth configuration
+	// Auth configuration.
 	cfg.Auth.JWTSecret = os.Getenv("JWT_SECRET") // No default for secret
 	cfg.Auth.AccessTokenDuration = getEnvAsDuration("ACCESS_TOKEN_DURATION", 15*time.Minute)
 	cfg.Auth.RefreshTokenDuration = getEnvAsDuration("REFRESH_TOKEN_DURATION", 7*24*time.Hour)
 	cfg.Auth.BcryptCost = getEnvAsInt("BCRYPT_COST", 10)
 
-	// AI configuration
+	// AI configuration.
 	cfg.AI.Provider = getEnv("AI_PROVIDER", "mock") // Default to mock for development
 	cfg.AI.APIKey = getEnv("AI_API_KEY", "")
 	cfg.AI.Model = getEnv("AI_MODEL", "gpt-4-turbo-preview") // Default model
@@ -98,7 +98,7 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
-// getEnv gets an environment variable with a fallback value
+// getEnv gets an environment variable with a fallback value.
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
@@ -106,7 +106,7 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
-// getEnvAsInt gets an environment variable as integer with a fallback value
+// getEnvAsInt gets an environment variable as integer with a fallback value.
 func getEnvAsInt(key string, defaultValue int) int {
 	strValue := getEnv(key, "")
 	if strValue == "" {
@@ -119,7 +119,7 @@ func getEnvAsInt(key string, defaultValue int) int {
 	return intValue
 }
 
-// getEnvAsDuration gets an environment variable as duration with a fallback value
+// getEnvAsDuration gets an environment variable as duration with a fallback value.
 func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
 	strValue := getEnv(key, "")
 	if strValue == "" {
@@ -132,7 +132,7 @@ func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
 	return duration
 }
 
-// Validate validates the configuration
+// Validate validates the configuration.
 func (c *Config) Validate() error {
 	if c.Server.Port == "" {
 		return fmt.Errorf("server port is required")
@@ -164,7 +164,7 @@ func (c *Config) Validate() error {
 	if c.Auth.BcryptCost < 4 || c.Auth.BcryptCost > 31 {
 		return fmt.Errorf("bcrypt cost must be between 4 and 31")
 	}
-	// Validate AI configuration if provider is not mock
+	// Validate AI configuration if provider is not mock.
 	if c.AI.Provider != "mock" && c.AI.APIKey == "" {
 		return fmt.Errorf("AI API key is required when AI provider is not 'mock' (AI_API_KEY environment variable)")
 	}

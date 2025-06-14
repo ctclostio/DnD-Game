@@ -2,8 +2,8 @@ package services
 
 import (
 	"errors"
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 	"sync"
 	"time"
 )
@@ -54,7 +54,7 @@ func (s *GameService) AddPlayerToSession(sessionID, playerID string, player *mod
 	}
 
 	player.JoinedAt = time.Now()
-	// TODO: Store player in database
+	// TODO: Store player in database.
 	// session.Players = append(session.Players, *player)
 
 	return nil

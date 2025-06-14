@@ -27,18 +27,18 @@ func NewCombatAnalyticsService(
 	}
 }
 
-// TrackCombatAction logs a combat action for analytics
+// TrackCombatAction logs a combat action for analytics.
 func (cas *CombatAnalyticsService) TrackCombatAction(ctx context.Context, action *models.CombatActionLog) error {
 	return cas.analyticsRepo.CreateCombatAction(action)
 }
 
-// FinalizeCombatAnalytics generates the final combat report when combat ends
+// FinalizeCombatAnalytics generates the final combat report when combat ends.
 func (cas *CombatAnalyticsService) FinalizeCombatAnalytics(
 	ctx context.Context,
 	combat *models.Combat,
 	sessionID uuid.UUID,
 ) (*models.CombatAnalyticsReport, error) {
-	// Get all combat actions
+	// Get all combat actions.
 	// Convert Combat.ID string to uuid.UUID
 	combatUUID, err := uuid.Parse(combat.ID)
 	if err != nil {
@@ -50,31 +50,31 @@ func (cas *CombatAnalyticsService) FinalizeCombatAnalytics(
 		return nil, fmt.Errorf("failed to get combat actions: %w", err)
 	}
 
-	// Calculate combat analytics
+	// Calculate combat analytics.
 	analytics := cas.calculateCombatAnalytics(combat, sessionID, actions, combatUUID)
 
-	// Save main analytics
+	// Save main analytics.
 	if err := cas.analyticsRepo.CreateCombatAnalytics(analytics); err != nil {
 		return nil, fmt.Errorf("failed to save combat analytics: %w", err)
 	}
 
-	// Calculate individual combatant analytics
+	// Calculate individual combatant analytics.
 	combatantReports := cas.calculateCombatantAnalytics(analytics.ID, combat, actions)
 
-	// Save combatant analytics
+	// Save combatant analytics.
 	for _, report := range combatantReports {
 		if err := cas.analyticsRepo.CreateCombatantAnalytics(report.Analytics); err != nil {
 			return nil, fmt.Errorf("failed to save combatant analytics: %w", err)
 		}
 	}
 
-	// Generate tactical analysis
+	// Generate tactical analysis.
 	tacticalAnalysis := cas.analyzeTactics(combat, actions, combatantReports)
 
-	// Generate recommendations
+	// Generate recommendations.
 	recommendations := cas.generateRecommendations(combat, combatantReports, tacticalAnalysis)
 
-	// Update analytics with AI-generated summary
+	// Update analytics with AI-generated summary.
 	summary := cas.generateCombatSummary(analytics, combatantReports, tacticalAnalysis)
 	updates := map[string]interface{}{
 		"combat_summary":  models.JSONB(summary),
@@ -96,12 +96,12 @@ func (cas *CombatAnalyticsService) calculateCombatAnalytics(
 	actions []*models.CombatActionLog,
 	combatUUID uuid.UUID,
 ) *models.CombatAnalytics {
-	// Calculate total damage and healing
+	// Calculate total damage and healing.
 	totalDamage := 0
 	totalHealing := 0
 	killingBlows := []map[string]interface{}{}
 
-	// Track damage by combatant for MVP calculation
+	// Track damage by combatant for MVP calculation.
 	damageByActor := make(map[string]int)
 
 	for _, action := range actions {
@@ -114,7 +114,7 @@ func (cas *CombatAnalyticsService) calculateCombatAnalytics(
 			totalHealing += action.DamageDealt // Healing stored as positive damage
 		}
 
-		// Check for killing blows
+		// Check for killing blows.
 		if action.Outcome == "killing_blow" {
 			killingBlows = append(killingBlows, map[string]interface{}{
 				"dealer_id": action.ActorID,
@@ -124,7 +124,7 @@ func (cas *CombatAnalyticsService) calculateCombatAnalytics(
 		}
 	}
 
-	// Determine MVP
+	// Determine MVP.
 	mvpID := ""
 	mvpType := ""
 	maxDamage := 0
@@ -133,7 +133,7 @@ func (cas *CombatAnalyticsService) calculateCombatAnalytics(
 		if damage > maxDamage {
 			maxDamage = damage
 			mvpID = actorID
-			// Determine if MVP is character or NPC
+			// Determine if MVP is character or NPC.
 			for _, c := range combat.Combatants {
 				if c.ID == actorID {
 					mvpType = string(c.Type)
@@ -167,10 +167,10 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 ) []*models.CombatantReport {
 	reports := []*models.CombatantReport{}
 
-	// Create a map to track analytics for each combatant
+	// Create a map to track analytics for each combatant.
 	combatantStats := make(map[string]*models.CombatantAnalytics)
 
-	// Initialize stats for all combatants
+	// Initialize stats for all combatants.
 	for _, combatant := range combat.Combatants {
 		stats := &models.CombatantAnalytics{
 			ID:                 uuid.New(),
@@ -186,7 +186,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 		}
 
 		if combatant.HP <= 0 {
-			// Find when they were defeated
+			// Find when they were defeated.
 			for _, action := range actions {
 				if action.TargetID != nil && *action.TargetID == combatant.ID && action.Outcome == "killing_blow" {
 					stats.RoundsSurvived = action.RoundNumber
@@ -198,10 +198,10 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 		combatantStats[combatant.ID] = stats
 	}
 
-	// Process all actions to update stats
+	// Process all actions to update stats.
 	for _, action := range actions {
 		if stats, ok := combatantStats[action.ActorID]; ok {
-			// Update attacker stats
+			// Update attacker stats.
 			switch action.ActionType {
 			case "attack":
 				stats.AttacksMade++
@@ -220,7 +220,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 				stats.DamageDealt += action.DamageDealt
 			case "spell", "ability":
 				stats.DamageDealt += action.DamageDealt
-				// Track ability usage
+				// Track ability usage.
 				abilities := []string{}
 				_ = json.Unmarshal(stats.AbilitiesUsed, &abilities)
 				abilities = append(abilities, action.ActionType)
@@ -231,7 +231,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 			}
 		}
 
-		// Update target stats
+		// Update target stats.
 		if action.TargetID != nil {
 			if stats, ok := combatantStats[*action.TargetID]; ok {
 				switch action.ActionType {
@@ -241,7 +241,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 					stats.HealingReceived += action.DamageDealt
 				}
 
-				// Track conditions
+				// Track conditions.
 				if len(action.ConditionsApplied) > 0 {
 					conditions := []string{}
 					_ = json.Unmarshal(stats.ConditionsSuffered, &conditions)
@@ -256,7 +256,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 			}
 		}
 
-		// Track saves
+		// Track saves.
 		if action.ActionType == "save" {
 			if stats, ok := combatantStats[action.ActorID]; ok {
 				if action.Outcome == "success" {
@@ -268,7 +268,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 		}
 	}
 
-	// Generate reports for each combatant
+	// Generate reports for each combatant.
 	for _, stats := range combatantStats {
 		report := &models.CombatantReport{
 			Analytics:         stats,
@@ -278,7 +278,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 		reports = append(reports, report)
 	}
 
-	// Sort by damage dealt
+	// Sort by damage dealt.
 	sort.Slice(reports, func(i, j int) bool {
 		return reports[i].Analytics.DamageDealt > reports[j].Analytics.DamageDealt
 	})
@@ -289,7 +289,7 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 func (cas *CombatAnalyticsService) ratePerformance(stats *models.CombatantAnalytics) string {
 	score := 0
 
-	// Damage efficiency
+	// Damage efficiency.
 	if stats.AttacksMade > 0 {
 		hitRate := float64(stats.AttacksHit) / float64(stats.AttacksMade)
 		if hitRate > 0.75 {
@@ -301,7 +301,7 @@ func (cas *CombatAnalyticsService) ratePerformance(stats *models.CombatantAnalyt
 		}
 	}
 
-	// Survival
+	// Survival.
 	if stats.FinalHP > 0 {
 		score += 2
 		if stats.DamageTaken == 0 {
@@ -309,17 +309,17 @@ func (cas *CombatAnalyticsService) ratePerformance(stats *models.CombatantAnalyt
 		}
 	}
 
-	// Impact
+	// Impact.
 	if stats.DamageDealt > stats.DamageTaken*2 {
 		score += 2
 	}
 
-	// Critical hits
+	// Critical hits.
 	if stats.CriticalHits > 0 {
 		score += 1
 	}
 
-	// Healing contribution
+	// Healing contribution.
 	if stats.HealingDone > 0 {
 		score += 2
 	}
@@ -384,7 +384,7 @@ func (cas *CombatAnalyticsService) analyzeTactics(
 }
 
 func (cas *CombatAnalyticsService) analyzePositioning(actions []*models.CombatActionLog) int {
-	// Analyze movement and positioning choices
+	// Analyze movement and positioning choices.
 	score := 5 // Base score
 
 	coverUses := 0
@@ -421,7 +421,7 @@ func (cas *CombatAnalyticsService) analyzePositioning(actions []*models.CombatAc
 }
 
 func (cas *CombatAnalyticsService) analyzeResourceUse(actions []*models.CombatActionLog) int {
-	// Analyze spell slot and ability usage efficiency
+	// Analyze spell slot and ability usage efficiency.
 	score := 5
 
 	highLevelSpellsOnMinions := 0
@@ -443,7 +443,7 @@ func (cas *CombatAnalyticsService) analyzeResourceUse(actions []*models.CombatAc
 		}
 
 		if action.ActionType == "heal" {
-			// Check if healing was wasted (overhealing)
+			// Check if healing was wasted (overhealing).
 			if action.DamageDealt > 20 && action.Outcome == "overheal" {
 				wastedHealing++
 			}
@@ -466,10 +466,10 @@ func (cas *CombatAnalyticsService) analyzeResourceUse(actions []*models.CombatAc
 }
 
 func (cas *CombatAnalyticsService) analyzeTargeting(actions []*models.CombatActionLog, combat *models.Combat) int {
-	// Analyze target selection priorities
+	// Analyze target selection priorities.
 	score := 5
 
-	// Track who was targeted and when
+	// Track who was targeted and when.
 	targetPriority := make(map[string]int)
 	dangerousEnemiesEliminated := 0
 
@@ -478,10 +478,10 @@ func (cas *CombatAnalyticsService) analyzeTargeting(actions []*models.CombatActi
 			targetPriority[*action.TargetID]++
 
 			if action.Outcome == "killing_blow" {
-				// Check if this was a high-priority target
+				// Check if this was a high-priority target.
 				for _, combatant := range combat.Combatants {
 					if combatant.ID == *action.TargetID {
-						// Simple heuristic: casters and high damage dealers are priority
+						// Simple heuristic: casters and high damage dealers are priority.
 						if combatant.Type == models.CombatantTypeNPC && action.RoundNumber < 5 {
 							dangerousEnemiesEliminated++
 						}
@@ -500,16 +500,16 @@ func (cas *CombatAnalyticsService) analyzeTargeting(actions []*models.CombatActi
 }
 
 func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActionLog, reports []*models.CombatantReport) int {
-	// Analyze coordination and teamwork
+	// Analyze coordination and teamwork.
 	score := 5
 
 	comboAttacks := 0
 	coordinatedHealing := 0
 	setupActions := 0
 
-	// Look for patterns indicating teamwork
+	// Look for patterns indicating teamwork.
 	for i, action := range actions {
-		// Check for combo attacks (multiple attacks on same target in same round)
+		// Check for combo attacks (multiple attacks on same target in same round).
 		if action.ActionType == "attack" && i > 0 {
 			prevAction := actions[i-1]
 			if prevAction.RoundNumber == action.RoundNumber &&
@@ -519,9 +519,9 @@ func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActio
 			}
 		}
 
-		// Check for timely healing
+		// Check for timely healing.
 		if action.ActionType == "heal" && action.TargetID != nil {
-			// Was the target low on health?
+			// Was the target low on health?.
 			for _, report := range reports {
 				if report.Analytics.CombatantID == *action.TargetID {
 					if report.Analytics.DamageTaken > report.Analytics.FinalHP {
@@ -532,7 +532,7 @@ func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActio
 			}
 		}
 
-		// Check for setup actions (buffs, debuffs)
+		// Check for setup actions (buffs, debuffs).
 		if action.ActionType == "spell" || action.ActionType == "ability" {
 			var conditions []string
 			_ = json.Unmarshal(action.ConditionsApplied, &conditions)
@@ -560,14 +560,14 @@ func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActio
 func (cas *CombatAnalyticsService) findMissedOpportunities(actions []*models.CombatActionLog, combat *models.Combat) []string {
 	opportunities := []string{}
 
-	// Analyze for common tactical mistakes
+	// Analyze for common tactical mistakes.
 	aoeOpportunities := 0
 	healingDelays := 0
 
 	for _, action := range actions {
-		// Check for missed AoE opportunities
+		// Check for missed AoE opportunities.
 		if action.ActionType == "attack" && action.TargetID != nil {
-			// Count enemies in same round
+			// Count enemies in same round.
 			enemiesClose := 0
 			for _, otherAction := range actions {
 				if otherAction.RoundNumber == action.RoundNumber &&
@@ -589,7 +589,7 @@ func (cas *CombatAnalyticsService) findMissedOpportunities(actions []*models.Com
 		opportunities = append(opportunities, "Healing was delayed, resulting in preventable unconsciousness")
 	}
 
-	// Check for poor resource management
+	// Check for poor resource management.
 	var lastRoundActions []*models.CombatActionLog
 	for _, action := range actions {
 		if action.RoundNumber == combat.Round {
@@ -627,7 +627,7 @@ func (cas *CombatAnalyticsService) generateRecommendations(
 ) []string {
 	recommendations := []string{}
 
-	// Based on tactical analysis scores
+	// Based on tactical analysis scores.
 	if analysis.PositioningScore < 5 {
 		recommendations = append(recommendations, "Focus on using cover and terrain advantages more effectively")
 	}
@@ -644,7 +644,7 @@ func (cas *CombatAnalyticsService) generateRecommendations(
 		recommendations = append(recommendations, "Coordinate attacks and support actions for better synergy")
 	}
 
-	// Based on individual performance
+	// Based on individual performance.
 	poorPerformers := 0
 	for _, report := range reports {
 		if report.PerformanceRating == "poor" {
@@ -656,7 +656,7 @@ func (cas *CombatAnalyticsService) generateRecommendations(
 		recommendations = append(recommendations, "Consider adjusting difficulty or providing tactical guidance to struggling players")
 	}
 
-	// Based on combat duration
+	// Based on combat duration.
 	if combat.Round > 10 {
 		recommendations = append(recommendations, "Combat lasted very long - consider more aggressive tactics to speed up encounters")
 	} else if combat.Round < 3 {
@@ -722,7 +722,7 @@ func (cas *CombatAnalyticsService) determineOutcomeFactors(
 ) []string {
 	factors := []string{}
 
-	// Check for decisive factors
+	// Check for decisive factors.
 	totalCrits := 0
 	totalHealing := 0
 	survivorCount := 0
@@ -754,7 +754,7 @@ func (cas *CombatAnalyticsService) determineOutcomeFactors(
 	return factors
 }
 
-// Helper functions
+// Helper functions.
 func min(a, b int) int {
 	if a < b {
 		return a
@@ -769,22 +769,22 @@ func max(a, b int) int {
 	return b
 }
 
-// calculateOverallScore calculates the overall tactical score
+// calculateOverallScore calculates the overall tactical score.
 func calculateOverallScore(ta *models.TacticalAnalysis) int {
 	return (ta.PositioningScore + ta.ResourceManagement + ta.TargetPrioritization + ta.TeamworkScore) / 4
 }
 
-// GetCombatAnalytics retrieves analytics for a combat
+// GetCombatAnalytics retrieves analytics for a combat.
 func (cas *CombatAnalyticsService) GetCombatAnalytics(ctx context.Context, combatID uuid.UUID) (*models.CombatAnalytics, error) {
 	return cas.analyticsRepo.GetCombatAnalytics(combatID)
 }
 
-// GetCombatantAnalytics retrieves combatant analytics for a combat
+// GetCombatantAnalytics retrieves combatant analytics for a combat.
 func (cas *CombatAnalyticsService) GetCombatantAnalytics(ctx context.Context, analyticsID uuid.UUID) ([]*models.CombatantAnalytics, error) {
 	return cas.analyticsRepo.GetCombatantAnalytics(analyticsID)
 }
 
-// GetCombatAnalyticsBySession retrieves all combat analytics for a session
+// GetCombatAnalyticsBySession retrieves all combat analytics for a session.
 func (cas *CombatAnalyticsService) GetCombatAnalyticsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.CombatAnalytics, error) {
 	return cas.analyticsRepo.GetCombatAnalyticsBySession(sessionID)
 }

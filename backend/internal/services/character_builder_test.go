@@ -7,20 +7,20 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 func TestCharacterBuilder_BuildCharacter(t *testing.T) {
-	// Create a temp directory for test data
+	// Create a temp directory for test data.
 	tmpDir := t.TempDir()
 	setupTestData(t, tmpDir)
 
 	builder := NewCharacterBuilder(tmpDir)
 
 	t.Run("successful character creation with standard race and class", func(t *testing.T) {
-		// Test data
+		// Test data.
 		params := map[string]interface{}{
 			"name":       "Aragorn",
 			"race":       "human",
@@ -37,10 +37,10 @@ func TestCharacterBuilder_BuildCharacter(t *testing.T) {
 			},
 		}
 
-		// Execute
+		// Execute.
 		char, err := builder.BuildCharacter(params)
 
-		// Assert
+		// Assert.
 		require.NoError(t, err)
 		require.NotNil(t, char)
 		assert.Equal(t, "Aragorn", char.Name)
@@ -48,12 +48,12 @@ func TestCharacterBuilder_BuildCharacter(t *testing.T) {
 		assert.Equal(t, "fighter", char.Class)
 		assert.Equal(t, 1, char.Level)
 
-		// Verify racial bonuses applied (Human gets +1 to all)
+		// Verify racial bonuses applied (Human gets +1 to all).
 		assert.Equal(t, 17, char.Attributes.Strength)
 		assert.Equal(t, 15, char.Attributes.Dexterity)
 		assert.Equal(t, 16, char.Attributes.Constitution)
 
-		// Verify HP calculation (10 base + 3 CON modifier)
+		// Verify HP calculation (10 base + 3 CON modifier).
 		assert.Equal(t, 13, char.MaxHitPoints)
 		assert.Equal(t, 13, char.HitPoints)
 	})
@@ -80,12 +80,12 @@ func TestCharacterBuilder_BuildCharacter(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, char)
 
-		// Verify wizard-specific features
+		// Verify wizard-specific features.
 		assert.NotEmpty(t, char.Spells.SpellSlots)
 		assert.Equal(t, 2, char.Spells.SpellSlots[0].Total) // Level 1 spell slots
 		assert.Equal(t, "Intelligence", char.Spells.SpellcastingAbility)
 
-		// Verify spell save DC and attack bonus
+		// Verify spell save DC and attack bonus.
 		intMod := builder.calculateModifier(char.Attributes.Intelligence)
 		expectedDC := 8 + char.ProficiencyBonus + intMod
 		assert.Equal(t, expectedDC, char.Spells.SpellSaveDC)
@@ -134,7 +134,7 @@ func TestCharacterBuilder_BuildCharacter(t *testing.T) {
 		assert.Equal(t, "Dragonkin", char.Race)
 		assert.Equal(t, &customRaceID, char.CustomRaceID)
 
-		// Verify custom racial bonuses applied
+		// Verify custom racial bonuses applied.
 		assert.Equal(t, 16, char.Attributes.Strength) // 14 + 2
 		assert.Equal(t, 15, char.Attributes.Charisma) // 14 + 1
 	})
@@ -150,7 +150,7 @@ func TestCharacterBuilder_GetAvailableOptions(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, options)
 
-	// Check that all required fields are present
+	// Check that all required fields are present.
 	races, ok := options["races"].([]string)
 	require.True(t, ok)
 	assert.Contains(t, races, "human")
@@ -184,14 +184,14 @@ func TestCharacterBuilder_RollAbilityScores(t *testing.T) {
 		scores, err := builder.RollAbilityScores("standard_array")
 		require.NoError(t, err)
 
-		// Check that standard array values are present
+		// Check that standard array values are present.
 		expectedValues := []int{15, 14, 13, 12, 10, 8}
 		var actualValues []int
 		for _, ability := range []string{"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"} {
 			actualValues = append(actualValues, scores[ability])
 		}
 
-		// Sort to compare (order doesn't matter for standard array)
+		// Sort to compare (order doesn't matter for standard array).
 		assert.ElementsMatch(t, expectedValues, actualValues)
 	})
 
@@ -199,7 +199,7 @@ func TestCharacterBuilder_RollAbilityScores(t *testing.T) {
 		scores, err := builder.RollAbilityScores("roll_4d6")
 		require.NoError(t, err)
 
-		// Check that all abilities have valid scores (3-18)
+		// Check that all abilities have valid scores (3-18).
 		for ability, score := range scores {
 			assert.GreaterOrEqual(t, score, 3, "Ability %s should be at least 3", ability)
 			assert.LessOrEqual(t, score, 18, "Ability %s should be at most 18", ability)
@@ -210,7 +210,7 @@ func TestCharacterBuilder_RollAbilityScores(t *testing.T) {
 		scores, err := builder.RollAbilityScores("point_buy")
 		require.NoError(t, err)
 
-		// Check that all abilities start at 8
+		// Check that all abilities start at 8.
 		for _, score := range scores {
 			assert.Equal(t, 8, score)
 		}
@@ -363,15 +363,15 @@ func TestCharacterBuilder_CalculateProficiencyBonus(t *testing.T) {
 	}
 }
 
-// Helper function to setup test data
+// Helper function to setup test data.
 func setupTestData(t *testing.T, dir string) {
-	// Create directory structure
+	// Create directory structure.
 	for _, subdir := range []string{"races", "classes", "backgrounds"} {
 		err := os.MkdirAll(filepath.Join(dir, subdir), 0755)
 		require.NoError(t, err)
 	}
 
-	// Create minimal test data files
+	// Create minimal test data files.
 	raceData := map[string]interface{}{
 		"human": map[string]interface{}{
 			"name": "Human",

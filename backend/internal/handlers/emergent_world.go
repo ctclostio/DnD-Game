@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
-// EmergentWorldHandlers manages handlers for the emergent world system
+// EmergentWorldHandlers manages handlers for the emergent world system.
 type EmergentWorldHandlers struct {
 	livingEcosystem    *services.LivingEcosystemService
 	factionPersonality *services.FactionPersonalityService
@@ -24,7 +24,7 @@ type EmergentWorldHandlers struct {
 	factionRepo        *database.WorldBuildingRepository
 }
 
-// NewEmergentWorldHandlers creates new emergent world handlers
+// NewEmergentWorldHandlers creates new emergent world handlers.
 func NewEmergentWorldHandlers(
 	livingEcosystem *services.LivingEcosystemService,
 	factionPersonality *services.FactionPersonalityService,
@@ -43,12 +43,12 @@ func NewEmergentWorldHandlers(
 	}
 }
 
-// SimulateWorld handles POST /api/sessions/{sessionId}/world/simulate
+// SimulateWorld handles POST /api/sessions/{sessionId}/world/simulate.
 func (h *EmergentWorldHandlers) SimulateWorld(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["sessionId"]
 
-	// Verify user is DM
+	// Verify user is DM.
 	userID, _ := auth.GetUserIDFromContext(r.Context())
 	session, err := h.gameService.GetSessionByID(r.Context(), sessionID)
 	if err != nil || session.DMID != userID {
@@ -56,14 +56,14 @@ func (h *EmergentWorldHandlers) SimulateWorld(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Run simulation
+	// Run simulation.
 	err = h.livingEcosystem.SimulateWorldProgress(r.Context(), sessionID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
 	}
 
-	// Get recent events
+	// Get recent events.
 	events, err := h.worldRepo.GetWorldEvents(sessionID, 10, false)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -76,12 +76,12 @@ func (h *EmergentWorldHandlers) SimulateWorld(w http.ResponseWriter, r *http.Req
 	})
 }
 
-// GetWorldEvents handles GET /api/sessions/{sessionId}/world/events
+// GetWorldEvents handles GET /api/sessions/{sessionId}/world/events.
 func (h *EmergentWorldHandlers) GetWorldEvents(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["sessionId"]
 
-	// Parse query parameters
+	// Parse query parameters.
 	limit := 50
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
 		if l, err := strconv.Atoi(limitStr); err == nil {
@@ -100,7 +100,7 @@ func (h *EmergentWorldHandlers) GetWorldEvents(w http.ResponseWriter, r *http.Re
 	response.JSON(w, r, http.StatusOK, events)
 }
 
-// GetWorldState handles GET /api/sessions/{sessionId}/world/state
+// GetWorldState handles GET /api/sessions/{sessionId}/world/state.
 func (h *EmergentWorldHandlers) GetWorldState(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["sessionId"]
@@ -114,9 +114,8 @@ func (h *EmergentWorldHandlers) GetWorldState(w http.ResponseWriter, r *http.Req
 	response.JSON(w, r, http.StatusOK, state)
 }
 
-// NPC Autonomy Handlers
-
-// GetNPCGoals handles GET /api/npcs/{npcId}/goals
+// NPC Autonomy Handlers.
+// GetNPCGoals handles GET /api/npcs/{npcId}/goals.
 func (h *EmergentWorldHandlers) GetNPCGoals(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	npcID := vars["npcId"]
@@ -130,7 +129,7 @@ func (h *EmergentWorldHandlers) GetNPCGoals(w http.ResponseWriter, r *http.Reque
 	response.JSON(w, r, http.StatusOK, goals)
 }
 
-// CreateNPCGoal handles POST /api/npcs/{npcId}/goals
+// CreateNPCGoal handles POST /api/npcs/{npcId}/goals.
 func (h *EmergentWorldHandlers) CreateNPCGoal(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	npcID := vars["npcId"]
@@ -152,7 +151,7 @@ func (h *EmergentWorldHandlers) CreateNPCGoal(w http.ResponseWriter, r *http.Req
 	response.JSON(w, r, http.StatusCreated, goal)
 }
 
-// GetNPCSchedule handles GET /api/npcs/{npcId}/schedule
+// GetNPCSchedule handles GET /api/npcs/{npcId}/schedule.
 func (h *EmergentWorldHandlers) GetNPCSchedule(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	npcID := vars["npcId"]
@@ -166,14 +165,13 @@ func (h *EmergentWorldHandlers) GetNPCSchedule(w http.ResponseWriter, r *http.Re
 	response.JSON(w, r, http.StatusOK, schedule)
 }
 
-// Faction Personality Handlers
-
-// InitializeFactionPersonality handles POST /api/factions/{factionId}/personality
+// Faction Personality Handlers.
+// InitializeFactionPersonality handles POST /api/factions/{factionId}/personality.
 func (h *EmergentWorldHandlers) InitializeFactionPersonality(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	factionID := vars["factionId"]
 
-	// Get faction
+	// Get faction.
 	factionUUID, _ := uuid.Parse(factionID)
 	faction, err := h.factionRepo.GetFaction(factionUUID)
 	if err != nil {
@@ -181,7 +179,7 @@ func (h *EmergentWorldHandlers) InitializeFactionPersonality(w http.ResponseWrit
 		return
 	}
 
-	// Initialize personality
+	// Initialize personality.
 	personality, err := h.factionPersonality.InitializeFactionPersonality(r.Context(), faction)
 	if err != nil {
 		response.InternalServerError(w, r, err)
@@ -191,7 +189,7 @@ func (h *EmergentWorldHandlers) InitializeFactionPersonality(w http.ResponseWrit
 	response.JSON(w, r, http.StatusCreated, personality)
 }
 
-// GetFactionPersonality handles GET /api/factions/{factionId}/personality
+// GetFactionPersonality handles GET /api/factions/{factionId}/personality.
 func (h *EmergentWorldHandlers) GetFactionPersonality(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	factionID := vars["factionId"]
@@ -205,7 +203,7 @@ func (h *EmergentWorldHandlers) GetFactionPersonality(w http.ResponseWriter, r *
 	response.JSON(w, r, http.StatusOK, personality)
 }
 
-// MakeFactionDecision handles POST /api/factions/{factionId}/decide
+// MakeFactionDecision handles POST /api/factions/{factionId}/decide.
 func (h *EmergentWorldHandlers) MakeFactionDecision(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	factionID := vars["factionId"]
@@ -225,7 +223,7 @@ func (h *EmergentWorldHandlers) MakeFactionDecision(w http.ResponseWriter, r *ht
 	response.JSON(w, r, http.StatusOK, result)
 }
 
-// GetFactionAgendas handles GET /api/factions/{factionId}/agendas
+// GetFactionAgendas handles GET /api/factions/{factionId}/agendas.
 func (h *EmergentWorldHandlers) GetFactionAgendas(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	factionID := vars["factionId"]
@@ -239,7 +237,7 @@ func (h *EmergentWorldHandlers) GetFactionAgendas(w http.ResponseWriter, r *http
 	response.JSON(w, r, http.StatusOK, agendas)
 }
 
-// RecordFactionInteraction handles POST /api/factions/{factionId}/interactions
+// RecordFactionInteraction handles POST /api/factions/{factionId}/interactions.
 func (h *EmergentWorldHandlers) RecordFactionInteraction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	factionID := vars["factionId"]
@@ -261,9 +259,8 @@ func (h *EmergentWorldHandlers) RecordFactionInteraction(w http.ResponseWriter, 
 	})
 }
 
-// Procedural Culture Handlers
-
-// GenerateCulture handles POST /api/sessions/{sessionId}/cultures/generate
+// Procedural Culture Handlers.
+// GenerateCulture handles POST /api/sessions/{sessionId}/cultures/generate.
 func (h *EmergentWorldHandlers) GenerateCulture(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["sessionId"]
@@ -283,7 +280,7 @@ func (h *EmergentWorldHandlers) GenerateCulture(w http.ResponseWriter, r *http.R
 	response.JSON(w, r, http.StatusCreated, culture)
 }
 
-// GetCultures handles GET /api/sessions/{sessionId}/cultures
+// GetCultures handles GET /api/sessions/{sessionId}/cultures.
 func (h *EmergentWorldHandlers) GetCultures(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["sessionId"]
@@ -297,7 +294,7 @@ func (h *EmergentWorldHandlers) GetCultures(w http.ResponseWriter, r *http.Reque
 	response.JSON(w, r, http.StatusOK, cultures)
 }
 
-// GetCulture handles GET /api/cultures/{cultureId}
+// GetCulture handles GET /api/cultures/{cultureId}.
 func (h *EmergentWorldHandlers) GetCulture(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cultureID := vars["cultureId"]
@@ -311,7 +308,7 @@ func (h *EmergentWorldHandlers) GetCulture(w http.ResponseWriter, r *http.Reques
 	response.JSON(w, r, http.StatusOK, culture)
 }
 
-// InteractWithCulture handles POST /api/cultures/{cultureId}/interact
+// InteractWithCulture handles POST /api/cultures/{cultureId}/interact.
 func (h *EmergentWorldHandlers) InteractWithCulture(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cultureID := vars["cultureId"]
@@ -328,7 +325,7 @@ func (h *EmergentWorldHandlers) InteractWithCulture(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Get updated culture
+	// Get updated culture.
 	culture, _ := h.worldRepo.GetCulture(cultureID)
 
 	response.JSON(w, r, http.StatusOK, map[string]interface{}{
@@ -337,7 +334,7 @@ func (h *EmergentWorldHandlers) InteractWithCulture(w http.ResponseWriter, r *ht
 	})
 }
 
-// GetCultureLanguage handles GET /api/cultures/{cultureId}/language
+// GetCultureLanguage handles GET /api/cultures/{cultureId}/language.
 func (h *EmergentWorldHandlers) GetCultureLanguage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cultureID := vars["cultureId"]
@@ -351,7 +348,7 @@ func (h *EmergentWorldHandlers) GetCultureLanguage(w http.ResponseWriter, r *htt
 	response.JSON(w, r, http.StatusOK, culture.Language)
 }
 
-// GetCultureBeliefs handles GET /api/cultures/{cultureId}/beliefs
+// GetCultureBeliefs handles GET /api/cultures/{cultureId}/beliefs.
 func (h *EmergentWorldHandlers) GetCultureBeliefs(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cultureID := vars["cultureId"]
@@ -365,7 +362,7 @@ func (h *EmergentWorldHandlers) GetCultureBeliefs(w http.ResponseWriter, r *http
 	response.JSON(w, r, http.StatusOK, culture.BeliefSystem)
 }
 
-// GetCultureCustoms handles GET /api/cultures/{cultureId}/customs
+// GetCultureCustoms handles GET /api/cultures/{cultureId}/customs.
 func (h *EmergentWorldHandlers) GetCultureCustoms(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cultureID := vars["cultureId"]
@@ -379,12 +376,12 @@ func (h *EmergentWorldHandlers) GetCultureCustoms(w http.ResponseWriter, r *http
 	response.JSON(w, r, http.StatusOK, culture.Customs)
 }
 
-// GetSimulationLogs handles GET /api/sessions/{sessionId}/world/logs
+// GetSimulationLogs handles GET /api/sessions/{sessionId}/world/logs.
 func (h *EmergentWorldHandlers) GetSimulationLogs(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["sessionId"]
 
-	// Only DM can view simulation logs
+	// Only DM can view simulation logs.
 	userID, _ := auth.GetUserIDFromContext(r.Context())
 	session, err := h.gameService.GetSessionByID(r.Context(), sessionID)
 	if err != nil || session.DMID != userID {
@@ -408,12 +405,12 @@ func (h *EmergentWorldHandlers) GetSimulationLogs(w http.ResponseWriter, r *http
 	response.JSON(w, r, http.StatusOK, logs)
 }
 
-// TriggerWorldEvent handles POST /api/sessions/{sessionId}/world/events
+// TriggerWorldEvent handles POST /api/sessions/{sessionId}/world/events.
 func (h *EmergentWorldHandlers) TriggerWorldEvent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["sessionId"]
 
-	// Only DM can trigger world events
+	// Only DM can trigger world events.
 	userID, _ := auth.GetUserIDFromContext(r.Context())
 	session, err := h.gameService.GetSessionByID(r.Context(), sessionID)
 	if err != nil || session.DMID != userID {
@@ -435,7 +432,7 @@ func (h *EmergentWorldHandlers) TriggerWorldEvent(w http.ResponseWriter, r *http
 	event.GameSessionID = parsedSessionID
 	event.ID = uuid.New()
 
-	// Convert WorldEvent to EmergentWorldEvent for creation
+	// Convert WorldEvent to EmergentWorldEvent for creation.
 	emergentEvent := &models.EmergentWorldEvent{
 		ID:               event.ID.String(),
 		SessionID:        sessionID,

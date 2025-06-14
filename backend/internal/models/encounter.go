@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// Encounter represents a planned or active encounter in the game
+// Encounter represents a planned or active encounter in the game.
 type Encounter struct {
 	ID                     string                 `json:"id" db:"id"`
 	GameSessionID          string                 `json:"gameSessionId" db:"game_session_id"`
@@ -41,7 +41,7 @@ type Encounter struct {
 	UpdatedAt              time.Time              `json:"updatedAt" db:"updated_at"`
 }
 
-// EncounterEnemy represents an enemy in an encounter
+// EncounterEnemy represents an enemy in an encounter.
 type EncounterEnemy struct {
 	ID                string                 `json:"id" db:"id"`
 	EncounterID       string                 `json:"encounterId" db:"encounter_id"`
@@ -71,7 +71,7 @@ type EncounterEnemy struct {
 	Role              string                 `json:"role"` // tank, damage, support, etc.
 }
 
-// TacticalInfo contains AI-generated tactical suggestions
+// TacticalInfo contains AI-generated tactical suggestions.
 type TacticalInfo struct {
 	GeneralStrategy   string            `json:"generalStrategy"`
 	PriorityTargets   []string          `json:"priorityTargets"`
@@ -81,7 +81,7 @@ type TacticalInfo struct {
 	SpecialTactics    map[string]string `json:"specialTactics"`
 }
 
-// CombatPhase represents different phases of combat with different tactics
+// CombatPhase represents different phases of combat with different tactics.
 type CombatPhase struct {
 	Name      string   `json:"name"`
 	Trigger   string   `json:"trigger"`
@@ -89,7 +89,7 @@ type CombatPhase struct {
 	Abilities []string `json:"abilities"`
 }
 
-// EnvironmentalHazard represents a hazard in the encounter
+// EnvironmentalHazard represents a hazard in the encounter.
 type EnvironmentalHazard struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -99,7 +99,7 @@ type EnvironmentalHazard struct {
 	Damage      string `json:"damage"`
 }
 
-// TerrainFeature represents terrain that affects combat
+// TerrainFeature represents terrain that affects combat.
 type TerrainFeature struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -107,7 +107,7 @@ type TerrainFeature struct {
 	Location    string `json:"location"`
 }
 
-// Solution represents a non-combat solution option
+// Solution represents a non-combat solution option.
 type Solution struct {
 	Method       string   `json:"method"`
 	Description  string   `json:"description"`
@@ -116,7 +116,7 @@ type Solution struct {
 	Consequences string   `json:"consequences"`
 }
 
-// ScalingOptions for dynamic difficulty
+// ScalingOptions for dynamic difficulty.
 type ScalingOptions struct {
 	Easy   ScalingAdjustment `json:"easy"`
 	Medium ScalingAdjustment `json:"medium"`
@@ -124,7 +124,7 @@ type ScalingOptions struct {
 	Deadly ScalingAdjustment `json:"deadly"`
 }
 
-// ScalingAdjustment represents how to adjust an encounter
+// ScalingAdjustment represents how to adjust an encounter.
 type ScalingAdjustment struct {
 	AddEnemies     []string `json:"addEnemies,omitempty"`
 	RemoveEnemies  []string `json:"removeEnemies,omitempty"`
@@ -135,7 +135,7 @@ type ScalingAdjustment struct {
 	AddObjectives  []string `json:"addObjectives,omitempty"`
 }
 
-// ReinforcementWave for mid-combat additions
+// ReinforcementWave for mid-combat additions.
 type ReinforcementWave struct {
 	Round        int              `json:"round"`
 	Trigger      string           `json:"trigger"`
@@ -144,7 +144,7 @@ type ReinforcementWave struct {
 	Announcement string           `json:"announcement"`
 }
 
-// EscapeRoute for tactical retreats
+// EscapeRoute for tactical retreats.
 type EscapeRoute struct {
 	Direction   string `json:"direction"`
 	Description string `json:"description"`
@@ -154,14 +154,14 @@ type EscapeRoute struct {
 
 // Note: Position type is defined in combat.go
 
-// Ability represents a special ability
+// Ability represents a special ability.
 type Ability struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Recharge    string `json:"recharge,omitempty"`
 }
 
-// Action represents something a creature can do
+// Action represents something a creature can do.
 type Action struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -171,7 +171,7 @@ type Action struct {
 	SaveType    string `json:"saveType,omitempty"`
 }
 
-// EncounterObjective represents goals for the encounter
+// EncounterObjective represents goals for the encounter.
 type EncounterObjective struct {
 	ID                string                 `json:"id" db:"id"`
 	EncounterID       string                 `json:"encounterId" db:"encounter_id"`
@@ -189,7 +189,7 @@ type EncounterObjective struct {
 	CreatedAt         time.Time              `json:"createdAt" db:"created_at"`
 }
 
-// ItemReward represents an item reward from an objective
+// ItemReward represents an item reward from an objective.
 type ItemReward struct {
 	ItemID      string `json:"itemId"`
 	ItemName    string `json:"itemName"`
@@ -197,7 +197,7 @@ type ItemReward struct {
 	Description string `json:"description"`
 }
 
-// EncounterEvent tracks what happens during an encounter
+// EncounterEvent tracks what happens during an encounter.
 type EncounterEvent struct {
 	ID               string                 `json:"id" db:"id"`
 	EncounterID      string                 `json:"encounterId" db:"encounter_id"`
@@ -213,7 +213,7 @@ type EncounterEvent struct {
 	CreatedAt        time.Time              `json:"createdAt" db:"created_at"`
 }
 
-// EncounterTemplate for reusable encounters
+// EncounterTemplate for reusable encounters.
 type EncounterTemplate struct {
 	ID                    string                 `json:"id" db:"id"`
 	CreatedBy             *string                `json:"createdBy,omitempty" db:"created_by"`
@@ -236,7 +236,7 @@ type EncounterTemplate struct {
 	UpdatedAt             time.Time              `json:"updatedAt" db:"updated_at"`
 }
 
-// EnemyGroup for templates
+// EnemyGroup for templates.
 type EnemyGroup struct {
 	Name         string `json:"name"`
 	MinQuantity  int    `json:"minQuantity"`
@@ -245,7 +245,7 @@ type EnemyGroup struct {
 	ScalingNotes string `json:"scalingNotes"`
 }
 
-// ObjectiveOption for templates
+// ObjectiveOption for templates.
 type ObjectiveOption struct {
 	Type        string `json:"type"`
 	Description string `json:"description"`

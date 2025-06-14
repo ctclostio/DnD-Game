@@ -7,19 +7,19 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/google/uuid"
 )
 
-// WorldEventEngineService manages world events that happen regardless of party actions
+// WorldEventEngineService manages world events that happen regardless of party actions.
 type WorldEventEngineService struct {
 	llmProvider    LLMProvider
 	worldRepo      WorldBuildingRepository
 	factionService *FactionSystemService
 }
 
-// NewWorldEventEngineService creates a new world event engine service
+// NewWorldEventEngineService creates a new world event engine service.
 func NewWorldEventEngineService(llmProvider LLMProvider, worldRepo WorldBuildingRepository, factionService *FactionSystemService) *WorldEventEngineService {
 	return &WorldEventEngineService{
 		llmProvider:    llmProvider,
@@ -28,9 +28,9 @@ func NewWorldEventEngineService(llmProvider LLMProvider, worldRepo WorldBuilding
 	}
 }
 
-// GenerateWorldEvent creates a new world event based on current world state
+// GenerateWorldEvent creates a new world event based on current world state.
 func (s *WorldEventEngineService) GenerateWorldEvent(ctx context.Context, gameSessionID uuid.UUID, eventType models.WorldEventType) (*models.WorldEvent, error) {
-	// Get current world state for context
+	// Get current world state for context.
 	settlements, _ := s.worldRepo.GetSettlementsByGameSession(gameSessionID)
 	factions, _ := s.worldRepo.GetFactionsByGameSession(gameSessionID)
 	activeEvents, _ := s.worldRepo.GetActiveWorldEvents(gameSessionID)
@@ -91,7 +91,7 @@ Respond in JSON format:
 
 	response, err := s.llmProvider.GenerateCompletion(ctx, userPrompt, systemPrompt)
 	if err != nil {
-		// Fallback to procedural generation
+		// Fallback to procedural generation.
 		return s.generateProceduralEvent(gameSessionID, eventType), nil
 	}
 
@@ -120,7 +120,7 @@ Respond in JSON format:
 		return s.generateProceduralEvent(gameSessionID, eventType), nil
 	}
 
-	// Map severity string to enum
+	// Map severity string to enum.
 	severityMap := map[string]models.WorldEventSeverity{
 		"minor":        models.SeverityMinor,
 		"moderate":     models.SeverityModerate,
@@ -152,7 +152,7 @@ Respond in JSON format:
 		PartyInvolved:      false,
 	}
 
-	// Convert to JSONB
+	// Convert to JSONB.
 	affectedRegions, _ := json.Marshal(eventData.AffectedRegions)
 	event.AffectedRegions = models.JSONB(affectedRegions)
 
@@ -171,25 +171,25 @@ Respond in JSON format:
 	politicalImpacts, _ := json.Marshal(eventData.PoliticalImpacts)
 	event.PoliticalImpacts = models.JSONB(politicalImpacts)
 
-	// Determine affected settlements and factions
+	// Determine affected settlements and factions.
 	event.AffectedSettlements = s.determineAffectedSettlements(settlements, eventData.AffectedRegions)
 	event.AffectedFactions = s.determineAffectedFactions(factions, eventType)
 
-	// Empty party actions initially
+	// Empty party actions initially.
 	event.PartyActions = models.JSONB("[]")
 
-	// Save the event
+	// Save the event.
 	if err := s.worldRepo.CreateWorldEvent(event); err != nil {
 		return nil, fmt.Errorf("failed to save world event: %w", err)
 	}
 
-	// Trigger immediate effects
+	// Trigger immediate effects.
 	s.applyEventEffects(ctx, event)
 
 	return event, nil
 }
 
-// SimulateEventProgression advances all active events
+// SimulateEventProgression advances all active events.
 func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, gameSessionID uuid.UUID) error {
 	activeEvents, err := s.worldRepo.GetActiveWorldEvents(gameSessionID)
 	if err != nil {
@@ -197,14 +197,14 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 	}
 
 	for _, event := range activeEvents {
-		// Check if event should progress
+		// Check if event should progress.
 		if s.shouldEventProgress(event) {
 			if err := s.progressEvent(ctx, event); err != nil {
 				logger.WithContext(ctx).WithError(err).WithField("event_name", event.Name).Warn().Msg("Failed to progress event")
 			}
 		}
 
-		// Check resolution conditions
+		// Check resolution conditions.
 		if s.checkResolutionConditions(ctx, event) {
 			if err := s.resolveEvent(ctx, event); err != nil {
 				logger.WithContext(ctx).WithError(err).WithField("event_name", event.Name).Warn().Msg("Failed to resolve event")
@@ -212,7 +212,7 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 		}
 	}
 
-	// Chance to generate new events
+	// Chance to generate new events.
 	if rand.Float32() < 0.2 {
 		eventTypes := []models.WorldEventType{
 			models.EventPolitical,
@@ -225,7 +225,7 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 
 		eventType := eventTypes[rand.Intn(len(eventTypes))]
 
-		// Higher chance for ancient events in corrupted worlds
+		// Higher chance for ancient events in corrupted worlds.
 		corruptionLevel := s.calculateWorldCorruption(gameSessionID)
 		if corruptionLevel > 5 && rand.Float32() < 0.5 {
 			eventType = models.EventAncientAwakening
@@ -237,35 +237,34 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 	return nil
 }
 
-// NotifyPartyOfEvent makes the party aware of an event
+// NotifyPartyOfEvent makes the party aware of an event.
 func (s *WorldEventEngineService) NotifyPartyOfEvent(eventID uuid.UUID) error {
-	// TODO: Implement repository method to update party_aware
-	// query := `UPDATE world_events SET party_aware = true WHERE id = $1`
+	// TODO: Implement repository method to update party_aware.
+	// query := `UPDATE world_events SET party_aware = true WHERE id = $1`.
 	return nil
 }
 
-// RecordPartyAction records party intervention in an event
+// RecordPartyAction records party intervention in an event.
 func (s *WorldEventEngineService) RecordPartyAction(eventID uuid.UUID, action string) error {
-	// Get the event
-	// Add action to party_actions array
-	// Update party_involved to true
-	// This would be implemented properly
+	// Get the event.
+	// Add action to party_actions array.
+	// Update party_involved to true.
+	// This would be implemented properly.
 	return nil
 }
 
-// Helper methods
-
+// Helper methods.
 func (s *WorldEventEngineService) shouldEventProgress(event *models.WorldEvent) bool {
-	// Events progress based on various factors
-	// For now, simple random chance
+	// Events progress based on various factors.
+	// For now, simple random chance.
 	progressChance := 0.3
 
-	// Major events progress faster
+	// Major events progress faster.
 	if event.Severity == models.SeverityMajor || event.Severity == models.SeverityCatastrophic {
 		progressChance = 0.5
 	}
 
-	// Ancient events are more inevitable
+	// Ancient events are more inevitable.
 	if event.AncientCause {
 		progressChance += 0.2
 	}
@@ -274,7 +273,7 @@ func (s *WorldEventEngineService) shouldEventProgress(event *models.WorldEvent) 
 }
 
 func (s *WorldEventEngineService) progressEvent(ctx context.Context, event *models.WorldEvent) error {
-	// Progress to next stage
+	// Progress to next stage.
 	err := s.worldRepo.ProgressWorldEvent(event.ID)
 	if err != nil {
 		return err
@@ -282,10 +281,10 @@ func (s *WorldEventEngineService) progressEvent(ctx context.Context, event *mode
 
 	event.CurrentStage++
 
-	// Apply new stage effects
+	// Apply new stage effects.
 	s.applyStageEffects(ctx, event)
 
-	// Generate related events for major progressions
+	// Generate related events for major progressions.
 	if event.CurrentStage == 2 && (event.Severity == models.SeverityMajor || event.Severity == models.SeverityCatastrophic) {
 		s.generateCascadeEvents(ctx, event)
 	}
@@ -294,10 +293,9 @@ func (s *WorldEventEngineService) progressEvent(ctx context.Context, event *mode
 }
 
 func (s *WorldEventEngineService) checkResolutionConditions(ctx context.Context, event *models.WorldEvent) bool {
-	// Check if resolution conditions are met
-	// This is simplified - full implementation would check actual conditions
-
-	// Party intervention can help resolve events
+	// Check if resolution conditions are met.
+	// This is simplified - full implementation would check actual conditions.
+	// Party intervention can help resolve events.
 	if event.PartyInvolved {
 		var partyActions []interface{}
 		_ = json.Unmarshal([]byte(event.PartyActions), &partyActions)
@@ -306,7 +304,7 @@ func (s *WorldEventEngineService) checkResolutionConditions(ctx context.Context,
 		}
 	}
 
-	// Random chance for natural resolution
+	// Random chance for natural resolution.
 	resolutionChance := 0.1
 	if event.Severity == models.SeverityMinor {
 		resolutionChance = 0.3
@@ -316,11 +314,10 @@ func (s *WorldEventEngineService) checkResolutionConditions(ctx context.Context,
 }
 
 func (s *WorldEventEngineService) resolveEvent(ctx context.Context, event *models.WorldEvent) error {
-	// Mark event as resolved
-	// TODO: Implement repository method to mark event as resolved
-	// query := `UPDATE world_events SET is_resolved = true, is_active = false WHERE id = $1`
-
-	// Apply resolution consequences
+	// Mark event as resolved.
+	// TODO: Implement repository method to mark event as resolved.
+	// query := `UPDATE world_events SET is_resolved = true, is_active = false WHERE id = $1`.
+	// Apply resolution consequences.
 	var consequences map[string]string
 	_ = json.Unmarshal([]byte(event.Consequences), &consequences)
 
@@ -329,7 +326,7 @@ func (s *WorldEventEngineService) resolveEvent(ctx context.Context, event *model
 		outcome = "ifResolved"
 	}
 
-	// Generate resolution event
+	// Generate resolution event.
 	resolutionEvent := &models.WorldEvent{
 		GameSessionID: event.GameSessionID,
 		Name:          fmt.Sprintf("Resolution: %s", event.Name),
@@ -343,12 +340,12 @@ func (s *WorldEventEngineService) resolveEvent(ctx context.Context, event *model
 		IsResolved:    true,
 	}
 
-	// Copy affected areas
+	// Copy affected areas.
 	resolutionEvent.AffectedRegions = event.AffectedRegions
 	resolutionEvent.AffectedSettlements = event.AffectedSettlements
 	resolutionEvent.AffectedFactions = event.AffectedFactions
 
-	// Empty other fields
+	// Empty other fields.
 	resolutionEvent.EconomicImpacts = models.JSONB("{}")
 	resolutionEvent.PoliticalImpacts = models.JSONB("{}")
 	resolutionEvent.Stages = models.JSONB("[]")
@@ -360,18 +357,18 @@ func (s *WorldEventEngineService) resolveEvent(ctx context.Context, event *model
 }
 
 func (s *WorldEventEngineService) applyEventEffects(ctx context.Context, event *models.WorldEvent) {
-	// Apply economic impacts
+	// Apply economic impacts.
 	s.applyEconomicImpacts(ctx, event)
 
-	// Apply political impacts
+	// Apply political impacts.
 	s.applyPoliticalImpacts(ctx, event)
 }
 
 func (s *WorldEventEngineService) applyStageEffects(ctx context.Context, event *models.WorldEvent) {
-	// Apply effects specific to the current stage
+	// Apply effects specific to the current stage.
 	// This could trigger new events, modify settlements, etc.
 
-	// Ancient awakening events get worse over time
+	// Ancient awakening events get worse over time.
 	if event.Type == models.EventAncientAwakening {
 		var affectedSettlements []string
 		_ = json.Unmarshal([]byte(event.AffectedSettlements), &affectedSettlements)
@@ -387,21 +384,21 @@ func (s *WorldEventEngineService) applyStageEffects(ctx context.Context, event *
 				continue
 			}
 
-			// Increase corruption
+			// Increase corruption.
 			settlement.CorruptionLevel += event.CurrentStage
 			if settlement.CorruptionLevel > 10 {
 				settlement.CorruptionLevel = 10
 			}
 
-			// Update would be done through repository
+			// Update would be done through repository.
 		}
 	}
 }
 
 func (s *WorldEventEngineService) generateCascadeEvents(ctx context.Context, parentEvent *models.WorldEvent) {
-	// Major events can trigger secondary events
+	// Major events can trigger secondary events.
 	if parentEvent.Type == models.EventAncientAwakening {
-		// Ancient awakenings might trigger supernatural events elsewhere
+		// Ancient awakenings might trigger supernatural events elsewhere.
 		cascadeEvent := &models.WorldEvent{
 			GameSessionID:        parentEvent.GameSessionID,
 			Name:                 fmt.Sprintf("Ripple Effect: %s", parentEvent.Name),
@@ -442,7 +439,7 @@ func (s *WorldEventEngineService) determineAffectedSettlements(settlements []*mo
 		}
 	}
 
-	// If no specific matches, affect random settlements
+	// If no specific matches, affect random settlements.
 	if len(affectedSettlementIDs) == 0 && len(settlements) > 0 {
 		numAffected := 1 + rand.Intn(3)
 		if numAffected > len(settlements) {
@@ -462,7 +459,7 @@ func (s *WorldEventEngineService) determineAffectedSettlements(settlements []*mo
 func (s *WorldEventEngineService) determineAffectedFactions(factions []*models.Faction, eventType models.WorldEventType) models.JSONB {
 	affectedFactionIDs := []string{}
 
-	// Certain event types affect specific faction types
+	// Certain event types affect specific faction types.
 	targetFactionTypes := map[models.WorldEventType][]models.FactionType{
 		models.EventPolitical:        {models.FactionPolitical, models.FactionMilitary},
 		models.EventEconomic:         {models.FactionMerchant, models.FactionCriminal},
@@ -481,7 +478,7 @@ func (s *WorldEventEngineService) determineAffectedFactions(factions []*models.F
 		}
 	}
 
-	// If no specific matches, affect random factions
+	// If no specific matches, affect random factions.
 	if len(affectedFactionIDs) == 0 && len(factions) > 0 {
 		numAffected := 1 + rand.Intn(2)
 		if numAffected > len(factions) {
@@ -499,7 +496,7 @@ func (s *WorldEventEngineService) determineAffectedFactions(factions []*models.F
 }
 
 func (s *WorldEventEngineService) calculateWorldCorruption(gameSessionID uuid.UUID) int {
-	// Calculate overall world corruption level
+	// Calculate overall world corruption level.
 	settlements, err := s.worldRepo.GetSettlementsByGameSession(gameSessionID)
 	if err != nil || len(settlements) == 0 {
 		return 0
@@ -513,8 +510,7 @@ func (s *WorldEventEngineService) calculateWorldCorruption(gameSessionID uuid.UU
 	return totalCorruption / len(settlements)
 }
 
-// Procedural event generation
-
+// Procedural event generation.
 func (s *WorldEventEngineService) generateProceduralEvent(gameSessionID uuid.UUID, eventType models.WorldEventType) *models.WorldEvent {
 	eventNames := map[models.WorldEventType][]string{
 		models.EventPolitical:        {"Border Dispute", "Succession Crisis", "Trade Embargo"},
@@ -536,7 +532,7 @@ func (s *WorldEventEngineService) generateProceduralEvent(gameSessionID uuid.UUI
 		models.SeverityMajor,
 	}
 
-	// Ancient events tend to be more severe
+	// Ancient events tend to be more severe.
 	if eventType == models.EventAncientAwakening || eventType == models.EventPlanar {
 		severities = []models.WorldEventSeverity{
 			models.SeverityModerate,
@@ -561,7 +557,7 @@ func (s *WorldEventEngineService) generateProceduralEvent(gameSessionID uuid.UUI
 		ProphecyRelated:    rand.Float32() < 0.2,
 	}
 
-	// Empty arrays
+	// Empty arrays.
 	event.AffectedRegions = models.JSONB("[]")
 	event.AffectedSettlements = models.JSONB("[]")
 	event.AffectedFactions = models.JSONB("[]")
@@ -575,19 +571,19 @@ func (s *WorldEventEngineService) generateProceduralEvent(gameSessionID uuid.UUI
 	return event
 }
 
-// Add missing constant
+// Add missing constant.
 const (
 	EventReligious models.WorldEventType = "religious"
 )
 
-// applyEconomicImpacts handles economic effects of world events
+// applyEconomicImpacts handles economic effects of world events.
 func (s *WorldEventEngineService) applyEconomicImpacts(ctx context.Context, event *models.WorldEvent) {
 	var economicImpacts map[string]interface{}
 	if err := json.Unmarshal([]byte(event.EconomicImpacts), &economicImpacts); err != nil || len(economicImpacts) == 0 {
 		return
 	}
 
-	// Update market conditions in affected settlements
+	// Update market conditions in affected settlements.
 	var affectedSettlements []string
 	if err := json.Unmarshal([]byte(event.AffectedSettlements), &affectedSettlements); err != nil {
 		return
@@ -603,14 +599,14 @@ func (s *WorldEventEngineService) applyEconomicImpacts(ctx context.Context, even
 	}
 }
 
-// updateMarketForSettlement updates market conditions based on event
+// updateMarketForSettlement updates market conditions based on event.
 func (s *WorldEventEngineService) updateMarketForSettlement(ctx context.Context, settlementID uuid.UUID, event *models.WorldEvent) {
 	market, err := s.worldRepo.GetMarketBySettlement(settlementID)
 	if err != nil || market == nil {
 		return
 	}
 
-	// Apply price modifiers based on event type
+	// Apply price modifiers based on event type.
 	if event.Type == models.EventEconomic && event.Severity == models.SeverityMajor {
 		market.CommonGoodsModifier *= 1.5
 		market.FoodPriceModifier *= 1.8
@@ -619,25 +615,25 @@ func (s *WorldEventEngineService) updateMarketForSettlement(ctx context.Context,
 	_ = s.worldRepo.CreateOrUpdateMarket(market)
 }
 
-// applyPoliticalImpacts handles political effects of world events
+// applyPoliticalImpacts handles political effects of world events.
 func (s *WorldEventEngineService) applyPoliticalImpacts(ctx context.Context, event *models.WorldEvent) {
 	var politicalImpacts map[string]interface{}
 	if err := json.Unmarshal([]byte(event.PoliticalImpacts), &politicalImpacts); err != nil || len(politicalImpacts) == 0 {
 		return
 	}
 
-	// Update faction relationships
+	// Update faction relationships.
 	s.updateFactionRelationships(ctx, event)
 }
 
-// updateFactionRelationships handles faction relationship changes from events
+// updateFactionRelationships handles faction relationship changes from events.
 func (s *WorldEventEngineService) updateFactionRelationships(ctx context.Context, event *models.WorldEvent) {
 	var affectedFactions []string
 	if err := json.Unmarshal([]byte(event.AffectedFactions), &affectedFactions); err != nil {
 		return
 	}
 
-	// Conflicts might worsen relationships
+	// Conflicts might worsen relationships.
 	if event.Type != models.EventPolitical || len(affectedFactions) < 2 {
 		return
 	}

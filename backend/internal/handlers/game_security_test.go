@@ -23,16 +23,16 @@ func TestGameSessionSecurity(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 	t.Skip("integration environment not available")
-	// Setup test context
+	// Setup test context.
 	ctx := context.Background()
 	testCtx, cleanup := testutil.SetupIntegrationTest(t)
 	defer cleanup()
 
-	// Create logger (not used in these tests)
+	// Create logger (not used in these tests).
 	// log, err := logger.NewV2(logger.DefaultConfig())
 	// require.NoError(t, err)
 
-	// Create services with repositories
+	// Create services with repositories.
 	gameService := services.NewGameSessionService(testCtx.Repos.GameSessions)
 	gameService.SetCharacterRepository(testCtx.Repos.Characters)
 	gameService.SetUserRepository(testCtx.Repos.Users)
@@ -45,21 +45,21 @@ func TestGameSessionSecurity(t *testing.T) {
 		JWTManager:   testCtx.JWTManager,
 	}
 
-	// Create handlers
+	// Create handlers.
 	h := handlers.NewHandlers(svc, testCtx.DB, nil)
 
-	// Create test users
+	// Create test users.
 	dm := createTestUser(t, testCtx, "dm_user", "dm@example.com", "dm")
 	player1 := createTestUser(t, testCtx, "player1", "player1@example.com", "player")
 	player2 := createTestUser(t, testCtx, "player2", "player2@example.com", "player")
 	player3 := createTestUser(t, testCtx, "player3", "player3@example.com", "player")
 
-	// Create test characters
+	// Create test characters.
 	char1 := createTestCharacter(t, testCtx, player1.ID, "Fighter", 5)
 	char2 := createTestCharacter(t, testCtx, player2.ID, "Wizard", 3)
 	charHighLevel := createTestCharacter(t, testCtx, player3.ID, "Paladin", 10)
 
-	// Create test session
+	// Create test session.
 	session := &models.GameSession{
 		DMID:                  dm.ID,
 		Name:                  "Security Test Session",
@@ -73,7 +73,7 @@ func TestGameSessionSecurity(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("JoinSession_Security", func(t *testing.T) {
-		// First, have player1 join the session
+		// First, have player1 join the session.
 		body := map[string]interface{}{
 			"character_id": char1.ID,
 		}
@@ -93,10 +93,10 @@ func TestGameSessionSecurity(t *testing.T) {
 		rr := httptest.NewRecorder()
 		h.JoinGameSession(rr, req)
 
-		// Verify player1 joined successfully
+		// Verify player1 joined successfully.
 		require.Equal(t, http.StatusOK, rr.Code, "Player1 should be able to join initially")
 
-		// Now run the security tests
+		// Now run the security tests.
 		t.Run("Cannot join twice", func(t *testing.T) {
 			body := map[string]interface{}{
 				"character_id": char1.ID,
@@ -119,7 +119,7 @@ func TestGameSessionSecurity(t *testing.T) {
 
 			assert.Equal(t, http.StatusBadRequest, rr.Code)
 
-			// Debug: print the response body
+			// Debug: print the response body.
 			bodyBytes := rr.Body.Bytes()
 			t.Logf("Response body: %s", string(bodyBytes))
 
@@ -135,7 +135,7 @@ func TestGameSessionSecurity(t *testing.T) {
 			assert.Contains(t, errorObj["message"], "already in this session")
 		})
 
-		// Continue with other tests
+		// Continue with other tests.
 		tests := []struct {
 			name           string
 			userID         string
@@ -171,7 +171,7 @@ func TestGameSessionSecurity(t *testing.T) {
 				name:   "Cannot join full session",
 				userID: "another_user",
 				setupFunc: func() {
-					// Fill the session to capacity
+					// Fill the session to capacity.
 					session.MaxPlayers = 2 // DM + 1 player
 					_ = testCtx.Repos.GameSessions.Update(ctx, session)
 				},
@@ -186,7 +186,7 @@ func TestGameSessionSecurity(t *testing.T) {
 					tt.setupFunc()
 				}
 
-				// Create request
+				// Create request.
 				body := map[string]interface{}{}
 				if tt.characterID != "" {
 					body["character_id"] = tt.characterID
@@ -195,7 +195,7 @@ func TestGameSessionSecurity(t *testing.T) {
 
 				req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
 				req.Header.Set("Content-Type", "application/json")
-				// Create user claims and add to context
+				// Create user claims and add to context.
 				claims := &auth.Claims{
 					UserID:   tt.userID,
 					Username: "testuser",
@@ -205,11 +205,11 @@ func TestGameSessionSecurity(t *testing.T) {
 				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
 				req = mux.SetURLVars(req, map[string]string{"id": session.ID})
 
-				// Execute request
+				// Execute request.
 				rr := httptest.NewRecorder()
 				h.JoinGameSession(rr, req)
 
-				// Check response
+				// Check response.
 				assert.Equal(t, tt.expectedStatus, rr.Code)
 				if tt.expectedError != "" {
 					var response map[string]interface{}
@@ -225,13 +225,13 @@ func TestGameSessionSecurity(t *testing.T) {
 	})
 
 	t.Run("GetGameSession_Authorization", func(t *testing.T) {
-		// Ensure player1 can join the session
+		// Ensure player1 can join the session.
 		_ = svc.GameSessions.LeaveSession(ctx, session.ID, player1.ID)
 		session.MaxPlayers = 4
 		err = testCtx.Repos.GameSessions.Update(ctx, session)
 		require.NoError(t, err)
 		_ = svc.GameSessions.JoinSession(ctx, session.ID, player1.ID, &char1.ID)
-		// Create private session
+		// Create private session.
 		privateSession := &models.GameSession{
 			DMID:        dm.ID,
 			Name:        "Private Session",
@@ -270,7 +270,7 @@ func TestGameSessionSecurity(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				req := httptest.NewRequest("GET", "/api/v1/game/sessions/"+tt.sessionID, nil)
-				// Create user claims and add to context
+				// Create user claims and add to context.
 				claims := &auth.Claims{
 					UserID:   tt.userID,
 					Username: "testuser",
@@ -289,7 +289,7 @@ func TestGameSessionSecurity(t *testing.T) {
 	})
 
 	t.Run("KickPlayer_Security", func(t *testing.T) {
-		// Ensure player2 is in the session for kick testing
+		// Ensure player2 is in the session for kick testing.
 		_ = svc.GameSessions.LeaveSession(ctx, session.ID, player2.ID)
 		err := svc.GameSessions.JoinSession(ctx, session.ID, player2.ID, &char2.ID)
 		require.NoError(t, err)
@@ -366,7 +366,7 @@ func TestGameSessionSecurity(t *testing.T) {
 	})
 
 	t.Run("SessionState_Security", func(t *testing.T) {
-		// Test operations on inactive session
+		// Test operations on inactive session.
 		inactiveSession := &models.GameSession{
 			DMID: dm.ID,
 			Name: "Inactive Session",
@@ -374,14 +374,14 @@ func TestGameSessionSecurity(t *testing.T) {
 		err := svc.GameSessions.CreateSession(ctx, inactiveSession)
 		require.NoError(t, err)
 
-		// Update session to be inactive (CreateSession sets it to active by default)
+		// Update session to be inactive (CreateSession sets it to active by default).
 		inactiveSession.IsActive = false
 		err = testCtx.Repos.GameSessions.Update(ctx, inactiveSession)
 		require.NoError(t, err)
 
-		// Try to join inactive session
+		// Try to join inactive session.
 		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+inactiveSession.ID+"/join", bytes.NewBufferString("{}"))
-		// Create user claims and add to context
+		// Create user claims and add to context.
 		claims := &auth.Claims{
 			UserID:   player1.ID,
 			Username: "testuser",
@@ -402,7 +402,7 @@ func TestGameSessionSecurity(t *testing.T) {
 		require.True(t, ok)
 		assert.Contains(t, errMap["message"], "not active")
 
-		// Test operations on completed session
+		// Test operations on completed session.
 		completedSession := &models.GameSession{
 			DMID:   dm.ID,
 			Name:   "Completed Session",
@@ -411,9 +411,9 @@ func TestGameSessionSecurity(t *testing.T) {
 		err = svc.GameSessions.CreateSession(ctx, completedSession)
 		require.NoError(t, err)
 
-		// Try to join completed session
+		// Try to join completed session.
 		req = httptest.NewRequest("POST", "/api/v1/game/sessions/"+completedSession.ID+"/join", bytes.NewBufferString("{}"))
-		// Create user claims and add to context
+		// Create user claims and add to context.
 		claims2 := &auth.Claims{
 			UserID:   player1.ID,
 			Username: "testuser",
@@ -435,7 +435,7 @@ func TestGameSessionSecurity(t *testing.T) {
 	})
 }
 
-// Helper functions
+// Helper functions.
 func createTestUser(t *testing.T, ctx *testutil.IntegrationTestContext, username, email, role string) *models.User {
 	user := &models.User{
 		Username: username,

@@ -7,23 +7,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
-// userRepository implements UserRepository interface
+// userRepository implements UserRepository interface.
 type userRepository struct {
 	db *DB
 }
 
-// NewUserRepository creates a new user repository
+// NewUserRepository creates a new user repository.
 func NewUserRepository(db *DB) UserRepository {
 	return &userRepository{db: db}
 }
 
-// Create creates a new user
+// Create creates a new user.
 func (r *userRepository) Create(ctx context.Context, user *models.User) error {
-	// For SQLite compatibility, generate UUID and timestamps in application
+	// For SQLite compatibility, generate UUID and timestamps in application.
 	if r.db.DriverName() == "sqlite3" {
 		user.ID = uuid.New().String()
 		user.CreatedAt = time.Now()
@@ -38,7 +38,7 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 			user.ID, user.Username, user.Email, user.PasswordHash, user.Role,
 			user.CreatedAt, user.UpdatedAt)
 		if err != nil {
-			// Check for constraint violations
+			// Check for constraint violations.
 			if strings.Contains(err.Error(), "UNIQUE") {
 				if strings.Contains(err.Error(), "username") {
 					return models.ErrDuplicateUsername
@@ -52,7 +52,7 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 		return nil
 	}
 
-	// PostgreSQL version with RETURNING clause
+	// PostgreSQL version with RETURNING clause.
 	query := `
 		INSERT INTO users (username, email, password_hash)
 		VALUES (?, ?, ?)
@@ -61,7 +61,7 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 	err := r.db.QueryRowContextRebind(ctx, query, user.Username, user.Email, user.PasswordHash).
 		Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
-		// Check for constraint violations
+		// Check for constraint violations.
 		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE") {
 			if strings.Contains(err.Error(), "username") {
 				return models.ErrDuplicateUsername
@@ -76,7 +76,7 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-// GetByID retrieves a user by ID
+// GetByID retrieves a user by ID.
 func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	var user models.User
 	query := `
@@ -96,7 +96,7 @@ func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, 
 	return &user, nil
 }
 
-// GetByUsername retrieves a user by username
+// GetByUsername retrieves a user by username.
 func (r *userRepository) GetByUsername(ctx context.Context, username string) (*models.User, error) {
 	var user models.User
 	query := `
@@ -116,7 +116,7 @@ func (r *userRepository) GetByUsername(ctx context.Context, username string) (*m
 	return &user, nil
 }
 
-// GetByEmail retrieves a user by email
+// GetByEmail retrieves a user by email.
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
 	query := `
@@ -136,7 +136,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	return &user, nil
 }
 
-// Update updates a user
+// Update updates a user.
 func (r *userRepository) Update(ctx context.Context, user *models.User) error {
 	query := `
 		UPDATE users
@@ -156,7 +156,7 @@ func (r *userRepository) Update(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-// Delete deletes a user
+// Delete deletes a user.
 func (r *userRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM users WHERE id = ?`
 
@@ -177,7 +177,7 @@ func (r *userRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// List retrieves a paginated list of users
+// List retrieves a paginated list of users.
 func (r *userRepository) List(ctx context.Context, offset, limit int) ([]*models.User, error) {
 	var users []*models.User
 	query := `

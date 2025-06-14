@@ -10,19 +10,18 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// RuleBuilderRepository handles database operations for rule builder
+// RuleBuilderRepository handles database operations for rule builder.
 type RuleBuilderRepository struct {
 	db *DB
 }
 
-// NewRuleBuilderRepository creates a new rule builder repository
+// NewRuleBuilderRepository creates a new rule builder repository.
 func NewRuleBuilderRepository(db *DB) *RuleBuilderRepository {
 	return &RuleBuilderRepository{db: db}
 }
 
-// Rule Template Methods
-
-// CreateRuleTemplate creates a new rule template
+// Rule Template Methods.
+// CreateRuleTemplate creates a new rule template.
 func (r *RuleBuilderRepository) CreateRuleTemplate(template *models.RuleTemplate) error {
 	query := `
 		INSERT INTO rule_templates (
@@ -74,7 +73,7 @@ func (r *RuleBuilderRepository) CreateRuleTemplate(template *models.RuleTemplate
 	return err
 }
 
-// GetRuleTemplate gets a rule template by ID
+// GetRuleTemplate gets a rule template by ID.
 func (r *RuleBuilderRepository) GetRuleTemplate(templateID string) (*models.RuleTemplate, error) {
 	query := `
 		SELECT id, name, description, category, complexity,
@@ -110,7 +109,7 @@ func (r *RuleBuilderRepository) GetRuleTemplate(templateID string) (*models.Rule
 		return nil, err
 	}
 
-	// Unmarshal JSON fields
+	// Unmarshal JSON fields.
 	if err := json.Unmarshal(logicGraphJSON, &template.LogicGraph); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal logic graph: %w", err)
 	}
@@ -130,7 +129,7 @@ func (r *RuleBuilderRepository) GetRuleTemplate(templateID string) (*models.Rule
 	return &template, nil
 }
 
-// GetRuleTemplates gets rule templates with filters
+// GetRuleTemplates gets rule templates with filters.
 func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPublic bool) ([]models.RuleTemplate, error) {
 	query := `
 		SELECT id, name, description, category, complexity,
@@ -192,7 +191,7 @@ func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPubl
 			return nil, err
 		}
 
-		// Unmarshal JSON fields
+		// Unmarshal JSON fields.
 		if err := json.Unmarshal(logicGraphJSON, &template.LogicGraph); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal logic graph: %w", err)
 		}
@@ -219,16 +218,16 @@ func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPubl
 	return templates, nil
 }
 
-// UpdateRuleTemplate updates a rule template
+// UpdateRuleTemplate updates a rule template.
 func (r *RuleBuilderRepository) UpdateRuleTemplate(templateID string, updates map[string]interface{}) error {
-	// Build dynamic update query
+	// Build dynamic update query.
 	query := "UPDATE rule_templates SET updated_at = ?"
 	args := []interface{}{time.Now()}
 
 	for key, value := range updates {
 		query += fmt.Sprintf(", %s = ?", key)
 
-		// Handle JSON fields
+		// Handle JSON fields.
 		switch key {
 		case "logic_graph", "parameters", "conditional_modifiers", "tags":
 			jsonData, err := json.Marshal(value)
@@ -248,13 +247,13 @@ func (r *RuleBuilderRepository) UpdateRuleTemplate(templateID string, updates ma
 	return err
 }
 
-// DeleteRuleTemplate deletes a rule template
+// DeleteRuleTemplate deletes a rule template.
 func (r *RuleBuilderRepository) DeleteRuleTemplate(templateID string) error {
 	_, err := r.db.ExecRebind("DELETE FROM rule_templates WHERE id = ?", templateID)
 	return err
 }
 
-// IncrementUsageCount increments the usage count for a template
+// IncrementUsageCount increments the usage count for a template.
 func (r *RuleBuilderRepository) IncrementUsageCount(templateID string) error {
 	_, err := r.db.ExecRebind(
 		"UPDATE rule_templates SET usage_count = usage_count + 1 WHERE id = ?",
@@ -263,9 +262,8 @@ func (r *RuleBuilderRepository) IncrementUsageCount(templateID string) error {
 	return err
 }
 
-// Node Template Methods
-
-// GetNodeTemplates gets all available node templates
+// Node Template Methods.
+// GetNodeTemplates gets all available node templates.
 func (r *RuleBuilderRepository) GetNodeTemplates() ([]models.NodeTemplate, error) {
 	query := `
 		SELECT id, node_type, subtype, category, name, description,
@@ -303,7 +301,7 @@ func (r *RuleBuilderRepository) GetNodeTemplates() ([]models.NodeTemplate, error
 			return nil, err
 		}
 
-		// Unmarshal JSON fields
+		// Unmarshal JSON fields.
 		if err := json.Unmarshal(inputPortsJSON, &template.InputPorts); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal input ports: %w", err)
 		}
@@ -326,9 +324,8 @@ func (r *RuleBuilderRepository) GetNodeTemplates() ([]models.NodeTemplate, error
 	return templates, nil
 }
 
-// Active Rule Methods
-
-// CreateActiveRule creates a new active rule instance
+// Active Rule Methods.
+// CreateActiveRule creates a new active rule instance.
 func (r *RuleBuilderRepository) CreateActiveRule(rule *models.ActiveRule) error {
 	query := `
 		INSERT INTO active_rules (
@@ -363,7 +360,7 @@ func (r *RuleBuilderRepository) CreateActiveRule(rule *models.ActiveRule) error 
 	return err
 }
 
-// GetActiveRules gets active rules for a session or character
+// GetActiveRules gets active rules for a session or character.
 func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string) ([]models.ActiveRule, error) {
 	query := `
 		SELECT id, template_id, game_session_id, character_id,
@@ -413,7 +410,7 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 			return nil, err
 		}
 
-		// Unmarshal JSON fields
+		// Unmarshal JSON fields.
 		if err := json.Unmarshal(compiledLogicJSON, &rule.CompiledLogic); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal compiled logic: %w", err)
 		}
@@ -432,7 +429,7 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 	return rules, nil
 }
 
-// DeactivateRule deactivates an active rule
+// DeactivateRule deactivates an active rule.
 func (r *RuleBuilderRepository) DeactivateRule(ruleID string) error {
 	_, err := r.db.ExecRebind(
 		"UPDATE active_rules SET is_active = false, updated_at = ? WHERE id = ?",
@@ -442,9 +439,8 @@ func (r *RuleBuilderRepository) DeactivateRule(ruleID string) error {
 	return err
 }
 
-// Execution History Methods
-
-// CreateRuleExecution creates a new rule execution record
+// Execution History Methods.
+// CreateRuleExecution creates a new rule execution record.
 func (r *RuleBuilderRepository) CreateRuleExecution(execution *models.RuleExecution) error {
 	query := `
 		INSERT INTO rule_executions (
@@ -479,7 +475,7 @@ func (r *RuleBuilderRepository) CreateRuleExecution(execution *models.RuleExecut
 	return err
 }
 
-// GetRuleExecutionHistory gets rule execution history
+// GetRuleExecutionHistory gets rule execution history.
 func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, characterID string, limit int) ([]models.RuleExecution, error) {
 	query := `
 		SELECT id, rule_id, game_session_id, character_id,
@@ -536,7 +532,7 @@ func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, character
 			return nil, err
 		}
 
-		// Unmarshal JSON fields
+		// Unmarshal JSON fields.
 		if err := json.Unmarshal(triggerContextJSON, &execution.TriggerContext); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal trigger context: %w", err)
 		}
@@ -555,9 +551,8 @@ func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, character
 	return executions, nil
 }
 
-// Conditional Modifier Methods
-
-// GetConditionalModifiers gets conditional modifiers for a rule
+// Conditional Modifier Methods.
+// GetConditionalModifiers gets conditional modifiers for a rule.
 func (r *RuleBuilderRepository) GetConditionalModifiers(ruleID string) ([]models.ConditionalModifier, error) {
 	query := `
 		SELECT cm.*
@@ -592,7 +587,7 @@ func (r *RuleBuilderRepository) GetConditionalModifiers(ruleID string) ([]models
 			return nil, err
 		}
 
-		// Unmarshal modifiers
+		// Unmarshal modifiers.
 		if err := json.Unmarshal(modifiersJSON, &modifier.Modifiers); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal modifiers: %w", err)
 		}
@@ -607,7 +602,7 @@ func (r *RuleBuilderRepository) GetConditionalModifiers(ruleID string) ([]models
 	return modifiers, nil
 }
 
-// GetRuleInstance retrieves a rule instance by ID
+// GetRuleInstance retrieves a rule instance by ID.
 func (r *RuleBuilderRepository) GetRuleInstance(instanceID string) (*models.RuleInstance, error) {
 	query := `
 		SELECT id, template_id, game_session_id, owner_id,
@@ -634,7 +629,7 @@ func (r *RuleBuilderRepository) GetRuleInstance(instanceID string) (*models.Rule
 		return nil, err
 	}
 
-	// Unmarshal parameter values
+	// Unmarshal parameter values.
 	if err := json.Unmarshal(parameterValuesJSON, &instance.ParameterValues); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal parameter values: %w", err)
 	}
@@ -642,7 +637,7 @@ func (r *RuleBuilderRepository) GetRuleInstance(instanceID string) (*models.Rule
 	return &instance, nil
 }
 
-// DeactivateRuleInstance deactivates a rule instance
+// DeactivateRuleInstance deactivates a rule instance.
 func (r *RuleBuilderRepository) DeactivateRuleInstance(instanceID string) error {
 	query := `
 		UPDATE rule_instances
