@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
@@ -32,7 +33,7 @@ var upgrader = websocket.Upgrader{
 		origin := r.Header.Get("Origin")
 
 		// In development, also allow empty origin
-		if os.Getenv("GO_ENV") == "development" && origin == "" {
+		if os.Getenv("GO_ENV") == constants.EnvDevelopment && origin == "" {
 			return true
 		}
 
@@ -137,7 +138,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate authentication message
-	if authMsg.Type != "auth" || authMsg.Token == "" {
+	if authMsg.Type != constants.AuthType || authMsg.Token == "" {
 		_ = conn.WriteJSON(map[string]string{
 			"type":  "error",
 			"error": "Invalid authentication message",

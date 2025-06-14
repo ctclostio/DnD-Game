@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -795,7 +796,7 @@ func (r *EmergentWorldRepository) GetWorldEvents(sessionID string, limit int, on
 	query += " ORDER BY occurred_at DESC"
 
 	if limit > 0 {
-		query += " LIMIT ?"
+		query += constants.LimitClause
 		args = append(args, limit)
 	}
 
@@ -882,7 +883,7 @@ func (r *EmergentWorldRepository) GetSimulationLogs(sessionID string, limit int)
 	args := []interface{}{sessionID}
 
 	if limit > 0 {
-		query += " LIMIT ?"
+		query += constants.LimitClause
 		args = append(args, limit)
 	}
 

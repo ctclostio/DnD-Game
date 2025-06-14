@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/dice"
 )
@@ -177,17 +178,17 @@ func (h *Handlers) GetCharacterChecks(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) getAbilityModifier(character *models.Character, ability string) int {
 	switch ability {
-	case "strength":
+	case constants.AbilityStrength:
 		return (character.Attributes.Strength - 10) / 2
-	case "dexterity":
+	case constants.AbilityDexterity:
 		return (character.Attributes.Dexterity - 10) / 2
-	case "constitution":
+	case constants.AbilityConstitution:
 		return (character.Attributes.Constitution - 10) / 2
-	case "intelligence":
+	case constants.AbilityIntelligence:
 		return (character.Attributes.Intelligence - 10) / 2
-	case "wisdom":
+	case constants.AbilityWisdom:
 		return (character.Attributes.Wisdom - 10) / 2
-	case "charisma":
+	case constants.AbilityCharisma:
 		return (character.Attributes.Charisma - 10) / 2
 	default:
 		return 0
@@ -199,17 +200,17 @@ func (h *Handlers) hasSavingThrowProficiency(character *models.Character, abilit
 	// For now, returning based on common class proficiencies
 	switch character.Class {
 	case "fighter", "barbarian":
-		return ability == "strength" || ability == "constitution"
+		return ability == constants.AbilityStrength || ability == constants.AbilityConstitution
 	case "rogue", "ranger", "monk":
-		return ability == "dexterity" || ability == "intelligence"
+		return ability == constants.AbilityDexterity || ability == constants.AbilityIntelligence
 	case "wizard":
-		return ability == "intelligence" || ability == "wisdom"
+		return ability == constants.AbilityIntelligence || ability == constants.AbilityWisdom
 	case "cleric", "druid":
-		return ability == "wisdom" || ability == "charisma"
+		return ability == constants.AbilityWisdom || ability == constants.AbilityCharisma
 	case "sorcerer", "warlock", "bard":
-		return ability == "charisma" || ability == "wisdom"
+		return ability == constants.AbilityCharisma || ability == constants.AbilityWisdom
 	case "paladin":
-		return ability == "wisdom" || ability == "charisma"
+		return ability == constants.AbilityWisdom || ability == constants.AbilityCharisma
 	default:
 		return false
 	}
@@ -223,7 +224,7 @@ func (h *Handlers) hasSkillProficiency(character *models.Character, skill string
 }
 
 func (h *Handlers) getSavingThrows(character *models.Character) []map[string]interface{} {
-	abilities := []string{"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"}
+	abilities := []string{constants.AbilityStrength, constants.AbilityDexterity, constants.AbilityConstitution, constants.AbilityIntelligence, constants.AbilityWisdom, constants.AbilityCharisma}
 	saves := make([]map[string]interface{}, 0)
 
 	for _, ability := range abilities {
@@ -249,24 +250,24 @@ func (h *Handlers) getSkills(character *models.Character) []map[string]interface
 		name    string
 		ability string
 	}{
-		{"acrobatics", "dexterity"},
-		{"animal handling", "wisdom"},
-		{"arcana", "intelligence"},
-		{"athletics", "strength"},
-		{"deception", "charisma"},
-		{"history", "intelligence"},
-		{"insight", "wisdom"},
-		{"intimidation", "charisma"},
-		{"investigation", "intelligence"},
-		{"medicine", "wisdom"},
-		{"nature", "intelligence"},
-		{"perception", "wisdom"},
-		{"performance", "charisma"},
-		{"persuasion", "charisma"},
-		{"religion", "intelligence"},
-		{"sleight of hand", "dexterity"},
-		{"stealth", "dexterity"},
-		{"survival", "wisdom"},
+		{"acrobatics", constants.AbilityDexterity},
+		{"animal handling", constants.AbilityWisdom},
+		{"arcana", constants.AbilityIntelligence},
+		{"athletics", constants.AbilityStrength},
+		{"deception", constants.AbilityCharisma},
+		{"history", constants.AbilityIntelligence},
+		{"insight", constants.AbilityWisdom},
+		{"intimidation", constants.AbilityCharisma},
+		{"investigation", constants.AbilityIntelligence},
+		{"medicine", constants.AbilityWisdom},
+		{"nature", constants.AbilityIntelligence},
+		{"perception", constants.AbilityWisdom},
+		{"performance", constants.AbilityCharisma},
+		{"persuasion", constants.AbilityCharisma},
+		{"religion", constants.AbilityIntelligence},
+		{"sleight of hand", constants.AbilityDexterity},
+		{"stealth", constants.AbilityDexterity},
+		{"survival", constants.AbilityWisdom},
 	}
 
 	skillList := make([]map[string]interface{}, 0)
@@ -286,7 +287,7 @@ func (h *Handlers) getSkills(character *models.Character) []map[string]interface
 }
 
 func (h *Handlers) getAbilityChecks(character *models.Character) []map[string]interface{} {
-	abilities := []string{"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"}
+	abilities := []string{constants.AbilityStrength, constants.AbilityDexterity, constants.AbilityConstitution, constants.AbilityIntelligence, constants.AbilityWisdom, constants.AbilityCharisma}
 	checks := make([]map[string]interface{}, 0)
 
 	for _, ability := range abilities {

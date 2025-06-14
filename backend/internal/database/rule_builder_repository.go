@@ -376,7 +376,7 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 	args := []interface{}{}
 
 	if gameSessionID != "" {
-		query += " AND game_session_id = ?"
+		query += constants.AndGameSessionIDClause
 		args = append(args, gameSessionID)
 	}
 
@@ -492,7 +492,7 @@ func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, character
 	args := []interface{}{}
 
 	if gameSessionID != "" {
-		query += " AND game_session_id = ?"
+		query += constants.AndGameSessionIDClause
 		args = append(args, gameSessionID)
 	}
 
