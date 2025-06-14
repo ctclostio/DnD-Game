@@ -361,60 +361,10 @@ func (s *WorldEventEngineService) resolveEvent(ctx context.Context, event *model
 
 func (s *WorldEventEngineService) applyEventEffects(ctx context.Context, event *models.WorldEvent) {
 	// Apply economic impacts
-	var economicImpacts map[string]interface{}
-	_ = json.Unmarshal([]byte(event.EconomicImpacts), &economicImpacts)
-
-	if len(economicImpacts) > 0 {
-		// Update market conditions in affected settlements
-		var affectedSettlements []string
-		_ = json.Unmarshal([]byte(event.AffectedSettlements), &affectedSettlements)
-
-		for _, settlementIDStr := range affectedSettlements {
-			settlementID, err := uuid.Parse(settlementIDStr)
-			if err != nil {
-				continue
-			}
-
-			market, err := s.worldRepo.GetMarketBySettlement(settlementID)
-			if err != nil || market == nil {
-				continue
-			}
-
-			// Apply price modifiers based on event type
-			if event.Type == models.EventEconomic {
-				if event.Severity == models.SeverityMajor {
-					market.CommonGoodsModifier *= 1.5
-					market.FoodPriceModifier *= 1.8
-				}
-			}
-
-			_ = s.worldRepo.CreateOrUpdateMarket(market)
-		}
-	}
+	s.applyEconomicImpacts(ctx, event)
 
 	// Apply political impacts
-	var politicalImpacts map[string]interface{}
-	_ = json.Unmarshal([]byte(event.PoliticalImpacts), &politicalImpacts)
-
-	if len(politicalImpacts) > 0 {
-		// Update faction relationships
-		var affectedFactions []string
-		_ = json.Unmarshal([]byte(event.AffectedFactions), &affectedFactions)
-
-		// Conflicts might worsen relationships
-		if event.Type == models.EventPolitical && len(affectedFactions) >= 2 {
-			faction1ID, _ := uuid.Parse(affectedFactions[0])
-			faction2ID, _ := uuid.Parse(affectedFactions[1])
-
-			if faction1ID != uuid.Nil && faction2ID != uuid.Nil {
-				change := -10
-				if event.Severity == models.SeverityMajor {
-					change = -25
-				}
-				_ = s.factionService.UpdateFactionRelationship(ctx, faction1ID, faction2ID, change, "world event")
-			}
-		}
-	}
+	s.applyPoliticalImpacts(ctx, event)
 }
 
 func (s *WorldEventEngineService) applyStageEffects(ctx context.Context, event *models.WorldEvent) {
@@ -629,3 +579,79 @@ func (s *WorldEventEngineService) generateProceduralEvent(gameSessionID uuid.UUI
 const (
 	EventReligious models.WorldEventType = "religious"
 )
+
+// applyEconomicImpacts handles economic effects of world events
+func (s *WorldEventEngineService) applyEconomicImpacts(ctx context.Context, event *models.WorldEvent) {
+	var economicImpacts map[string]interface{}
+	if err := json.Unmarshal([]byte(event.EconomicImpacts), &economicImpacts); err != nil || len(economicImpacts) == 0 {
+		return
+	}
+
+	// Update market conditions in affected settlements
+	var affectedSettlements []string
+	if err := json.Unmarshal([]byte(event.AffectedSettlements), &affectedSettlements); err != nil {
+		return
+	}
+
+	for _, settlementIDStr := range affectedSettlements {
+		settlementID, err := uuid.Parse(settlementIDStr)
+		if err != nil {
+			continue
+		}
+
+		s.updateMarketForSettlement(ctx, settlementID, event)
+	}
+}
+
+// updateMarketForSettlement updates market conditions based on event
+func (s *WorldEventEngineService) updateMarketForSettlement(ctx context.Context, settlementID uuid.UUID, event *models.WorldEvent) {
+	market, err := s.worldRepo.GetMarketBySettlement(settlementID)
+	if err != nil || market == nil {
+		return
+	}
+
+	// Apply price modifiers based on event type
+	if event.Type == models.EventEconomic && event.Severity == models.SeverityMajor {
+		market.CommonGoodsModifier *= 1.5
+		market.FoodPriceModifier *= 1.8
+	}
+
+	_ = s.worldRepo.CreateOrUpdateMarket(market)
+}
+
+// applyPoliticalImpacts handles political effects of world events
+func (s *WorldEventEngineService) applyPoliticalImpacts(ctx context.Context, event *models.WorldEvent) {
+	var politicalImpacts map[string]interface{}
+	if err := json.Unmarshal([]byte(event.PoliticalImpacts), &politicalImpacts); err != nil || len(politicalImpacts) == 0 {
+		return
+	}
+
+	// Update faction relationships
+	s.updateFactionRelationships(ctx, event)
+}
+
+// updateFactionRelationships handles faction relationship changes from events
+func (s *WorldEventEngineService) updateFactionRelationships(ctx context.Context, event *models.WorldEvent) {
+	var affectedFactions []string
+	if err := json.Unmarshal([]byte(event.AffectedFactions), &affectedFactions); err != nil {
+		return
+	}
+
+	// Conflicts might worsen relationships
+	if event.Type != models.EventPolitical || len(affectedFactions) < 2 {
+		return
+	}
+
+	faction1ID, err1 := uuid.Parse(affectedFactions[0])
+	faction2ID, err2 := uuid.Parse(affectedFactions[1])
+
+	if err1 != nil || err2 != nil || faction1ID == uuid.Nil || faction2ID == uuid.Nil {
+		return
+	}
+
+	change := -10
+	if event.Severity == models.SeverityMajor {
+		change = -25
+	}
+	_ = s.factionService.UpdateFactionRelationship(ctx, faction1ID, faction2ID, change, "world event")
+}

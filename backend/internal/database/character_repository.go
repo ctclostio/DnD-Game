@@ -152,7 +152,7 @@ func (r *characterRepository) GetByUserID(ctx context.Context, userID string) ([
 	}
 	defer rows.Close()
 
-	var characters []*models.Character
+	characters := make([]*models.Character, 0, 10)
 	for rows.Next() {
 		var character models.Character
 		var attributesJSON, skillsJSON, equipmentJSON, spellsJSON []byte
@@ -182,6 +182,10 @@ func (r *characterRepository) GetByUserID(ctx context.Context, userID string) ([
 		}
 
 		characters = append(characters, &character)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating characters: %w", err)
 	}
 
 	return characters, nil
@@ -279,7 +283,7 @@ func (r *characterRepository) List(ctx context.Context, offset, limit int) ([]*m
 	}
 	defer rows.Close()
 
-	var characters []*models.Character
+	characters := make([]*models.Character, 0, 10)
 	for rows.Next() {
 		var character models.Character
 		var attributesJSON, skillsJSON, equipmentJSON, spellsJSON []byte
@@ -309,6 +313,10 @@ func (r *characterRepository) List(ctx context.Context, offset, limit int) ([]*m
 		}
 
 		characters = append(characters, &character)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating characters: %w", err)
 	}
 
 	return characters, nil

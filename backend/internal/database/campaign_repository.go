@@ -439,8 +439,8 @@ func (r *campaignRepository) UpdateRelationshipScore(sessionID, npcID, targetID 
 
 // Helper function to build dynamic update queries
 func buildUpdateQuery(table string, id uuid.UUID, updates map[string]interface{}) (string, []interface{}) {
-	var setClauses []string
-	var args []interface{}
+	setClauses := make([]string, 0, len(updates))
+	args := make([]interface{}, 0, len(updates)+1)
 
 	for column, value := range updates {
 		setClauses = append(setClauses, fmt.Sprintf("%s = ?", column))

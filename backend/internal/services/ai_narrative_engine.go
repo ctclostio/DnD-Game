@@ -651,7 +651,7 @@ func formatBackstoryElements(elements []models.BackstoryElement) string {
 		return "No relevant backstory elements"
 	}
 
-	var formatted []string
+	formatted := make([]string, 0, 10)
 	for _, element := range elements {
 		formatted = append(formatted, fmt.Sprintf("- [%s] %s (Weight: %.2f)", element.Type, element.Content, element.Weight))
 	}

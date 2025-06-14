@@ -113,7 +113,7 @@ func (cas *CombatAutomationService) SmartInitiative(
 	sessionID uuid.UUID,
 	req models.SmartInitiativeRequest,
 ) ([]models.InitiativeEntry, error) {
-	var entries []models.InitiativeEntry
+	entries := make([]models.InitiativeEntry, 0, 10)
 
 	for _, combatant := range req.Combatants {
 		// Get any special initiative rules

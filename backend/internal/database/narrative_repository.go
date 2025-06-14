@@ -193,7 +193,7 @@ func (r *NarrativeRepository) GetBackstoryElements(characterID string) ([]models
 	}
 	defer rows.Close()
 
-	var elements []models.BackstoryElement
+	elements := make([]models.BackstoryElement, 0, 10)
 	for rows.Next() {
 		var element models.BackstoryElement
 		err := rows.Scan(
@@ -330,7 +330,7 @@ func (r *NarrativeRepository) GetPendingConsequences(sessionID string, currentTi
 	}
 	defer rows.Close()
 
-	var consequences []models.ConsequenceEvent
+	consequences := make([]models.ConsequenceEvent, 0, 10)
 	for rows.Next() {
 		var consequence models.ConsequenceEvent
 		var affectedEntitiesJSON, cascadeEffectsJSON, metadataJSON []byte
@@ -474,7 +474,7 @@ func (r *NarrativeRepository) GetEventPerspectives(eventID string) ([]models.Per
 	}
 	defer rows.Close()
 
-	var perspectives []models.PerspectiveNarrative
+	perspectives := make([]models.PerspectiveNarrative, 0, 10)
 	for rows.Next() {
 		var perspective models.PerspectiveNarrative
 		var contradictionsJSON, culturalContextJSON []byte
@@ -570,7 +570,7 @@ func (r *NarrativeRepository) GetActiveMemories(characterID string, limit int) (
 	}
 	defer rows.Close()
 
-	var memories []models.NarrativeMemory
+	memories := make([]models.NarrativeMemory, 0, 10)
 	for rows.Next() {
 		var memory models.NarrativeMemory
 		var metadataJSON []byte
@@ -684,7 +684,7 @@ func (r *NarrativeRepository) GetActiveNarrativeThreads() ([]models.NarrativeThr
 	}
 	defer rows.Close()
 
-	var threads []models.NarrativeThread
+	threads := make([]models.NarrativeThread, 0, 10)
 	for rows.Next() {
 		var thread models.NarrativeThread
 		var metadataJSON []byte

@@ -129,7 +129,7 @@ func (r *WorldBuildingRepository) GetSettlementsByGameSession(gameSessionID uuid
 	}
 	defer rows.Close()
 
-	var settlements []*models.Settlement
+	settlements := make([]*models.Settlement, 0, 10)
 	for rows.Next() {
 		var s models.Settlement
 		err := rows.Scan(
@@ -201,7 +201,7 @@ func (r *WorldBuildingRepository) GetSettlementNPCs(settlementID uuid.UUID) ([]m
 	}
 	defer rows.Close()
 
-	var npcs []models.SettlementNPC
+	npcs := make([]models.SettlementNPC, 0, 10)
 	for rows.Next() {
 		var npc models.SettlementNPC
 		err := rows.Scan(
@@ -268,7 +268,7 @@ func (r *WorldBuildingRepository) GetSettlementShops(settlementID uuid.UUID) ([]
 	}
 	defer rows.Close()
 
-	var shops []models.SettlementShop
+	shops := make([]models.SettlementShop, 0, 10)
 	for rows.Next() {
 		var shop models.SettlementShop
 		err := rows.Scan(
@@ -394,7 +394,7 @@ func (r *WorldBuildingRepository) GetFactionsByGameSession(gameSessionID uuid.UU
 	}
 	defer rows.Close()
 
-	var factions []*models.Faction
+	factions := make([]*models.Faction, 0, 10)
 	for rows.Next() {
 		var f models.Faction
 		err := rows.Scan(&f.ID, &f.Name, &f.Type, &f.InfluenceLevel, &f.Corrupted)
@@ -519,7 +519,7 @@ func (r *WorldBuildingRepository) GetActiveWorldEvents(gameSessionID uuid.UUID) 
 	}
 	defer rows.Close()
 
-	var events []*models.WorldEvent
+	events := make([]*models.WorldEvent, 0, 10)
 	for rows.Next() {
 		var e models.WorldEvent
 		err := rows.Scan(
@@ -681,7 +681,7 @@ func (r *WorldBuildingRepository) GetTradeRoutesBySettlement(settlementID uuid.U
 	}
 	defer rows.Close()
 
-	var routes []*models.TradeRoute
+	routes := make([]*models.TradeRoute, 0, 10)
 	for rows.Next() {
 		var route models.TradeRoute
 		err := rows.Scan(
@@ -756,7 +756,7 @@ func (r *WorldBuildingRepository) GetAncientSitesByGameSession(gameSessionID uui
 	}
 	defer rows.Close()
 
-	var sites []*models.AncientSite
+	sites := make([]*models.AncientSite, 0, 10)
 	for rows.Next() {
 		var site models.AncientSite
 		err := rows.Scan(

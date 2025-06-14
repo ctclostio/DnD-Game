@@ -209,7 +209,7 @@ Format the response as JSON with the following structure:
 }
 
 func (acm *AICampaignManager) buildRecapPrompt(memories []*models.SessionMemory) string {
-	var sessionsText []string
+	sessionsText := make([]string, 0, 10)
 	for _, memory := range memories {
 		sessionInfo := fmt.Sprintf("Session %d (%s):\n", memory.SessionNumber, memory.SessionDate.Format("Jan 2"))
 		if memory.RecapSummary != "" {

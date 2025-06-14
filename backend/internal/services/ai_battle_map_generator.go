@@ -231,7 +231,7 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 	}
 
 	// Add some cover positions
-	var coverPositions []map[string]interface{}
+	coverPositions := make([]map[string]interface{}, 0, 10)
 	for i := 0; i < 3; i++ {
 		coverPositions = append(coverPositions, map[string]interface{}{
 			"position":   models.Position{X: rand.Intn(gridX), Y: rand.Intn(gridY)},

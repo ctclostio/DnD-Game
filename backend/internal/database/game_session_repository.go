@@ -336,7 +336,7 @@ func (r *gameSessionRepository) GetParticipants(ctx context.Context, sessionID s
 	}
 	defer rows.Close()
 
-	var participants []*models.GameParticipant
+	participants := make([]*models.GameParticipant, 0, 10)
 	for rows.Next() {
 		var p models.GameParticipant
 

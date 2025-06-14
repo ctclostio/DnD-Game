@@ -376,48 +376,88 @@ func (s *CombatService) DeathSavingThrow(ctx context.Context, combatID, characte
 
 	// Critical success (20) - regain 1 HP
 	if roll == 20 {
-		result.CritSuccess = true
-		result.Success = true
-		character.HP = 1
-		// Remove unconscious
-		if character.Conditions != nil {
-			newConditions := []models.Condition{}
-			for _, cond := range character.Conditions {
-				if cond != models.ConditionUnconscious {
-					newConditions = append(newConditions, cond)
-				}
-			}
-			character.Conditions = newConditions
-		}
-		character.DeathSaveSuccesses = 0
-		character.DeathSaveFailures = 0
-	} else if roll == 1 {
-		// Critical failure - 2 failures
-		result.CritFailure = true
-		character.DeathSaveFailures += 2
-		if character.DeathSaveFailures >= 3 {
-			character.DeathSaveFailures = 3
-			character.Conditions = append(character.Conditions, models.ConditionDead)
-		}
-	} else if roll >= 10 {
-		// Success
-		result.Success = true
-		character.DeathSaveSuccesses++
-		if character.DeathSaveSuccesses >= 3 {
-			// Stabilized
-			character.DeathSaveSuccesses = 0
-			character.DeathSaveFailures = 0
-			character.Conditions = append(character.Conditions, models.ConditionStable)
-		}
+		handleCriticalSuccess(character, result)
+		combat, _ := s.GetCombatState(ctx, combatID)
+		return combat, result, nil
+	}
+
+	// Critical failure - 2 failures
+	if roll == 1 {
+		handleCriticalFailure(character, result)
+		combat, _ := s.GetCombatState(ctx, combatID)
+		return combat, result, nil
+	}
+
+	// Normal success
+	if roll >= 10 {
+		handleSuccess(character, result)
 	} else {
 		// Failure
-		character.DeathSaveFailures++
-		if character.DeathSaveFailures >= 3 {
-			character.DeathSaveFailures = 3
-			character.Conditions = append(character.Conditions, models.ConditionDead)
-		}
+		handleFailure(character, result)
 	}
 
 	combat, _ := s.GetCombatState(ctx, combatID)
 	return combat, result, nil
+}
+
+// handleCriticalSuccess processes a critical success on a death save
+func handleCriticalSuccess(combatant *models.Combatant, result *models.DeathSaveResult) {
+	result.CritSuccess = true
+	result.Success = true
+	combatant.HP = 1
+	
+	// Remove unconscious condition
+	removeUnconsciousCondition(combatant)
+	
+	combatant.DeathSaveSuccesses = 0
+	combatant.DeathSaveFailures = 0
+}
+
+// handleCriticalFailure processes a critical failure on a death save
+func handleCriticalFailure(combatant *models.Combatant, result *models.DeathSaveResult) {
+	result.CritFailure = true
+	combatant.DeathSaveFailures += 2
+	
+	if combatant.DeathSaveFailures >= 3 {
+		combatant.DeathSaveFailures = 3
+		combatant.Conditions = append(combatant.Conditions, models.ConditionDead)
+	}
+}
+
+// handleSuccess processes a normal success on a death save
+func handleSuccess(combatant *models.Combatant, result *models.DeathSaveResult) {
+	result.Success = true
+	combatant.DeathSaveSuccesses++
+	
+	if combatant.DeathSaveSuccesses >= 3 {
+		// Stabilized
+		combatant.DeathSaveSuccesses = 0
+		combatant.DeathSaveFailures = 0
+		combatant.Conditions = append(combatant.Conditions, models.ConditionStable)
+	}
+}
+
+// handleFailure processes a failure on a death save
+func handleFailure(combatant *models.Combatant, result *models.DeathSaveResult) {
+	combatant.DeathSaveFailures++
+	
+	if combatant.DeathSaveFailures >= 3 {
+		combatant.DeathSaveFailures = 3
+		combatant.Conditions = append(combatant.Conditions, models.ConditionDead)
+	}
+}
+
+// removeUnconsciousCondition removes the unconscious condition from a combatant
+func removeUnconsciousCondition(combatant *models.Combatant) {
+	if combatant.Conditions == nil {
+		return
+	}
+	
+	newConditions := []models.Condition{}
+	for _, cond := range combatant.Conditions {
+		if cond != models.ConditionUnconscious {
+			newConditions = append(newConditions, cond)
+		}
+	}
+	combatant.Conditions = newConditions
 }

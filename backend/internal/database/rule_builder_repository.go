@@ -165,7 +165,7 @@ func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPubl
 	}
 	defer rows.Close()
 
-	var templates []models.RuleTemplate
+	templates := make([]models.RuleTemplate, 0, 10)
 	for rows.Next() {
 		var template models.RuleTemplate
 		var logicGraphJSON, parametersJSON, condModsJSON, tagsJSON []byte
@@ -280,7 +280,7 @@ func (r *RuleBuilderRepository) GetNodeTemplates() ([]models.NodeTemplate, error
 	}
 	defer rows.Close()
 
-	var templates []models.NodeTemplate
+	templates := make([]models.NodeTemplate, 0, 10)
 	for rows.Next() {
 		var template models.NodeTemplate
 		var inputPortsJSON, outputPortsJSON, defaultPropsJSON []byte
@@ -392,7 +392,7 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 	}
 	defer rows.Close()
 
-	var rules []models.ActiveRule
+	rules := make([]models.ActiveRule, 0, 10)
 	for rows.Next() {
 		var rule models.ActiveRule
 		var compiledLogicJSON, parametersJSON []byte
@@ -515,7 +515,7 @@ func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, character
 	}
 	defer rows.Close()
 
-	var executions []models.RuleExecution
+	executions := make([]models.RuleExecution, 0, 10)
 	for rows.Next() {
 		var execution models.RuleExecution
 		var triggerContextJSON, executionResultJSON []byte
@@ -573,7 +573,7 @@ func (r *RuleBuilderRepository) GetConditionalModifiers(ruleID string) ([]models
 	}
 	defer rows.Close()
 
-	var modifiers []models.ConditionalModifier
+	modifiers := make([]models.ConditionalModifier, 0, 10)
 	for rows.Next() {
 		var modifier models.ConditionalModifier
 		var modifiersJSON []byte

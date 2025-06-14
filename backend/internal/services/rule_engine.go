@@ -262,7 +262,7 @@ func (re *RuleEngine) buildExecutionOrder(graph *models.LogicGraph) ([]string, e
 		}
 	}
 
-	var order []string
+	order := make([]string, 0, 10)
 	for len(queue) > 0 {
 		nodeID := queue[0]
 		queue = queue[1:]

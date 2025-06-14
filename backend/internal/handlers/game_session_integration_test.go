@@ -505,8 +505,8 @@ func TestGameSessionConcurrency_Integration(t *testing.T) {
 	dmID := ctx.CreateTestUser("concdm", "concdm@example.com", "password123")
 
 	// Create multiple players
-	var playerIDs []string
-	var charIDs []string
+	playerIDs := make([]string, 0, 5)
+	charIDs := make([]string, 0, 5)
 	for i := 0; i < 5; i++ {
 		playerID := ctx.CreateTestUser(testutil.RandomString(8), testutil.RandomString(8)+"@example.com", "password123")
 		charID := ctx.CreateTestCharacter(playerID, testutil.RandomString(8))

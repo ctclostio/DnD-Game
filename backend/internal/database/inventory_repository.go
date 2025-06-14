@@ -81,7 +81,7 @@ func (r *inventoryRepository) GetItemsByType(itemType models.ItemType) ([]*model
 	}
 	defer rows.Close()
 
-	var items []*models.Item
+	items := make([]*models.Item, 0, 20)
 	for rows.Next() {
 		var item models.Item
 		var attunementReq, description sql.NullString
@@ -186,7 +186,7 @@ func (r *inventoryRepository) GetCharacterInventory(characterID string) ([]*mode
 	}
 	defer rows.Close()
 
-	var items []*models.InventoryItem
+	items := make([]*models.InventoryItem, 0, 20)
 	for rows.Next() {
 		var inv models.InventoryItem
 		var item models.Item

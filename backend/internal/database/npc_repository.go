@@ -146,7 +146,7 @@ func (r *npcRepository) GetByGameSession(ctx context.Context, gameSessionID stri
 	}
 	defer rows.Close()
 
-	var npcs []*models.NPC
+	npcs := make([]*models.NPC, 0, 10)
 	for rows.Next() {
 		npc, err := r.scanNPC(rows)
 		if err != nil {
@@ -263,7 +263,7 @@ func (r *npcRepository) Search(ctx context.Context, filter models.NPCSearchFilte
 	}
 	defer rows.Close()
 
-	var npcs []*models.NPC
+	npcs := make([]*models.NPC, 0, 10)
 	for rows.Next() {
 		npc, err := r.scanNPC(rows)
 		if err != nil {
@@ -294,7 +294,7 @@ func (r *npcRepository) GetTemplates(ctx context.Context) ([]*models.NPCTemplate
 	}
 	defer rows.Close()
 
-	var templates []*models.NPCTemplate
+	templates := make([]*models.NPCTemplate, 0, 10)
 	for rows.Next() {
 		template, err := r.scanNPCTemplate(rows)
 		if err != nil {

@@ -625,38 +625,46 @@ Return as JSON with keys: name, description, decorations (array)`,
 				clothingStyle.Materials, foundation.Values)
 
 			response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+			if err != nil {
+				continue
+			}
 
 			var itemData map[string]interface{}
-			if err == nil && json.Unmarshal([]byte(response), &itemData) == nil {
-				item := models.ClothingItem{
-					WornBy:    gender,
-					Materials: clothingStyle.Materials[:2],
-					Colors:    clothingStyle.Colors[:2],
-				}
+			if err := json.Unmarshal([]byte(response), &itemData); err != nil {
+				continue
+			}
 
-				if name, ok := itemData["name"].(string); ok {
-					item.Name = name
-				}
+			item := models.ClothingItem{
+				WornBy:    gender,
+				Materials: clothingStyle.Materials[:2],
+				Colors:    clothingStyle.Colors[:2],
+			}
 
-				if desc, ok := itemData["description"].(string); ok {
-					item.Description = desc
-				}
+			// Extract clothing item data
+			if name, ok := itemData["name"].(string); ok {
+				item.Name = name
+			}
 
-				if decorations, ok := itemData["decorations"].([]interface{}); ok {
-					for _, d := range decorations {
-						item.Decorations = append(item.Decorations, d.(string))
+			if desc, ok := itemData["description"].(string); ok {
+				item.Description = desc
+			}
+
+			if decorations, ok := itemData["decorations"].([]interface{}); ok {
+				for _, d := range decorations {
+					if decoration, ok := d.(string); ok {
+						item.Decorations = append(item.Decorations, decoration)
 					}
 				}
+			}
 
-				key := fmt.Sprintf("%s_%s", gender, clothingType)
-				switch clothingType {
-				case "everyday":
-					clothingStyle.EverydayWear[key] = item
-				case "formal":
-					clothingStyle.FormalWear[key] = item
-				case "ceremonial":
-					clothingStyle.CeremonialWear[key] = item
-				}
+			key := fmt.Sprintf("%s_%s", gender, clothingType)
+			switch clothingType {
+			case "everyday":
+				clothingStyle.EverydayWear[key] = item
+			case "formal":
+				clothingStyle.FormalWear[key] = item
+			case "ceremonial":
+				clothingStyle.CeremonialWear[key] = item
 			}
 		}
 	}
@@ -738,50 +746,59 @@ Return as JSON with keys: classes (array of {name, rank, privileges, restriction
 		AgeRoles:    make(map[string]string),
 	}
 
+	if err != nil {
+		return socialStructure
+	}
+
 	var structureData map[string]interface{}
-	if err == nil && json.Unmarshal([]byte(response), &structureData) == nil {
-		// Parse classes
-		if classes, ok := structureData["classes"].([]interface{}); ok {
-			for i, c := range classes {
-				if classMap, ok := c.(map[string]interface{}); ok {
-					class := models.SocialClass{
-						Rank: i + 1,
-					}
+	if err := json.Unmarshal([]byte(response), &structureData); err != nil {
+		return socialStructure
+	}
 
-					if name, ok := classMap["name"].(string); ok {
-						class.Name = name
-					}
-
-					pcs.parseStringArray(classMap, "privileges", &class.Privileges)
-					pcs.parseStringArray(classMap, "restrictions", &class.Restrictions)
-					pcs.parseStringArray(classMap, "occupations", &class.Occupations)
-
-					// Add visual markers
-					class.Markers = []string{
-						fmt.Sprintf("%s clothing colors", class.Name),
-						fmt.Sprintf("%s symbols", class.Name),
-					}
-
-					socialStructure.Classes = append(socialStructure.Classes, class)
-				}
+	// Parse classes
+	if classes, ok := structureData["classes"].([]interface{}); ok {
+		for i, c := range classes {
+			classMap, ok := c.(map[string]interface{})
+			if !ok {
+				continue
 			}
-		}
 
-		if mobility, ok := structureData["mobility"].(string); ok {
-			socialStructure.Mobility = mobility
-		}
+			class := models.SocialClass{
+				Rank: i + 1,
+			}
 
-		if leadership, ok := structureData["leadership"].(string); ok {
-			socialStructure.Leadership = leadership
-		}
+			if name, ok := classMap["name"].(string); ok {
+				class.Name = name
+			}
 
-		if family, ok := structureData["family_unit"].(string); ok {
-			socialStructure.FamilyUnit = family
-		}
+			pcs.parseStringArray(classMap, "privileges", &class.Privileges)
+			pcs.parseStringArray(classMap, "restrictions", &class.Restrictions)
+			pcs.parseStringArray(classMap, "occupations", &class.Occupations)
 
-		if outsiders, ok := structureData["outsider_treatment"].(string); ok {
-			socialStructure.Outsiders = outsiders
+			// Add visual markers
+			class.Markers = []string{
+				fmt.Sprintf("%s clothing colors", class.Name),
+				fmt.Sprintf("%s symbols", class.Name),
+			}
+
+			socialStructure.Classes = append(socialStructure.Classes, class)
 		}
+	}
+
+	if mobility, ok := structureData["mobility"].(string); ok {
+		socialStructure.Mobility = mobility
+	}
+
+	if leadership, ok := structureData["leadership"].(string); ok {
+		socialStructure.Leadership = leadership
+	}
+
+	if family, ok := structureData["family_unit"].(string); ok {
+		socialStructure.FamilyUnit = family
+	}
+
+	if outsiders, ok := structureData["outsider_treatment"].(string); ok {
+		socialStructure.Outsiders = outsiders
 	}
 
 	// Generate gender and age roles

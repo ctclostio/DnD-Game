@@ -192,6 +192,10 @@ func (r *CustomClassRepository) GetByUserID(userID string, includeUnapproved boo
 		classes = append(classes, &class)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating custom classes: %w", err)
+	}
+
 	return classes, nil
 }
 
@@ -226,6 +230,10 @@ func (r *CustomClassRepository) GetApproved() ([]*models.CustomClass, error) {
 			return nil, err
 		}
 		classes = append(classes, &class)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating custom classes: %w", err)
 	}
 
 	return classes, nil

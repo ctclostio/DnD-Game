@@ -17,9 +17,6 @@ type GameSessionService struct {
 }
 
 func NewGameSessionService(repo database.GameSessionRepository) *GameSessionService {
-	// Seed random number generator
-	rand.Seed(time.Now().UnixNano())
-
 	return &GameSessionService{
 		repo: repo,
 	}
