@@ -157,10 +157,6 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 	}
 
 	cleanup := func() {
-		if hub != nil {
-			// Hub will be cleaned up when the test ends
-			// The goroutine will exit when the test process ends
-		}
 		_ = sqlxDB.Close()
 	}
 

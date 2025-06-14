@@ -7,9 +7,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 type CombatAnalyticsService struct {
@@ -234,9 +234,10 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 		// Update target stats
 		if action.TargetID != nil {
 			if stats, ok := combatantStats[*action.TargetID]; ok {
-				if action.ActionType == "attack" || action.ActionType == "spell" {
+				switch action.ActionType {
+				case "attack", "spell":
 					stats.DamageTaken += action.DamageDealt
-				} else if action.ActionType == "heal" {
+				case "heal":
 					stats.HealingReceived += action.DamageDealt
 				}
 

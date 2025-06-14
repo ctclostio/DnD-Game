@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/go-playground/validator/v10"
 )
 
 // Validator wraps the go-playground validator
@@ -122,9 +122,10 @@ func validateDnDName(fl validator.FieldLevel) bool {
 
 	// Allow letters, spaces, hyphens, and apostrophes
 	for _, char := range name {
-		if !((char >= 'a' && char <= 'z') ||
+		valid := (char >= 'a' && char <= 'z') ||
 			(char >= 'A' && char <= 'Z') ||
-			char == ' ' || char == '-' || char == '\'') {
+			char == ' ' || char == '-' || char == '\''
+		if !valid {
 			return false
 		}
 	}

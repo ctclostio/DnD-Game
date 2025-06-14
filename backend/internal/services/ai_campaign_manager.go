@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/google/uuid"
 )
 
 type AICampaignManager struct {
@@ -376,11 +376,7 @@ func (acm *AICampaignManager) createBasicSessionMemory(events []interface{}) *mo
 		UpdatedAt:        time.Now(),
 	}
 
-	// Basic analysis of events if needed
-	if len(events) > 0 {
-		// Process events to extract basic information
-		// This is a simplified version - expand as needed
-	}
+	// Basic analysis of events could be added here
 
 	return memory
 }

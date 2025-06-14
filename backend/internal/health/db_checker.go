@@ -19,5 +19,5 @@ func (d *DBChecker) Check(ctx context.Context) error {
 	if d.DB == nil {
 		return fmt.Errorf("db not initialized")
 	}
-	return d.DB.DB.PingContext(ctx)
+	return d.DB.PingContext(ctx)
 }

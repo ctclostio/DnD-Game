@@ -2,14 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/gorilla/mux"
 )
 
 // Rule Template Handlers
@@ -199,7 +200,7 @@ func (h *Handlers) ValidateRuleTemplate(w http.ResponseWriter, r *http.Request) 
 
 		executionResult, err = h.ruleEngine.ExecuteRule(r.Context(), compiled, testInstance, testTrigger)
 		if err != nil {
-			// Test execution errors are included in result - don't fail validation
+			fmt.Printf("rule execution error: %v\n", err)
 		}
 	}
 

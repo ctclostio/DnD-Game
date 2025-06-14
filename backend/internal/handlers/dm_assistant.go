@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 // ProcessDMAssistantRequest handles real-time DM assistant requests
@@ -57,12 +57,7 @@ func (h *Handlers) ProcessDMAssistantRequest(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// If streaming is requested, handle it separately
-	// TODO: Implement WebSocket streaming when needed
-	if req.StreamResponse {
-		// For now, just return normal response
-		// In future, this would upgrade to WebSocket for streaming
-	}
+	// TODO: Support streaming via WebSocket when needed
 
 	response.JSON(w, r, http.StatusOK, result)
 }
@@ -326,15 +321,3 @@ func (h *Handlers) TriggerHazard(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleStreamingDMAssistant handles WebSocket streaming for DM assistant
-func (h *Handlers) handleStreamingDMAssistant(w http.ResponseWriter, r *http.Request, userID uuid.UUID, req models.DMAssistantRequest) {
-	// This would upgrade to WebSocket and stream responses
-	// Implementation depends on your WebSocket setup
-	// For now, we'll just return the non-streaming response
-	result, err := h.dmAssistantService.ProcessRequest(r.Context(), userID, req)
-	if err != nil {
-		response.InternalServerError(w, r, err)
-		return
-	}
-
-	response.JSON(w, r, http.StatusOK, result)
-}

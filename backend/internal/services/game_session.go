@@ -211,12 +211,7 @@ func (s *GameSessionService) JoinSession(ctx context.Context, sessionID, userID 
 		}
 	}
 
-	// Security check: Private session requires invite
-	if session.RequiresInvite && !session.IsPublic {
-		// TODO: Check if user has valid invite
-		// For now, we'll skip this check but log it
-		// In production, implement invite validation
-	}
+	// Security check: Private session requires invite (not yet implemented)
 
 	// Add participant
 	return s.repo.AddParticipant(ctx, sessionID, userID, characterID)

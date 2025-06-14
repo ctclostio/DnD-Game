@@ -34,7 +34,7 @@ func (r *gameSessionRepository) Create(ctx context.Context, session *models.Game
 
 	// Convert state to JSON string for storage
 	stateJSON := "{}"
-	if session.State != nil && len(session.State) > 0 {
+	if len(session.State) > 0 {
 		// In production, handle JSON marshaling properly
 		stateJSON = "{}"
 	}
@@ -114,7 +114,9 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to get game sessions by dm user id: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	for rows.Next() {
 		var session models.GameSession
@@ -159,7 +161,9 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 	if err != nil {
 		return nil, fmt.Errorf("failed to get game sessions by participant user id: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	for rows.Next() {
 		var session models.GameSession
@@ -247,7 +251,9 @@ func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]
 	if err != nil {
 		return nil, fmt.Errorf("failed to list game sessions: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	for rows.Next() {
 		var session models.GameSession
@@ -333,7 +339,9 @@ func (r *gameSessionRepository) GetParticipants(ctx context.Context, sessionID s
 	if err != nil {
 		return nil, fmt.Errorf("failed to get participants: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var participants []*models.GameParticipant
 	for rows.Next() {

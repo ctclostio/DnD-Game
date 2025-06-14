@@ -14,21 +14,27 @@ import (
 
 const (
 	// Time allowed to write a message to the peer
+	//lint:ignore U1000 retained for future use
 	writeWait = 10 * time.Second
 
 	// Time allowed to read the next pong message from the peer
+	//lint:ignore U1000 retained for future use
 	pongWait = 60 * time.Second
 
 	// Send pings to peer with this period. Must be less than pongWait
+	//lint:ignore U1000 retained for future use
 	pingPeriod = (pongWait * 9) / 10
 
 	// Maximum message size allowed from peer
+	//lint:ignore U1000 retained for future use
 	maxMessageSize = 512 * 1024 // 512KB
 )
 
 var (
+	//lint:ignore U1000 retained for future use
 	newline = []byte{'\n'}
-	space   = []byte{' '}
+	//lint:ignore U1000 retained for future use
+	space = []byte{' '}
 )
 
 // AuthMessageV2 represents the authentication message

@@ -35,7 +35,7 @@ func (s *RefreshTokenService) Create(userID, refreshToken string) error {
 	}
 
 	// Store the token
-	return s.repo.Create(userID, claims.RegisteredClaims.ID, refreshToken, claims.RegisteredClaims.ExpiresAt.Time)
+	return s.repo.Create(userID, claims.ID, refreshToken, claims.ExpiresAt.Time)
 }
 
 // RefreshAccessToken validates a refresh token and generates a new token pair
@@ -54,8 +54,7 @@ func (s *RefreshTokenService) RefreshAccessToken(refreshToken string) (*auth.Tok
 
 	// Revoke the old refresh token
 	if err := s.repo.Revoke(storedToken.TokenID); err != nil {
-		// Log error but continue - we don't want to fail the refresh
-		// The old token will eventually expire anyway
+		fmt.Printf("failed to revoke old refresh token: %v\n", err)
 	}
 
 	// Generate new token pair

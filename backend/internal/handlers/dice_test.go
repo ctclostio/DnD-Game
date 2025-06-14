@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 func TestDiceHandler_RollDice(t *testing.T) {
@@ -70,12 +70,7 @@ func TestDiceHandler_RollDice(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/dice/roll", bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 
-			// Add auth context if userID is provided
-			if tt.userID != "" {
-				// Context would be added by auth middleware in real handler
-				// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{UserID: tt.userID})
-				// req = req.WithContext(ctx)
-			}
+			// Add auth context (placeholder)
 
 			// For this test, we'll just verify the request structure
 			// A full test would need the handler with all dependencies
@@ -147,12 +142,7 @@ func TestDiceHandler_GetRollHistory(t *testing.T) {
 			}
 			req := httptest.NewRequest(http.MethodGet, url, nil)
 
-			// Add auth context if userID is provided
-			if tt.userID != "" {
-				// Context would be added by auth middleware in real handler
-				// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{UserID: tt.userID})
-				// req = req.WithContext(ctx)
-			}
+			// Add auth context (placeholder)
 
 			// For this test, verify query parameter parsing
 			limit := req.URL.Query().Get("limit")
@@ -321,9 +311,10 @@ func TestAdvantageDisadvantage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// This demonstrates the notation for advantage/disadvantage
 			assert.Contains(t, tt.notation, "d20")
-			if tt.rollType == "advantage" {
+			switch tt.rollType {
+			case "advantage":
 				assert.Contains(t, tt.notation, "kh") // keep highest
-			} else if tt.rollType == "disadvantage" {
+			case "disadvantage":
 				assert.Contains(t, tt.notation, "kl") // keep lowest
 			}
 		})

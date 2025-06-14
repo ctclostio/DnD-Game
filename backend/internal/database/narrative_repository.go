@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // NarrativeRepository handles all narrative-related database operations
@@ -191,7 +191,7 @@ func (r *NarrativeRepository) GetBackstoryElements(characterID string) ([]models
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var elements []models.BackstoryElement
 	for rows.Next() {
@@ -328,7 +328,7 @@ func (r *NarrativeRepository) GetPendingConsequences(sessionID string, currentTi
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var consequences []models.ConsequenceEvent
 	for rows.Next() {
@@ -472,7 +472,7 @@ func (r *NarrativeRepository) GetEventPerspectives(eventID string) ([]models.Per
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var perspectives []models.PerspectiveNarrative
 	for rows.Next() {
@@ -568,7 +568,7 @@ func (r *NarrativeRepository) GetActiveMemories(characterID string, limit int) (
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var memories []models.NarrativeMemory
 	for rows.Next() {
@@ -682,7 +682,7 @@ func (r *NarrativeRepository) GetActiveNarrativeThreads() ([]models.NarrativeThr
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var threads []models.NarrativeThread
 	for rows.Next() {

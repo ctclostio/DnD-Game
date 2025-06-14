@@ -451,9 +451,10 @@ Create a brief description (2-3 sentences) of this economic event and its immedi
 
 	// Calculate economic impact
 	impact := (rand.Float64() - 0.5) * 0.4 // -20% to +20%
-	if eventType == "trade_boom" || eventType == "new_resource" {
+	switch eventType {
+	case "trade_boom", "new_resource":
 		impact = math.Abs(impact)
-	} else if eventType == "market_crash" || eventType == "resource_depletion" {
+	case "market_crash", "resource_depletion":
 		impact = -math.Abs(impact)
 	}
 

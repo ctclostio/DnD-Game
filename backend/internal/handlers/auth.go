@@ -202,8 +202,8 @@ func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
 
 	// Revoke all refresh tokens for the user
 	if err := h.refreshTokenService.RevokeAllForUser(claims.UserID); err != nil {
-		// Log error but don't fail the logout
-		// The access token will still expire
+		// Log error but don't fail the logout; the access token will still expire
+		fmt.Printf("failed to revoke tokens for user %s: %v\n", claims.UserID, err)
 	}
 
 	// Response

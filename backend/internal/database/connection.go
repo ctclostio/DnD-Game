@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // Config holds the database configuration
@@ -178,12 +178,12 @@ func (db *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 
 // Query executes a query that returns rows
 func (db *DB) Query(query string, args ...interface{}) (*sqlx.Rows, error) {
-	return db.DB.Queryx(query, args...)
+	return db.Queryx(query, args...)
 }
 
 // QueryRow executes a query that is expected to return at most one row
 func (db *DB) QueryRow(query string, args ...interface{}) *sqlx.Row {
-	return db.DB.QueryRowx(query, args...)
+	return db.QueryRowx(query, args...)
 }
 
 // Get executes a query and scans the result into dest
@@ -241,9 +241,9 @@ func (db *DB) QueryContextRebind(ctx context.Context, query string, args ...inte
 	reboundQuery := db.Rebind(query)
 	if db.logger != nil {
 		start := time.Now()
-		rows, err := db.DB.QueryContext(ctx, reboundQuery, args...)
+		rows, err := db.QueryContext(ctx, reboundQuery, args...)
 		db.logQuery(ctx, query, args, err, time.Since(start))
 		return rows, err
 	}
-	return db.DB.QueryContext(ctx, reboundQuery, args...)
+	return db.QueryContext(ctx, reboundQuery, args...)
 }

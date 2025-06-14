@@ -457,21 +457,3 @@ func TestRateLimiting_Integration(t *testing.T) {
 }
 
 // Helper to create authenticated request
-func createAuthRequest(t *testing.T, method, url string, body interface{}, token string) *http.Request {
-	var bodyReader *bytes.Reader
-	if body != nil {
-		bodyBytes, err := json.Marshal(body)
-		require.NoError(t, err)
-		bodyReader = bytes.NewReader(bodyBytes)
-	} else {
-		bodyReader = bytes.NewReader([]byte{})
-	}
-
-	req := httptest.NewRequest(method, url, bodyReader)
-	req.Header.Set("Content-Type", "application/json")
-	if token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
-
-	return req
-}

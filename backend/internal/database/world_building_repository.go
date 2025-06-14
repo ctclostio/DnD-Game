@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // WorldBuildingRepository handles all world building data operations
@@ -127,7 +127,7 @@ func (r *WorldBuildingRepository) GetSettlementsByGameSession(gameSessionID uuid
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var settlements []*models.Settlement
 	for rows.Next() {
@@ -199,7 +199,7 @@ func (r *WorldBuildingRepository) GetSettlementNPCs(settlementID uuid.UUID) ([]m
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var npcs []models.SettlementNPC
 	for rows.Next() {
@@ -266,7 +266,7 @@ func (r *WorldBuildingRepository) GetSettlementShops(settlementID uuid.UUID) ([]
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var shops []models.SettlementShop
 	for rows.Next() {
@@ -392,7 +392,7 @@ func (r *WorldBuildingRepository) GetFactionsByGameSession(gameSessionID uuid.UU
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var factions []*models.Faction
 	for rows.Next() {
@@ -517,7 +517,7 @@ func (r *WorldBuildingRepository) GetActiveWorldEvents(gameSessionID uuid.UUID) 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var events []*models.WorldEvent
 	for rows.Next() {
@@ -679,7 +679,7 @@ func (r *WorldBuildingRepository) GetTradeRoutesBySettlement(settlementID uuid.U
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var routes []*models.TradeRoute
 	for rows.Next() {
@@ -754,7 +754,7 @@ func (r *WorldBuildingRepository) GetAncientSitesByGameSession(gameSessionID uui
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var sites []*models.AncientSite
 	for rows.Next() {
@@ -788,7 +788,7 @@ func (r *WorldBuildingRepository) SimulateEconomicChanges(gameSessionID uuid.UUI
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	// Process each event's economic impacts
 	for rows.Next() {

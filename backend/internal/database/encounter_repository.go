@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/lib/pq"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/lib/pq"
 )
 
 type EncounterRepository struct {
@@ -237,7 +237,9 @@ func (r *EncounterRepository) getEncounterEnemies(encounterID string) ([]models.
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	enemies := make([]models.EncounterEnemy, 0, 10)
 	for rows.Next() {
@@ -306,7 +308,9 @@ func (r *EncounterRepository) GetByGameSession(gameSessionID string) ([]*models.
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	encounters := make([]*models.Encounter, 0, 20)
 	for rows.Next() {
@@ -403,7 +407,9 @@ func (r *EncounterRepository) GetEvents(encounterID string, limit int) ([]*model
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	events := make([]*models.EncounterEvent, 0, 50)
 	for rows.Next() {
@@ -501,7 +507,9 @@ func (r *EncounterRepository) GetObjectives(encounterID string) ([]*models.Encou
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	objectives := make([]*models.EncounterObjective, 0, 10)
 	for rows.Next() {

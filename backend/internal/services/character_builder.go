@@ -337,7 +337,7 @@ func (cb *CharacterBuilder) applyClassFeatures(character *models.Character, clas
 	character.HitPoints = character.MaxHitPoints
 
 	// Initialize spell slots for spellcasting classes
-	if classData.Spellcasting != nil && len(classData.Spellcasting) > 0 {
+	if len(classData.Spellcasting) > 0 {
 		// Extract spellcasting ability
 		if ability, ok := classData.Spellcasting["ability"].(string); ok {
 			character.Spells.SpellcastingAbility = ability

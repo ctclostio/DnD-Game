@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // ProceduralCultureService generates unique cultures with AI
@@ -816,10 +816,7 @@ func (pcs *ProceduralCultureService) RespondToPlayerAction(ctx context.Context, 
 	// Generate cultural event if major impact
 	if response.Impact > 0.5 {
 		event := pcs.generateCulturalResponseEvent(ctx, culture, action, response)
-		if event != nil {
-			// TODO: Convert EmergentWorldEvent to WorldEvent or create appropriate repository method
-			// pcs.worldRepo.CreateEmergentWorldEvent(event)
-		}
+		_ = event // placeholder for future event handling
 	}
 
 	return pcs.worldRepo.UpdateCulture(culture)
@@ -1206,13 +1203,14 @@ func (pcs *ProceduralCultureService) evaluateCulturalResponse(culture *models.Pr
 	}
 
 	// Calculate acceptance based on cultural values and action approach
-	if action.Approach == "respectful" {
+	switch action.Approach {
+	case "respectful":
 		response.Acceptance = 0.6 + rand.Float64()*0.3
 		response.Resistance = 0.1 + rand.Float64()*0.2
-	} else if action.Approach == "aggressive" {
+	case "aggressive":
 		response.Acceptance = 0.1 + rand.Float64()*0.2
 		response.Resistance = 0.6 + rand.Float64()*0.3
-	} else {
+	default:
 		response.Acceptance = 0.3 + rand.Float64()*0.3
 		response.Resistance = 0.3 + rand.Float64()*0.3
 	}
@@ -1252,7 +1250,7 @@ func (pcs *ProceduralCultureService) modifyCustoms(culture *models.ProceduralCul
 		newCustom := models.CultureCustom{
 			Name:         fmt.Sprintf("Festival of %s", action.Target),
 			Type:         "ceremonial",
-			Description:  fmt.Sprintf("A new tradition inspired by outsider influence"),
+			Description:  "A new tradition inspired by outsider influence",
 			Frequency:    "annual",
 			Participants: "all",
 			Significance: response.Impact,

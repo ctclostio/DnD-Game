@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // MockGameSessionService is a mock implementation of the game session service
@@ -109,16 +109,7 @@ func TestGameHandler_CreateGameSession(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/sessions", bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 
-			// Add auth context if userID is provided
-			if tt.userID != "" {
-				// Context would be added by auth middleware in real handler
-				// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
-				// 	UserID: tt.userID,
-				// 	Role:   tt.userRole,
-				// 	Type:   auth.AccessToken,
-				// })
-				// req = req.WithContext(ctx)
-			}
+			// Add auth context (placeholder)
 
 			// For this test, verify request structure
 			if tt.body != nil && tt.body != "invalid json" {
@@ -164,16 +155,7 @@ func TestGameHandler_GetGameSession(t *testing.T) {
 			// Create request
 			req := httptest.NewRequest(http.MethodGet, "/api/sessions/"+tt.sessionID, nil)
 			req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
-
-			// Add auth context if userID is provided
-			if tt.userID != "" {
-				// Context would be added by auth middleware in real handler
-				// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
-				// 	UserID: tt.userID,
-				// 	Type:   auth.AccessToken,
-				// })
-				// req = req.WithContext(ctx)
-			}
+			// Add auth context (placeholder)
 
 			// Verify session ID is properly extracted
 			vars := mux.Vars(req)
@@ -228,17 +210,8 @@ func TestGameHandler_JoinGameSession(t *testing.T) {
 			// Route vars would be set by router in real handler
 			// req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
 
+			// Add auth context (placeholder)
 			// Add auth context
-			if tt.userID != "" {
-				// Context would be added by auth middleware in real handler
-				// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
-				// 	UserID: tt.userID,
-				// 	Type:   auth.AccessToken,
-				// })
-				// req = req.WithContext(ctx)
-			}
-
-			// Verify request structure
 			var decoded map[string]interface{}
 			err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 			assert.NoError(t, err)
@@ -287,17 +260,10 @@ func TestGameHandler_UpdatePlayerStatus(t *testing.T) {
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPut, "/api/sessions/"+sessionID+"/status", bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
-			req = mux.SetURLVars(req, map[string]string{"id": sessionID})
+			_ = mux.SetURLVars(req, map[string]string{"id": sessionID})
 
 			// Add auth context
-			// Context would be added by auth middleware in real handler
-			// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
-			// 	UserID: userID,
-			// 	Type:   auth.AccessToken,
-			// })
-			// req = req.WithContext(ctx)
-
-			// Verify request structure
+			// Add auth context (placeholder)
 			var decoded map[string]interface{}
 			err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 			assert.NoError(t, err)

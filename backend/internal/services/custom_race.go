@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // CustomRaceService handles custom race operations
@@ -199,12 +199,7 @@ func (s *CustomRaceService) ValidateCustomRaceForCharacter(ctx context.Context, 
 	}
 
 	// Check if the user can use this race
-	canUse := false
-
-	// Creator can always use their own race
-	if race.CreatedBy == userID {
-		canUse = true
-	}
+	canUse := race.CreatedBy == userID
 
 	// Anyone can use public, approved races
 	if race.IsPublic && race.ApprovalStatus == models.ApprovalStatusApproved {

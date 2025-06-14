@@ -134,17 +134,10 @@ func (c *Client) ReadPump() {
 func (c *Client) WritePump() {
 	defer func() { _ = c.conn.Close() }()
 
-	for {
-		select {
-		case message, ok := <-c.send:
-			if !ok {
-				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-
-			_ = c.conn.WriteMessage(websocket.TextMessage, message)
-		}
+	for message := range c.send {
+		_ = c.conn.WriteMessage(websocket.TextMessage, message)
 	}
+	_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 }
 
 // Broadcast sends a message to the hub's broadcast channel
