@@ -288,7 +288,7 @@ func (s *AICharacterService) calculateModifier(score int) int {
 
 func (s *AICharacterService) getHitDiceValue(hitDice string) int {
 	switch hitDice {
-	case "1d6":
+	case constants.DiceD6:
 		return 6
 	case constants.DiceD8:
 		return 8

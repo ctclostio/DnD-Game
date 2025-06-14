@@ -478,9 +478,9 @@ func (s *EconomicSimulatorService) calculateRouteDifficulty(start, end *models.S
 		switch terrain {
 		case constants.TerrainMountainous:
 			difficulty += 2
-		case "swamp":
+		case constants.TerrainSwamp:
 			difficulty += 2
-		case "desert":
+		case constants.TerrainDesert:
 			difficulty += 1
 		case constants.TerrainForest:
 			difficulty += 1
@@ -500,7 +500,7 @@ func (s *EconomicSimulatorService) calculateRouteDifficulty(start, end *models.S
 
 func (s *EconomicSimulatorService) determineRouteType(start, end *models.Settlement) string {
 	// Determine based on terrain
-	if start.TerrainType == "coastal" || end.TerrainType == "coastal" {
+	if start.TerrainType == constants.TerrainCoastal || end.TerrainType == constants.TerrainCoastal {
 		return "sea"
 	}
 
@@ -642,9 +642,9 @@ func (s *EconomicSimulatorService) determineEnvironmentalHazards(start, end *mod
 		switch terrain {
 		case constants.TerrainMountainous:
 			hazards = append(hazards, "avalanches", "altitude sickness")
-		case "swamp":
+		case constants.TerrainSwamp:
 			hazards = append(hazards, "disease", "quicksand")
-		case "desert":
+		case constants.TerrainDesert:
 			hazards = append(hazards, "sandstorms", "dehydration")
 		case constants.TerrainForest:
 			hazards = append(hazards, "getting lost", "wild animals")
@@ -655,11 +655,11 @@ func (s *EconomicSimulatorService) determineEnvironmentalHazards(start, end *mod
 	climates := []string{start.Climate, end.Climate}
 	for _, climate := range climates {
 		switch climate {
-		case "cold":
+		case constants.ClimateCold:
 			hazards = append(hazards, "blizzards", "frostbite")
 		case constants.ClimateTropical:
 			hazards = append(hazards, "monsoons", "tropical diseases")
-		case "arid":
+		case constants.ClimateArid:
 			hazards = append(hazards, "extreme heat", "water scarcity")
 		}
 	}

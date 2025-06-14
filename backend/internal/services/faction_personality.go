@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
@@ -440,9 +441,9 @@ func (fps *FactionPersonalityService) getRelevantMemories(personality *models.Fa
 		}
 
 		// Check if event type is relevant
-		if decision.DecisionType == "diplomatic" && memory.EventType == "faction_interaction" {
+		if decision.DecisionType == constants.ApproachDiplomatic && memory.EventType == "faction_interaction" {
 			isRelevant = true
-		} else if decision.DecisionType == "military" && memory.EventType == "military_conflict" {
+		} else if decision.DecisionType == constants.ApproachMilitary && memory.EventType == "military_conflict" {
 			isRelevant = true
 		}
 
@@ -534,12 +535,12 @@ func (fps *FactionPersonalityService) LearnFromInteraction(ctx context.Context, 
 	// Adjust personality traits based on successful interactions
 	if outcome == "positive" {
 		switch interaction.Type {
-		case "diplomatic":
+		case constants.ApproachDiplomatic:
 			personality.Traits["diplomatic"] = math.Min(1.0, personality.Traits["diplomatic"]+0.02)
 			personality.Traits["aggressive"] = math.Max(0.0, personality.Traits["aggressive"]-0.01)
-		case "trade":
+		case constants.ActionTrade:
 			personality.Traits["mercantile"] = math.Min(1.0, personality.Traits["mercantile"]+0.02)
-		case "military":
+		case constants.ApproachMilitary:
 			personality.Traits["militaristic"] = math.Min(1.0, personality.Traits["militaristic"]+0.02)
 		}
 	}

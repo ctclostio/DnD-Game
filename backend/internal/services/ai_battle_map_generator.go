@@ -140,7 +140,7 @@ Format the response as JSON:
 
 func (abmg *AIBattleMapGenerator) determineGridSize(desiredSize string) (int, int) {
 	switch desiredSize {
-	case "small":
+	case constants.SizeSmall:
 		return 15, 15
 	case constants.SizeLarge:
 		return 30, 30
@@ -185,8 +185,8 @@ func (abmg *AIBattleMapGenerator) inferMapType(description string) string {
 
 	if strings.Contains(desc, constants.MapTypeDungeon) || strings.Contains(desc, "cave") || strings.Contains(desc, "underground") {
 		return constants.MapTypeDungeon
-	} else if strings.Contains(desc, "forest") || strings.Contains(desc, "outdoor") || strings.Contains(desc, "field") {
-		return "outdoor"
+	} else if strings.Contains(desc, "forest") || strings.Contains(desc, constants.TerrainOutdoor) || strings.Contains(desc, "field") {
+		return constants.TerrainOutdoor
 	} else if strings.Contains(desc, "city") || strings.Contains(desc, "street") || strings.Contains(desc, "tavern") {
 		return "urban"
 	}
@@ -220,7 +220,7 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 				},
 			)
 		}
-	case "outdoor":
+	case constants.TerrainOutdoor:
 		// Add some trees
 		for i := 0; i < 5; i++ {
 			terrainFeatures = append(terrainFeatures, models.BattleMapTerrainFeature{

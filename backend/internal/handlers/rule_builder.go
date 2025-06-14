@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
@@ -442,7 +443,7 @@ func (h *Handlers) ExportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	templateID := mux.Vars(r)["id"]
 	format := r.URL.Query().Get("format")
 	if format == "" {
-		format = "json"
+		format = constants.FormatJSON
 	}
 
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
@@ -452,7 +453,7 @@ func (h *Handlers) ExportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch format {
-	case "json":
+	case constants.FormatJSON:
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Content-Disposition", "attachment; filename="+template.Name+".json")
 		if err := json.NewEncoder(w).Encode(template); err != nil {

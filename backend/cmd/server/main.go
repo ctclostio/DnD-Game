@@ -10,6 +10,7 @@ import (
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
@@ -64,7 +65,7 @@ func main() {
 	log.Info().
 		Str("database_host", cfg.Database.Host).
 		Str("server_port", cfg.Server.Port).
-		Bool("ai_enabled", cfg.AI.Provider != "mock").
+		Bool("ai_enabled", cfg.AI.Provider != constants.MockProvider).
 		Msg("Configuration loaded successfully")
 
 	// Initialize database with logging
@@ -110,8 +111,8 @@ func main() {
 	aiRaceGenerator := services.NewAIRaceGeneratorService(llmProvider)
 	aiDMAssistant := services.NewAIDMAssistantService(llmProvider)
 	aiEncounterBuilder := services.NewAIEncounterBuilder(llmProvider)
-	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"}, log)
-	aiBattleMapGenerator := services.NewAIBattleMapGenerator(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != "mock"}, log)
+	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != constants.MockProvider}, log)
+	aiBattleMapGenerator := services.NewAIBattleMapGenerator(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != constants.MockProvider}, log)
 
 	// Create services
 	log.Info().Msg("Initializing core services")

@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
@@ -160,7 +161,7 @@ func (les *LivingEcosystemService) simulateNPCActivities(ctx context.Context, se
 
 		// Process each active goal
 		for _, goal := range goals {
-			if goal.Status != "active" {
+			if goal.Status != constants.StatusActive {
 				continue
 			}
 
@@ -173,7 +174,7 @@ func (les *LivingEcosystemService) simulateNPCActivities(ctx context.Context, se
 			// Update goal progress
 			goal.Progress = progress
 			if progress >= 1.0 {
-				goal.Status = "completed"
+				goal.Status = constants.StatusCompleted
 				now := time.Now()
 				goal.CompletedAt = &now
 			}
@@ -281,7 +282,7 @@ Create a specific, achievable goal that fits their personality. Return a brief d
 		Description: description,
 		Progress:    0.0,
 		Parameters:  make(map[string]interface{}),
-		Status:      "active",
+		Status:      constants.StatusActive,
 		StartedAt:   time.Now(),
 	}
 }
@@ -551,7 +552,7 @@ func (les *LivingEcosystemService) simulatePoliticalDevelopments(ctx context.Con
 		}
 
 		for _, agenda := range agendas {
-			if agenda.Status != "active" {
+			if agenda.Status != constants.StatusActive {
 				continue
 			}
 
@@ -630,7 +631,7 @@ func (les *LivingEcosystemService) simulateAgendaProgress(ctx context.Context, f
 
 	// Check if agenda is complete
 	if agenda.Progress >= 1.0 {
-		agenda.Status = "completed"
+		agenda.Status = constants.StatusCompleted
 	}
 
 	return nil

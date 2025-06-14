@@ -265,11 +265,11 @@ func (s *CharacterService) InitializeSpellSlots(class string, level int) []model
 
 	var slotsTable map[int][]int
 	switch class {
-	case "wizard", "cleric", "druid", "bard", "sorcerer":
+	case constants.ClassWizard, constants.ClassCleric, constants.ClassDruid, constants.ClassBard, constants.ClassSorcerer:
 		slotsTable = fullCasterSlots
-	case "ranger", "paladin":
+	case constants.ClassRanger, constants.ClassPaladin:
 		slotsTable = halfCasterSlots
-	case "warlock":
+	case constants.ClassWarlock:
 		slotsTable = warlockSlots
 	default:
 		// Non-casters have no spell slots

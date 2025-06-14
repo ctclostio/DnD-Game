@@ -727,11 +727,11 @@ func (b *AIEncounterBuilder) addPartySpecificTactics(encounter *models.Encounter
 
 	for _, class := range classes {
 		switch class {
-		case "cleric", "druid", "bard":
+		case constants.ClassCleric, constants.ClassDruid, constants.ClassBard:
 			hasHealer = true
-		case "wizard", "sorcerer", constants.ClassWarlock:
+		case constants.ClassWizard, constants.ClassSorcerer, constants.ClassWarlock:
 			hasCaster = true
-		case "fighter", "paladin", "barbarian":
+		case constants.ClassFighter, constants.ClassPaladin, constants.ClassBarbarian:
 			hasTank = true
 		}
 	}

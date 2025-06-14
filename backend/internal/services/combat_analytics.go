@@ -7,6 +7,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
@@ -105,12 +106,12 @@ func (cas *CombatAnalyticsService) calculateCombatAnalytics(
 	damageByActor := make(map[string]int)
 
 	for _, action := range actions {
-		if action.ActionType == "attack" || action.ActionType == "spell" {
+		if action.ActionType == constants.ActionAttack || action.ActionType == "spell" {
 			totalDamage += action.DamageDealt
 			damageByActor[action.ActorID] += action.DamageDealt
 		}
 
-		if action.ActionType == "heal" {
+		if action.ActionType == constants.ActionHeal {
 			totalHealing += action.DamageDealt // Healing stored as positive damage
 		}
 
@@ -203,12 +204,12 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 		if stats, ok := combatantStats[action.ActorID]; ok {
 			// Update attacker stats
 			switch action.ActionType {
-			case "attack":
+			case constants.ActionAttack:
 				stats.AttacksMade++
 				switch action.Outcome {
-				case "hit", "critical":
+				case "hit", constants.ActionCritical:
 					stats.AttacksHit++
-					if action.Outcome == "critical" {
+					if action.Outcome == constants.ActionCritical {
 						stats.CriticalHits++
 					}
 				case "miss":
@@ -235,9 +236,9 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 		if action.TargetID != nil {
 			if stats, ok := combatantStats[*action.TargetID]; ok {
 				switch action.ActionType {
-				case "attack", "spell":
+				case constants.ActionAttack, "spell":
 					stats.DamageTaken += action.DamageDealt
-				case "heal":
+				case constants.ActionHeal:
 					stats.HealingReceived += action.DamageDealt
 				}
 
@@ -331,7 +332,7 @@ func (cas *CombatAnalyticsService) ratePerformance(stats *models.CombatantAnalyt
 	} else if score >= 3 {
 		return "fair"
 	}
-	return "poor"
+	return constants.EconomicPoor
 }
 
 func (cas *CombatAnalyticsService) generateHighlights(stats *models.CombatantAnalytics) []string {
@@ -442,7 +443,7 @@ func (cas *CombatAnalyticsService) analyzeResourceUse(actions []*models.CombatAc
 			}
 		}
 
-		if action.ActionType == "heal" {
+		if action.ActionType == constants.ActionHeal {
 			// Check if healing was wasted (overhealing)
 			if action.DamageDealt > 20 && action.Outcome == "overheal" {
 				wastedHealing++
@@ -474,7 +475,7 @@ func (cas *CombatAnalyticsService) analyzeTargeting(actions []*models.CombatActi
 	dangerousEnemiesEliminated := 0
 
 	for _, action := range actions {
-		if action.TargetID != nil && action.ActionType == "attack" {
+		if action.TargetID != nil && action.ActionType == constants.ActionAttack {
 			targetPriority[*action.TargetID]++
 
 			if action.Outcome == "killing_blow" {
@@ -510,7 +511,7 @@ func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActio
 	// Look for patterns indicating teamwork
 	for i, action := range actions {
 		// Check for combo attacks (multiple attacks on same target in same round)
-		if action.ActionType == "attack" && i > 0 {
+		if action.ActionType == constants.ActionAttack && i > 0 {
 			prevAction := actions[i-1]
 			if prevAction.RoundNumber == action.RoundNumber &&
 				prevAction.TargetID != nil && action.TargetID != nil &&
@@ -520,7 +521,7 @@ func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActio
 		}
 
 		// Check for timely healing
-		if action.ActionType == "heal" && action.TargetID != nil {
+		if action.ActionType == constants.ActionHeal && action.TargetID != nil {
 			// Was the target low on health?
 			for _, report := range reports {
 				if report.Analytics.CombatantID == *action.TargetID {
@@ -566,7 +567,7 @@ func (cas *CombatAnalyticsService) findMissedOpportunities(actions []*models.Com
 
 	for _, action := range actions {
 		// Check for missed AoE opportunities
-		if action.ActionType == "attack" && action.TargetID != nil {
+		if action.ActionType == constants.ActionAttack && action.TargetID != nil {
 			// Count enemies in same round
 			enemiesClose := 0
 			for _, otherAction := range actions {
@@ -647,7 +648,7 @@ func (cas *CombatAnalyticsService) generateRecommendations(
 	// Based on individual performance
 	poorPerformers := 0
 	for _, report := range reports {
-		if report.PerformanceRating == "poor" {
+		if report.PerformanceRating == constants.EconomicPoor {
 			poorPerformers++
 		}
 	}

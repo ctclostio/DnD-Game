@@ -824,9 +824,9 @@ func (pcs *ProceduralCultureService) RespondToPlayerAction(ctx context.Context, 
 		switch response.AffectedAspect {
 		case constants.CultureValues:
 			pcs.adjustCulturalValues(culture, action, response)
-		case "customs":
+		case constants.AspectCustoms:
 			pcs.modifyCustoms(culture, action, response)
-		case "social_structure":
+		case constants.AspectSocialStructure:
 			pcs.adjustSocialStructure(culture, action, response)
 		}
 	}
@@ -1048,19 +1048,19 @@ func (pcs *ProceduralCultureService) generateBuildingTypes(cultureName string, a
 
 		switch buildingType {
 		case "dwelling":
-			building.Size = "small"
+			building.Size = constants.SizeSmall
 			building.Features = []string{"hearth", "sleeping area", "storage"}
 		case "temple":
-			building.Size = "large"
+			building.Size = constants.SizeLarge
 			building.Features = append(architecture.CommonFeatures[:2], "altar", "sacred space")
 		case "market":
-			building.Size = "medium"
+			building.Size = constants.SizeMedium
 			building.Features = []string{"stalls", "covered walkways", "central plaza"}
 		case "fortress":
 			building.Size = "massive"
 			building.Features = architecture.DefensiveElements
 		case "hall":
-			building.Size = "large"
+			building.Size = constants.SizeLarge
 			building.Features = []string{"great hearth", "high ceiling", "gathering space"}
 		}
 
@@ -1237,12 +1237,12 @@ func (pcs *ProceduralCultureService) evaluateCulturalResponse(culture *models.Pr
 
 	// Determine affected aspect
 	switch action.Type {
-	case "trade":
-		response.AffectedAspect = "customs"
-	case "diplomacy":
+	case constants.ActionTrade:
+		response.AffectedAspect = constants.AspectCustoms
+	case constants.ActionDiplomacy:
 		response.AffectedAspect = constants.CultureValues
 	case constants.EventConflict:
-		response.AffectedAspect = "social_structure"
+		response.AffectedAspect = constants.AspectSocialStructure
 	case constants.CultureInfluence:
 		response.AffectedAspect = action.Target
 	}
@@ -1255,7 +1255,7 @@ func (pcs *ProceduralCultureService) adjustCulturalValues(culture *models.Proced
 	impactMagnitude := response.Impact * 0.1 // Max 10% change
 
 	// Example: trade might increase value of wealth
-	if action.Type == "trade" {
+	if action.Type == constants.ActionTrade {
 		culture.Values["wealth"] = math.Min(1.0, culture.Values["wealth"]+impactMagnitude)
 		culture.Values["isolation"] = math.Max(0.0, culture.Values["isolation"]-impactMagnitude)
 	}
@@ -1284,15 +1284,15 @@ func (pcs *ProceduralCultureService) adjustSocialStructure(culture *models.Proce
 	// Modify social mobility or class structure based on actions
 	if action.Type == constants.EventConflict && response.Impact < -0.5 {
 		culture.SocialStructure.Mobility = "more rigid due to external threats"
-	} else if action.Type == "diplomacy" && response.Impact > 0.5 {
+	} else if action.Type == constants.ActionDiplomacy && response.Impact > 0.5 {
 		culture.SocialStructure.Outsiders = "viewed with cautious respect"
 	}
 }
 
 func (pcs *ProceduralCultureService) generateCulturalResponseEvent(ctx context.Context, culture *models.ProceduralCulture, action PlayerCulturalAction, response CulturalResponse) *models.EmergentWorldEvent {
 	eventTypes := map[string]string{
-		"trade":     "commercial_shift",
-		"diplomacy": "diplomatic_development",
+		constants.ActionTrade:     "commercial_shift",
+		constants.ActionDiplomacy: "diplomatic_development",
 		constants.EventConflict:  "cultural_resistance",
 		constants.CultureInfluence: "cultural_evolution",
 	}

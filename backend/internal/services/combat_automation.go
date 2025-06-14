@@ -282,10 +282,10 @@ func (cas *CombatAutomationService) simulateCombat(
 
 	// Determine outcome
 	if partyStrength > encounterStrength*1.5 {
-		outcome = "decisive_victory"
+		outcome = constants.OutcomeDecisiveVictory
 		rounds = 2 + rand.Intn(3)
 	} else if partyStrength > encounterStrength {
-		outcome = "victory"
+		outcome = constants.OutcomeVictory
 		rounds = 3 + rand.Intn(4)
 	} else if partyStrength > encounterStrength*0.7 {
 		outcome = constants.OutcomeCostlyVictory
@@ -304,9 +304,9 @@ func (cas *CombatAutomationService) simulateCombat(
 	// HP loss calculation
 	hpLossPercent := 0.0
 	switch outcome {
-	case "decisive_victory":
+	case constants.OutcomeDecisiveVictory:
 		hpLossPercent = 0.1 + rand.Float64()*0.1 // 10-20%
-	case "victory":
+	case constants.OutcomeVictory:
 		hpLossPercent = 0.2 + rand.Float64()*0.2 // 20-40%
 	case constants.OutcomeCostlyVictory:
 		hpLossPercent = 0.4 + rand.Float64()*0.3 // 40-70%
@@ -351,7 +351,7 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 		"easy":    25,
 		"medium":  50,
 		constants.DifficultyHard:    100,
-		"deadly":  200,
+		constants.DifficultyDeadly:  200,
 	}
 
 	baseGold := goldMultiplier[difficulty]
@@ -385,7 +385,7 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 		"easy":    0.2,
 		"medium":  0.4,
 		constants.DifficultyHard:    0.6,
-		"deadly":  0.8,
+		constants.DifficultyDeadly:  0.8,
 	}
 
 	if rand.Float64() < itemChance[difficulty] {
@@ -414,23 +414,23 @@ func (cas *CombatAutomationService) getRandomRarity(difficulty string) string {
 		if roll < 0.7 {
 			return constants.RarityCommon
 		} else if roll < 0.95 {
-			return "uncommon"
+			return constants.RarityUncommon
 		}
 		return "rare"
 	case constants.DifficultyHard:
 		if roll < 0.4 {
 			return constants.RarityCommon
 		} else if roll < 0.8 {
-			return "uncommon"
+			return constants.RarityUncommon
 		} else if roll < 0.95 {
-			return "rare"
+			return constants.RarityRare
 		}
 		return constants.RarityVeryRare
-	case "deadly":
+	case constants.DifficultyDeadly:
 		if roll < 0.2 {
-			return "uncommon"
+			return constants.RarityUncommon
 		} else if roll < 0.6 {
-			return "rare"
+			return constants.RarityRare
 		} else if roll < 0.9 {
 			return constants.RarityVeryRare
 		}
@@ -513,12 +513,12 @@ func (cas *CombatAutomationService) generateNarrativeSummary(
 	encounterCR float64,
 ) string {
 	narratives := map[string][]string{
-		"decisive_victory": {
+		constants.OutcomeDecisiveVictory: {
 			"The party swiftly overwhelmed their foes with coordinated strikes and superior tactics.",
 			"With barely a scratch, the adventurers dispatched their enemies in a display of martial prowess.",
 			"The encounter was over almost before it began, the party's skill far exceeding the challenge.",
 		},
-		"victory": {
+		constants.OutcomeVictory: {
 			"After a brief but intense skirmish, the party emerged victorious.",
 			"The adventurers fought well, overcoming their foes through teamwork and determination.",
 			"Though the enemies put up a fight, the party's strength proved superior.",
