@@ -12,7 +12,6 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-const categoryAbility = "ability"
 
 // AIBalanceAnalyzer uses AI to analyze and balance custom rules.
 type AIBalanceAnalyzer struct {
@@ -259,7 +258,7 @@ func (ba *AIBalanceAnalyzer) predictMetaImpact(ctx context.Context, template *mo
 	}
 
 	// Analyze potential combos
-	if template.Category == constants.CategorySpell || template.Category == categoryAbility {
+	if template.Category == constants.CategorySpell || template.Category == constants.CategoryAbility {
 		// Check for action surge potential
 		if ba.analyzeActionEconomy(template) < 1 {
 			prediction.EnablesCombos = append(prediction.EnablesCombos, "Action Surge combos")

@@ -201,7 +201,7 @@ func (h *Handlers) SearchNPCs(w http.ResponseWriter, r *http.Request) {
 		Name:             r.URL.Query().Get("name"),
 		Type:             r.URL.Query().Get("type"),
 		Size:             r.URL.Query().Get("size"),
-		IncludeTemplates: r.URL.Query().Get("includeTemplates") == "true",
+		IncludeTemplates: r.URL.Query().Get("includeTemplates") == queryParamTrue,
 	}
 
 	// Parse CR range

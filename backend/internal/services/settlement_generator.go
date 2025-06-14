@@ -8,13 +8,10 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-const (
-	sizeSmall = "small"
-	sizeLarge = "large"
-)
 
 // WorldBuildingRepository interface for world building data operations
 type WorldBuildingRepository interface {
@@ -465,17 +462,17 @@ Respond in JSON format:
 func (s *SettlementGeneratorService) determinePopulationSize(settlementType models.SettlementType) string {
 	switch settlementType {
 	case models.SettlementHamlet:
-		return sizeSmall
+		return constants.SizeSmall
 	case models.SettlementVillage:
-		return sizeSmall
+		return constants.SizeSmall
 	case models.SettlementTown:
 		return "medium"
 	case models.SettlementCity:
-		return sizeLarge
+		return constants.SizeLarge
 	case models.SettlementMetropolis:
-		return sizeLarge
+		return constants.SizeLarge
 	default:
-		return sizeSmall
+		return constants.SizeSmall
 	}
 }
 
@@ -490,9 +487,9 @@ func (s *SettlementGeneratorService) calculatePopulation(settlementType models.S
 	}
 
 	sizeMultiplier := map[string]float64{
-		sizeSmall:  0.5,
+		constants.SizeSmall:  0.5,
 		"medium": 1.0,
-		sizeLarge:  2.0,
+		constants.SizeLarge:  2.0,
 	}
 
 	base := basePopulation[settlementType]

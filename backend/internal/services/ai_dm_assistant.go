@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-const defaultDamageFormula = "1d6"
 
 // AIDMAssistantService handles AI-powered DM assistance
 type AIDMAssistantService struct {
@@ -305,7 +305,7 @@ Make it thematically appropriate and mechanically interesting.`, locationType, d
 
 	// Extract DC and damage formula from mechanical effects
 	dc := 12 // default
-	damageFormula := defaultDamageFormula
+	damageFormula := constants.DefaultDamageFormula
 
 	if dcVal, ok := hazardData.MechanicalEffects["difficultyClass"].(float64); ok {
 		dc = int(dcVal)

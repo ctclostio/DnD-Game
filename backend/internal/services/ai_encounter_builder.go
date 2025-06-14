@@ -10,8 +10,6 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-const difficultyEasy = "easy"
-
 type EncounterRequest struct {
 	PartyLevel       int      `json:"partyLevel"`
 	PartySize        int      `json:"partySize"`

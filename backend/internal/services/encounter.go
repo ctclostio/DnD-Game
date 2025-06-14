@@ -9,7 +9,6 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-const encounterTypeCombat = "combat"
 
 type EncounterService struct {
 	repo             *database.EncounterRepository
@@ -132,13 +131,13 @@ func (s *EncounterService) ScaleEncounter(ctx context.Context, encounterID strin
 	// Apply scaling based on new difficulty
 	var adjustment models.ScalingAdjustment
 	switch newDifficulty {
-	case "easy":
+	case difficultyEasy:
 		adjustment = encounter.ScalingOptions.Easy
-	case "medium":
+	case difficultyMedium:
 		adjustment = encounter.ScalingOptions.Medium
-	case "hard":
+	case difficultyHard:
 		adjustment = encounter.ScalingOptions.Hard
-	case "deadly":
+	case difficultyDeadly:
 		adjustment = encounter.ScalingOptions.Deadly
 	default:
 		return encounter, fmt.Errorf("invalid difficulty: %s", newDifficulty)
@@ -324,7 +323,7 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 	}
 
 	switch encounter.EncounterType {
-	case encounterTypeCombat:
+	case constants.EncounterTypeCombat:
 		primaryObjective.Type = constants.ObjectiveDefeatAll
 		primaryObjective.Description = "Defeat all enemies"
 	case "social":
@@ -341,7 +340,7 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 	_ = s.repo.CreateObjective(primaryObjective)
 
 	// Create optional objectives for non-combat resolution
-	if encounter.EncounterType == encounterTypeCombat && len(encounter.SocialSolutions) > 0 {
+	if encounter.EncounterType == constants.EncounterTypeCombat && len(encounter.SocialSolutions) > 0 {
 		bonusObjective := &models.EncounterObjective{
 			EncounterID:  encounter.ID,
 			Type:         "custom",

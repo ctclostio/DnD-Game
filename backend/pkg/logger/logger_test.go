@@ -108,49 +108,39 @@ func TestLogger_WithContext(t *testing.T) {
 	assert.Equal(t, "test message", logEntry["message"])
 }
 
-func TestLogger_WithRequestID(t *testing.T) {
+// testLoggerWith is a helper function to test logger context methods
+func testLoggerWith(t *testing.T, withFunc func(*Logger) *Logger, expectedField, expectedValue string) {
+	t.Helper()
 	var buf bytes.Buffer
 	logger := &Logger{
 		Logger: func() *zerolog.Logger { zl := zerolog.New(&buf).With().Timestamp().Logger(); return &zl }(),
 	}
 
-	requestLogger := logger.WithRequestID("req-123")
-	requestLogger.Info().Msg("test message")
+	contextLogger := withFunc(logger)
+	contextLogger.Info().Msg("test message")
 
 	var logEntry map[string]interface{}
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
 
-	assert.Equal(t, "req-123", logEntry["request_id"])
+	assert.Equal(t, expectedValue, logEntry[expectedField])
+}
+
+func TestLogger_WithRequestID(t *testing.T) {
+	testLoggerWith(t, func(l *Logger) *Logger {
+		return l.WithRequestID("req-123")
+	}, "request_id", "req-123")
 }
 
 func TestLogger_WithCorrelationID(t *testing.T) {
-	var buf bytes.Buffer
-	logger := &Logger{
-		Logger: func() *zerolog.Logger { zl := zerolog.New(&buf).With().Timestamp().Logger(); return &zl }(),
-	}
-
-	corrLogger := logger.WithCorrelationID("corr-123")
-	corrLogger.Info().Msg("test message")
-
-	var logEntry map[string]interface{}
-	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
-
-	assert.Equal(t, "corr-123", logEntry["correlation_id"])
+	testLoggerWith(t, func(l *Logger) *Logger {
+		return l.WithCorrelationID("corr-123")
+	}, "correlation_id", "corr-123")
 }
 
 func TestLogger_WithUserID(t *testing.T) {
-	var buf bytes.Buffer
-	logger := &Logger{
-		Logger: func() *zerolog.Logger { zl := zerolog.New(&buf).With().Timestamp().Logger(); return &zl }(),
-	}
-
-	userLogger := logger.WithUserID("user-456")
-	userLogger.Info().Msg("test message")
-
-	var logEntry map[string]interface{}
-	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
-
-	assert.Equal(t, "user-456", logEntry["user_id"])
+	testLoggerWith(t, func(l *Logger) *Logger {
+		return l.WithUserID("user-456")
+	}, "user_id", "user-456")
 }
 
 func TestLogger_WithError(t *testing.T) {

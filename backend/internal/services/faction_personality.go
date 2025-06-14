@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const outcomeNeutral = "neutral"
 
 // FactionPersonalityService manages AI-driven faction personalities
 type FactionPersonalityService struct {
@@ -63,7 +62,7 @@ Provide a JSON response with:
 	if err != nil {
 		// Use defaults if AI fails
 		response = `{
-			"mood": outcomeNeutral,
+			"mood": "neutral",
 			"decision_style": "pragmatic",
 			"communication_style": "formal",
 			"core_motivations": ["power", "security", "prosperity"],

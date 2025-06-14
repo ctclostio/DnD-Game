@@ -15,8 +15,6 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/dice"
 )
 
-const difficultyMedium = "medium"
-
 type CombatAutomationService struct {
 	combatRepo    database.CombatAnalyticsRepository
 	characterRepo database.CharacterRepository
@@ -407,7 +405,7 @@ func (cas *CombatAutomationService) getRandomRarity(difficulty string) string {
 	roll := rand.Float64()
 
 	switch difficulty {
-	case "trivial", "easy":
+	case "trivial", difficultyEasy:
 		if roll < 0.95 {
 			return constants.RarityCommon
 		}

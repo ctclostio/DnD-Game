@@ -37,6 +37,8 @@ const (
 	ActionKillingBlow = "killing_blow"
 	ActionCombat      = "combat"
 	ActionAbility     = "ability"
+	ActionTypeSpell   = "spell"
+	ActionTypeAbility = "ability"
 	// ActionSpell can use CategorySpell from strings.go
 )
 
@@ -77,6 +79,8 @@ const (
 const (
 	OutcomeVictory         = "victory"
 	OutcomeDecisiveVictory = "decisive_victory"
+	OutcomeHit             = "hit"
+	OutcomeKillingBlow     = "killing_blow"
 	// OutcomeCostlyVictory, OutcomeDefeat already defined
 	// RelationNeutral can be used for neutral outcome
 )
@@ -92,7 +96,10 @@ const (
 
 // Special constants
 const (
-	MockProvider = "mock"
-	FormatJSON   = "json"
+	MockProvider         = "mock"
+	FormatJSON           = "json"
+	CategoryAbility      = "ability"
+	DefaultDamageFormula = "1d6"
+	EncounterTypeCombat  = "combat"
 	// TrueString already defined in abilities.go
 )

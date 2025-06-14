@@ -89,7 +89,7 @@ func (h *EmergentWorldHandlers) GetWorldEvents(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	onlyVisible := r.URL.Query().Get("visible") == "true"
+	onlyVisible := r.URL.Query().Get("visible") == queryParamTrue
 
 	events, err := h.worldRepo.GetWorldEvents(sessionID, limit, onlyVisible)
 	if err != nil {
