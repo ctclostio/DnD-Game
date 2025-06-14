@@ -1,9 +1,12 @@
 # golangci-lint configuration
+# schema: https://golangci-lint.run/jsonschema/golangci.v1.61.jsonschema.json
+# schema validation disabled due to network timeouts in CI
 run:
   timeout: 5m
   tests: true
   build-tags:
     - integration
+  skip-dirs-use-default: true
 
 linters:
   enable:
