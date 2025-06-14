@@ -344,7 +344,7 @@ func (m *MockLLMProvider) GenerateCharacterBackstory(character *models.Character
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockLLMProvider) GenerateNPCDialogue(npc *models.NPC, context string) (string, error) {
+func (m *MockLLMProvider) GenerateNPCDialog(npc *models.NPC, context string) (string, error) {
 	args := m.Called(npc, context)
 	return args.String(0), args.Error(1)
 }

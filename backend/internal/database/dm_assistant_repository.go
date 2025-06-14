@@ -18,7 +18,7 @@ type DMAssistantRepository interface {
 	GetNPCByID(ctx context.Context, id uuid.UUID) (*models.AINPC, error)
 	GetNPCsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AINPC, error)
 	UpdateNPC(ctx context.Context, npc *models.AINPC) error
-	AddNPCDialogue(ctx context.Context, npcID uuid.UUID, dialogue models.DialogueEntry) error
+	AddNPCDialog(ctx context.Context, npcID uuid.UUID, dialog models.DialogEntry) error
 
 	// Location operations
 	SaveLocation(ctx context.Context, location *models.AILocation) error
@@ -68,17 +68,17 @@ func (r *dmAssistantRepository) SaveNPC(ctx context.Context, npc *models.AINPC) 
 		return fmt.Errorf("failed to marshal stat block: %w", err)
 	}
 
-	dialogueJSON, err := json.Marshal(npc.GeneratedDialogue)
+	dialogJSON, err := json.Marshal(npc.GeneratedDialog)
 	if err != nil {
-		return fmt.Errorf("failed to marshal dialogue: %w", err)
+		return fmt.Errorf("failed to marshal dialog: %w", err)
 	}
 
 	query := `
 		INSERT INTO ai_npcs (
 			id, game_session_id, name, race, occupation,
 			personality_traits, appearance, voice_description,
-			motivations, secrets, dialogue_style,
-			relationship_to_party, stat_block, generated_dialogue,
+			motivations, secrets, dialog_style,
+			relationship_to_party, stat_block, generated_dialog,
 			created_by, is_recurring, notes
 		) VALUES (
 			?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
@@ -89,8 +89,8 @@ func (r *dmAssistantRepository) SaveNPC(ctx context.Context, npc *models.AINPC) 
 	_, err = r.db.ExecContext(ctx, query,
 		npc.ID, npc.GameSessionID, npc.Name, npc.Race, npc.Occupation,
 		personalityJSON, npc.Appearance, npc.VoiceDescription,
-		npc.Motivations, npc.Secrets, npc.DialogueStyle,
-		npc.RelationshipToParty, statBlockJSON, dialogueJSON,
+		npc.Motivations, npc.Secrets, npc.DialogStyle,
+		npc.RelationshipToParty, statBlockJSON, dialogJSON,
 		npc.CreatedBy, npc.IsRecurring, npc.Notes,
 	)
 
@@ -99,14 +99,14 @@ func (r *dmAssistantRepository) SaveNPC(ctx context.Context, npc *models.AINPC) 
 
 func (r *dmAssistantRepository) GetNPCByID(ctx context.Context, id uuid.UUID) (*models.AINPC, error) {
 	var npc models.AINPC
-	var personalityJSON, statBlockJSON, dialogueJSON []byte
+	var personalityJSON, statBlockJSON, dialogJSON []byte
 
 	query := `
 		SELECT 
 			id, game_session_id, name, race, occupation,
 			personality_traits, appearance, voice_description,
-			motivations, secrets, dialogue_style,
-			relationship_to_party, stat_block, generated_dialogue,
+			motivations, secrets, dialog_style,
+			relationship_to_party, stat_block, generated_dialog,
 			created_by, is_recurring, last_seen_session, notes,
 			created_at, updated_at
 		FROM ai_npcs
@@ -116,8 +116,8 @@ func (r *dmAssistantRepository) GetNPCByID(ctx context.Context, id uuid.UUID) (*
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&npc.ID, &npc.GameSessionID, &npc.Name, &npc.Race, &npc.Occupation,
 		&personalityJSON, &npc.Appearance, &npc.VoiceDescription,
-		&npc.Motivations, &npc.Secrets, &npc.DialogueStyle,
-		&npc.RelationshipToParty, &statBlockJSON, &dialogueJSON,
+		&npc.Motivations, &npc.Secrets, &npc.DialogStyle,
+		&npc.RelationshipToParty, &statBlockJSON, &dialogJSON,
 		&npc.CreatedBy, &npc.IsRecurring, &npc.LastSeenSession, &npc.Notes,
 		&npc.CreatedAt, &npc.UpdatedAt,
 	)
@@ -135,8 +135,8 @@ func (r *dmAssistantRepository) GetNPCByID(ctx context.Context, id uuid.UUID) (*
 		return nil, fmt.Errorf("failed to unmarshal stat block: %w", err)
 	}
 
-	if err := json.Unmarshal(dialogueJSON, &npc.GeneratedDialogue); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal dialogue: %w", err)
+	if err := json.Unmarshal(dialogJSON, &npc.GeneratedDialog); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal dialog: %w", err)
 	}
 
 	return &npc, nil
@@ -147,8 +147,8 @@ func (r *dmAssistantRepository) GetNPCsBySession(ctx context.Context, sessionID 
 		SELECT 
 			id, game_session_id, name, race, occupation,
 			personality_traits, appearance, voice_description,
-			motivations, secrets, dialogue_style,
-			relationship_to_party, stat_block, generated_dialogue,
+			motivations, secrets, dialog_style,
+			relationship_to_party, stat_block, generated_dialog,
 			created_by, is_recurring, last_seen_session, notes,
 			created_at, updated_at
 		FROM ai_npcs
@@ -177,16 +177,16 @@ func (r *dmAssistantRepository) GetNPCsBySession(ctx context.Context, sessionID 
 func (r *dmAssistantRepository) UpdateNPC(ctx context.Context, npc *models.AINPC) error {
 	personalityJSON, _ := json.Marshal(npc.PersonalityTraits)
 	statBlockJSON, _ := json.Marshal(npc.StatBlock)
-	dialogueJSON, _ := json.Marshal(npc.GeneratedDialogue)
+	dialogJSON, _ := json.Marshal(npc.GeneratedDialog)
 
 	query := `
 		UPDATE ai_npcs SET
 			name = ?, race = ?, occupation = ?,
 			personality_traits = ?, appearance = ?,
 			voice_description = ?, motivations = ?,
-			secrets = ?, dialogue_style = ?,
+			secrets = ?, dialog_style = ?,
 			relationship_to_party = ?, stat_block = ?,
-			generated_dialogue = ?, is_recurring = ?,
+			generated_dialog = ?, is_recurring = ?,
 			last_seen_session = ?, notes = ?,
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?`
@@ -195,8 +195,8 @@ func (r *dmAssistantRepository) UpdateNPC(ctx context.Context, npc *models.AINPC
 	_, err := r.db.ExecContext(ctx, query,
 		npc.Name, npc.Race, npc.Occupation,
 		personalityJSON, npc.Appearance, npc.VoiceDescription,
-		npc.Motivations, npc.Secrets, npc.DialogueStyle,
-		npc.RelationshipToParty, statBlockJSON, dialogueJSON,
+		npc.Motivations, npc.Secrets, npc.DialogStyle,
+		npc.RelationshipToParty, statBlockJSON, dialogJSON,
 		npc.IsRecurring, npc.LastSeenSession, npc.Notes,
 		npc.ID,
 	)
@@ -204,15 +204,15 @@ func (r *dmAssistantRepository) UpdateNPC(ctx context.Context, npc *models.AINPC
 	return err
 }
 
-func (r *dmAssistantRepository) AddNPCDialogue(ctx context.Context, npcID uuid.UUID, dialogue models.DialogueEntry) error {
-	// First get existing dialogue
+func (r *dmAssistantRepository) AddNPCDialog(ctx context.Context, npcID uuid.UUID, dialog models.DialogEntry) error {
+	// First get existing dialog
 	npc, err := r.GetNPCByID(ctx, npcID)
 	if err != nil {
 		return err
 	}
 
-	// Add new dialogue entry
-	npc.GeneratedDialogue = append(npc.GeneratedDialogue, dialogue)
+	// Add new dialog entry
+	npc.GeneratedDialog = append(npc.GeneratedDialog, dialog)
 
 	// Update the NPC
 	return r.UpdateNPC(ctx, npc)
@@ -614,13 +614,13 @@ func (r *dmAssistantRepository) GetHistoryBySession(ctx context.Context, session
 
 func (r *dmAssistantRepository) scanNPC(rows *sql.Rows) (*models.AINPC, error) {
 	var npc models.AINPC
-	var personalityJSON, statBlockJSON, dialogueJSON []byte
+	var personalityJSON, statBlockJSON, dialogJSON []byte
 
 	err := rows.Scan(
 		&npc.ID, &npc.GameSessionID, &npc.Name, &npc.Race, &npc.Occupation,
 		&personalityJSON, &npc.Appearance, &npc.VoiceDescription,
-		&npc.Motivations, &npc.Secrets, &npc.DialogueStyle,
-		&npc.RelationshipToParty, &statBlockJSON, &dialogueJSON,
+		&npc.Motivations, &npc.Secrets, &npc.DialogStyle,
+		&npc.RelationshipToParty, &statBlockJSON, &dialogJSON,
 		&npc.CreatedBy, &npc.IsRecurring, &npc.LastSeenSession, &npc.Notes,
 		&npc.CreatedAt, &npc.UpdatedAt,
 	)
@@ -631,7 +631,7 @@ func (r *dmAssistantRepository) scanNPC(rows *sql.Rows) (*models.AINPC, error) {
 
 	_ = json.Unmarshal(personalityJSON, &npc.PersonalityTraits)
 	_ = json.Unmarshal(statBlockJSON, &npc.StatBlock)
-	_ = json.Unmarshal(dialogueJSON, &npc.GeneratedDialogue)
+	_ = json.Unmarshal(dialogJSON, &npc.GeneratedDialog)
 
 	return &npc, nil
 }

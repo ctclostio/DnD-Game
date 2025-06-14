@@ -27,7 +27,7 @@ func (h *InventoryHandler) GetCharacterInventory(w http.ResponseWriter, r *http.
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, inventory)
+	sendJSONResponse(w, inventory)
 }
 
 func (h *InventoryHandler) AddItemToInventory(w http.ResponseWriter, r *http.Request) {
@@ -128,7 +128,7 @@ func (h *InventoryHandler) GetCharacterCurrency(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, currency)
+	sendJSONResponse(w, currency)
 }
 
 func (h *InventoryHandler) UpdateCharacterCurrency(w http.ResponseWriter, r *http.Request) {
@@ -160,7 +160,7 @@ func (h *InventoryHandler) UpdateCharacterCurrency(w http.ResponseWriter, r *htt
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, currency)
+	sendJSONResponse(w, currency)
 }
 
 func (h *InventoryHandler) PurchaseItem(w http.ResponseWriter, r *http.Request) {
@@ -209,7 +209,7 @@ func (h *InventoryHandler) GetCharacterWeight(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, weight)
+	sendJSONResponse(w, weight)
 }
 
 func (h *InventoryHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
@@ -224,7 +224,7 @@ func (h *InventoryHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, item)
+	sendJSONResponse(w, item)
 }
 
 func (h *InventoryHandler) GetItemsByType(w http.ResponseWriter, r *http.Request) {
@@ -240,5 +240,5 @@ func (h *InventoryHandler) GetItemsByType(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	sendJSONResponse(w, http.StatusOK, items)
+	sendJSONResponse(w, items)
 }

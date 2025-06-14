@@ -290,7 +290,7 @@ type MockAIDMAssistantService struct {
 	mock.Mock
 }
 
-func (m *MockAIDMAssistantService) GenerateNPCDialogue(ctx context.Context, req models.NPCDialogueRequest) (string, error) {
+func (m *MockAIDMAssistantService) GenerateNPCDialog(ctx context.Context, req models.NPCDialogRequest) (string, error) {
 	args := m.Called(ctx, req)
 	return args.String(0), args.Error(1)
 }

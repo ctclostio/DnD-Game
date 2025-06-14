@@ -8,7 +8,7 @@ import (
 
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
 // Config holds the database configuration

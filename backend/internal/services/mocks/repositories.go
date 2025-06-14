@@ -752,7 +752,7 @@ func (m *MockDMAssistantRepository) GetNPCsBySession(ctx context.Context, sessio
 	return args.Get(0).([]*models.AINPC), args.Error(1)
 }
 
-func (m *MockDMAssistantRepository) AddNPCDialogue(ctx context.Context, npcID uuid.UUID, entry models.DialogueEntry) error {
+func (m *MockDMAssistantRepository) AddNPCDialog(ctx context.Context, npcID uuid.UUID, entry models.DialogEntry) error {
 	args := m.Called(ctx, npcID, entry)
 	return args.Error(0)
 }

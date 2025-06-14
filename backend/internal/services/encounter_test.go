@@ -203,11 +203,11 @@ func TestDifficultyScaling(t *testing.T) {
 // Test encounter status transitions
 func TestEncounterStatusTransitions(t *testing.T) {
 	validTransitions := map[string][]string{
-		"planned":   {"active", "cancelled"},
+		"planned":   {"active", "canceled"},
 		"active":    {"completed", "failed"},
 		"completed": {},
 		"failed":    {},
-		"cancelled": {},
+		"canceled": {},
 	}
 
 	for fromStatus, toStatuses := range validTransitions {
@@ -218,8 +218,8 @@ func TestEncounterStatusTransitions(t *testing.T) {
 				assert.Contains(t, toStatuses, toStatus)
 			}
 
-			// Test that completed/failed/cancelled are terminal states
-			if fromStatus == "completed" || fromStatus == "failed" || fromStatus == "cancelled" {
+			// Test that completed/failed/canceled are terminal states
+			if fromStatus == "completed" || fromStatus == "failed" || fromStatus == "canceled" {
 				assert.Empty(t, toStatuses)
 			}
 		})
@@ -354,7 +354,7 @@ func TestEncounterValidation(t *testing.T) {
 	})
 
 	t.Run("Valid Statuses", func(t *testing.T) {
-		validStatuses := []string{"planned", "active", "completed", "failed", "cancelled"}
+		validStatuses := []string{"planned", "active", "completed", "failed", "canceled"}
 		for _, status := range validStatuses {
 			assert.Contains(t, validStatuses, status)
 		}

@@ -528,16 +528,16 @@ func (s *EconomicSimulatorService) determineTradedGoods(start, end *models.Settl
 
 	// Match exports to imports
 	for _, export := range startExports {
-		for _, import_ := range endImports {
-			if export == import_ {
+		for _, importGood := range endImports {
+			if export == importGood {
 				goods = append(goods, export)
 			}
 		}
 	}
 
 	for _, export := range endExports {
-		for _, import_ := range startImports {
-			if export == import_ {
+		for _, importGood := range startImports {
+			if export == importGood {
 				goods = append(goods, export)
 			}
 		}

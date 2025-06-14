@@ -756,20 +756,7 @@ func (cas *CombatAnalyticsService) determineOutcomeFactors(
 	return factors
 }
 
-// Helper functions
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
+// Helper functions removed - using built-in min/max from Go 1.21+
 
 // calculateOverallScore calculates the overall tactical score
 func calculateOverallScore(ta *models.TacticalAnalysis) int {

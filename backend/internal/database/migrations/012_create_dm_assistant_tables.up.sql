@@ -10,10 +10,10 @@ CREATE TABLE IF NOT EXISTS ai_npcs (
     voice_description TEXT,
     motivations TEXT,
     secrets TEXT,
-    dialogue_style TEXT, -- How they speak (formal, slang, accent, etc.)
+    dialog_style TEXT, -- How they speak (formal, slang, accent, etc.)
     relationship_to_party TEXT,
     stat_block JSONB, -- Optional combat stats if needed
-    generated_dialogue JSONB DEFAULT '[]', -- History of generated dialogue
+    generated_dialog JSONB DEFAULT '[]', -- History of generated dialog
     created_by UUID REFERENCES users(id),
     is_recurring BOOLEAN DEFAULT false,
     last_seen_session UUID,
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS dm_assistant_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     game_session_id UUID REFERENCES game_sessions(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    request_type VARCHAR(50) NOT NULL, -- npc_dialogue, location, combat_narration, etc.
+    request_type VARCHAR(50) NOT NULL, -- npc_dialog, location, combat_narration, etc.
     request_context JSONB NOT NULL,
     prompt TEXT NOT NULL,
     response TEXT NOT NULL,

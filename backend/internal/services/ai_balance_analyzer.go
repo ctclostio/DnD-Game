@@ -95,11 +95,7 @@ func (ba *AIBalanceAnalyzer) runSimulations(ctx context.Context, template *model
 	results := []models.SimulationResult{}
 
 	for _, scenario := range scenarios {
-		result, err := ba.simulateScenario(ctx, template, scenario)
-		if err != nil {
-			// Log error but continue with other scenarios
-			continue
-		}
+		result := ba.simulateScenario(ctx, template, scenario)
 		results = append(results, result)
 	}
 
@@ -107,7 +103,7 @@ func (ba *AIBalanceAnalyzer) runSimulations(ctx context.Context, template *model
 }
 
 // simulateScenario runs a single simulation scenario.
-func (ba *AIBalanceAnalyzer) simulateScenario(ctx context.Context, template *models.RuleTemplate, scenario SimulationScenario) (models.SimulationResult, error) {
+func (ba *AIBalanceAnalyzer) simulateScenario(ctx context.Context, template *models.RuleTemplate, scenario SimulationScenario) models.SimulationResult {
 	successCount := 0
 	outcomes := []map[string]interface{}{}
 	edgeCases := []string{}
@@ -138,7 +134,7 @@ func (ba *AIBalanceAnalyzer) simulateScenario(ctx context.Context, template *mod
 		AverageOutcome:  avgOutcome,
 		EdgeCases:       edgeCases,
 		ComparisonScore: comparisonScore,
-	}, nil
+	}
 }
 
 // calculateDamageExpectation analyzes potential damage output.

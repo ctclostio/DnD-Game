@@ -240,7 +240,7 @@ func (h *Handlers) GetSessionPlayers(w http.ResponseWriter, r *http.Request) {
 	sessionID := vars["id"]
 
 	// Validate user session access
-	_, err := validateUserSession(w, r, h.gameService, sessionID)
+	err := validateUserSession(w, r, h.gameService, sessionID)
 	if err != nil {
 		return // Response already sent by helper
 	}

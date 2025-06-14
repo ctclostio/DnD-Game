@@ -354,7 +354,7 @@ func (acm *AICampaignManager) generateDefaultForeshadowing(req models.GenerateFo
 		SubtletyLevel: req.SubtletyLevel,
 		PlacementSuggestions: []string{
 			"During exploration",
-			"In NPC dialogue",
+			"In NPC dialog",
 			"As environmental detail",
 		},
 		RevealTiming: "When the time is right",

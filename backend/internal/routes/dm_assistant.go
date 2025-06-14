@@ -33,6 +33,6 @@ func RegisterDMAssistantRoutes(api *mux.Router, cfg *Config) {
 	// Story elements
 	api.HandleFunc("/dm/assistant/story/generate",
 		dmOnly(cfg.Handlers.GenerateStoryHook)).Methods("POST")
-	api.HandleFunc("/dm/assistant/dialogue/generate",
-		dmOnly(cfg.Handlers.GenerateNPCDialogue)).Methods("POST")
+	api.HandleFunc("/dm/assistant/dialog/generate",
+		dmOnly(cfg.Handlers.GenerateNPCDialog)).Methods("POST")
 }

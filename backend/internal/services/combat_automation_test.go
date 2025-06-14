@@ -18,13 +18,13 @@ import (
 // Using MockCombatAnalyticsRepository from combat_analytics_test.go
 
 // Test helpers
-func createTestCombatAutomationService() (*CombatAutomationService, *MockCombatAnalyticsRepository, *mocks.MockCharacterRepository, *mocks.MockNPCRepository) {
+func createTestCombatAutomationService() (*CombatAutomationService, *MockCombatAnalyticsRepository, *mocks.MockNPCRepository) {
 	mockCombatRepo := new(MockCombatAnalyticsRepository)
 	mockCharRepo := new(mocks.MockCharacterRepository)
 	mockNPCRepo := new(mocks.MockNPCRepository)
 
 	service := NewCombatAutomationService(mockCombatRepo, mockCharRepo, mockNPCRepo)
-	return service, mockCombatRepo, mockCharRepo, mockNPCRepo
+	return service, mockCombatRepo, mockNPCRepo
 }
 
 func createTestCharacters(count int, level int) []*models.Character {
@@ -156,7 +156,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service, mockCombatRepo, _, _ := createTestCombatAutomationService()
+			service, mockCombatRepo, _ := createTestCombatAutomationService()
 
 			if tt.setupMocks != nil {
 				tt.setupMocks(mockCombatRepo)
@@ -353,7 +353,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service, mockCombatRepo, _, _ := createTestCombatAutomationService()
+			service, mockCombatRepo, _ := createTestCombatAutomationService()
 
 			if tt.setupMocks != nil {
 				tt.setupMocks(mockCombatRepo)
@@ -388,7 +388,7 @@ func TestCombatAutomationService_BattleMapOperations(t *testing.T) {
 	}
 
 	t.Run("SaveBattleMap", func(t *testing.T) {
-		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
+		service, mockCombatRepo, _ := createTestCombatAutomationService()
 
 		mockCombatRepo.On("CreateBattleMap", battleMap).Return(nil)
 
@@ -399,7 +399,7 @@ func TestCombatAutomationService_BattleMapOperations(t *testing.T) {
 	})
 
 	t.Run("SaveBattleMap_Error", func(t *testing.T) {
-		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
+		service, mockCombatRepo, _ := createTestCombatAutomationService()
 
 		mockCombatRepo.On("CreateBattleMap", battleMap).Return(errors.New("database error"))
 
@@ -410,7 +410,7 @@ func TestCombatAutomationService_BattleMapOperations(t *testing.T) {
 	})
 
 	t.Run("GetBattleMap", func(t *testing.T) {
-		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
+		service, mockCombatRepo, _ := createTestCombatAutomationService()
 
 		mockCombatRepo.On("GetBattleMap", mapID).Return(battleMap, nil)
 
@@ -422,7 +422,7 @@ func TestCombatAutomationService_BattleMapOperations(t *testing.T) {
 	})
 
 	t.Run("GetBattleMapsBySession", func(t *testing.T) {
-		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
+		service, mockCombatRepo, _ := createTestCombatAutomationService()
 
 		maps := []*models.BattleMap{battleMap}
 		mockCombatRepo.On("GetBattleMapsBySession", sessionID).Return(maps, nil)
@@ -446,7 +446,7 @@ func TestCombatAutomationService_SetInitiativeRule(t *testing.T) {
 	}
 
 	t.Run("Success", func(t *testing.T) {
-		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
+		service, mockCombatRepo, _ := createTestCombatAutomationService()
 
 		mockCombatRepo.On("CreateOrUpdateInitiativeRule", rule).Return(nil)
 
@@ -457,7 +457,7 @@ func TestCombatAutomationService_SetInitiativeRule(t *testing.T) {
 	})
 
 	t.Run("Error", func(t *testing.T) {
-		service, mockCombatRepo, _, _ := createTestCombatAutomationService()
+		service, mockCombatRepo, _ := createTestCombatAutomationService()
 
 		mockCombatRepo.On("CreateOrUpdateInitiativeRule", rule).Return(errors.New("database error"))
 

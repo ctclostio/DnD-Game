@@ -46,20 +46,20 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 	var prompt string
 
 	switch req.Type {
-	case models.RequestTypeNPCDialogue:
-		npcReq, err := s.parseNPCDialogueRequest(req.Parameters)
+	case models.RequestTypeNPCDialog:
+		npcReq, err := s.parseNPCDialogRequest(req.Parameters)
 		if err != nil {
 			return nil, err
 		}
 		prompt = fmt.Sprintf("NPC: %s, Player: %s", npcReq.NPCName, npcReq.PlayerInput)
 
-		dialogue, err := s.aiAssistant.GenerateNPCDialogue(ctx, *npcReq)
+		dialog, err := s.aiAssistant.GenerateNPCDialog(ctx, *npcReq)
 		if err != nil {
 			return nil, err
 		}
 
-		historyEntry.Response = dialogue
-		result = map[string]string{"dialogue": dialogue}
+		historyEntry.Response = dialog
+		result = map[string]string{"dialog": dialog}
 
 	case models.RequestTypeLocationDesc:
 		locReq, err := s.parseLocationRequest(req.Parameters)
@@ -211,8 +211,8 @@ func (s *DMAssistantService) TriggerHazard(ctx context.Context, hazardID uuid.UU
 
 // Helper methods
 
-func (s *DMAssistantService) parseNPCDialogueRequest(params map[string]interface{}) (*models.NPCDialogueRequest, error) {
-	req := &models.NPCDialogueRequest{}
+func (s *DMAssistantService) parseNPCDialogRequest(params map[string]interface{}) (*models.NPCDialogRequest, error) {
+	req := &models.NPCDialogRequest{}
 
 	if name, ok := params["npcName"].(string); ok {
 		req.NPCName = name
@@ -228,7 +228,7 @@ func (s *DMAssistantService) parseNPCDialogueRequest(params map[string]interface
 		}
 	}
 
-	req.DialogueStyle, _ = params["dialogueStyle"].(string)
+	req.DialogStyle, _ = params["dialogStyle"].(string)
 	req.Situation, _ = params["situation"].(string)
 	req.PlayerInput, _ = params["playerInput"].(string)
 	req.PreviousContext, _ = params["previousContext"].(string)
@@ -318,13 +318,13 @@ func (s *DMAssistantService) CreateNPC(ctx context.Context, sessionID uuid.UUID,
 	return npc, nil
 }
 
-// UpdateNPCDialogue adds new dialogue to an NPC's history
-func (s *DMAssistantService) UpdateNPCDialogue(ctx context.Context, npcID uuid.UUID, dialogue string, context string) error {
-	entry := models.DialogueEntry{
+// UpdateNPCDialog adds new dialog to an NPC's history
+func (s *DMAssistantService) UpdateNPCDialog(ctx context.Context, npcID uuid.UUID, dialog string, context string) error {
+	entry := models.DialogEntry{
 		Context:   context,
-		Dialogue:  dialogue,
+		Dialog:    dialog,
 		Timestamp: time.Now(),
 	}
 
-	return s.repo.AddNPCDialogue(ctx, npcID, entry)
+	return s.repo.AddNPCDialog(ctx, npcID, entry)
 }

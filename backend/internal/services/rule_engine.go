@@ -477,14 +477,14 @@ func (e *RandomExecutor) Execute(ctx context.Context, node *models.LogicNode, in
 	diceNotation, _ := node.Properties["dice_notation"].(string)
 	if diceNotation == "" {
 		// Random number between min and max
-		min, _ := node.Properties["min"].(float64)
-		max, _ := node.Properties["max"].(float64)
+		minValue, _ := node.Properties["min"].(float64)
+		maxValue, _ := node.Properties["max"].(float64)
 
-		if max <= min {
+		if maxValue <= minValue {
 			return nil, fmt.Errorf("max must be greater than min")
 		}
 
-		result := min + rand.Float64()*(max-min)
+		result := minValue + rand.Float64()*(maxValue-minValue)
 		return map[string]interface{}{
 			"result": result,
 		}, nil

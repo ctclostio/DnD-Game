@@ -29,7 +29,7 @@ func (h *Handlers) ProcessDMAssistantRequest(w http.ResponseWriter, r *http.Requ
 
 	// Validate request type
 	validTypes := map[string]bool{
-		models.RequestTypeNPCDialogue:         true,
+		models.RequestTypeNPCDialog:           true,
 		models.RequestTypeLocationDesc:        true,
 		models.RequestTypeCombatNarration:     true,
 		models.RequestTypeDeathDescription:    true,
@@ -217,7 +217,7 @@ func (h *Handlers) GetDMAssistantLocation(w http.ResponseWriter, r *http.Request
 // GetDMAssistantStoryElements retrieves unused story elements for a session
 func (h *Handlers) GetDMAssistantStoryElements(w http.ResponseWriter, r *http.Request) {
 	// Authenticate user
-	if _, ok := authenticateUser(w, r); !ok {
+	if !authenticateUser(w, r) {
 		return
 	}
 
@@ -240,7 +240,7 @@ func (h *Handlers) GetDMAssistantStoryElements(w http.ResponseWriter, r *http.Re
 // MarkStoryElementUsed marks a story element as used
 func (h *Handlers) MarkStoryElementUsed(w http.ResponseWriter, r *http.Request) {
 	// Authenticate user
-	if _, ok := authenticateUser(w, r); !ok {
+	if !authenticateUser(w, r) {
 		return
 	}
 
@@ -262,7 +262,7 @@ func (h *Handlers) MarkStoryElementUsed(w http.ResponseWriter, r *http.Request) 
 // GetDMAssistantHazards retrieves environmental hazards for a location
 func (h *Handlers) GetDMAssistantHazards(w http.ResponseWriter, r *http.Request) {
 	// Authenticate user
-	if _, ok := authenticateUser(w, r); !ok {
+	if !authenticateUser(w, r) {
 		return
 	}
 
@@ -285,7 +285,7 @@ func (h *Handlers) GetDMAssistantHazards(w http.ResponseWriter, r *http.Request)
 // TriggerHazard marks a hazard as triggered
 func (h *Handlers) TriggerHazard(w http.ResponseWriter, r *http.Request) {
 	// Authenticate user
-	if _, ok := authenticateUser(w, r); !ok {
+	if !authenticateUser(w, r) {
 		return
 	}
 

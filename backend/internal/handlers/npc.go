@@ -83,7 +83,7 @@ func (h *Handlers) GetNPCsBySession(w http.ResponseWriter, r *http.Request) {
 	sessionID := vars["sessionId"]
 
 	// Validate user session access
-	_, err := validateUserSession(w, r, h.gameService, sessionID)
+	err := validateUserSession(w, r, h.gameService, sessionID)
 	if err != nil {
 		return // Response already sent by helper
 	}

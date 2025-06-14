@@ -139,9 +139,9 @@ func (b *CharacterBuilder) WithAbilities(attributes models.Attributes) *Characte
 	return b
 }
 
-func (b *CharacterBuilder) WithHP(current, max int) *CharacterBuilder {
+func (b *CharacterBuilder) WithHP(current, maxHP int) *CharacterBuilder {
 	b.character.HitPoints = current
-	b.character.MaxHitPoints = max
+	b.character.MaxHitPoints = maxHP
 	return b
 }
 
@@ -289,9 +289,9 @@ func (b *CombatantBuilder) WithInitiative(init int) *CombatantBuilder {
 	return b
 }
 
-func (b *CombatantBuilder) WithHP(current, max int) *CombatantBuilder {
+func (b *CombatantBuilder) WithHP(current, maxHP int) *CombatantBuilder {
 	b.participant.HP = current
-	b.participant.MaxHP = max
+	b.participant.MaxHP = maxHP
 	return b
 }
 

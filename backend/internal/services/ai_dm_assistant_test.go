@@ -26,23 +26,23 @@ func (m *MockLLMProviderDMTest) GenerateContent(ctx context.Context, prompt stri
 	return args.String(0), args.Error(1)
 }
 
-func TestAIDMAssistantService_GenerateNPCDialogue(t *testing.T) {
+func TestAIDMAssistantService_GenerateNPCDialog(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
 		name          string
-		request       models.NPCDialogueRequest
+		request       models.NPCDialogRequest
 		mockResponse  string
 		mockError     error
 		expected      string
 		expectedError bool
 	}{
 		{
-			name: "successful tavern keeper dialogue",
-			request: models.NPCDialogueRequest{
+			name: "successful tavern keeper dialog",
+			request: models.NPCDialogRequest{
 				NPCName:         "Gareth the Barkeep",
 				NPCPersonality:  []string{"gruff", "protective of locals", "secretly helpful"},
-				DialogueStyle:   "Working class, uses simple words, occasional grunt",
+				DialogStyle:      "Working class, uses simple words, occasional grunt",
 				Situation:       "Late evening in a busy tavern",
 				PlayerInput:     "Do you know anything about the strange disappearances?",
 				PreviousContext: "First time meeting",
@@ -52,7 +52,7 @@ func TestAIDMAssistantService_GenerateNPCDialogue(t *testing.T) {
 		},
 		{
 			name: "LLM provider error",
-			request: models.NPCDialogueRequest{
+			request: models.NPCDialogRequest{
 				NPCName:     "Test NPC",
 				PlayerInput: "Hello",
 			},
@@ -72,7 +72,7 @@ func TestAIDMAssistantService_GenerateNPCDialogue(t *testing.T) {
 			}
 
 			service := NewAIDMAssistantService(mockLLM)
-			result, err := service.GenerateNPCDialogue(ctx, tt.request)
+			result, err := service.GenerateNPCDialog(ctx, tt.request)
 
 			if tt.expectedError {
 				require.Error(t, err)
@@ -392,7 +392,7 @@ func TestAIDMAssistantService_GenerateNPC(t *testing.T) {
 				"voiceDescription": "Smooth baritone with musical accent, often speaks in riddles",
 				"motivations": "Seeks rare artifacts and forbidden knowledge to sell to the highest bidder",
 				"secrets": "Is actually an agent of a djinn, bound to gather information",
-				"dialogueStyle": "Flowery speech, uses many metaphors, addresses everyone as 'friend'",
+				"dialogStyle": "Flowery speech, uses many metaphors, addresses everyone as 'friend'",
 				"relationshipToParty": "Cautiously interested, sees potential profit"
 			}`,
 		},

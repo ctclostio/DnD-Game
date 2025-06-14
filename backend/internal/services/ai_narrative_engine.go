@@ -629,14 +629,14 @@ func (pg *PerspectiveGenerator) findContradictions(perspectives []models.Perspec
 
 // Utility functions
 
-func mergeUnique(existing, new []string) []string {
+func mergeUnique(existing, newItems []string) []string {
 	seen := make(map[string]bool)
 	for _, item := range existing {
 		seen[item] = true
 	}
 
 	result := append([]string{}, existing...)
-	for _, item := range new {
+	for _, item := range newItems {
 		if !seen[item] {
 			result = append(result, item)
 			seen[item] = true

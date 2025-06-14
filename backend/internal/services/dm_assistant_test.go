@@ -13,7 +13,7 @@ import (
 )
 
 func TestDMAssistantService_ProcessRequest(t *testing.T) {
-	t.Run("successful NPC dialogue generation", func(t *testing.T) {
+	t.Run("successful NPC dialog generation", func(t *testing.T) {
 		mockRepo := new(mocks.MockDMAssistantRepository)
 		mockAI := new(mocks.MockAIDMAssistantService)
 
@@ -24,31 +24,31 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 		sessionID := uuid.New()
 
 		req := models.DMAssistantRequest{
-			Type:          models.RequestTypeNPCDialogue,
+			Type:          models.RequestTypeNPCDialog,
 			GameSessionID: sessionID.String(),
 			Context:       map[string]interface{}{"situation": "Tavern conversation"},
 			Parameters: map[string]interface{}{
 				"npcName":        "Bartender Bob",
 				"npcPersonality": []interface{}{"friendly", "gossipy"},
-				"dialogueStyle":  "casual",
+				"dialogStyle":    "casual",
 				"situation":      "player asking about local rumors",
 				"playerInput":    "What's the latest gossip?",
 			},
 		}
 
-		expectedDialogue := "Well, funny you should ask! Just this morning..."
+		expectedDialog := "Well, funny you should ask! Just this morning..."
 
-		mockAI.On("GenerateNPCDialogue", ctx, mock.MatchedBy(func(req models.NPCDialogueRequest) bool {
+		mockAI.On("GenerateNPCDialog", ctx, mock.MatchedBy(func(req models.NPCDialogRequest) bool {
 			return req.NPCName == "Bartender Bob" &&
 				len(req.NPCPersonality) == 2 &&
 				req.PlayerInput == "What's the latest gossip?"
-		})).Return(expectedDialogue, nil)
+		})).Return(expectedDialog, nil)
 
 		mockRepo.On("SaveHistory", ctx, mock.MatchedBy(func(h *models.DMAssistantHistory) bool {
 			return h.GameSessionID == sessionID &&
 				h.UserID == userID &&
-				h.RequestType == models.RequestTypeNPCDialogue &&
-				h.Response == expectedDialogue
+				h.RequestType == models.RequestTypeNPCDialog &&
+				h.Response == expectedDialog
 		})).Return(nil)
 
 		result, err := service.ProcessRequest(ctx, userID, req)
@@ -56,9 +56,9 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, result)
 
-		dialogue, ok := result.(map[string]string)
+		dialog, ok := result.(map[string]string)
 		require.True(t, ok)
-		require.Equal(t, expectedDialogue, dialogue["dialogue"])
+		require.Equal(t, expectedDialog, dialog["dialog"])
 
 		mockAI.AssertExpectations(t)
 		mockRepo.AssertExpectations(t)
@@ -301,7 +301,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 		userID := uuid.New()
 
 		req := models.DMAssistantRequest{
-			Type:          models.RequestTypeNPCDialogue,
+			Type:          models.RequestTypeNPCDialog,
 			GameSessionID: "invalid-uuid",
 			Context:       map[string]interface{}{},
 			Parameters:    map[string]interface{}{},
@@ -347,7 +347,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 		sessionID := uuid.New()
 
 		req := models.DMAssistantRequest{
-			Type:          models.RequestTypeNPCDialogue,
+			Type:          models.RequestTypeNPCDialog,
 			GameSessionID: sessionID.String(),
 			Context:       map[string]interface{}{},
 			Parameters:    map[string]interface{}{
@@ -458,8 +458,8 @@ func TestDMAssistantService_CreateNPC(t *testing.T) {
 	})
 }
 
-func TestDMAssistantService_UpdateNPCDialogue(t *testing.T) {
-	t.Run("successful dialogue update", func(t *testing.T) {
+func TestDMAssistantService_UpdateNPCDialog(t *testing.T) {
+	t.Run("successful dialog update", func(t *testing.T) {
 		mockRepo := new(mocks.MockDMAssistantRepository)
 		mockAI := new(mocks.MockAIDMAssistantService)
 
@@ -467,16 +467,16 @@ func TestDMAssistantService_UpdateNPCDialogue(t *testing.T) {
 
 		ctx := context.Background()
 		npcID := uuid.New()
-		dialogue := "The dragon? Aye, I've seen it fly over the mountains."
+		dialog := "The dragon? Aye, I've seen it fly over the mountains."
 		context := "Player asking about dragon sightings"
 
-		mockRepo.On("AddNPCDialogue", ctx, npcID, mock.MatchedBy(func(entry models.DialogueEntry) bool {
-			return entry.Dialogue == dialogue &&
+		mockRepo.On("AddNPCDialog", ctx, npcID, mock.MatchedBy(func(entry models.DialogEntry) bool {
+			return entry.Dialog == dialog &&
 				entry.Context == context &&
 				!entry.Timestamp.IsZero()
 		})).Return(nil)
 
-		err := service.UpdateNPCDialogue(ctx, npcID, dialogue, context)
+		err := service.UpdateNPCDialog(ctx, npcID, dialog, context)
 
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)

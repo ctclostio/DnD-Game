@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// AINPC represents an AI-generated NPC with personality and dialogue
+// AINPC represents an AI-generated NPC with personality and dialog
 type AINPC struct {
 	ID                  uuid.UUID              `json:"id" db:"id"`
 	GameSessionID       uuid.UUID              `json:"gameSessionId" db:"game_session_id"`
@@ -18,10 +18,10 @@ type AINPC struct {
 	VoiceDescription    string                 `json:"voiceDescription" db:"voice_description"`
 	Motivations         string                 `json:"motivations" db:"motivations"`
 	Secrets             string                 `json:"secrets" db:"secrets"`
-	DialogueStyle       string                 `json:"dialogueStyle" db:"dialogue_style"`
+	DialogStyle         string                 `json:"dialogStyle" db:"dialog_style"`
 	RelationshipToParty string                 `json:"relationshipToParty" db:"relationship_to_party"`
 	StatBlock           map[string]interface{} `json:"statBlock,omitempty" db:"stat_block"`
-	GeneratedDialogue   []DialogueEntry        `json:"generatedDialogue" db:"generated_dialogue"`
+	GeneratedDialog     []DialogEntry          `json:"generatedDialog" db:"generated_dialog"`
 	CreatedBy           uuid.UUID              `json:"createdBy" db:"created_by"`
 	IsRecurring         bool                   `json:"isRecurring" db:"is_recurring"`
 	LastSeenSession     *uuid.UUID             `json:"lastSeenSession,omitempty" db:"last_seen_session"`
@@ -30,10 +30,10 @@ type AINPC struct {
 	UpdatedAt           time.Time              `json:"updatedAt" db:"updated_at"`
 }
 
-// DialogueEntry represents a single piece of dialogue from an NPC
-type DialogueEntry struct {
+// DialogEntry represents a single piece of dialog from an NPC
+type DialogEntry struct {
 	Context   string    `json:"context"`
-	Dialogue  string    `json:"dialogue"`
+	Dialog    string    `json:"dialog"`
 	Timestamp time.Time `json:"timestamp"`
 }
 
@@ -134,7 +134,7 @@ type DMAssistantHistory struct {
 
 // Request types for DM Assistant
 const (
-	RequestTypeNPCDialogue         = "npc_dialogue"
+	RequestTypeNPCDialog           = "npc_dialog"
 	RequestTypeLocationDesc        = "location_description"
 	RequestTypeCombatNarration     = "combat_narration"
 	RequestTypeDeathDescription    = "death_description"
@@ -188,11 +188,11 @@ type DMAssistantRequest struct {
 	StreamResponse bool                   `json:"streamResponse"`
 }
 
-// NPCDialogueRequest for generating NPC dialogue
-type NPCDialogueRequest struct {
+// NPCDialogRequest for generating NPC dialog
+type NPCDialogRequest struct {
 	NPCName         string   `json:"npcName"`
 	NPCPersonality  []string `json:"npcPersonality"`
-	DialogueStyle   string   `json:"dialogueStyle"`
+	DialogStyle     string   `json:"dialogStyle"`
 	Situation       string   `json:"situation"`
 	PlayerInput     string   `json:"playerInput"`
 	PreviousContext string   `json:"previousContext"`

@@ -37,7 +37,7 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt, system
 		return `{"name": "Testarian McTestface"}`, nil
 	case contains(prompt, "npc"):
 		return mockNPCResponse(), nil
-	case contains(prompt, "dialogue"):
+	case contains(prompt, "dialog"):
 		return `"Greetings, adventurer! How may I assist you today?"`, nil
 	case contains(prompt, "location") || contains(prompt, "description"):
 		return mockLocationResponse(), nil

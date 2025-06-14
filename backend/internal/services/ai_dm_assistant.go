@@ -24,10 +24,10 @@ func NewAIDMAssistantService(llmProvider LLMProvider) *AIDMAssistantService {
 	}
 }
 
-// GenerateNPCDialogue generates contextual dialogue for an NPC
-func (s *AIDMAssistantService) GenerateNPCDialogue(ctx context.Context, req models.NPCDialogueRequest) (string, error) {
-	systemPrompt := `You are a Dungeon Master helping to generate NPC dialogue for a D&D game. 
-Generate dialogue that:
+// GenerateNPCDialog generates contextual dialog for an NPC
+func (s *AIDMAssistantService) GenerateNPCDialog(ctx context.Context, req models.NPCDialogRequest) (string, error) {
+	systemPrompt := `You are a Dungeon Master helping to generate NPC dialog for a D&D game. 
+Generate dialog that:
 1. Matches the NPC's personality traits and speaking style
 2. Responds appropriately to the player's input
 3. Stays in character
@@ -35,7 +35,7 @@ Generate dialogue that:
 5. Is engaging and memorable
 
 Keep responses concise (1-3 sentences unless the situation calls for more).
-Do not include actions or descriptions, only spoken dialogue.`
+Do not include actions or descriptions, only spoken dialog.`
 
 	userPrompt := fmt.Sprintf(`NPC: %s
 Personality: %s
@@ -47,14 +47,14 @@ Previous Context: %s
 Generate an appropriate response from this NPC.`,
 		req.NPCName,
 		strings.Join(req.NPCPersonality, ", "),
-		req.DialogueStyle,
+		req.DialogStyle,
 		req.Situation,
 		req.PlayerInput,
 		req.PreviousContext)
 
 	response, err := s.llmProvider.GenerateCompletion(ctx, userPrompt, systemPrompt)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate NPC dialogue: %w", err)
+		return "", fmt.Errorf("failed to generate NPC dialog: %w", err)
 	}
 
 	return strings.TrimSpace(response), nil
@@ -350,7 +350,7 @@ Return as JSON:
   "voiceDescription": "How they sound",
   "motivations": "What drives them",
   "secrets": "What they're hiding",
-  "dialogueStyle": "How they speak (accent, vocabulary, mannerisms)",
+  "dialogStyle": "How they speak (accent, vocabulary, mannerisms)",
   "relationshipToParty": "Initial attitude/connection"
 }`
 
@@ -375,7 +375,7 @@ Make them interesting and three-dimensional.`, role, string(contextJSON))
 		VoiceDescription    string   `json:"voiceDescription"`
 		Motivations         string   `json:"motivations"`
 		Secrets             string   `json:"secrets"`
-		DialogueStyle       string   `json:"dialogueStyle"`
+		DialogStyle         string   `json:"dialogStyle"`
 		RelationshipToParty string   `json:"relationshipToParty"`
 	}
 
@@ -393,8 +393,8 @@ Make them interesting and three-dimensional.`, role, string(contextJSON))
 		VoiceDescription:    npcData.VoiceDescription,
 		Motivations:         npcData.Motivations,
 		Secrets:             npcData.Secrets,
-		DialogueStyle:       npcData.DialogueStyle,
+		DialogStyle:         npcData.DialogStyle,
 		RelationshipToParty: npcData.RelationshipToParty,
-		GeneratedDialogue:   []models.DialogueEntry{},
+		GeneratedDialog:     []models.DialogEntry{},
 	}, nil
 }

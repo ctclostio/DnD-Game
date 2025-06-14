@@ -100,7 +100,7 @@ type AICampaignManagerInterface interface {
 
 // AIDMAssistantInterface defines the AI DM assistant contract
 type AIDMAssistantInterface interface {
-	GenerateNPCDialogue(ctx context.Context, req models.NPCDialogueRequest) (string, error)
+	GenerateNPCDialog(ctx context.Context, req models.NPCDialogRequest) (string, error)
 	GenerateLocationDescription(ctx context.Context, req models.LocationDescriptionRequest) (*models.AILocation, error)
 	GenerateCombatNarration(ctx context.Context, req models.CombatNarrationRequest) (string, error)
 	GeneratePlotTwist(ctx context.Context, currentContext map[string]interface{}) (*models.AIStoryElement, error)

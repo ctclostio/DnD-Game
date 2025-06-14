@@ -215,9 +215,9 @@ func (r *EncounterRepository) GetByID(id string) (*models.Encounter, error) {
 	_ = json.Unmarshal(escapeRoutes, &encounter.EscapeRoutes)
 
 	// Load encounter enemies
-	enemies_list, err := r.getEncounterEnemies(id)
+	enemiesList, err := r.getEncounterEnemies(id)
 	if err == nil {
-		encounter.Enemies = enemies_list
+		encounter.Enemies = enemiesList
 	}
 
 	return &encounter, nil

@@ -160,10 +160,10 @@ func (h *Handlers) GenerateStoryHook(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handlers) GenerateNPCDialogue(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) GenerateNPCDialog(w http.ResponseWriter, r *http.Request) {
 	response.Error(w, r, &errors.AppError{
 		Type:       errors.ErrorTypeInternal,
-		Message:    "NPC dialogue generation not implemented",
+		Message:    "NPC dialog generation not implemented",
 		StatusCode: http.StatusNotImplemented,
 	})
 }
