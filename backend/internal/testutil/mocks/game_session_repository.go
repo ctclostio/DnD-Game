@@ -76,7 +76,7 @@ func (m *MockGameSessionRepository) GetParticipants(sessionID uuid.UUID) ([]*mod
 	return args.Get(0).([]*models.GameParticipant), args.Error(1)
 }
 
-func (m *MockGameSessionRepository) UpdateParticipantCharacter(sessionID, userID uuid.UUID, characterID uuid.UUID) error {
+func (m *MockGameSessionRepository) UpdateParticipantCharacter(sessionID, userID, characterID uuid.UUID) error {
 	args := m.Called(sessionID, userID, characterID)
 	return args.Error(0)
 }

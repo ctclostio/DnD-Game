@@ -8,6 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
@@ -17,9 +21,6 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCombatFlow_Integration(t *testing.T) {
@@ -206,7 +207,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("Get Combat State", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/api/v1/combat/"+combatID, nil)
+		req := httptest.NewRequest("GET", "/api/v1/combat/"+combatID, http.NoBody)
 		req.Header.Set("Authorization", "Bearer "+playerToken.AccessToken)
 		req = mux.SetURLVars(req, map[string]string{"combatId": combatID})
 
@@ -259,7 +260,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 		assert.Equal(t, "attack", actionData["actionType"])
 
 		// Get updated combat state
-		req2 := httptest.NewRequest("GET", "/api/v1/combat/"+combatID, nil)
+		req2 := httptest.NewRequest("GET", "/api/v1/combat/"+combatID, http.NoBody)
 		req2.Header.Set("Authorization", "Bearer "+playerToken.AccessToken)
 		req2 = mux.SetURLVars(req2, map[string]string{"combatId": combatID})
 		w2 := httptest.NewRecorder()
@@ -321,7 +322,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 		assert.Equal(t, "endTurn", actionData["actionType"])
 
 		// Get updated combat state to verify round advancement
-		req2 := httptest.NewRequest("GET", "/api/v1/combat/"+combatID, nil)
+		req2 := httptest.NewRequest("GET", "/api/v1/combat/"+combatID, http.NoBody)
 		req2.Header.Set("Authorization", "Bearer "+dmToken.AccessToken)
 		req2 = mux.SetURLVars(req2, map[string]string{"combatId": combatID})
 		w2 := httptest.NewRecorder()
@@ -338,7 +339,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("End Combat", func(t *testing.T) {
-		req := httptest.NewRequest("POST", "/api/v1/combat/"+combatID+"/end", nil)
+		req := httptest.NewRequest("POST", "/api/v1/combat/"+combatID+"/end", http.NoBody)
 		req.Header.Set("Authorization", "Bearer "+dmToken.AccessToken)
 		req = mux.SetURLVars(req, map[string]string{"combatId": combatID})
 
@@ -353,7 +354,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 		assert.True(t, resp.Success)
 
 		// Verify combat is ended - it should be removed from memory
-		req = httptest.NewRequest("GET", "/api/v1/combat/"+combatID, nil)
+		req = httptest.NewRequest("GET", "/api/v1/combat/"+combatID, http.NoBody)
 		req.Header.Set("Authorization", "Bearer "+dmToken.AccessToken)
 		req = mux.SetURLVars(req, map[string]string{"combatId": combatID})
 

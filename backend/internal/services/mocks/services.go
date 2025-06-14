@@ -53,12 +53,12 @@ func (m *MockLLMProvider) GenerateJSON(ctx context.Context, prompt, system strin
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockLLMProvider) StreamContent(ctx context.Context, prompt, system string) (<-chan string, <-chan error) {
+func (m *MockLLMProvider) StreamContent(ctx context.Context, prompt, system string) (content <-chan string, errors <-chan error) {
 	args := m.Called(ctx, prompt, system)
 	return args.Get(0).(<-chan string), args.Get(1).(<-chan error)
 }
 
-func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	args := m.Called(ctx, prompt, systemPrompt)
 	return args.String(0), args.Error(1)
 }
@@ -107,7 +107,7 @@ func (m *MockCustomClassRepository) Delete(id string) error {
 	return args.Error(0)
 }
 
-func (m *MockCustomClassRepository) Approve(id string, approvedBy string) error {
+func (m *MockCustomClassRepository) Approve(id, approvedBy string) error {
 	args := m.Called(id, approvedBy)
 	return args.Error(0)
 }
@@ -324,8 +324,8 @@ func (m *MockAIDMAssistantService) GenerateEnvironmentalHazard(ctx context.Conte
 	return args.Get(0).(*models.AIEnvironmentalHazard), args.Error(1)
 }
 
-func (m *MockAIDMAssistantService) GenerateNPC(ctx context.Context, role string, context map[string]interface{}) (*models.AINPC, error) {
-	args := m.Called(ctx, role, context)
+func (m *MockAIDMAssistantService) GenerateNPC(ctx context.Context, role string, contextData map[string]interface{}) (*models.AINPC, error) {
+	args := m.Called(ctx, role, contextData)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

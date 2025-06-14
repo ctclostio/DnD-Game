@@ -319,7 +319,7 @@ type MockRefreshTokenRepository struct {
 	mock.Mock
 }
 
-func (m *MockRefreshTokenRepository) Create(userID, tokenID string, token string, expiresAt time.Time) error {
+func (m *MockRefreshTokenRepository) Create(userID, tokenID, token string, expiresAt time.Time) error {
 	args := m.Called(userID, tokenID, token, expiresAt)
 	return args.Error(0)
 }
@@ -625,7 +625,7 @@ func (m *MockCampaignRepository) CreateOrUpdateNPCRelationship(relationship *mod
 	return args.Error(0)
 }
 
-func (m *MockCampaignRepository) GetNPCRelationships(sessionID uuid.UUID, npcID uuid.UUID) ([]*models.NPCRelationship, error) {
+func (m *MockCampaignRepository) GetNPCRelationships(sessionID, npcID uuid.UUID) ([]*models.NPCRelationship, error) {
 	args := m.Called(sessionID, npcID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

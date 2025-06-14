@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
@@ -148,7 +149,7 @@ func parseRollNotation(notation string) (count int, diceType string, modifier in
 
 	// Parse dice type
 	if matches[2] == "%" {
-		diceType = "d100"
+		diceType = constants.DiceD100
 	} else {
 		diceNum, err := strconv.Atoi(matches[2])
 		if err != nil {
@@ -190,7 +191,7 @@ func getDiceMax(diceType string) int {
 		return 12
 	case "d20":
 		return 20
-	case "d100":
+	case constants.DiceD100:
 		return 100
 	default:
 		return 20 // Default to d20

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/dice"
@@ -290,7 +291,7 @@ func (cas *CombatAutomationService) simulateCombat(
 		outcome = "costly_victory"
 		rounds = 5 + rand.Intn(5)
 	} else if partyStrength > encounterStrength*0.5 {
-		outcome = "retreat"
+		outcome = constants.ActionTypeRetreat
 		rounds = 3 + rand.Intn(3)
 	} else {
 		outcome = "defeat"
@@ -309,7 +310,7 @@ func (cas *CombatAutomationService) simulateCombat(
 		hpLossPercent = 0.2 + rand.Float64()*0.2 // 20-40%
 	case "costly_victory":
 		hpLossPercent = 0.4 + rand.Float64()*0.3 // 40-70%
-	case "retreat":
+	case constants.ActionTypeRetreat:
 		hpLossPercent = 0.3 + rand.Float64()*0.3 // 30-60%
 	case "defeat":
 		hpLossPercent = 0.6 + rand.Float64()*0.3 // 60-90%
@@ -406,36 +407,36 @@ func (cas *CombatAutomationService) getRandomRarity(difficulty string) string {
 	switch difficulty {
 	case "trivial", "easy":
 		if roll < 0.95 {
-			return "common"
+			return constants.RarityCommon
 		}
 		return "uncommon"
 	case "medium":
 		if roll < 0.7 {
-			return "common"
+			return constants.RarityCommon
 		} else if roll < 0.95 {
 			return "uncommon"
 		}
 		return "rare"
 	case "hard":
 		if roll < 0.4 {
-			return "common"
+			return constants.RarityCommon
 		} else if roll < 0.8 {
 			return "uncommon"
 		} else if roll < 0.95 {
 			return "rare"
 		}
-		return "very_rare"
+		return constants.RarityVeryRare
 	case "deadly":
 		if roll < 0.2 {
 			return "uncommon"
 		} else if roll < 0.6 {
 			return "rare"
 		} else if roll < 0.9 {
-			return "very_rare"
+			return constants.RarityVeryRare
 		}
 		return "legendary"
 	default:
-		return "common"
+		return constants.RarityCommon
 	}
 }
 
@@ -527,7 +528,7 @@ func (cas *CombatAutomationService) generateNarrativeSummary(
 			"Bloodied but unbowed, the adventurers managed to defeat their foes after a grueling combat.",
 			"Victory came at a cost, with several party members bearing serious wounds.",
 		},
-		"retreat": {
+		constants.ActionTypeRetreat: {
 			"Recognizing the danger, the party made a tactical withdrawal from the battlefield.",
 			"The adventurers fought a retreating action, escaping with their lives if not their pride.",
 			"Discretion proved the better part of valor as the party retreated from overwhelming odds.",

@@ -9,14 +9,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
-	"github.com/gorilla/mux"
-	"github.com/jmoiron/sqlx"
-	"github.com/stretchr/testify/require"
 )
 
 // IntegrationTestContext contains all dependencies for integration testing

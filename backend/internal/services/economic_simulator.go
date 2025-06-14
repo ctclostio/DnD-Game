@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/google/uuid"
@@ -656,7 +657,7 @@ func (s *EconomicSimulatorService) determineEnvironmentalHazards(start, end *mod
 		switch climate {
 		case "cold":
 			hazards = append(hazards, "blizzards", "frostbite")
-		case "tropical":
+		case constants.ClimateTropical:
 			hazards = append(hazards, "monsoons", "tropical diseases")
 		case "arid":
 			hazards = append(hazards, "extreme heat", "water scarcity")

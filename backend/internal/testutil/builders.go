@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type ctxKey string
@@ -230,8 +231,8 @@ func (b *CombatBuilder) WithParticipants(participants ...models.Combatant) *Comb
 	b.combat.Combatants = participants
 	// Set turn order based on participant IDs
 	turnOrder := make([]string, len(participants))
-	for i, p := range participants {
-		turnOrder[i] = p.ID
+	for i := range participants {
+		turnOrder[i] = participants[i].ID
 	}
 	b.combat.TurnOrder = turnOrder
 	return b

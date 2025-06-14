@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -376,7 +377,7 @@ func (ba *AIBalanceAnalyzer) analyzeActionEconomy(template *models.RuleTemplate)
 		if strings.HasPrefix(node.Type, "trigger_") {
 			triggerType, _ := node.Properties["trigger_type"].(string)
 			switch triggerType {
-			case "bonus_action":
+			case constants.ActionTypeBonusAction:
 				actionCost = 0.5
 			case "reaction":
 				actionCost = 0.3
@@ -632,7 +633,7 @@ func (ba *AIBalanceAnalyzer) grantsExtraActions(template *models.RuleTemplate) b
 	for _, node := range template.LogicGraph.Nodes {
 		if node.Type == models.NodeTypeActionResource {
 			if resource, ok := node.Properties["resource"].(string); ok {
-				return resource == "action" || resource == "bonus_action"
+				return resource == "action" || resource == constants.ActionTypeBonusAction
 			}
 		}
 	}

@@ -34,7 +34,7 @@ func (r *gameSessionRepository) Create(ctx context.Context, session *models.Game
 	session.UpdatedAt = now
 
 	// Convert state to JSON string for storage
-	stateJSON := "{}"
+	stateJSON := constants.EmptyJSON
 	if len(session.State) > 0 {
 		// In production, handle JSON marshaling properly
 		stateJSON = constants.EmptyJSON

@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
@@ -85,7 +86,7 @@ func AuthenticatedRequest(t *testing.T, method, path string, body interface{}, u
 		require.NoError(t, err)
 		req.Header.Set("Content-Type", "application/json")
 	} else {
-		req, err = http.NewRequest(method, path, nil)
+		req, err = http.NewRequest(method, path, http.NoBody)
 		require.NoError(t, err)
 	}
 

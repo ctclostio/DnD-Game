@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
@@ -490,7 +491,7 @@ func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitP
 			char.Attributes.Intelligence++
 		case "wisdom":
 			char.Attributes.Wisdom++
-		case "charisma":
+		case constants.AbilityCharisma:
 			char.Attributes.Charisma++
 		}
 	}

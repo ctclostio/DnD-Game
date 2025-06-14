@@ -22,13 +22,13 @@ func NewCombatEngine() *CombatEngine {
 }
 
 // Initiative and Turn Order
-func (ce *CombatEngine) RollInitiative(dexterityModifier int) (int, int, error) {
+func (ce *CombatEngine) RollInitiative(dexterityModifier int) (roll int, total int, err error) {
 	result, err := ce.roller.Roll("1d20")
 	if err != nil {
 		return 0, 0, err
 	}
-	roll := result.Dice[0]
-	total := roll + dexterityModifier
+	roll = result.Dice[0]
+	total = roll + dexterityModifier
 	return roll, total, nil
 }
 
@@ -67,8 +67,8 @@ func (ce *CombatEngine) StartCombat(gameSessionID string, combatants []models.Co
 
 	// Create turn order
 	turnOrder := make([]string, len(combatants))
-	for i, c := range combatants {
-		turnOrder[i] = c.ID
+	for i := range combatants {
+		turnOrder[i] = combatants[i].ID
 	}
 
 	combat := &models.Combat{
@@ -104,19 +104,20 @@ func (ce *CombatEngine) NextTurn(combat *models.Combat) (*models.Combatant, bool
 	// Get current combatant
 	currentID := combat.TurnOrder[combat.CurrentTurn]
 	for i := range combat.Combatants {
-		if combat.Combatants[i].ID == currentID {
-			// Skip unconscious/dead combatants
-			if combat.Combatants[i].HP <= 0 && !combat.Combatants[i].DeathSaves.IsStable {
-				return ce.NextTurn(combat)
-			}
-
-			// Reset action economy for the combatant
-			combat.Combatants[i].Actions = 1
-			combat.Combatants[i].BonusActions = 1
-			combat.Combatants[i].Movement = combat.Combatants[i].Speed
-
-			return &combat.Combatants[i], true
+		if combat.Combatants[i].ID != currentID {
+			continue
 		}
+		// Skip unconscious/dead combatants
+		if combat.Combatants[i].HP <= 0 && !combat.Combatants[i].DeathSaves.IsStable {
+			return ce.NextTurn(combat)
+		}
+
+		// Reset action economy for the combatant
+		combat.Combatants[i].Actions = 1
+		combat.Combatants[i].BonusActions = 1
+		combat.Combatants[i].Movement = combat.Combatants[i].Speed
+
+		return &combat.Combatants[i], true
 	}
 
 	return nil, false

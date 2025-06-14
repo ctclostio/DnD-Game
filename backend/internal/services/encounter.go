@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
@@ -33,7 +34,7 @@ func (s *EncounterService) GenerateEncounter(ctx context.Context, req EncounterR
 	// Set metadata
 	encounter.GameSessionID = gameSessionID
 	encounter.CreatedBy = userID
-	encounter.Status = "planned"
+	encounter.Status = constants.EncounterStatusPlanned
 
 	// Save to database
 	if err := s.repo.Create(encounter); err != nil {
@@ -72,7 +73,7 @@ func (s *EncounterService) StartEncounter(ctx context.Context, encounterID strin
 		return fmt.Errorf("encounter not found: %w", err)
 	}
 
-	if encounter.Status != "planned" {
+	if encounter.Status != constants.EncounterStatusPlanned {
 		return fmt.Errorf("encounter already started or completed")
 	}
 
@@ -275,7 +276,7 @@ func (s *EncounterService) CheckObjectives(ctx context.Context, encounterID stri
 		failed := false
 
 		switch objective.Type {
-		case "defeat_all":
+		case constants.ObjectiveDefeatAll:
 			// Check if all enemies are defeated
 			allDefeated := true
 			for _, enemy := range encounter.Enemies {
@@ -322,7 +323,7 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 
 	switch encounter.EncounterType {
 	case "combat":
-		primaryObjective.Type = "defeat_all"
+		primaryObjective.Type = constants.ObjectiveDefeatAll
 		primaryObjective.Description = "Defeat all enemies"
 	case "social":
 		primaryObjective.Type = "negotiate"

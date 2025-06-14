@@ -11,7 +11,7 @@ type MockLLMProvider struct {
 	Responses    map[string]string
 }
 
-func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	if m.ResponseFunc != nil {
 		return m.ResponseFunc(ctx, systemPrompt, prompt)
 	}
@@ -57,12 +57,12 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 }
 
 // GenerateContent is an alias for GenerateCompletion to satisfy the interface
-func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	return m.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 
 func contains(str, substr string) bool {
-	return len(str) >= len(substr) && (str == substr || len(str) > 0 && len(substr) > 0 && str[0:len(substr)] == substr || (len(str) > len(substr) && str[len(str)-len(substr):] == substr) || (len(substr) > 0 && len(str) > len(substr) && findSubstring(str, substr)))
+	return len(str) >= len(substr) && (str == substr || str != "" && len(substr) > 0 && str[0:len(substr)] == substr || (len(str) > len(substr) && str[len(str)-len(substr):] == substr) || (len(substr) > 0 && len(str) > len(substr) && findSubstring(str, substr)))
 }
 
 func findSubstring(str, substr string) bool {

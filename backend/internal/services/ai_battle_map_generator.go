@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"strings"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/google/uuid"
@@ -141,7 +142,7 @@ func (abmg *AIBattleMapGenerator) determineGridSize(desiredSize string) (int, in
 	switch desiredSize {
 	case "small":
 		return 15, 15
-	case "large":
+	case constants.SizeLarge:
 		return 30, 30
 	case "huge":
 		return 40, 40
@@ -182,8 +183,8 @@ func (abmg *AIBattleMapGenerator) convertToBattleMap(generated GeneratedBattleMa
 func (abmg *AIBattleMapGenerator) inferMapType(description string) string {
 	desc := strings.ToLower(description)
 
-	if strings.Contains(desc, "dungeon") || strings.Contains(desc, "cave") || strings.Contains(desc, "underground") {
-		return "dungeon"
+	if strings.Contains(desc, constants.MapTypeDungeon) || strings.Contains(desc, "cave") || strings.Contains(desc, "underground") {
+		return constants.MapTypeDungeon
 	} else if strings.Contains(desc, "forest") || strings.Contains(desc, "outdoor") || strings.Contains(desc, "field") {
 		return "outdoor"
 	} else if strings.Contains(desc, "city") || strings.Contains(desc, "street") || strings.Contains(desc, "tavern") {
@@ -201,7 +202,7 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 
 	// Add some walls or trees based on map type
 	switch req.MapType {
-	case "dungeon":
+	case constants.MapTypeDungeon:
 		// Add walls around the edges
 		for x := 0; x < gridX; x++ {
 			terrainFeatures = append(terrainFeatures,

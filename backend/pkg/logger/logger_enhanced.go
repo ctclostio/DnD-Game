@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 )
@@ -57,7 +58,7 @@ func DefaultConfig() ConfigV2 {
 		TimeFormat:   time.RFC3339Nano,
 		CallerInfo:   true,
 		StackTrace:   true,
-		Output:       "stdout",
+		Output:       constants.LogOutputStdout,
 		SamplingRate: 1.0,
 		ServiceName:  "dnd-game-backend",
 		Environment:  "development",
@@ -86,7 +87,7 @@ func NewV2(cfg ConfigV2) (*LoggerV2, error) {
 	// Configure output
 	var output io.Writer
 	switch cfg.Output {
-	case "stdout":
+	case constants.LogOutputStdout:
 		output = os.Stdout
 	case "stderr":
 		output = os.Stderr

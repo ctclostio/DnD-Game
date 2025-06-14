@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -162,7 +163,7 @@ Respond with a JSON object in this format:
     "wisdom": 10,
     "charisma": 10
   },
-  "hitDice": "1d8",
+  "hitDice": "" + constants.DiceD8 + "",
   "speed": 30,
   "features": [
     {
@@ -289,7 +290,7 @@ func (s *AICharacterService) getHitDiceValue(hitDice string) int {
 	switch hitDice {
 	case "1d6":
 		return 6
-	case "1d8":
+	case constants.DiceD8:
 		return 8
 	case "1d10":
 		return 10
@@ -341,7 +342,7 @@ func (s *AICharacterService) GenerateFallbackCharacter(req CustomCharacterReques
 		Background: "Wanderer",
 		Alignment:  "True Neutral",
 		Level:      1,
-		HitDice:    "1d8",
+		HitDice:    constants.DiceD8,
 		Speed:      30,
 		Attributes: models.Attributes{
 			Strength:     12,

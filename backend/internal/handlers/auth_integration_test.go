@@ -7,6 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
@@ -15,9 +19,6 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAuthFlow_Integration(t *testing.T) {
@@ -197,7 +198,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 		accessToken := authData["access_token"].(string)
 
 		// Now test /me endpoint
-		req = httptest.NewRequest("GET", "/api/v1/auth/me", nil)
+		req = httptest.NewRequest("GET", "/api/v1/auth/me", http.NoBody)
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 
 		w = httptest.NewRecorder()
@@ -288,7 +289,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 		refreshToken := authData["refresh_token"].(string)
 
 		// Now logout
-		req = httptest.NewRequest("POST", "/api/v1/auth/logout", nil)
+		req = httptest.NewRequest("POST", "/api/v1/auth/logout", http.NoBody)
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 
 		w = httptest.NewRecorder()
@@ -312,7 +313,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("Unauthorized Access Without Token", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/api/v1/auth/me", nil)
+		req := httptest.NewRequest("GET", "/api/v1/auth/me", http.NoBody)
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -321,7 +322,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("Invalid Token Format", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/api/v1/auth/me", nil)
+		req := httptest.NewRequest("GET", "/api/v1/auth/me", http.NoBody)
 		req.Header.Set("Authorization", "InvalidTokenFormat")
 
 		w := httptest.NewRecorder()

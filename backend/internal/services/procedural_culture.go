@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
@@ -821,7 +822,7 @@ func (pcs *ProceduralCultureService) RespondToPlayerAction(ctx context.Context, 
 	// Update cultural aspects if significant impact
 	if response.Impact > 0.3 {
 		switch response.AffectedAspect {
-		case "values":
+		case constants.CultureValues:
 			pcs.adjustCulturalValues(culture, action, response)
 		case "customs":
 			pcs.modifyCustoms(culture, action, response)
@@ -1216,7 +1217,7 @@ func (pcs *ProceduralCultureService) generateAgeRoles(cultureName string, founda
 
 func (pcs *ProceduralCultureService) evaluateCulturalResponse(culture *models.ProceduralCulture, action PlayerCulturalAction) CulturalResponse {
 	response := CulturalResponse{
-		AffectedAspect: "values",
+		AffectedAspect: constants.CultureValues,
 	}
 
 	// Calculate acceptance based on cultural values and action approach
@@ -1239,10 +1240,10 @@ func (pcs *ProceduralCultureService) evaluateCulturalResponse(culture *models.Pr
 	case "trade":
 		response.AffectedAspect = "customs"
 	case "diplomacy":
-		response.AffectedAspect = "values"
+		response.AffectedAspect = constants.CultureValues
 	case "conflict":
 		response.AffectedAspect = "social_structure"
-	case "influence":
+	case constants.CultureInfluence:
 		response.AffectedAspect = action.Target
 	}
 
@@ -1262,7 +1263,7 @@ func (pcs *ProceduralCultureService) adjustCulturalValues(culture *models.Proced
 
 func (pcs *ProceduralCultureService) modifyCustoms(culture *models.ProceduralCulture, action PlayerCulturalAction, response CulturalResponse) {
 	// Potentially add new customs or modify existing ones
-	if response.Impact > 0.7 && action.Type == "influence" {
+	if response.Impact > 0.7 && action.Type == constants.CultureInfluence {
 		// Create new custom influenced by players
 		newCustom := models.CultureCustom{
 			Name:         fmt.Sprintf("Festival of %s", action.Target),
@@ -1293,7 +1294,7 @@ func (pcs *ProceduralCultureService) generateCulturalResponseEvent(ctx context.C
 		"trade":     "commercial_shift",
 		"diplomacy": "diplomatic_development",
 		"conflict":  "cultural_resistance",
-		"influence": "cultural_evolution",
+		constants.CultureInfluence: "cultural_evolution",
 	}
 
 	return &models.EmergentWorldEvent{

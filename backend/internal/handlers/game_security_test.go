@@ -8,14 +8,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGameSessionSecurity(t *testing.T) {
@@ -269,7 +270,7 @@ func TestGameSessionSecurity(t *testing.T) {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				req := httptest.NewRequest("GET", "/api/v1/game/sessions/"+tt.sessionID, nil)
+				req := httptest.NewRequest("GET", "/api/v1/game/sessions/"+tt.sessionID, http.NoBody)
 				// Create user claims and add to context
 				claims := &auth.Claims{
 					UserID:   tt.userID,

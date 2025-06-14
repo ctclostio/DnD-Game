@@ -415,7 +415,7 @@ func (r *campaignRepository) CreateOrUpdateNPCRelationship(relationship *models.
 	return err
 }
 
-func (r *campaignRepository) GetNPCRelationships(sessionID uuid.UUID, npcID uuid.UUID) ([]*models.NPCRelationship, error) {
+func (r *campaignRepository) GetNPCRelationships(sessionID, npcID uuid.UUID) ([]*models.NPCRelationship, error) {
 	var relationships []*models.NPCRelationship
 	query := `
 		SELECT * FROM npc_relationships 
@@ -438,9 +438,9 @@ func (r *campaignRepository) UpdateRelationshipScore(sessionID, npcID, targetID 
 }
 
 // Helper function to build dynamic update queries
-func buildUpdateQuery(table string, id uuid.UUID, updates map[string]interface{}) (string, []interface{}) {
+func buildUpdateQuery(table string, id uuid.UUID, updates map[string]interface{}) (query string, args []interface{}) {
 	setClauses := make([]string, 0, len(updates))
-	args := make([]interface{}, 0, len(updates)+1)
+	args = make([]interface{}, 0, len(updates)+1)
 
 	for column, value := range updates {
 		setClauses = append(setClauses, fmt.Sprintf("%s = ?", column))
@@ -448,7 +448,7 @@ func buildUpdateQuery(table string, id uuid.UUID, updates map[string]interface{}
 	}
 
 	args = append(args, id)
-	query := fmt.Sprintf(
+	query = fmt.Sprintf(
 		"UPDATE %s SET %s WHERE id = ?",
 		table,
 		joinStrings(setClauses, ", "),

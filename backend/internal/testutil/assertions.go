@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -87,7 +88,8 @@ func (a *AssertHelpers) AssertCombatValid(combat *models.Combat) {
 	}
 
 	// Validate combatants
-	for i, combatant := range combat.Combatants {
+	for i := range combat.Combatants {
+		combatant := &combat.Combatants[i]
 		require.NotEmpty(a.t, combatant.ID, "Combatant %d must have ID", i)
 		require.NotEmpty(a.t, combatant.Name, "Combatant %d must have name", i)
 		require.GreaterOrEqual(a.t, combatant.HP, 0)
@@ -96,8 +98,8 @@ func (a *AssertHelpers) AssertCombatValid(combat *models.Combat) {
 
 	// Ensure turn order contains valid combatant IDs
 	combatantIDMap := make(map[string]bool)
-	for _, combatant := range combat.Combatants {
-		combatantIDMap[combatant.ID] = true
+	for i := range combat.Combatants {
+		combatantIDMap[combat.Combatants[i].ID] = true
 	}
 
 	for _, id := range combat.TurnOrder {
