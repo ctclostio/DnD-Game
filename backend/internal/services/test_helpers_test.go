@@ -139,9 +139,13 @@ func (s *CombatService) GetCombatState(ctx context.Context, combatID string) (*m
 }
 
 // ExecuteAction processes a combat action
-func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, action models.CombatAction) (*models.Combat, error) {
+func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, action *models.CombatAction) (*models.Combat, error) {
 	if combatID == "" {
 		return nil, errors.New("combat not found")
+	}
+
+	if action == nil {
+		return nil, errors.New("action is required")
 	}
 
 	testCombat, exists := s.combats[combatID]
@@ -207,7 +211,7 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 	}
 
 	// Record the action with all modifications
-	combat.ActionHistory = append(combat.ActionHistory, action)
+	combat.ActionHistory = append(combat.ActionHistory, *action)
 
 	return s.GetCombatState(ctx, combatID)
 }

@@ -274,9 +274,10 @@ func (c *CombatAssertions) AssertDamageApplied(
 
 // AssertConditionApplied asserts a condition was applied
 func (c *CombatAssertions) AssertConditionApplied(
-	combatant models.Combatant,
+	combatant *models.Combatant,
 	condition string,
 ) {
+	require.NotNil(c.t, combatant)
 	require.Contains(c.t, combatant.Condition, condition)
 }
 

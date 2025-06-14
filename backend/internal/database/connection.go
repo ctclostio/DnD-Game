@@ -27,7 +27,7 @@ type Config struct {
 // DB wraps the database connection
 type DB struct {
 	*sqlx.DB
-	config Config
+	config *Config
 	logger *logger.LoggerV2
 }
 
@@ -37,7 +37,11 @@ func (db *DB) StdDB() *sql.DB {
 }
 
 // NewConnection creates a new database connection
-func NewConnection(cfg Config) (*DB, error) {
+func NewConnection(cfg *Config) (*DB, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("config is required")
+	}
+
 	// Construct DSN
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DatabaseName, cfg.SSLMode)
@@ -168,7 +172,10 @@ func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}
 
 // GetConfig returns the database configuration
 func (db *DB) GetConfig() Config {
-	return db.config
+	if db.config == nil {
+		return Config{}
+	}
+	return *db.config
 }
 
 // Exec executes a query without returning any rows

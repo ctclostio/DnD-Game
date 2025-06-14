@@ -112,7 +112,7 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 			"contentType": requestType,
 			"content":     result,
 		})
-		c.broadcastToSession(gameSessionID, Message{
+		c.broadcastToSession(gameSessionID, &Message{
 			Type: "dm_content_update",
 			Data: json.RawMessage(contentData),
 		})
@@ -242,7 +242,7 @@ func (c *Client) handleCombatNarration(msg DMAssistantMessage, dmAssistant *serv
 			"target":    targetName,
 			"damage":    int(damage),
 		})
-		c.broadcastToSession(sessionID, Message{
+		c.broadcastToSession(sessionID, &Message{
 			Type: "combat_update",
 			Data: json.RawMessage(combatData),
 		})
@@ -319,9 +319,12 @@ func (c *Client) sendError(requestID string, errorMsg string) {
 	})
 }
 
-func (c *Client) broadcastToSession(sessionID string, message Message) {
+func (c *Client) broadcastToSession(sessionID string, message *Message) {
 	// This would broadcast to all clients in the same game session
 	// Implementation depends on your hub structure
+	if message == nil {
+		return
+	}
 	message.RoomID = sessionID
 	data, _ := json.Marshal(message)
 	c.hub.broadcast <- data

@@ -34,7 +34,7 @@ func InitializeWithLogging(cfg *config.Config, log *logger.LoggerV2) (*DB, *Repo
 
 	maxRetries := 5
 	for i := 0; i < maxRetries; i++ {
-		db, err = NewConnection(dbConfig)
+		db, err = NewConnection(&dbConfig)
 		if err == nil {
 			break
 		}

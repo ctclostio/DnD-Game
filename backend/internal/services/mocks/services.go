@@ -133,7 +133,7 @@ func (m *MockCombatService) GetCombatState(ctx context.Context, combatID string)
 	return args.Get(0).(*models.Combat), args.Error(1)
 }
 
-func (m *MockCombatService) ExecuteAction(ctx context.Context, combatID string, action models.CombatAction) (*models.Combat, error) {
+func (m *MockCombatService) ExecuteAction(ctx context.Context, combatID string, action *models.CombatAction) (*models.Combat, error) {
 	args := m.Called(ctx, combatID, action)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
