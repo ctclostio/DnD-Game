@@ -558,7 +558,20 @@ func TestSettlementGeneratorService_GenerateMarketConditions(t *testing.T) {
 
 		market := service.generateMarketConditions(settlement)
 
-		require.Less(t, market.CommonGoodsModifier, 1.0)
+		// Wealthy settlements normally have lower prices (modifier < 1.0)
+		// but can have higher prices during economic depression
+		if market.EconomicDepression {
+			// During depression, prices can be higher
+			require.Greater(t, market.CommonGoodsModifier, 1.0)
+		} else if market.EconomicBoom {
+			// During boom, prices should be even lower
+			require.Less(t, market.CommonGoodsModifier, 0.9)
+		} else {
+			// Normal conditions for wealthy settlement
+			require.Less(t, market.CommonGoodsModifier, 1.0)
+		}
+		
+		// Magical items are not affected by economic conditions in the implementation
 		require.Less(t, market.MagicalItemsModifier, 1.0)
 	})
 
