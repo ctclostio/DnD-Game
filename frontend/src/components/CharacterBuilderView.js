@@ -40,6 +40,13 @@ export class CharacterBuilderView {
                         </label>
                         <span>Custom/Homebrew Mode ${this.options.aiEnabled ? '(AI Powered)' : '(Basic)'}</span>
                     </div>
+                    <div class="mode-toggle" style="margin-top: 8px;">
+                        <label class="toggle">
+                            <input type="checkbox" id="guidedModeToggle" ${this.isGuidedMode ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Guided Mode <span style="font-size:0.9em;color:#888;">(Beginner Friendly)</span></span>
+                    </div>
                 </div>
                 
                 <div class="progress-bar">
@@ -57,6 +64,7 @@ export class CharacterBuilderView {
                     <button class="btn-primary" id="nextBtn">
                         ${this.currentStep === 6 ? 'Create Character' : 'Next'}
                     </button>
+                    ${this.isGuidedMode && !this.isCustomMode ? `<button class="btn-quickbuild" id="quickBuildBtn" style="margin-left:12px;">Quick Build</button>` : ''}
                 </div>
             </div>
         `;
@@ -435,6 +443,15 @@ export class CharacterBuilderView {
                 this.updateContent();
             });
         }
+        // Guided mode toggle
+        const guidedToggle = this.container.querySelector('#guidedModeToggle');
+        if (guidedToggle) {
+            guidedToggle.addEventListener('change', (e) => {
+                this.isGuidedMode = e.target.checked;
+                this.currentStep = 0;
+                this.updateContent();
+            });
+        }
 
         // Navigation buttons
         const prevBtn = this.container.querySelector('#prevBtn');
@@ -569,6 +586,13 @@ export class CharacterBuilderView {
         this.attachFormListeners();
         this.attachSelectionListeners();
         this.updateProgressBar();
+        // Attach quick build button if in guided mode
+        if (this.isGuidedMode && !this.isCustomMode) {
+            const quickBuildBtn = this.container.querySelector('#quickBuildBtn');
+            if (quickBuildBtn) {
+                quickBuildBtn.addEventListener('click', () => this.quickBuild());
+            }
+        }
     }
 
     updateProgressBar() {
@@ -806,5 +830,18 @@ export class CharacterBuilderView {
         return name.split('-').map(word => 
             word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ');
+    }
+    // Guided Mode: Quick Build for new players
+    quickBuild() {
+        // Example: pick a beginner-friendly race/class/background
+        this.characterData.race = this.options.races?.includes('human') ? 'human' : this.options.races[0];
+        this.characterData.class = this.options.classes?.includes('fighter') ? 'fighter' : this.options.classes[0];
+        this.characterData.background = this.options.backgrounds?.includes('folk-hero') ? 'folk-hero' : this.options.backgrounds[0];
+        this.characterData.abilityScoreMethod = 'standard_array';
+        this.characterData.abilityScores = {
+            strength: 15, dexterity: 14, constitution: 13, intelligence: 12, wisdom: 10, charisma: 8
+        };
+        this.currentStep = 6; // Jump to review
+        this.updateContent();
     }
 }
