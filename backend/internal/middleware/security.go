@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// SecurityHeaders adds security headers to HTTP responses
+// SecurityHeaders adds security headers to HTTP responses.
 func SecurityHeaders(isDevelopment bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +60,7 @@ func SecurityHeaders(isDevelopment bool) func(http.Handler) http.Handler {
 	}
 }
 
-// ValidateOrigin checks if the origin is allowed
+// ValidateOrigin checks if the origin is allowed.
 func ValidateOrigin(allowedOrigins []string, origin string) bool {
 	if origin == "" {
 		return false

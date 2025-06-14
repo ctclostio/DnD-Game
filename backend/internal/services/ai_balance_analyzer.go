@@ -11,7 +11,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// AIBalanceAnalyzer uses AI to analyze and balance custom rules
+// AIBalanceAnalyzer uses AI to analyze and balance custom rules.
 type AIBalanceAnalyzer struct {
 	llm        LLMProvider
 	ruleEngine *RuleEngine
@@ -19,12 +19,12 @@ type AIBalanceAnalyzer struct {
 	cfg        *config.Config
 }
 
-// CombatSimulator runs combat simulations for balance testing
+// CombatSimulator runs combat simulations for balance testing.
 type CombatSimulator struct {
 	combatService *CombatService
 }
 
-// NewAIBalanceAnalyzer creates a new balance analyzer instance
+// NewAIBalanceAnalyzer creates a new balance analyzer instance.
 func NewAIBalanceAnalyzer(cfg *config.Config, llm LLMProvider, ruleEngine *RuleEngine, combatService *CombatService) *AIBalanceAnalyzer {
 	return &AIBalanceAnalyzer{
 		llm:        llm,
@@ -34,7 +34,7 @@ func NewAIBalanceAnalyzer(cfg *config.Config, llm LLMProvider, ruleEngine *RuleE
 	}
 }
 
-// AnalyzeRuleBalance performs comprehensive balance analysis on a rule template
+// AnalyzeRuleBalance performs comprehensive balance analysis on a rule template.
 func (ba *AIBalanceAnalyzer) AnalyzeRuleBalance(ctx context.Context, template *models.RuleTemplate) (*models.BalanceMetrics, error) {
 	// Run simulations across different scenarios
 	simResults := ba.runSimulations(ctx, template)
@@ -87,7 +87,7 @@ func (ba *AIBalanceAnalyzer) AnalyzeRuleBalance(ctx context.Context, template *m
 	}, nil
 }
 
-// runSimulations executes balance simulations across various scenarios
+// runSimulations executes balance simulations across various scenarios.
 func (ba *AIBalanceAnalyzer) runSimulations(ctx context.Context, template *models.RuleTemplate) []models.SimulationResult {
 	scenarios := ba.getSimulationScenarios(template.Category)
 	results := []models.SimulationResult{}
@@ -104,7 +104,7 @@ func (ba *AIBalanceAnalyzer) runSimulations(ctx context.Context, template *model
 	return results
 }
 
-// simulateScenario runs a single simulation scenario
+// simulateScenario runs a single simulation scenario.
 func (ba *AIBalanceAnalyzer) simulateScenario(ctx context.Context, template *models.RuleTemplate, scenario SimulationScenario) (models.SimulationResult, error) {
 	successCount := 0
 	outcomes := []map[string]interface{}{}
@@ -139,7 +139,7 @@ func (ba *AIBalanceAnalyzer) simulateScenario(ctx context.Context, template *mod
 	}, nil
 }
 
-// calculateDamageExpectation analyzes potential damage output
+// calculateDamageExpectation analyzes potential damage output.
 func (ba *AIBalanceAnalyzer) calculateDamageExpectation(template *models.RuleTemplate) models.DamageExpectation {
 	expectation := models.DamageExpectation{
 		DamageTypes: make(map[string]float64),
@@ -174,7 +174,7 @@ func (ba *AIBalanceAnalyzer) calculateDamageExpectation(template *models.RuleTem
 	return expectation
 }
 
-// generateBalanceSuggestions uses AI to suggest balance adjustments
+// generateBalanceSuggestions uses AI to suggest balance adjustments.
 func (ba *AIBalanceAnalyzer) generateBalanceSuggestions(ctx context.Context, template *models.RuleTemplate, simResults []models.SimulationResult) ([]models.BalanceSuggestion, error) {
 	if !ba.cfg.AI.Enabled {
 		return ba.generateDefaultSuggestions(template, simResults), nil
@@ -247,7 +247,7 @@ Consider:
 	return suggestions, nil
 }
 
-// predictMetaImpact predicts how the rule will affect the game meta
+// predictMetaImpact predicts how the rule will affect the game meta.
 func (ba *AIBalanceAnalyzer) predictMetaImpact(ctx context.Context, template *models.RuleTemplate, simResults []models.SimulationResult) models.MetaImpactPrediction {
 	prediction := models.MetaImpactPrediction{
 		EnablesCombos: []string{},

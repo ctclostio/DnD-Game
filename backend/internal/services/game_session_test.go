@@ -217,7 +217,7 @@ func TestGameSessionService_JoinSession(t *testing.T) {
 				return &s
 			}(),
 			setupMock: func(m *mocks.MockGameSessionRepository) {
-				session := &models.GameSession{ID: "session-123", IsActive: true}
+				session := &models.GameSession{ID: "session-123", IsActive: true, Status: models.GameStatusActive}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
 				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
 				m.On("AddParticipant", ctx, "session-123", "user-123", mock.Anything).Return(nil)
@@ -229,7 +229,7 @@ func TestGameSessionService_JoinSession(t *testing.T) {
 			userID:      "user-123",
 			characterID: nil,
 			setupMock: func(m *mocks.MockGameSessionRepository) {
-				session := &models.GameSession{ID: "session-123", IsActive: true}
+				session := &models.GameSession{ID: "session-123", IsActive: true, Status: models.GameStatusActive}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
 				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
 				m.On("AddParticipant", ctx, "session-123", "user-123", (*string)(nil)).Return(nil)
@@ -255,7 +255,7 @@ func TestGameSessionService_JoinSession(t *testing.T) {
 			userID:      "user-123",
 			characterID: nil,
 			setupMock: func(m *mocks.MockGameSessionRepository) {
-				session := &models.GameSession{ID: "session-123", IsActive: true}
+				session := &models.GameSession{ID: "session-123", IsActive: true, Status: models.GameStatusActive}
 				m.On("GetByID", ctx, "session-123").Return(session, nil)
 				m.On("GetParticipants", ctx, "session-123").Return([]*models.GameParticipant{}, nil)
 				m.On("AddParticipant", ctx, "session-123", "user-123", (*string)(nil)).Return(errors.New("database error"))

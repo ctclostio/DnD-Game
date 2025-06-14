@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// RateLimiter tracks request rates per IP
+// RateLimiter tracks request rates per IP.
 type RateLimiter struct {
 	visitors map[string]*visitor
 	mu       sync.RWMutex
@@ -16,7 +16,7 @@ type RateLimiter struct {
 	window   time.Duration // time window
 }
 
-// visitor tracks the rate limit data for each visitor
+// visitor tracks the rate limit data for each visitor.
 type visitor struct {
 	lastSeen  time.Time
 	count     int
@@ -24,7 +24,7 @@ type visitor struct {
 	blockTime time.Time
 }
 
-// NewRateLimiter creates a new rate limiter
+// NewRateLimiter creates a new rate limiter.
 func NewRateLimiter(rate int, window time.Duration) *RateLimiter {
 	rl := &RateLimiter{
 		visitors: make(map[string]*visitor),
@@ -38,7 +38,7 @@ func NewRateLimiter(rate int, window time.Duration) *RateLimiter {
 	return rl
 }
 
-// cleanupVisitors removes old entries from the visitors map
+// cleanupVisitors removes old entries from the visitors map.
 func (rl *RateLimiter) cleanupVisitors() {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
@@ -54,7 +54,7 @@ func (rl *RateLimiter) cleanupVisitors() {
 	}
 }
 
-// getVisitor retrieves or creates a visitor entry
+// getVisitor retrieves or creates a visitor entry.
 func (rl *RateLimiter) getVisitor(ip string) *visitor {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
@@ -71,7 +71,7 @@ func (rl *RateLimiter) getVisitor(ip string) *visitor {
 	return v
 }
 
-// isAllowed checks if a request from the given IP is allowed
+// isAllowed checks if a request from the given IP is allowed.
 func (rl *RateLimiter) isAllowed(ip string) bool {
 	v := rl.getVisitor(ip)
 
@@ -111,7 +111,7 @@ func (rl *RateLimiter) isAllowed(ip string) bool {
 	return true
 }
 
-// Middleware returns a rate limiting middleware
+// Middleware returns a rate limiting middleware.
 func (rl *RateLimiter) Middleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +132,7 @@ func (rl *RateLimiter) Middleware() func(http.Handler) http.Handler {
 	}
 }
 
-// getIP extracts the real IP address from the request
+// getIP extracts the real IP address from the request.
 func getIP(r *http.Request) string {
 	// Check X-Forwarded-For header
 	forwarded := r.Header.Get("X-Forwarded-For")
@@ -159,13 +159,13 @@ func getIP(r *http.Request) string {
 	return ip
 }
 
-// AuthRateLimiter creates a rate limiter specifically for auth endpoints
+// AuthRateLimiter creates a rate limiter specifically for auth endpoints.
 func AuthRateLimiter() *RateLimiter {
 	// Allow 5 requests per minute for auth endpoints
 	return NewRateLimiter(5, 1*time.Minute)
 }
 
-// APIRateLimiter creates a general rate limiter for API endpoints
+// APIRateLimiter creates a general rate limiter for API endpoints.
 func APIRateLimiter() *RateLimiter {
 	// Allow 100 requests per minute for general API endpoints
 	return NewRateLimiter(100, 1*time.Minute)

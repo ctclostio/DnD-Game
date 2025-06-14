@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+	"github.com/google/uuid"
 )
 
 // LoggingMiddleware logs all HTTP requests with enhanced context
@@ -169,7 +169,7 @@ func RequestContextMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// DatabaseQueryLogger logs database queries
+// DatabaseQueryLogger logs database queries.
 type DatabaseQueryLogger struct {
 	log *logger.LoggerV2
 }

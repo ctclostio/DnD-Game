@@ -10,7 +10,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
-// RecoveryMiddleware returns a middleware that recovers from panics
+// RecoveryMiddleware returns a middleware that recovers from panics.
 func RecoveryMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +38,7 @@ func RecoveryMiddleware(log *logger.LoggerV2) func(http.Handler) http.Handler {
 	}
 }
 
-// RecoveryWithConfigNew allows custom error handling with structured logging
+// RecoveryWithConfigNew allows custom error handling with structured logging.
 type RecoveryConfigNew struct {
 	Logger       *logger.LoggerV2
 	PrintStack   bool
@@ -46,7 +46,7 @@ type RecoveryConfigNew struct {
 	ErrorHandler func(w http.ResponseWriter, r *http.Request, err interface{}, log *logger.LoggerV2)
 }
 
-// RecoveryWithConfigNew creates a recovery middleware with custom configuration
+// RecoveryWithConfigNew creates a recovery middleware with custom configuration.
 func RecoveryWithConfigNew(config RecoveryConfigNew) func(http.Handler) http.Handler {
 	// Set defaults
 	if config.StackSize == 0 {

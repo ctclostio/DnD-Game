@@ -59,9 +59,6 @@ func (s *GameSessionService) CreateSession(ctx context.Context, session *models.
 	// the session can be joined right away.
 	if session.Status == "" {
 		session.Status = models.GameStatusActive
-		if !session.IsActive {
-			session.IsActive = true
-		}
 	}
 
 	// Set security defaults
