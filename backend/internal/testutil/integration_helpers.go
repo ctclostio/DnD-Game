@@ -56,7 +56,7 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (ctx *In
 		ServiceName: "test",
 		Environment: "test",
 	}
-	log, err := logger.NewV2(logConfig)
+	log, err := logger.NewV2(&logConfig)
 	require.NoError(t, err)
 
 	// Setup test database

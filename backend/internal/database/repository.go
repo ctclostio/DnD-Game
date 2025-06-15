@@ -95,7 +95,7 @@ type NPCRepository interface {
 	GetByGameSession(ctx context.Context, gameSessionID string) ([]*models.NPC, error)
 	Update(ctx context.Context, npc *models.NPC) error
 	Delete(ctx context.Context, id string) error
-	Search(ctx context.Context, filter models.NPCSearchFilter) ([]*models.NPC, error)
+	Search(ctx context.Context, filter *models.NPCSearchFilter) ([]*models.NPC, error)
 
 	// Template operations
 	GetTemplates(ctx context.Context) ([]*models.NPCTemplate, error)

@@ -16,7 +16,7 @@ import (
 //lint:ignore U1000 retained for backward compatibility
 func deprecatedSendJSONResponse(w http.ResponseWriter, status int, data interface{}) {
 	// Create a minimal request with empty context for backward compatibility
-	r, _ := http.NewRequest("", "", nil)
+	r, _ := http.NewRequest("", "", http.NoBody)
 	response.JSON(w, r, status, data)
 }
 
@@ -26,7 +26,7 @@ func deprecatedSendJSONResponse(w http.ResponseWriter, status int, data interfac
 //lint:ignore U1000 retained for backward compatibility
 func deprecatedSendErrorResponse(w http.ResponseWriter, status int, message string) {
 	// Create a minimal request with empty context for backward compatibility
-	r, _ := http.NewRequest("", "", nil)
+	r, _ := http.NewRequest("", "", http.NoBody)
 	response.BadRequest(w, r, message)
 }
 
@@ -36,7 +36,7 @@ func deprecatedSendErrorResponse(w http.ResponseWriter, status int, message stri
 //lint:ignore U1000 retained for backward compatibility
 func deprecatedRespondWithJSON(w http.ResponseWriter, status int, data interface{}) {
 	// Create a minimal request with empty context for backward compatibility
-	r, _ := http.NewRequest("", "", nil)
+	r, _ := http.NewRequest("", "", http.NoBody)
 	response.JSON(w, r, status, data)
 }
 
@@ -46,7 +46,7 @@ func deprecatedRespondWithJSON(w http.ResponseWriter, status int, data interface
 //lint:ignore U1000 retained for backward compatibility
 func deprecatedRespondWithError(w http.ResponseWriter, status int, message string) {
 	// Create a minimal request with empty context for backward compatibility
-	r, _ := http.NewRequest("", "", nil)
+	r, _ := http.NewRequest("", "", http.NoBody)
 
 	switch status {
 	case http.StatusBadRequest:

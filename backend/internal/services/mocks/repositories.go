@@ -384,7 +384,7 @@ func (m *MockNPCRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockNPCRepository) Search(ctx context.Context, filter models.NPCSearchFilter) ([]*models.NPC, error) {
+func (m *MockNPCRepository) Search(ctx context.Context, filter *models.NPCSearchFilter) ([]*models.NPC, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

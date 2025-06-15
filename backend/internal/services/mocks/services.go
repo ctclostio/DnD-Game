@@ -291,12 +291,12 @@ type MockAIDMAssistantService struct {
 	mock.Mock
 }
 
-func (m *MockAIDMAssistantService) GenerateNPCDialog(ctx context.Context, req models.NPCDialogRequest) (string, error) {
+func (m *MockAIDMAssistantService) GenerateNPCDialog(ctx context.Context, req *models.NPCDialogRequest) (string, error) {
 	args := m.Called(ctx, req)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockAIDMAssistantService) GenerateLocationDescription(ctx context.Context, req models.LocationDescriptionRequest) (*models.AILocation, error) {
+func (m *MockAIDMAssistantService) GenerateLocationDescription(ctx context.Context, req *models.LocationDescriptionRequest) (*models.AILocation, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -304,7 +304,7 @@ func (m *MockAIDMAssistantService) GenerateLocationDescription(ctx context.Conte
 	return args.Get(0).(*models.AILocation), args.Error(1)
 }
 
-func (m *MockAIDMAssistantService) GenerateCombatNarration(ctx context.Context, req models.CombatNarrationRequest) (string, error) {
+func (m *MockAIDMAssistantService) GenerateCombatNarration(ctx context.Context, req *models.CombatNarrationRequest) (string, error) {
 	args := m.Called(ctx, req)
 	return args.String(0), args.Error(1)
 }

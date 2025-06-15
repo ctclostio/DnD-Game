@@ -40,7 +40,7 @@ func main() {
 		},
 	}
 
-	log, err := logger.NewV2(logConfig)
+	log, err := logger.NewV2(&logConfig)
 	if err != nil {
 		// Fallback to standard library if logger fails
 		panic("Failed to initialize logger: " + err.Error())

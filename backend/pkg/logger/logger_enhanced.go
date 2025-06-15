@@ -67,7 +67,7 @@ func DefaultConfig() ConfigV2 {
 }
 
 // NewV2 creates a new enhanced logger
-func NewV2(cfg ConfigV2) (*LoggerV2, error) {
+func NewV2(cfg *ConfigV2) (*LoggerV2, error) {
 	// Parse log level
 	level, err := zerolog.ParseLevel(cfg.Level)
 	if err != nil {

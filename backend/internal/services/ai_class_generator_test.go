@@ -86,7 +86,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		class, err := generator.GenerateCustomClass(ctx, req)
+		class, err := generator.GenerateCustomClass(ctx, &req)
 
 		require.NoError(t, err)
 		require.NotNil(t, class)
@@ -113,7 +113,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		class, err := generator.GenerateCustomClass(ctx, req)
+		class, err := generator.GenerateCustomClass(ctx, &req)
 
 		require.Error(t, err)
 		require.Nil(t, class)
@@ -136,7 +136,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		class, err := generator.GenerateCustomClass(ctx, req)
+		class, err := generator.GenerateCustomClass(ctx, &req)
 
 		require.Error(t, err)
 		require.Nil(t, class)
@@ -179,7 +179,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		class, err := generator.GenerateCustomClass(ctx, req)
+		class, err := generator.GenerateCustomClass(ctx, &req)
 
 		require.Error(t, err)
 		require.Nil(t, class)

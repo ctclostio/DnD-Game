@@ -483,9 +483,9 @@ func TestNPCService_SearchNPCs(t *testing.T) {
 			{ID: "npc-2", Name: "Hobgoblin Captain", ChallengeRating: 3},
 		}
 
-		mockRepo.On("Search", mock.Anything, filter).Return(expectedNPCs, nil)
+		mockRepo.On("Search", mock.Anything, &filter).Return(expectedNPCs, nil)
 
-		npcs, err := service.SearchNPCs(context.Background(), filter)
+		npcs, err := service.SearchNPCs(context.Background(), &filter)
 
 		require.NoError(t, err)
 		require.Len(t, npcs, 2)
@@ -622,7 +622,7 @@ func (m *MockNPCRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockNPCRepository) Search(ctx context.Context, filter models.NPCSearchFilter) ([]*models.NPC, error) {
+func (m *MockNPCRepository) Search(ctx context.Context, filter *models.NPCSearchFilter) ([]*models.NPC, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

@@ -25,7 +25,7 @@ func NewAIDMAssistantService(llmProvider LLMProvider) *AIDMAssistantService {
 }
 
 // GenerateNPCDialog generates contextual dialog for an NPC
-func (s *AIDMAssistantService) GenerateNPCDialog(ctx context.Context, req models.NPCDialogRequest) (string, error) {
+func (s *AIDMAssistantService) GenerateNPCDialog(ctx context.Context, req *models.NPCDialogRequest) (string, error) {
 	systemPrompt := `You are a Dungeon Master helping to generate NPC dialog for a D&D game. 
 Generate dialog that:
 1. Matches the NPC's personality traits and speaking style
@@ -61,7 +61,7 @@ Generate an appropriate response from this NPC.`,
 }
 
 // GenerateLocationDescription creates immersive location descriptions
-func (s *AIDMAssistantService) GenerateLocationDescription(ctx context.Context, req models.LocationDescriptionRequest) (*models.AILocation, error) {
+func (s *AIDMAssistantService) GenerateLocationDescription(ctx context.Context, req *models.LocationDescriptionRequest) (*models.AILocation, error) {
 	systemPrompt := `You are a Dungeon Master creating vivid location descriptions for a D&D game.
 Your descriptions should:
 1. Paint a clear picture using all five senses
@@ -147,7 +147,7 @@ Make it immersive and interactive.`,
 }
 
 // GenerateCombatNarration creates dynamic combat descriptions
-func (s *AIDMAssistantService) GenerateCombatNarration(ctx context.Context, req models.CombatNarrationRequest) (string, error) {
+func (s *AIDMAssistantService) GenerateCombatNarration(ctx context.Context, req *models.CombatNarrationRequest) (string, error) {
 	intensity := "normal"
 	if req.IsCritical {
 		intensity = "epic and dramatic"

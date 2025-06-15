@@ -596,7 +596,7 @@ func (s *CharacterService) GenerateCustomClass(ctx context.Context, userID, name
 	}
 
 	// Generate the custom class
-	customClass, err := s.classGenerator.GenerateCustomClass(ctx, req)
+	customClass, err := s.classGenerator.GenerateCustomClass(ctx, &req)
 	if err != nil {
 		return nil, err
 	}

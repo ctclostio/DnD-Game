@@ -108,7 +108,7 @@ func TestNewV2(t *testing.T) {
 				tt.config.Output = "stdout"
 			}
 
-			logger, err := NewV2(tt.config)
+			logger, err := NewV2(&tt.config)
 			if tt.wantError {
 				assert.Error(t, err)
 				return
@@ -570,7 +570,7 @@ func TestLoggerV2_PrettyPrinting(t *testing.T) {
 		ServiceName: "test-service",
 	}
 
-	logger, err := NewV2(cfg)
+	logger, err := NewV2(&cfg)
 	require.NoError(t, err)
 	assert.NotNil(t, logger)
 
@@ -585,7 +585,7 @@ func TestLoggerV2_CallerInfo(t *testing.T) {
 		CallerInfo: true,
 	}
 
-	logger, err := NewV2(cfg)
+	logger, err := NewV2(&cfg)
 	require.NoError(t, err)
 
 	// Replace output for testing
@@ -618,7 +618,8 @@ func TestLoggerV2_EmptyGameContext(t *testing.T) {
 }
 
 func BenchmarkLoggerV2_LogHTTPRequest(b *testing.B) {
-	logger, _ := NewV2(DefaultConfig())
+	cfg := DefaultConfig()
+	logger, _ := NewV2(&cfg)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -627,7 +628,8 @@ func BenchmarkLoggerV2_LogHTTPRequest(b *testing.B) {
 }
 
 func BenchmarkLoggerV2_WithContext(b *testing.B) {
-	logger, _ := NewV2(DefaultConfig())
+	cfg := DefaultConfig()
+	logger, _ := NewV2(&cfg)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, RequestIDKey, "bench-req")

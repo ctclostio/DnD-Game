@@ -46,7 +46,7 @@ func (c *Client) HandleDMAssistantMessage(message []byte, dmAssistant *services.
 	switch msg.Type {
 	case "dm_assistant_request":
 		c.handleDMAssistantRequest(msg, dmAssistant)
-	case "dm_assistant_npc_dialogue":
+	case "dm_assistant_npc_dialog":
 		c.handleNPCDialogue(msg, dmAssistant)
 	case "dm_assistant_location":
 		c.handleLocationGeneration(msg, dmAssistant)
@@ -121,13 +121,13 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 }
 
 func (c *Client) handleNPCDialogue(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
-	// Stream NPC dialogue as it's generated
+	// Stream NPC dialog as it's generated
 	npcName, _ := msg.Data["npcName"].(string)
 	playerInput, _ := msg.Data["playerInput"].(string)
 
 	// Send typing indicator
 	c.sendDMAssistantResponse(DMAssistantResponse{
-		Type:      "npc_dialogue_stream",
+		Type:      "npc_dialog_stream",
 		RequestID: msg.RequestID,
 		Streaming: true,
 		Complete:  false,
@@ -141,16 +141,16 @@ func (c *Client) handleNPCDialogue(msg DMAssistantMessage, dmAssistant *services
 	// For now, we'll simulate with a complete response
 	time.Sleep(500 * time.Millisecond) // Simulate thinking
 
-	dialogue := fmt.Sprintf("'%s? Well, that's an interesting question...'", playerInput)
+	dialog := fmt.Sprintf("'%s? Well, that's an interesting question...'", playerInput)
 
 	c.sendDMAssistantResponse(DMAssistantResponse{
-		Type:      "npc_dialogue_stream",
+		Type:      "npc_dialog_stream",
 		RequestID: msg.RequestID,
 		Streaming: false,
 		Complete:  true,
 		Data: map[string]interface{}{
 			"npcName":  npcName,
-			"dialogue": dialogue,
+			"dialog": dialog,
 		},
 	})
 }

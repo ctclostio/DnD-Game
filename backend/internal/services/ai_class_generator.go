@@ -27,7 +27,7 @@ func NewAIClassGenerator(provider LLMProvider) *AIClassGenerator {
 	}
 }
 
-func (g *AIClassGenerator) GenerateCustomClass(ctx context.Context, req CustomClassRequest) (*models.CustomClass, error) {
+func (g *AIClassGenerator) GenerateCustomClass(ctx context.Context, req *CustomClassRequest) (*models.CustomClass, error) {
 	prompt := g.buildClassPrompt(req)
 
 	systemPrompt := `You are a D&D 5th Edition expert game designer creating balanced, interesting custom classes.
@@ -55,7 +55,7 @@ Your responses must be valid JSON matching the specified format exactly. Do not 
 	return class, nil
 }
 
-func (g *AIClassGenerator) buildClassPrompt(req CustomClassRequest) string {
+func (g *AIClassGenerator) buildClassPrompt(req *CustomClassRequest) string {
 	styleGuide := map[string]string{
 		"balanced":  "Create a class that is well-balanced with existing D&D 5e classes, neither too powerful nor too weak.",
 		"flavorful": "Focus on unique and interesting mechanics that enhance the roleplay experience, even if slightly unconventional.",

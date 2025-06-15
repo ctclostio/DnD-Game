@@ -27,7 +27,8 @@ func TestAuthFlow_Integration(t *testing.T) {
 	defer cleanup()
 
 	// Create logger
-	log, err := logger.NewV2(logger.DefaultConfig())
+	cfg := logger.DefaultConfig()
+	log, err := logger.NewV2(&cfg)
 	require.NoError(t, err)
 
 	// Create services
@@ -347,7 +348,8 @@ func TestPasswordValidation_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t)
 	defer cleanup()
 
-	log, err := logger.NewV2(logger.DefaultConfig())
+	cfg := logger.DefaultConfig()
+	log, err := logger.NewV2(&cfg)
 	require.NoError(t, err)
 
 	svc := &services.Services{

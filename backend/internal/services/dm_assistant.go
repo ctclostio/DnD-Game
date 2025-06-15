@@ -54,7 +54,7 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 		}
 		prompt = fmt.Sprintf("NPC: %s, Player: %s", npcReq.NPCName, npcReq.PlayerInput)
 
-		dialog, err := s.aiAssistant.GenerateNPCDialog(ctx, *npcReq)
+		dialog, err := s.aiAssistant.GenerateNPCDialog(ctx, npcReq)
 		if err != nil {
 			return nil, err
 		}
@@ -69,7 +69,7 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 		}
 		prompt = fmt.Sprintf("Location: %s (%s)", locReq.LocationName, locReq.LocationType)
 
-		location, err := s.aiAssistant.GenerateLocationDescription(ctx, *locReq)
+		location, err := s.aiAssistant.GenerateLocationDescription(ctx, locReq)
 		if err != nil {
 			return nil, err
 		}
@@ -89,7 +89,7 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 		combatReq := s.parseCombatRequest(req.Parameters)
 		prompt = fmt.Sprintf("Combat: %s vs %s", combatReq.AttackerName, combatReq.TargetName)
 
-		narration, err := s.aiAssistant.GenerateCombatNarration(ctx, *combatReq)
+		narration, err := s.aiAssistant.GenerateCombatNarration(ctx, combatReq)
 		if err != nil {
 			return nil, err
 		}

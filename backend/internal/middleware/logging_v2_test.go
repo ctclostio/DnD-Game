@@ -21,7 +21,7 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 		Environment:  "test",
 		SamplingRate: 1.0, // Ensure no sampling issues
 	}
-	log, err := logger.NewV2(logConfig)
+	log, err := logger.NewV2(&logConfig)
 	require.NoError(t, err)
 
 	// Create test handler
@@ -135,7 +135,7 @@ func TestRequestContextMiddleware(t *testing.T) {
 	wrappedHandler := middleware.RequestContextMiddleware(handler)
 
 	// Basic test to ensure middleware doesn't break
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	req.Header.Set("X-Session-ID", "session-123")
 	req.Header.Set("X-Character-ID", "char-789")
 

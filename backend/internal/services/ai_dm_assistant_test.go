@@ -73,7 +73,7 @@ func TestAIDMAssistantService_GenerateNPCDialog(t *testing.T) {
 			}
 
 			service := NewAIDMAssistantService(mockLLM)
-			result, err := service.GenerateNPCDialog(ctx, tt.request)
+			result, err := service.GenerateNPCDialog(ctx, &tt.request)
 
 			if tt.expectedError {
 				require.Error(t, err)
@@ -153,7 +153,7 @@ func TestAIDMAssistantService_GenerateLocationDescription(t *testing.T) {
 			}
 
 			service := NewAIDMAssistantService(mockLLM)
-			result, err := service.GenerateLocationDescription(ctx, tt.request)
+			result, err := service.GenerateLocationDescription(ctx, &tt.request)
 
 			if tt.expectedError {
 				require.Error(t, err)
@@ -228,7 +228,7 @@ func TestAIDMAssistantService_GenerateCombatNarration(t *testing.T) {
 			mockLLM.On("GenerateCompletion", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(tt.mockResponse, nil)
 
 			service := NewAIDMAssistantService(mockLLM)
-			result, err := service.GenerateCombatNarration(ctx, tt.request)
+			result, err := service.GenerateCombatNarration(ctx, &tt.request)
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, result)

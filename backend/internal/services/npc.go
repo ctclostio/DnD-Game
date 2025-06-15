@@ -88,7 +88,7 @@ func (s *NPCService) DeleteNPC(ctx context.Context, id string) error {
 }
 
 // SearchNPCs searches for NPCs based on filter criteria
-func (s *NPCService) SearchNPCs(ctx context.Context, filter models.NPCSearchFilter) ([]*models.NPC, error) {
+func (s *NPCService) SearchNPCs(ctx context.Context, filter *models.NPCSearchFilter) ([]*models.NPC, error) {
 	return s.repo.Search(ctx, filter)
 }
 

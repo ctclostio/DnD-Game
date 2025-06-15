@@ -39,7 +39,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 
 		expectedDialog := "Well, funny you should ask! Just this morning..."
 
-		mockAI.On("GenerateNPCDialog", ctx, mock.MatchedBy(func(req models.NPCDialogRequest) bool {
+		mockAI.On("GenerateNPCDialog", ctx, mock.MatchedBy(func(req *models.NPCDialogRequest) bool {
 			return req.NPCName == "Bartender Bob" &&
 				len(req.NPCPersonality) == 2 &&
 				req.PlayerInput == "What's the latest gossip?"

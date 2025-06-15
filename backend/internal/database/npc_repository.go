@@ -206,7 +206,7 @@ func (r *npcRepository) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func (r *npcRepository) Search(ctx context.Context, filter models.NPCSearchFilter) ([]*models.NPC, error) {
+func (r *npcRepository) Search(ctx context.Context, filter *models.NPCSearchFilter) ([]*models.NPC, error) {
 	query := `
 		SELECT 
 			id, game_session_id, name, type, size, alignment,

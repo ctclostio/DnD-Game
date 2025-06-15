@@ -33,7 +33,8 @@ func TestCombatFlow_Integration(t *testing.T) {
 	defer cleanup()
 
 	// Create logger
-	log, err := logger.NewV2(logger.DefaultConfig())
+	cfg := logger.DefaultConfig()
+	log, err := logger.NewV2(&cfg)
 	require.NoError(t, err)
 
 	// Create services
@@ -370,7 +371,8 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t)
 	defer cleanup()
 
-	log, _ := logger.NewV2(logger.DefaultConfig())
+	cfg := logger.DefaultConfig()
+	log, _ := logger.NewV2(&cfg)
 
 	// Create services
 	svc := &services.Services{

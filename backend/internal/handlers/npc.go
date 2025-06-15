@@ -226,7 +226,7 @@ func (h *Handlers) SearchNPCs(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	npcs, err := h.npcService.SearchNPCs(r.Context(), filter)
+	npcs, err := h.npcService.SearchNPCs(r.Context(), &filter)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return
