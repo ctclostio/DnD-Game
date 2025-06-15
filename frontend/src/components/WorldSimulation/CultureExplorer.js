@@ -328,6 +328,15 @@ const CultureExplorer = ({ sessionId, isDM }) => {
               key={culture.id}
               className={`culture-card ${selectedCulture?.id === culture.id ? 'selected' : ''}`}
               onClick={() => setSelectedCulture(culture)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedCulture(culture);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-pressed={selectedCulture?.id === culture.id}
             >
               <div className="culture-icon">
                 <FaGlobeAsia />

@@ -148,6 +148,15 @@ const FactionPersonalities = ({ sessionId, isDM }) => {
               key={faction.id}
               className={`faction-card ${selectedFaction?.id === faction.id ? 'selected' : ''}`}
               onClick={() => setSelectedFaction(faction)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedFaction(faction);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-pressed={selectedFaction?.id === faction.id}
               style={{ borderColor: faction.color || '#95a5a6' }}
             >
               <div className="faction-banner" style={{ backgroundColor: faction.color || '#95a5a6' }}>

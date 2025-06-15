@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -109,12 +110,12 @@ func (r *gameSessionRepository) GetByID(ctx context.Context, id string) (*models
 		return nil, fmt.Errorf("failed to get game session by id: %w", err)
 	}
 
-	// Parse state JSON (in production, handle this properly)
+	// Parse state JSON
+	session.State = make(map[string]interface{})
 	if stateJSON != "" && stateJSON != "{}" {
-		// Parse JSON into session.State
-		session.State = make(map[string]interface{})
-	} else {
-		session.State = make(map[string]interface{})
+		if err := json.Unmarshal([]byte(stateJSON), &session.State); err != nil {
+			return nil, fmt.Errorf("failed to parse session state: %w", err)
+		}
 	}
 
 	return &session, nil

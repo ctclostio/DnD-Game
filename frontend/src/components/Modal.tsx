@@ -77,7 +77,14 @@ export const Modal: React.FC<ModalProps> = ({
     <div 
       className={`modal-overlay ${settings.reduceMotion ? 'no-animation' : ''}`}
       onClick={handleOverlayClick}
+      onKeyDown={(e) => {
+        if (closeOnOverlayClick && e.key === 'Escape') {
+          onClose();
+        }
+      }}
+      role="dialog"
       aria-modal="true"
+      tabIndex={-1}
     >
       <div
         ref={modalRef}
