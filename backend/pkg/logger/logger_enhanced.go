@@ -147,7 +147,7 @@ func NewV2(cfg *ConfigV2) (*LoggerV2, error) {
 
 	return &LoggerV2{
 		Logger: &zl,
-		config: cfg,
+		config: *cfg,
 	}, nil
 }
 
