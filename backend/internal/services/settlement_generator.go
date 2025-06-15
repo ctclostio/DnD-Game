@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
-
 
 // WorldBuildingRepository interface for world building data operations
 type WorldBuildingRepository interface {
@@ -487,9 +487,9 @@ func (s *SettlementGeneratorService) calculatePopulation(settlementType models.S
 	}
 
 	sizeMultiplier := map[string]float64{
-		constants.SizeSmall:  0.5,
-		"medium": 1.0,
-		constants.SizeLarge:  2.0,
+		constants.SizeSmall: 0.5,
+		"medium":            1.0,
+		constants.SizeLarge: 2.0,
 	}
 
 	base := basePopulation[settlementType]

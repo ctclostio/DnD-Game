@@ -597,10 +597,10 @@ func (b *AIEncounterBuilder) calculateXPBudget(level, size int, difficulty strin
 	}
 
 	difficultyIndex := map[string]int{
-		difficultyEasy:   0,
-		"medium": 1,
-		"hard":   2,
-		"deadly": 3,
+		difficultyEasy: 0,
+		"medium":       1,
+		"hard":         2,
+		"deadly":       3,
 	}
 
 	idx := difficultyIndex[difficulty]

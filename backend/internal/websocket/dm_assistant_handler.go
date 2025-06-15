@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 )
@@ -45,8 +46,8 @@ func (c *Client) HandleDMAssistantMessage(message []byte, dmAssistant *services.
 	switch msg.Type {
 	case "dm_assistant_request":
 		c.handleDMAssistantRequest(msg, dmAssistant)
-	case "dm_assistant_npc_dialog":
-		c.handleNPCDialog(msg, dmAssistant)
+	case "dm_assistant_npc_dialogue":
+		c.handleNPCDialogue(msg, dmAssistant)
 	case "dm_assistant_location":
 		c.handleLocationGeneration(msg, dmAssistant)
 	case "dm_assistant_combat":
@@ -119,7 +120,7 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 	}
 }
 
-func (c *Client) handleNPCDialog(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
+func (c *Client) handleNPCDialogue(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
 	// Stream NPC dialogue as it's generated
 	npcName, _ := msg.Data["npcName"].(string)
 	playerInput, _ := msg.Data["playerInput"].(string)

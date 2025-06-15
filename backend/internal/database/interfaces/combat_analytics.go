@@ -1,8 +1,9 @@
 package interfaces
 
 import (
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // CombatAnalyticsInterface handles core combat analytics data

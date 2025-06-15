@@ -34,11 +34,11 @@ func decodeItemRequest(r *http.Request) (*ItemRequest, error) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
-	
+
 	// Ensure quantity is at least 1
 	if req.Quantity <= 0 {
 		req.Quantity = 1
 	}
-	
+
 	return &req, nil
 }

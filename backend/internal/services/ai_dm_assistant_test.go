@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -42,7 +43,7 @@ func TestAIDMAssistantService_GenerateNPCDialog(t *testing.T) {
 			request: models.NPCDialogRequest{
 				NPCName:         "Gareth the Barkeep",
 				NPCPersonality:  []string{"gruff", "protective of locals", "secretly helpful"},
-				DialogStyle:      "Working class, uses simple words, occasional grunt",
+				DialogStyle:     "Working class, uses simple words, occasional grunt",
 				Situation:       "Late evening in a busy tavern",
 				PlayerInput:     "Do you know anything about the strange disappearances?",
 				PreviousContext: "First time meeting",

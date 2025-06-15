@@ -5,8 +5,9 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/jmoiron/sqlx"
+
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // LoggedDB wraps DB with query logging

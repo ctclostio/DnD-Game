@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/constants"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type npcRepository struct {

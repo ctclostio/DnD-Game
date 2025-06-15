@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"github.com/stretchr/testify/mock"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 

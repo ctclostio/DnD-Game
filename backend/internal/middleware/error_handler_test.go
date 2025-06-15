@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
-	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 )
 
 func TestErrorHandlerMiddleware(t *testing.T) {

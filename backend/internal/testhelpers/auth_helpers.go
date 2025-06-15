@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/google/uuid"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 )
 
 // CreateTestClaims creates test JWT claims with sensible defaults

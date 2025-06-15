@@ -5,11 +5,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/gorilla/websocket"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
-	"github.com/gorilla/websocket"
 )
 
 // getAllowedOrigins returns the list of allowed origins for CORS
@@ -24,7 +25,7 @@ func getAllowedOrigins() []string {
 	if prodOrigin := os.Getenv("PRODUCTION_ORIGIN"); prodOrigin != "" {
 		origins = append(origins, prodOrigin)
 	}
-	
+
 	return origins
 }
 

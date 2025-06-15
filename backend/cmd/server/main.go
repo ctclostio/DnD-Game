@@ -8,6 +8,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
@@ -18,8 +21,6 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
-	"github.com/gorilla/mux"
-	"github.com/rs/cors"
 )
 
 func main() {

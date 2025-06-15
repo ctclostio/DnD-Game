@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"strings"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // GetCSRFToken handles CSRF token generation

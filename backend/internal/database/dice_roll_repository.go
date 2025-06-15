@@ -5,8 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/lib/pq"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // diceRollRepository implements DiceRollRepository interface

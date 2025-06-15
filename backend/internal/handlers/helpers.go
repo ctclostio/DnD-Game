@@ -4,10 +4,11 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/auth"
-	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // validateUserSession validates that a user is authenticated and has access to a game session
@@ -36,13 +37,13 @@ func validateUserSession(w http.ResponseWriter, r *http.Request, gameService int
 func parseUUIDFromRequest(w http.ResponseWriter, r *http.Request, key string) (uuid.UUID, error) {
 	vars := mux.Vars(r)
 	idStr := vars[key]
-	
+
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		response.BadRequest(w, r, "Invalid "+key)
 		return uuid.Nil, err
 	}
-	
+
 	return id, nil
 }
 

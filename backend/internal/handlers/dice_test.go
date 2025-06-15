@@ -7,9 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 func TestDiceHandler_RollDice(t *testing.T) {

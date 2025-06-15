@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 func TestUserRepository_Create(t *testing.T) {

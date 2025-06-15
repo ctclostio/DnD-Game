@@ -113,7 +113,46 @@ Generate a complete, balanced race following the system prompt guidelines. Ensur
 }
 
 func (s *AIRaceGeneratorService) validateGeneratedRace(race *models.CustomRaceGenerationResult) error {
-	// Validate ability score increases
+	if err := s.validateAbilityScores(race); err != nil {
+		return err
+	}
+	if err := s.validateSize(race); err != nil {
+		return err
+	}
+	if err := s.validateSpeed(race); err != nil {
+		return err
+	}
+	if err := s.validateTraits(race); err != nil {
+		return err
+	}
+	if err := s.validateLanguages(race); err != nil {
+		return err
+	}
+	if err := s.validateDarkvision(race); err != nil {
+		return err
+	}
+	if err := s.validateDamageTypes(race); err != nil {
+		return err
+	}
+	if err := s.validateBalanceScore(race); err != nil {
+		return err
+	}
+	return nil
+}
+
+func isValidDamageType(damageType string) bool {
+	normalized := strings.ToLower(damageType)
+	for _, valid := range models.ValidDamageTypes {
+		if normalized == valid {
+			return true
+		}
+	}
+	return false
+}
+
+// Validation helper methods to reduce cyclomatic complexity
+
+func (s *AIRaceGeneratorService) validateAbilityScores(race *models.CustomRaceGenerationResult) error {
 	totalASI := 0
 	validAbilities := map[string]bool{
 		"strength": true, "dexterity": true, "constitution": true,
@@ -133,72 +172,72 @@ func (s *AIRaceGeneratorService) validateGeneratedRace(race *models.CustomRaceGe
 	if totalASI < 1 || totalASI > 6 {
 		return fmt.Errorf("total ability score increases (%d) outside acceptable range (1-6)", totalASI)
 	}
+	return nil
+}
 
-	// Validate size
-	validSize := false
+func (s *AIRaceGeneratorService) validateSize(race *models.CustomRaceGenerationResult) error {
 	for _, size := range models.ValidSizes {
 		if race.Size == size {
-			validSize = true
-			break
+			return nil
 		}
 	}
-	if !validSize {
-		return fmt.Errorf("invalid size: %s", race.Size)
-	}
+	return fmt.Errorf("invalid size: %s", race.Size)
+}
 
-	// Validate speed
+func (s *AIRaceGeneratorService) validateSpeed(race *models.CustomRaceGenerationResult) error {
 	if race.Speed < 20 || race.Speed > 40 {
 		return fmt.Errorf("speed %d outside acceptable range (20-40)", race.Speed)
 	}
+	return nil
+}
 
-	// Validate traits
+func (s *AIRaceGeneratorService) validateTraits(race *models.CustomRaceGenerationResult) error {
 	if len(race.Traits) < 1 {
 		return fmt.Errorf("race must have at least one trait")
 	}
 	if len(race.Traits) > 6 {
 		return fmt.Errorf("too many traits (%d), maximum is 6", len(race.Traits))
 	}
+	return nil
+}
 
-	// Validate languages
+func (s *AIRaceGeneratorService) validateLanguages(race *models.CustomRaceGenerationResult) error {
 	if len(race.Languages) < 1 {
 		return fmt.Errorf("race must know at least one language")
 	}
 	if len(race.Languages) > 4 {
 		return fmt.Errorf("too many languages (%d), maximum is 4", len(race.Languages))
 	}
+	return nil
+}
 
-	// Validate darkvision
-	if race.Darkvision != 0 && race.Darkvision != 30 && race.Darkvision != 60 && race.Darkvision != 120 {
-		return fmt.Errorf("invalid darkvision range: %d", race.Darkvision)
+func (s *AIRaceGeneratorService) validateDarkvision(race *models.CustomRaceGenerationResult) error {
+	validRanges := []int{0, 30, 60, 120}
+	for _, validRange := range validRanges {
+		if race.Darkvision == validRange {
+			return nil
+		}
 	}
+	return fmt.Errorf("invalid darkvision range: %d", race.Darkvision)
+}
 
-	// Validate damage types for resistances/immunities
+func (s *AIRaceGeneratorService) validateDamageTypes(race *models.CustomRaceGenerationResult) error {
 	for _, resistance := range race.Resistances {
 		if !isValidDamageType(resistance) {
 			return fmt.Errorf("invalid damage resistance type: %s", resistance)
 		}
 	}
-
 	for _, immunity := range race.Immunities {
 		if !isValidDamageType(immunity) {
 			return fmt.Errorf("invalid damage immunity type: %s", immunity)
 		}
 	}
-
-	// Validate balance score
-	if race.BalanceScore < 1 || race.BalanceScore > 10 {
-		return fmt.Errorf("balance score %d outside range (1-10)", race.BalanceScore)
-	}
-
 	return nil
 }
 
-func isValidDamageType(damageType string) bool {
-	normalized := strings.ToLower(damageType)
-	for _, valid := range models.ValidDamageTypes {
-		if normalized == valid {
-			return true
-		}
+func (s *AIRaceGeneratorService) validateBalanceScore(race *models.CustomRaceGenerationResult) error {
+	if race.BalanceScore < 1 || race.BalanceScore > 10 {
+		return fmt.Errorf("balance score %d outside range (1-10)", race.BalanceScore)
 	}
-	return false
+	return nil
 }

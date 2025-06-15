@@ -8,9 +8,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
+
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
-	"github.com/go-playground/validator/v10"
 )
 
 type contextKey string

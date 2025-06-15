@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
@@ -89,7 +90,7 @@ func (s *InventoryService) EquipItem(characterID, itemID string) error {
 				if inv.Item.Properties["two_handed"] == true {
 					currentSlots += 2
 				} else {
-					currentSlots += 1
+					currentSlots++
 				}
 			}
 		}

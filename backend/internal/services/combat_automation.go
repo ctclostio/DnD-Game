@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
@@ -347,11 +348,11 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 
 	// Base gold calculation
 	goldMultiplier := map[string]int{
-		"trivial": 10,
-		"easy":    25,
-		difficultyMedium:  50,
-		constants.DifficultyHard:    100,
-		constants.DifficultyDeadly:  200,
+		"trivial":                  10,
+		"easy":                     25,
+		difficultyMedium:           50,
+		constants.DifficultyHard:   100,
+		constants.DifficultyDeadly: 200,
 	}
 
 	baseGold := goldMultiplier[difficulty]
@@ -381,11 +382,11 @@ func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []mo
 
 	// Chance for items based on difficulty
 	itemChance := map[string]float64{
-		"trivial": 0.1,
-		"easy":    0.2,
-		difficultyMedium:  0.4,
-		constants.DifficultyHard:    0.6,
-		constants.DifficultyDeadly:  0.8,
+		"trivial":                  0.1,
+		"easy":                     0.2,
+		difficultyMedium:           0.4,
+		constants.DifficultyHard:   0.6,
+		constants.DifficultyDeadly: 0.8,
 	}
 
 	if rand.Float64() < itemChance[difficulty] {

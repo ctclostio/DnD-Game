@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
@@ -570,7 +571,7 @@ func TestSettlementGeneratorService_GenerateMarketConditions(t *testing.T) {
 			// Normal conditions for wealthy settlement
 			require.Less(t, market.CommonGoodsModifier, 1.0)
 		}
-		
+
 		// Magical items are not affected by economic conditions in the implementation
 		require.Less(t, market.MagicalItemsModifier, 1.0)
 	})

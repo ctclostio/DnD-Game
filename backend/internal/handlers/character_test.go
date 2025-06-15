@@ -8,11 +8,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/auth"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // Helper function to create a test context with auth claims

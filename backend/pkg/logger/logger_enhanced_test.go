@@ -211,7 +211,7 @@ func TestLoggerV2_WithGameContext(t *testing.T) {
 		},
 		"game context test",
 		map[string]string{
-			"session_id":    "game-123",
+			"session_id":   "game-123",
 			"character_id": "char-456",
 		},
 	)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/game"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
@@ -106,6 +107,36 @@ func (s *CombatService) ProcessAction(ctx context.Context, combatID string, requ
 	case models.ActionTypeEndTurn:
 		// End turn just creates the action, turn will advance below
 		action.Description = fmt.Sprintf("%s ends their turn", actor.Name)
+	case models.ActionTypeCast, models.ActionTypeCastSpell:
+		// TODO: Implement spell casting
+		err = fmt.Errorf("spell casting not yet implemented")
+	case models.ActionTypeHelp:
+		// TODO: Implement help action
+		err = fmt.Errorf("help action not yet implemented")
+	case models.ActionTypeHide:
+		// TODO: Implement hide action
+		err = fmt.Errorf("hide action not yet implemented")
+	case models.ActionTypeReady:
+		// TODO: Implement ready action
+		err = fmt.Errorf("ready action not yet implemented")
+	case models.ActionTypeSearch:
+		// TODO: Implement search action
+		err = fmt.Errorf("search action not yet implemented")
+	case models.ActionTypeUseItem:
+		// TODO: Implement use item action
+		err = fmt.Errorf("use item action not yet implemented")
+	case models.ActionTypeBonusAction:
+		// TODO: Implement bonus action
+		err = fmt.Errorf("bonus action not yet implemented")
+	case models.ActionTypeReaction:
+		// TODO: Implement reaction
+		err = fmt.Errorf("reaction not yet implemented")
+	case models.ActionTypeConcentration:
+		// TODO: Implement concentration check
+		err = fmt.Errorf("concentration check not yet implemented")
+	case models.ActionTypeSavingThrow:
+		// TODO: Implement saving throw
+		err = fmt.Errorf("saving throw not yet implemented")
 	default:
 		err = fmt.Errorf("unsupported action type: %s", request.Action)
 	}

@@ -5,8 +5,9 @@ import (
 	"errors"
 	"math/rand"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // CombatService adapter for tests
@@ -181,7 +182,7 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 			}
 		}
 
-	case models.ActionTypeCastSpell:
+	case models.ActionTypeCastSpell, models.ActionTypeCast:
 		// Record spell cast
 
 	case models.ActionTypeMove:
@@ -208,6 +209,39 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 			combat.CurrentTurn = 0
 			combat.Round++
 		}
+
+	case models.ActionTypeDash:
+		// Double movement speed for this turn
+
+	case models.ActionTypeHelp:
+		// Grant advantage to an ally
+
+	case models.ActionTypeHide:
+		// Attempt to hide
+
+	case models.ActionTypeReady:
+		// Ready an action for a trigger
+
+	case models.ActionTypeSearch:
+		// Search the area
+
+	case models.ActionTypeUseItem:
+		// Use an item from inventory
+
+	case models.ActionTypeBonusAction:
+		// Bonus action taken
+
+	case models.ActionTypeReaction:
+		// Reaction triggered
+
+	case models.ActionTypeDeathSave:
+		// Death saving throw
+
+	case models.ActionTypeConcentration:
+		// Concentration check
+
+	case models.ActionTypeSavingThrow:
+		// Saving throw made
 	}
 
 	// Record the action with all modifications
@@ -410,10 +444,10 @@ func handleCriticalSuccess(combatant *models.Combatant, result *models.DeathSave
 	result.CritSuccess = true
 	result.Success = true
 	combatant.HP = 1
-	
+
 	// Remove unconscious condition
 	removeUnconsciousCondition(combatant)
-	
+
 	combatant.DeathSaveSuccesses = 0
 	combatant.DeathSaveFailures = 0
 }
@@ -422,7 +456,7 @@ func handleCriticalSuccess(combatant *models.Combatant, result *models.DeathSave
 func handleCriticalFailure(combatant *models.Combatant, result *models.DeathSaveResult) {
 	result.CritFailure = true
 	combatant.DeathSaveFailures += 2
-	
+
 	if combatant.DeathSaveFailures >= 3 {
 		combatant.DeathSaveFailures = 3
 		combatant.Conditions = append(combatant.Conditions, models.ConditionDead)
@@ -433,7 +467,7 @@ func handleCriticalFailure(combatant *models.Combatant, result *models.DeathSave
 func handleSuccess(combatant *models.Combatant, result *models.DeathSaveResult) {
 	result.Success = true
 	combatant.DeathSaveSuccesses++
-	
+
 	if combatant.DeathSaveSuccesses >= 3 {
 		// Stabilized
 		combatant.DeathSaveSuccesses = 0
@@ -445,7 +479,7 @@ func handleSuccess(combatant *models.Combatant, result *models.DeathSaveResult) 
 // handleFailure processes a failure on a death save
 func handleFailure(combatant *models.Combatant, result *models.DeathSaveResult) {
 	combatant.DeathSaveFailures++
-	
+
 	if combatant.DeathSaveFailures >= 3 {
 		combatant.DeathSaveFailures = 3
 		combatant.Conditions = append(combatant.Conditions, models.ConditionDead)
@@ -457,7 +491,7 @@ func removeUnconsciousCondition(combatant *models.Combatant) {
 	if combatant.Conditions == nil {
 		return
 	}
-	
+
 	newConditions := []models.Condition{}
 	for _, cond := range combatant.Conditions {
 		if cond != models.ConditionUnconscious {

@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // Basic compilation test to ensure the service compiles correctly
@@ -207,7 +208,7 @@ func TestEncounterStatusTransitions(t *testing.T) {
 		"active":    {"completed", "failed"},
 		"completed": {},
 		"failed":    {},
-		"canceled": {},
+		"canceled":  {},
 	}
 
 	for fromStatus, toStatuses := range validTransitions {

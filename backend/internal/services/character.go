@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
-
 
 type CharacterService struct {
 	repo            database.CharacterRepository
@@ -160,18 +160,18 @@ func CalculateCarryCapacity(strength int) float64 {
 func (s *CharacterService) CalculateHitPoints(class string, level, constitution int) int {
 	// Base hit points by class (simplified)
 	baseHP := map[string]int{
-		"fighter":   10,
-		"wizard":    6,
-		"rogue":     8,
-		"cleric":    8,
-		"ranger":    10,
-		"paladin":   10,
-		"barbarian": 12,
-		"bard":      8,
-		"druid":     8,
-		"monk":      8,
-		"sorcerer":  6,
-		constants.ClassWarlock:   8,
+		"fighter":              10,
+		"wizard":               6,
+		"rogue":                8,
+		"cleric":               8,
+		"ranger":               10,
+		"paladin":              10,
+		"barbarian":            12,
+		"bard":                 8,
+		"druid":                8,
+		"monk":                 8,
+		"sorcerer":             6,
+		constants.ClassWarlock: 8,
 	}
 
 	base, ok := baseHP[class]
@@ -509,18 +509,18 @@ func (s *CharacterService) LevelUp(ctx context.Context, characterID string, hitP
 func (s *CharacterService) calculateHPIncrease(class string, constitution int) int {
 	// Average hit die value by class
 	hitDieAverage := map[string]int{
-		"fighter":   6, // 1d10 average
-		"wizard":    4, // 1d6 average
-		"rogue":     5, // 1d8 average
-		"cleric":    5, // 1d8 average
-		"ranger":    6, // 1d10 average
-		"paladin":   6, // 1d10 average
-		"barbarian": 7, // 1d12 average
-		"bard":      5, // 1d8 average
-		"druid":     5, // 1d8 average
-		"monk":      5, // 1d8 average
-		"sorcerer":  4, // 1d6 average
-		constants.ClassWarlock:   5, // 1d8 average
+		"fighter":              6, // 1d10 average
+		"wizard":               4, // 1d6 average
+		"rogue":                5, // 1d8 average
+		"cleric":               5, // 1d8 average
+		"ranger":               6, // 1d10 average
+		"paladin":              6, // 1d10 average
+		"barbarian":            7, // 1d12 average
+		"bard":                 5, // 1d8 average
+		"druid":                5, // 1d8 average
+		"monk":                 5, // 1d8 average
+		"sorcerer":             4, // 1d6 average
+		constants.ClassWarlock: 5, // 1d8 average
 	}
 
 	average, ok := hitDieAverage[class]

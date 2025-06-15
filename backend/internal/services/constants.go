@@ -15,7 +15,7 @@ const (
 	sizeLarge  = "large"
 )
 
-// Action type constants  
+// Action type constants
 const (
 	actionTypeSpell       = "spell"
 	actionTypeAbility     = "ability"
@@ -28,10 +28,10 @@ const (
 
 // Outcome constants
 const (
-	outcomeHit        = "hit"
-	outcomeMiss       = "miss"
-	outcomeCritical   = "critical"
-	outcomeNeutral    = "neutral"
+	outcomeHit         = "hit"
+	outcomeMiss        = "miss"
+	outcomeCritical    = "critical"
+	outcomeNeutral     = "neutral"
 	outcomeKillingBlow = "killing_blow"
 )
 
@@ -63,7 +63,7 @@ const (
 // Dice constants
 const (
 	diceD4  = "1d4"
-	diceD6  = "1d6" 
+	diceD6  = "1d6"
 	diceD8  = "1d8"
 	diceD10 = "1d10"
 	diceD12 = "1d12"

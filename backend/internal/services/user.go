@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {

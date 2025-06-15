@@ -9,11 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // MockGameSessionService is a mock implementation of the game session service

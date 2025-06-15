@@ -3,8 +3,9 @@ package testhelpers
 import (
 	"time"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // CharacterBuilder provides a fluent interface for building test characters

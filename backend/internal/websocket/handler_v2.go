@@ -6,10 +6,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/gorilla/websocket"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
-	"github.com/gorilla/websocket"
 )
 
 const (

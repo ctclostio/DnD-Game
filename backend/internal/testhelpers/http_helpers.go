@@ -9,10 +9,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 )
 
 // HTTPTestCase represents a standard HTTP test case structure

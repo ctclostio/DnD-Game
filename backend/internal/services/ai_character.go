@@ -10,7 +10,6 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-
 type AICharacterService struct {
 	llmProvider LLMProvider
 	aiEnabled   bool

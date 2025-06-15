@@ -3,8 +3,10 @@ package websocket
 import (
 	"context"
 	"encoding/json"
-	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
+
 	"github.com/gorilla/websocket"
+
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 type Hub struct {

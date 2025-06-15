@@ -301,14 +301,14 @@ func (g *AIClassGenerator) calculateBalanceScore(class *models.CustomClass) int 
 	if containsInClassGen(class.ArmorProficiencies, "Heavy armor") {
 		score += 2
 	} else if containsInClassGen(class.ArmorProficiencies, "Medium armor") {
-		score += 1
+		score++
 	}
 
 	// Spellcasting scoring
 	if class.SpellcastingAbility != "" {
 		score += 2 // Spellcasters are generally more versatile
 		if class.RitualCasting {
-			score += 1
+			score++
 		}
 	}
 
@@ -320,14 +320,14 @@ func (g *AIClassGenerator) calculateBalanceScore(class *models.CustomClass) int 
 		}
 	}
 	if level5Features > 6 {
-		score += 1 // Many early features
+		score++ // Many early features
 	} else if level5Features < 3 {
-		score -= 1 // Few early features
+		score-- // Few early features
 	}
 
 	// Skill choices scoring
 	if class.SkillChoices >= 4 {
-		score += 1
+		score++
 	}
 
 	// Cap the score between 1 and 10

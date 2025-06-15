@@ -7,12 +7,12 @@ import (
 	"sort"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
-	"github.com/google/uuid"
 )
-
 
 type CombatAnalyticsService struct {
 	analyticsRepo database.CombatAnalyticsRepository
@@ -300,7 +300,7 @@ func (cas *CombatAnalyticsService) ratePerformance(stats *models.CombatantAnalyt
 		} else if hitRate > 0.5 {
 			score += 2
 		} else if hitRate > 0.25 {
-			score += 1
+			score++
 		}
 	}
 
@@ -319,7 +319,7 @@ func (cas *CombatAnalyticsService) ratePerformance(stats *models.CombatantAnalyt
 
 	// Critical hits
 	if stats.CriticalHits > 0 {
-		score += 1
+		score++
 	}
 
 	// Healing contribution
@@ -411,13 +411,13 @@ func (cas *CombatAnalyticsService) analyzePositioning(actions []*models.CombatAc
 	if coverUses > 5 {
 		score += 2
 	} else if coverUses > 2 {
-		score += 1
+		score++
 	}
 
 	if advantageousPositions > 3 {
 		score += 2
 	} else if advantageousPositions > 1 {
-		score += 1
+		score++
 	}
 
 	return min(10, score)
@@ -458,7 +458,7 @@ func (cas *CombatAnalyticsService) analyzeResourceUse(actions []*models.CombatAc
 	}
 
 	if wastedHealing > 3 {
-		score -= 1
+		score--
 	}
 
 	if efficientResourceUse > 5 {
@@ -550,7 +550,7 @@ func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActio
 	}
 
 	if coordinatedHealing > 3 {
-		score += 1
+		score++
 	}
 
 	if setupActions > 4 {

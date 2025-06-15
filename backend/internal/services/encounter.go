@@ -9,7 +9,6 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-
 type EncounterService struct {
 	repo             *database.EncounterRepository
 	encounterBuilder *AIEncounterBuilder
@@ -49,7 +48,7 @@ func (s *EncounterService) GenerateEncounter(ctx context.Context, req *Encounter
 }
 
 // GetEncounter retrieves an encounter by ID
-func (s *EncounterService) GetEncounter(ctx context.Context, encounterID string) (*models.Encounter, error) {
+func (s *EncounterService) GetEncounter(_ context.Context, encounterID string) (*models.Encounter, error) {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
 		return nil, fmt.Errorf("encounter not found: %w", err)
@@ -63,12 +62,12 @@ func (s *EncounterService) GetEncounter(ctx context.Context, encounterID string)
 }
 
 // GetEncountersBySession retrieves all encounters for a game session
-func (s *EncounterService) GetEncountersBySession(ctx context.Context, gameSessionID string) ([]*models.Encounter, error) {
+func (s *EncounterService) GetEncountersBySession(_ context.Context, gameSessionID string) ([]*models.Encounter, error) {
 	return s.repo.GetByGameSession(gameSessionID)
 }
 
 // StartEncounter begins an encounter
-func (s *EncounterService) StartEncounter(ctx context.Context, encounterID string) error {
+func (s *EncounterService) StartEncounter(_ context.Context, encounterID string) error {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
 		return fmt.Errorf("encounter not found: %w", err)
@@ -98,7 +97,7 @@ func (s *EncounterService) StartEncounter(ctx context.Context, encounterID strin
 }
 
 // CompleteEncounter marks an encounter as completed
-func (s *EncounterService) CompleteEncounter(ctx context.Context, encounterID string, outcome string) error {
+func (s *EncounterService) CompleteEncounter(_ context.Context, encounterID string, outcome string) error {
 	if err := s.repo.CompleteEncounter(encounterID, outcome); err != nil {
 		return fmt.Errorf("failed to complete encounter: %w", err)
 	}

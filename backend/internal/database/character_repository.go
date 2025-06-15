@@ -6,8 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // characterRepository implements CharacterRepository interface

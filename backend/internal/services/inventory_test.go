@@ -14,6 +14,67 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
+// runInventoryServiceTest is a helper to reduce duplication in table-driven tests
+func runInventoryServiceTest(t *testing.T, tests []struct {
+	name          string
+	characterID   string
+	itemID        string
+	setupMock     func(*mocks.MockInventoryRepository)
+	expectedError string
+}, serviceAction func(*services.InventoryService, string, string) error) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockInventoryRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewInventoryService(mockRepo, nil)
+			err := serviceAction(service, tt.characterID, tt.itemID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+// runInventoryServiceTestWithQuantity is a helper for tests that include quantity parameter
+func runInventoryServiceTestWithQuantity(t *testing.T, tests []struct {
+	name          string
+	characterID   string
+	itemID        string
+	quantity      int
+	setupMock     func(*mocks.MockInventoryRepository)
+	expectedError string
+}, serviceAction func(*services.InventoryService, string, string, int) error) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockInventoryRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewInventoryService(mockRepo, nil)
+			err := serviceAction(service, tt.characterID, tt.itemID, tt.quantity)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
 func TestInventoryService_AddItemToCharacter(t *testing.T) {
 	ctx := context.Background()
 
@@ -248,26 +309,9 @@ func TestInventoryService_EquipItem(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(mocks.MockInventoryRepository)
-			if tt.setupMock != nil {
-				tt.setupMock(mockRepo)
-			}
-
-			service := services.NewInventoryService(mockRepo, nil)
-			err := service.EquipItem(tt.characterID, tt.itemID)
-
-			if tt.expectedError != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
-			} else {
-				require.NoError(t, err)
-			}
-
-			mockRepo.AssertExpectations(t)
-		})
-	}
+	runInventoryServiceTest(t, tests, func(service *services.InventoryService, characterID, itemID string) error {
+		return service.EquipItem(characterID, itemID)
+	})
 }
 
 func TestInventoryService_AttuneToItem(t *testing.T) {
@@ -356,26 +400,9 @@ func TestInventoryService_AttuneToItem(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(mocks.MockInventoryRepository)
-			if tt.setupMock != nil {
-				tt.setupMock(mockRepo)
-			}
-
-			service := services.NewInventoryService(mockRepo, nil)
-			err := service.AttuneToItem(tt.characterID, tt.itemID)
-
-			if tt.expectedError != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
-			} else {
-				require.NoError(t, err)
-			}
-
-			mockRepo.AssertExpectations(t)
-		})
-	}
+	runInventoryServiceTest(t, tests, func(service *services.InventoryService, characterID, itemID string) error {
+		return service.AttuneToItem(characterID, itemID)
+	})
 }
 
 func TestInventoryService_UpdateCharacterCurrency(t *testing.T) {
@@ -608,26 +635,9 @@ func TestInventoryService_PurchaseItem(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(mocks.MockInventoryRepository)
-			if tt.setupMock != nil {
-				tt.setupMock(mockRepo)
-			}
-
-			service := services.NewInventoryService(mockRepo, nil)
-			err := service.PurchaseItem(tt.characterID, tt.itemID, tt.quantity)
-
-			if tt.expectedError != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
-			} else {
-				require.NoError(t, err)
-			}
-
-			mockRepo.AssertExpectations(t)
-		})
-	}
+	runInventoryServiceTestWithQuantity(t, tests, func(service *services.InventoryService, characterID, itemID string, quantity int) error {
+		return service.PurchaseItem(characterID, itemID, quantity)
+	})
 }
 
 func TestInventoryService_SellItem(t *testing.T) {
@@ -733,26 +743,9 @@ func TestInventoryService_SellItem(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(mocks.MockInventoryRepository)
-			if tt.setupMock != nil {
-				tt.setupMock(mockRepo)
-			}
-
-			service := services.NewInventoryService(mockRepo, nil)
-			err := service.SellItem(tt.characterID, tt.itemID, tt.quantity)
-
-			if tt.expectedError != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
-			} else {
-				require.NoError(t, err)
-			}
-
-			mockRepo.AssertExpectations(t)
-		})
-	}
+	runInventoryServiceTestWithQuantity(t, tests, func(service *services.InventoryService, characterID, itemID string, quantity int) error {
+		return service.SellItem(characterID, itemID, quantity)
+	})
 }
 
 func TestInventoryService_GetCharacterWeight(t *testing.T) {

@@ -2,10 +2,12 @@ package services
 
 import (
 	"errors"
-	"github.com/google/uuid"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 type GameService struct {

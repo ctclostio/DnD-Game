@@ -498,89 +498,13 @@ func (cb *CharacterBuilder) convertCustomRaceToRaceData(customRaceStats map[stri
 		Traits:           []map[string]interface{}{},
 	}
 
-	// Convert ability score increases
-	if asi, ok := customRaceStats["abilityScoreIncreases"].(map[string]interface{}); ok {
-		for ability, increase := range asi {
-			if val, ok := increase.(float64); ok {
-				raceData.AbilityIncreases[ability] = int(val)
-			}
-		}
-	}
-
-	// Convert languages
-	if languages, ok := customRaceStats["languages"].([]interface{}); ok {
-		for _, lang := range languages {
-			if langStr, ok := lang.(string); ok {
-				raceData.Languages = append(raceData.Languages, langStr)
-			}
-		}
-	}
-
-	// Convert traits
-	if traits, ok := customRaceStats["traits"].([]interface{}); ok {
-		for _, trait := range traits {
-			if traitMap, ok := trait.(map[string]interface{}); ok {
-				raceData.Traits = append(raceData.Traits, traitMap)
-			}
-		}
-	}
-
-	// Add additional features from custom race
-	// Darkvision
-	if darkvision, ok := customRaceStats["darkvision"].(float64); ok && darkvision > 0 {
-		raceData.Traits = append(raceData.Traits, map[string]interface{}{
-			"name":        "Darkvision",
-			"description": fmt.Sprintf("You can see in dim light within %d feet as if it were bright light, and in darkness as if it were dim light.", int(darkvision)),
-		})
-	}
-
-	// Resistances
-	if resistances, ok := customRaceStats["resistances"].([]interface{}); ok && len(resistances) > 0 {
-		resistanceList := []string{}
-		for _, res := range resistances {
-			if resStr, ok := res.(string); ok {
-				resistanceList = append(resistanceList, resStr)
-			}
-		}
-		if len(resistanceList) > 0 {
-			raceData.Traits = append(raceData.Traits, map[string]interface{}{
-				"name":        "Damage Resistance",
-				"description": fmt.Sprintf("You have resistance to %s damage.", strings.Join(resistanceList, ", ")),
-			})
-		}
-	}
-
-	// Immunities
-	if immunities, ok := customRaceStats["immunities"].([]interface{}); ok && len(immunities) > 0 {
-		immunityList := []string{}
-		for _, imm := range immunities {
-			if immStr, ok := imm.(string); ok {
-				immunityList = append(immunityList, immStr)
-			}
-		}
-		if len(immunityList) > 0 {
-			raceData.Traits = append(raceData.Traits, map[string]interface{}{
-				"name":        "Damage Immunity",
-				"description": fmt.Sprintf("You are immune to %s damage.", strings.Join(immunityList, ", ")),
-			})
-		}
-	}
-
-	// Skill proficiencies
-	if skills, ok := customRaceStats["skillProficiencies"].([]interface{}); ok && len(skills) > 0 {
-		skillList := []string{}
-		for _, skill := range skills {
-			if skillStr, ok := skill.(string); ok {
-				skillList = append(skillList, skillStr)
-			}
-		}
-		if len(skillList) > 0 {
-			raceData.Traits = append(raceData.Traits, map[string]interface{}{
-				"name":        "Skill Proficiencies",
-				"description": fmt.Sprintf("You gain proficiency in %s.", strings.Join(skillList, " and ")),
-			})
-		}
-	}
+	cb.convertAbilityScoreIncreases(customRaceStats, raceData)
+	cb.convertLanguages(customRaceStats, raceData)
+	cb.convertTraits(customRaceStats, raceData)
+	cb.addDarkvision(customRaceStats, raceData)
+	cb.addResistances(customRaceStats, raceData)
+	cb.addImmunities(customRaceStats, raceData)
+	cb.addSkillProficiencies(customRaceStats, raceData)
 
 	return raceData
 }
@@ -714,4 +638,96 @@ func InitializeSpellSlots(class string, level int) []models.SpellSlot {
 	}
 
 	return slots
+}
+
+// Helper methods for convertCustomRaceToRaceData to reduce cyclomatic complexity
+
+func (cb *CharacterBuilder) convertAbilityScoreIncreases(customRaceStats map[string]interface{}, raceData *RaceData) {
+	if asi, ok := customRaceStats["abilityScoreIncreases"].(map[string]interface{}); ok {
+		for ability, increase := range asi {
+			if val, ok := increase.(float64); ok {
+				raceData.AbilityIncreases[ability] = int(val)
+			}
+		}
+	}
+}
+
+func (cb *CharacterBuilder) convertLanguages(customRaceStats map[string]interface{}, raceData *RaceData) {
+	if languages, ok := customRaceStats["languages"].([]interface{}); ok {
+		for _, lang := range languages {
+			if langStr, ok := lang.(string); ok {
+				raceData.Languages = append(raceData.Languages, langStr)
+			}
+		}
+	}
+}
+
+func (cb *CharacterBuilder) convertTraits(customRaceStats map[string]interface{}, raceData *RaceData) {
+	if traits, ok := customRaceStats["traits"].([]interface{}); ok {
+		for _, trait := range traits {
+			if traitMap, ok := trait.(map[string]interface{}); ok {
+				raceData.Traits = append(raceData.Traits, traitMap)
+			}
+		}
+	}
+}
+
+func (cb *CharacterBuilder) addDarkvision(customRaceStats map[string]interface{}, raceData *RaceData) {
+	if darkvision, ok := customRaceStats["darkvision"].(float64); ok && darkvision > 0 {
+		raceData.Traits = append(raceData.Traits, map[string]interface{}{
+			"name":        "Darkvision",
+			"description": fmt.Sprintf("You can see in dim light within %d feet as if it were bright light, and in darkness as if it were dim light.", int(darkvision)),
+		})
+	}
+}
+
+func (cb *CharacterBuilder) addResistances(customRaceStats map[string]interface{}, raceData *RaceData) {
+	if resistances, ok := customRaceStats["resistances"].([]interface{}); ok && len(resistances) > 0 {
+		resistanceList := []string{}
+		for _, res := range resistances {
+			if resStr, ok := res.(string); ok {
+				resistanceList = append(resistanceList, resStr)
+			}
+		}
+		if len(resistanceList) > 0 {
+			raceData.Traits = append(raceData.Traits, map[string]interface{}{
+				"name":        "Damage Resistance",
+				"description": fmt.Sprintf("You have resistance to %s damage.", strings.Join(resistanceList, ", ")),
+			})
+		}
+	}
+}
+
+func (cb *CharacterBuilder) addImmunities(customRaceStats map[string]interface{}, raceData *RaceData) {
+	if immunities, ok := customRaceStats["immunities"].([]interface{}); ok && len(immunities) > 0 {
+		immunityList := []string{}
+		for _, imm := range immunities {
+			if immStr, ok := imm.(string); ok {
+				immunityList = append(immunityList, immStr)
+			}
+		}
+		if len(immunityList) > 0 {
+			raceData.Traits = append(raceData.Traits, map[string]interface{}{
+				"name":        "Damage Immunity",
+				"description": fmt.Sprintf("You are immune to %s damage.", strings.Join(immunityList, ", ")),
+			})
+		}
+	}
+}
+
+func (cb *CharacterBuilder) addSkillProficiencies(customRaceStats map[string]interface{}, raceData *RaceData) {
+	if skills, ok := customRaceStats["skillProficiencies"].([]interface{}); ok && len(skills) > 0 {
+		skillList := []string{}
+		for _, skill := range skills {
+			if skillStr, ok := skill.(string); ok {
+				skillList = append(skillList, skillStr)
+			}
+		}
+		if len(skillList) > 0 {
+			raceData.Traits = append(raceData.Traits, map[string]interface{}{
+				"name":        "Skill Proficiencies",
+				"description": fmt.Sprintf("You gain proficiency in %s.", strings.Join(skillList, " and ")),
+			})
+		}
+	}
 }

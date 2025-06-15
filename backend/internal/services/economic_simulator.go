@@ -7,10 +7,11 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/google/uuid"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
-	"github.com/google/uuid"
 )
 
 // EconomicSimulatorService manages market dynamics and trade
@@ -481,9 +482,9 @@ func (s *EconomicSimulatorService) calculateRouteDifficulty(start, end *models.S
 		case constants.TerrainSwamp:
 			difficulty += 2
 		case constants.TerrainDesert:
-			difficulty += 1
+			difficulty++
 		case constants.TerrainForest:
-			difficulty += 1
+			difficulty++
 		}
 	}
 
@@ -619,7 +620,7 @@ func (s *EconomicSimulatorService) calculateInitialTradeVolume(start, end *model
 	} else if avgPop > 5000 {
 		volume += 2
 	} else if avgPop > 1000 {
-		volume += 1
+		volume++
 	}
 
 	// Wealth increases trade

@@ -9,8 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/google/uuid"
+
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // LoggingMiddleware logs all HTTP requests with enhanced context

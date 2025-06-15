@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // NarrativeRepository handles all narrative-related database operations

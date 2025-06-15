@@ -40,40 +40,33 @@ func TestGenerateTokenPair(t *testing.T) {
 func TestValidateToken(t *testing.T) {
 	manager := NewJWTManager("test-secret", 15*time.Minute, 24*time.Hour)
 
-	t.Run("valid access token", func(t *testing.T) {
-		userID := "user-123"
-		username := "testuser"
-		email := "test@example.com"
-		role := "player"
-
+	// Helper function to test token validation
+	validateTokenHelper := func(t *testing.T, userID, username, email, role string, tokenType TokenType) {
 		tokenPair, err := manager.GenerateTokenPair(userID, username, email, role)
 		require.NoError(t, err)
 
-		claims, err := manager.ValidateToken(tokenPair.AccessToken, AccessToken)
+		var token string
+		if tokenType == AccessToken {
+			token = tokenPair.AccessToken
+		} else {
+			token = tokenPair.RefreshToken
+		}
+
+		claims, err := manager.ValidateToken(token, tokenType)
 		require.NoError(t, err)
 		assert.Equal(t, userID, claims.UserID)
 		assert.Equal(t, username, claims.Username)
 		assert.Equal(t, email, claims.Email)
 		assert.Equal(t, role, claims.Role)
-		assert.Equal(t, AccessToken, claims.Type)
+		assert.Equal(t, tokenType, claims.Type)
+	}
+
+	t.Run("valid access token", func(t *testing.T) {
+		validateTokenHelper(t, "user-123", "testuser", "test@example.com", "player", AccessToken)
 	})
 
 	t.Run("valid refresh token", func(t *testing.T) {
-		userID := "user-456"
-		username := "anotheruser"
-		email := "another@example.com"
-		role := "dm"
-
-		tokenPair, err := manager.GenerateTokenPair(userID, username, email, role)
-		require.NoError(t, err)
-
-		claims, err := manager.ValidateToken(tokenPair.RefreshToken, RefreshToken)
-		require.NoError(t, err)
-		assert.Equal(t, userID, claims.UserID)
-		assert.Equal(t, username, claims.Username)
-		assert.Equal(t, email, claims.Email)
-		assert.Equal(t, role, claims.Role)
-		assert.Equal(t, RefreshToken, claims.Type)
+		validateTokenHelper(t, "user-456", "anotheruser", "another@example.com", "dm", RefreshToken)
 	})
 
 	t.Run("invalid token", func(t *testing.T) {

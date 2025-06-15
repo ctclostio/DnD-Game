@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
-
 
 // AIDMAssistantService handles AI-powered DM assistance
 type AIDMAssistantService struct {

@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 )
 
 // ProcessDMAssistantRequest handles real-time DM assistant requests

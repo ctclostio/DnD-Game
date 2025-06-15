@@ -9,10 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
-	"github.com/google/uuid"
 )
 
 // ProceduralCultureService generates unique cultures with AI
@@ -1291,9 +1292,9 @@ func (pcs *ProceduralCultureService) adjustSocialStructure(culture *models.Proce
 
 func (pcs *ProceduralCultureService) generateCulturalResponseEvent(ctx context.Context, culture *models.ProceduralCulture, action PlayerCulturalAction, response CulturalResponse) *models.EmergentWorldEvent {
 	eventTypes := map[string]string{
-		constants.ActionTrade:     "commercial_shift",
-		constants.ActionDiplomacy: "diplomatic_development",
-		constants.EventConflict:  "cultural_resistance",
+		constants.ActionTrade:      "commercial_shift",
+		constants.ActionDiplomacy:  "diplomatic_development",
+		constants.EventConflict:    "cultural_resistance",
 		constants.CultureInfluence: "cultural_evolution",
 	}
 

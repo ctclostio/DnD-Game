@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 

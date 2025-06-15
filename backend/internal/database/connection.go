@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // PostgreSQL driver
+
+	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
 // Config holds the database configuration
