@@ -62,3 +62,6 @@ mock.ExpectQuery(`SELECT .* WHERE id = \?`).WithArgs(id)
 - Database compatibility is critical for stable pipeline
 - Test restoration blocked on SQL migration completion
 - 11 repositories need SQL updates (~290 queries total)
+
+### Sensitive Tokens & Credentials
+- Sonar Token: `cb8b0a7e4c6522e4aa1d016dd5785c7352b4e727`

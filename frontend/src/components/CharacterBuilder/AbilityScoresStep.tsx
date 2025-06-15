@@ -242,7 +242,7 @@ export const AbilityScoresStep = memo(({
                   {availableScores.map(score => (
                     <option key={score} value={score}>{score}</option>
                   ))}
-                  {characterData.abilityScores[ability] && (
+                  {Boolean(characterData.abilityScores[ability]) && (
                     <option value={characterData.abilityScores[ability]}>
                       {characterData.abilityScores[ability]} (Current)
                     </option>
