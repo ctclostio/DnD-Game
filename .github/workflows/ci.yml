@@ -380,7 +380,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=dnd-game
+            -Dsonar.projectKey=ctclostio_DnD-Game
             -Dsonar.organization=ctclostio
             -Dsonar.sources=backend/,frontend/src/
             -Dsonar.tests=backend/,frontend/src/
