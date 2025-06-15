@@ -127,7 +127,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage-report
-          path: backend/coverage.html
+          path: |
+            backend/coverage.out
+            backend/coverage.html
 
   backend-security:
     name: Backend Security Scan
@@ -358,14 +360,21 @@ jobs:
   code-quality:
     name: Code Quality Analysis
     runs-on: ubuntu-latest
+    needs: [backend-test]  # Ensure coverage.out is generated first
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history for SonarCloud
 
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage-report
+          path: backend/
+
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -377,12 +386,13 @@ jobs:
             -Dsonar.tests=backend/,frontend/src/
             -Dsonar.test.inclusions=**/*_test.go,**/*.test.ts,**/*.test.tsx
             -Dsonar.go.coverage.reportPaths=backend/coverage.out
-        continue-on-error: true  # Don't fail if SonarCloud is not configured
+            -Dsonar.coverage.exclusions=**/*_test.go,**/mocks/**,**/vendor/**,**/testutil/**,**/testhelpers/**,**/test/**
+            -Dsonar.exclusions=**/*_test.go,**/mocks/**,**/vendor/**,**/node_modules/**,**/*.pb.go,**/generated/**
 
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [backend-lint, backend-test, backend-security, frontend-lint, frontend-test, docker-build, integration-test]
+    needs: [backend-lint, backend-test, backend-security, frontend-lint, frontend-test, docker-build, integration-test, code-quality]
     if: always()
     steps:
       - name: Summary
@@ -398,3 +408,4 @@ jobs:
           echo "| Frontend Tests | ${{ needs.frontend-test.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Docker Build | ${{ needs.docker-build.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Integration Tests | ${{ needs.integration-test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Quality | ${{ needs.code-quality.result }} |" >> $GITHUB_STEP_SUMMARY
