@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 
@@ -163,16 +162,7 @@ func (r *dmAssistantRepository) GetNPCsBySession(ctx context.Context, sessionID 
 	}
 	defer func() { _ = rows.Close() }()
 
-	npcs := make([]*models.AINPC, 0, 20)
-	for rows.Next() {
-		npc, err := r.scanNPC(rows)
-		if err != nil {
-			return nil, err
-		}
-		npcs = append(npcs, npc)
-	}
-
-	return npcs, rows.Err()
+	return ScanRowsGeneric(rows, r.scanNPC)
 }
 
 func (r *dmAssistantRepository) UpdateNPC(ctx context.Context, npc *models.AINPC) error {
@@ -309,16 +299,7 @@ func (r *dmAssistantRepository) GetLocationsBySession(ctx context.Context, sessi
 	}
 	defer func() { _ = rows.Close() }()
 
-	locations := make([]*models.AILocation, 0, 20)
-	for rows.Next() {
-		location, err := r.scanLocation(rows)
-		if err != nil {
-			return nil, err
-		}
-		locations = append(locations, location)
-	}
-
-	return locations, rows.Err()
+	return ScanRowsGeneric(rows, r.scanLocation)
 }
 
 func (r *dmAssistantRepository) UpdateLocation(ctx context.Context, location *models.AILocation) error {
@@ -459,16 +440,7 @@ func (r *dmAssistantRepository) GetUnusedStoryElements(ctx context.Context, sess
 	}
 	defer func() { _ = rows.Close() }()
 
-	elements := make([]*models.AIStoryElement, 0, 20)
-	for rows.Next() {
-		element, err := r.scanStoryElement(rows)
-		if err != nil {
-			return nil, err
-		}
-		elements = append(elements, element)
-	}
-
-	return elements, rows.Err()
+	return ScanRowsGeneric(rows, r.scanStoryElement)
 }
 
 func (r *dmAssistantRepository) MarkStoryElementUsed(ctx context.Context, elementID uuid.UUID) error {
@@ -530,16 +502,7 @@ func (r *dmAssistantRepository) GetActiveHazardsByLocation(ctx context.Context, 
 	}
 	defer func() { _ = rows.Close() }()
 
-	hazards := make([]*models.AIEnvironmentalHazard, 0, 10)
-	for rows.Next() {
-		hazard, err := r.scanHazard(rows)
-		if err != nil {
-			return nil, err
-		}
-		hazards = append(hazards, hazard)
-	}
-
-	return hazards, rows.Err()
+	return ScanRowsGeneric(rows, r.scanHazard)
 }
 
 func (r *dmAssistantRepository) TriggerHazard(ctx context.Context, hazardID uuid.UUID) error {
@@ -613,7 +576,7 @@ func (r *dmAssistantRepository) GetHistoryBySession(ctx context.Context, session
 
 // Helper scan functions
 
-func (r *dmAssistantRepository) scanNPC(rows *sql.Rows) (*models.AINPC, error) {
+func (r *dmAssistantRepository) scanNPC(rows RowScanner) (*models.AINPC, error) {
 	var npc models.AINPC
 	var personalityJSON, statBlockJSON, dialogJSON []byte
 
@@ -637,7 +600,7 @@ func (r *dmAssistantRepository) scanNPC(rows *sql.Rows) (*models.AINPC, error) {
 	return &npc, nil
 }
 
-func (r *dmAssistantRepository) scanLocation(rows *sql.Rows) (*models.AILocation, error) {
+func (r *dmAssistantRepository) scanLocation(rows RowScanner) (*models.AILocation, error) {
 	var location models.AILocation
 	var featuresJSON, npcsJSON, actionsJSON, secretsJSON []byte
 
@@ -662,7 +625,7 @@ func (r *dmAssistantRepository) scanLocation(rows *sql.Rows) (*models.AILocation
 	return &location, nil
 }
 
-func (r *dmAssistantRepository) scanStoryElement(rows *sql.Rows) (*models.AIStoryElement, error) {
+func (r *dmAssistantRepository) scanStoryElement(rows RowScanner) (*models.AIStoryElement, error) {
 	var element models.AIStoryElement
 	var contextJSON, prereqJSON, consequencesJSON, hintsJSON []byte
 
@@ -687,7 +650,7 @@ func (r *dmAssistantRepository) scanStoryElement(rows *sql.Rows) (*models.AIStor
 	return &element, nil
 }
 
-func (r *dmAssistantRepository) scanHazard(rows *sql.Rows) (*models.AIEnvironmentalHazard, error) {
+func (r *dmAssistantRepository) scanHazard(rows RowScanner) (*models.AIEnvironmentalHazard, error) {
 	var hazard models.AIEnvironmentalHazard
 	var mechanicalJSON []byte
 

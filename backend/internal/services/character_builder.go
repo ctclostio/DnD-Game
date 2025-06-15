@@ -681,53 +681,40 @@ func (cb *CharacterBuilder) addDarkvision(customRaceStats map[string]interface{}
 	}
 }
 
-func (cb *CharacterBuilder) addResistances(customRaceStats map[string]interface{}, raceData *RaceData) {
-	if resistances, ok := customRaceStats["resistances"].([]interface{}); ok && len(resistances) > 0 {
-		resistanceList := []string{}
-		for _, res := range resistances {
-			if resStr, ok := res.(string); ok {
-				resistanceList = append(resistanceList, resStr)
+// addListTrait is a generic helper to add traits from list data
+func (cb *CharacterBuilder) addListTrait(customRaceStats map[string]interface{}, raceData *RaceData, 
+	key string, traitName string, descriptionFormat string) {
+	if items, ok := customRaceStats[key].([]interface{}); ok && len(items) > 0 {
+		itemList := []string{}
+		for _, item := range items {
+			if itemStr, ok := item.(string); ok {
+				itemList = append(itemList, itemStr)
 			}
 		}
-		if len(resistanceList) > 0 {
+		if len(itemList) > 0 {
+			separator := ", "
+			if key == "skillProficiencies" {
+				separator = " and "
+			}
 			raceData.Traits = append(raceData.Traits, map[string]interface{}{
-				"name":        "Damage Resistance",
-				"description": fmt.Sprintf("You have resistance to %s damage.", strings.Join(resistanceList, ", ")),
+				"name":        traitName,
+				"description": fmt.Sprintf(descriptionFormat, strings.Join(itemList, separator)),
 			})
 		}
 	}
+}
+
+func (cb *CharacterBuilder) addResistances(customRaceStats map[string]interface{}, raceData *RaceData) {
+	cb.addListTrait(customRaceStats, raceData, "resistances", "Damage Resistance", 
+		"You have resistance to %s damage.")
 }
 
 func (cb *CharacterBuilder) addImmunities(customRaceStats map[string]interface{}, raceData *RaceData) {
-	if immunities, ok := customRaceStats["immunities"].([]interface{}); ok && len(immunities) > 0 {
-		immunityList := []string{}
-		for _, imm := range immunities {
-			if immStr, ok := imm.(string); ok {
-				immunityList = append(immunityList, immStr)
-			}
-		}
-		if len(immunityList) > 0 {
-			raceData.Traits = append(raceData.Traits, map[string]interface{}{
-				"name":        "Damage Immunity",
-				"description": fmt.Sprintf("You are immune to %s damage.", strings.Join(immunityList, ", ")),
-			})
-		}
-	}
+	cb.addListTrait(customRaceStats, raceData, "immunities", "Damage Immunity", 
+		"You are immune to %s damage.")
 }
 
 func (cb *CharacterBuilder) addSkillProficiencies(customRaceStats map[string]interface{}, raceData *RaceData) {
-	if skills, ok := customRaceStats["skillProficiencies"].([]interface{}); ok && len(skills) > 0 {
-		skillList := []string{}
-		for _, skill := range skills {
-			if skillStr, ok := skill.(string); ok {
-				skillList = append(skillList, skillStr)
-			}
-		}
-		if len(skillList) > 0 {
-			raceData.Traits = append(raceData.Traits, map[string]interface{}{
-				"name":        "Skill Proficiencies",
-				"description": fmt.Sprintf("You gain proficiency in %s.", strings.Join(skillList, " and ")),
-			})
-		}
-	}
+	cb.addListTrait(customRaceStats, raceData, "skillProficiencies", "Skill Proficiencies", 
+		"You gain proficiency in %s.")
 }

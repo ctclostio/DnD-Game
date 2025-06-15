@@ -95,26 +95,23 @@ Provide a JSON response with:
 	return personality, nil
 }
 
+// generateRandomMap creates a map with random float64 values for given keys
+func generateRandomMap(keys ...string) map[string]float64 {
+	result := make(map[string]float64, len(keys))
+	for _, key := range keys {
+		result[key] = rand.Float64()
+	}
+	return result
+}
+
 // generatePersonalityTraits creates base personality traits
 func (fps *FactionPersonalityService) generatePersonalityTraits(faction *models.Faction) map[string]float64 {
-	traits := map[string]float64{
-		"aggressive":    rand.Float64(),
-		"diplomatic":    rand.Float64(),
-		"isolationist":  rand.Float64(),
-		"expansionist":  rand.Float64(),
-		"traditional":   rand.Float64(),
-		"progressive":   rand.Float64(),
-		"mercantile":    rand.Float64(),
-		"militaristic":  rand.Float64(),
-		"scholarly":     rand.Float64(),
-		"religious":     rand.Float64(),
-		"pragmatic":     rand.Float64(),
-		"idealistic":    rand.Float64(),
-		"xenophobic":    rand.Float64(),
-		"cosmopolitan":  rand.Float64(),
-		"authoritarian": rand.Float64(),
-		"libertarian":   rand.Float64(),
-	}
+	traits := generateRandomMap(
+		"aggressive", "diplomatic", "isolationist", "expansionist",
+		"traditional", "progressive", "mercantile", "militaristic",
+		"scholarly", "religious", "pragmatic", "idealistic",
+		"xenophobic", "cosmopolitan", "authoritarian", "libertarian",
+	)
 
 	// Adjust based on faction type
 	switch faction.Type {
@@ -145,24 +142,12 @@ func (fps *FactionPersonalityService) generatePersonalityTraits(faction *models.
 
 // generateFactionValues creates core values
 func (fps *FactionPersonalityService) generateFactionValues(_ *models.Faction) map[string]float64 {
-	values := map[string]float64{
-		"honor":        rand.Float64(),
-		"wealth":       rand.Float64(),
-		"knowledge":    rand.Float64(),
-		"power":        rand.Float64(),
-		"freedom":      rand.Float64(),
-		"order":        rand.Float64(),
-		"tradition":    rand.Float64(),
-		"innovation":   rand.Float64(),
-		"faith":        rand.Float64(),
-		"nature":       rand.Float64(),
-		"justice":      rand.Float64(),
-		"loyalty":      rand.Float64(),
-		"independence": rand.Float64(),
-		"unity":        rand.Float64(),
-		"glory":        rand.Float64(),
-		"survival":     rand.Float64(),
-	}
+	values := generateRandomMap(
+		"honor", "wealth", "knowledge", "power",
+		"freedom", "order", "tradition", "innovation",
+		"faith", "nature", "justice", "loyalty",
+		"independence", "unity", "glory", "survival",
+	)
 
 	// Ensure some values are prioritized
 	topValues := 3 + rand.Intn(3)

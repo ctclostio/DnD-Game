@@ -20,6 +20,64 @@ func NewRuleBuilderRepository(db *DB) *RuleBuilderRepository {
 	return &RuleBuilderRepository{db: db}
 }
 
+// scanActiveRule is a helper to scan a single ActiveRule row
+func (r *RuleBuilderRepository) scanActiveRule(row RowScanner) (*models.ActiveRule, error) {
+	var rule models.ActiveRule
+	var compiledLogicJSON, parametersJSON []byte
+
+	dest := []interface{}{
+		&rule.ID,
+		&rule.TemplateID,
+		&rule.GameSessionID,
+		&rule.CharacterID,
+		&compiledLogicJSON,
+		&parametersJSON,
+		&rule.IsActive,
+		&rule.CreatedAt,
+		&rule.UpdatedAt,
+	}
+
+	jsonFields := map[int]JSONFieldUnmarshaler{
+		4: UnmarshalJSONWithError(&rule.CompiledLogic, "compiled logic"),
+		5: UnmarshalJSONWithError(&rule.Parameters, "parameters"),
+	}
+
+	if err := ScanWithJSON(row, dest, jsonFields); err != nil {
+		return nil, err
+	}
+
+	return &rule, nil
+}
+
+// scanRuleExecution is a helper to scan a single RuleExecution row
+func (r *RuleBuilderRepository) scanRuleExecution(row RowScanner) (*models.RuleExecution, error) {
+	var execution models.RuleExecution
+	var triggerContextJSON, executionResultJSON []byte
+
+	dest := []interface{}{
+		&execution.ID,
+		&execution.RuleID,
+		&execution.GameSessionID,
+		&execution.CharacterID,
+		&triggerContextJSON,
+		&executionResultJSON,
+		&execution.Success,
+		&execution.ErrorMessage,
+		&execution.ExecutedAt,
+	}
+
+	jsonFields := map[int]JSONFieldUnmarshaler{
+		4: UnmarshalJSONWithError(&execution.TriggerContext, "trigger context"),
+		5: UnmarshalJSONWithError(&execution.ExecutionResult, "execution result"),
+	}
+
+	if err := ScanWithJSON(row, dest, jsonFields); err != nil {
+		return nil, err
+	}
+
+	return &execution, nil
+}
+
 // Rule Template Methods
 
 // CreateRuleTemplate creates a new rule template
@@ -338,14 +396,14 @@ func (r *RuleBuilderRepository) CreateActiveRule(rule *models.ActiveRule) error 
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	compiledLogicJSON, err := json.Marshal(rule.CompiledLogic)
+	compiledLogicJSON, err := MarshalJSONField(rule.CompiledLogic, "compiled logic")
 	if err != nil {
-		return fmt.Errorf("failed to marshal compiled logic: %w", err)
+		return err
 	}
 
-	parametersJSON, err := json.Marshal(rule.Parameters)
+	parametersJSON, err := MarshalJSONField(rule.Parameters, "parameters")
 	if err != nil {
-		return fmt.Errorf("failed to marshal parameters: %w", err)
+		return err
 	}
 
 	_, err = r.db.ExecRebind(query,
@@ -392,43 +450,16 @@ func (r *RuleBuilderRepository) GetActiveRules(gameSessionID, characterID string
 	}
 	defer func() { _ = rows.Close() }()
 
-	rules := make([]models.ActiveRule, 0, 10)
-	for rows.Next() {
-		var rule models.ActiveRule
-		var compiledLogicJSON, parametersJSON []byte
-
-		err := rows.Scan(
-			&rule.ID,
-			&rule.TemplateID,
-			&rule.GameSessionID,
-			&rule.CharacterID,
-			&compiledLogicJSON,
-			&parametersJSON,
-			&rule.IsActive,
-			&rule.CreatedAt,
-			&rule.UpdatedAt,
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		// Unmarshal JSON fields
-		if err := json.Unmarshal(compiledLogicJSON, &rule.CompiledLogic); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal compiled logic: %w", err)
-		}
-
-		if err := json.Unmarshal(parametersJSON, &rule.Parameters); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal parameters: %w", err)
-		}
-
-		rules = append(rules, rule)
+	rulesPtr, err := ScanRowsGeneric(rows, r.scanActiveRule)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
+	// Convert []*models.ActiveRule to []models.ActiveRule
+	rules := make([]models.ActiveRule, len(rulesPtr))
+	for i, r := range rulesPtr {
+		rules[i] = *r
 	}
-
 	return rules, nil
 }
 
@@ -454,14 +485,14 @@ func (r *RuleBuilderRepository) CreateRuleExecution(execution *models.RuleExecut
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	triggerContextJSON, err := json.Marshal(execution.TriggerContext)
+	triggerContextJSON, err := MarshalJSONField(execution.TriggerContext, "trigger context")
 	if err != nil {
-		return fmt.Errorf("failed to marshal trigger context: %w", err)
+		return err
 	}
 
-	executionResultJSON, err := json.Marshal(execution.ExecutionResult)
+	executionResultJSON, err := MarshalJSONField(execution.ExecutionResult, "execution result")
 	if err != nil {
-		return fmt.Errorf("failed to marshal execution result: %w", err)
+		return err
 	}
 
 	_, err = r.db.ExecRebind(query,
@@ -515,41 +546,15 @@ func (r *RuleBuilderRepository) GetRuleExecutionHistory(gameSessionID, character
 	}
 	defer func() { _ = rows.Close() }()
 
-	executions := make([]models.RuleExecution, 0, 10)
-	for rows.Next() {
-		var execution models.RuleExecution
-		var triggerContextJSON, executionResultJSON []byte
-
-		err := rows.Scan(
-			&execution.ID,
-			&execution.RuleID,
-			&execution.GameSessionID,
-			&execution.CharacterID,
-			&triggerContextJSON,
-			&executionResultJSON,
-			&execution.Success,
-			&execution.ErrorMessage,
-			&execution.ExecutedAt,
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		// Unmarshal JSON fields
-		if err := json.Unmarshal(triggerContextJSON, &execution.TriggerContext); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal trigger context: %w", err)
-		}
-
-		if err := json.Unmarshal(executionResultJSON, &execution.ExecutionResult); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal execution result: %w", err)
-		}
-
-		executions = append(executions, execution)
+	executionsPtr, err := ScanRowsGeneric(rows, r.scanRuleExecution)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
+	// Convert []*models.RuleExecution to []models.RuleExecution
+	executions := make([]models.RuleExecution, len(executionsPtr))
+	for i, e := range executionsPtr {
+		executions[i] = *e
 	}
 
 	return executions, nil

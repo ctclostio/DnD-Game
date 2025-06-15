@@ -21,6 +21,38 @@ func NewCharacterRepository(db *DB) CharacterRepository {
 	return &characterRepository{db: db}
 }
 
+// scanCharacter is a helper to scan a single Character row with JSON fields
+func (r *characterRepository) scanCharacter(row RowScanner) (*models.Character, error) {
+	var character models.Character
+	var attributesJSON, skillsJSON, equipmentJSON, spellsJSON []byte
+
+	err := row.Scan(
+		&character.ID, &character.UserID, &character.Name, &character.Race,
+		&character.Class, &character.Level, &character.ExperiencePoints,
+		&character.HitPoints, &character.MaxHitPoints, &character.ArmorClass,
+		&character.Speed, &attributesJSON, &skillsJSON, &equipmentJSON,
+		&spellsJSON, &character.CreatedAt, &character.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan character: %w", err)
+	}
+
+	// Unmarshal JSON fields
+	if err := json.Unmarshal(attributesJSON, &character.Attributes); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal attributes: %w", err)
+	}
+	if err := json.Unmarshal(skillsJSON, &character.Skills); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal skills: %w", err)
+	}
+	if err := json.Unmarshal(equipmentJSON, &character.Equipment); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal equipment: %w", err)
+	}
+	if err := json.Unmarshal(spellsJSON, &character.Spells); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal spells: %w", err)
+	}
+
+	return &character, nil
+}
+
 // Create creates a new character
 func (r *characterRepository) Create(ctx context.Context, character *models.Character) error {
 	// Generate ID if not provided (for SQLite compatibility)
@@ -154,35 +186,12 @@ func (r *characterRepository) GetByUserID(ctx context.Context, userID string) ([
 	defer func() { _ = rows.Close() }()
 
 	characters := make([]*models.Character, 0, 10)
-	for rows.Next() {
-		var character models.Character
-		var attributesJSON, skillsJSON, equipmentJSON, spellsJSON []byte
-
-		err := rows.Scan(
-			&character.ID, &character.UserID, &character.Name, &character.Race,
-			&character.Class, &character.Level, &character.ExperiencePoints,
-			&character.HitPoints, &character.MaxHitPoints, &character.ArmorClass,
-			&character.Speed, &attributesJSON, &skillsJSON, &equipmentJSON,
-			&spellsJSON, &character.CreatedAt, &character.UpdatedAt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan character: %w", err)
-		}
-
-		// Unmarshal JSON fields
-		if err := json.Unmarshal(attributesJSON, &character.Attributes); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal attributes: %w", err)
-		}
-		if err := json.Unmarshal(skillsJSON, &character.Skills); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal skills: %w", err)
-		}
-		if err := json.Unmarshal(equipmentJSON, &character.Equipment); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal equipment: %w", err)
-		}
-		if err := json.Unmarshal(spellsJSON, &character.Spells); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal spells: %w", err)
-		}
-
-		characters = append(characters, &character)
+	charactersPtr, err := ScanRowsGeneric(rows, r.scanCharacter)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range charactersPtr {
+		characters = append(characters, c)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -285,35 +294,12 @@ func (r *characterRepository) List(ctx context.Context, offset, limit int) ([]*m
 	defer func() { _ = rows.Close() }()
 
 	characters := make([]*models.Character, 0, 10)
-	for rows.Next() {
-		var character models.Character
-		var attributesJSON, skillsJSON, equipmentJSON, spellsJSON []byte
-
-		err := rows.Scan(
-			&character.ID, &character.UserID, &character.Name, &character.Race,
-			&character.Class, &character.Level, &character.ExperiencePoints,
-			&character.HitPoints, &character.MaxHitPoints, &character.ArmorClass,
-			&character.Speed, &attributesJSON, &skillsJSON, &equipmentJSON,
-			&spellsJSON, &character.CreatedAt, &character.UpdatedAt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan character: %w", err)
-		}
-
-		// Unmarshal JSON fields
-		if err := json.Unmarshal(attributesJSON, &character.Attributes); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal attributes: %w", err)
-		}
-		if err := json.Unmarshal(skillsJSON, &character.Skills); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal skills: %w", err)
-		}
-		if err := json.Unmarshal(equipmentJSON, &character.Equipment); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal equipment: %w", err)
-		}
-		if err := json.Unmarshal(spellsJSON, &character.Spells); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal spells: %w", err)
-		}
-
-		characters = append(characters, &character)
+	charactersPtr, err := ScanRowsGeneric(rows, r.scanCharacter)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range charactersPtr {
+		characters = append(characters, c)
 	}
 
 	if err := rows.Err(); err != nil {

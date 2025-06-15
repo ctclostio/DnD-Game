@@ -21,6 +21,27 @@ func NewGameSessionRepository(db *DB) GameSessionRepository {
 	return &gameSessionRepository{db: db}
 }
 
+// scanGameSession is a helper to scan a single GameSession row
+func (r *gameSessionRepository) scanGameSession(row RowScanner) (*models.GameSession, error) {
+	var session models.GameSession
+	var stateJSON string
+
+	err := row.Scan(
+		&session.ID, &session.Name, &session.Description, &session.DMID,
+		&session.Code, &session.IsActive, &session.Status, &stateJSON,
+		&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
+		&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt,
+		&session.StartedAt, &session.EndedAt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan game session: %w", err)
+	}
+
+	// Initialize state
+	session.State = make(map[string]interface{})
+
+	return &session, nil
+}
+
 // Create creates a new game session
 func (r *gameSessionRepository) Create(ctx context.Context, session *models.GameSession) error {
 	// Generate a unique ID if not provided
@@ -119,24 +140,12 @@ func (r *gameSessionRepository) GetByDMUserID(ctx context.Context, dmUserID stri
 		_ = rows.Close()
 	}()
 
-	for rows.Next() {
-		var session models.GameSession
-		var stateJSON string
-
-		err := rows.Scan(
-			&session.ID, &session.Name, &session.Description, &session.DMID,
-			&session.Code, &session.IsActive, &session.Status, &stateJSON,
-			&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
-			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt,
-			&session.StartedAt, &session.EndedAt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan game session: %w", err)
-		}
-
-		// Initialize state
-		session.State = make(map[string]interface{})
-
-		sessions = append(sessions, &session)
+	sessionsPtr, err := ScanRowsGeneric(rows, r.scanGameSession)
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range sessionsPtr {
+		sessions = append(sessions, s)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -166,24 +175,12 @@ func (r *gameSessionRepository) GetByParticipantUserID(ctx context.Context, user
 		_ = rows.Close()
 	}()
 
-	for rows.Next() {
-		var session models.GameSession
-		var stateJSON string
-
-		err := rows.Scan(
-			&session.ID, &session.Name, &session.Description, &session.DMID,
-			&session.Code, &session.IsActive, &session.Status, &stateJSON,
-			&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
-			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt,
-			&session.StartedAt, &session.EndedAt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan game session: %w", err)
-		}
-
-		// Initialize state
-		session.State = make(map[string]interface{})
-
-		sessions = append(sessions, &session)
+	sessionsPtr, err := ScanRowsGeneric(rows, r.scanGameSession)
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range sessionsPtr {
+		sessions = append(sessions, s)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -256,24 +253,12 @@ func (r *gameSessionRepository) List(ctx context.Context, offset, limit int) ([]
 		_ = rows.Close()
 	}()
 
-	for rows.Next() {
-		var session models.GameSession
-		var stateJSON string
-
-		err := rows.Scan(
-			&session.ID, &session.Name, &session.Description, &session.DMID,
-			&session.Code, &session.IsActive, &session.Status, &stateJSON,
-			&session.MaxPlayers, &session.IsPublic, &session.RequiresInvite,
-			&session.AllowedCharacterLevel, &session.CreatedAt, &session.UpdatedAt,
-			&session.StartedAt, &session.EndedAt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan game session: %w", err)
-		}
-
-		// Initialize state
-		session.State = make(map[string]interface{})
-
-		sessions = append(sessions, &session)
+	sessionsPtr, err := ScanRowsGeneric(rows, r.scanGameSession)
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range sessionsPtr {
+		sessions = append(sessions, s)
 	}
 
 	if err := rows.Err(); err != nil {

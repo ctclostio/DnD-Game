@@ -283,7 +283,7 @@ func (s *AICharacterService) parseAIResponse(aiResponse string, req *CustomChara
 }
 
 func (s *AICharacterService) calculateModifier(score int) int {
-	return (score - 10) / 2
+	return CalculateAbilityModifier(score)
 }
 
 func (s *AICharacterService) getHitDiceValue(hitDice string) int {
@@ -304,32 +304,7 @@ func (s *AICharacterService) getHitDiceValue(hitDice string) int {
 func (s *AICharacterService) calculateSavingThrows(character *models.Character) models.SavingThrows {
 	// Basic saving throws without class proficiencies
 	// In a full implementation, this would check class data
-	return models.SavingThrows{
-		Strength: models.SavingThrow{
-			Modifier:    s.calculateModifier(character.Attributes.Strength),
-			Proficiency: false,
-		},
-		Dexterity: models.SavingThrow{
-			Modifier:    s.calculateModifier(character.Attributes.Dexterity),
-			Proficiency: false,
-		},
-		Constitution: models.SavingThrow{
-			Modifier:    s.calculateModifier(character.Attributes.Constitution),
-			Proficiency: false,
-		},
-		Intelligence: models.SavingThrow{
-			Modifier:    s.calculateModifier(character.Attributes.Intelligence),
-			Proficiency: false,
-		},
-		Wisdom: models.SavingThrow{
-			Modifier:    s.calculateModifier(character.Attributes.Wisdom),
-			Proficiency: false,
-		},
-		Charisma: models.SavingThrow{
-			Modifier:    s.calculateModifier(character.Attributes.Charisma),
-			Proficiency: false,
-		},
-	}
+	return CalculateSavingThrows(CharacterAttributeProvider{character})
 }
 
 // GenerateFallbackCharacter creates a character without AI when the service is disabled

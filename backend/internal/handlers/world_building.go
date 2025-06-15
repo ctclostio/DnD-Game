@@ -43,58 +43,33 @@ func NewWorldBuildingHandlers(
 
 // GenerateSettlement handles settlement generation requests
 func (h *WorldBuildingHandlers) GenerateSettlement(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserFromContext(r.Context())
+	_, sessionID, ok := ExtractUserAndSessionID(w, r)
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
-		return
-	}
-
-	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
-	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
 		return
 	}
 
 	// TODO: Verify user is DM of this session
 
 	var req models.SettlementGenerationRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+	if !DecodeAndValidateJSON(w, r, &req) {
 		return
 	}
 
-	settlement, err := h.settlementGen.GenerateSettlement(r.Context(), sessionID, req)
-	if err != nil {
-		response.InternalServerError(w, r, err)
-		return
-	}
-
-	response.JSON(w, r, http.StatusCreated, settlement)
+	HandleServiceOperation(w, r, func() (*models.Settlement, error) {
+		return h.settlementGen.GenerateSettlement(r.Context(), sessionID, req)
+	}, http.StatusCreated)
 }
 
 // GetSettlements retrieves all settlements for a game session
 func (h *WorldBuildingHandlers) GetSettlements(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserFromContext(r.Context())
+	_, sessionID, ok := ExtractUserAndSessionID(w, r)
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
-	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
-		return
-	}
-
-	settlements, err := h.worldRepo.GetSettlementsByGameSession(sessionID)
-	if err != nil {
-		response.InternalServerError(w, r, err)
-		return
-	}
-
-	response.JSON(w, r, http.StatusOK, settlements)
+	HandleServiceListOperation(w, r, func() ([]*models.Settlement, error) {
+		return h.worldRepo.GetSettlementsByGameSession(sessionID)
+	})
 }
 
 // GetSettlement retrieves a specific settlement
@@ -165,58 +140,33 @@ func (h *WorldBuildingHandlers) CalculateItemPrice(w http.ResponseWriter, r *htt
 
 // CreateFaction handles faction creation requests
 func (h *WorldBuildingHandlers) CreateFaction(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserFromContext(r.Context())
+	_, sessionID, ok := ExtractUserAndSessionID(w, r)
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
-		return
-	}
-
-	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
-	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
 		return
 	}
 
 	// TODO: Verify user is DM of this session
 
 	var req models.FactionCreationRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+	if !DecodeAndValidateJSON(w, r, &req) {
 		return
 	}
 
-	faction, err := h.factionSystem.CreateFaction(r.Context(), sessionID, req)
-	if err != nil {
-		response.InternalServerError(w, r, err)
-		return
-	}
-
-	response.JSON(w, r, http.StatusCreated, faction)
+	HandleServiceOperation(w, r, func() (*models.Faction, error) {
+		return h.factionSystem.CreateFaction(r.Context(), sessionID, req)
+	}, http.StatusCreated)
 }
 
 // GetFactions retrieves all factions for a game session
 func (h *WorldBuildingHandlers) GetFactions(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserFromContext(r.Context())
+	_, sessionID, ok := ExtractUserAndSessionID(w, r)
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
 		return
 	}
 
-	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
-	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
-		return
-	}
-
-	factions, err := h.worldRepo.GetFactionsByGameSession(sessionID)
-	if err != nil {
-		response.InternalServerError(w, r, err)
-		return
-	}
-
-	response.JSON(w, r, http.StatusOK, factions)
+	HandleServiceListOperation(w, r, func() ([]*models.Faction, error) {
+		return h.worldRepo.GetFactionsByGameSession(sessionID)
+	})
 }
 
 // UpdateFactionRelationship updates the relationship between two factions

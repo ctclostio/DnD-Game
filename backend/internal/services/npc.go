@@ -206,36 +206,11 @@ func (s *NPCService) calculateSavingThrows(npc *models.NPC) models.SavingThrows 
 	// TODO: Add proficiency bonus when implementing proficient saves
 	// profBonus := s.getProficiencyBonusFromCR(npc.ChallengeRating)
 
-	return models.SavingThrows{
-		Strength: models.SavingThrow{
-			Modifier:    s.getAbilityModifier(npc.Attributes.Strength),
-			Proficiency: false,
-		},
-		Dexterity: models.SavingThrow{
-			Modifier:    s.getAbilityModifier(npc.Attributes.Dexterity),
-			Proficiency: false,
-		},
-		Constitution: models.SavingThrow{
-			Modifier:    s.getAbilityModifier(npc.Attributes.Constitution),
-			Proficiency: false,
-		},
-		Intelligence: models.SavingThrow{
-			Modifier:    s.getAbilityModifier(npc.Attributes.Intelligence),
-			Proficiency: false,
-		},
-		Wisdom: models.SavingThrow{
-			Modifier:    s.getAbilityModifier(npc.Attributes.Wisdom),
-			Proficiency: false,
-		},
-		Charisma: models.SavingThrow{
-			Modifier:    s.getAbilityModifier(npc.Attributes.Charisma),
-			Proficiency: false,
-		},
-	}
+	return CalculateSavingThrows(NPCAttributeProvider{npc})
 }
 
 func (s *NPCService) getAbilityModifier(score int) int {
-	return (score - 10) / 2
+	return CalculateAbilityModifier(score)
 }
 
 func (s *NPCService) getProficiencyBonusFromCR(cr float64) int {

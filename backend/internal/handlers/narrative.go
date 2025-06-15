@@ -260,37 +260,9 @@ func (h *NarrativeHandlers) GetBackstoryElements(w http.ResponseWriter, r *http.
 
 // CreateBackstoryElement creates a new backstory element
 func (h *NarrativeHandlers) CreateBackstoryElement(w http.ResponseWriter, r *http.Request) {
-	claims := auth.GetClaimsFromContext(r.Context())
-
-	var element models.BackstoryElement
-	if err := json.NewDecoder(r.Body).Decode(&element); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	// Verify character ownership
-	character, err := h.characterRepo.GetByID(r.Context(), element.CharacterID)
-	if err != nil {
-		http.Error(w, "Character not found", http.StatusNotFound)
-		return
-	}
-
-	if character.UserID != claims.UserID {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
-		return
-	}
-
-	if err := h.narrativeRepo.CreateBackstoryElement(&element); err != nil {
-		http.Error(w, "Failed to create backstory element", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(element); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	HandleCharacterOwnedCreation(w, r, h.characterRepo,
+		func(element *models.BackstoryElement) string { return element.CharacterID },
+		func(element *models.BackstoryElement) error { return h.narrativeRepo.CreateBackstoryElement(element) })
 }
 
 // RecordPlayerAction records a significant player action
@@ -781,37 +753,9 @@ func (h *NarrativeHandlers) GetCharacterMemories(w http.ResponseWriter, r *http.
 
 // CreateMemory creates a new narrative memory
 func (h *NarrativeHandlers) CreateMemory(w http.ResponseWriter, r *http.Request) {
-	claims := auth.GetClaimsFromContext(r.Context())
-
-	var memory models.NarrativeMemory
-	if err := json.NewDecoder(r.Body).Decode(&memory); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	// Verify character ownership
-	character, err := h.characterRepo.GetByID(r.Context(), memory.CharacterID)
-	if err != nil {
-		http.Error(w, "Character not found", http.StatusNotFound)
-		return
-	}
-
-	if character.UserID != claims.UserID {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
-		return
-	}
-
-	if err := h.narrativeRepo.CreateNarrativeMemory(&memory); err != nil {
-		http.Error(w, "Failed to create memory", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(memory); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	HandleCharacterOwnedCreation(w, r, h.characterRepo,
+		func(memory *models.NarrativeMemory) string { return memory.CharacterID },
+		func(memory *models.NarrativeMemory) error { return h.narrativeRepo.CreateNarrativeMemory(memory) })
 }
 
 // GetActiveThreads retrieves active narrative threads

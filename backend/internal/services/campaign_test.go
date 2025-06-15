@@ -48,6 +48,34 @@ func createTestCampaignService(repo *mocks.MockCampaignRepository, gameRepo *moc
 	return NewCampaignService(repo, gameRepo, aiManager)
 }
 
+// executeRepoTest is a generic helper for repository test execution
+func executeRepoTest(t *testing.T, 
+	setupMocks func(*mocks.MockCampaignRepository),
+	expectError bool,
+	serviceCall func(*CampaignService) (interface{}, error),
+	validateResult func(interface{})) {
+	
+	mockRepo := new(mocks.MockCampaignRepository)
+	mockGameRepo := new(mocks.MockGameSessionRepository)
+	mockAI := new(MockAICampaignManager)
+	
+	setupMocks(mockRepo)
+	
+	service := createTestCampaignService(mockRepo, mockGameRepo, mockAI)
+	result, err := serviceCall(service)
+	
+	if expectError {
+		assert.Error(t, err)
+	} else {
+		assert.NoError(t, err)
+		if validateResult != nil && result != nil {
+			validateResult(result)
+		}
+	}
+	
+	mockRepo.AssertExpectations(t)
+}
+
 // Tests for Story Arc Management
 
 func TestCampaignService_CreateStoryArc(t *testing.T) {
@@ -546,23 +574,12 @@ func TestCampaignService_GetSessionMemories(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(mocks.MockCampaignRepository)
-			mockGameRepo := new(mocks.MockGameSessionRepository)
-			mockAI := new(MockAICampaignManager)
-
-			tt.setupMocks(mockRepo)
-
-			service := createTestCampaignService(mockRepo, mockGameRepo, mockAI)
-			memories, err := service.GetSessionMemories(context.Background(), sessionID, tt.limit)
-
-			if tt.expectError {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
+			executeRepoTest(t, tt.setupMocks, tt.expectError, func(service *CampaignService) (interface{}, error) {
+				return service.GetSessionMemories(context.Background(), sessionID, tt.limit)
+			}, func(result interface{}) {
+				memories := result.([]*models.SessionMemory)
 				assert.Len(t, memories, tt.expectCount)
-			}
-
-			mockRepo.AssertExpectations(t)
+			})
 		})
 	}
 }
@@ -818,23 +835,12 @@ func TestCampaignService_GetPlotThreads(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(mocks.MockCampaignRepository)
-			mockGameRepo := new(mocks.MockGameSessionRepository)
-			mockAI := new(MockAICampaignManager)
-
-			tt.setupMocks(mockRepo)
-
-			service := createTestCampaignService(mockRepo, mockGameRepo, mockAI)
-			threads, err := service.GetPlotThreads(context.Background(), sessionID, tt.activeOnly)
-
-			if tt.expectError {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
+			executeRepoTest(t, tt.setupMocks, tt.expectError, func(service *CampaignService) (interface{}, error) {
+				return service.GetPlotThreads(context.Background(), sessionID, tt.activeOnly)
+			}, func(result interface{}) {
+				threads := result.([]*models.PlotThread)
 				assert.Len(t, threads, tt.expectCount)
-			}
-
-			mockRepo.AssertExpectations(t)
+			})
 		})
 	}
 }

@@ -336,46 +336,45 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 		}
 	})
 
-	t.Run("calculateNPCCount", func(t *testing.T) {
-		tests := []struct {
-			settlementType models.SettlementType
-			minExpected    int
-			maxExpected    int
-		}{
-			{models.SettlementHamlet, 3, 5},
-			{models.SettlementVillage, 5, 7},
-			{models.SettlementTown, 8, 10},
-			{models.SettlementCity, 12, 14},
-			{models.SettlementMetropolis, 20, 22},
-			{models.SettlementRuins, 1, 3},
-		}
+	// Helper for testing count calculations
+	testCountCalculation := func(name string, calculateFunc func(models.SettlementType) int, testData []struct {
+		settlementType models.SettlementType
+		minExpected    int
+		maxExpected    int
+	}) {
+		t.Run(name, func(t *testing.T) {
+			for _, tt := range testData {
+				result := calculateFunc(tt.settlementType)
+				require.GreaterOrEqual(t, result, tt.minExpected, "Settlement type: %v", tt.settlementType)
+				require.LessOrEqual(t, result, tt.maxExpected, "Settlement type: %v", tt.settlementType)
+			}
+		})
+	}
 
-		for _, tt := range tests {
-			result := service.calculateNPCCount(tt.settlementType)
-			require.GreaterOrEqual(t, result, tt.minExpected)
-			require.LessOrEqual(t, result, tt.maxExpected)
-		}
+	testCountCalculation("calculateNPCCount", service.calculateNPCCount, []struct {
+		settlementType models.SettlementType
+		minExpected    int
+		maxExpected    int
+	}{
+		{models.SettlementHamlet, 3, 5},
+		{models.SettlementVillage, 5, 7},
+		{models.SettlementTown, 8, 10},
+		{models.SettlementCity, 12, 14},
+		{models.SettlementMetropolis, 20, 22},
+		{models.SettlementRuins, 1, 3},
 	})
 
-	t.Run("calculateShopCount", func(t *testing.T) {
-		tests := []struct {
-			settlementType models.SettlementType
-			minExpected    int
-			maxExpected    int
-		}{
-			{models.SettlementHamlet, 1, 2},
-			{models.SettlementVillage, 2, 3},
-			{models.SettlementTown, 4, 5},
-			{models.SettlementCity, 8, 9},
-			{models.SettlementMetropolis, 15, 16},
-			{models.SettlementRuins, 0, 1},
-		}
-
-		for _, tt := range tests {
-			result := service.calculateShopCount(tt.settlementType)
-			require.GreaterOrEqual(t, result, tt.minExpected)
-			require.LessOrEqual(t, result, tt.maxExpected)
-		}
+	testCountCalculation("calculateShopCount", service.calculateShopCount, []struct {
+		settlementType models.SettlementType
+		minExpected    int
+		maxExpected    int
+	}{
+		{models.SettlementHamlet, 1, 2},
+		{models.SettlementVillage, 2, 3},
+		{models.SettlementTown, 4, 5},
+		{models.SettlementCity, 8, 9},
+		{models.SettlementMetropolis, 15, 16},
+		{models.SettlementRuins, 0, 1},
 	})
 
 	t.Run("calculateWealthLevel", func(t *testing.T) {

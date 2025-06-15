@@ -65,29 +65,14 @@ func (h *Handlers) ProcessDMAssistantRequest(w http.ResponseWriter, r *http.Requ
 
 // GetDMAssistantNPCs retrieves NPCs for a game session
 func (h *Handlers) GetDMAssistantNPCs(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from context
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	_, sessionID, ok := ExtractUserAndID(w, r, "sessionId")
 	if !ok {
-		response.Unauthorized(w, r, "")
 		return
 	}
 
-	// Get session ID from URL
-	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
-	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
-		return
-	}
-
-	// Get NPCs
-	npcs, err := h.dmAssistantService.GetNPCsBySession(r.Context(), sessionID)
-	if err != nil {
-		response.InternalServerError(w, r, err)
-		return
-	}
-
-	response.JSON(w, r, http.StatusOK, npcs)
+	HandleServiceListOperation(w, r, func() ([]*models.AINPC, error) {
+		return h.dmAssistantService.GetNPCsBySession(r.Context(), sessionID)
+	})
 }
 
 // GetDMAssistantNPC retrieves a specific NPC
@@ -163,29 +148,14 @@ func (h *Handlers) CreateDMAssistantNPC(w http.ResponseWriter, r *http.Request) 
 
 // GetDMAssistantLocations retrieves locations for a game session
 func (h *Handlers) GetDMAssistantLocations(w http.ResponseWriter, r *http.Request) {
-	// Get user ID from context
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	_, sessionID, ok := ExtractUserAndID(w, r, "sessionId")
 	if !ok {
-		response.Unauthorized(w, r, "")
 		return
 	}
 
-	// Get session ID from URL
-	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
-	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
-		return
-	}
-
-	// Get locations
-	locations, err := h.dmAssistantService.GetLocationsBySession(r.Context(), sessionID)
-	if err != nil {
-		response.InternalServerError(w, r, err)
-		return
-	}
-
-	response.JSON(w, r, http.StatusOK, locations)
+	HandleServiceListOperation(w, r, func() ([]*models.AILocation, error) {
+		return h.dmAssistantService.GetLocationsBySession(r.Context(), sessionID)
+	})
 }
 
 // GetDMAssistantLocation retrieves a specific location

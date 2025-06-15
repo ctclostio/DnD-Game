@@ -363,49 +363,52 @@ func TestNPCService_ApplyDamage(t *testing.T) {
 }
 
 func TestNPCService_HealNPC(t *testing.T) {
-	t.Run("heals NPC without exceeding max HP", func(t *testing.T) {
-		mockRepo := new(MockNPCRepository)
-		service := NewNPCService(mockRepo)
+	tests := []struct {
+		name           string
+		npc            *models.NPC
+		healAmount     int
+		expectedHP     int
+	}{
+		{
+			name: "heals NPC without exceeding max HP",
+			npc: &models.NPC{
+				ID:           "npc-1",
+				Name:         "Wounded Orc",
+				HitPoints:    20,
+				MaxHitPoints: 42,
+			},
+			healAmount: 15,
+			expectedHP: 35, // 20 + 15
+		},
+		{
+			name: "caps healing at max HP",
+			npc: &models.NPC{
+				ID:           "npc-1",
+				Name:         "Nearly Full HP Orc",
+				HitPoints:    38,
+				MaxHitPoints: 42,
+			},
+			healAmount: 20,
+			expectedHP: 42, // Capped at max
+		},
+	}
 
-		npc := &models.NPC{
-			ID:           "npc-1",
-			Name:         "Wounded Orc",
-			HitPoints:    20,
-			MaxHitPoints: 42,
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(MockNPCRepository)
+			service := NewNPCService(mockRepo)
 
-		mockRepo.On("GetByID", mock.Anything, "npc-1").Return(npc, nil)
-		mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
-			return n.HitPoints == 35 // 20 + 15
-		})).Return(nil)
+			mockRepo.On("GetByID", mock.Anything, tt.npc.ID).Return(tt.npc, nil)
+			mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
+				return n.HitPoints == tt.expectedHP
+			})).Return(nil)
 
-		err := service.HealNPC(context.Background(), "npc-1", 15)
+			err := service.HealNPC(context.Background(), tt.npc.ID, tt.healAmount)
 
-		require.NoError(t, err)
-		mockRepo.AssertExpectations(t)
-	})
-
-	t.Run("caps healing at max HP", func(t *testing.T) {
-		mockRepo := new(MockNPCRepository)
-		service := NewNPCService(mockRepo)
-
-		npc := &models.NPC{
-			ID:           "npc-1",
-			Name:         "Nearly Full HP Orc",
-			HitPoints:    38,
-			MaxHitPoints: 42,
-		}
-
-		mockRepo.On("GetByID", mock.Anything, "npc-1").Return(npc, nil)
-		mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
-			return n.HitPoints == 42 // Capped at max
-		})).Return(nil)
-
-		err := service.HealNPC(context.Background(), "npc-1", 20)
-
-		require.NoError(t, err)
-		mockRepo.AssertExpectations(t)
-	})
+			require.NoError(t, err)
+			mockRepo.AssertExpectations(t)
+		})
+	}
 }
 
 func TestNPCService_UpdateNPC(t *testing.T) {

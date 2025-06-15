@@ -20,6 +20,19 @@ func NewDiceRollRepository(db *DB) DiceRollRepository {
 	return &diceRollRepository{db: db}
 }
 
+// scanDiceRoll is a helper to scan a single DiceRoll row
+func (r *diceRollRepository) scanDiceRoll(row RowScanner) (*models.DiceRoll, error) {
+	var roll models.DiceRoll
+	err := row.Scan(
+		&roll.ID, &roll.GameSessionID, &roll.UserID, &roll.DiceType,
+		&roll.Count, &roll.Modifier, pq.Array(&roll.Results),
+		&roll.Total, &roll.Purpose, &roll.RollNotation, &roll.Timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan dice roll: %w", err)
+	}
+	return &roll, nil
+}
+
 // Create creates a new dice roll
 func (r *diceRollRepository) Create(ctx context.Context, roll *models.DiceRoll) error {
 	query := `
@@ -80,24 +93,7 @@ func (r *diceRollRepository) GetByGameSession(ctx context.Context, sessionID str
 	}
 	defer func() { _ = rows.Close() }()
 
-	rolls := make([]*models.DiceRoll, 0, limit)
-	for rows.Next() {
-		var roll models.DiceRoll
-		err := rows.Scan(
-			&roll.ID, &roll.GameSessionID, &roll.UserID, &roll.DiceType,
-			&roll.Count, &roll.Modifier, pq.Array(&roll.Results),
-			&roll.Total, &roll.Purpose, &roll.RollNotation, &roll.Timestamp)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan dice roll: %w", err)
-		}
-		rolls = append(rolls, &roll)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating dice rolls: %w", err)
-	}
-
-	return rolls, nil
+	return ScanRowsGeneric(rows, r.scanDiceRoll)
 }
 
 // GetByUser retrieves dice rolls for a user
@@ -116,24 +112,7 @@ func (r *diceRollRepository) GetByUser(ctx context.Context, userID string, offse
 	}
 	defer func() { _ = rows.Close() }()
 
-	rolls := make([]*models.DiceRoll, 0, limit)
-	for rows.Next() {
-		var roll models.DiceRoll
-		err := rows.Scan(
-			&roll.ID, &roll.GameSessionID, &roll.UserID, &roll.DiceType,
-			&roll.Count, &roll.Modifier, pq.Array(&roll.Results),
-			&roll.Total, &roll.Purpose, &roll.RollNotation, &roll.Timestamp)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan dice roll: %w", err)
-		}
-		rolls = append(rolls, &roll)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating dice rolls: %w", err)
-	}
-
-	return rolls, nil
+	return ScanRowsGeneric(rows, r.scanDiceRoll)
 }
 
 // GetByGameSessionAndUser retrieves dice rolls for a specific user in a game session
@@ -152,24 +131,7 @@ func (r *diceRollRepository) GetByGameSessionAndUser(ctx context.Context, sessio
 	}
 	defer func() { _ = rows.Close() }()
 
-	rolls := make([]*models.DiceRoll, 0, limit)
-	for rows.Next() {
-		var roll models.DiceRoll
-		err := rows.Scan(
-			&roll.ID, &roll.GameSessionID, &roll.UserID, &roll.DiceType,
-			&roll.Count, &roll.Modifier, pq.Array(&roll.Results),
-			&roll.Total, &roll.Purpose, &roll.RollNotation, &roll.Timestamp)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan dice roll: %w", err)
-		}
-		rolls = append(rolls, &roll)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating dice rolls: %w", err)
-	}
-
-	return rolls, nil
+	return ScanRowsGeneric(rows, r.scanDiceRoll)
 }
 
 // Delete deletes a dice roll
