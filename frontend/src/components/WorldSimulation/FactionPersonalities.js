@@ -5,6 +5,7 @@ import {
 } from 'react-icons/fa';
 import api from '../../services/api';
 import { Radar } from 'react-chartjs-2';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const FactionPersonalities = ({ sessionId, isDM }) => {
   const [factions, setFactions] = useState([]);
@@ -297,8 +298,8 @@ const FactionPersonalities = ({ sessionId, isDM }) => {
       )}
 
       {showDecisionModal && (
-        <div className="modal-overlay" onClick={() => setShowDecisionModal(false)}>
-          <div className="modal-content large" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" {...getClickableProps(() => setShowDecisionModal(false))}>
+          <div className="modal-content large" {...getClickableProps(e => e.stopPropagation())}>
             <h3>Faction Decision Point</h3>
             
             <div className="form-group">

@@ -4,6 +4,7 @@ import {
   FaMagic, FaPlus, FaFilter, FaGlobe
 } from 'react-icons/fa';
 import api from '../../services/api';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const WorldEventsFeed = ({ events, sessionId, isDM, onEventCreated }) => {
   const [filter, setFilter] = useState('all');
@@ -172,8 +173,8 @@ const WorldEventsFeed = ({ events, sessionId, isDM, onEventCreated }) => {
       </div>
 
       {showCreateModal && (
-        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" {...getClickableProps(() => setShowCreateModal(false))}>
+          <div className="modal-content" {...getClickableProps(e => e.stopPropagation())}>
             <h3>Create World Event</h3>
             
             <div className="form-group">

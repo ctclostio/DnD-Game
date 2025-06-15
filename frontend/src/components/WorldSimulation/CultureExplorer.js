@@ -5,6 +5,7 @@ import {
   FaBook, FaTshirt, FaHandshake
 } from 'react-icons/fa';
 import api from '../../services/api';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const CultureExplorer = ({ sessionId, isDM }) => {
   const [cultures, setCultures] = useState([]);
@@ -460,8 +461,8 @@ const CultureExplorer = ({ sessionId, isDM }) => {
       )}
 
       {showGenerateModal && (
-        <div className="modal-overlay" onClick={() => setShowGenerateModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" {...getClickableProps(() => setShowGenerateModal(false))}>
+          <div className="modal-content" {...getClickableProps(e => e.stopPropagation())}>
             <h3>Generate New Culture</h3>
             
             <div className="form-group">

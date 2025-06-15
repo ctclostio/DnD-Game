@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const FactionCreator = ({ onClose, onSubmit }) => {
     const [formData, setFormData] = useState({
@@ -66,8 +67,8 @@ const FactionCreator = ({ onClose, onSubmit }) => {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content faction-creator" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" {...getClickableProps(onClose)}>
+            <div className="modal-content faction-creator" {...getClickableProps((e) => e.stopPropagation())}>
                 <div className="modal-header">
                     <h3>Create New Faction</h3>
                     <button className="close-button" onClick={onClose}>×</button>

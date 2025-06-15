@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '@store/index';
+import { getClickableProps } from '../utils/accessibility';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -15,12 +16,12 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="dashboard-grid">
-        <div className="dashboard-card" onClick={() => navigate('/characters')}>
+        <div className="dashboard-card" {...getClickableProps(() => navigate('/characters'))}>
           <h3>My Characters</h3>
           <p>View and manage your D&D characters</p>
         </div>
 
-        <div className="dashboard-card" onClick={() => navigate('/characters/new')}>
+        <div className="dashboard-card" {...getClickableProps(() => navigate('/characters/new'))}>
           <h3>Create Character</h3>
           <p>Build a new character from scratch</p>
         </div>
@@ -32,12 +33,12 @@ const Dashboard: React.FC = () => {
 
         {user?.role === 'dm' && (
           <>
-            <div className="dashboard-card" onClick={() => navigate('/world-builder')}>
+            <div className="dashboard-card" {...getClickableProps(() => navigate('/world-builder'))}>
               <h3>World Builder</h3>
               <p>Create and manage your campaign world</p>
             </div>
 
-            <div className="dashboard-card" onClick={() => navigate('/dm-tools')}>
+            <div className="dashboard-card" {...getClickableProps(() => navigate('/dm-tools'))}>
               <h3>DM Tools</h3>
               <p>Access DM-specific utilities</p>
             </div>

@@ -7,6 +7,7 @@ import {
   FaExclamationTriangle, FaEye, FaComments, FaCogs
 } from 'react-icons/fa';
 import api from '../services/api';
+import { getClickableProps, getSelectableProps } from '../utils/accessibility';
 import BackstoryManager from './NarrativeEngine/BackstoryManager';
 import ConsequenceTracker from './NarrativeEngine/ConsequenceTracker';
 import PerspectiveViewer from './NarrativeEngine/PerspectiveViewer';
@@ -384,10 +385,10 @@ const NarrativeEngine = () => {
         <div className="modal-content">
           <span 
             className="close" 
-            onClick={() => {
+            {...getClickableProps(() => {
               const modal = document.getElementById('world-event-modal');
               if (modal) modal.style.display = 'none';
-            }}
+            })}
           >
             &times;
           </span>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const NPCDialogue = ({ gameSessionId, savedNPCs, onGenerate, isGenerating }) => {
     const [selectedNPC, setSelectedNPC] = useState(null);
@@ -164,7 +165,7 @@ const NPCDialogue = ({ gameSessionId, savedNPCs, onGenerate, isGenerating }) => 
                         <div
                             key={npc.id}
                             className={`npc-card ${selectedNPC?.id === npc.id ? 'selected' : ''}`}
-                            onClick={() => setSelectedNPC(npc)}
+                            {...getSelectableProps(() => setSelectedNPC(npc), selectedNPC?.id === npc.id)}
                         >
                             <div className="npc-name">{npc.name}</div>
                             <div className="npc-details">

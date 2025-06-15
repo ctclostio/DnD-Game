@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const EconomicDashboard = ({ sessionId, settlements }) => {
     const [tradeRoutes, setTradeRoutes] = useState([]);
@@ -204,7 +205,7 @@ const EconomicDashboard = ({ sessionId, settlements }) => {
                                     <div
                                         key={route.id}
                                         className={`route-card ${selectedRoute?.id === route.id ? 'selected' : ''} ${status}`}
-                                        onClick={() => setSelectedRoute(route)}
+                                        {...getSelectableProps(() => setSelectedRoute(route), selectedRoute?.id === route.id)}
                                     >
                                         <div className="route-header">
                                             <div className="route-path">
@@ -306,8 +307,8 @@ const EconomicDashboard = ({ sessionId, settlements }) => {
             </div>
 
             {showRouteCreator && (
-                <div className="modal-overlay" onClick={() => setShowRouteCreator(false)}>
-                    <div className="modal-content route-creator" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-overlay" {...getClickableProps(() => setShowRouteCreator(false))}>
+                    <div className="modal-content route-creator" {...getClickableProps((e) => e.stopPropagation())}>
                         <div className="modal-header">
                             <h3>Create Trade Route</h3>
                             <button className="close-button" onClick={() => setShowRouteCreator(false)}>×</button>

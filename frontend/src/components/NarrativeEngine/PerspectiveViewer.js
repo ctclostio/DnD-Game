@@ -4,6 +4,7 @@ import {
   FaExclamationTriangle, FaPlus, FaRandom, FaQuestionCircle
 } from 'react-icons/fa';
 import api from '../../services/api';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
   const [worldEvents, setWorldEvents] = useState([]);
@@ -239,7 +240,7 @@ const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
                   <div 
                     key={event.id} 
                     className="event-card"
-                    onClick={() => handleEventSelect(event)}
+                    {...getClickableProps(() => handleEventSelect(event))}
                   >
                     <h5>{event.name}</h5>
                     <p>{event.description}</p>

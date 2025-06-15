@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const GeneratedContent = ({ content, onReuse }) => {
     const [filter, setFilter] = useState('all');
@@ -137,7 +138,10 @@ const GeneratedContent = ({ content, onReuse }) => {
                                 <div
                                     key={item.id}
                                     className={`content-item ${item.type} ${selectedItem?.id === item.id ? 'selected' : ''}`}
-                                    onClick={() => setSelectedItem(item)}
+                                    {...getSelectableProps(
+                                        () => setSelectedItem(item),
+                                        selectedItem?.id === item.id
+                                    )}
                                 >
                                     <div className="item-header">
                                         <span className={`type-icon ${contentTypes[item.type]?.color}`}>
@@ -180,8 +184,8 @@ const GeneratedContent = ({ content, onReuse }) => {
 
             {/* Selected Item Detail Modal */}
             {selectedItem && (
-                <div className="content-detail-modal" onClick={() => setSelectedItem(null)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="content-detail-modal" {...getClickableProps(() => setSelectedItem(null))}>
+                    <div className="modal-content" {...getClickableProps((e) => e.stopPropagation())}>
                         <div className="modal-header">
                             <h3>
                                 {contentTypes[selectedItem.type]?.icon} {getContentTitle(selectedItem)}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const SettlementGenerator = ({ onGenerate, onClose, isGenerating }) => {
     const [formData, setFormData] = useState({
@@ -48,8 +49,8 @@ const SettlementGenerator = ({ onGenerate, onClose, isGenerating }) => {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content settlement-generator" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" {...getClickableProps(onClose)}>
+            <div className="modal-content settlement-generator" {...getClickableProps((e) => e.stopPropagation())}>
                 <div className="modal-header">
                     <h3>Generate Settlement</h3>
                     <button className="close-button" onClick={onClose}>×</button>

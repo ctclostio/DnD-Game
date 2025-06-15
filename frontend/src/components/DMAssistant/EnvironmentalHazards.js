@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
+import { getSelectableProps, getClickableProps } from '../../utils/accessibility';
 
 const EnvironmentalHazards = ({ gameSessionId, currentLocation, onGenerate, isGenerating }) => {
     const [hazardForm, setHazardForm] = useState({
@@ -194,7 +195,10 @@ const EnvironmentalHazards = ({ gameSessionId, currentLocation, onGenerate, isGe
                             <div
                                 key={hazard.id}
                                 className={`hazard-card ${selectedHazard?.id === hazard.id ? 'selected' : ''} ${!hazard.isActive ? 'inactive' : ''}`}
-                                onClick={() => setSelectedHazard(hazard)}
+                                {...getSelectableProps(
+                                    () => setSelectedHazard(hazard),
+                                    selectedHazard?.id === hazard.id
+                                )}
                             >
                                 <div className="hazard-header">
                                     <span className="hazard-icon">{getHazardIcon(hazard)}</span>
@@ -324,31 +328,39 @@ const EnvironmentalHazards = ({ gameSessionId, currentLocation, onGenerate, isGe
             <div className="hazard-templates">
                 <h4>Common Hazard Templates</h4>
                 <div className="template-grid">
-                    <div className="template-card" onClick={() => {
-                        setHazardForm({ locationType: 'dungeon', difficulty: 5, hazardType: 'trap' });
-                        handleGenerateHazard();
-                    }}>
+                    <div 
+                        className="template-card" 
+                        {...getClickableProps(() => {
+                            setHazardForm({ locationType: 'dungeon', difficulty: 5, hazardType: 'trap' });
+                            handleGenerateHazard();
+                        })}>
                         <span className="template-icon">🪤</span>
                         <span>Pit Trap</span>
                     </div>
-                    <div className="template-card" onClick={() => {
-                        setHazardForm({ locationType: 'dungeon', difficulty: 7, hazardType: 'trap' });
-                        handleGenerateHazard();
-                    }}>
+                    <div 
+                        className="template-card" 
+                        {...getClickableProps(() => {
+                            setHazardForm({ locationType: 'dungeon', difficulty: 7, hazardType: 'trap' });
+                            handleGenerateHazard();
+                        })}>
                         <span className="template-icon">🎯</span>
                         <span>Dart Trap</span>
                     </div>
-                    <div className="template-card" onClick={() => {
-                        setHazardForm({ locationType: 'wilderness', difficulty: 6, hazardType: 'natural' });
-                        handleGenerateHazard();
-                    }}>
+                    <div 
+                        className="template-card" 
+                        {...getClickableProps(() => {
+                            setHazardForm({ locationType: 'wilderness', difficulty: 6, hazardType: 'natural' });
+                            handleGenerateHazard();
+                        })}>
                         <span className="template-icon">🌊</span>
                         <span>Quicksand</span>
                     </div>
-                    <div className="template-card" onClick={() => {
-                        setHazardForm({ locationType: 'temple', difficulty: 8, hazardType: 'magical' });
-                        handleGenerateHazard();
-                    }}>
+                    <div 
+                        className="template-card" 
+                        {...getClickableProps(() => {
+                            setHazardForm({ locationType: 'temple', difficulty: 8, hazardType: 'magical' });
+                            handleGenerateHazard();
+                        })}>
                         <span className="template-icon">⚡</span>
                         <span>Lightning Ward</span>
                     </div>

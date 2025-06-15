@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import FactionCreator from './FactionCreator';
 import FactionRelationships from './FactionRelationships';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const FactionManager = ({ sessionId, factions, settlements, onUpdate }) => {
     const [selectedFaction, setSelectedFaction] = useState(null);
@@ -111,7 +112,7 @@ const FactionManager = ({ sessionId, factions, settlements, onUpdate }) => {
                             <div
                                 key={faction.id}
                                 className={`faction-card ${selectedFaction?.id === faction.id ? 'selected' : ''}`}
-                                onClick={() => setSelectedFaction(faction)}
+                                {...getSelectableProps(() => setSelectedFaction(faction), selectedFaction?.id === faction.id)}
                             >
                                 <div className="faction-header">
                                     <span className="faction-icon">{getFactionIcon(faction.type)}</span>

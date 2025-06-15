@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const LocationGenerator = ({ gameSessionId, savedLocations, onGenerate, isGenerating }) => {
     const [locationForm, setLocationForm] = useState({
@@ -224,7 +225,7 @@ const LocationGenerator = ({ gameSessionId, savedLocations, onGenerate, isGenera
                         <div
                             key={location.id}
                             className={`location-card ${selectedLocation?.id === location.id ? 'selected' : ''}`}
-                            onClick={() => setSelectedLocation(location)}
+                            {...getSelectableProps(() => setSelectedLocation(location), selectedLocation?.id === location.id)}
                         >
                             <div className="location-header">
                                 <h5>{location.name}</h5>

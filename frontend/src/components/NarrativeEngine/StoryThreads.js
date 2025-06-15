@@ -4,6 +4,7 @@ import {
   FaBan, FaPlus, FaEdit, FaChartLine, FaUsers
 } from 'react-icons/fa';
 import api from '../../services/api';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const StoryThreads = ({ threads, sessionId, isDM, onThreadUpdate }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -274,9 +275,9 @@ const StoryThreads = ({ threads, sessionId, isDM, onThreadUpdate }) => {
                   <div 
                     key={thread.id} 
                     className="thread-card active"
-                    onClick={() => setSelectedThread(
+                    {...getSelectableProps(() => setSelectedThread(
                       selectedThread?.id === thread.id ? null : thread
-                    )}
+                    ), selectedThread?.id === thread.id)}
                   >
                     <div className="thread-header">
                       <div className="thread-title">

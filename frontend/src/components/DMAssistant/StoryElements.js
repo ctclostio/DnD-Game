@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const StoryElements = ({ gameSessionId, storyElements, onGenerate, onUseElement, isGenerating }) => {
     const [currentContext, setCurrentContext] = useState({
@@ -153,7 +154,7 @@ const StoryElements = ({ gameSessionId, storyElements, onGenerate, onUseElement,
                                 <div
                                     key={element.id}
                                     className={`story-element-card ${element.type} ${selectedElement?.id === element.id ? 'selected' : ''}`}
-                                    onClick={() => setSelectedElement(element)}
+                                    {...getSelectableProps(() => setSelectedElement(element), selectedElement?.id === element.id)}
                                 >
                                     <div className="element-header">
                                         <span className="element-type">

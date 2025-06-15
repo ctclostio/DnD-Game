@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaFilter } from 'react-icons/fa';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const WorldTimeline = ({ events, sessionId }) => {
   const [groupedEvents, setGroupedEvents] = useState({});
@@ -140,7 +141,7 @@ const WorldTimeline = ({ events, sessionId }) => {
             <div key={dayKey} className="timeline-day">
               <div 
                 className="day-header"
-                onClick={() => toggleDay(dayKey)}
+                {...getClickableProps(() => toggleDay(dayKey))}
               >
                 <div className="day-info">
                   <h4>{formatDayHeader(dayData.date)}</h4>

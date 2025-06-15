@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaBook, FaSearch, FaStar, FaDownload, FaFilter, FaTags, FaUser, FaClock } from 'react-icons/fa';
 import api from '../../services/api';
+import { getClickableProps } from '../../utils/accessibility';
 
 const RuleLibrary = ({ onImportRule, currentRuleId }) => {
   const [rules, setRules] = useState([]);
@@ -101,8 +102,8 @@ const RuleLibrary = ({ onImportRule, currentRuleId }) => {
 
   const renderRulePreview = (rule) => {
     return (
-      <div className="rule-preview-modal" onClick={() => setSelectedRule(null)}>
-        <div className="rule-preview-content" onClick={(e) => e.stopPropagation()}>
+      <div className="rule-preview-modal" {...getClickableProps(() => setSelectedRule(null))}>
+        <div className="rule-preview-content" {...getClickableProps((e) => e.stopPropagation())}>
           <div className="preview-header">
             <h3>{rule.name}</h3>
             <button className="close-btn" onClick={() => setSelectedRule(null)}>×</button>
@@ -261,7 +262,7 @@ const RuleLibrary = ({ onImportRule, currentRuleId }) => {
             <div 
               key={rule.id} 
               className={`rule-card ${rule.id === currentRuleId ? 'current' : ''}`}
-              onClick={() => setSelectedRule(rule)}
+              {...getClickableProps(() => setSelectedRule(rule))}
             >
               <div className="rule-card-header">
                 <h4>{rule.name}</h4>

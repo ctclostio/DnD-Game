@@ -8,6 +8,7 @@ import {
     getCombatAnalytics,
     getCombatHistory 
 } from '../services/api';
+import { getClickableProps, getSelectableProps } from '../utils/accessibility';
 import '../styles/combat-automation.css';
 
 const CombatAutomation = ({ gameSessionId, characters, npcs, isDM }) => {
@@ -455,7 +456,7 @@ const CombatAutomation = ({ gameSessionId, characters, npcs, isDM }) => {
                                 <div
                                     key={combat.id}
                                     className={`combat-entry ${selectedCombat?.id === combat.id ? 'selected' : ''}`}
-                                    onClick={() => setSelectedCombat(combat)}
+                                    {...getSelectableProps(() => setSelectedCombat(combat), selectedCombat?.id === combat.id)}
                                 >
                                     <div className="combat-header">
                                         <span className="combat-date">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import SettlementDetails from './SettlementDetails';
 import SettlementGenerator from './SettlementGenerator';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const SettlementManager = ({ sessionId, settlements, onUpdate }) => {
     const [selectedSettlement, setSelectedSettlement] = useState(null);
@@ -83,7 +84,7 @@ const SettlementManager = ({ sessionId, settlements, onUpdate }) => {
                             <div
                                 key={settlement.id}
                                 className={`settlement-card ${selectedSettlement?.id === settlement.id ? 'selected' : ''}`}
-                                onClick={() => setSelectedSettlement(settlement)}
+                                {...getSelectableProps(() => setSelectedSettlement(settlement), selectedSettlement?.id === settlement.id)}
                             >
                                 <div className="settlement-header">
                                     <span className="settlement-icon">

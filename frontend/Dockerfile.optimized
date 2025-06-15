@@ -1,0 +1,189 @@
+# syntax=docker/dockerfile:1
+
+# ========================================
+# Stage 1: Dependencies
+# ========================================
+FROM node:20-alpine AS deps
+
+# Install build dependencies
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+# Copy package files only for better caching
+COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+
+# Install dependencies based on lockfile
+RUN \
+  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
+# ========================================
+# Stage 2: Builder
+# ========================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Copy source code
+COPY . .
+
+# Set build arguments for optimization
+ARG NODE_ENV=production
+ARG REACT_APP_API_URL
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+
+# Build the application with optimizations
+ENV NODE_ENV=${NODE_ENV}
+ENV GENERATE_SOURCEMAP=false
+ENV INLINE_RUNTIME_CHUNK=false
+
+RUN npm run build
+
+# Remove unnecessary files
+RUN rm -rf node_modules
+
+# ========================================
+# Stage 3: Security Scanner
+# ========================================
+FROM aquasec/trivy:latest AS scanner
+
+WORKDIR /app
+
+# Copy built files for scanning
+COPY --from=builder /app/build ./build
+
+# Scan for vulnerabilities
+RUN trivy filesystem --exit-code 0 --no-progress /app/build
+
+# ========================================
+# Stage 4: Production Image
+# ========================================
+FROM nginx:alpine-slim AS production
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    curl \
+    tzdata \
+    && rm -rf /var/cache/apk/*
+
+# Create non-root user
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Copy custom nginx config
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+
+# Copy security headers config
+COPY nginx/security-headers.conf /etc/nginx/conf.d/security-headers.conf
+
+# Copy built application
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Copy runtime configuration script
+COPY docker/runtime-env.sh /docker-entrypoint.d/40-runtime-env.sh
+RUN chmod +x /docker-entrypoint.d/40-runtime-env.sh
+
+# Set correct permissions
+RUN chown -R appuser:appgroup /usr/share/nginx/html && \
+    chown -R appuser:appgroup /var/cache/nginx && \
+    chown -R appuser:appgroup /var/log/nginx && \
+    chown -R appuser:appgroup /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && \
+    chown -R appuser:appgroup /var/run/nginx.pid
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 3000
+
+# Add labels for metadata
+LABEL org.opencontainers.image.title="D&D Game Frontend" \
+      org.opencontainers.image.description="Frontend application for D&D Game" \
+      org.opencontainers.image.version="${VERSION:-latest}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.revision="${VCS_REF}"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/ || exit 1
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
+
+# ========================================
+# Stage 5: Development
+# ========================================
+FROM node:20-alpine AS development
+
+# Install development tools
+RUN apk add --no-cache git
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install all dependencies including devDependencies
+RUN npm install
+
+# Copy source code (will be mounted in development)
+COPY . .
+
+# Expose ports
+EXPOSE 3000
+
+# Environment for development
+ENV NODE_ENV=development
+ENV CHOKIDAR_USEPOLLING=true
+
+# Start development server
+CMD ["npm", "start"]
+
+# ========================================
+# Stage 6: Test Runner
+# ========================================
+FROM node:20-alpine AS test
+
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy package files and source
+COPY package.json package-lock.json* ./
+COPY . .
+
+# Run tests
+RUN npm run test -- --coverage --watchAll=false
+
+# ========================================
+# Stage 7: Static Analyzer
+# ========================================
+FROM node:20-alpine AS analyzer
+
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy package files and source
+COPY package.json package-lock.json* ./
+COPY . .
+
+# Run linting and type checking
+RUN npm run lint && \
+    npm run type-check || true

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useDrag } from 'react-dnd';
 import { FaTrash, FaStar, FaGripVertical } from 'react-icons/fa';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const LogicNode = ({
   node,
@@ -133,10 +134,10 @@ const LogicNode = ({
         top: node.position.y,
         borderColor: nodeColor
       }}
-      onClick={(e) => {
+      {...getSelectableProps((e) => {
         e.stopPropagation();
         onSelect();
-      }}
+      }, isSelected)}
     >
       <div 
         className="node-header" 

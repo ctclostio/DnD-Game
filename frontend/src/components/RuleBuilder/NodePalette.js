@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useDrag } from 'react-dnd';
 import { FaSearch, FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const NodeTemplateItem = ({ template, onNodeAdd }) => {
   const [{ isDragging }, drag] = useDrag({
@@ -119,7 +120,7 @@ const NodePalette = ({ nodeTemplates, onNodeAdd }) => {
           <div key={category} className="node-category">
             <div 
               className="category-header"
-              onClick={() => toggleCategory(category)}
+              {...getClickableProps(() => toggleCategory(category))}
             >
               <span className="category-toggle">
                 {isCollapsed ? <FaChevronRight /> : <FaChevronDown />}

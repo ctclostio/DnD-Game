@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const WorldEventViewer = ({ sessionId }) => {
     const [events, setEvents] = useState([]);
@@ -200,7 +201,7 @@ const WorldEventViewer = ({ sessionId }) => {
                             <div
                                 key={event.id}
                                 className={`event-card ${selectedEvent?.id === event.id ? 'selected' : ''} ${getEventStatusColor(event.status)}`}
-                                onClick={() => setSelectedEvent(event)}
+                                {...getSelectableProps(() => setSelectedEvent(event), selectedEvent?.id === event.id)}
                             >
                                 <div className="event-header">
                                     <span className="event-icon">{getEventTypeIcon(event.type)}</span>

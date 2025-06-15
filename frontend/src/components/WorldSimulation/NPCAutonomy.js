@@ -4,6 +4,7 @@ import {
   FaChartLine, FaPlus, FaEdit, FaCheckCircle
 } from 'react-icons/fa';
 import api from '../../services/api';
+import { getSelectableProps, getClickableProps } from '../../utils/accessibility';
 
 const NPCAutonomy = ({ sessionId, isDM }) => {
   const [npcs, setNpcs] = useState([]);
@@ -114,7 +115,10 @@ const NPCAutonomy = ({ sessionId, isDM }) => {
             <div 
               key={npc.id}
               className={`npc-card ${selectedNPC?.id === npc.id ? 'selected' : ''}`}
-              onClick={() => setSelectedNPC(npc)}
+              {...getSelectableProps(
+                () => setSelectedNPC(npc),
+                selectedNPC?.id === npc.id
+              )}
             >
               <div className="npc-avatar">
                 <FaUser />
@@ -240,8 +244,8 @@ const NPCAutonomy = ({ sessionId, isDM }) => {
       )}
 
       {showGoalModal && (
-        <div className="modal-overlay" onClick={() => setShowGoalModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" {...getClickableProps(() => setShowGoalModal(false))}>
+          <div className="modal-content" {...getClickableProps(e => e.stopPropagation())}>
             <h3>Create NPC Goal</h3>
             
             <div className="form-group">

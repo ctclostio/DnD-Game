@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getClickableProps, getSelectableProps } from '../utils/accessibility';
 import '../styles/battle-map.css';
 
 const BattleMapViewer = ({ battleMap }) => {
@@ -171,7 +172,7 @@ const BattleMapViewer = ({ battleMap }) => {
                                 <div
                                     key={`${x}-${y}`}
                                     className={`grid-cell ${getCellClass(content)} ${isSelected ? 'selected' : ''}`}
-                                    onClick={() => handleCellClick(x, y)}
+                                    {...getSelectableProps(() => handleCellClick(x, y), isSelected)}
                                     title={content?.data?.type || ''}
                                 >
                                     <span className="cell-symbol">
