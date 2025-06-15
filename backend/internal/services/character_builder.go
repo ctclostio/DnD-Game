@@ -311,7 +311,7 @@ func (cb *CharacterBuilder) calculateSavingThrows(character *models.Character, c
 	return saves
 }
 
-func (cb *CharacterBuilder) calculateSkills(character *models.Character) []models.Skill {
+func (cb *CharacterBuilder) calculateSkills(_ *models.Character) []models.Skill {
 	// This would be expanded to calculate all skills based on proficiencies
 	// For now, return empty slice
 	return []models.Skill{}
@@ -369,14 +369,14 @@ func (cb *CharacterBuilder) applyClassFeatures(character *models.Character, clas
 	// TODO: Apply other class features based on level
 }
 
-func (cb *CharacterBuilder) applyRacialFeatures(character *models.Character, raceData *RaceData, subrace string) {
+func (cb *CharacterBuilder) applyRacialFeatures(character *models.Character, raceData *RaceData, _ string) {
 	// Apply racial traits
 	character.Proficiencies.Languages = append(character.Proficiencies.Languages, raceData.Languages...)
 
 	// TODO: Apply other racial features
 }
 
-func (cb *CharacterBuilder) applyBackground(character *models.Character, backgroundData *BackgroundData) {
+func (cb *CharacterBuilder) applyBackground(_ *models.Character, backgroundData *BackgroundData) {
 	// Apply background proficiencies
 	// TODO: Add skill proficiencies from background
 

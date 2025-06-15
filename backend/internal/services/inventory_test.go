@@ -109,7 +109,7 @@ func TestInventoryService_AddItemToCharacter(t *testing.T) {
 			characterID: "nonexistent",
 			itemID:      "item-456",
 			quantity:    1,
-			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
+			setupMock: func(_ *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
 				charRepo.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("not found"))
 			},
 			expectedError: "not found",
@@ -119,7 +119,7 @@ func TestInventoryService_AddItemToCharacter(t *testing.T) {
 			characterID: "char-123",
 			itemID:      "item-456",
 			quantity:    1,
-			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
+			setupMock: func(_ *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
 				charRepo.On("GetByID", ctx, "char-123").Return(nil, nil)
 			},
 			expectedError: "character not found",

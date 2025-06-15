@@ -148,7 +148,7 @@ func (h *Hub) Broadcast(message []byte) {
 }
 
 // Shutdown gracefully stops the hub and closes all connections
-func (h *Hub) Shutdown(ctx context.Context) error {
+func (h *Hub) Shutdown(_ context.Context) error {
 	close(h.shutdown)
 	return nil
 }

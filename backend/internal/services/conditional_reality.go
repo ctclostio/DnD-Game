@@ -233,7 +233,7 @@ func (crs *ConditionalRealitySystem) evaluateEmotionCondition(condition models.R
 	return false
 }
 
-func (crs *ConditionalRealitySystem) evaluateCharacterStateCondition(condition models.RuleCondition, instance *models.RuleInstance) bool {
+func (crs *ConditionalRealitySystem) evaluateCharacterStateCondition(_ models.RuleCondition, instance *models.RuleInstance) bool {
 	// This would check character conditions like HP, status effects, etc.
 	// Simplified for now
 	return true

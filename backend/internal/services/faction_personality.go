@@ -144,7 +144,7 @@ func (fps *FactionPersonalityService) generatePersonalityTraits(faction *models.
 }
 
 // generateFactionValues creates core values
-func (fps *FactionPersonalityService) generateFactionValues(faction *models.Faction) map[string]float64 {
+func (fps *FactionPersonalityService) generateFactionValues(_ *models.Faction) map[string]float64 {
 	values := map[string]float64{
 		"honor":        rand.Float64(),
 		"wealth":       rand.Float64(),
@@ -208,7 +208,7 @@ func (fps *FactionPersonalityService) generateDecisionWeights(traits, values map
 }
 
 // RecordMemory adds a significant event to faction memory
-func (fps *FactionPersonalityService) RecordMemory(ctx context.Context, factionID string, event *models.WorldEvent) error {
+func (fps *FactionPersonalityService) RecordMemory(_ context.Context, factionID string, event *models.WorldEvent) error {
 	personality, err := fps.worldRepo.GetFactionPersonality(factionID)
 	if err != nil {
 		return err
@@ -468,7 +468,7 @@ func (fps *FactionPersonalityService) getRelevantMemories(personality *models.Fa
 }
 
 // UpdateFactionMood adjusts faction mood based on recent events
-func (fps *FactionPersonalityService) UpdateFactionMood(ctx context.Context, factionID string) error {
+func (fps *FactionPersonalityService) UpdateFactionMood(_ context.Context, factionID string) error {
 	personality, err := fps.worldRepo.GetFactionPersonality(factionID)
 	if err != nil {
 		return err
@@ -508,7 +508,7 @@ func (fps *FactionPersonalityService) UpdateFactionMood(ctx context.Context, fac
 }
 
 // LearnFromInteraction updates faction personality based on player interactions
-func (fps *FactionPersonalityService) LearnFromInteraction(ctx context.Context, factionID string, interaction models.PlayerInteraction) error {
+func (fps *FactionPersonalityService) LearnFromInteraction(_ context.Context, factionID string, interaction models.PlayerInteraction) error {
 	personality, err := fps.worldRepo.GetFactionPersonality(factionID)
 	if err != nil {
 		return err
@@ -620,7 +620,7 @@ func (fps *FactionPersonalityService) formatMemories(memories []models.FactionMe
 	return result
 }
 
-func (fps *FactionPersonalityService) makeDefaultDecision(personality *models.FactionPersonality, decision *models.FactionDecision, scores map[string]float64) *models.FactionDecisionResult {
+func (fps *FactionPersonalityService) makeDefaultDecision(_ *models.FactionPersonality, decision *models.FactionDecision, scores map[string]float64) *models.FactionDecisionResult {
 	if decision == nil {
 		return &models.FactionDecisionResult{
 			Success:      false,

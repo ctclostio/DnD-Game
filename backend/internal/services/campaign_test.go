@@ -468,7 +468,7 @@ func TestCampaignService_CreateSessionMemory(t *testing.T) {
 			tt.setupMocks(mockRepo)
 
 			service := createTestCampaignService(mockRepo, mockGameRepo, mockAI)
-			memory, err := service.CreateSessionMemory(context.Background(), sessionID, tt.request)
+			memory, err := service.CreateSessionMemory(context.Background(), sessionID, &tt.request)
 
 			if tt.expectError {
 				assert.Error(t, err)

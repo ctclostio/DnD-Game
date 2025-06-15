@@ -420,7 +420,7 @@ func (re *RuleEngine) isCriticalError(err error) bool {
 // MathExecutor handles mathematical operations
 type MathExecutor struct{}
 
-func (e *MathExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *MathExecutor) Execute(_ context.Context, node *models.LogicNode, inputs map[string]interface{}, _ *ExecutionState) (map[string]interface{}, error) {
 	a, ok := inputs["a"].(float64)
 	if !ok {
 		if aInt, ok := inputs["a"].(int); ok {
@@ -474,7 +474,7 @@ type RandomExecutor struct {
 	diceRoller *DiceRollService
 }
 
-func (e *RandomExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *RandomExecutor) Execute(_ context.Context, node *models.LogicNode, _ map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	diceNotation, _ := node.Properties["dice_notation"].(string)
 	if diceNotation == "" {
 		// Random number between min and max
@@ -543,7 +543,7 @@ func (e *RandomExecutor) parseDiceNotation(notation string) (int, map[string]int
 // ConditionCheckExecutor handles if/else branching
 type ConditionCheckExecutor struct{}
 
-func (e *ConditionCheckExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *ConditionCheckExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	condition, ok := inputs["condition"].(bool)
 	if !ok {
 		return nil, fmt.Errorf("condition input must be boolean")
@@ -563,7 +563,7 @@ func (e *ConditionCheckExecutor) Execute(ctx context.Context, node *models.Logic
 // CompareExecutor handles number comparisons
 type CompareExecutor struct{}
 
-func (e *CompareExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *CompareExecutor) Execute(_ context.Context, node *models.LogicNode, inputs map[string]interface{}, _ *ExecutionState) (map[string]interface{}, error) {
 	a := toFloat64(inputs["a"])
 	b := toFloat64(inputs["b"])
 	operator, _ := node.Properties["operator"].(string)
@@ -611,49 +611,49 @@ func toFloat64(v interface{}) float64 {
 // Placeholder implementations for other executors
 type ActionTriggerExecutor struct{}
 
-func (e *ActionTriggerExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *ActionTriggerExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"trigger": true}, nil
 }
 
 type DamageTriggerExecutor struct{}
 
-func (e *DamageTriggerExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *DamageTriggerExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"trigger": true, "damage_amount": 0}, nil
 }
 
 type TimeTriggerExecutor struct{}
 
-func (e *TimeTriggerExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *TimeTriggerExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"trigger": true}, nil
 }
 
 type RollCheckExecutor struct{ diceRoller *DiceRollService }
 
-func (e *RollCheckExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *RollCheckExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"success": true, "roll_total": 15}, nil
 }
 
 type DamageActionExecutor struct{}
 
-func (e *DamageActionExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *DamageActionExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"out": true}, nil
 }
 
 type HealActionExecutor struct{}
 
-func (e *HealActionExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *HealActionExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"out": true}, nil
 }
 
 type EffectActionExecutor struct{}
 
-func (e *EffectActionExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *EffectActionExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"out": true}, nil
 }
 
 type ResourceActionExecutor struct{}
 
-func (e *ResourceActionExecutor) Execute(ctx context.Context, node *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+func (e *ResourceActionExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
 	return map[string]interface{}{"out": true}, nil
 }
 

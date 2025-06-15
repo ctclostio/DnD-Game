@@ -281,7 +281,7 @@ type MockLLMProvider struct {
 }
 
 // GenerateCompletion returns a mock response
-func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error) {
+func (m *MockLLMProvider) GenerateCompletion(_ context.Context, _, systemPrompt string) (string, error) {
 	if m.Error != nil {
 		return "", m.Error
 	}

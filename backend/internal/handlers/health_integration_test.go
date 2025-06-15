@@ -20,7 +20,7 @@ func TestHealthCheckIntegration(t *testing.T) {
 	router.HandleFunc("/health", HealthCheck).Methods("GET")
 
 	// Create a test request
-	req, err := http.NewRequest("GET", "/health", nil)
+	req, err := http.NewRequest("GET", "/health", http.NoBody)
 	assert.NoError(t, err)
 
 	// Create a ResponseRecorder to record the response

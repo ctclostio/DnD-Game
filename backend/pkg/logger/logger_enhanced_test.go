@@ -38,7 +38,7 @@ func TestNewV2(t *testing.T) {
 		{
 			name:   "default config",
 			config: DefaultConfig(),
-			verify: func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer) {
+			verify: func(t *testing.T, logger *LoggerV2, _ *bytes.Buffer) {
 				assert.NotNil(t, logger)
 				assert.NotNil(t, logger.Logger)
 			},
@@ -72,7 +72,7 @@ func TestNewV2(t *testing.T) {
 			config: ConfigV2{
 				Level: "invalid",
 			},
-			verify: func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer) {
+			verify: func(t *testing.T, logger *LoggerV2, _ *bytes.Buffer) {
 				assert.NotNil(t, logger)
 				assert.Equal(t, zerolog.InfoLevel, zerolog.GlobalLevel())
 			},
@@ -83,7 +83,7 @@ func TestNewV2(t *testing.T) {
 				Level:        "debug",
 				SamplingRate: 0.5,
 			},
-			verify: func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer) {
+			verify: func(t *testing.T, logger *LoggerV2, _ *bytes.Buffer) {
 				assert.NotNil(t, logger)
 			},
 		},
@@ -93,7 +93,7 @@ func TestNewV2(t *testing.T) {
 				Level:  "info",
 				Output: "stderr",
 			},
-			verify: func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer) {
+			verify: func(t *testing.T, logger *LoggerV2, _ *bytes.Buffer) {
 				assert.NotNil(t, logger)
 			},
 		},

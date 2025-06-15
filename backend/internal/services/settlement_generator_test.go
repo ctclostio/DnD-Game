@@ -681,7 +681,7 @@ func TestSettlementGeneratorService_ConcurrentGeneration(t *testing.T) {
 	settlements := make(chan *models.Settlement, numGoroutines)
 
 	for i := 0; i < numGoroutines; i++ {
-		go func(id int) {
+		go func(_ int) {
 			gameSessionID := uuid.New()
 			req := models.SettlementGenerationRequest{
 				Type:   models.SettlementTown,

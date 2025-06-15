@@ -119,7 +119,7 @@ func (s *CombatService) StartCombat(ctx context.Context, sessionID string, parti
 }
 
 // GetCombatState retrieves the current state of a combat
-func (s *CombatService) GetCombatState(ctx context.Context, combatID string) (*models.Combat, error) {
+func (s *CombatService) GetCombatState(_ context.Context, combatID string) (*models.Combat, error) {
 	if combatID == "" {
 		return nil, errors.New("combat ID is required")
 	}
@@ -251,7 +251,7 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 }
 
 // EndCombat ends an active combat
-func (s *CombatService) EndCombat(ctx context.Context, combatID string) error {
+func (s *CombatService) EndCombat(_ context.Context, combatID string) error {
 	testCombat, exists := s.combats[combatID]
 	if !exists {
 		return errors.New("combat not found")
@@ -477,7 +477,7 @@ func handleSuccess(combatant *models.Combatant, result *models.DeathSaveResult) 
 }
 
 // handleFailure processes a failure on a death save
-func handleFailure(combatant *models.Combatant, result *models.DeathSaveResult) {
+func handleFailure(combatant *models.Combatant, _ *models.DeathSaveResult) {
 	combatant.DeathSaveFailures++
 
 	if combatant.DeathSaveFailures >= 3 {

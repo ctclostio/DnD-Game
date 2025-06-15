@@ -217,7 +217,7 @@ func (h *Handlers) hasSavingThrowProficiency(character *models.Character, abilit
 	}
 }
 
-func (h *Handlers) hasSkillProficiency(character *models.Character, skill string) bool {
+func (h *Handlers) hasSkillProficiency(_ *models.Character, _ string) bool {
 	// This would check character's skill proficiencies from background/class
 	// For now, returning true for some common proficiencies
 	// In a real implementation, this would check character.Skills array

@@ -313,7 +313,7 @@ func TestCharacterHandler_CustomClass(t *testing.T) {
 	})
 
 	t.Run("list custom classes", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/characters/custom-classes?includeUnapproved=true", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/characters/custom-classes?includeUnapproved=true", http.NoBody)
 
 		// Add auth context
 		// Context would be added by auth middleware in real handler

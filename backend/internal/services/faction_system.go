@@ -179,7 +179,7 @@ Respond in JSON format:
 }
 
 // UpdateFactionRelationship changes the relationship between two factions
-func (s *FactionSystemService) UpdateFactionRelationship(ctx context.Context, faction1ID, faction2ID uuid.UUID, change int, reason string) error {
+func (s *FactionSystemService) UpdateFactionRelationship(_ context.Context, faction1ID, faction2ID uuid.UUID, change int, _ string) error {
 	// Get current relationship
 	faction1, err := s.worldRepo.GetFaction(faction1ID)
 	if err != nil {
@@ -281,7 +281,7 @@ func (s *FactionSystemService) SimulateFactionConflicts(ctx context.Context, gam
 
 // Helper methods
 
-func (s *FactionSystemService) generateInitialRelationships(ctx context.Context, newFaction *models.Faction) error {
+func (s *FactionSystemService) generateInitialRelationships(_ context.Context, newFaction *models.Faction) error {
 	// Get other factions in the same game session
 	otherFactions, err := s.worldRepo.GetFactionsByGameSession(newFaction.GameSessionID)
 	if err != nil {
@@ -371,7 +371,7 @@ func (s *FactionSystemService) getFactionStanding(faction *models.Faction, other
 	return 0 // Neutral by default
 }
 
-func (s *FactionSystemService) generateConflictEvent(ctx context.Context, faction1, faction2 *models.Faction) *models.WorldEvent {
+func (s *FactionSystemService) generateConflictEvent(_ context.Context, faction1, faction2 *models.Faction) *models.WorldEvent {
 	conflicts := []string{
 		"trade war", "territorial dispute", "ideological conflict",
 		"resource competition", "assassination attempt", "sabotage",
@@ -415,7 +415,7 @@ func (s *FactionSystemService) generateConflictEvent(ctx context.Context, factio
 	return event
 }
 
-func (s *FactionSystemService) generateAllianceEvent(ctx context.Context, faction1, faction2 *models.Faction) *models.WorldEvent {
+func (s *FactionSystemService) generateAllianceEvent(_ context.Context, faction1, faction2 *models.Faction) *models.WorldEvent {
 	alliances := []string{
 		"trade agreement", "mutual defense pact", "intelligence sharing",
 		"resource exchange", "joint venture", "marriage alliance",
@@ -452,7 +452,7 @@ func (s *FactionSystemService) generateAllianceEvent(ctx context.Context, factio
 	return event
 }
 
-func (s *FactionSystemService) generateFactionEvent(ctx context.Context, faction *models.Faction) *models.WorldEvent {
+func (s *FactionSystemService) generateFactionEvent(_ context.Context, faction *models.Faction) *models.WorldEvent {
 	// Different event types based on faction characteristics
 	if faction.Corrupted && rand.Float32() < 0.5 {
 		return s.generateCorruptionEvent(faction)
@@ -580,7 +580,7 @@ func (s *FactionSystemService) calculateInfluenceLevel(factionType models.Factio
 	return influence
 }
 
-func (s *FactionSystemService) calculateMilitaryStrength(factionType models.FactionType, resources map[string]interface{}) int {
+func (s *FactionSystemService) calculateMilitaryStrength(factionType models.FactionType, _ map[string]interface{}) int {
 	baseMilitary := map[models.FactionType]int{
 		models.FactionReligious:    3,
 		models.FactionPolitical:    5,

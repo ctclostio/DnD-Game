@@ -40,7 +40,7 @@ func TestCharacterService_CreateCharacter(t *testing.T) {
 					Charisma:     10,
 				},
 			},
-			setupMock: func(charRepo *mocks.MockCharacterRepository, llm *mocks.MockLLMProvider) {
+			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {
 				// Just accept any character since the service modifies it
 				charRepo.On("Create", ctx, mock.Anything).Return(nil)
 			},
@@ -99,7 +99,7 @@ func TestCharacterService_CreateCharacter(t *testing.T) {
 				Race:   "Human",
 				Class:  "Ranger",
 			},
-			setupMock: func(charRepo *mocks.MockCharacterRepository, llm *mocks.MockLLMProvider) {
+			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {
 				charRepo.On("Create", ctx, mock.Anything).Return(errors.New("database error"))
 			},
 			expectedError: "database error",
@@ -361,7 +361,7 @@ func TestCharacterService_AddExperience(t *testing.T) {
 			name:        "add XP without level up",
 			characterID: "char-123",
 			xpToAdd:     100,
-			setupMock: func(charRepo *mocks.MockCharacterRepository, llm *mocks.MockLLMProvider) {
+			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {
 				char := &models.Character{
 					ID:               "char-123",
 					Level:            1,
@@ -381,7 +381,7 @@ func TestCharacterService_AddExperience(t *testing.T) {
 			name:        "add XP with level up",
 			characterID: "char-123",
 			xpToAdd:     250,
-			setupMock: func(charRepo *mocks.MockCharacterRepository, llm *mocks.MockLLMProvider) {
+			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {
 				char := &models.Character{
 					ID:               "char-123",
 					Level:            1,
@@ -404,7 +404,7 @@ func TestCharacterService_AddExperience(t *testing.T) {
 			name:        "character not found",
 			characterID: "nonexistent",
 			xpToAdd:     100,
-			setupMock: func(charRepo *mocks.MockCharacterRepository, llm *mocks.MockLLMProvider) {
+			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {
 				charRepo.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("character not found"))
 			},
 			expectedError: "character not found",

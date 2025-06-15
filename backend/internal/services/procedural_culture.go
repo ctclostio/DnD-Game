@@ -883,7 +883,7 @@ type CulturalResponse struct {
 
 // Implementation of helper functions
 
-func (pcs *ProceduralCultureService) generateCultureName(params CultureGenParameters) string {
+func (pcs *ProceduralCultureService) generateCultureName(_ CultureGenParameters) string {
 	prefixes := []string{"Zar", "Keth", "Mor", "Val", "Syl", "Dra", "Ith", "Nar", "Bel", "Tor"}
 	suffixes := []string{"ani", "ari", "eshi", "ovan", "ukai", "enti", "ashi", "orim", "ethi", "alor"}
 
@@ -995,7 +995,7 @@ func (pcs *ProceduralCultureService) generateAlignment() string {
 	return alignments[rand.Intn(len(alignments))]
 }
 
-func (pcs *ProceduralCultureService) generateHolyDays(cultureName string, deities []models.CultureDeity) []models.HolyDay {
+func (pcs *ProceduralCultureService) generateHolyDays(_ string, deities []models.CultureDeity) []models.HolyDay {
 	holyDays := []models.HolyDay{}
 	seasons := []string{"Spring Equinox", "Summer Solstice", "Autumn Equinox", "Winter Solstice"}
 
@@ -1018,7 +1018,7 @@ func (pcs *ProceduralCultureService) generateHolyDays(cultureName string, deitie
 	return holyDays
 }
 
-func (pcs *ProceduralCultureService) generateDefaultGreeting(context, cultureName string) string {
+func (pcs *ProceduralCultureService) generateDefaultGreeting(context, _ string) string {
 	greetingMap := map[string]string{
 		"formal":   "May the ancestors guide you",
 		"informal": "Well met, friend",
@@ -1034,7 +1034,7 @@ func (pcs *ProceduralCultureService) generateDefaultGreeting(context, cultureNam
 	return "Greetings"
 }
 
-func (pcs *ProceduralCultureService) generateBuildingTypes(cultureName string, architecture models.ArchitectureStyle) map[string]models.BuildingStyle {
+func (pcs *ProceduralCultureService) generateBuildingTypes(_ string, architecture models.ArchitectureStyle) map[string]models.BuildingStyle {
 	buildingTypes := make(map[string]models.BuildingStyle)
 
 	types := []string{"dwelling", "temple", "market", "fortress", "hall"}
@@ -1140,7 +1140,7 @@ func (pcs *ProceduralCultureService) getClothingMaterials(environment string) []
 	return []string{"cloth", "leather", "wool", "linen"}
 }
 
-func (pcs *ProceduralCultureService) generateColorPalette(cultureName string) []string {
+func (pcs *ProceduralCultureService) generateColorPalette(_ string) []string {
 	allColors := []string{
 		"crimson", "azure", "emerald", "gold", "silver", "obsidian",
 		"ivory", "amber", "violet", "turquoise", "ochre", "indigo",
@@ -1160,7 +1160,7 @@ func (pcs *ProceduralCultureService) generateColorPalette(cultureName string) []
 	return selected
 }
 
-func (pcs *ProceduralCultureService) generateJewelry(cultureName string, foundation *CultureFoundation) []string {
+func (pcs *ProceduralCultureService) generateJewelry(_ string, _ *CultureFoundation) []string {
 	jewelry := []string{}
 	types := []string{"rings", "necklaces", "bracelets", "earrings", "brooches", "circlets", "anklets"}
 
@@ -1189,7 +1189,7 @@ func (pcs *ProceduralCultureService) getLanguagePatterns(cultureName string) []s
 	return patterns
 }
 
-func (pcs *ProceduralCultureService) generateGenderRoles(cultureName string, foundation *CultureFoundation) map[string]string {
+func (pcs *ProceduralCultureService) generateGenderRoles(_ string, foundation *CultureFoundation) map[string]string {
 	// Generate based on cultural values
 	roles := make(map[string]string)
 
@@ -1206,7 +1206,7 @@ func (pcs *ProceduralCultureService) generateGenderRoles(cultureName string, fou
 	return roles
 }
 
-func (pcs *ProceduralCultureService) generateAgeRoles(cultureName string, foundation *CultureFoundation) map[string]string {
+func (pcs *ProceduralCultureService) generateAgeRoles(_ string, _ *CultureFoundation) map[string]string {
 	return map[string]string{
 		"children":     "learn and play",
 		"youth":        "prove themselves",
@@ -1216,7 +1216,7 @@ func (pcs *ProceduralCultureService) generateAgeRoles(cultureName string, founda
 	}
 }
 
-func (pcs *ProceduralCultureService) evaluateCulturalResponse(culture *models.ProceduralCulture, action PlayerCulturalAction) CulturalResponse {
+func (pcs *ProceduralCultureService) evaluateCulturalResponse(_ *models.ProceduralCulture, action PlayerCulturalAction) CulturalResponse {
 	response := CulturalResponse{
 		AffectedAspect: constants.CultureValues,
 	}
@@ -1290,7 +1290,7 @@ func (pcs *ProceduralCultureService) adjustSocialStructure(culture *models.Proce
 	}
 }
 
-func (pcs *ProceduralCultureService) generateCulturalResponseEvent(ctx context.Context, culture *models.ProceduralCulture, action PlayerCulturalAction, response CulturalResponse) *models.EmergentWorldEvent {
+func (pcs *ProceduralCultureService) generateCulturalResponseEvent(_ context.Context, culture *models.ProceduralCulture, action PlayerCulturalAction, response CulturalResponse) *models.EmergentWorldEvent {
 	eventTypes := map[string]string{
 		constants.ActionTrade:      "commercial_shift",
 		constants.ActionDiplomacy:  "diplomatic_development",

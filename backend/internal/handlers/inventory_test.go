@@ -136,7 +136,7 @@ func TestInventoryHandler_EquipItems(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create request
 			req := httptest.NewRequest(http.MethodPost,
-				"/api/characters/"+characterID+"/inventory/"+itemID+"/"+tt.action, nil)
+				"/api/characters/"+characterID+"/inventory/"+itemID+"/"+tt.action, http.NoBody)
 			req = mux.SetURLVars(req, map[string]string{
 				"characterId": characterID,
 				"itemId":      itemID,

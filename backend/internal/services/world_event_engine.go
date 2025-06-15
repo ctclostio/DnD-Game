@@ -239,14 +239,14 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 }
 
 // NotifyPartyOfEvent makes the party aware of an event
-func (s *WorldEventEngineService) NotifyPartyOfEvent(eventID uuid.UUID) error {
+func (s *WorldEventEngineService) NotifyPartyOfEvent(_ uuid.UUID) error {
 	// TODO: Implement repository method to update party_aware
 	// query := `UPDATE world_events SET party_aware = true WHERE id = $1`
 	return nil
 }
 
 // RecordPartyAction records party intervention in an event
-func (s *WorldEventEngineService) RecordPartyAction(eventID uuid.UUID, action string) error {
+func (s *WorldEventEngineService) RecordPartyAction(_ uuid.UUID, action string) error {
 	// Get the event
 	// Add action to party_actions array
 	// Update party_involved to true
@@ -294,7 +294,7 @@ func (s *WorldEventEngineService) progressEvent(ctx context.Context, event *mode
 	return nil
 }
 
-func (s *WorldEventEngineService) checkResolutionConditions(ctx context.Context, event *models.WorldEvent) bool {
+func (s *WorldEventEngineService) checkResolutionConditions(_ context.Context, event *models.WorldEvent) bool {
 	// Check if resolution conditions are met
 	// This is simplified - full implementation would check actual conditions
 
@@ -316,7 +316,7 @@ func (s *WorldEventEngineService) checkResolutionConditions(ctx context.Context,
 	return rand.Float64() < resolutionChance
 }
 
-func (s *WorldEventEngineService) resolveEvent(ctx context.Context, event *models.WorldEvent) error {
+func (s *WorldEventEngineService) resolveEvent(_ context.Context, event *models.WorldEvent) error {
 	// Mark event as resolved
 	// TODO: Implement repository method to mark event as resolved
 	// query := `UPDATE world_events SET is_resolved = true, is_active = false WHERE id = $1`
@@ -368,7 +368,7 @@ func (s *WorldEventEngineService) applyEventEffects(ctx context.Context, event *
 	s.applyPoliticalImpacts(ctx, event)
 }
 
-func (s *WorldEventEngineService) applyStageEffects(ctx context.Context, event *models.WorldEvent) {
+func (s *WorldEventEngineService) applyStageEffects(_ context.Context, event *models.WorldEvent) {
 	// Apply effects specific to the current stage
 	// This could trigger new events, modify settlements, etc.
 
@@ -399,7 +399,7 @@ func (s *WorldEventEngineService) applyStageEffects(ctx context.Context, event *
 	}
 }
 
-func (s *WorldEventEngineService) generateCascadeEvents(ctx context.Context, parentEvent *models.WorldEvent) {
+func (s *WorldEventEngineService) generateCascadeEvents(_ context.Context, parentEvent *models.WorldEvent) {
 	// Major events can trigger secondary events
 	if parentEvent.Type == models.EventAncientAwakening {
 		// Ancient awakenings might trigger supernatural events elsewhere
@@ -605,7 +605,7 @@ func (s *WorldEventEngineService) applyEconomicImpacts(ctx context.Context, even
 }
 
 // updateMarketForSettlement updates market conditions based on event
-func (s *WorldEventEngineService) updateMarketForSettlement(ctx context.Context, settlementID uuid.UUID, event *models.WorldEvent) {
+func (s *WorldEventEngineService) updateMarketForSettlement(_ context.Context, settlementID uuid.UUID, event *models.WorldEvent) {
 	market, err := s.worldRepo.GetMarketBySettlement(settlementID)
 	if err != nil || market == nil {
 		return

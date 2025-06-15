@@ -24,7 +24,7 @@ func deprecatedSendJSONResponse(w http.ResponseWriter, status int, data interfac
 // Deprecated: Use response.Error or response.ErrorWithCode instead
 //
 //lint:ignore U1000 retained for backward compatibility
-func deprecatedSendErrorResponse(w http.ResponseWriter, status int, message string) {
+func deprecatedSendErrorResponse(w http.ResponseWriter, _ int, message string) {
 	// Create a minimal request with empty context for backward compatibility
 	r, _ := http.NewRequest("", "", http.NoBody)
 	response.BadRequest(w, r, message)

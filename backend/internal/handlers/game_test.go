@@ -154,7 +154,7 @@ func TestGameHandler_GetGameSession(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create request
-			req := httptest.NewRequest(http.MethodGet, "/api/sessions/"+tt.sessionID, nil)
+			req := httptest.NewRequest(http.MethodGet, "/api/sessions/"+tt.sessionID, http.NoBody)
 			req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
 			// Add auth context (placeholder)
 

@@ -613,16 +613,16 @@ func (s *CharacterService) GenerateCustomClass(ctx context.Context, userID, name
 }
 
 // GetUserCustomClasses gets all custom classes for a user
-func (s *CharacterService) GetUserCustomClasses(ctx context.Context, userID string, includeUnapproved bool) ([]*models.CustomClass, error) {
+func (s *CharacterService) GetUserCustomClasses(_ context.Context, userID string, includeUnapproved bool) ([]*models.CustomClass, error) {
 	return s.customClassRepo.GetByUserID(userID, includeUnapproved)
 }
 
 // GetCustomClass gets a custom class by ID
-func (s *CharacterService) GetCustomClass(ctx context.Context, classID string) (*models.CustomClass, error) {
+func (s *CharacterService) GetCustomClass(_ context.Context, classID string) (*models.CustomClass, error) {
 	return s.customClassRepo.GetByID(classID)
 }
 
 // GetApprovedCustomClasses gets all approved custom classes
-func (s *CharacterService) GetApprovedCustomClasses(ctx context.Context) ([]*models.CustomClass, error) {
+func (s *CharacterService) GetApprovedCustomClasses(_ context.Context) ([]*models.CustomClass, error) {
 	return s.customClassRepo.GetApproved()
 }

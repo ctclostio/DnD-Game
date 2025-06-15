@@ -63,7 +63,7 @@ func (s *EconomicSimulatorService) SimulateEconomicCycle(ctx context.Context, ga
 }
 
 // CreateTradeRoute establishes a new trade route between settlements
-func (s *EconomicSimulatorService) CreateTradeRoute(ctx context.Context, startSettlementID, endSettlementID uuid.UUID) (*models.TradeRoute, error) {
+func (s *EconomicSimulatorService) CreateTradeRoute(_ context.Context, startSettlementID, endSettlementID uuid.UUID) (*models.TradeRoute, error) {
 	// Get both settlements
 	startSettlement, err := s.worldRepo.GetSettlement(startSettlementID)
 	if err != nil {
@@ -181,7 +181,7 @@ func (s *EconomicSimulatorService) CalculateItemPrice(settlementID uuid.UUID, ba
 }
 
 // DisruptTradeRoute applies a disruption to a trade route
-func (s *EconomicSimulatorService) DisruptTradeRoute(routeID uuid.UUID, disruptionType string, severity int) error {
+func (s *EconomicSimulatorService) DisruptTradeRoute(_ uuid.UUID, disruptionType string, severity int) error {
 	// This would update the trade route with disruption events
 	// and affect connected settlement markets
 	return nil
@@ -189,7 +189,7 @@ func (s *EconomicSimulatorService) DisruptTradeRoute(routeID uuid.UUID, disrupti
 
 // Helper methods
 
-func (s *EconomicSimulatorService) updateSettlementMarket(ctx context.Context, settlement *models.Settlement, activeEvents []*models.WorldEvent) error {
+func (s *EconomicSimulatorService) updateSettlementMarket(_ context.Context, settlement *models.Settlement, activeEvents []*models.WorldEvent) error {
 	market, err := s.worldRepo.GetMarketBySettlement(settlement.ID)
 	if err != nil {
 		// Create new market if none exists
@@ -399,7 +399,7 @@ func (s *EconomicSimulatorService) applyRandomMarketEvent(market *models.Market)
 	}
 }
 
-func (s *EconomicSimulatorService) updateTradeRoutes(ctx context.Context, gameSessionID uuid.UUID) error {
+func (s *EconomicSimulatorService) updateTradeRoutes(_ context.Context, _ uuid.UUID) error {
 	// This would update all trade routes based on current conditions
 	// Check for disruptions, update trade volumes, etc.
 	return nil
@@ -443,7 +443,7 @@ func (s *EconomicSimulatorService) checkForEconomicBoom(settlements []*models.Se
 	return float64(boomCount) > float64(len(settlements))*0.5
 }
 
-func (s *EconomicSimulatorService) triggerEconomicEvent(ctx context.Context, gameSessionID uuid.UUID, eventType string) {
+func (s *EconomicSimulatorService) triggerEconomicEvent(_ context.Context, _ uuid.UUID, eventType string) {
 	// This would create a world event for economic conditions
 	// Would integrate with WorldEventEngine
 }

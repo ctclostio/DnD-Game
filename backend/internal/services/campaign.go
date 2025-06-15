@@ -33,7 +33,7 @@ func NewCampaignService(
 
 // Story Arc Management
 
-func (cs *CampaignService) CreateStoryArc(ctx context.Context, sessionID uuid.UUID, req models.CreateStoryArcRequest) (*models.StoryArc, error) {
+func (cs *CampaignService) CreateStoryArc(_ context.Context, sessionID uuid.UUID, req models.CreateStoryArcRequest) (*models.StoryArc, error) {
 	arc := &models.StoryArc{
 		ID:              uuid.New(),
 		GameSessionID:   sessionID,
@@ -88,11 +88,11 @@ func (cs *CampaignService) GenerateStoryArc(ctx context.Context, sessionID uuid.
 	return arc, nil
 }
 
-func (cs *CampaignService) GetStoryArcs(ctx context.Context, sessionID uuid.UUID) ([]*models.StoryArc, error) {
+func (cs *CampaignService) GetStoryArcs(_ context.Context, sessionID uuid.UUID) ([]*models.StoryArc, error) {
 	return cs.campaignRepo.GetStoryArcsBySession(sessionID)
 }
 
-func (cs *CampaignService) UpdateStoryArc(ctx context.Context, arcID uuid.UUID, req models.UpdateStoryArcRequest) error {
+func (cs *CampaignService) UpdateStoryArc(_ context.Context, arcID uuid.UUID, req models.UpdateStoryArcRequest) error {
 	updates := make(map[string]interface{})
 
 	if req.Title != nil {
@@ -120,7 +120,7 @@ func (cs *CampaignService) UpdateStoryArc(ctx context.Context, arcID uuid.UUID, 
 
 // Session Memory Management
 
-func (cs *CampaignService) CreateSessionMemory(ctx context.Context, sessionID uuid.UUID, req models.CreateSessionMemoryRequest) (*models.SessionMemory, error) {
+func (cs *CampaignService) CreateSessionMemory(_ context.Context, sessionID uuid.UUID, req *models.CreateSessionMemoryRequest) (*models.SessionMemory, error) {
 	// Convert request data to JSONB
 	keyEventsJSON, _ := json.Marshal(req.KeyEvents)
 	npcsJSON, _ := json.Marshal(req.NPCsEncountered)
@@ -157,7 +157,7 @@ func (cs *CampaignService) CreateSessionMemory(ctx context.Context, sessionID uu
 	return memory, nil
 }
 
-func (cs *CampaignService) GetSessionMemories(ctx context.Context, sessionID uuid.UUID, limit int) ([]*models.SessionMemory, error) {
+func (cs *CampaignService) GetSessionMemories(_ context.Context, sessionID uuid.UUID, limit int) ([]*models.SessionMemory, error) {
 	if limit <= 0 {
 		limit = 10
 	}
@@ -188,7 +188,7 @@ func (cs *CampaignService) GenerateRecap(ctx context.Context, sessionID uuid.UUI
 
 // Plot Thread Management
 
-func (cs *CampaignService) CreatePlotThread(ctx context.Context, sessionID uuid.UUID, thread *models.PlotThread) error {
+func (cs *CampaignService) CreatePlotThread(_ context.Context, sessionID uuid.UUID, thread *models.PlotThread) error {
 	thread.ID = uuid.New()
 	thread.GameSessionID = sessionID
 	thread.CreatedAt = time.Now()
@@ -204,14 +204,14 @@ func (cs *CampaignService) CreatePlotThread(ctx context.Context, sessionID uuid.
 	return cs.campaignRepo.CreatePlotThread(thread)
 }
 
-func (cs *CampaignService) GetPlotThreads(ctx context.Context, sessionID uuid.UUID, activeOnly bool) ([]*models.PlotThread, error) {
+func (cs *CampaignService) GetPlotThreads(_ context.Context, sessionID uuid.UUID, activeOnly bool) ([]*models.PlotThread, error) {
 	if activeOnly {
 		return cs.campaignRepo.GetActivePlotThreads(sessionID)
 	}
 	return cs.campaignRepo.GetPlotThreadsBySession(sessionID)
 }
 
-func (cs *CampaignService) UpdatePlotThread(ctx context.Context, threadID uuid.UUID, updates map[string]interface{}) error {
+func (cs *CampaignService) UpdatePlotThread(_ context.Context, threadID uuid.UUID, updates map[string]interface{}) error {
 	return cs.campaignRepo.UpdatePlotThread(threadID, updates)
 }
 
@@ -265,17 +265,17 @@ func (cs *CampaignService) GenerateForeshadowing(ctx context.Context, sessionID 
 	return element, nil
 }
 
-func (cs *CampaignService) GetUnrevealedForeshadowing(ctx context.Context, sessionID uuid.UUID) ([]*models.ForeshadowingElement, error) {
+func (cs *CampaignService) GetUnrevealedForeshadowing(_ context.Context, sessionID uuid.UUID) ([]*models.ForeshadowingElement, error) {
 	return cs.campaignRepo.GetUnrevealedForeshadowing(sessionID)
 }
 
-func (cs *CampaignService) RevealForeshadowing(ctx context.Context, elementID uuid.UUID, sessionNumber int) error {
+func (cs *CampaignService) RevealForeshadowing(_ context.Context, elementID uuid.UUID, sessionNumber int) error {
 	return cs.campaignRepo.RevealForeshadowing(elementID, sessionNumber)
 }
 
 // Timeline Management
 
-func (cs *CampaignService) AddTimelineEvent(ctx context.Context, event *models.CampaignTimeline) error {
+func (cs *CampaignService) AddTimelineEvent(_ context.Context, event *models.CampaignTimeline) error {
 	event.ID = uuid.New()
 	event.CreatedAt = time.Now()
 
@@ -286,13 +286,13 @@ func (cs *CampaignService) AddTimelineEvent(ctx context.Context, event *models.C
 	return cs.campaignRepo.CreateTimelineEvent(event)
 }
 
-func (cs *CampaignService) GetTimeline(ctx context.Context, sessionID uuid.UUID, startDate, endDate time.Time) ([]*models.CampaignTimeline, error) {
+func (cs *CampaignService) GetTimeline(_ context.Context, sessionID uuid.UUID, startDate, endDate time.Time) ([]*models.CampaignTimeline, error) {
 	return cs.campaignRepo.GetTimelineEvents(sessionID, startDate, endDate)
 }
 
 // NPC Relationship Management
 
-func (cs *CampaignService) UpdateNPCRelationship(ctx context.Context, relationship *models.NPCRelationship) error {
+func (cs *CampaignService) UpdateNPCRelationship(_ context.Context, relationship *models.NPCRelationship) error {
 	relationship.ID = uuid.New()
 	relationship.CreatedAt = time.Now()
 	relationship.UpdatedAt = time.Now()
@@ -300,17 +300,17 @@ func (cs *CampaignService) UpdateNPCRelationship(ctx context.Context, relationsh
 	return cs.campaignRepo.CreateOrUpdateNPCRelationship(relationship)
 }
 
-func (cs *CampaignService) GetNPCRelationships(ctx context.Context, sessionID, npcID uuid.UUID) ([]*models.NPCRelationship, error) {
+func (cs *CampaignService) GetNPCRelationships(_ context.Context, sessionID, npcID uuid.UUID) ([]*models.NPCRelationship, error) {
 	return cs.campaignRepo.GetNPCRelationships(sessionID, npcID)
 }
 
-func (cs *CampaignService) AdjustRelationshipScore(ctx context.Context, sessionID, npcID, targetID uuid.UUID, scoreDelta int) error {
+func (cs *CampaignService) AdjustRelationshipScore(_ context.Context, sessionID, npcID, targetID uuid.UUID, scoreDelta int) error {
 	return cs.campaignRepo.UpdateRelationshipScore(sessionID, npcID, targetID, scoreDelta)
 }
 
 // Helper methods
 
-func (cs *CampaignService) generateRecapFromEvents(req models.CreateSessionMemoryRequest) string {
+func (cs *CampaignService) generateRecapFromEvents(req *models.CreateSessionMemoryRequest) string {
 	recap := fmt.Sprintf("In session %d, the party ", req.SessionNumber)
 
 	if len(req.KeyEvents) > 0 {

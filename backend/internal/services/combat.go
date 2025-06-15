@@ -22,7 +22,7 @@ func NewCombatService() *CombatService {
 	}
 }
 
-func (s *CombatService) StartCombat(ctx context.Context, gameSessionID string, combatants []models.Combatant) (*models.Combat, error) {
+func (s *CombatService) StartCombat(_ context.Context, gameSessionID string, combatants []models.Combatant) (*models.Combat, error) {
 	combat, err := s.engine.StartCombat(gameSessionID, combatants)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func (s *CombatService) StartCombat(ctx context.Context, gameSessionID string, c
 	return combat, nil
 }
 
-func (s *CombatService) GetCombat(ctx context.Context, combatID string) (*models.Combat, error) {
+func (s *CombatService) GetCombat(_ context.Context, combatID string) (*models.Combat, error) {
 	combat, exists := s.combats[combatID]
 	if !exists {
 		return nil, fmt.Errorf("combat not found")
@@ -40,7 +40,7 @@ func (s *CombatService) GetCombat(ctx context.Context, combatID string) (*models
 	return combat, nil
 }
 
-func (s *CombatService) GetCombatBySession(ctx context.Context, gameSessionID string) (*models.Combat, error) {
+func (s *CombatService) GetCombatBySession(_ context.Context, gameSessionID string) (*models.Combat, error) {
 	for _, combat := range s.combats {
 		if combat.GameSessionID == gameSessionID && combat.IsActive {
 			return combat, nil
@@ -215,7 +215,7 @@ func (s *CombatService) processAttack(combat *models.Combat, actor *models.Comba
 	return nil
 }
 
-func (s *CombatService) processMovement(combat *models.Combat, actor *models.Combatant, request models.CombatRequest, action *models.CombatAction) error {
+func (s *CombatService) processMovement(_ *models.Combat, actor *models.Combatant, request models.CombatRequest, action *models.CombatAction) error {
 	// Calculate distance
 	distance := 5 // Example: each square is 5 feet
 
@@ -228,7 +228,7 @@ func (s *CombatService) processMovement(combat *models.Combat, actor *models.Com
 	return nil
 }
 
-func (s *CombatService) processDeathSave(combat *models.Combat, actor *models.Combatant, action *models.CombatAction) error {
+func (s *CombatService) processDeathSave(_ *models.Combat, actor *models.Combatant, action *models.CombatAction) error {
 	roll, err := s.engine.DeathSavingThrow(actor)
 	if err != nil {
 		return err
@@ -251,7 +251,7 @@ func (s *CombatService) processDeathSave(combat *models.Combat, actor *models.Co
 	return nil
 }
 
-func (s *CombatService) processDash(combat *models.Combat, actor *models.Combatant, action *models.CombatAction) error {
+func (s *CombatService) processDash(_ *models.Combat, actor *models.Combatant, action *models.CombatAction) error {
 	if err := s.engine.UseAction(actor, models.ActionTypeDash); err != nil {
 		return err
 	}
@@ -261,7 +261,7 @@ func (s *CombatService) processDash(combat *models.Combat, actor *models.Combata
 	return nil
 }
 
-func (s *CombatService) processDodge(combat *models.Combat, actor *models.Combatant, action *models.CombatAction) error {
+func (s *CombatService) processDodge(_ *models.Combat, actor *models.Combatant, action *models.CombatAction) error {
 	if err := s.engine.UseAction(actor, models.ActionTypeDodge); err != nil {
 		return err
 	}

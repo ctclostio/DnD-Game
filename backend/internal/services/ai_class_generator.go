@@ -220,7 +220,7 @@ func (g *AIClassGenerator) parseClassResponse(response string) (*models.CustomCl
 	return customClass, nil
 }
 
-func (g *AIClassGenerator) generateSpellSlotProgression(class *models.CustomClass) map[string]interface{} {
+func (g *AIClassGenerator) generateSpellSlotProgression(_ *models.CustomClass) map[string]interface{} {
 	// Basic spell slot progression for full casters
 	// This can be customized based on the class type
 	fullCasterProgression := map[string]interface{}{

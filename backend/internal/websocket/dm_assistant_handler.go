@@ -120,7 +120,7 @@ func (c *Client) handleDMAssistantRequest(msg DMAssistantMessage, dmAssistant *s
 	}
 }
 
-func (c *Client) handleNPCDialogue(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
+func (c *Client) handleNPCDialogue(msg DMAssistantMessage, _ *services.DMAssistantService) {
 	// Stream NPC dialog as it's generated
 	npcName, _ := msg.Data["npcName"].(string)
 	playerInput, _ := msg.Data["playerInput"].(string)
@@ -149,13 +149,13 @@ func (c *Client) handleNPCDialogue(msg DMAssistantMessage, dmAssistant *services
 		Streaming: false,
 		Complete:  true,
 		Data: map[string]interface{}{
-			"npcName":  npcName,
-			"dialog": dialog,
+			"npcName": npcName,
+			"dialog":  dialog,
 		},
 	})
 }
 
-func (c *Client) handleLocationGeneration(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
+func (c *Client) handleLocationGeneration(msg DMAssistantMessage, _ *services.DMAssistantService) {
 	locationType, _ := msg.Data["locationType"].(string)
 	locationName, _ := msg.Data["locationName"].(string)
 
@@ -217,7 +217,7 @@ func (c *Client) handleLocationGeneration(msg DMAssistantMessage, dmAssistant *s
 	})
 }
 
-func (c *Client) handleCombatNarration(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
+func (c *Client) handleCombatNarration(msg DMAssistantMessage, _ *services.DMAssistantService) {
 	// Quick combat narration without streaming
 	attackerName, _ := msg.Data["attackerName"].(string)
 	targetName, _ := msg.Data["targetName"].(string)
@@ -250,7 +250,7 @@ func (c *Client) handleCombatNarration(msg DMAssistantMessage, dmAssistant *serv
 	}
 }
 
-func (c *Client) handlePlotTwist(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
+func (c *Client) handlePlotTwist(msg DMAssistantMessage, _ *services.DMAssistantService) {
 	// Generate a plot twist based on current context
 	c.sendDMAssistantResponse(DMAssistantResponse{
 		Type:      "plot_twist_generation",
@@ -284,7 +284,7 @@ func (c *Client) handlePlotTwist(msg DMAssistantMessage, dmAssistant *services.D
 	})
 }
 
-func (c *Client) handleEnvironmentalHazard(msg DMAssistantMessage, dmAssistant *services.DMAssistantService) {
+func (c *Client) handleEnvironmentalHazard(msg DMAssistantMessage, _ *services.DMAssistantService) {
 	// Extract parameters (not used in this example implementation)
 	// locationType, _ := msg.Data["locationType"].(string)
 	// difficulty, _ := msg.Data["difficulty"].(float64)

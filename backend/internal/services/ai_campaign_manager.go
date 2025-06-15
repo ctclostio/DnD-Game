@@ -362,7 +362,7 @@ func (acm *AICampaignManager) generateDefaultForeshadowing(req models.GenerateFo
 	}
 }
 
-func (acm *AICampaignManager) createBasicSessionMemory(events []interface{}) *models.SessionMemory {
+func (acm *AICampaignManager) createBasicSessionMemory(_ []interface{}) *models.SessionMemory {
 	memory := &models.SessionMemory{
 		ID:               uuid.New(),
 		RecapSummary:     "The party continued their adventure",

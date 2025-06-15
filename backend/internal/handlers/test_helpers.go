@@ -13,7 +13,7 @@ import (
 )
 
 // createTestServices creates a complete services instance for testing
-func createTestServices(t *testing.T, db *database.DB, repos *database.Repositories, jwtManager *auth.JWTManager, cfg *config.Config, log *logger.LoggerV2) *services.Services {
+func createTestServices(_ *testing.T, db *database.DB, repos *database.Repositories, jwtManager *auth.JWTManager, cfg *config.Config, log *logger.LoggerV2) *services.Services {
 	// Create mock LLM provider
 	llmProvider := &services.MockLLMProvider{}
 

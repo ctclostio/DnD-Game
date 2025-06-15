@@ -30,13 +30,13 @@ func NewCombatAnalyticsService(
 }
 
 // TrackCombatAction logs a combat action for analytics
-func (cas *CombatAnalyticsService) TrackCombatAction(ctx context.Context, action *models.CombatActionLog) error {
+func (cas *CombatAnalyticsService) TrackCombatAction(_ context.Context, action *models.CombatActionLog) error {
 	return cas.analyticsRepo.CreateCombatAction(action)
 }
 
 // FinalizeCombatAnalytics generates the final combat report when combat ends
 func (cas *CombatAnalyticsService) FinalizeCombatAnalytics(
-	ctx context.Context,
+	_ context.Context,
 	combat *models.Combat,
 	sessionID uuid.UUID,
 ) (*models.CombatAnalyticsReport, error) {
@@ -765,16 +765,16 @@ func calculateOverallScore(ta *models.TacticalAnalysis) int {
 }
 
 // GetCombatAnalytics retrieves analytics for a combat
-func (cas *CombatAnalyticsService) GetCombatAnalytics(ctx context.Context, combatID uuid.UUID) (*models.CombatAnalytics, error) {
+func (cas *CombatAnalyticsService) GetCombatAnalytics(_ context.Context, combatID uuid.UUID) (*models.CombatAnalytics, error) {
 	return cas.analyticsRepo.GetCombatAnalytics(combatID)
 }
 
 // GetCombatantAnalytics retrieves combatant analytics for a combat
-func (cas *CombatAnalyticsService) GetCombatantAnalytics(ctx context.Context, analyticsID uuid.UUID) ([]*models.CombatantAnalytics, error) {
+func (cas *CombatAnalyticsService) GetCombatantAnalytics(_ context.Context, analyticsID uuid.UUID) ([]*models.CombatantAnalytics, error) {
 	return cas.analyticsRepo.GetCombatantAnalytics(analyticsID)
 }
 
 // GetCombatAnalyticsBySession retrieves all combat analytics for a session
-func (cas *CombatAnalyticsService) GetCombatAnalyticsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.CombatAnalytics, error) {
+func (cas *CombatAnalyticsService) GetCombatAnalyticsBySession(_ context.Context, sessionID uuid.UUID) ([]*models.CombatAnalytics, error) {
 	return cas.analyticsRepo.GetCombatAnalyticsBySession(sessionID)
 }

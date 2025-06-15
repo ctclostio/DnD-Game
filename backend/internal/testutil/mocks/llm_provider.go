@@ -220,7 +220,7 @@ func (m *MockLLMProvider) WithResponse(key, response string) *MockLLMProvider {
 
 // WithError returns an error for testing error cases
 func (m *MockLLMProvider) WithError(err error) *MockLLMProvider {
-	m.ResponseFunc = func(ctx context.Context, system, user string) (string, error) {
+	m.ResponseFunc = func(_ context.Context, _, user string) (string, error) {
 		return "", err
 	}
 	return m

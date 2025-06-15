@@ -815,7 +815,7 @@ func (h *NarrativeHandlers) CreateMemory(w http.ResponseWriter, r *http.Request)
 }
 
 // GetActiveThreads retrieves active narrative threads
-func (h *NarrativeHandlers) GetActiveThreads(w http.ResponseWriter, r *http.Request) {
+func (h *NarrativeHandlers) GetActiveThreads(w http.ResponseWriter, _ *http.Request) {
 	threads, err := h.narrativeRepo.GetActiveNarrativeThreads()
 	if err != nil {
 		http.Error(w, "Failed to retrieve threads", http.StatusInternalServerError)

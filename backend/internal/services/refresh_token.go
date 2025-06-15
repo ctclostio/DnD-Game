@@ -110,7 +110,7 @@ func (s *RefreshTokenService) StopCleanupTask() {
 }
 
 // Shutdown implements the Shutdowner interface
-func (s *RefreshTokenService) Shutdown(ctx context.Context) error {
+func (s *RefreshTokenService) Shutdown(_ context.Context) error {
 	s.StopCleanupTask()
 	return nil
 }

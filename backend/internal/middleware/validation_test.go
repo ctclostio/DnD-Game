@@ -94,7 +94,7 @@ func TestValidationMiddleware_Validate(t *testing.T) {
 			rec := httptest.NewRecorder()
 
 			// Create handler with validation middleware
-			handler := vm.Validate(tt.targetStruct)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handler := vm.Validate(tt.targetStruct)(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte("OK"))
 			}))
@@ -180,7 +180,7 @@ func TestValidationMiddleware_StructValidation(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 			rec := httptest.NewRecorder()
 
-			handler := vm.Validate(&TestRequest{})(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handler := vm.Validate(&TestRequest{})(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			}))
 
@@ -228,7 +228,7 @@ func TestValidationMiddleware_NestedStructValidation(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	handler := vm.Validate(&UserProfile{})(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := vm.Validate(&UserProfile{})(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 

@@ -200,7 +200,7 @@ func (les *LivingEcosystemService) simulateNPCActivities(ctx context.Context, se
 }
 
 // simulateGoalProgress simulates progress on an NPC goal
-func (les *LivingEcosystemService) simulateGoalProgress(ctx context.Context, npc *models.NPC, goal models.NPCGoal, timeDelta time.Duration) (*models.EmergentWorldEvent, float64) {
+func (les *LivingEcosystemService) simulateGoalProgress(_ context.Context, npc *models.NPC, goal models.NPCGoal, timeDelta time.Duration) (*models.EmergentWorldEvent, float64) {
 	// Calculate progress based on goal type and time
 	progressRate := 0.1 * (timeDelta.Hours() / 24.0) // Base 10% progress per day
 
@@ -492,7 +492,7 @@ Create a brief description (2-3 sentences) of this economic event and its immedi
 }
 
 // updateSettlementProsperity updates a settlement's economic status
-func (les *LivingEcosystemService) updateSettlementProsperity(ctx context.Context, settlement *models.Settlement, timeDelta time.Duration) {
+func (les *LivingEcosystemService) updateSettlementProsperity(_ context.Context, settlement *models.Settlement, timeDelta time.Duration) {
 	// Base prosperity change
 	prosperityChange := 0.0
 
@@ -586,7 +586,7 @@ func (les *LivingEcosystemService) simulatePoliticalDevelopments(ctx context.Con
 }
 
 // simulateAgendaProgress advances a faction's political agenda
-func (les *LivingEcosystemService) simulateAgendaProgress(ctx context.Context, faction *models.Faction, personality *models.FactionPersonality, agenda *models.FactionAgenda, timeDelta time.Duration) *models.EmergentWorldEvent {
+func (les *LivingEcosystemService) simulateAgendaProgress(_ context.Context, faction *models.Faction, personality *models.FactionPersonality, agenda *models.FactionAgenda, timeDelta time.Duration) *models.EmergentWorldEvent {
 	// Calculate progress based on faction traits and resources
 	progressRate := 0.05 * (timeDelta.Hours() / 168.0) // Base 5% per week
 
@@ -824,7 +824,7 @@ func (les *LivingEcosystemService) getAffectedGoods(eventType string) []string {
 	return []string{"general_goods"}
 }
 
-func (les *LivingEcosystemService) getFactionRelationship(faction1, faction2 *models.Faction) float64 {
+func (les *LivingEcosystemService) getFactionRelationship(_, faction2 *models.Faction) float64 {
 	// TODO: Parse FactionRelationships JSONB to get standing
 	// For now, return neutral relationship
 	return 0.0
@@ -900,7 +900,7 @@ Create a description (2-3 sentences) of this interaction and its outcome.`,
 	}
 }
 
-func (les *LivingEcosystemService) determineAffectedEntities(ctx context.Context, sessionID string, eventType string) []string {
+func (les *LivingEcosystemService) determineAffectedEntities(_ context.Context, _ string, eventType string) []string {
 	// For now, return empty - in full implementation would determine based on event type and location
 	return []string{}
 }

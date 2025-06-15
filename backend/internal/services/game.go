@@ -46,7 +46,7 @@ func (s *GameService) GetSessionByID(id string) (*models.GameSession, error) {
 	return session, nil
 }
 
-func (s *GameService) AddPlayerToSession(sessionID, playerID string, player *models.Player) error {
+func (s *GameService) AddPlayerToSession(sessionID, _ string, player *models.Player) error {
 	s.mu.RLock()
 	_, exists := s.sessions[sessionID]
 	s.mu.RUnlock()

@@ -108,7 +108,7 @@ func (r *combatAnalyticsRepository) GetCombatAnalyticsBySession(sessionID uuid.U
 	return analytics, err
 }
 
-func (r *combatAnalyticsRepository) UpdateCombatAnalytics(id uuid.UUID, updates map[string]interface{}) error {
+func (r *combatAnalyticsRepository) UpdateCombatAnalytics(_ uuid.UUID, updates map[string]interface{}) error {
 	// TODO: Implement database-agnostic update query builder
 	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax
 	return fmt.Errorf("UpdateCombatAnalytics not implemented - pending SQL migration")
@@ -168,7 +168,7 @@ func (r *combatAnalyticsRepository) GetCombatantAnalytics(combatAnalyticsID uuid
 	return analytics, err
 }
 
-func (r *combatAnalyticsRepository) UpdateCombatantAnalytics(id uuid.UUID, updates map[string]interface{}) error {
+func (r *combatAnalyticsRepository) UpdateCombatantAnalytics(_ uuid.UUID, updates map[string]interface{}) error {
 	// TODO: Implement database-agnostic update query builder
 	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax
 	return fmt.Errorf("UpdateCombatantAnalytics not implemented - pending SQL migration")
@@ -298,7 +298,7 @@ func (r *combatAnalyticsRepository) GetBattleMapsBySession(sessionID uuid.UUID) 
 	return maps, err
 }
 
-func (r *combatAnalyticsRepository) UpdateBattleMap(id uuid.UUID, updates map[string]interface{}) error {
+func (r *combatAnalyticsRepository) UpdateBattleMap(_ uuid.UUID, updates map[string]interface{}) error {
 	// TODO: Implement database-agnostic update query builder
 	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax
 	return fmt.Errorf("UpdateBattleMap not implemented - pending SQL migration")

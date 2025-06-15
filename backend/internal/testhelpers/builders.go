@@ -139,7 +139,7 @@ func (b *GameSessionBuilder) WithStatus(status string) *GameSessionBuilder {
 
 // WithPlayer adds a player to the session
 // Note: The GameSession model doesn't have a Players field, this would need to be tracked separately
-func (b *GameSessionBuilder) WithPlayer(userID, characterID string) *GameSessionBuilder {
+func (b *GameSessionBuilder) WithPlayer(_, characterID string) *GameSessionBuilder {
 	// Players are tracked in a separate table, not in the GameSession model
 	return b
 }

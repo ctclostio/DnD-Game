@@ -725,25 +725,25 @@ func (r *NarrativeRepository) GetActiveNarrativeThreads() ([]models.NarrativeThr
 }
 
 // UpdatePlayerAction updates an existing player action
-func (r *NarrativeRepository) UpdatePlayerAction(action *models.PlayerAction) error {
+func (r *NarrativeRepository) UpdatePlayerAction(_ *models.PlayerAction) error {
 	// TODO: Implement update logic
 	return nil
 }
 
 // GetWorldEvent retrieves a narrative event by ID
-func (r *NarrativeRepository) GetWorldEvent(eventID string) (*models.NarrativeEvent, error) {
+func (r *NarrativeRepository) GetWorldEvent(_ string) (*models.NarrativeEvent, error) {
 	// TODO: Implement retrieval logic
 	return &models.NarrativeEvent{}, nil
 }
 
 // CreateWorldEvent creates a new narrative event
-func (r *NarrativeRepository) CreateWorldEvent(event *models.NarrativeEvent) error {
+func (r *NarrativeRepository) CreateWorldEvent(_ *models.NarrativeEvent) error {
 	// TODO: Implement creation logic
 	return nil
 }
 
 // CreatePersonalizedNarrative saves a personalized narrative
-func (r *NarrativeRepository) CreatePersonalizedNarrative(narrative *models.PersonalizedNarrative) error {
+func (r *NarrativeRepository) CreatePersonalizedNarrative(_ *models.PersonalizedNarrative) error {
 	// TODO: Implement creation logic
 	return nil
 }

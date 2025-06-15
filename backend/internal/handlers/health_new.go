@@ -57,7 +57,7 @@ var startTime = time.Now()
 // @Produce json
 // @Success 200 {object} HealthResponse "Service is healthy"
 // @Router /health [get]
-func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) Health(w http.ResponseWriter, _ *http.Request) {
 	response := HealthResponse{
 		Status:    "healthy",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
@@ -82,7 +82,7 @@ func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} map[string]string "Service is alive"
 // @Failure 503 {object} map[string]string "Service is not alive"
 // @Router /health/live [get]
-func (h *Handlers) LivenessProbe(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) LivenessProbe(w http.ResponseWriter, _ *http.Request) {
 	// Basic liveness check - if we can respond, we're alive
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]string{
@@ -224,7 +224,7 @@ func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 // Standalone HealthCheckV2 function for backward compatibility
-func HealthCheckV2(w http.ResponseWriter, r *http.Request) {
+func HealthCheckV2(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]string{
 		"status":    "healthy",

@@ -38,7 +38,7 @@ func NewCombatAutomationService(
 
 // AutoResolveCombat performs quick combat resolution for minor encounters
 func (cas *CombatAutomationService) AutoResolveCombat(
-	ctx context.Context,
+	_ context.Context,
 	sessionID uuid.UUID,
 	characters []*models.Character,
 	req models.AutoResolveRequest,
@@ -111,7 +111,7 @@ func (cas *CombatAutomationService) AutoResolveCombat(
 
 // SmartInitiative calculates and assigns initiative automatically
 func (cas *CombatAutomationService) SmartInitiative(
-	ctx context.Context,
+	_ context.Context,
 	sessionID uuid.UUID,
 	req models.SmartInitiativeRequest,
 ) ([]models.InitiativeEntry, error) {
@@ -190,27 +190,27 @@ func (cas *CombatAutomationService) SmartInitiative(
 }
 
 // SaveBattleMap saves a battle map to the database
-func (cas *CombatAutomationService) SaveBattleMap(ctx context.Context, battleMap *models.BattleMap) error {
+func (cas *CombatAutomationService) SaveBattleMap(_ context.Context, battleMap *models.BattleMap) error {
 	return cas.combatRepo.CreateBattleMap(battleMap)
 }
 
 // GetBattleMap retrieves a battle map by ID
-func (cas *CombatAutomationService) GetBattleMap(ctx context.Context, mapID uuid.UUID) (*models.BattleMap, error) {
+func (cas *CombatAutomationService) GetBattleMap(_ context.Context, mapID uuid.UUID) (*models.BattleMap, error) {
 	return cas.combatRepo.GetBattleMap(mapID)
 }
 
 // GetBattleMapsBySession retrieves all battle maps for a session
-func (cas *CombatAutomationService) GetBattleMapsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.BattleMap, error) {
+func (cas *CombatAutomationService) GetBattleMapsBySession(_ context.Context, sessionID uuid.UUID) ([]*models.BattleMap, error) {
 	return cas.combatRepo.GetBattleMapsBySession(sessionID)
 }
 
 // GetAutoResolutionsBySession retrieves all auto-resolutions for a session
-func (cas *CombatAutomationService) GetAutoResolutionsBySession(ctx context.Context, sessionID uuid.UUID) ([]*models.AutoCombatResolution, error) {
+func (cas *CombatAutomationService) GetAutoResolutionsBySession(_ context.Context, sessionID uuid.UUID) ([]*models.AutoCombatResolution, error) {
 	return cas.combatRepo.GetAutoCombatResolutionsBySession(sessionID)
 }
 
 // SetInitiativeRule sets or updates an initiative rule
-func (cas *CombatAutomationService) SetInitiativeRule(ctx context.Context, rule *models.SmartInitiativeRule) error {
+func (cas *CombatAutomationService) SetInitiativeRule(_ context.Context, rule *models.SmartInitiativeRule) error {
 	return cas.combatRepo.CreateOrUpdateInitiativeRule(rule)
 }
 
@@ -264,7 +264,7 @@ func (cas *CombatAutomationService) parseCR(cr string) float64 {
 
 func (cas *CombatAutomationService) simulateCombat(
 	characters []*models.Character,
-	enemies []models.EnemyInfo,
+	_ []models.EnemyInfo,
 	partyLevel float64,
 	encounterCR float64,
 	useResources bool,
@@ -510,8 +510,8 @@ func (cas *CombatAutomationService) generateNarrativeSummary(
 	outcome string,
 	rounds int,
 	terrainType string,
-	partyLevel float64,
-	encounterCR float64,
+	_ float64,
+	_ float64,
 ) string {
 	narratives := map[string][]string{
 		constants.OutcomeDecisiveVictory: {

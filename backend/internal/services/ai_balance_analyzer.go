@@ -245,7 +245,7 @@ Consider:
 }
 
 // predictMetaImpact predicts how the rule will affect the game meta.
-func (ba *AIBalanceAnalyzer) predictMetaImpact(ctx context.Context, template *models.RuleTemplate, simResults []models.SimulationResult) models.MetaImpactPrediction {
+func (ba *AIBalanceAnalyzer) predictMetaImpact(_ context.Context, template *models.RuleTemplate, simResults []models.SimulationResult) models.MetaImpactPrediction {
 	prediction := models.MetaImpactPrediction{
 		EnablesCombos: []string{},
 		CounteredBy:   []string{},
@@ -474,7 +474,7 @@ func (ba *AIBalanceAnalyzer) analyzeSynergyPotential(template *models.RuleTempla
 	return math.Min(math.Max(potential, 0), 10)
 }
 
-func (ba *AIBalanceAnalyzer) generateDefaultSuggestions(template *models.RuleTemplate, simResults []models.SimulationResult) []models.BalanceSuggestion {
+func (ba *AIBalanceAnalyzer) generateDefaultSuggestions(template *models.RuleTemplate, _ []models.SimulationResult) []models.BalanceSuggestion {
 	suggestions := []models.BalanceSuggestion{}
 
 	// Check if overpowered
@@ -582,7 +582,7 @@ func (ba *AIBalanceAnalyzer) hasCounterspellProperties(template *models.RuleTemp
 	return false
 }
 
-func (ba *AIBalanceAnalyzer) calculatePopularityScore(template *models.RuleTemplate, simResults []models.SimulationResult) float64 {
+func (ba *AIBalanceAnalyzer) calculatePopularityScore(template *models.RuleTemplate, _ []models.SimulationResult) float64 {
 	// Base popularity on power, fun factor, and ease of use
 	power := template.BalanceMetrics.PowerLevel / 10
 
@@ -648,7 +648,7 @@ func (ba *AIBalanceAnalyzer) isStackable(template *models.RuleTemplate) bool {
 	return true
 }
 
-func (ba *AIBalanceAnalyzer) runSingleSimulation(ctx context.Context, template *models.RuleTemplate, scenario SimulationScenario) (map[string]interface{}, bool, string) {
+func (ba *AIBalanceAnalyzer) runSingleSimulation(_ context.Context, _ *models.RuleTemplate, scenario SimulationScenario) (map[string]interface{}, bool, string) {
 	// Placeholder for actual simulation
 	// In a real implementation, this would create mock combat scenarios
 	// and test the rule's effectiveness
@@ -694,7 +694,7 @@ func (ba *AIBalanceAnalyzer) calculateAverageOutcome(outcomes []map[string]inter
 	return avgOutcome
 }
 
-func (ba *AIBalanceAnalyzer) compareToBaseline(template *models.RuleTemplate, scenario SimulationScenario, outcome map[string]interface{}) float64 {
+func (ba *AIBalanceAnalyzer) compareToBaseline(_ *models.RuleTemplate, scenario SimulationScenario, outcome map[string]interface{}) float64 {
 	// Compare to baseline abilities at this level
 	// This would normally reference a database of baseline abilities
 

@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
+var upgrader = websocket.Upgrader{CheckOrigin: func(_ *http.Request) bool { return true }}
 
 func SyncHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")

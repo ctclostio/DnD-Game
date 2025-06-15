@@ -141,7 +141,7 @@ func TestDiceHandler_GetRollHistory(t *testing.T) {
 			if tt.limit != "" {
 				url += "?limit=" + tt.limit
 			}
-			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req := httptest.NewRequest(http.MethodGet, url, http.NoBody)
 
 			// Add auth context (placeholder)
 

@@ -183,7 +183,7 @@ type TestMockLLMProvider struct {
 	Error    error
 }
 
-func (m *TestMockLLMProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (m *TestMockLLMProvider) GenerateCompletion(_ context.Context, _ string, systemPrompt string) (string, error) {
 	if m.Error != nil {
 		return "", m.Error
 	}
@@ -194,11 +194,11 @@ func (m *TestMockLLMProvider) GenerateContent(ctx context.Context, prompt, syste
 	return m.GenerateCompletion(ctx, prompt, system)
 }
 
-func (m *TestMockLLMProvider) GenerateJSON(ctx context.Context, prompt, system string, schema interface{}) (string, error) {
+func (m *TestMockLLMProvider) GenerateJSON(ctx context.Context, prompt, system string, _ interface{}) (string, error) {
 	return m.GenerateCompletion(ctx, prompt, system)
 }
 
-func (m *TestMockLLMProvider) StreamContent(ctx context.Context, prompt, system string) (<-chan string, <-chan error) {
+func (m *TestMockLLMProvider) StreamContent(_ context.Context, _, system string) (<-chan string, <-chan error) {
 	content := make(chan string)
 	errors := make(chan error)
 	close(content)

@@ -215,7 +215,7 @@ func (h *CampaignHandler) CreateSessionMemory(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	memory, err := h.campaignService.CreateSessionMemory(ctx, sessionID, req)
+	memory, err := h.campaignService.CreateSessionMemory(ctx, sessionID, &req)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return

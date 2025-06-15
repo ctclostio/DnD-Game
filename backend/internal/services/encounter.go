@@ -117,7 +117,7 @@ func (s *EncounterService) CompleteEncounter(_ context.Context, encounterID stri
 }
 
 // ScaleEncounter adjusts the difficulty of an encounter
-func (s *EncounterService) ScaleEncounter(ctx context.Context, encounterID string, newDifficulty string) (*models.Encounter, error) {
+func (s *EncounterService) ScaleEncounter(_ context.Context, encounterID string, newDifficulty string) (*models.Encounter, error) {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
 		return nil, fmt.Errorf("encounter not found: %w", err)
@@ -194,7 +194,7 @@ func (s *EncounterService) GetTacticalSuggestion(ctx context.Context, encounterI
 }
 
 // LogCombatEvent records an event during combat
-func (s *EncounterService) LogCombatEvent(ctx context.Context, encounterID string, round int, eventType, actorType, actorID, actorName, description string, mechanicalEffect map[string]interface{}) error {
+func (s *EncounterService) LogCombatEvent(_ context.Context, encounterID string, round int, eventType, actorType, actorID, actorName, description string, mechanicalEffect map[string]interface{}) error {
 	event := &models.EncounterEvent{
 		EncounterID:      encounterID,
 		RoundNumber:      round,
@@ -210,17 +210,17 @@ func (s *EncounterService) LogCombatEvent(ctx context.Context, encounterID strin
 }
 
 // GetEncounterEvents retrieves recent events for an encounter
-func (s *EncounterService) GetEncounterEvents(ctx context.Context, encounterID string, limit int) ([]*models.EncounterEvent, error) {
+func (s *EncounterService) GetEncounterEvents(_ context.Context, encounterID string, limit int) ([]*models.EncounterEvent, error) {
 	return s.repo.GetEvents(encounterID, limit)
 }
 
 // UpdateEnemyStatus updates an enemy's status during combat
-func (s *EncounterService) UpdateEnemyStatus(ctx context.Context, enemyID string, updates map[string]interface{}) error {
+func (s *EncounterService) UpdateEnemyStatus(_ context.Context, enemyID string, updates map[string]interface{}) error {
 	return s.repo.UpdateEnemyStatus(enemyID, updates)
 }
 
 // TriggerReinforcements activates a reinforcement wave
-func (s *EncounterService) TriggerReinforcements(ctx context.Context, encounterID string, waveIndex int) error {
+func (s *EncounterService) TriggerReinforcements(_ context.Context, encounterID string, waveIndex int) error {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
 		return fmt.Errorf("encounter not found: %w", err)
@@ -374,7 +374,7 @@ func (s *EncounterService) applyScalingAdjustment(encounter *models.Encounter, a
 	// Add terrain - future enhancement
 }
 
-func (s *EncounterService) awardObjectiveRewards(ctx context.Context, objective *models.EncounterObjective, gameSessionID string) {
+func (s *EncounterService) awardObjectiveRewards(_ context.Context, objective *models.EncounterObjective, _ string) {
 	// Award XP to party members
 	// This would integrate with character service to add XP
 
