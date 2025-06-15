@@ -87,53 +87,67 @@ func (s *CSRFStore) ValidateToken(token string) bool {
 	return true
 }
 
+// handleSafeCSRFMethod handles CSRF token generation for safe HTTP methods.
+func handleSafeCSRFMethod(w http.ResponseWriter, r *http.Request, store *CSRFStore, next http.Handler) {
+	// Generate and set CSRF token for GET requests (also applies to HEAD, OPTIONS as per original logic)
+	token, err := store.GenerateToken()
+	if err == nil {
+		http.SetCookie(w, &http.Cookie{
+			Name:     csrfCookieName,
+			Value:    token,
+			Path:     "/",
+			HttpOnly: false, // Must be readable by JavaScript
+			Secure:   r.TLS != nil,
+			SameSite: http.SameSiteStrictMode,
+			MaxAge:   int(csrfTokenTTL.Seconds()),
+		})
+	}
+	next.ServeHTTP(w, r)
+}
+
+// validateCSRFForStateChange validates the CSRF token for state-changing methods.
+// It returns true if the request should proceed, false if an error was written and the request should stop.
+func validateCSRFForStateChange(w http.ResponseWriter, r *http.Request, store *CSRFStore) bool {
+	cookieToken := ""
+	if cookie, err := r.Cookie(csrfCookieName); err == nil {
+		cookieToken = cookie.Value
+	}
+
+	headerToken := r.Header.Get(csrfHeaderName)
+
+	// Both tokens must be present and match
+	if cookieToken == "" || headerToken == "" {
+		http.Error(w, "CSRF token missing", http.StatusForbidden)
+		return false
+	}
+
+	// Use constant-time comparison
+	if subtle.ConstantTimeCompare([]byte(cookieToken), []byte(headerToken)) != 1 {
+		http.Error(w, "CSRF token mismatch", http.StatusForbidden)
+		return false
+	}
+
+	// Validate token exists and isn't expired
+	if !store.ValidateToken(cookieToken) {
+		http.Error(w, "Invalid CSRF token", http.StatusForbidden)
+		return false
+	}
+	return true
+}
+
 // CSRFMiddleware provides CSRF protection
 func CSRFMiddleware(store *CSRFStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Skip CSRF for safe methods
 			if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
-				// Generate and set CSRF token for GET requests
-				token, err := store.GenerateToken()
-				if err == nil {
-					http.SetCookie(w, &http.Cookie{
-						Name:     csrfCookieName,
-						Value:    token,
-						Path:     "/",
-						HttpOnly: false, // Must be readable by JavaScript
-						Secure:   r.TLS != nil,
-						SameSite: http.SameSiteStrictMode,
-						MaxAge:   int(csrfTokenTTL.Seconds()),
-					})
-				}
-				next.ServeHTTP(w, r)
+				handleSafeCSRFMethod(w, r, store, next)
 				return
 			}
 
 			// For state-changing methods, validate CSRF token
-			cookieToken := ""
-			if cookie, err := r.Cookie(csrfCookieName); err == nil {
-				cookieToken = cookie.Value
-			}
-
-			headerToken := r.Header.Get(csrfHeaderName)
-
-			// Both tokens must be present and match
-			if cookieToken == "" || headerToken == "" {
-				http.Error(w, "CSRF token missing", http.StatusForbidden)
-				return
-			}
-
-			// Use constant-time comparison
-			if subtle.ConstantTimeCompare([]byte(cookieToken), []byte(headerToken)) != 1 {
-				http.Error(w, "CSRF token mismatch", http.StatusForbidden)
-				return
-			}
-
-			// Validate token exists and isn't expired
-			if !store.ValidateToken(cookieToken) {
-				http.Error(w, "Invalid CSRF token", http.StatusForbidden)
-				return
+			if !validateCSRFForStateChange(w, r, store) {
+				return // Error already handled by validateCSRFForStateChange
 			}
 
 			next.ServeHTTP(w, r)

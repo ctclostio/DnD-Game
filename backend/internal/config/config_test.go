@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const testConfigJWTSecret = "a-very-long-secret-key-that-is-at-least-32-chars"
+
 func TestLoad(t *testing.T) {
 	// Save original env vars
 	originalEnv := make(map[string]string)
@@ -161,7 +163,7 @@ func TestValidate(t *testing.T) {
 					DatabaseName: "db",
 				},
 				Auth: AuthConfig{
-					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					JWTSecret:            testConfigJWTSecret,
 					AccessTokenDuration:  15 * time.Minute,
 					RefreshTokenDuration: 7 * 24 * time.Hour,
 					BcryptCost:           10,
@@ -186,7 +188,7 @@ func TestValidate(t *testing.T) {
 					DatabaseName: "db",
 				},
 				Auth: AuthConfig{
-					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					JWTSecret:            testConfigJWTSecret,
 					AccessTokenDuration:  15 * time.Minute,
 					RefreshTokenDuration: 7 * 24 * time.Hour,
 					BcryptCost:           10,
@@ -209,7 +211,7 @@ func TestValidate(t *testing.T) {
 					DatabaseName: "db",
 				},
 				Auth: AuthConfig{
-					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					JWTSecret:            testConfigJWTSecret,
 					AccessTokenDuration:  15 * time.Minute,
 					RefreshTokenDuration: 7 * 24 * time.Hour,
 					BcryptCost:           10,
@@ -232,7 +234,7 @@ func TestValidate(t *testing.T) {
 					DatabaseName: "db",
 				},
 				Auth: AuthConfig{
-					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					JWTSecret:            testConfigJWTSecret,
 					AccessTokenDuration:  15 * time.Minute,
 					RefreshTokenDuration: 7 * 24 * time.Hour,
 					BcryptCost:           10,
@@ -255,7 +257,7 @@ func TestValidate(t *testing.T) {
 					DatabaseName: "db",
 				},
 				Auth: AuthConfig{
-					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					JWTSecret:            testConfigJWTSecret,
 					AccessTokenDuration:  15 * time.Minute,
 					RefreshTokenDuration: 7 * 24 * time.Hour,
 					BcryptCost:           10,
@@ -278,7 +280,7 @@ func TestValidate(t *testing.T) {
 					Password: "pass",
 				},
 				Auth: AuthConfig{
-					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					JWTSecret:            testConfigJWTSecret,
 					AccessTokenDuration:  15 * time.Minute,
 					RefreshTokenDuration: 7 * 24 * time.Hour,
 					BcryptCost:           10,

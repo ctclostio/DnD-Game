@@ -8,6 +8,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	testJWTSecret = "test-secret"
+	testUserID    = "user-123"
+	testEmail     = "test@example.com"
+	testUsername  = "testuser"
+	testRole      = "player"
+)
+
 func TestNewJWTManager(t *testing.T) {
 	secret := "test-secret-key"
 	accessDuration := 15 * time.Minute
@@ -22,12 +30,12 @@ func TestNewJWTManager(t *testing.T) {
 }
 
 func TestGenerateTokenPair(t *testing.T) {
-	manager := NewJWTManager("test-secret", 15*time.Minute, 24*time.Hour)
+	manager := NewJWTManager(testJWTSecret, 15*time.Minute, 24*time.Hour)
 
-	userID := "user-123"
-	username := "testuser"
-	email := "test@example.com"
-	role := "player"
+	userID := testUserID
+	username := testUsername
+	email := testEmail
+	role := testRole
 
 	tokenPair, err := manager.GenerateTokenPair(userID, username, email, role)
 	require.NoError(t, err)
@@ -38,7 +46,7 @@ func TestGenerateTokenPair(t *testing.T) {
 }
 
 func TestValidateToken(t *testing.T) {
-	manager := NewJWTManager("test-secret", 15*time.Minute, 24*time.Hour)
+	manager := NewJWTManager(testJWTSecret, 15*time.Minute, 24*time.Hour)
 
 	// Helper function to test token validation
 	validateTokenHelper := func(t *testing.T, userID, username, email, role string, tokenType TokenType) {
@@ -62,7 +70,7 @@ func TestValidateToken(t *testing.T) {
 	}
 
 	t.Run("valid access token", func(t *testing.T) {
-		validateTokenHelper(t, "user-123", "testuser", "test@example.com", "player", AccessToken)
+		validateTokenHelper(t, testUserID, testUsername, testEmail, testRole, AccessToken)
 	})
 
 	t.Run("valid refresh token", func(t *testing.T) {
@@ -76,9 +84,9 @@ func TestValidateToken(t *testing.T) {
 
 	t.Run("expired token", func(t *testing.T) {
 		// Create manager with very short duration
-		shortManager := NewJWTManager("test-secret", 1*time.Millisecond, 1*time.Millisecond)
+		shortManager := NewJWTManager(testJWTSecret, 1*time.Millisecond, 1*time.Millisecond)
 
-		tokenPair, err := shortManager.GenerateTokenPair("user-123", "testuser", "test@example.com", "player")
+		tokenPair, err := shortManager.GenerateTokenPair(testUserID, testUsername, testEmail, testRole)
 		require.NoError(t, err)
 
 		// Wait for token to expire
@@ -92,7 +100,7 @@ func TestValidateToken(t *testing.T) {
 	t.Run("wrong secret", func(t *testing.T) {
 		// Generate token with one secret
 		manager1 := NewJWTManager("secret1", 15*time.Minute, 24*time.Hour)
-		tokenPair, err := manager1.GenerateTokenPair("user-123", "testuser", "test@example.com", "player")
+		tokenPair, err := manager1.GenerateTokenPair(testUserID, testUsername, testEmail, testRole)
 		require.NoError(t, err)
 
 		// Try to validate with different secret
@@ -102,7 +110,7 @@ func TestValidateToken(t *testing.T) {
 	})
 
 	t.Run("wrong token type", func(t *testing.T) {
-		tokenPair, err := manager.GenerateTokenPair("user-123", "testuser", "test@example.com", "player")
+		tokenPair, err := manager.GenerateTokenPair(testUserID, testUsername, testEmail, testRole)
 		require.NoError(t, err)
 
 		// Try to validate access token as refresh token
@@ -113,13 +121,13 @@ func TestValidateToken(t *testing.T) {
 }
 
 func TestRefreshAccessToken(t *testing.T) {
-	manager := NewJWTManager("test-secret", 15*time.Minute, 24*time.Hour)
+	manager := NewJWTManager(testJWTSecret, 15*time.Minute, 24*time.Hour)
 
 	t.Run("valid refresh token", func(t *testing.T) {
-		userID := "user-123"
-		username := "testuser"
-		email := "test@example.com"
-		role := "player"
+		userID := testUserID
+		username := testUsername
+		email := testEmail
+		role := testRole
 
 		tokenPair, err := manager.GenerateTokenPair(userID, username, email, role)
 		require.NoError(t, err)
@@ -140,7 +148,7 @@ func TestRefreshAccessToken(t *testing.T) {
 	})
 
 	t.Run("with access token instead of refresh token", func(t *testing.T) {
-		tokenPair, err := manager.GenerateTokenPair("user-123", "testuser", "test@example.com", "player")
+		tokenPair, err := manager.GenerateTokenPair(testUserID, testUsername, testEmail, testRole)
 		require.NoError(t, err)
 
 		_, err = manager.RefreshAccessToken(tokenPair.AccessToken)
