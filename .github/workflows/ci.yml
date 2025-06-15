@@ -330,14 +330,14 @@ jobs:
 
       - name: Run database migrations
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dnd_integration?sslmode=disable
+          DATABASE_URL: postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/dnd_integration?sslmode=disable
         run: |
           cd backend
           go run cmd/server/main.go migrate up
 
       - name: Start backend server
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dnd_integration?sslmode=disable
+          DATABASE_URL: postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/dnd_integration?sslmode=disable
           JWT_SECRET: integration-test-secret
           REDIS_URL: redis://localhost:6379
           GO_ENV: test
