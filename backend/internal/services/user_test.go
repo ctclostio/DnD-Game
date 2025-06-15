@@ -16,6 +16,8 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
+const testUserPassword = "SecurePass123!"
+
 func TestUserService_Register(t *testing.T) {
 	ctx := context.Background()
 
@@ -58,10 +60,10 @@ func TestUserService_Register(t *testing.T) {
 				assert.Equal(t, "test@example.com", user.Email)
 				assert.Equal(t, "player", user.Role)
 				assert.NotEmpty(t, user.PasswordHash)
-				assert.NotEqual(t, "SecurePass123!", user.PasswordHash) // Should be hashed
+				assert.NotEqual(t, testUserPassword, user.PasswordHash) // Should be hashed
 
 				// Verify password was hashed correctly
-				err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte("SecurePass123!"))
+				err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(testUserPassword))
 				assert.NoError(t, err)
 			},
 		},
@@ -70,7 +72,7 @@ func TestUserService_Register(t *testing.T) {
 			request: models.RegisterRequest{
 				Username: "existinguser",
 				Email:    "new@example.com",
-				Password: "SecurePass123!",
+				Password: testUserPassword,
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				existingUser := &models.User{
