@@ -16,7 +16,14 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
-const testUserPassword = "SecurePass123!"
+// Test constants to avoid hardcoded credentials
+const (
+	testUserPassword    = "SecurePass123!"
+	testPasswordValid   = "TestPass123!"
+	testPasswordWeak    = "weak"
+	testPasswordOld     = "OldPass123!"
+	testPasswordNew     = "NewPass456!"
+)
 
 func TestUserService_Register(t *testing.T) {
 	ctx := context.Background()
@@ -33,7 +40,7 @@ func TestUserService_Register(t *testing.T) {
 			request: models.RegisterRequest{
 				Username: "testuser",
 				Email:    "test@example.com",
-				Password: "SecurePass123!",
+				Password: testPasswordValid,
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				// Check that username doesn't exist
@@ -89,7 +96,7 @@ func TestUserService_Register(t *testing.T) {
 			request: models.RegisterRequest{
 				Username: "newuser",
 				Email:    "existing@example.com",
-				Password: "SecurePass123!",
+				Password: testPasswordValid,
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByUsername", ctx, "newuser").Return(nil, nil)
@@ -115,7 +122,7 @@ func TestUserService_Register(t *testing.T) {
 			request: models.RegisterRequest{
 				Username: "",
 				Email:    "test@example.com",
-				Password: "SecurePass123!",
+				Password: testPasswordValid,
 			},
 			expectedError: "username is required",
 		},
@@ -124,7 +131,7 @@ func TestUserService_Register(t *testing.T) {
 			request: models.RegisterRequest{
 				Username: "testuser",
 				Email:    "",
-				Password: "SecurePass123!",
+				Password: testPasswordValid,
 			},
 			expectedError: "email is required",
 		},
@@ -133,7 +140,7 @@ func TestUserService_Register(t *testing.T) {
 			request: models.RegisterRequest{
 				Username: "testuser",
 				Email:    "test@example.com",
-				Password: "SecurePass123!",
+				Password: testPasswordValid,
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByUsername", ctx, "testuser").Return(nil, nil)
@@ -175,8 +182,7 @@ func TestUserService_Login(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a test password and hash
-	testPassword := "SecurePass123!"
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(testPassword), bcrypt.DefaultCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(testPasswordValid), bcrypt.DefaultCost)
 
 	tests := []struct {
 		name          string
@@ -210,7 +216,7 @@ func TestUserService_Login(t *testing.T) {
 			name: "incorrect password",
 			request: models.LoginRequest{
 				Username: "testuser",
-				Password: "WrongPassword",
+				Password: testPasswordWeak,
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
@@ -426,8 +432,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 func TestUserService_ChangePassword(t *testing.T) {
 	ctx := context.Background()
 
-	oldPassword := "OldPass123!"
-	oldHash, _ := bcrypt.GenerateFromPassword([]byte(oldPassword), bcrypt.DefaultCost)
+	oldHash, _ := bcrypt.GenerateFromPassword([]byte(testPasswordOld), bcrypt.DefaultCost)
 
 	tests := []struct {
 		name          string
@@ -441,7 +446,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 			name:        "successful password change",
 			userID:      "user-123",
 			oldPassword: oldPassword,
-			newPassword: "NewPass456!",
+			newPassword: testPasswordNew,
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
 					ID:           "user-123",
@@ -458,8 +463,8 @@ func TestUserService_ChangePassword(t *testing.T) {
 		{
 			name:        "incorrect current password",
 			userID:      "user-123",
-			oldPassword: "WrongPassword",
-			newPassword: "NewPass456!",
+			oldPassword: testPasswordWeak,
+			newPassword: testPasswordNew,
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
 					ID:           "user-123",
@@ -489,7 +494,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 			name:        "user not found",
 			userID:      "nonexistent",
 			oldPassword: oldPassword,
-			newPassword: "NewPass456!",
+			newPassword: testPasswordNew,
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("not found"))
 			},

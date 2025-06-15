@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Test</title>
 </head>
 <body>
@@ -9,24 +11,29 @@
     <script>
         const results = document.getElementById('results');
         
+        // Helper function to safely add text content
+        function addResult(text) {
+            const p = document.createElement('p');
+            p.textContent = text;
+            results.appendChild(p);
+        }
+        
         // Test health endpoint
         fetch('/api/v1/health')
             .then(res => {
-                results.innerHTML += `<p>Health endpoint status: ${res.status}</p>`;
+                addResult(`Health endpoint status: ${res.status}`);
                 return res.json();
             })
             .then(data => {
-                results.innerHTML += `<p>Health response: ${JSON.stringify(data)}</p>`;
+                addResult(`Health response: ${JSON.stringify(data)}`);
             })
             .catch(err => {
-                results.innerHTML += `<p>Health error: ${err}</p>`;
+                addResult(`Health error: ${err}`);
             });
             
         // Check if auth is required
-        results.innerHTML += `<p>LocalStorage auth token: ${localStorage.getItem('access_token') || 'none'}</p>`;
-        const urlParagraph = document.createElement('p');
-        urlParagraph.textContent = `Current URL: ${window.location.href}`;
-        results.appendChild(urlParagraph);
+        addResult(`LocalStorage auth token: ${localStorage.getItem('access_token') || 'none'}`);
+        addResult(`Current URL: ${window.location.href}`);
     </script>
 </body>
 </html>
