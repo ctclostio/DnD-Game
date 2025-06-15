@@ -1,3 +1,5 @@
+# Ignore GitHub token files
+.github_token
 # Binaries for programs and plugins
 *.exe
 *.exe~
