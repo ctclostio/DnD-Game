@@ -118,10 +118,10 @@ export function useWebSocketChat(roomId: string) {
   const { isConnected, connectionState, sendMessage } = useWebSocket({
     roomId,
     onConnect: () => {
-      console.log('Chat connected');
+      console.debug('Chat connected');
     },
     onDisconnect: () => {
-      console.log('Chat disconnected');
+      console.debug('Chat disconnected');
     },
   });
 

@@ -4,7 +4,7 @@ import { CustomClassForm } from './CustomClassForm';
 
 interface ClassSelectionStepProps {
   characterData: CharacterData;
-  onUpdate: (field: keyof CharacterData, value: any) => void;
+  onUpdate: (field: keyof CharacterData, value: CharacterData[keyof CharacterData]) => void;
   options: CharacterOptions;
   isCustomMode: boolean;
   errors: Record<string, string>;

@@ -3,7 +3,7 @@ import { CharacterData, CharacterOptions } from './CharacterBuilder';
 
 interface BackgroundSelectionStepProps {
   characterData: CharacterData;
-  onUpdate: (field: keyof CharacterData, value: any) => void;
+  onUpdate: (field: keyof CharacterData, value: CharacterData[keyof CharacterData]) => void;
   options: CharacterOptions;
   errors: Record<string, string>;
   touched: Record<string, boolean>;
@@ -119,7 +119,7 @@ export const BackgroundSelectionStep = memo(({
   const handleCustomBackgroundSubmit = useCallback(() => {
     if (customBackground.name && customBackground.description) {
       // In a real app, this would save the custom background
-      console.log('Custom background:', customBackground);
+      console.debug('Custom background:', customBackground);
     }
   }, [customBackground]);
 

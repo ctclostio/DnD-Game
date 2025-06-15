@@ -1,4 +1,5 @@
 # golangci-lint configuration
+version: 2
 run:
   timeout: 5m
   tests: true
@@ -16,12 +17,9 @@ linters:
     - goconst
     - gocritic
     - gocyclo
-    - gofmt
-    - goimports
     - mnd
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - lll
@@ -31,7 +29,6 @@ linters:
     - nolintlint
     - rowserrcheck
     - staticcheck
-    - stylecheck
     - unconvert
     - unparam
     - unused
@@ -79,8 +76,6 @@ linters-settings:
       - wrapperFunc
   gocyclo:
     min-complexity: 15
-  goimports:
-    local-prefixes: github.com/ctclostio/DnD-Game
   mnd:
     checks:
       - argument
@@ -168,9 +163,6 @@ issues:
     - linters:
         - lll
       source: "^//go:generate "
-    - linters:
-        - stylecheck
-      text: "ST1000:"
     - linters:
         - revive
       text: "exported:"

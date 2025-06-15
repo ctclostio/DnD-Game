@@ -645,7 +645,7 @@ export class CharacterBuilderView {
             }
             
             const response = await apiService.post('/characters/create', characterData);
-            console.log('Character created:', response);
+            console.debug('Character created:', response);
             // Redirect to character sheet or show success message
             window.location.hash = '#/characters/' + response.id;
         } catch (error) {
@@ -818,7 +818,7 @@ export class CharacterBuilderView {
 
         try {
             const response = await apiService.post('/characters/create-custom', customData);
-            console.log('Custom character created:', response);
+            console.debug('Custom character created:', response);
             window.location.hash = '#/characters/' + response.id;
         } catch (error) {
             console.error('Failed to create custom character:', error);

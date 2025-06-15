@@ -84,7 +84,7 @@ class AuthService {
 
   // Register new user
   async register(username: string, email: string, password: string): Promise<AuthResponse> {
-    console.log('Starting registration for:', username);
+    console.debug('Starting registration for:', username);
     
     // Ensure we have a CSRF token
     await fetch(`${API_BASE_URL}/csrf-token`, { credentials: 'same-origin' });
@@ -110,12 +110,12 @@ class AuthService {
 
   // Login user
   async login(username: string, password: string): Promise<AuthResponse> {
-    console.log('Starting login for:', username);
+    console.debug('Starting login for:', username);
     
     // Ensure we have a CSRF token
     await fetch(`${API_BASE_URL}/csrf-token`, { credentials: 'same-origin' });
     
-    console.log('Sending login request to:', `${API_BASE_URL}/auth/login`);
+    console.debug('Sending login request to:', `${API_BASE_URL}/auth/login`);
     const response = await fetchWithCSRF(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
@@ -124,7 +124,7 @@ class AuthService {
       body: JSON.stringify({ username, password })
     });
 
-    console.log('Login response status:', response.status);
+    console.debug('Login response status:', response.status);
     
     if (!response.ok) {
       const error = await response.json();
@@ -133,7 +133,7 @@ class AuthService {
     }
 
     const data: AuthResponse = await response.json();
-    console.log('Login successful, saving auth data');
+    console.debug('Login successful, saving auth data');
     this.saveAuthData(data);
     return data;
   }

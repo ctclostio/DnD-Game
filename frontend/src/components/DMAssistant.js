@@ -74,7 +74,7 @@ const DMAssistant = ({ gameSessionId, currentCombat }) => {
         // Update UI with streaming progress
         if (message.data.progress) {
             // Show progress bar or status
-            console.log('Generation progress:', message.data.progress);
+            console.debug('Generation progress:', message.data.progress);
         }
     };
 

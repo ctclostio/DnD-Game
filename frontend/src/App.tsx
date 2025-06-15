@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import AuthGuard from './components/AuthGuard';
 import LoadingSpinner from './components/LoadingSpinner';
 import { ErrorBoundary, RouteErrorBoundary } from './components/ErrorBoundary';
+import { useAuthSync } from './hooks/useAuthSync';
 
 // Lazy load all page components
 const Login = lazy(() => import('./pages/Login'));
@@ -18,6 +19,7 @@ const DMTools = lazy(() => import('./pages/DMTools'));
 const RuleBuilder = lazy(() => import('./components/RuleBuilder'));
 
 const App: React.FC = () => {
+  useAuthSync();
   return (
     <ErrorBoundary
       onError={(error, errorInfo) => {

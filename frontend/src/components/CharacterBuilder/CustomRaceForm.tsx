@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useState } from 'react';
 import { useDebouncedCallback } from '../../hooks/useDebounce';
+import apiService from '../../services/api';
 
 interface CustomRaceData {
   name: string;
@@ -14,13 +15,24 @@ interface CustomRaceFormProps {
   aiEnabled: boolean;
 }
 
-export const CustomRaceForm = memo(({
+interface GeneratedRacePreview {
+  name: string;
+  description: string;
+  traits: {
+    abilityScoreIncrease: string;
+    size: string;
+    speed: string;
+    specialAbilities: string[];
+  };
+}
+
+export const CustomRaceForm = memo(({ 
   customRaceData,
   onUpdate,
   aiEnabled,
 }: CustomRaceFormProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedPreview, setGeneratedPreview] = useState<any>(null);
+  const [generatedPreview, setGeneratedPreview] = useState<GeneratedRacePreview | null>(null);
 
   const updateField = useCallback((field: keyof CustomRaceData, value: string) => {
     onUpdate({
@@ -54,25 +66,16 @@ export const CustomRaceForm = memo(({
 
     setIsGenerating(true);
     try {
-      // TODO: Call AI generation endpoint
-      console.log('Generating custom race:', customRaceData);
-      
-      // Mock response for now
-      setTimeout(() => {
-        setGeneratedPreview({
-          name: customRaceData.name,
-          description: 'A unique race with special abilities...',
-          traits: {
-            abilityScoreIncrease: '+2 to one ability score of your choice',
-            size: 'Medium',
-            speed: '30 feet',
-            specialAbilities: ['Darkvision', 'Natural Resilience'],
-          },
-        });
-        setIsGenerating(false);
-      }, 1500);
+      const preview = await apiService.generateCustomRace({
+        name: customRaceData.name,
+        description: customRaceData.description,
+        desiredTraits: customRaceData.desiredTraits,
+        style: customRaceData.generationStyle,
+      });
+      setGeneratedPreview(preview as GeneratedRacePreview);
     } catch (error) {
       console.error('Failed to generate custom race:', error);
+    } finally {
       setIsGenerating(false);
     }
   }, 1000);
@@ -165,6 +168,7 @@ export const CustomRaceForm = memo(({
             className="btn-primary generate-race-btn"
             onClick={generateCustomRace}
             disabled={!customRaceData?.name || !customRaceData?.description || isGenerating}
+            aria-disabled={!customRaceData?.name || !customRaceData?.description || isGenerating}
           >
             {isGenerating ? '🎲 Generating...' : '🎲 Generate Custom Race'}
           </button>

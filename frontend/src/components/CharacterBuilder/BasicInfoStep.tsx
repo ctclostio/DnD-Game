@@ -3,7 +3,7 @@ import { CharacterData } from './CharacterBuilder';
 
 interface BasicInfoStepProps {
   characterData: CharacterData;
-  onUpdate: (field: keyof CharacterData, value: any) => void;
+  onUpdate: (field: keyof CharacterData, value: CharacterData[keyof CharacterData]) => void;
   errors: Record<string, string>;
   touched: Record<string, boolean>;
   setFieldTouched: (field: keyof CharacterData, touched: boolean) => void;
@@ -61,10 +61,12 @@ export const BasicInfoStep = memo(({
           onBlur={handleNameBlur}
           placeholder="Enter character name"
           className={showNameError ? 'error' : ''}
+          aria-invalid={showNameError ? 'true' : 'false'}
+          aria-describedby={showNameError ? 'characterName-error' : undefined}
           autoFocus
         />
         {showNameError && (
-          <span className="error-message">{errors.name}</span>
+          <span id="characterName-error" className="error-message" aria-live="polite">{errors.name}</span>
         )}
         <span className="field-hint">
           Choose a name that fits your character's background and personality

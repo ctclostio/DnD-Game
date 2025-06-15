@@ -65,7 +65,7 @@ const GameSession = ({ sessionId, userId, isDM }) => {
                     handleDiceRoll(message.data);
                     break;
                 default:
-                    console.log('Unknown message type:', message.type);
+                    console.debug('Unknown message type:', message.type);
             }
         });
     };

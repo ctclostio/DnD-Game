@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useState } from 'react';
 import { useDebouncedCallback } from '../../hooks/useDebounce';
+import apiService from '../../services/api';
 
 interface CustomClassData {
   name: string;
@@ -12,6 +13,15 @@ interface CustomClassFormProps {
   customClassData?: CustomClassData;
   onUpdate: (data: CustomClassData) => void;
   aiEnabled: boolean;
+}
+
+interface GeneratedClassPreview {
+  name: string;
+  description: string;
+  hitDice: string;
+  primaryAbility: string;
+  savingThrows: string[];
+  features: Array<{ level: number; name: string; description: string }>;
 }
 
 const CLASS_ROLES = [
@@ -37,7 +47,7 @@ export const CustomClassForm = memo(({
   aiEnabled,
 }: CustomClassFormProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedPreview, setGeneratedPreview] = useState<any>(null);
+  const [generatedPreview, setGeneratedPreview] = useState<GeneratedClassPreview | null>(null);
 
   const updateField = useCallback((field: keyof CustomClassData, value: string) => {
     onUpdate({
@@ -71,27 +81,16 @@ export const CustomClassForm = memo(({
 
     setIsGenerating(true);
     try {
-      // TODO: Call AI generation endpoint
-      console.log('Generating custom class:', customClassData);
-      
-      // Mock response for now
-      setTimeout(() => {
-        setGeneratedPreview({
-          name: customClassData.name,
-          description: 'A unique class with special abilities...',
-          hitDice: 'd10',
-          primaryAbility: 'Strength or Dexterity',
-          savingThrows: ['Strength', 'Constitution'],
-          features: [
-            { level: 1, name: 'Unique Feature', description: 'A special ability...' },
-            { level: 2, name: 'Fighting Style', description: 'Choose a combat specialty...' },
-            { level: 3, name: 'Subclass Choice', description: 'Select your path...' },
-          ],
-        });
-        setIsGenerating(false);
-      }, 1500);
+      const preview = await apiService.generateCustomClass({
+        name: customClassData.name,
+        description: customClassData.description,
+        role: customClassData.role,
+        playstyle: customClassData.playstyle,
+      });
+      setGeneratedPreview(preview as GeneratedClassPreview);
     } catch (error) {
       console.error('Failed to generate custom class:', error);
+    } finally {
       setIsGenerating(false);
     }
   }, 1000);
@@ -170,6 +169,7 @@ export const CustomClassForm = memo(({
           className="btn-primary generate-class-btn"
           onClick={generateCustomClass}
           disabled={!customClassData?.name || !customClassData?.description || isGenerating}
+          aria-disabled={!customClassData?.name || !customClassData?.description || isGenerating}
         >
           {isGenerating ? '🎲 Generating...' : '🎲 Generate Custom Class'}
         </button>

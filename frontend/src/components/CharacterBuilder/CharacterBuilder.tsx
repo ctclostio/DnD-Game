@@ -212,9 +212,9 @@ export const CharacterBuilder = memo(() => {
       <div className="builder-header">
         <h1>Create Your Character</h1>
         <div className="mode-toggle">
-          <label className="toggle">
-            <input 
-              type="checkbox" 
+          <label className="toggle" aria-label="Toggle custom or homebrew mode">
+            <input
+              type="checkbox"
               checked={isCustomMode}
               onChange={toggleCustomMode}
             />
@@ -263,7 +263,7 @@ export const CharacterBuilder = memo(() => {
       </div>
       
       {error && (
-        <div className="builder-error-message">
+        <div className="builder-error-message" role="alert" aria-live="assertive">
           {error}
         </div>
       )}

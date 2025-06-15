@@ -16,16 +16,11 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    console.log('Login form submitted with:', formData.username);
-    
+
     const result = await dispatch(login(formData));
-    console.log('Login action result:', result);
-    
+
     if (login.fulfilled.match(result)) {
-      console.log('Login successful, navigating to dashboard');
       navigate('/dashboard');
-    } else {
-      console.log('Login failed');
     }
   };
 
@@ -43,7 +38,7 @@ const Login: React.FC = () => {
         <h2>Login to D&D Online</h2>
         
         {error && (
-          <div className="alert alert-error">
+          <div id="login-error" className="alert alert-error" role="alert">
             {error}
           </div>
         )}
@@ -59,6 +54,7 @@ const Login: React.FC = () => {
               onChange={handleInputChange}
               required
               autoFocus
+              autoComplete="username"
             />
           </div>
 
@@ -71,6 +67,9 @@ const Login: React.FC = () => {
               value={formData.password}
               onChange={handleInputChange}
               required
+              autoComplete="current-password"
+              aria-describedby={error ? 'login-error' : undefined}
+              aria-invalid={error ? true : undefined}
             />
           </div>
 

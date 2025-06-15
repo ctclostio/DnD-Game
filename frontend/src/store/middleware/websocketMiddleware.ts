@@ -9,8 +9,8 @@ export const WS_RECEIVE_MESSAGE = 'websocket/receiveMessage';
 
 // WebSocket instance storage
 let socket: WebSocket | null = null;
-let reconnectTimer: NodeJS.Timeout | null = null;
-let pingInterval: NodeJS.Timeout | null = null;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let pingInterval: ReturnType<typeof setInterval> | null = null;
 
 const RECONNECT_DELAY = 3000;
 const PING_INTERVAL = 30000;
@@ -30,7 +30,7 @@ export const websocketMiddleware: Middleware = (store) => {
         socket = new WebSocket(`${url}?room=${roomId}&token=${token}`);
         
         socket.onopen = () => {
-          console.log('WebSocket connected');
+          console.debug('WebSocket connected');
           store.dispatch({ type: 'websocket/connected', payload: { roomId } });
           
           // Start ping interval
@@ -97,7 +97,7 @@ export const websocketMiddleware: Middleware = (store) => {
         };
         
         socket.onclose = () => {
-          console.log('WebSocket disconnected');
+          console.debug('WebSocket disconnected');
           store.dispatch({ type: 'websocket/disconnected' });
           
           // Clear ping interval

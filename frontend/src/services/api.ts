@@ -123,6 +123,32 @@ export class ApiService {
     });
   }
 
+  // AI-powered character creation
+  async generateCustomRace(data: {
+    name: string;
+    description: string;
+    desiredTraits?: string;
+    style?: string;
+  }) {
+    return this.request('/characters/custom-races/generate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async generateCustomClass(data: {
+    name: string;
+    description: string;
+    role?: string;
+    playstyle?: string;
+    style?: string;
+  }) {
+    return this.request('/characters/custom-classes/generate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Spell endpoints
   async castSpell(characterId: string, spellData: { spellId: string; level: number }) {
     return this.request<Character>(`/characters/${characterId}/cast-spell`, {

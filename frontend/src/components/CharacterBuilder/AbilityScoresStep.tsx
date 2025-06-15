@@ -3,7 +3,7 @@ import { CharacterData } from './CharacterBuilder';
 
 interface AbilityScoresStepProps {
   characterData: CharacterData;
-  onUpdate: (field: keyof CharacterData, value: any) => void;
+  onUpdate: (field: keyof CharacterData, value: CharacterData[keyof CharacterData]) => void;
   onMultipleUpdate: (updates: Partial<CharacterData>) => void;
   errors: Record<string, string>;
   touched: Record<string, boolean>;

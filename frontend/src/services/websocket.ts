@@ -30,7 +30,7 @@ export class WebSocketService {
   private messageHandlers: Map<number, MessageHandler> = new Map();
   private roomId: string | null = null;
   private user: User | null = null;
-  private reconnectTimer: NodeJS.Timeout | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private isIntentionalDisconnect: boolean = false;
   private maxReconnectAttempts: number = 10;
   private reconnectAttempts: number = 0;
@@ -78,7 +78,7 @@ export class WebSocketService {
     let isAuthenticated = false;
 
     const handleOpen = () => {
-      console.log('WebSocket connected, waiting for authentication...');
+      console.debug('WebSocket connected, waiting for authentication...');
       this.reconnectAttempts = 0; // Reset on successful connection
     };
 
@@ -104,7 +104,7 @@ export class WebSocketService {
         }
         
         if (message.type === 'auth_success') {
-          console.log('WebSocket authenticated successfully');
+          console.debug('WebSocket authenticated successfully');
           isAuthenticated = true;
           // Now send the join message
           this.sendMessage('join', { 
@@ -139,7 +139,7 @@ export class WebSocketService {
     };
 
     const handleClose = () => {
-      console.log('WebSocket disconnected');
+      console.debug('WebSocket disconnected');
       isAuthenticated = false;
       
       // Only attempt reconnect if it wasn't intentional and under the limit
@@ -169,7 +169,7 @@ export class WebSocketService {
     try {
       const newToken = await authService.refreshAccessToken();
       if (newToken) {
-        console.log('Token refreshed, reconnecting...');
+        console.debug('Token refreshed, reconnecting...');
       } else {
         console.error('Token refresh failed');
         this.disconnect();
@@ -335,11 +335,11 @@ export class WebSocketService {
       30000 // Max 30 seconds
     );
     
-    console.log(`Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
+    console.debug(`Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
     
     this.reconnectTimer = setTimeout(() => {
       if (this.roomId && authService.isAuthenticated() && !this.isIntentionalDisconnect) {
-        console.log('Attempting to reconnect...');
+        console.debug('Attempting to reconnect...');
         this.connect(this.roomId);
       }
     }, delay);

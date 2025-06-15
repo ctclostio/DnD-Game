@@ -167,7 +167,9 @@ export const SkillSelectionStep = memo(({
       </div>
 
       {showSkillError && (
-        <div className="error-banner">{errors.selectedSkills}</div>
+        <div className="error-banner" role="alert" aria-live="polite">
+          {errors.selectedSkills}
+        </div>
       )}
 
       <div className="skills-container">

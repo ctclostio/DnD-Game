@@ -4,7 +4,7 @@ import { CustomRaceForm } from './CustomRaceForm';
 
 interface RaceSelectionStepProps {
   characterData: CharacterData;
-  onUpdate: (field: keyof CharacterData, value: any) => void;
+  onUpdate: (field: keyof CharacterData, value: CharacterData[keyof CharacterData]) => void;
   onMultipleUpdate: (updates: Partial<CharacterData>) => void;
   options: CharacterOptions;
   isCustomMode: boolean;
@@ -36,6 +36,8 @@ const RaceCard = memo(({
     onClick={onClick}
     role="button"
     tabIndex={0}
+    aria-pressed={isSelected}
+    aria-label={isCustom ? 'Create custom race' : `Select ${formatRaceName(race)}`}
     onKeyDown={(e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         onClick();
@@ -104,12 +106,13 @@ export const RaceSelectionStep = memo(({
             value={searchTerm}
             onChange={handleSearchChange}
             className="search-input"
+            aria-label="Search available races"
           />
         </div>
       )}
 
       {showRaceError && (
-        <div className="error-banner">{errors.race}</div>
+        <div className="error-banner" role="alert" aria-live="polite">{errors.race}</div>
       )}
 
       <div className="selection-grid race-grid">

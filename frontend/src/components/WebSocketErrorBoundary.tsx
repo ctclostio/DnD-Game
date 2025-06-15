@@ -13,7 +13,7 @@ interface State {
 }
 
 export class WebSocketErrorBoundary extends Component<Props, State> {
-  private reconnectTimer: NodeJS.Timeout | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private maxReconnectAttempts = 3;
 
   constructor(props: Props) {

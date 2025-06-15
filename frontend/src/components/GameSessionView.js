@@ -136,6 +136,7 @@ export class GameSessionView {
         try {
             const session = await this.api.createGameSession(sessionData);
             this.currentSession = session;
+            sessionStorage.setItem('sessionId', session.id);
             this.showGameSession(session, true);
         } catch (error) {
             console.error('Failed to create session:', error);
@@ -150,7 +151,8 @@ export class GameSessionView {
         try {
             const session = await this.api.getGameSession(sessionId);
             this.currentSession = session;
-            
+            sessionStorage.setItem('sessionId', session.id);
+
             // Connect WebSocket
             if (window.ws) {
                 window.ws.connect(sessionId, playerName);
@@ -333,7 +335,7 @@ export class GameSessionView {
 
     async updateSessionStatus(status) {
         // This would update the session status on the server
-        console.log(`Updating session status to: ${status}`);
+        console.debug(`Updating session status to: ${status}`);
         // Implementation would depend on your API
     }
 }

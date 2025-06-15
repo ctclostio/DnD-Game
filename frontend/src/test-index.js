@@ -1,8 +1,8 @@
-console.log("Test index.js loaded!");
+console.debug("Test index.js loaded!");
 
 // Simple test without any complex initialization
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM loaded");
+    console.debug("DOM loaded");
     
     const body = document.body;
     body.innerHTML = `

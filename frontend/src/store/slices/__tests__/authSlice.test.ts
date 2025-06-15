@@ -49,7 +49,7 @@ describe('authSlice', () => {
       // Set up localStorage before requiring the module
       localStorageMock.getItem.mockImplementation((key) => {
         if (key === 'user') return JSON.stringify(savedUser);
-        if (key === 'token') return savedToken;
+        if (key === 'access_token') return savedToken;
         return null;
       });
 
@@ -74,7 +74,7 @@ describe('authSlice', () => {
     const loginCredentials = { username: 'testuser', password: 'password123' };
     const mockResponse = {
       user: { id: '1', username: 'testuser', email: 'test@example.com', role: 'player' as const },
-      token: 'mock-token',
+      access_token: 'mock-token',
     };
 
     it('should handle successful login', async () => {
@@ -84,13 +84,11 @@ describe('authSlice', () => {
 
       const state = store.getState().auth;
       expect(state.user).toEqual(mockResponse.user);
-      expect(state.token).toBe(mockResponse.token);
+      expect(state.token).toBe(mockResponse.access_token);
       expect(state.isLoading).toBe(false);
       expect(state.error).toBeNull();
 
-      // Check localStorage
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('user', JSON.stringify(mockResponse.user));
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('token', mockResponse.token);
+      // Local storage updates are handled inside auth service
     });
 
     it('should handle login pending state', () => {
@@ -139,7 +137,7 @@ describe('authSlice', () => {
     };
     const mockResponse = {
       user: { id: '2', username: 'newuser', email: 'new@example.com', role: 'player' as const },
-      token: 'new-token',
+      access_token: 'new-token',
     };
 
     it('should handle successful registration', async () => {
@@ -149,13 +147,11 @@ describe('authSlice', () => {
 
       const state = store.getState().auth;
       expect(state.user).toEqual(mockResponse.user);
-      expect(state.token).toBe(mockResponse.token);
+      expect(state.token).toBe(mockResponse.access_token);
       expect(state.isLoading).toBe(false);
       expect(state.error).toBeNull();
 
-      // Check localStorage
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('user', JSON.stringify(mockResponse.user));
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('token', mockResponse.token);
+      // Local storage updates are handled inside auth service
     });
 
     it('should handle registration pending state', () => {
@@ -203,7 +199,7 @@ describe('authSlice', () => {
       }));
       (authService.login as jest.Mock).mockResolvedValue({
         user: initialUser,
-        token: 'test-token',
+        access_token: 'test-token',
       });
 
       // Mock logout
@@ -217,7 +213,7 @@ describe('authSlice', () => {
 
       // Check localStorage
       expect(localStorageMock.removeItem).toHaveBeenCalledWith('user');
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('access_token');
     });
 
     it('should call logout service', async () => {
@@ -262,7 +258,7 @@ describe('authSlice', () => {
     it('should handle player role', async () => {
       const playerResponse = {
         user: { id: '1', username: 'player1', email: 'player@example.com', role: 'player' as const },
-        token: 'player-token',
+        access_token: 'player-token',
       };
 
       (authService.login as jest.Mock).mockResolvedValue(playerResponse);
@@ -275,7 +271,7 @@ describe('authSlice', () => {
     it('should handle dm role', async () => {
       const dmResponse = {
         user: { id: '2', username: 'dm1', email: 'dm@example.com', role: 'dm' as const },
-        token: 'dm-token',
+        access_token: 'dm-token',
       };
 
       (authService.login as jest.Mock).mockResolvedValue(dmResponse);
@@ -288,7 +284,7 @@ describe('authSlice', () => {
     it('should handle admin role', async () => {
       const adminResponse = {
         user: { id: '3', username: 'admin1', email: 'admin@example.com', role: 'admin' as const },
-        token: 'admin-token',
+        access_token: 'admin-token',
       };
 
       (authService.login as jest.Mock).mockResolvedValue(adminResponse);
@@ -303,11 +299,11 @@ describe('authSlice', () => {
     it('should handle multiple login attempts', async () => {
       const response1 = {
         user: { id: '1', username: 'user1', email: 'user1@example.com', role: 'player' as const },
-        token: 'token1',
+        access_token: 'token1',
       };
       const response2 = {
         user: { id: '2', username: 'user2', email: 'user2@example.com', role: 'player' as const },
-        token: 'token2',
+        access_token: 'token2',
       };
 
       (authService.login as jest.Mock)

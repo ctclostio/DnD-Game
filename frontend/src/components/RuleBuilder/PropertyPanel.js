@@ -348,7 +348,7 @@ const PropertyPanel = ({
               <div className="parameter-actions">
                 <button onClick={() => {
                   // Open edit modal
-                  console.log('Edit parameter', param);
+                  console.debug('Edit parameter', param);
                 }}>
                   <FaEdit />
                 </button>

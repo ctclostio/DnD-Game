@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // DMAssistantRepository defines the interface for DM Assistant database operations

@@ -82,7 +82,7 @@ const Register: React.FC = () => {
         <h2>Register for D&D Online</h2>
         
         {(error || validationError) && (
-          <div className="alert alert-error">
+          <div id="register-error" className="alert alert-error" role="alert">
             {error || validationError}
           </div>
         )}
@@ -98,6 +98,7 @@ const Register: React.FC = () => {
               onChange={handleInputChange}
               required
               autoFocus
+              autoComplete="username"
             />
           </div>
 
@@ -110,6 +111,7 @@ const Register: React.FC = () => {
               value={formData.email}
               onChange={handleInputChange}
               required
+              autoComplete="email"
             />
           </div>
 
@@ -123,6 +125,7 @@ const Register: React.FC = () => {
               onChange={handleInputChange}
               required
               minLength={8}
+              autoComplete="new-password"
             />
             {formData.password && passwordErrors.length > 0 && (
               <div className="password-requirements">
@@ -145,6 +148,9 @@ const Register: React.FC = () => {
               value={formData.confirmPassword}
               onChange={handleInputChange}
               required
+              autoComplete="new-password"
+              aria-describedby={validationError ? 'register-error' : undefined}
+              aria-invalid={validationError ? true : undefined}
             />
           </div>
 
