@@ -97,7 +97,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 			NPCsPresent: []uuid.UUID{},
 		}
 
-		mockAI.On("GenerateLocationDescription", ctx, mock.MatchedBy(func(req models.LocationDescriptionRequest) bool {
+		mockAI.On("GenerateLocationDescription", ctx, mock.MatchedBy(func(req *models.LocationDescriptionRequest) bool {
 			return req.LocationType == "dungeon" &&
 				req.LocationName == "The Forgotten Crypt" &&
 				len(req.SpecialFeatures) == 2
@@ -154,7 +154,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 
 		expectedNarration := "Aragorn's blade finds its mark with devastating precision!"
 
-		mockAI.On("GenerateCombatNarration", ctx, mock.MatchedBy(func(req models.CombatNarrationRequest) bool {
+		mockAI.On("GenerateCombatNarration", ctx, mock.MatchedBy(func(req *models.CombatNarrationRequest) bool {
 			return req.AttackerName == "Aragorn" &&
 				req.IsCritical == true &&
 				req.Damage == 15
