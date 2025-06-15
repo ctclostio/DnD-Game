@@ -654,10 +654,11 @@ func (s *SettlementGeneratorService) generateMarketConditions(settlement *models
 	}
 
 	// Random economic conditions
-	if rand.Float32() < 0.1 {
+	economicRoll := rand.Float32()
+	if economicRoll < 0.1 {
 		market.EconomicBoom = true
 		market.CommonGoodsModifier *= 0.9
-	} else if rand.Float32() < 0.1 {
+	} else if economicRoll < 0.2 {
 		market.EconomicDepression = true
 		market.CommonGoodsModifier *= 1.3
 	}

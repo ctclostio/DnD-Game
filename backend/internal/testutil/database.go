@@ -2,12 +2,43 @@ package testutil
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 )
+
+// Regular expression for valid SQL identifiers (table and column names)
+var validSQLIdentifier = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+
+// isValidTableName validates table names to prevent SQL injection
+func isValidTableName(name string) bool {
+	// Whitelist of known table names in the test database
+	validTables := map[string]bool{
+		"users":           true,
+		"refresh_tokens":  true,
+		"game_sessions":   true,
+		"characters":      true,
+		"combat_sessions": true,
+		"combat_logs":     true,
+		"inventories":     true,
+		"items":           true,
+		"factions":        true,
+		"settlements":     true,
+		"cultures":        true,
+		"world_events":    true,
+	}
+	
+	return validTables[name] && validSQLIdentifier.MatchString(name)
+}
+
+// isValidColumnName validates column names to prevent SQL injection
+func isValidColumnName(name string) bool {
+	// Basic validation: must be a valid SQL identifier
+	return validSQLIdentifier.MatchString(name) && len(name) <= 64
+}
 
 // NewMockDB creates a new mock database for testing
 func NewMockDB(t *testing.T) (*sqlx.DB, sqlmock.Sqlmock) {
@@ -274,8 +305,18 @@ func SeedTestItem(t *testing.T, db *sqlx.DB, id, name, itemType string, value in
 }
 
 // AssertRowExists checks if a row exists in a table
+// Uses a whitelist of allowed table and column names to prevent SQL injection
 func AssertRowExists(t *testing.T, db *sqlx.DB, table, column, value string) {
+	// Validate table and column names to prevent SQL injection
+	if !isValidTableName(table) {
+		t.Fatalf("Invalid table name: %s", table)
+	}
+	if !isValidColumnName(column) {
+		t.Fatalf("Invalid column name: %s", column)
+	}
+	
 	var count int
+	// Safe to use fmt.Sprintf after validation
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = $1", table, column)
 	err := db.Get(&count, query, value)
 	require.NoError(t, err)
@@ -283,8 +324,18 @@ func AssertRowExists(t *testing.T, db *sqlx.DB, table, column, value string) {
 }
 
 // AssertRowNotExists checks if a row does not exist in a table
+// Uses a whitelist of allowed table and column names to prevent SQL injection
 func AssertRowNotExists(t *testing.T, db *sqlx.DB, table, column, value string) {
+	// Validate table and column names to prevent SQL injection
+	if !isValidTableName(table) {
+		t.Fatalf("Invalid table name: %s", table)
+	}
+	if !isValidColumnName(column) {
+		t.Fatalf("Invalid column name: %s", column)
+	}
+	
 	var count int
+	// Safe to use fmt.Sprintf after validation
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = $1", table, column)
 	err := db.Get(&count, query, value)
 	require.NoError(t, err)

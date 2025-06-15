@@ -433,10 +433,15 @@ func (fps *FactionPersonalityService) getRelevantMemories(personality *models.Fa
 		}
 
 		// Check if event type is relevant
-		if decision.DecisionType == constants.ApproachDiplomatic && memory.EventType == "faction_interaction" {
-			isRelevant = true
-		} else if decision.DecisionType == constants.ApproachMilitary && memory.EventType == "military_conflict" {
-			isRelevant = true
+		switch decision.DecisionType {
+		case constants.ApproachDiplomatic:
+			if memory.EventType == "faction_interaction" {
+				isRelevant = true
+			}
+		case constants.ApproachMilitary:
+			if memory.EventType == "military_conflict" {
+				isRelevant = true
+			}
 		}
 
 		if isRelevant {

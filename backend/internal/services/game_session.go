@@ -128,7 +128,7 @@ func (s *GameSessionService) UpdateSession(ctx context.Context, session *models.
 	// Check if session exists
 	existing, err := s.repo.GetByID(ctx, session.ID)
 	if err != nil {
-		return fmt.Errorf("session not found: %w", err)
+		return fmt.Errorf("failed to retrieve session %s for update: %w", session.ID, err)
 	}
 
 	// Preserve DM user ID and created at
@@ -156,7 +156,7 @@ func (s *GameSessionService) JoinSession(ctx context.Context, sessionID, userID 
 	// Check if session exists and is active
 	session, err := s.repo.GetByID(ctx, sessionID)
 	if err != nil {
-		return fmt.Errorf("session not found: %w", err)
+		return fmt.Errorf("failed to retrieve session %s for joining: %w", sessionID, err)
 	}
 
 	// Security check: If a session is marked active but flagged inactive,
@@ -228,7 +228,7 @@ func (s *GameSessionService) LeaveSession(ctx context.Context, sessionID, userID
 	// Check if session exists
 	session, err := s.repo.GetByID(ctx, sessionID)
 	if err != nil {
-		return fmt.Errorf("session not found: %w", err)
+		return fmt.Errorf("failed to retrieve session %s for leaving: %w", sessionID, err)
 	}
 
 	// Don't allow DM to leave
@@ -266,7 +266,7 @@ func (s *GameSessionService) ValidateUserInSession(ctx context.Context, sessionI
 	// Also check if user is the DM
 	session, err := s.repo.GetByID(ctx, sessionID)
 	if err != nil {
-		return fmt.Errorf("session not found: %w", err)
+		return fmt.Errorf("failed to retrieve session %s for user validation: %w", sessionID, err)
 	}
 
 	if session.DMID == userID {
@@ -299,7 +299,7 @@ func (s *GameSessionService) KickPlayer(ctx context.Context, sessionID, playerID
 	// Check if session exists
 	session, err := s.repo.GetByID(ctx, sessionID)
 	if err != nil {
-		return fmt.Errorf("session not found: %w", err)
+		return fmt.Errorf("failed to retrieve session %s for kicking player: %w", sessionID, err)
 	}
 
 	// Security check: Cannot kick the DM

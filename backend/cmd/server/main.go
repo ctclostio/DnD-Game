@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -43,7 +44,8 @@ func main() {
 	log, err := logger.NewV2(&logConfig)
 	if err != nil {
 		// Fallback to standard library if logger fails
-		panic("Failed to initialize logger: " + err.Error())
+		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
+		os.Exit(1)
 	}
 
 	// Log startup
