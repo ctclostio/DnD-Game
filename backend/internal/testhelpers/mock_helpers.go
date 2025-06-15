@@ -19,15 +19,15 @@ type MockCall struct {
 func SetupMockCalls(mockObj *mock.Mock, calls []MockCall) {
 	for _, call := range calls {
 		mockCall := mockObj.On(call.Method, call.Arguments...)
-		
+
 		if call.Returns != nil {
 			mockCall.Return(call.Returns...)
 		}
-		
+
 		if call.RunFunc != nil {
 			mockCall.Run(call.RunFunc)
 		}
-		
+
 		if call.Times > 0 {
 			mockCall.Times(call.Times)
 		}
@@ -37,7 +37,7 @@ func SetupMockCalls(mockObj *mock.Mock, calls []MockCall) {
 // AssertMockExpectations asserts all expectations on multiple mocks
 func AssertMockExpectations(t *testing.T, mocks ...interface{}) {
 	t.Helper()
-	
+
 	for _, m := range mocks {
 		if mockObj, ok := m.(interface{ AssertExpectations(t *testing.T) bool }); ok {
 			mockObj.AssertExpectations(t)

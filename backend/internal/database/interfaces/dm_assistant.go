@@ -2,9 +2,9 @@ package interfaces
 
 import (
 	"context"
-	
-	"github.com/google/uuid"
+
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // DMAssistantNPCInterface manages NPC operations for the DM assistant

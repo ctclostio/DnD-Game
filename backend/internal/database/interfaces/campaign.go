@@ -1,8 +1,8 @@
 package interfaces
 
 import (
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // StoryArcInterface manages story arc operations
@@ -43,8 +43,8 @@ type ForeshadowingInterface interface {
 
 // CampaignTimelineInterface manages campaign timeline
 type CampaignTimelineInterface interface {
-	CreateTimelineEvent(event *models.TimelineEvent) error
-	GetTimelineEvents(sessionID uuid.UUID) ([]*models.TimelineEvent, error)
+	CreateTimelineEvent(event *models.CampaignTimeline) error
+	GetTimelineEvents(sessionID uuid.UUID) ([]*models.CampaignTimeline, error)
 	UpdateTimelineEvent(id uuid.UUID, updates map[string]interface{}) error
 }
 

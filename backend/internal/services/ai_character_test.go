@@ -144,7 +144,7 @@ func TestAICharacterService_GenerateCustomCharacter(t *testing.T) {
 			}
 			service := NewAICharacterService(mockLLM)
 
-			character, err := service.GenerateCustomCharacter(tt.request)
+			character, err := service.GenerateCustomCharacter(&tt.request)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -163,10 +163,11 @@ func TestAICharacterService_GenerateCustomCharacter(t *testing.T) {
 func TestAICharacterService_GenerateCustomCharacter_Disabled(t *testing.T) {
 	service := NewAICharacterService(nil)
 
-	_, err := service.GenerateCustomCharacter(CustomCharacterRequest{
+	req := CustomCharacterRequest{
 		Name:    "Test",
 		Concept: "Test concept",
-	})
+	}
+	_, err := service.GenerateCustomCharacter(&req)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "AI character generation is not enabled")
@@ -317,7 +318,7 @@ func TestAICharacterService_GenerateFallbackCharacter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			service := NewAICharacterService(nil) // No LLM provider
 
-			character, err := service.GenerateFallbackCharacter(tt.request)
+			character, err := service.GenerateFallbackCharacter(&tt.request)
 
 			assert.NoError(t, err)
 			assert.NotNil(t, character)

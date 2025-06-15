@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/mock"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/stretchr/testify/mock"
 )
 
 // MockFactory creates mock objects for testing
@@ -402,7 +402,7 @@ func PresetSuccessfulCharacterCreation(
 	userRepo *MockUserRepository,
 	charRepo *MockCharacterRepository,
 	user *models.User,
-	char *models.Character,
+	_ *models.Character,
 ) {
 	userRepo.On("GetByID", user.ID).Return(user, nil)
 	charRepo.On("Create", mock.AnythingOfType("*models.Character")).Return(nil)

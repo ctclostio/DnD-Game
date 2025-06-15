@@ -30,12 +30,12 @@ func NewMockDB(t *testing.T) (*database.DB, sqlmock.Sqlmock, func()) {
 }
 
 // NewTestDB creates an in-memory SQLite database for integration tests
-func NewTestDB(t *testing.T) (*database.DB, func()) {
+func NewTestDB(t *testing.T) (db *database.DB, cleanup func()) {
 	// Create in-memory SQLite database
 	sqlxDB, err := sqlx.Open("sqlite3", ":memory:")
 	require.NoError(t, err)
 
-	db := &database.DB{
+	db = &database.DB{
 		DB: sqlxDB,
 	}
 
@@ -43,7 +43,7 @@ func NewTestDB(t *testing.T) (*database.DB, func()) {
 	err = createTestTables(db)
 	require.NoError(t, err)
 
-	cleanup := func() {
+	cleanup = func() {
 		_ = sqlxDB.Close()
 	}
 

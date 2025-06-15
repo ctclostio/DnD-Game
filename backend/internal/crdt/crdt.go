@@ -1,8 +1,9 @@
 package crdt
 
 import (
-	"github.com/automerge/automerge-go"
 	"sync"
+
+	"github.com/automerge/automerge-go"
 )
 
 var store = struct {

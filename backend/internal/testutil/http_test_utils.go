@@ -228,7 +228,8 @@ type HTTPTestCase struct {
 
 // RunHTTPTestCases runs multiple HTTP test cases
 func RunHTTPTestCases(t *testing.T, router *gin.Engine, cases []HTTPTestCase) {
-	for _, tc := range cases {
+	for i := range cases {
+		tc := &cases[i]
 		t.Run(tc.Name, func(t *testing.T) {
 			if tc.Setup != nil {
 				tc.Setup()

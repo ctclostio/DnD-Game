@@ -19,12 +19,12 @@ type TestDB struct {
 // NewTestDB creates a new test database with sqlmock
 func NewTestDB(t *testing.T) *TestDB {
 	t.Helper()
-	
+
 	mockDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherRegexp))
 	require.NoError(t, err, "Failed to create mock database")
-	
+
 	db := sqlx.NewDb(mockDB, "sqlmock")
-	
+
 	return &TestDB{
 		DB:   db,
 		Mock: mock,
@@ -39,7 +39,7 @@ func (tdb *TestDB) Close() error {
 // AssertExpectationsMet verifies all expectations were met
 func (tdb *TestDB) AssertExpectationsMet(t *testing.T) {
 	t.Helper()
-	
+
 	err := tdb.Mock.ExpectationsWereMet()
 	require.NoError(t, err, "Database expectations were not met")
 }
@@ -94,14 +94,14 @@ type TestTx struct {
 // NewTestTx creates a test transaction
 func NewTestTx(t *testing.T) (*TestTx, *sql.DB) {
 	t.Helper()
-	
+
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	
+
 	mock.ExpectBegin()
 	tx, err := db.Begin()
 	require.NoError(t, err)
-	
+
 	return &TestTx{Tx: tx, Mock: mock}, db
 }
 
@@ -111,11 +111,11 @@ func NewTestTx(t *testing.T) (*TestTx, *sql.DB) {
 func (tdb *TestDB) SetupGetByIDSuccess(table string, columns []string, result interface{}) {
 	query := `SELECT .* FROM ` + table + ` WHERE id = \?`
 	rows := sqlmock.NewRows(columns)
-	
+
 	// Add row data based on result type
 	// This is simplified - you'd expand based on your models
 	rows.AddRow(result)
-	
+
 	tdb.Mock.ExpectQuery(query).WillReturnRows(rows)
 }
 
@@ -163,7 +163,7 @@ func NewTestRepository(t *testing.T) *TestRepository {
 // Cleanup cleans up the test repository
 func (tr *TestRepository) Cleanup(t *testing.T) {
 	t.Helper()
-	
+
 	tr.DB.AssertExpectationsMet(t)
 	err := tr.DB.Close()
 	require.NoError(t, err)
@@ -189,7 +189,7 @@ func CharacterColumns() []string {
 	}
 }
 
-// GameSessionColumns returns standard game session table columns  
+// GameSessionColumns returns standard game session table columns
 func GameSessionColumns() []string {
 	return []string{
 		"id", "name", "description", "dm_id", "status",

@@ -387,8 +387,9 @@ func (ce *CombatEngine) UseAction(combatant *models.Combatant, actionType models
 	case models.ActionTypeMove:
 		// Movement is tracked separately
 
-	default:
-		// Free actions don't consume resources
+	case models.ActionTypeDeathSave, models.ActionTypeConcentration,
+		models.ActionTypeSavingThrow, models.ActionTypeEndTurn, models.ActionTypeCastSpell:
+		// These actions don't consume resources from the action economy
 	}
 
 	return nil

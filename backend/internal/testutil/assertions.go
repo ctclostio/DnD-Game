@@ -125,6 +125,9 @@ func (a *AssertHelpers) AssertInventoryItemValid(item *models.InventoryItem) {
 		a.AssertArmorPropertiesValid(item.Item.Properties)
 	case models.ItemTypeMagic:
 		a.AssertMagicItemPropertiesValid(item.Item.Properties)
+	case models.ItemTypeConsumable, models.ItemTypeTool, models.ItemTypeOther:
+		// These item types may have various properties or none at all
+		// No specific validation required
 	}
 }
 
@@ -178,7 +181,7 @@ func (a *AssertHelpers) AssertSpellSlotsValid(slots []models.SpellSlot) {
 }
 
 // AssertErrorCode asserts an error has the expected code
-func (a *AssertHelpers) AssertErrorCode(err error, expectedCode string) {
+func (a *AssertHelpers) AssertErrorCode(err error, _ string) {
 	require.Error(a.t, err)
 	// This would check against your custom error type
 	// For now, we'll just check the error exists

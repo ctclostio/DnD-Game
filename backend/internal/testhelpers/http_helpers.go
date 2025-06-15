@@ -9,10 +9,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 )
 
 // HTTPTestCase represents a standard HTTP test case structure
@@ -48,15 +48,15 @@ func CreateTestRequest(method, path string, body interface{}) *http.Request {
 // CreateAuthenticatedRequest creates a request with authentication context
 func CreateAuthenticatedRequest(method, path string, body interface{}, userID, role string) *http.Request {
 	req := CreateTestRequest(method, path, body)
-	
+
 	claims := &auth.Claims{
 		UserID:   userID,
 		Username: "testuser",
-		Email:    "test@example.com", 
+		Email:    "test@example.com",
 		Role:     role,
 		Type:     auth.AccessToken,
 	}
-	
+
 	ctx := context.WithValue(req.Context(), auth.UserContextKey, claims)
 	return req.WithContext(ctx)
 }
@@ -72,18 +72,18 @@ func SetPathVars(req *http.Request, vars map[string]string) *http.Request {
 // DecodeResponseBody decodes the response body into a map
 func DecodeResponseBody(t *testing.T, recorder *httptest.ResponseRecorder) map[string]interface{} {
 	t.Helper()
-	
+
 	var result map[string]interface{}
 	err := json.NewDecoder(recorder.Body).Decode(&result)
 	require.NoError(t, err, "Failed to decode response body")
-	
+
 	return result
 }
 
 // DecodeResponseBodyInto decodes the response body into a provided struct
 func DecodeResponseBodyInto(t *testing.T, recorder *httptest.ResponseRecorder, v interface{}) {
 	t.Helper()
-	
+
 	err := json.NewDecoder(recorder.Body).Decode(v)
 	require.NoError(t, err, "Failed to decode response body")
 }
@@ -91,9 +91,9 @@ func DecodeResponseBodyInto(t *testing.T, recorder *httptest.ResponseRecorder, v
 // AssertJSONResponse checks status code and optionally validates response body
 func AssertJSONResponse(t *testing.T, recorder *httptest.ResponseRecorder, expectedStatus int) {
 	t.Helper()
-	
+
 	assert.Equal(t, expectedStatus, recorder.Code, "Unexpected status code")
-	
+
 	if recorder.Body.Len() > 0 {
 		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"),
 			"Expected JSON content type")
@@ -103,9 +103,9 @@ func AssertJSONResponse(t *testing.T, recorder *httptest.ResponseRecorder, expec
 // AssertErrorResponse validates an error response
 func AssertErrorResponse(t *testing.T, recorder *httptest.ResponseRecorder, expectedStatus int, expectedError string) {
 	t.Helper()
-	
+
 	assert.Equal(t, expectedStatus, recorder.Code)
-	
+
 	if expectedError != "" {
 		body := DecodeResponseBody(t, recorder)
 		assert.Contains(t, body["error"], expectedError)
@@ -115,7 +115,7 @@ func AssertErrorResponse(t *testing.T, recorder *httptest.ResponseRecorder, expe
 // ExecuteTestCase runs a complete HTTP test case
 func ExecuteTestCase(t *testing.T, tc HTTPTestCase, handler http.HandlerFunc) {
 	t.Helper()
-	
+
 	// Create request
 	var req *http.Request
 	if tc.UserID != "" {
@@ -123,22 +123,22 @@ func ExecuteTestCase(t *testing.T, tc HTTPTestCase, handler http.HandlerFunc) {
 	} else {
 		req = CreateTestRequest(tc.Method, tc.Path, tc.Body)
 	}
-	
+
 	// Add path variables
 	req = SetPathVars(req, tc.PathVars)
-	
+
 	// Add custom headers
 	for key, value := range tc.Headers {
 		req.Header.Set(key, value)
 	}
-	
+
 	// Execute request
 	recorder := httptest.NewRecorder()
 	handler(recorder, req)
-	
+
 	// Validate response
 	AssertJSONResponse(t, recorder, tc.ExpectedStatus)
-	
+
 	if tc.ExpectedError != "" {
 		AssertErrorResponse(t, recorder, tc.ExpectedStatus, tc.ExpectedError)
 	} else if tc.ValidateBody != nil && recorder.Code < 400 {
@@ -160,14 +160,14 @@ func RunHTTPTestCases(t *testing.T, testCases []HTTPTestCase, handler http.Handl
 func CreateMultipartRequest(method, path string, fields map[string]string, files map[string][]byte) (*http.Request, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	
+
 	// Add fields
 	for key, value := range fields {
 		if err := writer.WriteField(key, value); err != nil {
 			return nil, err
 		}
 	}
-	
+
 	// Add files
 	for fieldname, content := range files {
 		part, err := writer.CreateFormFile(fieldname, "test.file")
@@ -178,13 +178,13 @@ func CreateMultipartRequest(method, path string, fields map[string]string, files
 			return nil, err
 		}
 	}
-	
+
 	if err := writer.Close(); err != nil {
 		return nil, err
 	}
-	
+
 	req := httptest.NewRequest(method, path, body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	
+
 	return req, nil
 }

@@ -1,8 +1,8 @@
 package interfaces
 
 import (
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // CombatAnalyticsInterface handles core combat analytics data
@@ -52,34 +52,38 @@ type CombatActionLogInterface interface {
 
 // CombatHistoryInterface manages combat history and summaries
 type CombatHistoryInterface interface {
-	CreateCombatHistory(history *models.CombatHistory) error
-	GetCombatHistory(combatID uuid.UUID) (*models.CombatHistory, error)
-	GetCombatHistoriesBySession(sessionID uuid.UUID) ([]*models.CombatHistory, error)
+	// NOTE: CombatHistory model does not exist - only CombatSummary
+	// CreateCombatHistory(history *models.CombatHistory) error
+	// GetCombatHistory(combatID uuid.UUID) (*models.CombatHistory, error)
+	// GetCombatHistoriesBySession(sessionID uuid.UUID) ([]*models.CombatHistory, error)
 	CreateCombatSummary(summary *models.CombatSummary) error
 	GetCombatSummary(combatID uuid.UUID) (*models.CombatSummary, error)
 }
 
 // CombatAnimationInterface handles combat animation presets
-type CombatAnimationInterface interface {
-	CreateAnimationPreset(preset *models.AnimationPreset) error
-	GetAnimationPreset(id uuid.UUID) (*models.AnimationPreset, error)
-	GetAnimationPresets() ([]*models.AnimationPreset, error)
-}
+// NOTE: AnimationPreset model does not exist - commenting out until implemented
+// type CombatAnimationInterface interface {
+// 	CreateAnimationPreset(preset *models.AnimationPreset) error
+// 	GetAnimationPreset(id uuid.UUID) (*models.AnimationPreset, error)
+// 	GetAnimationPresets() ([]*models.AnimationPreset, error)
+// }
 
 // CombatStrategyInterface manages AI combat strategies
-type CombatStrategyInterface interface {
-	CreateCombatStrategy(strategy *models.CombatStrategy) error
-	GetCombatStrategy(id uuid.UUID) (*models.CombatStrategy, error)
-	GetCombatStrategiesByType(entityType string) ([]*models.CombatStrategy, error)
-	UpdateCombatStrategy(id uuid.UUID, updates map[string]interface{}) error
-}
+// NOTE: CombatStrategy model does not exist - commenting out until implemented
+// type CombatStrategyInterface interface {
+// 	CreateCombatStrategy(strategy *models.CombatStrategy) error
+// 	GetCombatStrategy(id uuid.UUID) (*models.CombatStrategy, error)
+// 	GetCombatStrategiesByType(entityType string) ([]*models.CombatStrategy, error)
+// 	UpdateCombatStrategy(id uuid.UUID, updates map[string]interface{}) error
+// }
 
 // CombatPredictionInterface handles combat outcome predictions
-type CombatPredictionInterface interface {
-	SaveCombatPrediction(prediction *models.CombatPrediction) error
-	GetCombatPrediction(combatID uuid.UUID) (*models.CombatPrediction, error)
-	UpdatePredictionResult(combatID uuid.UUID, actualOutcome string, actualDuration int) error
-}
+// NOTE: CombatPrediction model does not exist - commenting out until implemented
+// type CombatPredictionInterface interface {
+// 	SaveCombatPrediction(prediction *models.CombatPrediction) error
+// 	GetCombatPrediction(combatID uuid.UUID) (*models.CombatPrediction, error)
+// 	UpdatePredictionResult(combatID uuid.UUID, actualOutcome string, actualDuration int) error
+// }
 
 // LegacyCombatAnalyticsRepository maintains backward compatibility
 // This interface combines all the focused interfaces
@@ -92,7 +96,7 @@ type LegacyCombatAnalyticsRepository interface {
 	InitiativeRuleInterface
 	CombatActionLogInterface
 	CombatHistoryInterface
-	CombatAnimationInterface
-	CombatStrategyInterface
-	CombatPredictionInterface
+	// CombatAnimationInterface // Commented out - model doesn't exist
+	// CombatStrategyInterface  // Commented out - model doesn't exist
+	// CombatPredictionInterface // Commented out - model doesn't exist
 }

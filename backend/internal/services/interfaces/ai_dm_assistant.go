@@ -2,7 +2,7 @@ package interfaces
 
 import (
 	"context"
-	
+
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 

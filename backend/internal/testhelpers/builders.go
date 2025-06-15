@@ -3,8 +3,8 @@ package testhelpers
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/google/uuid"
 )
 
 // CharacterBuilder provides a fluent interface for building test characters
@@ -16,15 +16,15 @@ type CharacterBuilder struct {
 func NewCharacterBuilder() *CharacterBuilder {
 	return &CharacterBuilder{
 		character: &models.Character{
-			ID:        uuid.New().String(),
-			UserID:    uuid.New().String(),
-			Name:      "Test Character",
-			Race:      "Human",
-			Class:     "Fighter",
-			Level:     1,
-			HitPoints: 10,
-			MaxHP:     10,
-			Stats: models.CharacterStats{
+			ID:           uuid.New().String(),
+			UserID:       uuid.New().String(),
+			Name:         "Test Character",
+			Race:         "Human",
+			Class:        "Fighter",
+			Level:        1,
+			HitPoints:    10,
+			MaxHitPoints: 10,
+			Attributes: models.Attributes{
 				Strength:     10,
 				Dexterity:    10,
 				Constitution: 10,
@@ -76,7 +76,7 @@ func (b *CharacterBuilder) WithRace(race string) *CharacterBuilder {
 
 // WithStats sets specific stats
 func (b *CharacterBuilder) WithStats(str, dex, con, intel, wis, cha int) *CharacterBuilder {
-	b.character.Stats = models.CharacterStats{
+	b.character.Attributes = models.Attributes{
 		Strength:     str,
 		Dexterity:    dex,
 		Constitution: con,
@@ -104,9 +104,8 @@ func NewGameSessionBuilder() *GameSessionBuilder {
 			ID:          uuid.New().String(),
 			Name:        "Test Session",
 			Description: "A test game session",
-			DmID:        uuid.New().String(),
-			Status:      "active",
-			Players:     []models.Player{},
+			DMID:        uuid.New().String(),
+			Status:      models.GameStatusActive,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
@@ -121,7 +120,7 @@ func (b *GameSessionBuilder) WithID(id string) *GameSessionBuilder {
 
 // WithDM sets the DM ID
 func (b *GameSessionBuilder) WithDM(dmID string) *GameSessionBuilder {
-	b.session.DmID = dmID
+	b.session.DMID = dmID
 	return b
 }
 
@@ -133,17 +132,14 @@ func (b *GameSessionBuilder) WithName(name string) *GameSessionBuilder {
 
 // WithStatus sets the session status
 func (b *GameSessionBuilder) WithStatus(status string) *GameSessionBuilder {
-	b.session.Status = status
+	b.session.Status = models.GameStatus(status)
 	return b
 }
 
 // WithPlayer adds a player to the session
+// Note: The GameSession model doesn't have a Players field, this would need to be tracked separately
 func (b *GameSessionBuilder) WithPlayer(userID, characterID string) *GameSessionBuilder {
-	b.session.Players = append(b.session.Players, models.Player{
-		UserID:      userID,
-		CharacterID: characterID,
-		JoinedAt:    time.Now(),
-	})
+	// Players are tracked in a separate table, not in the GameSession model
 	return b
 }
 
@@ -163,11 +159,11 @@ func NewCombatBuilder() *CombatBuilder {
 		combat: &models.Combat{
 			ID:            uuid.New().String(),
 			GameSessionID: uuid.New().String(),
-			Status:        "active",
+			IsActive:      true,
 			CurrentTurn:   0,
 			Round:         1,
 			Combatants:    []models.Combatant{},
-			StartedAt:     time.Now(),
+			CreatedAt:     time.Now(),
 			UpdatedAt:     time.Now(),
 		},
 	}
@@ -187,7 +183,7 @@ func (b *CombatBuilder) WithGameSession(sessionID string) *CombatBuilder {
 
 // WithStatus sets the combat status
 func (b *CombatBuilder) WithStatus(status string) *CombatBuilder {
-	b.combat.Status = status
+	b.combat.IsActive = status == "active"
 	return b
 }
 
@@ -195,17 +191,16 @@ func (b *CombatBuilder) WithStatus(status string) *CombatBuilder {
 func (b *CombatBuilder) WithCombatant(name string, initiative int, isPlayer bool) *CombatBuilder {
 	combatantType := models.CombatantTypeNPC
 	if isPlayer {
-		combatantType = models.CombatantTypePlayer
+		combatantType = models.CombatantTypeCharacter
 	}
-	
+
 	b.combat.Combatants = append(b.combat.Combatants, models.Combatant{
 		ID:         uuid.New().String(),
 		Name:       name,
 		Type:       combatantType,
 		Initiative: initiative,
-		HitPoints:  20,
+		HP:         20,
 		MaxHP:      20,
-		Status:     "active",
 	})
 	return b
 }
@@ -226,10 +221,10 @@ func NewItemBuilder() *ItemBuilder {
 		item: &models.Item{
 			ID:          uuid.New().String(),
 			Name:        "Test Item",
-			Type:        "equipment",
-			Rarity:      "common",
+			Type:        models.ItemTypeOther,
+			Rarity:      models.ItemRarityCommon,
 			Description: "A test item",
-			Properties:  map[string]interface{}{},
+			Properties:  models.ItemProperties{},
 			CreatedAt:   time.Now(),
 		},
 	}
@@ -248,19 +243,22 @@ func (b *ItemBuilder) WithName(name string) *ItemBuilder {
 }
 
 // WithType sets the item type
-func (b *ItemBuilder) WithType(itemType string) *ItemBuilder {
+func (b *ItemBuilder) WithType(itemType models.ItemType) *ItemBuilder {
 	b.item.Type = itemType
 	return b
 }
 
 // WithRarity sets the item rarity
-func (b *ItemBuilder) WithRarity(rarity string) *ItemBuilder {
+func (b *ItemBuilder) WithRarity(rarity models.ItemRarity) *ItemBuilder {
 	b.item.Rarity = rarity
 	return b
 }
 
 // WithProperty adds a property to the item
 func (b *ItemBuilder) WithProperty(key string, value interface{}) *ItemBuilder {
+	if b.item.Properties == nil {
+		b.item.Properties = make(models.ItemProperties)
+	}
 	b.item.Properties[key] = value
 	return b
 }

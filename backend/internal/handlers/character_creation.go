@@ -206,14 +206,14 @@ func (h *CharacterCreationHandler) CreateCustomCharacter(w http.ResponseWriter, 
 
 	// Try AI generation first if enabled
 	if h.aiCharService.IsEnabled() {
-		character, err = h.aiCharService.GenerateCustomCharacter(req)
+		character, err = h.aiCharService.GenerateCustomCharacter(&req)
 		if err != nil {
 			// Fall back to basic generation
-			character, err = h.aiCharService.GenerateFallbackCharacter(req)
+			character, err = h.aiCharService.GenerateFallbackCharacter(&req)
 		}
 	} else {
 		// Use fallback if AI is not enabled
-		character, err = h.aiCharService.GenerateFallbackCharacter(req)
+		character, err = h.aiCharService.GenerateFallbackCharacter(&req)
 	}
 
 	if err != nil {

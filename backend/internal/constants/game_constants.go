@@ -51,12 +51,12 @@ const (
 
 // Terrain and climate types
 const (
-	TerrainSwamp    = "swamp"
-	TerrainDesert   = "desert"
-	TerrainCoastal  = "coastal"
-	TerrainOutdoor  = "outdoor"
-	ClimateCold     = "cold"
-	ClimateArid     = "arid"
+	TerrainSwamp   = "swamp"
+	TerrainDesert  = "desert"
+	TerrainCoastal = "coastal"
+	TerrainOutdoor = "outdoor"
+	ClimateCold    = "cold"
+	ClimateArid    = "arid"
 	// TerrainMountainous, TerrainForest, ClimateTropical already defined
 )
 
@@ -67,12 +67,12 @@ const (
 
 // Political/Social types
 const (
-	ApproachDiplomatic = "diplomatic"
-	ApproachMilitary   = "military"
-	ActionDiplomacy    = "diplomacy"
-	ActionTrade        = "trade"
+	ApproachDiplomatic    = "diplomatic"
+	ApproachMilitary      = "military"
+	ActionDiplomacy       = "diplomacy"
+	ActionTrade           = "trade"
 	AspectSocialStructure = "social_structure"
-	AspectCustoms        = "customs"
+	AspectCustoms         = "customs"
 )
 
 // Additional combat outcomes

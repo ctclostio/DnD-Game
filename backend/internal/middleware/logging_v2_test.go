@@ -81,7 +81,7 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create request
-			req := httptest.NewRequest("GET", "/test", nil)
+			req := httptest.NewRequest("GET", "/test", http.NoBody)
 			if tt.requestID != "" {
 				req.Header.Set("X-Request-ID", tt.requestID)
 			}
@@ -124,7 +124,7 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 
 func TestRequestContextMiddleware(t *testing.T) {
 	// Create test handler that checks context
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		// Context should be enriched by middleware
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("OK"))

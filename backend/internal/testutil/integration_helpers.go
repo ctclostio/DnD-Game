@@ -43,7 +43,7 @@ type IntegrationTestOptions struct {
 }
 
 // SetupIntegrationTest creates a complete test environment
-func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*IntegrationTestContext, func()) {
+func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (ctx *IntegrationTestContext, cleanup func()) {
 	var options IntegrationTestOptions
 	if len(opts) > 0 {
 		options = opts[0]
@@ -157,7 +157,7 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (*Integr
 		})
 	}
 
-	cleanup := func() {
+	cleanup = func() {
 		_ = sqlxDB.Close()
 	}
 
@@ -253,7 +253,7 @@ func (ctx *IntegrationTestContext) AssertErrorResponse(w *httptest.ResponseRecor
 }
 
 // CreateTestUser creates a test user and returns the user ID
-func (ctx *IntegrationTestContext) CreateTestUser(username, email, password string) string {
+func (ctx *IntegrationTestContext) CreateTestUser(username, email, _ string) string {
 	userID := "user-" + username
 	hashedPassword := "$2a$10$test-hash" // Mock hash for testing
 	query := `INSERT INTO users (id, username, email, password_hash, role) VALUES (?, ?, ?, ?, ?)`

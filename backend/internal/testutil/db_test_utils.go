@@ -273,7 +273,7 @@ func LoadTestFixtures() *DBFixtures {
 }
 
 // SeedTestData helps seed test data into mock expectations
-func SeedTestData(mock sqlmock.Sqlmock, fixtures *DBFixtures) {
+func SeedTestData(_ sqlmock.Sqlmock, _ *DBFixtures) {
 	// This can be extended to automatically set up common expectations
 	// based on the fixtures provided
 }

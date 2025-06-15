@@ -4,21 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/google/uuid"
 )
 
 // CreateTestClaims creates test JWT claims with sensible defaults
 func CreateTestClaims(userID, username, email, role string) *auth.Claims {
-	return &auth.Claims{
-		UserID:   userID,
-		Username: username,
-		Email:    email,
-		Role:     role,
-		Type:     auth.AccessToken,
-		IssuedAt: time.Now().Unix(),
-		ExpireAt: time.Now().Add(time.Hour).Unix(),
-	}
+	return auth.NewClaims(userID, username, email, role, auth.AccessToken, time.Hour)
 }
 
 // CreateAuthContext creates a context with authentication claims
@@ -61,14 +53,14 @@ func NewTestUser(role string) *TestUser {
 	userID := uuid.New().String()
 	username := "testuser_" + userID[:8]
 	email := username + "@example.com"
-	
+
 	user := &TestUser{
 		ID:       userID,
 		Username: username,
 		Email:    email,
 		Role:     role,
 	}
-	
+
 	user.Claims = CreateTestClaims(userID, username, email, role)
 	return user
 }
