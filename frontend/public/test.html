@@ -24,7 +24,9 @@
             
         // Check if auth is required
         results.innerHTML += `<p>LocalStorage auth token: ${localStorage.getItem('access_token') || 'none'}</p>`;
-        results.innerHTML += `<p>Current URL: ${window.location.href}</p>`;
+        const urlParagraph = document.createElement('p');
+        urlParagraph.textContent = `Current URL: ${window.location.href}`;
+        results.appendChild(urlParagraph);
     </script>
 </body>
 </html>
