@@ -216,7 +216,7 @@ func (h *EmergentWorldHandlers) MakeFactionDecision(w http.ResponseWriter, r *ht
 		return
 	}
 
-	result, err := h.factionPersonality.MakeFactionDecision(r.Context(), factionID, decision)
+	result, err := h.factionPersonality.MakeFactionDecision(r.Context(), factionID, &decision)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return

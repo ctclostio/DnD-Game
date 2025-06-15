@@ -346,8 +346,8 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 		worldState := h.buildWorldState(ctx, action.SessionID)
 		consequences, err := h.narrativeEngine.ConsequenceEngine.CalculateConsequences(ctx, action, worldState)
 		if err == nil {
-			for _, consequence := range consequences {
-				_ = h.narrativeRepo.CreateConsequenceEvent(&consequence)
+			for i := range consequences {
+				_ = h.narrativeRepo.CreateConsequenceEvent(&consequences[i])
 			}
 			action.PotentialConsequences = len(consequences)
 			_ = h.narrativeRepo.UpdatePlayerAction(&action)
@@ -506,11 +506,11 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 	// Generate perspectives asynchronously
 	go func() {
 		ctx := r.Context()
-		sources := h.getRelevantPerspectiveSources(event)
-		perspectives, err := h.narrativeEngine.PerspectiveGen.GenerateMultiplePerspectives(ctx, event, sources)
+		sources := h.getRelevantPerspectiveSources(&event)
+		perspectives, err := h.narrativeEngine.PerspectiveGen.GenerateMultiplePerspectives(ctx, &event, sources)
 		if err == nil {
-			for _, perspective := range perspectives {
-				_ = h.narrativeRepo.CreatePerspectiveNarrative(&perspective)
+			for i := range perspectives {
+				_ = h.narrativeRepo.CreatePerspectiveNarrative(&perspectives[i])
 			}
 		}
 	}()
@@ -598,7 +598,7 @@ func (h *NarrativeHandlers) PersonalizeEvent(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Generate personalized narrative
-	narrative, err := h.narrativeEngine.GeneratePersonalizedNarrative(r.Context(), *event, profile, backstory)
+	narrative, err := h.narrativeEngine.GeneratePersonalizedNarrative(r.Context(), event, profile, backstory)
 	if err != nil {
 		http.Error(w, "Failed to personalize event", http.StatusInternalServerError)
 		return
@@ -671,7 +671,7 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 	}
 
 	// Generate narrative
-	narrative, err := h.narrativeEngine.GeneratePersonalizedNarrative(r.Context(), event, profile, backstory)
+	narrative, err := h.narrativeEngine.GeneratePersonalizedNarrative(r.Context(), &event, profile, backstory)
 	if err != nil {
 		http.Error(w, "Failed to generate story", http.StatusInternalServerError)
 		return
@@ -727,15 +727,15 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 	}
 
 	// Generate perspectives
-	perspectives, err := h.narrativeEngine.PerspectiveGen.GenerateMultiplePerspectives(r.Context(), *event, request.Sources)
+	perspectives, err := h.narrativeEngine.PerspectiveGen.GenerateMultiplePerspectives(r.Context(), event, request.Sources)
 	if err != nil {
 		http.Error(w, "Failed to generate perspectives", http.StatusInternalServerError)
 		return
 	}
 
 	// Save perspectives
-	for _, perspective := range perspectives {
-		if err := h.narrativeRepo.CreatePerspectiveNarrative(&perspective); err != nil {
+	for i := range perspectives {
+		if err := h.narrativeRepo.CreatePerspectiveNarrative(&perspectives[i]); err != nil {
 			continue
 		}
 	}
@@ -900,7 +900,10 @@ func (h *NarrativeHandlers) buildWorldState(ctx context.Context, sessionID strin
 	return worldState
 }
 
-func (h *NarrativeHandlers) getRelevantPerspectiveSources(event models.NarrativeEvent) []models.PerspectiveSource {
+func (h *NarrativeHandlers) getRelevantPerspectiveSources(event *models.NarrativeEvent) []models.PerspectiveSource {
+	if event == nil {
+		return []models.PerspectiveSource{}
+	}
 	// Get relevant NPCs, factions, etc. that might have perspectives
 	sources := []models.PerspectiveSource{}
 

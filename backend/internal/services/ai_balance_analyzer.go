@@ -393,7 +393,8 @@ func (ba *AIBalanceAnalyzer) calculateResourceCost(template *models.RuleTemplate
 	cost := 0.0
 
 	// Check for spell slot usage
-	for _, param := range template.Parameters {
+	for i := range template.Parameters {
+		param := &template.Parameters[i]
 		if param.Name == "spell_slot_level" {
 			if level, ok := param.DefaultValue.(float64); ok {
 				cost += level * 0.2 // Each spell level adds 0.2 to cost
@@ -607,8 +608,8 @@ func (ba *AIBalanceAnalyzer) calculateUniqueness(template *models.RuleTemplate) 
 }
 
 func (ba *AIBalanceAnalyzer) requiresConcentration(template *models.RuleTemplate) bool {
-	for _, param := range template.Parameters {
-		if param.Name == "concentration" {
+	for i := range template.Parameters {
+		if template.Parameters[i].Name == "concentration" {
 			return true
 		}
 	}
@@ -639,7 +640,8 @@ func (ba *AIBalanceAnalyzer) grantsExtraActions(template *models.RuleTemplate) b
 
 func (ba *AIBalanceAnalyzer) isStackable(template *models.RuleTemplate) bool {
 	// Check if effects can stack
-	for _, param := range template.Parameters {
+	for i := range template.Parameters {
+		param := &template.Parameters[i]
 		if param.Name == "stacking" && param.DefaultValue == false {
 			return false
 		}

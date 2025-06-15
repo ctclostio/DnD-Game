@@ -12,8 +12,8 @@ import (
 
 // LLMProvider defines the interface for Large Language Model providers
 type LLMProvider interface {
-	GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error)
-	GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error)
+	GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error)
+	GenerateContent(ctx context.Context, prompt, systemPrompt string) (string, error)
 }
 
 // AIConfig holds configuration for AI services
@@ -46,7 +46,7 @@ type OpenAIProvider struct {
 }
 
 // NewOpenAIProvider creates a new OpenAI LLM provider
-func NewOpenAIProvider(apiKey string, model string) *OpenAIProvider {
+func NewOpenAIProvider(apiKey, model string) *OpenAIProvider {
 	return &OpenAIProvider{
 		apiKey: apiKey,
 		model:  model,
@@ -57,7 +57,7 @@ func NewOpenAIProvider(apiKey string, model string) *OpenAIProvider {
 }
 
 // GenerateCompletion sends a request to OpenAI and returns the completion
-func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	requestBody := map[string]interface{}{
 		"model": p.model,
 		"messages": []map[string]string{
@@ -113,7 +113,7 @@ func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, prompt string, 
 }
 
 // GenerateContent is an alias for GenerateCompletion
-func (p *OpenAIProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (p *OpenAIProvider) GenerateContent(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	return p.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 
@@ -125,7 +125,7 @@ type AnthropicProvider struct {
 }
 
 // NewAnthropicProvider creates a new Anthropic LLM provider
-func NewAnthropicProvider(apiKey string, model string) *AnthropicProvider {
+func NewAnthropicProvider(apiKey, model string) *AnthropicProvider {
 	return &AnthropicProvider{
 		apiKey: apiKey,
 		model:  model,
@@ -136,7 +136,7 @@ func NewAnthropicProvider(apiKey string, model string) *AnthropicProvider {
 }
 
 // GenerateCompletion sends a request to Anthropic and returns the completion
-func (p *AnthropicProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (p *AnthropicProvider) GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	requestBody := map[string]interface{}{
 		"model":      p.model,
 		"max_tokens": 2000,
@@ -190,7 +190,7 @@ func (p *AnthropicProvider) GenerateCompletion(ctx context.Context, prompt strin
 }
 
 // GenerateContent is an alias for GenerateCompletion
-func (p *AnthropicProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (p *AnthropicProvider) GenerateContent(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	return p.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 
@@ -202,7 +202,7 @@ type OpenRouterProvider struct {
 }
 
 // NewOpenRouterProvider creates a new OpenRouter LLM provider
-func NewOpenRouterProvider(apiKey string, model string) *OpenRouterProvider {
+func NewOpenRouterProvider(apiKey, model string) *OpenRouterProvider {
 	return &OpenRouterProvider{
 		apiKey: apiKey,
 		model:  model,
@@ -213,7 +213,7 @@ func NewOpenRouterProvider(apiKey string, model string) *OpenRouterProvider {
 }
 
 // GenerateCompletion sends a request to OpenRouter and returns the completion
-func (p *OpenRouterProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (p *OpenRouterProvider) GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	requestBody := map[string]interface{}{
 		"model": p.model,
 		"messages": []map[string]string{
@@ -270,7 +270,7 @@ func (p *OpenRouterProvider) GenerateCompletion(ctx context.Context, prompt stri
 }
 
 // GenerateContent is an alias for GenerateCompletion
-func (p *OpenRouterProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (p *OpenRouterProvider) GenerateContent(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	return p.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 
@@ -281,7 +281,7 @@ type MockLLMProvider struct {
 }
 
 // GenerateCompletion returns a mock response
-func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	if m.Error != nil {
 		return "", m.Error
 	}
@@ -316,7 +316,7 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string,
 }
 
 // GenerateContent is an alias for GenerateCompletion
-func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	return m.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 

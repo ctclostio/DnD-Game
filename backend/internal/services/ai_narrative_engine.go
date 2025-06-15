@@ -141,7 +141,10 @@ Provide analysis in JSON format with:
 }
 
 // GeneratePersonalizedNarrative creates a narrative tailored to a specific player
-func (ne *NarrativeEngine) GeneratePersonalizedNarrative(ctx context.Context, baseEvent models.NarrativeEvent, profile *models.NarrativeProfile, backstory []models.BackstoryElement) (*models.PersonalizedNarrative, error) {
+func (ne *NarrativeEngine) GeneratePersonalizedNarrative(ctx context.Context, baseEvent *models.NarrativeEvent, profile *models.NarrativeProfile, backstory []models.BackstoryElement) (*models.PersonalizedNarrative, error) {
+	if baseEvent == nil {
+		return nil, fmt.Errorf("base event cannot be nil")
+	}
 	if !ne.cfg.AI.Enabled {
 		// Return basic narrative without personalization
 		return &models.PersonalizedNarrative{
@@ -358,7 +361,8 @@ Provide consequences in JSON format as an array of:
 
 	// Build consequence events
 	consequences := make([]models.ConsequenceEvent, 0, len(consequenceData))
-	for _, data := range consequenceData {
+	for i := range consequenceData {
+		data := &consequenceData[i]
 		consequence := models.ConsequenceEvent{
 			ID:              uuid.New().String(),
 			TriggerActionID: action.ID,
@@ -412,7 +416,10 @@ Provide consequences in JSON format as an array of:
 }
 
 // GenerateMultiplePerspectives creates different viewpoints of the same event
-func (pg *PerspectiveGenerator) GenerateMultiplePerspectives(ctx context.Context, event models.NarrativeEvent, sources []models.PerspectiveSource) ([]models.PerspectiveNarrative, error) {
+func (pg *PerspectiveGenerator) GenerateMultiplePerspectives(ctx context.Context, event *models.NarrativeEvent, sources []models.PerspectiveSource) ([]models.PerspectiveNarrative, error) {
+	if event == nil {
+		return nil, fmt.Errorf("event cannot be nil")
+	}
 	if !pg.cfg.AI.Enabled {
 		// Return single neutral perspective without AI
 		return []models.PerspectiveNarrative{{
@@ -537,11 +544,15 @@ Provide the perspective in JSON format:
 
 // Helper functions
 
-func (ne *NarrativeEngine) selectRelevantBackstory(backstory []models.BackstoryElement, event models.NarrativeEvent) []models.BackstoryElement {
+func (ne *NarrativeEngine) selectRelevantBackstory(backstory []models.BackstoryElement, event *models.NarrativeEvent) []models.BackstoryElement {
+	if event == nil {
+		return []models.BackstoryElement{}
+	}
 	// Select up to 3 most relevant backstory elements based on tags and type
 	relevant := make([]models.BackstoryElement, 0)
 
-	for _, element := range backstory {
+	for i := range backstory {
+		element := &backstory[i]
 		if element.Used && element.UsageCount > 2 {
 			continue // Don't overuse elements
 		}
@@ -560,7 +571,7 @@ func (ne *NarrativeEngine) selectRelevantBackstory(backstory []models.BackstoryE
 
 		if relevanceScore > 0 {
 			element.Weight = relevanceScore
-			relevant = append(relevant, element)
+			relevant = append(relevant, *element)
 		}
 	}
 
@@ -652,7 +663,8 @@ func formatBackstoryElements(elements []models.BackstoryElement) string {
 	}
 
 	formatted := make([]string, 0, 10)
-	for _, element := range elements {
+	for i := range elements {
+		element := &elements[i]
 		formatted = append(formatted, fmt.Sprintf("- [%s] %s (Weight: %.2f)", element.Type, element.Content, element.Weight))
 	}
 
@@ -665,7 +677,10 @@ func formatWorldState(state map[string]interface{}) string {
 	return string(formatted)
 }
 
-func extractEventTags(event models.NarrativeEvent) []string {
+func extractEventTags(event *models.NarrativeEvent) []string {
+	if event == nil {
+		return []string{}
+	}
 	// Extract relevant tags from event for matching
 	tags := []string{event.Type}
 	tags = append(tags, strings.Fields(event.Name)...)

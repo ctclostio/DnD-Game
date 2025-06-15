@@ -69,7 +69,7 @@ func (h *Handlers) GenerateEncounter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate encounter
-	encounter, err := h.encounterService.GenerateEncounter(r.Context(), encounterReq, req.GameSessionID, userID)
+	encounter, err := h.encounterService.GenerateEncounter(r.Context(), &encounterReq, req.GameSessionID, userID)
 	if err != nil {
 		response.InternalServerError(w, r, err)
 		return

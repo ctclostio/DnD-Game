@@ -300,7 +300,7 @@ func (s *DMAssistantService) getCombatNarrationType(req *models.CombatNarrationR
 }
 
 // CreateNPC generates and saves a new NPC
-func (s *DMAssistantService) CreateNPC(ctx context.Context, sessionID uuid.UUID, userID uuid.UUID, role string, context map[string]interface{}) (*models.AINPC, error) {
+func (s *DMAssistantService) CreateNPC(ctx context.Context, sessionID, userID uuid.UUID, role string, context map[string]interface{}) (*models.AINPC, error) {
 	npc, err := s.aiAssistant.GenerateNPC(ctx, role, context)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate NPC: %w", err)
@@ -319,7 +319,7 @@ func (s *DMAssistantService) CreateNPC(ctx context.Context, sessionID uuid.UUID,
 }
 
 // UpdateNPCDialog adds new dialog to an NPC's history
-func (s *DMAssistantService) UpdateNPCDialog(ctx context.Context, npcID uuid.UUID, dialog string, context string) error {
+func (s *DMAssistantService) UpdateNPCDialog(ctx context.Context, npcID uuid.UUID, dialog, context string) error {
 	entry := models.DialogEntry{
 		Context:   context,
 		Dialog:    dialog,

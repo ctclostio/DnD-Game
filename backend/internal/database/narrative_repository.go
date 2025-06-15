@@ -605,7 +605,7 @@ func (r *NarrativeRepository) GetActiveMemories(characterID string, limit int) (
 }
 
 // UpdateConsequenceStatus updates the status of a consequence event
-func (r *NarrativeRepository) UpdateConsequenceStatus(consequenceID string, status string, triggerTime *time.Time) error {
+func (r *NarrativeRepository) UpdateConsequenceStatus(consequenceID, status string, triggerTime *time.Time) error {
 	query := `
 		UPDATE consequence_events
 		SET status = ?, actual_trigger_time = ?

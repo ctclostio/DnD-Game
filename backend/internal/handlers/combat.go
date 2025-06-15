@@ -314,9 +314,9 @@ func (h *Handlers) ApplyDamage(w http.ResponseWriter, r *http.Request) {
 
 	// Find combatant name
 	var combatantName string
-	for _, c := range updatedCombat.Combatants {
-		if c.ID == combatantID {
-			combatantName = c.Name
+	for i := range updatedCombat.Combatants {
+		if updatedCombat.Combatants[i].ID == combatantID {
+			combatantName = updatedCombat.Combatants[i].Name
 			break
 		}
 	}
@@ -373,9 +373,9 @@ func (h *Handlers) HealCombatant(w http.ResponseWriter, r *http.Request) {
 
 	// Find combatant name
 	var combatantName string
-	for _, c := range updatedCombat.Combatants {
-		if c.ID == combatantID {
-			combatantName = c.Name
+	for i := range updatedCombat.Combatants {
+		if updatedCombat.Combatants[i].ID == combatantID {
+			combatantName = updatedCombat.Combatants[i].Name
 			break
 		}
 	}

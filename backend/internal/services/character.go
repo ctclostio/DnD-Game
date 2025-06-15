@@ -157,7 +157,7 @@ func CalculateCarryCapacity(strength int) float64 {
 }
 
 // CalculateHitPoints calculates hit points based on class and constitution
-func (s *CharacterService) CalculateHitPoints(class string, level int, constitution int) int {
+func (s *CharacterService) CalculateHitPoints(class string, level, constitution int) int {
 	// Base hit points by class (simplified)
 	baseHP := map[string]int{
 		"fighter":   10,
@@ -314,7 +314,7 @@ func (s *CharacterService) UseSpellSlot(ctx context.Context, characterID string,
 }
 
 // RestoreSpellSlots restores spell slots (short or long rest)
-func (s *CharacterService) RestoreSpellSlots(ctx context.Context, characterID string, restType string) error {
+func (s *CharacterService) RestoreSpellSlots(ctx context.Context, characterID, restType string) error {
 	char, err := s.GetCharacterByID(ctx, characterID)
 	if err != nil {
 		return err

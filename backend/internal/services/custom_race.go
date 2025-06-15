@@ -107,7 +107,7 @@ func (s *CustomRaceService) GetPublicCustomRaces(ctx context.Context) ([]*models
 }
 
 // ApproveCustomRace approves a custom race (DM only)
-func (s *CustomRaceService) ApproveCustomRace(ctx context.Context, raceID uuid.UUID, approverID uuid.UUID, notes string) error {
+func (s *CustomRaceService) ApproveCustomRace(ctx context.Context, raceID, approverID uuid.UUID, notes string) error {
 	race, err := s.repo.GetByID(ctx, raceID)
 	if err != nil {
 		return fmt.Errorf("failed to get custom race: %w", err)
@@ -125,7 +125,7 @@ func (s *CustomRaceService) ApproveCustomRace(ctx context.Context, raceID uuid.U
 }
 
 // RejectCustomRace rejects a custom race (DM only)
-func (s *CustomRaceService) RejectCustomRace(ctx context.Context, raceID uuid.UUID, approverID uuid.UUID, notes string) error {
+func (s *CustomRaceService) RejectCustomRace(ctx context.Context, raceID, approverID uuid.UUID, notes string) error {
 	race, err := s.repo.GetByID(ctx, raceID)
 	if err != nil {
 		return fmt.Errorf("failed to get custom race: %w", err)
@@ -143,7 +143,7 @@ func (s *CustomRaceService) RejectCustomRace(ctx context.Context, raceID uuid.UU
 }
 
 // RequestRevision requests changes to a custom race (DM only)
-func (s *CustomRaceService) RequestRevision(ctx context.Context, raceID uuid.UUID, approverID uuid.UUID, notes string) error {
+func (s *CustomRaceService) RequestRevision(ctx context.Context, raceID, approverID uuid.UUID, notes string) error {
 	race, err := s.repo.GetByID(ctx, raceID)
 	if err != nil {
 		return fmt.Errorf("failed to get custom race: %w", err)
@@ -161,7 +161,7 @@ func (s *CustomRaceService) RequestRevision(ctx context.Context, raceID uuid.UUI
 }
 
 // MakePublic makes a custom race available to all players
-func (s *CustomRaceService) MakePublic(ctx context.Context, raceID uuid.UUID, userID uuid.UUID) error {
+func (s *CustomRaceService) MakePublic(ctx context.Context, raceID, userID uuid.UUID) error {
 	race, err := s.repo.GetByID(ctx, raceID)
 	if err != nil {
 		return fmt.Errorf("failed to get custom race: %w", err)
@@ -192,7 +192,7 @@ func (s *CustomRaceService) IncrementUsage(ctx context.Context, raceID uuid.UUID
 }
 
 // ValidateCustomRaceForCharacter validates if a custom race can be used for a character
-func (s *CustomRaceService) ValidateCustomRaceForCharacter(ctx context.Context, raceID uuid.UUID, userID uuid.UUID) error {
+func (s *CustomRaceService) ValidateCustomRaceForCharacter(ctx context.Context, raceID, userID uuid.UUID) error {
 	race, err := s.repo.GetByID(ctx, raceID)
 	if err != nil {
 		return fmt.Errorf("custom race not found")

@@ -16,12 +16,12 @@ type MockLLMProviderDMTest struct {
 	mock.Mock
 }
 
-func (m *MockLLMProviderDMTest) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (m *MockLLMProviderDMTest) GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	args := m.Called(ctx, prompt, systemPrompt)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockLLMProviderDMTest) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (m *MockLLMProviderDMTest) GenerateContent(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	args := m.Called(ctx, prompt, systemPrompt)
 	return args.String(0), args.Error(1)
 }

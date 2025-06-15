@@ -80,9 +80,9 @@ func (r *EncounterRepository) Create(encounter *models.Encounter) error {
 	}
 
 	// Create encounter enemies
-	for _, enemy := range encounter.Enemies {
-		enemy.EncounterID = encounter.ID
-		if err := r.CreateEncounterEnemy(&enemy); err != nil {
+	for i := range encounter.Enemies {
+		encounter.Enemies[i].EncounterID = encounter.ID
+		if err := r.CreateEncounterEnemy(&encounter.Enemies[i]); err != nil {
 			return fmt.Errorf("failed to create encounter enemy: %w", err)
 		}
 	}
@@ -339,7 +339,7 @@ func (r *EncounterRepository) GetByGameSession(gameSessionID string) ([]*models.
 	return encounters, nil
 }
 
-func (r *EncounterRepository) UpdateStatus(id string, status string) error {
+func (r *EncounterRepository) UpdateStatus(id, status string) error {
 	query := `UPDATE encounters SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
 	_, err := r.db.ExecContextRebind(context.Background(), query, status, id)
 	return err
@@ -354,7 +354,7 @@ func (r *EncounterRepository) StartEncounter(id string) error {
 	return err
 }
 
-func (r *EncounterRepository) CompleteEncounter(id string, outcome string) error {
+func (r *EncounterRepository) CompleteEncounter(id, outcome string) error {
 	query := `
 		UPDATE encounters 
 		SET status = 'completed', completed_at = CURRENT_TIMESTAMP, 

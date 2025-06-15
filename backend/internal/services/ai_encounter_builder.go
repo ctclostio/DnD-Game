@@ -31,7 +31,7 @@ func NewAIEncounterBuilder(provider LLMProvider) *AIEncounterBuilder {
 	}
 }
 
-func (b *AIEncounterBuilder) GenerateEncounter(ctx context.Context, req EncounterRequest) (*models.Encounter, error) {
+func (b *AIEncounterBuilder) GenerateEncounter(ctx context.Context, req *EncounterRequest) (*models.Encounter, error) {
 	// Calculate XP budget based on party
 	xpBudget := b.calculateXPBudget(req.PartyLevel, req.PartySize, req.Difficulty)
 
@@ -62,7 +62,7 @@ Your responses must be valid JSON matching the specified format exactly. Do not 
 	return encounter, nil
 }
 
-func (b *AIEncounterBuilder) buildEncounterPrompt(req EncounterRequest, xpBudget int) string {
+func (b *AIEncounterBuilder) buildEncounterPrompt(req *EncounterRequest, xpBudget int) string {
 	return fmt.Sprintf(`Create a %s %s encounter for the following party:
 
 Party Details:
@@ -644,10 +644,10 @@ func (b *AIEncounterBuilder) calculateEncounterXP(encounter *models.Encounter) {
 	totalXP := 0
 	enemyCount := 0
 
-	for _, enemy := range encounter.Enemies {
-		if xp, ok := crToXP[enemy.ChallengeRating]; ok {
-			totalXP += xp * enemy.Quantity
-			enemyCount += enemy.Quantity
+	for i := range encounter.Enemies {
+		if xp, ok := crToXP[encounter.Enemies[i].ChallengeRating]; ok {
+			totalXP += xp * encounter.Enemies[i].Quantity
+			enemyCount += encounter.Enemies[i].Quantity
 		}
 	}
 
@@ -680,7 +680,7 @@ func (b *AIEncounterBuilder) calculateEncounterXP(encounter *models.Encounter) {
 	encounter.AdjustedXP = int(float64(totalXP) * multiplier)
 }
 
-func (b *AIEncounterBuilder) enhanceEncounterForParty(encounter *models.Encounter, req EncounterRequest) {
+func (b *AIEncounterBuilder) enhanceEncounterForParty(encounter *models.Encounter, req *EncounterRequest) {
 	encounter.PartyLevel = req.PartyLevel
 	encounter.PartySize = req.PartySize
 	encounter.Location = req.Location
@@ -701,9 +701,9 @@ func (b *AIEncounterBuilder) enhanceEncounterForParty(encounter *models.Encounte
 	// Calculate average CR for the encounter
 	totalCR := 0.0
 	enemyCount := 0
-	for _, enemy := range encounter.Enemies {
-		totalCR += enemy.ChallengeRating * float64(enemy.Quantity)
-		enemyCount += enemy.Quantity
+	for i := range encounter.Enemies {
+		totalCR += encounter.Enemies[i].ChallengeRating * float64(encounter.Enemies[i].Quantity)
+		enemyCount += encounter.Enemies[i].Quantity
 	}
 	if enemyCount > 0 {
 		encounter.ChallengeRating = totalCR / float64(enemyCount)

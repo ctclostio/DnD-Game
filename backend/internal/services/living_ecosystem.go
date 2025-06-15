@@ -117,8 +117,8 @@ func (les *LivingEcosystemService) SimulateWorldProgress(ctx context.Context, se
 	}
 
 	// Save all events
-	for _, event := range events {
-		if err := les.worldRepo.CreateWorldEvent(&event); err != nil {
+	for i := range events {
+		if err := les.worldRepo.CreateWorldEvent(&events[i]); err != nil {
 			simLog.Details["save_error"] = err.Error()
 			simLog.Success = false
 		} else {
@@ -160,13 +160,14 @@ func (les *LivingEcosystemService) simulateNPCActivities(ctx context.Context, se
 		}
 
 		// Process each active goal
-		for _, goal := range goals {
+		for i := range goals {
+			goal := &goals[i]
 			if goal.Status != constants.StatusActive {
 				continue
 			}
 
 			// Simulate progress on goal
-			event, progress := les.simulateGoalProgress(ctx, npc, goal, timeDelta)
+			event, progress := les.simulateGoalProgress(ctx, npc, *goal, timeDelta)
 			if event != nil {
 				events = append(events, *event)
 			}
@@ -178,7 +179,7 @@ func (les *LivingEcosystemService) simulateNPCActivities(ctx context.Context, se
 				now := time.Now()
 				goal.CompletedAt = &now
 			}
-			_ = les.worldRepo.UpdateNPCGoal(&goal)
+			_ = les.worldRepo.UpdateNPCGoal(goal)
 		}
 
 		// Check if NPC should create new goals
@@ -551,19 +552,20 @@ func (les *LivingEcosystemService) simulatePoliticalDevelopments(ctx context.Con
 			continue
 		}
 
-		for _, agenda := range agendas {
+		for i := range agendas {
+			agenda := &agendas[i]
 			if agenda.Status != constants.StatusActive {
 				continue
 			}
 
 			// Simulate agenda progress
-			event := les.simulateAgendaProgress(ctx, faction, personality, &agenda, timeDelta)
+			event := les.simulateAgendaProgress(ctx, faction, personality, agenda, timeDelta)
 			if event != nil {
 				events = append(events, *event)
 			}
 
 			// Update agenda
-			_ = les.worldRepo.UpdateFactionAgenda(&agenda)
+			_ = les.worldRepo.UpdateFactionAgenda(agenda)
 		}
 
 		// Check for new political opportunities

@@ -33,7 +33,7 @@ func NewRefreshTokenRepository(db *sqlx.DB) RefreshTokenRepository {
 }
 
 // Create stores a new refresh token
-func (r *refreshTokenRepository) Create(userID, tokenID string, token string, expiresAt time.Time) error {
+func (r *refreshTokenRepository) Create(userID, tokenID, token string, expiresAt time.Time) error {
 	// For SQLite compatibility, generate ID and timestamps
 	id := uuid.New().String()
 	createdAt := time.Now()

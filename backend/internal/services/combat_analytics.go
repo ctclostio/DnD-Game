@@ -136,9 +136,9 @@ func (cas *CombatAnalyticsService) calculateCombatAnalytics(
 			maxDamage = damage
 			mvpID = actorID
 			// Determine if MVP is character or NPC
-			for _, c := range combat.Combatants {
-				if c.ID == actorID {
-					mvpType = string(c.Type)
+			for i := range combat.Combatants {
+				if combat.Combatants[i].ID == actorID {
+					mvpType = string(combat.Combatants[i].Type)
 					break
 				}
 			}
@@ -173,7 +173,8 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 	combatantStats := make(map[string]*models.CombatantAnalytics)
 
 	// Initialize stats for all combatants
-	for _, combatant := range combat.Combatants {
+	for i := range combat.Combatants {
+		combatant := &combat.Combatants[i]
 		stats := &models.CombatantAnalytics{
 			ID:                 uuid.New(),
 			CombatAnalyticsID:  analyticsID,
@@ -481,10 +482,10 @@ func (cas *CombatAnalyticsService) analyzeTargeting(actions []*models.CombatActi
 
 			if action.Outcome == constants.OutcomeKillingBlow {
 				// Check if this was a high-priority target
-				for _, combatant := range combat.Combatants {
-					if combatant.ID == *action.TargetID {
+				for i := range combat.Combatants {
+					if combat.Combatants[i].ID == *action.TargetID {
 						// Simple heuristic: casters and high damage dealers are priority
-						if combatant.Type == models.CombatantTypeNPC && action.RoundNumber < 5 {
+						if combat.Combatants[i].Type == models.CombatantTypeNPC && action.RoundNumber < 5 {
 							dangerousEnemiesEliminated++
 						}
 						break

@@ -25,7 +25,7 @@ func NewEncounterService(repo *database.EncounterRepository, builder *AIEncounte
 }
 
 // GenerateEncounter creates a new AI-generated encounter
-func (s *EncounterService) GenerateEncounter(ctx context.Context, req EncounterRequest, gameSessionID, userID string) (*models.Encounter, error) {
+func (s *EncounterService) GenerateEncounter(ctx context.Context, req *EncounterRequest, gameSessionID, userID string) (*models.Encounter, error) {
 	// Generate the encounter using AI
 	encounter, err := s.encounterBuilder.GenerateEncounter(ctx, req)
 	if err != nil {
@@ -144,7 +144,7 @@ func (s *EncounterService) ScaleEncounter(ctx context.Context, encounterID strin
 	}
 
 	// Apply adjustments
-	s.applyScalingAdjustment(encounter, adjustment)
+	s.applyScalingAdjustment(encounter, &adjustment)
 
 	// Recalculate XP
 	s.encounterBuilder.calculateEncounterXP(encounter)
@@ -168,7 +168,7 @@ func (s *EncounterService) ScaleEncounter(ctx context.Context, encounterID strin
 }
 
 // GetTacticalSuggestion provides AI-generated tactical advice
-func (s *EncounterService) GetTacticalSuggestion(ctx context.Context, encounterID string, situation string) (string, error) {
+func (s *EncounterService) GetTacticalSuggestion(ctx context.Context, encounterID, situation string) (string, error) {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
 		return "", fmt.Errorf("encounter not found: %w", err)
@@ -234,9 +234,9 @@ func (s *EncounterService) TriggerReinforcements(ctx context.Context, encounterI
 	wave := encounter.ReinforcementWaves[waveIndex]
 
 	// Add reinforcement enemies to the encounter
-	for _, enemy := range wave.Enemies {
-		enemy.EncounterID = encounterID
-		if err := s.repo.CreateEncounterEnemy(&enemy); err != nil {
+	for i := range wave.Enemies {
+		wave.Enemies[i].EncounterID = encounterID
+		if err := s.repo.CreateEncounterEnemy(&wave.Enemies[i]); err != nil {
 			return fmt.Errorf("failed to add reinforcement: %w", err)
 		}
 	}
@@ -280,8 +280,8 @@ func (s *EncounterService) CheckObjectives(ctx context.Context, encounterID stri
 		case constants.ObjectiveDefeatAll:
 			// Check if all enemies are defeated
 			allDefeated := true
-			for _, enemy := range encounter.Enemies {
-				if enemy.IsAlive && !enemy.Fled {
+			for i := range encounter.Enemies {
+				if encounter.Enemies[i].IsAlive && !encounter.Enemies[i].Fled {
 					allDefeated = false
 					break
 				}
@@ -352,7 +352,7 @@ func (s *EncounterService) createDefaultObjectives(encounter *models.Encounter) 
 	}
 }
 
-func (s *EncounterService) applyScalingAdjustment(encounter *models.Encounter, adjustment models.ScalingAdjustment) {
+func (s *EncounterService) applyScalingAdjustment(encounter *models.Encounter, adjustment *models.ScalingAdjustment) {
 	// Remove enemies - logic to remove specified enemies could be added here
 
 	// Add enemies - placeholder for future logic

@@ -22,7 +22,7 @@ func NewCombatEngine() *CombatEngine {
 }
 
 // Initiative and Turn Order
-func (ce *CombatEngine) RollInitiative(dexterityModifier int) (roll int, total int, err error) {
+func (ce *CombatEngine) RollInitiative(dexterityModifier int) (roll, total int, err error) {
 	result, err := ce.roller.Roll("1d20")
 	if err != nil {
 		return 0, 0, err

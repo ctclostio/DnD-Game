@@ -324,12 +324,12 @@ type MockLLMProvider struct {
 	mock.Mock
 }
 
-func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	args := m.Called(ctx, prompt, systemPrompt)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt string, systemPrompt string) (string, error) {
+func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt, systemPrompt string) (string, error) {
 	args := m.Called(ctx, prompt, systemPrompt)
 	return args.String(0), args.Error(1)
 }

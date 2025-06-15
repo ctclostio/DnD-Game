@@ -310,7 +310,7 @@ func (c *Client) sendDMAssistantResponse(response DMAssistantResponse) {
 	c.send <- data
 }
 
-func (c *Client) sendError(requestID string, errorMsg string) {
+func (c *Client) sendError(requestID, errorMsg string) {
 	c.sendDMAssistantResponse(DMAssistantResponse{
 		Type:      "error",
 		RequestID: requestID,

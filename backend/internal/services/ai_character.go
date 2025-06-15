@@ -37,7 +37,7 @@ func (s *AICharacterService) IsEnabled() bool {
 	return s.aiEnabled && s.llmProvider != nil
 }
 
-func (s *AICharacterService) GenerateCustomCharacter(req CustomCharacterRequest) (*models.Character, error) {
+func (s *AICharacterService) GenerateCustomCharacter(req *CustomCharacterRequest) (*models.Character, error) {
 	if !s.IsEnabled() {
 		return nil, fmt.Errorf("AI character generation is not enabled")
 	}
@@ -110,7 +110,7 @@ Is this character balanced for play? If not, suggest adjustments. Respond with J
 	return nil
 }
 
-func (s *AICharacterService) buildCharacterPrompt(req CustomCharacterRequest) string {
+func (s *AICharacterService) buildCharacterPrompt(req *CustomCharacterRequest) string {
 	ruleset := req.Ruleset
 	if ruleset == "" {
 		ruleset = "D&D 5e"
@@ -200,7 +200,7 @@ Respond with a JSON object in this format:
 	return prompt
 }
 
-func (s *AICharacterService) parseAIResponse(aiResponse string, req CustomCharacterRequest) (*models.Character, error) {
+func (s *AICharacterService) parseAIResponse(aiResponse string, req *CustomCharacterRequest) (*models.Character, error) {
 	// Try to extract JSON from the response
 	startIdx := strings.Index(aiResponse, "{")
 	endIdx := strings.LastIndex(aiResponse, "}")
@@ -334,7 +334,7 @@ func (s *AICharacterService) calculateSavingThrows(character *models.Character) 
 }
 
 // GenerateFallbackCharacter creates a character without AI when the service is disabled
-func (s *AICharacterService) GenerateFallbackCharacter(req CustomCharacterRequest) (*models.Character, error) {
+func (s *AICharacterService) GenerateFallbackCharacter(req *CustomCharacterRequest) (*models.Character, error) {
 	// Create a basic character based on the concept
 	character := &models.Character{
 		Name:       req.Name,

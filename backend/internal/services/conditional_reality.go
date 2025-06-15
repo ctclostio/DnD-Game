@@ -58,7 +58,7 @@ func NewConditionalRealitySystem(ruleEngine *RuleEngine) *ConditionalRealitySyst
 }
 
 // RegisterContext adds a new active context to the system
-func (crs *ConditionalRealitySystem) RegisterContext(ctx context.Context, sessionID string, contextType string, contextValue interface{}) error {
+func (crs *ConditionalRealitySystem) RegisterContext(ctx context.Context, sessionID, contextType string, contextValue interface{}) error {
 	context := models.ConditionalContext{
 		ID:          uuid.New().String(),
 		SessionID:   sessionID,

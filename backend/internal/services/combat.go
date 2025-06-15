@@ -253,7 +253,7 @@ func (s *CombatService) EndCombat(ctx context.Context, combatID string) error {
 	return nil
 }
 
-func (s *CombatService) MakeSavingThrow(ctx context.Context, combatID string, combatantID string, ability string, dc int, advantage, disadvantage bool) (*models.Roll, bool, error) {
+func (s *CombatService) MakeSavingThrow(ctx context.Context, combatID, combatantID, ability string, dc int, advantage, disadvantage bool) (*models.Roll, bool, error) {
 	combat, err := s.GetCombat(ctx, combatID)
 	if err != nil {
 		return nil, false, err
@@ -273,7 +273,7 @@ func (s *CombatService) MakeSavingThrow(ctx context.Context, combatID string, co
 	return s.engine.SavingThrow(combatant, ability, dc, advantage, disadvantage)
 }
 
-func (s *CombatService) ApplyDamage(ctx context.Context, combatID string, combatantID string, damage []models.Damage) (int, error) {
+func (s *CombatService) ApplyDamage(ctx context.Context, combatID, combatantID string, damage []models.Damage) (int, error) {
 	combat, err := s.GetCombat(ctx, combatID)
 	if err != nil {
 		return 0, err
@@ -293,7 +293,7 @@ func (s *CombatService) ApplyDamage(ctx context.Context, combatID string, combat
 	return s.engine.ApplyDamage(combatant, damage), nil
 }
 
-func (s *CombatService) HealCombatant(ctx context.Context, combatID string, combatantID string, healing int) error {
+func (s *CombatService) HealCombatant(ctx context.Context, combatID, combatantID string, healing int) error {
 	combat, err := s.GetCombat(ctx, combatID)
 	if err != nil {
 		return err

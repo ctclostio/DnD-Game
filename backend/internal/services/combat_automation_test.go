@@ -27,7 +27,7 @@ func createTestCombatAutomationService() (*CombatAutomationService, *MockCombatA
 	return service, mockCombatRepo, mockNPCRepo
 }
 
-func createTestCharacters(count int, level int) []*models.Character {
+func createTestCharacters(count, level int) []*models.Character {
 	chars := make([]*models.Character, count)
 	for i := 0; i < count; i++ {
 		chars[i] = &models.Character{

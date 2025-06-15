@@ -208,7 +208,7 @@ func (fps *FactionPersonalityService) generateDecisionWeights(traits, values map
 }
 
 // RecordMemory adds a significant event to faction memory
-func (fps *FactionPersonalityService) RecordMemory(ctx context.Context, factionID string, event models.WorldEvent) error {
+func (fps *FactionPersonalityService) RecordMemory(ctx context.Context, factionID string, event *models.WorldEvent) error {
 	personality, err := fps.worldRepo.GetFactionPersonality(factionID)
 	if err != nil {
 		return err
@@ -243,7 +243,7 @@ func (fps *FactionPersonalityService) RecordMemory(ctx context.Context, factionI
 }
 
 // calculateEventImpact determines how much an event affects a faction
-func (fps *FactionPersonalityService) calculateEventImpact(personality *models.FactionPersonality, event models.WorldEvent) float64 {
+func (fps *FactionPersonalityService) calculateEventImpact(personality *models.FactionPersonality, event *models.WorldEvent) float64 {
 	impact := 0.0
 
 	// Base impact from event type
@@ -277,7 +277,10 @@ func (fps *FactionPersonalityService) calculateEventImpact(personality *models.F
 }
 
 // MakeFactionDecision uses AI personality to make strategic decisions
-func (fps *FactionPersonalityService) MakeFactionDecision(ctx context.Context, factionID string, decision models.FactionDecision) (*models.FactionDecisionResult, error) {
+func (fps *FactionPersonalityService) MakeFactionDecision(ctx context.Context, factionID string, decision *models.FactionDecision) (*models.FactionDecisionResult, error) {
+	if decision == nil {
+		return nil, fmt.Errorf("decision cannot be nil")
+	}
 	personality, err := fps.worldRepo.GetFactionPersonality(factionID)
 	if err != nil {
 		return nil, err
@@ -417,7 +420,10 @@ func (fps *FactionPersonalityService) scoreOption(personality *models.FactionPer
 }
 
 // getRelevantMemories retrieves memories that might influence a decision
-func (fps *FactionPersonalityService) getRelevantMemories(personality *models.FactionPersonality, decision models.FactionDecision) []models.FactionMemory {
+func (fps *FactionPersonalityService) getRelevantMemories(personality *models.FactionPersonality, decision *models.FactionDecision) []models.FactionMemory {
+	if decision == nil {
+		return []models.FactionMemory{}
+	}
 	relevant := []models.FactionMemory{}
 
 	// Look for memories involving same entities or similar contexts
@@ -614,7 +620,13 @@ func (fps *FactionPersonalityService) formatMemories(memories []models.FactionMe
 	return result
 }
 
-func (fps *FactionPersonalityService) makeDefaultDecision(personality *models.FactionPersonality, decision models.FactionDecision, scores map[string]float64) *models.FactionDecisionResult {
+func (fps *FactionPersonalityService) makeDefaultDecision(personality *models.FactionPersonality, decision *models.FactionDecision, scores map[string]float64) *models.FactionDecisionResult {
+	if decision == nil {
+		return &models.FactionDecisionResult{
+			Success:      false,
+			Consequences: []string{"Invalid decision input"},
+		}
+	}
 	// Find highest scored option
 	var bestOption string
 	bestScore := -999.0
