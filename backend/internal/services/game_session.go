@@ -2,9 +2,8 @@ package services
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
-	"time"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
@@ -32,16 +31,24 @@ func (s *GameSessionService) SetUserRepository(userRepo database.UserRepository)
 	s.userRepo = userRepo
 }
 
-// generateSessionCode generates a unique 6-character alphanumeric code
+// generateSessionCode generates a cryptographically secure 6-character alphanumeric code
 func (s *GameSessionService) generateSessionCode() string {
 	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	// Create a local random generator
-	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
-	code := make([]byte, 6)
-	for i := range code {
-		code[i] = chars[rng.Intn(len(chars))]
+	const codeLength = 6
+	
+	// Use crypto/rand for secure random generation
+	bytes := make([]byte, codeLength)
+	if _, err := rand.Read(bytes); err != nil {
+		// In the unlikely event of an error, panic as this is a critical security component
+		panic(fmt.Sprintf("failed to generate secure session code: %v", err))
 	}
-	return string(code)
+	
+	// Convert random bytes to characters from our charset
+	for i := range bytes {
+		bytes[i] = chars[bytes[i]%byte(len(chars))]
+	}
+	
+	return string(bytes)
 }
 
 // CreateSession creates a new game session
