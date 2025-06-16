@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"

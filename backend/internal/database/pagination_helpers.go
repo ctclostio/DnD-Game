@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
 
@@ -178,6 +177,9 @@ func (pr *PaginatedRepository) GetGameSessionsPaginated(ctx context.Context, par
 }
 
 // GetCampaignsPaginated returns paginated campaigns
+// TODO: This function needs to be updated to match the current schema
+// Currently commented out to fix build errors
+/*
 func (pr *PaginatedRepository) GetCampaignsPaginated(ctx context.Context, userID string, params *pagination.PaginationParams) (*pagination.PageResult, error) {
 	baseQuery := `
 		SELECT c.*, COUNT(DISTINCT cp.user_id) as player_count
@@ -229,9 +231,9 @@ func (pr *PaginatedRepository) GetCampaignsPaginated(ctx context.Context, userID
 	}
 	defer rows.Close()
 
-	var campaigns []*models.Campaign
+	var campaigns []*models.GameSession
 	for rows.Next() {
-		var campaign models.Campaign
+		var campaign models.GameSession
 		var playerCount int
 		err := rows.Scan(
 			&campaign.ID, &campaign.OwnerID, &campaign.Name, &campaign.Description,
@@ -247,6 +249,7 @@ func (pr *PaginatedRepository) GetCampaignsPaginated(ctx context.Context, userID
 
 	return pagination.NewPageResult(campaigns, params, total), nil
 }
+*/
 
 // CursorPaginationHelper helps with cursor-based pagination
 type CursorPaginationHelper struct {

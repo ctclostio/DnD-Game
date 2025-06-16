@@ -48,19 +48,19 @@ func getTestUsername() string {
 	return fmt.Sprintf("testuser_%d", time.Now().Unix())
 }
 
-// TestUser represents a test user configuration
-type TestUser struct {
+// TestUserConfig represents a test user configuration
+type TestUserConfig struct {
 	Username string
 	Email    string
 	Password string
 }
 
 // NewTestUser creates a new test user with secure defaults
-func NewTestUser() *TestUser {
+func NewTestUser() *TestUserConfig {
 	config := GetTestConfig()
 	timestamp := time.Now().Unix()
 	
-	return &TestUser{
+	return &TestUserConfig{
 		Username: fmt.Sprintf("%s_%d", config.DefaultUsername, timestamp),
 		Email:    fmt.Sprintf("test_%d@example.com", timestamp),
 		Password: config.DefaultPassword,
