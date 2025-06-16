@@ -65,3 +65,47 @@ mock.ExpectQuery(`SELECT .* WHERE id = \?`).WithArgs(id)
 
 ### Sensitive Tokens & Credentials
 - Sonar Token: `cb8b0a7e4c6522e4aa1d016dd5785c7352b4e727`
+
+## MCP (Model Context Protocol) Configuration
+
+### GitHub MCP Server
+The project has GitHub MCP server configured for enhanced GitHub operations.
+
+#### Setup (already configured)
+```bash
+# Add GitHub MCP server with authentication
+claude mcp add-json github '{"command": "npx", "args": ["-y", "@modelcontextprotocol/server-github"], "env": {"GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_TOKEN_HERE"}}'
+
+# List configured servers
+claude mcp list
+
+# Check server details
+claude mcp get github
+```
+
+#### Usage Patterns
+When GitHub MCP tools are available (after Claude Code restart), prefer them over `gh` CLI for:
+
+1. **Complex API Operations**
+   - Instead of: `gh api repos/ctclostio/DnD-Game/pulls`
+   - Use: `mcp_github__` prefixed tools for better performance
+
+2. **Batch Operations**
+   - Creating multiple issues/PRs
+   - Managing labels across repositories
+   - Bulk repository operations
+
+3. **Advanced Queries**
+   - Repository insights and analytics
+   - Complex search operations
+   - Workflow management
+
+#### Current MCP Servers
+- **github**: GitHub operations with personal access token
+
+#### Future MCP Considerations
+- **mcp_postgres**: Direct database access for complex queries
+- **mcp_sonarcloud**: Direct SonarCloud integration
+- **mcp_docker**: Container management for development
+
+Note: MCP tools require Claude Code restart to become available after configuration.

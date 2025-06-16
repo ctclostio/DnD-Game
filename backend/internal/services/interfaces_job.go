@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"time"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
 // EmailServiceInterface defines email sending operations
@@ -51,4 +53,22 @@ type Campaign struct {
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// AIServiceInterface defines AI-related operations for job processing
+type AIServiceInterface interface {
+	GenerateContent(ctx context.Context, prompt string, options map[string]interface{}) (string, error)
+	GenerateNPC(ctx context.Context, params map[string]interface{}) (*models.NPC, error)
+	GenerateLocation(ctx context.Context, params map[string]interface{}) (map[string]interface{}, error)
+	GenerateEncounter(ctx context.Context, params map[string]interface{}) (*models.Encounter, error)
+}
+
+// CharacterServiceInterface defines character-related operations for job processing
+type CharacterServiceInterface interface {
+	GetCharacterByID(ctx context.Context, characterID string) (*models.Character, error)
+	GetUserCharacters(ctx context.Context, userID string) ([]*models.Character, error)
+	CreateCharacter(ctx context.Context, character *models.Character) error
+	UpdateCharacter(ctx context.Context, character *models.Character) error
+	DeleteCharacter(ctx context.Context, characterID string) error
+	LevelUp(ctx context.Context, characterID string) error
 }

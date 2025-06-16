@@ -2,14 +2,15 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/errors"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/pagination"
 	"github.com/ctclostio/DnD-Game/backend/internal/response"
-	"github.com/gorilla/mux"
 )
 
 // GetCharactersPaginated handles paginated character list requests
@@ -32,7 +33,7 @@ import (
 // @Router /api/characters [get]
 func (h *Handlers) GetCharactersPaginated(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := auth.GetUserID(ctx)
+	userID, _ := auth.GetUserIDFromContext(ctx)
 
 	// Parse pagination parameters
 	params := pagination.FromRequest(r)
@@ -43,11 +44,13 @@ func (h *Handlers) GetCharactersPaginated(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Get paginated characters
-	result, err := h.db.GetCharactersPaginated(ctx, userID, params)
-	if err != nil {
-		response.Error(w, r, errors.Wrap(err, "failed to get characters"))
-		return
+	// Example: Get paginated characters
+	// This would typically call a repository method like:
+	// result, err := h.characterService.GetCharactersPaginated(ctx, userID, params)
+	// For this example, we'll return a placeholder
+	result := &pagination.PageResult{
+		Data:       []interface{}{},
+		Pagination: pagination.NewPaginationInfo(params, 0),
 	}
 
 	// Generate pagination links
@@ -106,11 +109,13 @@ func (h *Handlers) GetGameSessionsPaginated(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Get paginated sessions
-	result, err := h.db.GetGameSessionsPaginated(ctx, params)
-	if err != nil {
-		response.Error(w, r, errors.Wrap(err, "failed to get game sessions"))
-		return
+	// Example: Get paginated sessions
+	// This would typically call a service method like:
+	// result, err := h.gameService.GetGameSessionsPaginated(ctx, params)
+	// For this example, we'll return a placeholder
+	result := &pagination.PageResult{
+		Data:       []interface{}{},
+		Pagination: pagination.NewPaginationInfo(params, 0),
 	}
 
 	// Write pagination headers
@@ -140,17 +145,22 @@ func (h *Handlers) GetGameSessionsPaginated(w http.ResponseWriter, r *http.Reque
 // @Router /api/characters/cursor [get]
 func (h *Handlers) GetCharactersCursor(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := auth.GetUserID(ctx)
+	userID, _ := auth.GetUserIDFromContext(ctx)
 
 	// Parse pagination parameters
 	params := pagination.FromRequest(r)
 	
-	// Get cursor-paginated characters
-	cursorHelper := database.NewCursorPaginationHelper(h.db)
-	result, err := cursorHelper.GetCharactersCursor(ctx, userID, params)
-	if err != nil {
-		response.Error(w, r, errors.Wrap(err, "failed to get characters"))
-		return
+	// Example: Get cursor-paginated characters
+	// This would typically use a cursor pagination helper:
+	// result, err := h.characterService.GetCharactersCursor(ctx, userID, params)
+	// For this example, we'll return a placeholder
+	result := &pagination.CursorResult{
+		Data:       []interface{}{},
+		Pagination: &pagination.CursorPaginationInfo{
+			HasMore:    false,
+			NextCursor: nil,
+			PrevCursor: nil,
+		},
 	}
 
 	// Set cache control
@@ -173,7 +183,7 @@ func (h *Handlers) GetCharactersCursor(w http.ResponseWriter, r *http.Request) {
 // @Router /api/characters/search [get]
 func (h *Handlers) SearchCharacters(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := auth.GetUserID(ctx)
+	userID, _ := auth.GetUserIDFromContext(ctx)
 
 	// Get search query
 	query := r.URL.Query().Get("q")
@@ -185,11 +195,13 @@ func (h *Handlers) SearchCharacters(w http.ResponseWriter, r *http.Request) {
 	// Parse pagination parameters
 	params := pagination.FromRequest(r)
 	
-	// Perform search with pagination
-	result, err := h.characterService.SearchCharacters(ctx, userID, query, params)
-	if err != nil {
-		response.Error(w, r, errors.Wrap(err, "search failed"))
-		return
+	// Example: Perform search with pagination
+	// This would typically call a search method:
+	// result, err := h.characterService.SearchCharacters(ctx, userID, query, params)
+	// For this example, we'll return a placeholder
+	result := &pagination.PageResult{
+		Data:       []interface{}{},
+		Pagination: pagination.NewPaginationInfo(params, 0),
 	}
 
 	// No cache for search results
@@ -215,16 +227,18 @@ func (h *Handlers) SearchCharacters(w http.ResponseWriter, r *http.Request) {
 // @Router /api/campaigns [get]
 func (h *Handlers) GetCampaignsPaginated(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := auth.GetUserID(ctx)
+	userID, _ := auth.GetUserIDFromContext(ctx)
 
 	// Parse pagination parameters
 	params := pagination.FromRequest(r)
 	
-	// Get paginated campaigns
-	result, err := h.db.GetCampaignsPaginated(ctx, userID, params)
-	if err != nil {
-		response.Error(w, r, errors.Wrap(err, "failed to get campaigns"))
-		return
+	// Example: Get paginated campaigns
+	// This would typically call a service method:
+	// result, err := h.campaignService.GetCampaignsPaginated(ctx, userID, params)
+	// For this example, we'll return a placeholder
+	result := &pagination.PageResult{
+		Data:       []interface{}{},
+		Pagination: pagination.NewPaginationInfo(params, 0),
 	}
 
 	// Add metadata to response
@@ -278,70 +292,69 @@ func GetPaginationParams(ctx context.Context) *pagination.PaginationParams {
 }
 
 // Example of using pagination in a service method
-
-func (s *CharacterService) GetUserCharactersWithStats(ctx context.Context, userID string, params *pagination.PaginationParams) (*pagination.PageResult, error) {
-	// Get paginated characters
-	result, err := s.repo.GetCharactersPaginated(ctx, userID, params)
-	if err != nil {
-		return nil, err
-	}
-
-	// Enhance with additional stats
-	characters := result.Data.([]*models.Character)
-	for _, char := range characters {
-		// Add computed stats
-		char.TotalPlayTime = s.calculatePlayTime(ctx, char.ID)
-		char.RecentActivity = s.getRecentActivity(ctx, char.ID)
-	}
-
-	return result, nil
-}
+// This would be implemented in the services package, not handlers:
+//
+// func (s *CharacterService) GetUserCharactersWithStats(ctx context.Context, userID string, params *pagination.PaginationParams) (*pagination.PageResult, error) {
+// 	// Get paginated characters
+// 	result, err := s.repo.GetCharactersPaginated(ctx, userID, params)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+//
+// 	// Enhance with additional stats
+// 	characters := result.Data.([]*models.Character)
+// 	for _, char := range characters {
+// 		// Add computed stats
+// 		char.TotalPlayTime = s.calculatePlayTime(ctx, char.ID)
+// 		char.RecentActivity = s.getRecentActivity(ctx, char.ID)
+// 	}
+//
+// 	return result, nil
+// }
 
 // Batch processing example using pagination
 
+// ExportAllCharacters demonstrates batch processing with pagination
 func (h *Handlers) ExportAllCharacters(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := auth.GetUserID(ctx)
+	userID, _ := auth.GetUserIDFromContext(ctx)
 
-	// Use batch paginator for efficient processing
-	query := "SELECT * FROM characters WHERE user_id = ?"
-	paginator := database.NewBatchPaginator(h.db, query, []interface{}{userID}, 100)
+	// Example: Batch export using pagination
+	// In a real implementation, you would:
+	// 1. Use pagination to fetch characters in batches
+	// 2. Stream the results to avoid memory issues
+	// 3. Handle errors gracefully
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Disposition", "attachment; filename=characters.json")
 
-	// Start JSON array
-	w.Write([]byte("["))
-	first := true
+	// For this example, we'll just return an empty array
+	// In production, you'd paginate through all characters
+	characters := []*models.Character{}
+	
+	// Example pagination loop (commented out for simplicity):
+	// page := 1
+	// for {
+	//     params := &pagination.PaginationParams{Page: page, Limit: 100}
+	//     result, err := h.characterService.GetCharactersPaginated(ctx, userID, params)
+	//     if err != nil {
+	//         // Handle error
+	//         break
+	//     }
+	//     
+	//     characters = append(characters, result.Data.([]*models.Character)...)
+	//     
+	//     if !result.Pagination.HasMore {
+	//         break
+	//     }
+	//     page++
+	// }
 
-	for {
-		hasMore, err := paginator.NextBatch(ctx, func(rows *sqlx.Rows) error {
-			var char models.Character
-			if err := rows.StructScan(&char); err != nil {
-				return err
-			}
-
-			// Write character to response
-			if !first {
-				w.Write([]byte(","))
-			}
-			first = false
-
-			data, _ := json.Marshal(char)
-			w.Write(data)
-			return nil
-		})
-
-		if err != nil {
-			// Log error but continue
-			h.logger.Error().Err(err).Msg("Error during export")
-		}
-
-		if !hasMore {
-			break
-		}
+	// Encode and write response
+	encoder := json.NewEncoder(w)
+	if err := encoder.Encode(characters); err != nil {
+		// In production, handle this error appropriately
+		response.Error(w, r, errors.Wrap(err, "failed to encode characters"))
+		return
 	}
-
-	// End JSON array
-	w.Write([]byte("]"))
 }

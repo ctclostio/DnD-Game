@@ -32,12 +32,7 @@ func setupCRDTConnection(w http.ResponseWriter, r *http.Request) (*websocket.Con
 // processCRDTMessages handles the synchronization logic for a given document
 // over an established WebSocket connection.
 func processCRDTMessages(conn *websocket.Conn, doc *automerge.Doc) {
-	state, err := automerge.NewSyncState(doc)
-	if err != nil {
-		// TODO: Consider logging this error, e.g., log.Printf("Error creating sync state for doc %v: %v", doc, err)
-		// For now, simply return, which will terminate message processing for this connection.
-		return
-	}
+	state := automerge.NewSyncState(doc)
 	for {
 		mt, msg, err := conn.ReadMessage()
 		if err != nil {
