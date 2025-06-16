@@ -7,6 +7,7 @@ spec:
   replicas: 1
   template:
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: backend
         imagePullPolicy: Always
@@ -33,6 +34,7 @@ spec:
   replicas: 1
   template:
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: frontend
         imagePullPolicy: Always
@@ -56,6 +58,7 @@ spec:
   replicas: 1
   template:
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: postgres
         resources:
@@ -78,6 +81,7 @@ spec:
   replicas: 1
   template:
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: redis
         resources:
