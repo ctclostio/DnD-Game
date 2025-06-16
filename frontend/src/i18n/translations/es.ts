@@ -44,10 +44,10 @@ export const es = {
     registerTitle: 'Crear Cuenta',
     username: 'Nombre de Usuario',
     email: 'Correo Electrónico',
-    password: 'Contraseña',
-    confirmPassword: 'Confirmar Contraseña',
+    password: 'Contraseña', // NOSONAR - UI label, not a hardcoded password
+    confirmPassword: 'Confirmar Contraseña', // NOSONAR - UI label, not a hardcoded password
     rememberMe: 'Recordarme',
-    forgotPassword: '¿Olvidaste tu contraseña?',
+    forgotPassword: '¿Olvidaste tu contraseña?', // NOSONAR - UI label, not a hardcoded password
     noAccount: '¿No tienes una cuenta?',
     hasAccount: '¿Ya tienes una cuenta?',
     loginButton: 'Iniciar Sesión',
@@ -56,8 +56,8 @@ export const es = {
       invalidCredentials: 'Usuario o contraseña inválidos',
       usernameTaken: 'El nombre de usuario ya está en uso',
       emailTaken: 'El correo ya está registrado',
-      passwordMismatch: 'Las contraseñas no coinciden',
-      weakPassword: 'La contraseña debe tener al menos 8 caracteres',
+      passwordMismatch: 'Las contraseñas no coinciden', // NOSONAR - UI error message
+      weakPassword: 'La contraseña debe tener al menos 8 caracteres', // NOSONAR - UI error message
       networkError: 'Error de red. Por favor, intenta de nuevo.',
     },
   },

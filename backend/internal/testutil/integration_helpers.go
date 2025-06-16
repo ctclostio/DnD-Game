@@ -255,7 +255,7 @@ func (ctx *IntegrationTestContext) AssertErrorResponse(w *httptest.ResponseRecor
 // CreateTestUser creates a test user and returns the user ID
 func (ctx *IntegrationTestContext) CreateTestUser(username, email, _ string) string {
 	userID := "user-" + username
-	hashedPassword := "$2a$10$test-hash" // Mock hash for testing
+	hashedPassword := "$2a$10$test-hash" // NOSONAR - Mock bcrypt hash for testing
 	query := `INSERT INTO users (id, username, email, password_hash, role) VALUES (?, ?, ?, ?, ?)`
 	_, err := ctx.SQLXDB.Exec(ctx.SQLXDB.Rebind(query), userID, username, email, hashedPassword, "player")
 	require.NoError(ctx.T, err)

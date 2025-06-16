@@ -38,11 +38,23 @@ CMD ["npm", "start"]
 # Production stage
 FROM nginx:alpine AS production
 
-# Copy built files from builder
-COPY --from=builder /app/build /usr/share/nginx/html
+# Create non-root user
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Copy built files from builder with proper ownership
+COPY --from=builder --chown=appuser:appgroup /app/build /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chown=appuser:appgroup frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Update nginx config to run as non-root
+RUN sed -i 's/user nginx;/user appuser;/g' /etc/nginx/nginx.conf && \
+    touch /var/run/nginx.pid && \
+    chown -R appuser:appgroup /var/run/nginx.pid /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
+
+# Switch to non-root user
+USER appuser
 
 # Expose port
 EXPOSE 3000

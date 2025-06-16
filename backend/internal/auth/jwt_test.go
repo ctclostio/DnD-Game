@@ -175,7 +175,7 @@ func TestGenerateTokenID(t *testing.T) {
 
 func TestExtractTokenFromHeader(t *testing.T) {
 	t.Run("valid bearer token", func(t *testing.T) {
-		token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test"
+		token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test" // NOSONAR - Mock JWT token for testing
 		header := "Bearer " + token
 
 		extracted, err := ExtractTokenFromHeader(header)

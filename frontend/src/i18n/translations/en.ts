@@ -44,10 +44,10 @@ export const en = {
     registerTitle: 'Create Account',
     username: 'Username',
     email: 'Email',
-    password: 'Password',
-    confirmPassword: 'Confirm Password',
+    password: 'Password', // NOSONAR - UI label, not a hardcoded password
+    confirmPassword: 'Confirm Password', // NOSONAR - UI label, not a hardcoded password
     rememberMe: 'Remember me',
-    forgotPassword: 'Forgot password?',
+    forgotPassword: 'Forgot password?', // NOSONAR - UI label, not a hardcoded password
     noAccount: "Don't have an account?",
     hasAccount: 'Already have an account?',
     loginButton: 'Login',
@@ -56,8 +56,8 @@ export const en = {
       invalidCredentials: 'Invalid username or password',
       usernameTaken: 'Username is already taken',
       emailTaken: 'Email is already registered',
-      passwordMismatch: 'Passwords do not match',
-      weakPassword: 'Password must be at least 8 characters',
+      passwordMismatch: 'Passwords do not match', // NOSONAR - UI error message
+      weakPassword: 'Password must be at least 8 characters', // NOSONAR - UI error message
       networkError: 'Network error. Please try again.',
     },
   },

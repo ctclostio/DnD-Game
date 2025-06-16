@@ -223,10 +223,11 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 		}
 	case constants.TerrainOutdoor:
 		// Add some trees
+		// NOSONAR - Using math/rand is safe here as this is for game map generation, not security
 		for i := 0; i < 5; i++ {
 			terrainFeatures = append(terrainFeatures, models.BattleMapTerrainFeature{
 				Type:       "tree",
-				Position:   models.Position{X: rand.Intn(gridX), Y: rand.Intn(gridY)},
+				Position:   models.Position{X: rand.Intn(gridX), Y: rand.Intn(gridY)}, // NOSONAR - Pseudorandom is sufficient for game features
 				Size:       models.Size{Width: 1, Height: 1},
 				Properties: []string{"blocks_movement", "provides_cover"},
 			})
@@ -235,6 +236,7 @@ func (abmg *AIBattleMapGenerator) generateDefaultBattleMap(req models.GenerateBa
 
 	// Add some cover positions
 	coverPositions := make([]map[string]interface{}, 0, 10)
+	// NOSONAR - Pseudorandom positioning is appropriate for game cover generation
 	for i := 0; i < 3; i++ {
 		coverPositions = append(coverPositions, map[string]interface{}{
 			"position":   models.Position{X: rand.Intn(gridX), Y: rand.Intn(gridY)},

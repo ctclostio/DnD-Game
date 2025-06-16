@@ -460,9 +460,9 @@ async function setupCombat(dmPage: Page, playerPage: Page, dmUser: any, playerUs
 async function getParticipantHP(page: Page, participantName: string): Promise<{ current: number; max: number }> {
   const participant = page.locator(`[data-testid="initiative-list"]`).getByText(participantName).locator('..');
   const healthText = await participant.getByTestId('health-display').textContent();
-  // Use a more efficient regex pattern to avoid catastrophic backtracking
-  // Limit whitespace matching to prevent DOS vulnerabilities
-  const match = healthText?.match(/(\d+)\s{0,5}\/\s{0,5}(\d+)/);
+  // Use a safe regex pattern that avoids backtracking vulnerabilities
+  // Match only spaces (not all whitespace) with strict limits
+  const match = healthText?.match(/(\d+)[ ]{0,3}\/[ ]{0,3}(\d+)/);
   
   if (match) {
     return {

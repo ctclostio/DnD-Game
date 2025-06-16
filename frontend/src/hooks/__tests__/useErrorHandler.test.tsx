@@ -234,7 +234,7 @@ describe('useFormErrorHandler', () => {
         status: 400,
         data: {
           errors: {
-            'password.confirm': 'Passwords do not match',
+            'password.confirm': 'Passwords do not match', // NOSONAR - error message, not a password
             'profile.age': 'Must be a number',
           },
         },
@@ -247,7 +247,7 @@ describe('useFormErrorHandler', () => {
     });
 
     expect(fieldErrors).toEqual({
-      'password.confirm': 'Passwords do not match',
+      'password.confirm': 'Passwords do not match', // NOSONAR - error message, not a password
       'profile.age': 'Must be a number',
     });
   });
