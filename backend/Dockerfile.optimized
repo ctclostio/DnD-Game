@@ -3,7 +3,7 @@
 # ========================================
 # Stage 1: Download dependencies
 # ========================================
-FROM golang:1.21-alpine AS deps
+FROM golang:1.24-alpine AS deps
 
 # Install certificates for HTTPS
 RUN apk add --no-cache ca-certificates git
@@ -20,7 +20,7 @@ RUN go mod download && go mod verify
 # ========================================
 # Stage 2: Build the application
 # ========================================
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Install build tools
 RUN apk add --no-cache git make
@@ -93,7 +93,7 @@ ENTRYPOINT ["/app/server"]
 # ========================================
 # Development stage with debugging tools
 # ========================================
-FROM golang:1.21-alpine AS development
+FROM golang:1.24-alpine AS development
 
 # Install development tools
 RUN apk add --no-cache git make bash curl vim
