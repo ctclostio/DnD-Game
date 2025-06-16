@@ -124,7 +124,7 @@ CMD ["air", "-c", ".air.toml"]
 # ========================================
 # Production-debug stage (with shell)
 # ========================================
-FROM alpine:3.19 AS production-debug
+FROM alpine:3.22 AS production-debug
 
 # Install runtime dependencies and debug tools
 RUN apk add --no-cache \
