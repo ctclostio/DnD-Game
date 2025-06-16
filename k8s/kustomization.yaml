@@ -1,0 +1,87 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dnd-game
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - postgres.yaml
+  - redis.yaml
+  - backend.yaml
+  - frontend.yaml
+  - ingress.yaml
+
+images:
+  - name: dnd-backend
+    newName: ghcr.io/your-org/dnd-backend # Replace with your registry
+    newTag: latest
+  - name: dnd-frontend
+    newName: ghcr.io/your-org/dnd-frontend # Replace with your registry
+    newTag: latest
+
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/part-of: dnd-game
+
+configMapGenerator:
+  - name: game-data
+    files:
+      - ../data/races.json
+      - ../data/classes.json
+      - ../data/spells.json
+    options:
+      disableNameSuffixHash: true
+
+secretGenerator:
+  - name: dnd-game-secrets
+    envs:
+      - secrets.env
+    options:
+      disableNameSuffixHash: true
+
+replicas:
+  - name: backend
+    count: 3
+  - name: frontend
+    count: 2
+
+patches:
+  # Add resource limits to all containers
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
+
+# For different environments
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: dev-
+namespace: dnd-game-dev
+
+bases:
+  - ../base
+
+patchesStrategicMerge:
+  - dev-config.yaml
+
+replicas:
+  - name: backend
+    count: 1
+  - name: frontend
+    count: 1
+  - name: postgres
+    count: 1
+  - name: redis
+    count: 1

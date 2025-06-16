@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: dev-
+namespace: dnd-game-dev
+
+bases:
+  - ../../base
+
+resources:
+  - namespace.yaml
+
+patchesStrategicMerge:
+  - config-patch.yaml
+  - deployment-patch.yaml
+
+configMapGenerator:
+  - name: dnd-game-config
+    behavior: merge
+    literals:
+      - ENV=development
+      - DB_SSLMODE=disable
+      - AI_PROVIDER=mock
+      - REACT_APP_ENVIRONMENT=development
+
+secretGenerator:
+  - name: dnd-game-secrets
+    behavior: merge
+    literals:
+      - DB_PASSWORD=dev-password
+      - REDIS_PASSWORD=dev-redis
+      - JWT_SECRET=dev-jwt-secret-for-local-development-only
+
+replicas:
+  - name: backend
+    count: 1
+  - name: frontend
+    count: 1
+
+images:
+  - name: dnd-backend
+    newTag: dev
+  - name: dnd-frontend
+    newTag: dev

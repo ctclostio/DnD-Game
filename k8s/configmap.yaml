@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dnd-game-config
+  namespace: dnd-game
+  labels:
+    app.kubernetes.io/name: dnd-game
+    app.kubernetes.io/component: config
+data:
+  # Backend configuration
+  PORT: "8080"
+  ENV: "production"
+  DB_HOST: "postgres-service.dnd-game.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "dndgame"
+  DB_USER: "dndgame"
+  DB_SSLMODE: "require"
+  DB_MAX_OPEN_CONNS: "100"
+  DB_MAX_IDLE_CONNS: "25"
+  DB_MAX_LIFETIME: "30m"
+  
+  # Redis configuration
+  REDIS_HOST: "redis-service.dnd-game.svc.cluster.local"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  
+  # Auth configuration
+  ACCESS_TOKEN_DURATION: "15m"
+  REFRESH_TOKEN_DURATION: "168h"
+  BCRYPT_COST: "12"
+  
+  # AI configuration
+  AI_PROVIDER: "openai"
+  AI_MODEL: "gpt-4-turbo-preview"
+  
+  # Frontend configuration
+  REACT_APP_API_URL: "https://api.dndgame.example.com"
+  REACT_APP_WS_URL: "wss://api.dndgame.example.com"
+  REACT_APP_ENVIRONMENT: "production"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: dnd-game
+  labels:
+    app.kubernetes.io/name: dnd-game
+    app.kubernetes.io/component: frontend
+data:
+  default.conf: |
+    server {
+        listen 3000;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+        # Enable gzip
+        gzip on;
+        gzip_types text/plain text/css text/xml text/javascript application/json application/javascript;
+
+        # Cache static assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # Health check
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+
+        # React app
+        location / {
+            try_files $uri $uri/ /index.html;
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+        }
+    }

@@ -1,0 +1,33 @@
+apiVersion: v2
+name: dnd-game
+description: A Helm chart for D&D Game application
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+keywords:
+  - dnd
+  - game
+  - dungeons-and-dragons
+  - rpg
+
+home: https://github.com/your-org/dnd-game
+sources:
+  - https://github.com/your-org/dnd-game
+
+maintainers:
+  - name: Your Name
+    email: your-email@example.com
+
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+  - name: redis
+    version: "17.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+
+annotations:
+  category: Gaming
