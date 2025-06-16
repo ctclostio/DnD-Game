@@ -195,7 +195,7 @@ func TestUserService_Login(t *testing.T) {
 			name: "successful login with username",
 			request: models.LoginRequest{
 				Username: "testuser",
-				Password: testPassword,
+				Password: testPasswordValid,
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
@@ -232,7 +232,7 @@ func TestUserService_Login(t *testing.T) {
 			name: "user not found",
 			request: models.LoginRequest{
 				Username: "nonexistent",
-				Password: testPassword,
+				Password: testPasswordValid,
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByUsername", ctx, "nonexistent").Return(nil, errors.New("not found"))
@@ -445,7 +445,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 		{
 			name:        "successful password change",
 			userID:      "user-123",
-			oldPassword: oldPassword,
+			oldPassword: testPasswordOld,
 			newPassword: testPasswordNew,
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
@@ -478,7 +478,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 		{
 			name:        "weak new password",
 			userID:      "user-123",
-			oldPassword: oldPassword,
+			oldPassword: testPasswordOld,
 			newPassword: "weak",
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
@@ -493,7 +493,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 		{
 			name:        "user not found",
 			userID:      "nonexistent",
-			oldPassword: oldPassword,
+			oldPassword: testPasswordOld,
 			newPassword: testPasswordNew,
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("not found"))

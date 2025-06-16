@@ -61,6 +61,8 @@ type AIServiceInterface interface {
 	GenerateNPC(ctx context.Context, params map[string]interface{}) (*models.NPC, error)
 	GenerateLocation(ctx context.Context, params map[string]interface{}) (map[string]interface{}, error)
 	GenerateEncounter(ctx context.Context, params map[string]interface{}) (*models.Encounter, error)
+	GenerateQuest(ctx context.Context, params map[string]interface{}) (map[string]interface{}, error)
+	GenerateItem(ctx context.Context, params map[string]interface{}) (map[string]interface{}, error)
 }
 
 // CharacterServiceInterface defines character-related operations for job processing

@@ -77,19 +77,45 @@ func (jh *JobHandlers) HandleAIGeneration(ctx context.Context, task *asynq.Task)
 	switch payload.Type {
 	case "npc":
 		// Generate NPC using AI service
-		result, err = jh.aiService.GenerateNPC(ctx, payload.Prompt, payload.Context)
+		params := map[string]interface{}{
+			"prompt": payload.Prompt,
+			"context": payload.Context,
+		}
+		npc, npcErr := jh.aiService.GenerateNPC(ctx, params)
+		if npcErr != nil {
+			err = npcErr
+		} else {
+			result = npc
+		}
 		
 	case "quest":
 		// Generate quest
-		result, err = jh.aiService.GenerateQuest(ctx, payload.Prompt, payload.Context)
+		params := map[string]interface{}{
+			"prompt": payload.Prompt,
+			"context": payload.Context,
+		}
+		result, err = jh.aiService.GenerateQuest(ctx, params)
 		
 	case "item":
 		// Generate item
-		result, err = jh.aiService.GenerateItem(ctx, payload.Prompt, payload.Context)
+		params := map[string]interface{}{
+			"prompt": payload.Prompt,
+			"context": payload.Context,
+		}
+		result, err = jh.aiService.GenerateItem(ctx, params)
 		
 	case "encounter":
 		// Generate encounter
-		result, err = jh.aiService.GenerateEncounter(ctx, payload.Prompt, payload.Context)
+		params := map[string]interface{}{
+			"prompt": payload.Prompt,
+			"context": payload.Context,
+		}
+		encounter, encErr := jh.aiService.GenerateEncounter(ctx, params)
+		if encErr != nil {
+			err = encErr
+		} else {
+			result = encounter
+		}
 		
 	default:
 		return fmt.Errorf("unknown AI generation type: %s", payload.Type)

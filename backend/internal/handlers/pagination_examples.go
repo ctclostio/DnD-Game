@@ -48,10 +48,7 @@ func (h *Handlers) GetCharactersPaginated(w http.ResponseWriter, r *http.Request
 	// This would typically call a repository method like:
 	// result, err := h.characterService.GetCharactersPaginated(ctx, userID, params)
 	// For this example, we'll return a placeholder
-	result := &pagination.PageResult{
-		Data:       []interface{}{},
-		Pagination: pagination.NewPaginationInfo(params, 0),
-	}
+	result := pagination.NewPageResult([]interface{}{}, params, 0)
 
 	// Generate pagination links
 	baseURL := r.URL.Path
@@ -113,10 +110,7 @@ func (h *Handlers) GetGameSessionsPaginated(w http.ResponseWriter, r *http.Reque
 	// This would typically call a service method like:
 	// result, err := h.gameService.GetGameSessionsPaginated(ctx, params)
 	// For this example, we'll return a placeholder
-	result := &pagination.PageResult{
-		Data:       []interface{}{},
-		Pagination: pagination.NewPaginationInfo(params, 0),
-	}
+	result := pagination.NewPageResult([]interface{}{}, params, 0)
 
 	// Write pagination headers
 	pagination.WritePaginationHeaders(w, result.Pagination)
@@ -155,11 +149,12 @@ func (h *Handlers) GetCharactersCursor(w http.ResponseWriter, r *http.Request) {
 	// result, err := h.characterService.GetCharactersCursor(ctx, userID, params)
 	// For this example, we'll return a placeholder
 	result := &pagination.CursorResult{
-		Data:       []interface{}{},
-		Pagination: &pagination.CursorPaginationInfo{
+		Data: []interface{}{},
+		Pagination: pagination.CursorInfo{
+			Limit:      params.Limit,
 			HasMore:    false,
-			NextCursor: nil,
-			PrevCursor: nil,
+			NextCursor: "",
+			PrevCursor: "",
 		},
 	}
 
@@ -199,10 +194,7 @@ func (h *Handlers) SearchCharacters(w http.ResponseWriter, r *http.Request) {
 	// This would typically call a search method:
 	// result, err := h.characterService.SearchCharacters(ctx, userID, query, params)
 	// For this example, we'll return a placeholder
-	result := &pagination.PageResult{
-		Data:       []interface{}{},
-		Pagination: pagination.NewPaginationInfo(params, 0),
-	}
+	result := pagination.NewPageResult([]interface{}{}, params, 0)
 
 	// No cache for search results
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -236,10 +228,7 @@ func (h *Handlers) GetCampaignsPaginated(w http.ResponseWriter, r *http.Request)
 	// This would typically call a service method:
 	// result, err := h.campaignService.GetCampaignsPaginated(ctx, userID, params)
 	// For this example, we'll return a placeholder
-	result := &pagination.PageResult{
-		Data:       []interface{}{},
-		Pagination: pagination.NewPaginationInfo(params, 0),
-	}
+	result := pagination.NewPageResult([]interface{}{}, params, 0)
 
 	// Add metadata to response
 	enrichedResult := map[string]interface{}{
