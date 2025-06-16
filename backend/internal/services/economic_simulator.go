@@ -299,6 +299,14 @@ func (s *EconomicSimulatorService) applyEventEffects(market *models.Market, sett
 			// Ancient events increase demand for magical protection
 			market.MagicalItemsModifier *= 0.8     // Cheaper due to desperation
 			market.AncientArtifactsModifier *= 1.5 // But artifacts are riskier
+		case models.EventSupernatural:
+			// Supernatural events increase demand for protective items
+			market.MagicalItemsModifier *= 0.9
+			market.WeaponsArmorModifier *= 1.1
+		case models.EventPlanar:
+			// Planar events affect exotic goods availability
+			market.MagicalItemsModifier *= 0.7      // More items from other planes
+			market.AncientArtifactsModifier *= 1.3  // But artifacts are more valuable
 		}
 	}
 }
@@ -317,6 +325,14 @@ func (s *EconomicSimulatorService) simulateSupplyDemand(market *models.Market, s
 		// Rural areas produce food
 		surplus = append(surplus, "food", "raw materials")
 		highDemand = append(highDemand, "tools", "manufactured goods")
+	case models.SettlementTown:
+		// Towns are balanced between production and consumption
+		surplus = append(surplus, "crafted goods")
+		highDemand = append(highDemand, "luxury items", "specialized tools")
+	case models.SettlementRuins:
+		// Ruins have no regular economy but may have artifacts
+		surplus = append(surplus, "ancient artifacts")
+		highDemand = append(highDemand, "adventuring supplies")
 	}
 
 	// Danger creates demand for weapons

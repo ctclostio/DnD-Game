@@ -471,6 +471,8 @@ func (s *SettlementGeneratorService) determinePopulationSize(settlementType mode
 		return constants.SizeLarge
 	case models.SettlementMetropolis:
 		return constants.SizeLarge
+	case models.SettlementRuins:
+		return constants.SizeSmall // Ruins are usually small or abandoned
 	default:
 		return constants.SizeSmall
 	}

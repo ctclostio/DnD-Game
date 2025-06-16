@@ -19,7 +19,7 @@ func ScanWithJSON(scanner RowScanner, dest []interface{}, jsonFields map[int]JSO
 	// Create temporary byte slices for JSON fields
 	tempDest := make([]interface{}, len(dest))
 	jsonData := make(map[int]*[]byte)
-	
+
 	for i, d := range dest {
 		if _, hasJSON := jsonFields[i]; hasJSON {
 			var data []byte
@@ -29,12 +29,12 @@ func ScanWithJSON(scanner RowScanner, dest []interface{}, jsonFields map[int]JSO
 			tempDest[i] = d
 		}
 	}
-	
+
 	// Scan the row
 	if err := scanner.Scan(tempDest...); err != nil {
 		return err
 	}
-	
+
 	// Unmarshal JSON fields
 	for i, unmarshaler := range jsonFields {
 		if data := jsonData[i]; data != nil && *data != nil {
@@ -43,14 +43,14 @@ func ScanWithJSON(scanner RowScanner, dest []interface{}, jsonFields map[int]JSO
 			}
 		}
 	}
-	
+
 	return nil
 }
 
 // ScanRowsGeneric is a generic helper for scanning multiple rows with a custom scanner function
 func ScanRowsGeneric[T any](rows *sql.Rows, scanner func(RowScanner) (*T, error)) ([]*T, error) {
 	defer func() { _ = rows.Close() }()
-	
+
 	var results []*T
 	for rows.Next() {
 		item, err := scanner(rows)
@@ -59,14 +59,13 @@ func ScanRowsGeneric[T any](rows *sql.Rows, scanner func(RowScanner) (*T, error)
 		}
 		results = append(results, item)
 	}
-	
+
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
-	
+
 	return results, nil
 }
-
 
 // Common JSON unmarshalers
 func UnmarshalJSON(target interface{}) JSONFieldUnmarshaler {
@@ -94,9 +93,14 @@ func MarshalJSONField(value interface{}, fieldName string) ([]byte, error) {
 }
 
 // ExecWithJSON executes a query with JSON field marshaling
-func ExecWithJSON(db interface{ ExecRebind(string, ...interface{}) (sql.Result, error) }, 
-	query string, args []interface{}, jsonFields map[int]struct{ Value interface{}; Name string }) error {
-	
+func ExecWithJSON(db interface {
+	ExecRebind(string, ...interface{}) (sql.Result, error)
+},
+	query string, args []interface{}, jsonFields map[int]struct {
+		Value interface{}
+		Name  string
+	}) error {
+
 	// Marshal JSON fields
 	for i, field := range jsonFields {
 		data, err := MarshalJSONField(field.Value, field.Name)
@@ -105,7 +109,7 @@ func ExecWithJSON(db interface{ ExecRebind(string, ...interface{}) (sql.Result, 
 		}
 		args[i] = data
 	}
-	
+
 	_, err := db.ExecRebind(query, args...)
 	return err
 }

@@ -18,11 +18,11 @@ import (
 
 // Test constants to avoid hardcoded credentials
 const (
-	testUserPassword    = "SecurePass123!"
-	testPasswordValid   = "TestPass123!"
-	testPasswordWeak    = "weak"
-	testPasswordOld     = "OldPass123!"
-	testPasswordNew     = "NewPass456!"
+	testUserPassword  = "SecurePass123!"
+	testPasswordValid = "TestPass123!"
+	testPasswordWeak  = "weak"
+	testPasswordOld   = "OldPass123!"
+	testPasswordNew   = "NewPass456!"
 )
 
 func TestUserService_Register(t *testing.T) {

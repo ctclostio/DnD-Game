@@ -30,7 +30,7 @@ func isValidTableName(name string) bool {
 		"cultures":        true,
 		"world_events":    true,
 	}
-	
+
 	return validTables[name] && validSQLIdentifier.MatchString(name)
 }
 
@@ -314,7 +314,7 @@ func AssertRowExists(t *testing.T, db *sqlx.DB, table, column, value string) {
 	if !isValidColumnName(column) {
 		t.Fatalf("Invalid column name: %s", column)
 	}
-	
+
 	var count int
 	// Safe to use fmt.Sprintf after validation
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = $1", table, column)
@@ -333,7 +333,7 @@ func AssertRowNotExists(t *testing.T, db *sqlx.DB, table, column, value string) 
 	if !isValidColumnName(column) {
 		t.Fatalf("Invalid column name: %s", column)
 	}
-	
+
 	var count int
 	// Safe to use fmt.Sprintf after validation
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = $1", table, column)

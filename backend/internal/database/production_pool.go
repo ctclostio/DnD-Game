@@ -14,14 +14,14 @@ type PoolMetrics struct {
 	mu sync.RWMutex
 
 	// Connection pool stats
-	OpenConnections      int
-	InUse                int
-	Idle                 int
-	WaitCount            int64
-	WaitDuration         time.Duration
-	MaxIdleClosed        int64
-	MaxIdleTimeClosed    int64
-	MaxLifetimeClosed    int64
+	OpenConnections   int
+	InUse             int
+	Idle              int
+	WaitCount         int64
+	WaitDuration      time.Duration
+	MaxIdleClosed     int64
+	MaxIdleTimeClosed int64
+	MaxLifetimeClosed int64
 
 	// Query stats
 	TotalQueries         int64
@@ -30,11 +30,11 @@ type PoolMetrics struct {
 	AverageQueryDuration time.Duration
 
 	// Transaction stats
-	TotalTransactions    int64
-	FailedTransactions   int64
+	TotalTransactions      int64
+	FailedTransactions     int64
 	RolledBackTransactions int64
 
-	LastUpdate           time.Time
+	LastUpdate time.Time
 }
 
 // PoolMonitor monitors database connection pool health
@@ -55,8 +55,8 @@ type ProductionPoolConfig struct {
 	MaxLifetime  time.Duration // Maximum lifetime of a connection
 
 	// Performance tuning
-	MaxIdleTime  time.Duration // Maximum time a connection can be idle
-	SlowQueryMs  int64         // Threshold for slow query logging (milliseconds)
+	MaxIdleTime time.Duration // Maximum time a connection can be idle
+	SlowQueryMs int64         // Threshold for slow query logging (milliseconds)
 
 	// Monitoring
 	EnableMonitoring bool          // Enable pool monitoring
@@ -216,7 +216,7 @@ func (pm *PoolMonitor) RecordQuery(duration time.Duration, err error) {
 	defer pm.metrics.mu.Unlock()
 
 	pm.metrics.TotalQueries++
-	
+
 	if err != nil && err != sql.ErrNoRows {
 		pm.metrics.FailedQueries++
 	}
@@ -252,7 +252,7 @@ func HealthCheck(ctx context.Context, db *DB) error {
 
 	// Check connection pool health
 	stats := db.Stats()
-	
+
 	// Warn if too many connections are waiting
 	if stats.WaitCount > 10 {
 		if db.logger != nil {
@@ -267,17 +267,17 @@ func HealthCheck(ctx context.Context, db *DB) error {
 
 // OptimizeForReadHeavyWorkload adjusts pool settings for read-heavy applications
 func OptimizeForReadHeavyWorkload(cfg *ProductionPoolConfig) {
-	cfg.MaxOpenConns = 150     // More connections for concurrent reads
-	cfg.MaxIdleConns = 50      // Keep more idle connections
+	cfg.MaxOpenConns = 150      // More connections for concurrent reads
+	cfg.MaxIdleConns = 50       // Keep more idle connections
 	cfg.MaxLifetime = time.Hour // Longer lifetime is OK for reads
 	cfg.MaxIdleTime = 10 * time.Minute
 }
 
 // OptimizeForWriteHeavyWorkload adjusts pool settings for write-heavy applications
 func OptimizeForWriteHeavyWorkload(cfg *ProductionPoolConfig) {
-	cfg.MaxOpenConns = 50                // Fewer connections to reduce contention
-	cfg.MaxIdleConns = 10                // Less idle connections
-	cfg.MaxLifetime = 15 * time.Minute   // Shorter lifetime to handle locks
+	cfg.MaxOpenConns = 50              // Fewer connections to reduce contention
+	cfg.MaxIdleConns = 10              // Less idle connections
+	cfg.MaxLifetime = 15 * time.Minute // Shorter lifetime to handle locks
 	cfg.MaxIdleTime = 2 * time.Minute
 }
 

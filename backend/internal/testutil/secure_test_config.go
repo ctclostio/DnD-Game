@@ -59,7 +59,7 @@ type TestUserConfig struct {
 func NewTestUser() *TestUserConfig {
 	config := GetTestConfig()
 	timestamp := time.Now().Unix()
-	
+
 	return &TestUserConfig{
 		Username: fmt.Sprintf("%s_%d", config.DefaultUsername, timestamp),
 		Email:    fmt.Sprintf("test_%d@example.com", timestamp),

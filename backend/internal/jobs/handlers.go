@@ -242,8 +242,13 @@ func (jh *JobHandlers) HandleDataExport(ctx context.Context, task *asynq.Task) e
 
 	// Store result
 	if exportData != nil {
-		resultData, _ := json.Marshal(exportData)
-		task.ResultWriter().Write(resultData)
+		resultData, err := json.Marshal(exportData)
+		if err != nil {
+			return fmt.Errorf("failed to marshal export data: %w", err)
+		}
+		if _, err := task.ResultWriter().Write(resultData); err != nil {
+			return fmt.Errorf("failed to write result: %w", err)
+		}
 	}
 
 	// Send email with export link

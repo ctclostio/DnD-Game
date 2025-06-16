@@ -10,6 +10,21 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Common pagination constants
+const (
+	DefaultSortColumn = "created_at"
+	LimitOffsetClause = " LIMIT ? OFFSET ?"
+	
+	// CharacterSelectQuery is the base query for selecting characters
+	CharacterSelectQuery = `
+		SELECT id, user_id, name, race, class, level, experience, 
+		       hit_points, max_hit_points, armor_class, alignment,
+		       background, attributes, skills, proficiencies,
+		       equipment, spells, features, created_at, updated_at
+		FROM characters
+		WHERE user_id = ?`
+)
+
 // PaginatedRepository provides pagination helpers for repositories
 type PaginatedRepository struct {
 	db *DB
@@ -23,13 +38,7 @@ func NewPaginatedRepository(db *DB) *PaginatedRepository {
 // GetCharactersPaginated returns paginated characters
 func (pr *PaginatedRepository) GetCharactersPaginated(ctx context.Context, userID string, params *pagination.PaginationParams) (*pagination.PageResult, error) {
 	// Base query
-	baseQuery := `
-		SELECT id, user_id, name, race, class, level, experience, 
-		       hit_points, max_hit_points, armor_class, alignment,
-		       background, attributes, skills, proficiencies,
-		       equipment, spells, features, created_at, updated_at
-		FROM characters
-		WHERE user_id = ?`
+	baseQuery := CharacterSelectQuery
 
 	// Count query
 	countQuery := `SELECT COUNT(*) FROM characters WHERE user_id = ?`
@@ -62,7 +71,7 @@ func (pr *PaginatedRepository) GetCharactersPaginated(ctx context.Context, userI
 	}
 
 	// Add sorting
-	sortColumn := "created_at"
+	sortColumn := DefaultSortColumn
 	if params.SortBy != "" {
 		// Validate sort column
 		validColumns := map[string]bool{
@@ -80,7 +89,7 @@ func (pr *PaginatedRepository) GetCharactersPaginated(ctx context.Context, userI
 	baseQuery += fmt.Sprintf(" ORDER BY %s %s", sortColumn, params.SortDir)
 
 	// Add pagination
-	baseQuery += " LIMIT ? OFFSET ?"
+	baseQuery += LimitOffsetClause
 	args = append(args, params.Limit, params.GetOffset())
 
 	// Execute count query
@@ -137,7 +146,7 @@ func (pr *PaginatedRepository) GetGameSessionsPaginated(ctx context.Context, par
 	}
 
 	// Add sorting
-	sortColumn := "created_at"
+	sortColumn := DefaultSortColumn
 	if params.SortBy != "" {
 		validColumns := map[string]bool{
 			"name":            true,
@@ -154,7 +163,7 @@ func (pr *PaginatedRepository) GetGameSessionsPaginated(ctx context.Context, par
 	baseQuery += fmt.Sprintf(" ORDER BY %s %s", sortColumn, params.SortDir)
 
 	// Add pagination
-	baseQuery += " LIMIT ? OFFSET ?"
+	baseQuery += LimitOffsetClause
 	args = append(args, params.Limit, params.GetOffset())
 
 	// Execute count query
@@ -213,7 +222,7 @@ func (pr *PaginatedRepository) GetCampaignsPaginated(ctx context.Context, userID
 	baseQuery += fmt.Sprintf(" ORDER BY %s %s", sortColumn, params.SortDir)
 
 	// Add pagination
-	baseQuery += " LIMIT ? OFFSET ?"
+	baseQuery += LimitOffsetClause
 	args = append(args, params.Limit, params.GetOffset())
 
 	// Execute count query
@@ -264,13 +273,7 @@ func NewCursorPaginationHelper(db *DB) *CursorPaginationHelper {
 // GetCharactersCursor returns cursor-paginated characters
 func (cph *CursorPaginationHelper) GetCharactersCursor(ctx context.Context, userID string, params *pagination.PaginationParams) (*pagination.CursorResult, error) {
 	var characters []*models.Character
-	query := `
-		SELECT id, user_id, name, race, class, level, experience, 
-		       hit_points, max_hit_points, armor_class, alignment,
-		       background, attributes, skills, proficiencies,
-		       equipment, spells, features, created_at, updated_at
-		FROM characters
-		WHERE user_id = ?`
+	query := CharacterSelectQuery
 
 	args := []interface{}{userID}
 
@@ -380,7 +383,9 @@ func (bp *BatchPaginator) NextBatch(ctx context.Context, scanFunc func(*sqlx.Row
 
 		// Get the ID for cursor (assumes first column is ID)
 		var id string
-		rows.Scan(&id)
+		if err := rows.Scan(&id); err != nil {
+			return false, fmt.Errorf("failed to scan id: %w", err)
+		}
 		lastID = id
 		count++
 	}

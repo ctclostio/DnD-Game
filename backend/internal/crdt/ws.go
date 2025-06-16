@@ -78,15 +78,11 @@ func SyncHandler(w http.ResponseWriter, r *http.Request) {
 
 	// The original code ignores the error from LoadDoc.
 	// This behavior is preserved here but might be an area for future improvement.
-	doc, _ := LoadDoc(id)
-	if doc == nil {
-		// If LoadDoc can return nil on error (even if error is ignored),
-		// we should probably handle it to prevent panic with NewSyncState.
-		// For now, assuming LoadDoc returns a non-nil doc or NewSyncState handles nil.
-		// If LoadDoc truly fails and returns nil, this could be problematic.
-		// Consider logging an error here if doc is nil.
-		// http.Error(w, "failed to load document", http.StatusInternalServerError)
-		// return
+	doc, err := LoadDoc(id)
+	if err != nil || doc == nil {
+		// Handle document loading failure
+		http.Error(w, "failed to load document", http.StatusInternalServerError)
+		return
 	}
 
 	processCRDTMessages(conn, doc)

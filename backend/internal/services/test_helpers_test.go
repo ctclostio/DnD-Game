@@ -285,6 +285,8 @@ func (s *CombatService) SetCombatState(combat *models.Combat) {
 		combat.IsActive = true
 	case models.CombatStatusCompleted:
 		combat.IsActive = false
+	case models.CombatStatusPaused:
+		combat.IsActive = false // Paused combat is not active
 	}
 
 	s.combats[combat.ID] = &TestCombat{

@@ -420,6 +420,14 @@ func TestLogger_MultipleLogLevels(t *testing.T) {
 				logger.Warn().Msg("test")
 			case zerolog.ErrorLevel:
 				logger.Error().Msg("test")
+			case zerolog.FatalLevel, zerolog.PanicLevel:
+				// Fatal and Panic levels are not tested as they would terminate the test
+				// These levels are included here to satisfy the exhaustive check
+			case zerolog.NoLevel, zerolog.Disabled:
+				// NoLevel and Disabled don't produce output
+				// These levels are included here to satisfy the exhaustive check
+			case zerolog.TraceLevel:
+				logger.Trace().Msg("test")
 			}
 
 			if test.shouldLog {

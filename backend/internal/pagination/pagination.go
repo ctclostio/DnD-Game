@@ -11,6 +11,12 @@ import (
 	"time"
 )
 
+// Sort direction constants
+const (
+	SortDirectionAsc  = "asc"
+	SortDirectionDesc = "desc"
+)
+
 // Paginator interface for different pagination strategies
 type Paginator interface {
 	GetLimit() int
@@ -23,18 +29,18 @@ type Paginator interface {
 // PaginationParams contains common pagination parameters
 type PaginationParams struct {
 	// Offset-based pagination
-	Page     int `json:"page,omitempty"`
-	Limit    int `json:"limit,omitempty"`
-	
+	Page  int `json:"page,omitempty"`
+	Limit int `json:"limit,omitempty"`
+
 	// Cursor-based pagination
-	Cursor   string `json:"cursor,omitempty"`
-	
+	Cursor string `json:"cursor,omitempty"`
+
 	// Sorting
-	SortBy   string `json:"sort_by,omitempty"`
-	SortDir  string `json:"sort_dir,omitempty"`
-	
+	SortBy  string `json:"sort_by,omitempty"`
+	SortDir string `json:"sort_dir,omitempty"`
+
 	// Filtering
-	Filters  map[string]interface{} `json:"filters,omitempty"`
+	Filters map[string]interface{} `json:"filters,omitempty"`
 }
 
 // DefaultPaginationParams returns default pagination parameters
@@ -80,7 +86,7 @@ func FromRequest(r *http.Request) *PaginationParams {
 	}
 
 	if sortDir := query.Get("sort_dir"); sortDir != "" {
-		if sortDir == "desc" || sortDir == "asc" {
+		if sortDir == SortDirectionDesc || sortDir == SortDirectionAsc {
 			params.SortDir = sortDir
 		}
 	}
@@ -221,11 +227,11 @@ func NewCursorResult(data interface{}, params *PaginationParams, nextCursor, pre
 
 // SQLBuilder helps build paginated SQL queries
 type SQLBuilder struct {
-	baseQuery   string
-	countQuery  string
-	params      *PaginationParams
-	bindings    []interface{}
-	paramIndex  int
+	baseQuery  string
+	countQuery string
+	params     *PaginationParams
+	bindings   []interface{}
+	paramIndex int
 }
 
 // NewSQLBuilder creates a new SQL query builder
@@ -298,11 +304,11 @@ func (b *SQLBuilder) GetCountQuery() string {
 
 // PaginatedQuery executes a paginated database query
 type PaginatedQuery struct {
-	DB           QueryExecutor
-	BaseQuery    string
-	CountQuery   string
-	Params       *PaginationParams
-	ScanFunc     func(rows Scanner) (interface{}, error)
+	DB         QueryExecutor
+	BaseQuery  string
+	CountQuery string
+	Params     *PaginationParams
+	ScanFunc   func(rows Scanner) (interface{}, error)
 }
 
 // QueryExecutor interface for database operations
@@ -332,7 +338,7 @@ type Scanner interface {
 func (pq *PaginatedQuery) Execute(ctx context.Context) (*PageResult, error) {
 	// Build query
 	builder := NewSQLBuilder(pq.BaseQuery, pq.CountQuery, pq.Params)
-	
+
 	// Add filters from params
 	for key, value := range pq.Params.Filters {
 		builder.AddFilter(key, value)
@@ -413,7 +419,7 @@ func WritePaginationHeaders(w http.ResponseWriter, info PageInfo) {
 	w.Header().Set("X-Pagination-Limit", strconv.Itoa(info.Limit))
 	w.Header().Set("X-Pagination-Total", strconv.FormatInt(info.Total, 10))
 	w.Header().Set("X-Pagination-Total-Pages", strconv.Itoa(info.TotalPages))
-	
+
 	if info.HasMore {
 		w.Header().Set("X-Pagination-Has-More", "true")
 	} else {

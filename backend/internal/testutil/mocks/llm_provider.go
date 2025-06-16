@@ -62,7 +62,7 @@ func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt, systemPro
 }
 
 func contains(str, substr string) bool {
-	return len(str) >= len(substr) && (str == substr || str != "" && len(substr) > 0 && str[0:len(substr)] == substr || (len(str) > len(substr) && str[len(str)-len(substr):] == substr) || (len(substr) > 0 && len(str) > len(substr) && findSubstring(str, substr)))
+	return len(str) >= len(substr) && (str == substr || str != "" && substr != "" && str[0:len(substr)] == substr || (len(str) > len(substr) && str[len(str)-len(substr):] == substr) || (substr != "" && len(str) > len(substr) && findSubstring(str, substr)))
 }
 
 func findSubstring(str, substr string) bool {
@@ -220,7 +220,7 @@ func (m *MockLLMProvider) WithResponse(key, response string) *MockLLMProvider {
 
 // WithError returns an error for testing error cases
 func (m *MockLLMProvider) WithError(err error) *MockLLMProvider {
-	m.ResponseFunc = func(_ context.Context, _, user string) (string, error) {
+	m.ResponseFunc = func(_ context.Context, _, _ string) (string, error) {
 		return "", err
 	}
 	return m

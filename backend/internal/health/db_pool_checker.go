@@ -9,28 +9,35 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 )
 
+// Health status constants
+const (
+	StatusHealthy  = "healthy"
+	StatusWarning  = "warning"
+	StatusCritical = "critical"
+)
+
 // DBPoolChecker provides comprehensive database health checks including pool statistics
 type DBPoolChecker struct {
-	DB               *database.DB
-	WarnThresholds   PoolThresholds
+	DB                 *database.DB
+	WarnThresholds     PoolThresholds
 	CriticalThresholds PoolThresholds
 }
 
 // PoolThresholds defines warning and critical thresholds for pool metrics
 type PoolThresholds struct {
-	ConnectionUsagePercent int    // Percentage of connections in use
-	WaitCount             int64  // Number of connections waiting
-	WaitDuration          time.Duration // Total wait duration
-	QueryTimeout          time.Duration // Maximum query execution time
+	ConnectionUsagePercent int           // Percentage of connections in use
+	WaitCount              int64         // Number of connections waiting
+	WaitDuration           time.Duration // Total wait duration
+	QueryTimeout           time.Duration // Maximum query execution time
 }
 
 // DefaultWarnThresholds returns default warning thresholds
 func DefaultWarnThresholds() PoolThresholds {
 	return PoolThresholds{
 		ConnectionUsagePercent: 70,
-		WaitCount:             5,
-		WaitDuration:          100 * time.Millisecond,
-		QueryTimeout:          1 * time.Second,
+		WaitCount:              5,
+		WaitDuration:           100 * time.Millisecond,
+		QueryTimeout:           1 * time.Second,
 	}
 }
 
@@ -38,20 +45,20 @@ func DefaultWarnThresholds() PoolThresholds {
 func DefaultCriticalThresholds() PoolThresholds {
 	return PoolThresholds{
 		ConnectionUsagePercent: 90,
-		WaitCount:             20,
-		WaitDuration:          1 * time.Second,
-		QueryTimeout:          5 * time.Second,
+		WaitCount:              20,
+		WaitDuration:           1 * time.Second,
+		QueryTimeout:           5 * time.Second,
 	}
 }
 
 // PoolHealthResult contains detailed pool health information
 type PoolHealthResult struct {
-	Status           string                 `json:"status"` // healthy, warning, critical
-	Message          string                 `json:"message,omitempty"`
-	Stats            sql.DBStats            `json:"stats"`
-	Metrics          map[string]interface{} `json:"metrics"`
-	Warnings         []string               `json:"warnings,omitempty"`
-	CriticalIssues   []string               `json:"critical_issues,omitempty"`
+	Status         string                 `json:"status"` // healthy, warning, critical
+	Message        string                 `json:"message,omitempty"`
+	Stats          sql.DBStats            `json:"stats"`
+	Metrics        map[string]interface{} `json:"metrics"`
+	Warnings       []string               `json:"warnings,omitempty"`
+	CriticalIssues []string               `json:"critical_issues,omitempty"`
 }
 
 func (d *DBPoolChecker) Name() string { return "database_pool" }
@@ -90,7 +97,7 @@ func (d *DBPoolChecker) Check(ctx context.Context) error {
 
 	// Get pool statistics
 	stats := d.DB.Stats()
-	
+
 	// Calculate usage percentage
 	usagePercent := 0
 	if stats.MaxOpenConnections > 0 {
@@ -113,9 +120,7 @@ func (d *DBPoolChecker) Check(ctx context.Context) error {
 	// Check warning conditions (these don't fail the health check)
 	if usagePercent >= d.WarnThresholds.ConnectionUsagePercent {
 		// Log warning but don't fail
-		if d.DB.GetDB() != nil {
-			// This would be logged but not fail the check
-		}
+		// TODO: Add logging for warning conditions
 	}
 
 	return nil
@@ -124,14 +129,14 @@ func (d *DBPoolChecker) Check(ctx context.Context) error {
 // GetDetailedHealth returns comprehensive pool health information
 func (d *DBPoolChecker) GetDetailedHealth(ctx context.Context) (*PoolHealthResult, error) {
 	result := &PoolHealthResult{
-		Status:   "healthy",
-		Metrics:  make(map[string]interface{}),
-		Warnings: []string{},
+		Status:         StatusHealthy,
+		Metrics:        make(map[string]interface{}),
+		Warnings:       []string{},
 		CriticalIssues: []string{},
 	}
 
 	if d.DB == nil {
-		result.Status = "critical"
+		result.Status = StatusCritical
 		result.Message = "Database not initialized"
 		return result, fmt.Errorf("database not initialized")
 	}
@@ -146,7 +151,7 @@ func (d *DBPoolChecker) GetDetailedHealth(ctx context.Context) (*PoolHealthResul
 	queryDuration := time.Since(start)
 
 	if err != nil {
-		result.Status = "critical"
+		result.Status = StatusCritical
 		result.Message = fmt.Sprintf("Database connectivity failed: %v", err)
 		result.CriticalIssues = append(result.CriticalIssues, result.Message)
 		return result, err
@@ -175,59 +180,59 @@ func (d *DBPoolChecker) GetDetailedHealth(ctx context.Context) (*PoolHealthResul
 
 	// Check critical issues
 	if usagePercent >= d.CriticalThresholds.ConnectionUsagePercent {
-		issue := fmt.Sprintf("Connection pool usage critical: %d%% (threshold: %d%%)", 
+		issue := fmt.Sprintf("Connection pool usage critical: %d%% (threshold: %d%%)",
 			usagePercent, d.CriticalThresholds.ConnectionUsagePercent)
 		result.CriticalIssues = append(result.CriticalIssues, issue)
-		result.Status = "critical"
+		result.Status = StatusCritical
 	}
 
 	if stats.WaitCount >= d.CriticalThresholds.WaitCount {
-		issue := fmt.Sprintf("Too many connections waiting: %d (threshold: %d)", 
+		issue := fmt.Sprintf("Too many connections waiting: %d (threshold: %d)",
 			stats.WaitCount, d.CriticalThresholds.WaitCount)
 		result.CriticalIssues = append(result.CriticalIssues, issue)
-		result.Status = "critical"
+		result.Status = StatusCritical
 	}
 
 	if queryDuration > d.CriticalThresholds.QueryTimeout {
-		issue := fmt.Sprintf("Query timeout critical: %v (threshold: %v)", 
+		issue := fmt.Sprintf("Query timeout critical: %v (threshold: %v)",
 			queryDuration, d.CriticalThresholds.QueryTimeout)
 		result.CriticalIssues = append(result.CriticalIssues, issue)
-		result.Status = "critical"
+		result.Status = StatusCritical
 	}
 
 	// Check warnings (only if not already critical)
-	if result.Status != "critical" {
+	if result.Status != StatusCritical {
 		if usagePercent >= d.WarnThresholds.ConnectionUsagePercent {
-			warning := fmt.Sprintf("Connection pool usage high: %d%% (threshold: %d%%)", 
+			warning := fmt.Sprintf("Connection pool usage high: %d%% (threshold: %d%%)",
 				usagePercent, d.WarnThresholds.ConnectionUsagePercent)
 			result.Warnings = append(result.Warnings, warning)
-			result.Status = "warning"
+			result.Status = StatusWarning
 		}
 
 		if stats.WaitCount >= d.WarnThresholds.WaitCount {
-			warning := fmt.Sprintf("Connections waiting: %d (threshold: %d)", 
+			warning := fmt.Sprintf("Connections waiting: %d (threshold: %d)",
 				stats.WaitCount, d.WarnThresholds.WaitCount)
 			result.Warnings = append(result.Warnings, warning)
-			result.Status = "warning"
+			result.Status = StatusWarning
 		}
 
 		if queryDuration > d.WarnThresholds.QueryTimeout {
-			warning := fmt.Sprintf("Query slow: %v (threshold: %v)", 
+			warning := fmt.Sprintf("Query slow: %v (threshold: %v)",
 				queryDuration, d.WarnThresholds.QueryTimeout)
 			result.Warnings = append(result.Warnings, warning)
-			result.Status = "warning"
+			result.Status = StatusWarning
 		}
 	}
 
 	// Set appropriate message
-	if result.Status == "healthy" {
-		result.Message = fmt.Sprintf("Database healthy - %d/%d connections in use", 
+	if result.Status == StatusHealthy {
+		result.Message = fmt.Sprintf("Database healthy - %d/%d connections in use",
 			stats.InUse, stats.MaxOpenConnections)
-	} else if result.Status == "warning" {
-		result.Message = fmt.Sprintf("Database operational with warnings - %d/%d connections in use", 
+	} else if result.Status == StatusWarning {
+		result.Message = fmt.Sprintf("Database operational with warnings - %d/%d connections in use",
 			stats.InUse, stats.MaxOpenConnections)
 	} else {
-		result.Message = fmt.Sprintf("Database critical - %d/%d connections in use", 
+		result.Message = fmt.Sprintf("Database critical - %d/%d connections in use",
 			stats.InUse, stats.MaxOpenConnections)
 	}
 
@@ -243,7 +248,7 @@ func (d *DBPoolChecker) GetPoolMetrics() map[string]interface{} {
 	}
 
 	stats := d.DB.Stats()
-	
+
 	usagePercent := 0
 	if stats.MaxOpenConnections > 0 {
 		usagePercent = int((float64(stats.InUse) / float64(stats.MaxOpenConnections)) * 100)
@@ -255,10 +260,10 @@ func (d *DBPoolChecker) GetPoolMetrics() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"open_connections":       stats.OpenConnections,
-		"in_use":                stats.InUse,
-		"idle":                  stats.Idle,
-		"max_open_connections":  stats.MaxOpenConnections,
+		"open_connections":     stats.OpenConnections,
+		"in_use":               stats.InUse,
+		"idle":                 stats.Idle,
+		"max_open_connections": stats.MaxOpenConnections,
 		"wait_count":           stats.WaitCount,
 		"wait_duration_ms":     stats.WaitDuration.Milliseconds(),
 		"avg_wait_time_ms":     avgWaitTime.Milliseconds(),

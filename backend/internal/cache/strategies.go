@@ -241,7 +241,9 @@ func (cs *CacheService) SetGameSession(ctx context.Context, session *models.Game
 	// Also update active sessions cache if applicable
 	if session.Status == "active" {
 		activeKey := fmt.Sprintf("sessions:active:%s", session.ID)
-		cs.client.Set(ctx, activeKey, "1", ttl)
+		if err := cs.client.Set(ctx, activeKey, "1", ttl); err != nil {
+			return fmt.Errorf("failed to cache active session: %w", err)
+		}
 	}
 
 	return nil

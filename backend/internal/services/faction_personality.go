@@ -115,21 +115,29 @@ func (fps *FactionPersonalityService) generatePersonalityTraits(faction *models.
 
 	// Adjust based on faction type
 	switch faction.Type {
-	case "kingdom":
-		traits["traditional"] += 0.3
-		traits["authoritarian"] += 0.2
-	case "merchant_guild":
-		traits["mercantile"] += 0.5
-		traits["diplomatic"] += 0.3
-	case "religious_order":
+	case models.FactionReligious:
 		traits["religious"] += 0.5
 		traits["idealistic"] += 0.3
-	case "barbarian_horde":
+	case models.FactionPolitical:
+		traits["traditional"] += 0.3
+		traits["authoritarian"] += 0.2
+	case models.FactionCriminal:
+		traits["aggressive"] += 0.3
+		traits["pragmatic"] += 0.4
+	case models.FactionMerchant:
+		traits["mercantile"] += 0.5
+		traits["diplomatic"] += 0.3
+	case models.FactionMilitary:
 		traits["aggressive"] += 0.5
 		traits["militaristic"] += 0.4
-	case "magical_council":
+	case models.FactionCult:
+		traits["religious"] += 0.4
+		traits["isolationist"] += 0.3
+		traits["idealistic"] += 0.2
+	case models.FactionAncientOrder:
 		traits["scholarly"] += 0.5
 		traits["progressive"] += 0.3
+		traits["traditional"] += 0.2
 	}
 
 	// Normalize traits

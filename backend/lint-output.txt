@@ -1,0 +1,1885 @@
+pkg/logger/logger_test.go:414:4: missing cases in switch of type zerolog.Level: zerolog.FatalLevel, zerolog.PanicLevel, zerolog.NoLevel, zerolog.Disabled, zerolog.TraceLevel (exhaustive)
+			switch test.testLevel {
+			^
+internal/testutil/database.go:33:1: File is not properly formatted (gofmt)
+	
+^
+internal/testutil/secure_test_config.go:62:1: File is not properly formatted (gofmt)
+	
+^
+internal/websocket/hub.go:51:1: cyclomatic complexity 17 of func `(*Hub).Run` is high (> 15) (gocyclo)
+func (h *Hub) Run() {
+^
+internal/health/db_pool_checker.go:134:19: string `critical` has 6 occurrences, make it a constant (goconst)
+		result.Status = "critical"
+		                ^
+internal/health/db_pool_checker.go:204:20: string `warning` has 4 occurrences, make it a constant (goconst)
+			result.Status = "warning"
+			                ^
+internal/health/db_pool_checker.go:116:26: empty-block: this block is empty, you can remove it (revive)
+		if d.DB.GetDB() != nil {
+			// This would be logged but not fail the check
+		}
+internal/health/db_pool_checker.go:14:1: File is not properly formatted (gofmt)
+	DB               *database.DB
+^
+internal/services/game_session_test.go:417: 417-436 lines are duplicate of `internal/services/game_session_test.go:465-484` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockGameSessionRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewGameSessionService(mockRepo)
+			err := service.UpdateSession(ctx, tt.session)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/game_session_test.go:465: 465-484 lines are duplicate of `internal/services/user_test.go:410-429` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockGameSessionRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewGameSessionService(mockRepo)
+			err := service.DeleteSession(ctx, tt.sessionID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/user_test.go:410: 410-429 lines are duplicate of `internal/services/user_test.go:558-577` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockUserRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewUserService(mockRepo)
+			err := service.UpdateUser(ctx, tt.user)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/user_test.go:558: 558-577 lines are duplicate of `internal/services/game_session_test.go:417-436` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockUserRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewUserService(mockRepo)
+			err := service.DeleteUser(ctx, tt.userID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/game_session_test.go:173: 173-197 lines are duplicate of `internal/services/game_session_test.go:536-560` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockGameSessionRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewGameSessionService(mockRepo)
+			session, err := service.GetSessionByID(ctx, tt.sessionID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.Nil(t, session)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, session)
+				if tt.validate != nil {
+					tt.validate(t, session)
+				}
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/game_session_test.go:536: 536-560 lines are duplicate of `internal/services/user_test.go:154-178` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockGameSessionRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewGameSessionService(mockRepo)
+			participants, err := service.GetSessionParticipants(ctx, tt.sessionID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.Nil(t, participants)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, participants)
+				if tt.validate != nil {
+					tt.validate(t, participants)
+				}
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/user_test.go:154: 154-178 lines are duplicate of `internal/services/user_test.go:244-268` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockUserRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewUserService(mockRepo)
+			user, err := service.Register(ctx, tt.request)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.Nil(t, user)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, user)
+				if tt.validate != nil {
+					tt.validate(t, user)
+				}
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/user_test.go:244: 244-268 lines are duplicate of `internal/services/user_test.go:312-336` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockUserRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewUserService(mockRepo)
+			auth, err := service.Login(ctx, tt.request)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.Nil(t, auth)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, auth)
+				if tt.validate != nil {
+					tt.validate(t, auth)
+				}
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/user_test.go:312: 312-336 lines are duplicate of `internal/services/game_session_test.go:173-197` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockUserRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewUserService(mockRepo)
+			user, err := service.GetUserByID(ctx, tt.userID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.Nil(t, user)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, user)
+				if tt.validate != nil {
+					tt.validate(t, user)
+				}
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/character_test.go:271: 271-290 lines are duplicate of `internal/services/character_test.go:327-346` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockCharacterRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewCharacterService(mockRepo, nil, nil)
+			err := service.UpdateCharacter(ctx, tt.update)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/character_test.go:327: 327-346 lines are duplicate of `internal/services/character_test.go:271-290` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockCharacterRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewCharacterService(mockRepo, nil, nil)
+			err := service.DeleteCharacter(ctx, tt.characterID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/dice_roll_test.go:147: 147-169 lines are duplicate of `internal/services/game_session_test.go:107-130` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockDiceRollRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewDiceRollService(mockRepo)
+			err := service.RollDice(ctx, tt.roll)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+				if tt.validateRoll != nil {
+					tt.validateRoll(t, tt.roll)
+				}
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/game_session_test.go:107: 107-130 lines are duplicate of `internal/services/dice_roll_test.go:147-169` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSessionRepo := new(mocks.MockGameSessionRepository)
+
+			if tt.setupMock != nil {
+				tt.setupMock(mockSessionRepo)
+			}
+
+			service := services.NewGameSessionService(mockSessionRepo)
+			err := service.CreateSession(ctx, tt.session)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+				if tt.validate != nil {
+					tt.validate(t, tt.session)
+				}
+			}
+
+			mockSessionRepo.AssertExpectations(t)
+		})
+	}
+internal/services/game_session_test.go:267: 267-286 lines are duplicate of `internal/services/game_session_test.go:799-818` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockGameSessionRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewGameSessionService(mockRepo)
+			err := service.JoinSession(ctx, tt.sessionID, tt.userID, tt.characterID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/game_session_test.go:799: 799-818 lines are duplicate of `internal/services/user_test.go:505-524` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockGameSessionRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewGameSessionService(mockRepo)
+			err := service.UpdatePlayerOnlineStatus(ctx, tt.sessionID, tt.userID, tt.isOnline)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/user_test.go:505: 505-524 lines are duplicate of `internal/services/game_session_test.go:267-286` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockUserRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewUserService(mockRepo)
+			err := service.ChangePassword(ctx, tt.userID, tt.oldPassword, tt.newPassword)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/dice_roll_test.go:251: 251-271 lines are duplicate of `internal/services/dice_roll_test.go:329-349` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockDiceRollRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewDiceRollService(mockRepo)
+			result, err := service.GetRollsBySession(ctx, tt.sessionID, tt.offset, tt.limit)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/dice_roll_test.go:329: 329-349 lines are duplicate of `internal/services/dice_roll_test.go:251-271` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockDiceRollRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewDiceRollService(mockRepo)
+			result, err := service.GetRollsByUser(ctx, tt.userID, tt.offset, tt.limit)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/game_session_test.go:341: 341-360 lines are duplicate of `internal/services/game_session_test.go:645-664` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockGameSessionRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewGameSessionService(mockRepo)
+			err := service.LeaveSession(ctx, tt.sessionID, tt.userID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/game_session_test.go:645: 645-664 lines are duplicate of `internal/services/game_session_test.go:341-360` (dupl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(mocks.MockGameSessionRepository)
+			if tt.setupMock != nil {
+				tt.setupMock(mockRepo)
+			}
+
+			service := services.NewGameSessionService(mockRepo)
+			err := service.ValidateUserInSession(ctx, tt.sessionID, tt.userID)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+internal/services/test_helpers_test.go:143:1: cyclomatic complexity 32 of func `(*CombatService).ExecuteAction` is high (> 15) (gocyclo)
+func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, action *models.CombatAction) (*models.Combat, error) {
+^
+internal/services/dice_roll_test.go:17:1: cyclomatic complexity 19 of func `TestDiceRollService_RollDice` is high (> 15) (gocyclo)
+func TestDiceRollService_RollDice(t *testing.T) {
+^
+internal/services/test_helpers_test.go:38:1: cyclomatic complexity 17 of func `(*CombatService).StartCombat` is high (> 15) (gocyclo)
+func (s *CombatService) StartCombat(ctx context.Context, sessionID string, participants []models.Combatant) (*models.Combat, error) {
+^
+internal/services/test_helpers_test.go:283:2: missing cases in switch of type models.CombatStatus: models.CombatStatusPaused (exhaustive)
+	switch combat.Status {
+	^
+internal/services/test_helpers_test.go:48:2: rangeValCopy: each iteration copies 488 bytes (consider pointers or indexing) (gocritic)
+	for _, p := range participants {
+	^
+internal/services/test_helpers_test.go:70:2: rangeValCopy: each iteration copies 488 bytes (consider pointers or indexing) (gocritic)
+	for i, p := range participants {
+	^
+internal/services/test_helpers_test.go:78:4: rangeValCopy: each iteration copies 488 bytes (consider pointers or indexing) (gocritic)
+			for _, p := range participants {
+			^
+internal/services/user_test.go:21:1: File is not properly formatted (gofmt)
+	testUserPassword    = "SecurePass123!"
+^
+internal/pagination/pagination.go:83:17: string `desc` has 2 occurrences, make it a constant (goconst)
+		if sortDir == "desc" || sortDir == "asc" {
+		              ^
+internal/pagination/pagination.go:50:1: cyclomatic complexity 16 of func `FromRequest` is high (> 15) (gocyclo)
+func FromRequest(r *http.Request) *PaginationParams {
+^
+internal/pagination/pagination.go:290:1: unnamedResult: consider giving a name to these results (gocritic)
+func (b *SQLBuilder) Build() (string, []interface{}) {
+^
+internal/pagination/pagination.go:26:1: File is not properly formatted (gofmt)
+	Page     int `json:"page,omitempty"`
+^
+internal/pagination/pagination.go:360:2: Consider pre-allocating `results` (prealloc)
+	var results []interface{}
+	^
+pkg/game/random.go:100:1: File is not properly formatted (gofmt)
+}
+^
+internal/crdt/ws.go:82:16: empty-block: this block is empty, you can remove it (revive)
+	if doc == nil {
+		// If LoadDoc can return nil on error (even if error is ignored),
+		// we should probably handle it to prevent panic with NewSyncState.
+		// For now, assuming LoadDoc returns a non-nil doc or NewSyncState handles nil.
+		// If LoadDoc truly fails and returns nil, this could be problematic.
+		// Consider logging an error here if doc is nil.
+		// http.Error(w, "failed to load document", http.StatusInternalServerError)
+		// return
+	}
+internal/testhelpers/builders.go:142:44: unused-parameter: parameter 'characterID' seems to be unused, consider removing or renaming it as _ (revive)
+func (b *GameSessionBuilder) WithPlayer(_, characterID string) *GameSessionBuilder {
+                                           ^
+internal/testhelpers/assertions.go:223:1: paramTypeCombine: func(t *testing.T, id string, fieldName string) could be replaced with func(t *testing.T, id, fieldName string) (gocritic)
+func AssertUUID(t *testing.T, id string, fieldName string) {
+^
+internal/testhelpers/assertions.go:77:3: rangeValCopy: each iteration copies 488 bytes (consider pointers or indexing) (gocritic)
+		for i, combatant := range combat.Combatants {
+		^
+internal/testhelpers/assertions.go:132:2: rangeValCopy: each iteration copies 176 bytes (consider pointers or indexing) (gocritic)
+	for i, item := range items {
+	^
+internal/testhelpers/http_helpers.go:117:36: hugeParam: tc is heavy (144 bytes); consider passing it by pointer (gocritic)
+func ExecuteTestCase(t *testing.T, tc HTTPTestCase, handler http.HandlerFunc) {
+                                   ^
+internal/testhelpers/http_helpers.go:153:2: rangeValCopy: each iteration copies 144 bytes (consider pointers or indexing) (gocritic)
+	for _, tc := range testCases {
+	^
+internal/database/rule_builder_repository.go:24: 24-50 lines are duplicate of `internal/database/rule_builder_repository.go:53-79` (dupl)
+func (r *RuleBuilderRepository) scanActiveRule(row RowScanner) (*models.ActiveRule, error) {
+	var rule models.ActiveRule
+	var compiledLogicJSON, parametersJSON []byte
+
+	dest := []interface{}{
+		&rule.ID,
+		&rule.TemplateID,
+		&rule.GameSessionID,
+		&rule.CharacterID,
+		&compiledLogicJSON,
+		&parametersJSON,
+		&rule.IsActive,
+		&rule.CreatedAt,
+		&rule.UpdatedAt,
+	}
+
+	jsonFields := map[int]JSONFieldUnmarshaler{
+		4: UnmarshalJSONWithError(&rule.CompiledLogic, "compiled logic"),
+		5: UnmarshalJSONWithError(&rule.Parameters, "parameters"),
+	}
+
+	if err := ScanWithJSON(row, dest, jsonFields); err != nil {
+		return nil, err
+	}
+
+	return &rule, nil
+}
+internal/database/rule_builder_repository.go:53: 53-79 lines are duplicate of `internal/database/rule_builder_repository.go:24-50` (dupl)
+func (r *RuleBuilderRepository) scanRuleExecution(row RowScanner) (*models.RuleExecution, error) {
+	var execution models.RuleExecution
+	var triggerContextJSON, executionResultJSON []byte
+
+	dest := []interface{}{
+		&execution.ID,
+		&execution.RuleID,
+		&execution.GameSessionID,
+		&execution.CharacterID,
+		&triggerContextJSON,
+		&executionResultJSON,
+		&execution.Success,
+		&execution.ErrorMessage,
+		&execution.ExecutedAt,
+	}
+
+	jsonFields := map[int]JSONFieldUnmarshaler{
+		4: UnmarshalJSONWithError(&execution.TriggerContext, "trigger context"),
+		5: UnmarshalJSONWithError(&execution.ExecutionResult, "execution result"),
+	}
+
+	if err := ScanWithJSON(row, dest, jsonFields); err != nil {
+		return nil, err
+	}
+
+	return &execution, nil
+}
+internal/database/pagination_helpers.go:383:12: Error return value of `rows.Scan` is not checked (errcheck)
+		rows.Scan(&id)
+		         ^
+internal/database/pagination_helpers.go:65:16: string `created_at` has 2 occurrences, make it a constant (goconst)
+	sortColumn := "created_at"
+	              ^
+internal/database/pagination_helpers.go:26:15: string `
+		SELECT id, user_id, name, race, class, level, experience, 
+		       hit_points, max_hit_points, armor_class, alignment,
+		       background, attributes, skills, proficiencies,
+		       equipment, spells, features, created_at, updated_at
+		FROM characters
+		WHERE user_id = ?` has 2 occurrences, make it a constant (goconst)
+	baseQuery := `
+	             ^
+internal/database/pagination_helpers.go:83:15: string ` LIMIT ? OFFSET ?` has 2 occurrences, make it a constant (goconst)
+	baseQuery += " LIMIT ? OFFSET ?"
+	             ^
+internal/database/combat_analytics_repository.go:111:72: unused-parameter: parameter 'updates' seems to be unused, consider removing or renaming it as _ (revive)
+func (r *combatAnalyticsRepository) UpdateCombatAnalytics(_ uuid.UUID, updates map[string]interface{}) error {
+                                                                       ^
+internal/database/combat_analytics_repository.go:171:75: unused-parameter: parameter 'updates' seems to be unused, consider removing or renaming it as _ (revive)
+func (r *combatAnalyticsRepository) UpdateCombatantAnalytics(_ uuid.UUID, updates map[string]interface{}) error {
+                                                                          ^
+internal/database/combat_analytics_repository.go:301:66: unused-parameter: parameter 'updates' seems to be unused, consider removing or renaming it as _ (revive)
+func (r *combatAnalyticsRepository) UpdateBattleMap(_ uuid.UUID, updates map[string]interface{}) error {
+                                                                 ^
+internal/database/inventory_repository.go:164:5: sloppyReassign: re-assignment to `err` can be replaced with `err := tx.Commit()` (gocritic)
+	if err = tx.Commit(); err != nil {
+	   ^
+internal/database/migrate.go:74:1: unnamedResult: consider giving a name to these results (gocritic)
+func GetMigrationVersion(db *DB) (uint, bool, error) {
+^
+internal/database/pagination_helpers.go:390:1: File is not properly formatted (gofmt)
+}
+^
+internal/database/production_pool.go:17:1: File is not properly formatted (gofmt)
+	OpenConnections      int
+^
+internal/database/scan_helpers.go:22:1: File is not properly formatted (gofmt)
+	
+^
+internal/database/pagination_helpers.go:7:1: File is not properly formatted (goimports)
+
+^
+internal/database/character_repository.go:193:2: S1011: should replace loop with `characters = append(characters, charactersPtr...)` (gosimple)
+	for _, c := range charactersPtr {
+	^
+internal/database/character_repository.go:301:2: S1011: should replace loop with `characters = append(characters, charactersPtr...)` (gosimple)
+	for _, c := range charactersPtr {
+	^
+internal/database/game_session_repository.go:148:2: S1011: should replace loop with `sessions = append(sessions, sessionsPtr...)` (gosimple)
+	for _, s := range sessionsPtr {
+	^
+internal/database/game_session_repository.go:183:2: S1011: should replace loop with `sessions = append(sessions, sessionsPtr...)` (gosimple)
+	for _, s := range sessionsPtr {
+	^
+internal/database/game_session_repository.go:261:2: S1011: should replace loop with `sessions = append(sessions, sessionsPtr...)` (gosimple)
+	for _, s := range sessionsPtr {
+	^
+internal/database/production_pool.go:210:9: copylocks: return copies lock value: github.com/ctclostio/DnD-Game/backend/internal/database.PoolMetrics contains sync.RWMutex (govet)
+	return *pm.metrics
+	       ^
+internal/database/user_repository.go:28:1: `if r.db.DriverName() == "sqlite3"` has complex nested blocks (complexity: 9) (nestif)
+	if r.db.DriverName() == "sqlite3" {
+^
+internal/database/user_repository.go:64:1: `if err != nil` has complex nested blocks (complexity: 5) (nestif)
+	if err != nil {
+^
+internal/database/world_building_repository.go:811:1: `if ok` has complex nested blocks (complexity: 10) (nestif)
+		if settlementIDs, ok := impacts["affected_settlements"].([]interface{}); ok {
+^
+internal/database/scan_helpers.go:54:2: Consider pre-allocating `results` (prealloc)
+	var results []*T
+	^
+internal/database/scan_helpers.go:98:104: unnecessary leading newline (whitespace)
+	query string, args []interface{}, jsonFields map[int]struct{ Value interface{}; Name string }) error {
+	                                                                                                      ^
+internal/services/character.go:196: 196-217 lines are duplicate of `internal/services/character.go:220-241` (dupl)
+	fullCasterSlots := map[int][]int{
+		1:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
+		2:  {3, 0, 0, 0, 0, 0, 0, 0, 0},
+		3:  {4, 2, 0, 0, 0, 0, 0, 0, 0},
+		4:  {4, 3, 0, 0, 0, 0, 0, 0, 0},
+		5:  {4, 3, 2, 0, 0, 0, 0, 0, 0},
+		6:  {4, 3, 3, 0, 0, 0, 0, 0, 0},
+		7:  {4, 3, 3, 1, 0, 0, 0, 0, 0},
+		8:  {4, 3, 3, 2, 0, 0, 0, 0, 0},
+		9:  {4, 3, 3, 3, 1, 0, 0, 0, 0},
+		10: {4, 3, 3, 3, 2, 0, 0, 0, 0},
+		11: {4, 3, 3, 3, 2, 1, 0, 0, 0},
+		12: {4, 3, 3, 3, 2, 1, 0, 0, 0},
+		13: {4, 3, 3, 3, 2, 1, 1, 0, 0},
+		14: {4, 3, 3, 3, 2, 1, 1, 0, 0},
+		15: {4, 3, 3, 3, 2, 1, 1, 1, 0},
+		16: {4, 3, 3, 3, 2, 1, 1, 1, 0},
+		17: {4, 3, 3, 3, 2, 1, 1, 1, 1},
+		18: {4, 3, 3, 3, 3, 1, 1, 1, 1},
+		19: {4, 3, 3, 3, 3, 2, 1, 1, 1},
+		20: {4, 3, 3, 3, 3, 2, 2, 1, 1},
+	}
+internal/services/character.go:220: 220-241 lines are duplicate of `internal/services/character.go:244-265` (dupl)
+	halfCasterSlots := map[int][]int{
+		1:  {0, 0, 0, 0, 0, 0, 0, 0, 0},
+		2:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
+		3:  {3, 0, 0, 0, 0, 0, 0, 0, 0},
+		4:  {3, 0, 0, 0, 0, 0, 0, 0, 0},
+		5:  {4, 2, 0, 0, 0, 0, 0, 0, 0},
+		6:  {4, 2, 0, 0, 0, 0, 0, 0, 0},
+		7:  {4, 3, 0, 0, 0, 0, 0, 0, 0},
+		8:  {4, 3, 0, 0, 0, 0, 0, 0, 0},
+		9:  {4, 3, 2, 0, 0, 0, 0, 0, 0},
+		10: {4, 3, 2, 0, 0, 0, 0, 0, 0},
+		11: {4, 3, 3, 0, 0, 0, 0, 0, 0},
+		12: {4, 3, 3, 0, 0, 0, 0, 0, 0},
+		13: {4, 3, 3, 1, 0, 0, 0, 0, 0},
+		14: {4, 3, 3, 1, 0, 0, 0, 0, 0},
+		15: {4, 3, 3, 2, 0, 0, 0, 0, 0},
+		16: {4, 3, 3, 2, 0, 0, 0, 0, 0},
+		17: {4, 3, 3, 3, 1, 0, 0, 0, 0},
+		18: {4, 3, 3, 3, 1, 0, 0, 0, 0},
+		19: {4, 3, 3, 3, 2, 0, 0, 0, 0},
+		20: {4, 3, 3, 3, 2, 0, 0, 0, 0},
+	}
+internal/services/character.go:244: 244-265 lines are duplicate of `internal/services/character_builder.go:543-564` (dupl)
+	warlockSlots := map[int][]int{
+		1:  {1, 0, 0, 0, 0, 0, 0, 0, 0},
+		2:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
+		3:  {0, 2, 0, 0, 0, 0, 0, 0, 0},
+		4:  {0, 2, 0, 0, 0, 0, 0, 0, 0},
+		5:  {0, 0, 2, 0, 0, 0, 0, 0, 0},
+		6:  {0, 0, 2, 0, 0, 0, 0, 0, 0},
+		7:  {0, 0, 0, 2, 0, 0, 0, 0, 0},
+		8:  {0, 0, 0, 2, 0, 0, 0, 0, 0},
+		9:  {0, 0, 0, 0, 2, 0, 0, 0, 0},
+		10: {0, 0, 0, 0, 2, 0, 0, 0, 0},
+		11: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		12: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		13: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		14: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		15: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		16: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		17: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+		18: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+		19: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+		20: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+	}
+internal/services/character_builder.go:543: 543-564 lines are duplicate of `internal/services/character_builder.go:567-588` (dupl)
+	fullCasterSlots := map[int][]int{
+		1:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
+		2:  {3, 0, 0, 0, 0, 0, 0, 0, 0},
+		3:  {4, 2, 0, 0, 0, 0, 0, 0, 0},
+		4:  {4, 3, 0, 0, 0, 0, 0, 0, 0},
+		5:  {4, 3, 2, 0, 0, 0, 0, 0, 0},
+		6:  {4, 3, 3, 0, 0, 0, 0, 0, 0},
+		7:  {4, 3, 3, 1, 0, 0, 0, 0, 0},
+		8:  {4, 3, 3, 2, 0, 0, 0, 0, 0},
+		9:  {4, 3, 3, 3, 1, 0, 0, 0, 0},
+		10: {4, 3, 3, 3, 2, 0, 0, 0, 0},
+		11: {4, 3, 3, 3, 2, 1, 0, 0, 0},
+		12: {4, 3, 3, 3, 2, 1, 0, 0, 0},
+		13: {4, 3, 3, 3, 2, 1, 1, 0, 0},
+		14: {4, 3, 3, 3, 2, 1, 1, 0, 0},
+		15: {4, 3, 3, 3, 2, 1, 1, 1, 0},
+		16: {4, 3, 3, 3, 2, 1, 1, 1, 0},
+		17: {4, 3, 3, 3, 2, 1, 1, 1, 1},
+		18: {4, 3, 3, 3, 3, 1, 1, 1, 1},
+		19: {4, 3, 3, 3, 3, 2, 1, 1, 1},
+		20: {4, 3, 3, 3, 3, 2, 2, 1, 1},
+	}
+internal/services/character_builder.go:567: 567-588 lines are duplicate of `internal/services/character_builder.go:591-612` (dupl)
+	halfCasterSlots := map[int][]int{
+		1:  {0, 0, 0, 0, 0, 0, 0, 0, 0},
+		2:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
+		3:  {3, 0, 0, 0, 0, 0, 0, 0, 0},
+		4:  {3, 0, 0, 0, 0, 0, 0, 0, 0},
+		5:  {4, 2, 0, 0, 0, 0, 0, 0, 0},
+		6:  {4, 2, 0, 0, 0, 0, 0, 0, 0},
+		7:  {4, 3, 0, 0, 0, 0, 0, 0, 0},
+		8:  {4, 3, 0, 0, 0, 0, 0, 0, 0},
+		9:  {4, 3, 2, 0, 0, 0, 0, 0, 0},
+		10: {4, 3, 2, 0, 0, 0, 0, 0, 0},
+		11: {4, 3, 3, 0, 0, 0, 0, 0, 0},
+		12: {4, 3, 3, 0, 0, 0, 0, 0, 0},
+		13: {4, 3, 3, 1, 0, 0, 0, 0, 0},
+		14: {4, 3, 3, 1, 0, 0, 0, 0, 0},
+		15: {4, 3, 3, 2, 0, 0, 0, 0, 0},
+		16: {4, 3, 3, 2, 0, 0, 0, 0, 0},
+		17: {4, 3, 3, 3, 1, 0, 0, 0, 0},
+		18: {4, 3, 3, 3, 1, 0, 0, 0, 0},
+		19: {4, 3, 3, 3, 2, 0, 0, 0, 0},
+		20: {4, 3, 3, 3, 2, 0, 0, 0, 0},
+	}
+internal/services/character_builder.go:591: 591-612 lines are duplicate of `internal/services/character.go:196-217` (dupl)
+	warlockSlots := map[int][]int{
+		1:  {1, 0, 0, 0, 0, 0, 0, 0, 0},
+		2:  {2, 0, 0, 0, 0, 0, 0, 0, 0},
+		3:  {0, 2, 0, 0, 0, 0, 0, 0, 0},
+		4:  {0, 2, 0, 0, 0, 0, 0, 0, 0},
+		5:  {0, 0, 2, 0, 0, 0, 0, 0, 0},
+		6:  {0, 0, 2, 0, 0, 0, 0, 0, 0},
+		7:  {0, 0, 0, 2, 0, 0, 0, 0, 0},
+		8:  {0, 0, 0, 2, 0, 0, 0, 0, 0},
+		9:  {0, 0, 0, 0, 2, 0, 0, 0, 0},
+		10: {0, 0, 0, 0, 2, 0, 0, 0, 0},
+		11: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		12: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		13: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		14: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		15: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		16: {0, 0, 0, 0, 3, 0, 0, 0, 0},
+		17: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+		18: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+		19: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+		20: {0, 0, 0, 0, 4, 0, 0, 0, 0},
+	}
+internal/services/faction_system.go:552: 552-581 lines are duplicate of `internal/services/faction_system.go:609-638` (dupl)
+func (s *FactionSystemService) calculateInfluenceLevel(factionType models.FactionType, resources map[string]interface{}) int {
+	baseInfluence := map[models.FactionType]int{
+		models.FactionReligious:    6,
+		models.FactionPolitical:    8,
+		models.FactionCriminal:     4,
+		models.FactionMerchant:     5,
+		models.FactionMilitary:     7,
+		models.FactionCult:         3,
+		models.FactionAncientOrder: 5,
+	}
+
+	influence := baseInfluence[factionType]
+
+	// Adjust based on resources
+	if connections, ok := resources["connections"].(string); ok && connections != "" {
+		influence++
+	}
+
+	// Add randomness
+	influence += rand.Intn(3) - 1
+
+	if influence < 1 {
+		influence = 1
+	}
+	if influence > 10 {
+		influence = 10
+	}
+
+	return influence
+}
+internal/services/faction_system.go:609: 609-638 lines are duplicate of `internal/services/faction_system.go:552-581` (dupl)
+func (s *FactionSystemService) calculateEconomicPower(factionType models.FactionType, resources map[string]interface{}) int {
+	baseEconomic := map[models.FactionType]int{
+		models.FactionReligious:    5,
+		models.FactionPolitical:    6,
+		models.FactionCriminal:     6,
+		models.FactionMerchant:     9,
+		models.FactionMilitary:     4,
+		models.FactionCult:         2,
+		models.FactionAncientOrder: 3,
+	}
+
+	power := baseEconomic[factionType]
+
+	// Adjust based on resources
+	if wealth, ok := resources["wealth"].(string); ok && wealth != "" {
+		power++
+	}
+
+	// Add randomness
+	power += rand.Intn(3) - 1
+
+	if power < 1 {
+		power = 1
+	}
+	if power > 10 {
+		power = 10
+	}
+
+	return power
+}
+internal/services/faction_system.go:502: 502-524 lines are duplicate of `internal/services/faction_system.go:526-548` (dupl)
+func (s *FactionSystemService) generateCorruptionEvent(faction *models.Faction) *models.WorldEvent {
+	return &models.WorldEvent{
+		Name:                 fmt.Sprintf("Dark Revelation: %s", faction.Name),
+		Type:                 models.EventSupernatural,
+		Severity:             models.SeverityMajor,
+		Description:          fmt.Sprintf("The corruption within %s has manifested in terrifying ways", faction.Name),
+		Cause:                "Ancient corruption reaching critical mass",
+		StartDate:            "Current",
+		Duration:             "Unknown",
+		IsActive:             true,
+		AncientCause:         true,
+		AwakensAncientEvil:   rand.Float32() < 0.3,
+		AffectedFactions:     models.JSONB(fmt.Sprintf(`["%s"]`, faction.ID)),
+		AffectedRegions:      models.JSONB("[]"),
+		AffectedSettlements:  models.JSONB("[]"),
+		EconomicImpacts:      models.JSONB("{}"),
+		PoliticalImpacts:     models.JSONB("{}"),
+		Stages:               models.JSONB("[]"),
+		ResolutionConditions: models.JSONB("[]"),
+		Consequences:         models.JSONB("{}"),
+		PartyActions:         models.JSONB("[]"),
+	}
+}
+internal/services/faction_system.go:526: 526-548 lines are duplicate of `internal/services/faction_system.go:502-524` (dupl)
+func (s *FactionSystemService) generateAncientPowerEvent(faction *models.Faction) *models.WorldEvent {
+	return &models.WorldEvent{
+		Name:                 fmt.Sprintf("Ancient Discovery: %s", faction.Name),
+		Type:                 models.EventSupernatural,
+		Severity:             models.SeverityModerate,
+		Description:          fmt.Sprintf("%s has uncovered significant ancient artifacts or knowledge", faction.Name),
+		Cause:                "Faction research and exploration",
+		StartDate:            "Current",
+		Duration:             "Ongoing",
+		IsActive:             true,
+		AncientCause:         true,
+		ProphecyRelated:      rand.Float32() < 0.4,
+		AffectedFactions:     models.JSONB(fmt.Sprintf(`["%s"]`, faction.ID)),
+		AffectedRegions:      models.JSONB("[]"),
+		AffectedSettlements:  models.JSONB("[]"),
+		EconomicImpacts:      models.JSONB("{}"),
+		PoliticalImpacts:     models.JSONB("{}"),
+		Stages:               models.JSONB("[]"),
+		ResolutionConditions: models.JSONB("[]"),
+		Consequences:         models.JSONB("{}"),
+		PartyActions:         models.JSONB("[]"),
+	}
+}
+internal/services/combat_analytics.go:165:1: cyclomatic complexity 25 of func `(*CombatAnalyticsService).calculateCombatantAnalytics` is high (> 15) (gocyclo)
+func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
+^
+internal/services/combat.go:66:1: cyclomatic complexity 24 of func `(*CombatService).ProcessAction` is high (> 15) (gocyclo)
+func (s *CombatService) ProcessAction(ctx context.Context, combatID string, request models.CombatRequest) (*models.CombatAction, error) {
+^
+internal/services/ai_encounter_builder.go:271:1: cyclomatic complexity 23 of func `(*AIEncounterBuilder).parseEncounterResponse` is high (> 15) (gocyclo)
+func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.Encounter, error) {
+^
+internal/services/game_session.go:154:1: cyclomatic complexity 20 of func `(*GameSessionService).JoinSession` is high (> 15) (gocyclo)
+func (s *GameSessionService) JoinSession(ctx context.Context, sessionID, userID string, characterID *string) error {
+^
+internal/services/dm_assistant.go:30:1: cyclomatic complexity 20 of func `(*DMAssistantService).ProcessRequest` is high (> 15) (gocyclo)
+func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUID, req models.DMAssistantRequest) (interface{}, error) {
+^
+internal/services/dm_assistant_test.go:16:1: cyclomatic complexity 19 of func `TestDMAssistantService_ProcessRequest` is high (> 15) (gocyclo)
+func TestDMAssistantService_ProcessRequest(t *testing.T) {
+^
+internal/services/inventory.go:51:1: cyclomatic complexity 19 of func `(*InventoryService).EquipItem` is high (> 15) (gocyclo)
+func (s *InventoryService) EquipItem(characterID, itemID string) error {
+^
+internal/services/combat_analytics.go:563:1: cyclomatic complexity 19 of func `(*CombatAnalyticsService).findMissedOpportunities` is high (> 15) (gocyclo)
+func (cas *CombatAnalyticsService) findMissedOpportunities(actions []*models.CombatActionLog, combat *models.Combat) []string {
+^
+internal/services/combat_analytics.go:505:1: cyclomatic complexity 19 of func `(*CombatAnalyticsService).analyzeTeamwork` is high (> 15) (gocyclo)
+func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActionLog, reports []*models.CombatantReport) int {
+^
+internal/services/game_test.go:402:1: cyclomatic complexity 18 of func `TestGameService_ConcurrentAccess` is high (> 15) (gocyclo)
+func TestGameService_ConcurrentAccess(t *testing.T) {
+^
+internal/services/character.go:94:1: cyclomatic complexity 18 of func `(*CharacterService).UpdateCharacter` is high (> 15) (gocyclo)
+func (s *CharacterService) UpdateCharacter(ctx context.Context, char *models.Character) error {
+^
+internal/services/procedural_culture.go:308:1: cyclomatic complexity 16 of func `(*ProceduralCultureService).generateBeliefSystem` is high (> 15) (gocyclo)
+func (pcs *ProceduralCultureService) generateBeliefSystem(ctx context.Context, cultureName string, foundation *CultureFoundation) models.CultureBeliefSystem {
+^
+internal/services/faction_system.go:223:1: cyclomatic complexity 16 of func `(*FactionSystemService).SimulateFactionConflicts` is high (> 15) (gocyclo)
+func (s *FactionSystemService) SimulateFactionConflicts(ctx context.Context, gameSessionID uuid.UUID) ([]*models.WorldEvent, error) {
+^
+internal/services/character_builder.go:379:66: unused-parameter: parameter 'backgroundData' seems to be unused, consider removing or renaming it as _ (revive)
+func (cb *CharacterBuilder) applyBackground(_ *models.Character, backgroundData *BackgroundData) {
+                                                                 ^
+internal/services/economic_simulator.go:184:67: unused-parameter: parameter 'disruptionType' seems to be unused, consider removing or renaming it as _ (revive)
+func (s *EconomicSimulatorService) DisruptTradeRoute(_ uuid.UUID, disruptionType string, severity int) error {
+                                                                  ^
+internal/services/economic_simulator.go:446:89: unused-parameter: parameter 'eventType' seems to be unused, consider removing or renaming it as _ (revive)
+func (s *EconomicSimulatorService) triggerEconomicEvent(_ context.Context, _ uuid.UUID, eventType string) {
+                                                                                        ^
+internal/services/world_event_engine_test.go:186:79: unused-parameter: parameter 'systemPrompt' seems to be unused, consider removing or renaming it as _ (revive)
+func (m *TestMockLLMProvider) GenerateCompletion(_ context.Context, _ string, systemPrompt string) (string, error) {
+                                                                              ^
+internal/services/world_event_engine_test.go:201:67: unused-parameter: parameter 'system' seems to be unused, consider removing or renaming it as _ (revive)
+func (m *TestMockLLMProvider) StreamContent(_ context.Context, _, system string) (<-chan string, <-chan error) {
+                                                                  ^
+internal/services/ai_race_generator.go:137:2: if-return: redundant if ...; err != nil check, just return error instead. (revive)
+	if err := s.validateBalanceScore(race); err != nil {
+		return err
+	}
+internal/services/combat.go:218:84: unused-parameter: parameter 'request' seems to be unused, consider removing or renaming it as _ (revive)
+func (s *CombatService) processMovement(_ *models.Combat, actor *models.Combatant, request models.CombatRequest, action *models.CombatAction) error {
+                                                                                   ^
+internal/services/conditional_reality.go:236:94: unused-parameter: parameter 'instance' seems to be unused, consider removing or renaming it as _ (revive)
+func (crs *ConditionalRealitySystem) evaluateCharacterStateCondition(_ models.RuleCondition, instance *models.RuleInstance) bool {
+                                                                                             ^
+internal/services/llm_providers.go:284:68: unused-parameter: parameter 'systemPrompt' seems to be unused, consider removing or renaming it as _ (revive)
+func (m *MockLLMProvider) GenerateCompletion(_ context.Context, _, systemPrompt string) (string, error) {
+                                                                   ^
+internal/services/ai_balance_analyzer.go:651:93: unused-parameter: parameter 'scenario' seems to be unused, consider removing or renaming it as _ (revive)
+func (ba *AIBalanceAnalyzer) runSingleSimulation(_ context.Context, _ *models.RuleTemplate, scenario SimulationScenario) (map[string]interface{}, bool, string) {
+                                                                                            ^
+internal/services/living_ecosystem.go:827:62: unused-parameter: parameter 'faction2' seems to be unused, consider removing or renaming it as _ (revive)
+func (les *LivingEcosystemService) getFactionRelationship(_, faction2 *models.Faction) float64 {
+                                                             ^
+internal/services/living_ecosystem.go:903:91: unused-parameter: parameter 'eventType' seems to be unused, consider removing or renaming it as _ (revive)
+func (les *LivingEcosystemService) determineAffectedEntities(_ context.Context, _ string, eventType string) []string {
+                                                                                          ^
+internal/services/procedural_culture.go:1331:9: indent-error-flow: if block ends with a return statement, so drop this else and outdent its block (revive)
+	} else {
+		return "strongly rejected the foreign ways"
+	}
+internal/services/world_event_engine.go:249:66: unused-parameter: parameter 'action' seems to be unused, consider removing or renaming it as _ (revive)
+func (s *WorldEventEngineService) RecordPartyAction(_ uuid.UUID, action string) error {
+                                                                 ^
+internal/services/rule_engine.go:477:103: unused-parameter: parameter 'state' seems to be unused, consider removing or renaming it as _ (revive)
+func (e *RandomExecutor) Execute(_ context.Context, node *models.LogicNode, _ map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+                                                                                                      ^
+internal/services/rule_engine.go:546:113: unused-parameter: parameter 'state' seems to be unused, consider removing or renaming it as _ (revive)
+func (e *ConditionCheckExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+                                                                                                                ^
+internal/services/rule_engine.go:614:81: unused-parameter: parameter 'inputs' seems to be unused, consider removing or renaming it as _ (revive)
+func (e *ActionTriggerExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+                                                                                ^
+internal/services/rule_engine.go:620:81: unused-parameter: parameter 'inputs' seems to be unused, consider removing or renaming it as _ (revive)
+func (e *DamageTriggerExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+                                                                                ^
+internal/services/rule_engine.go:626:79: unused-parameter: parameter 'inputs' seems to be unused, consider removing or renaming it as _ (revive)
+func (e *TimeTriggerExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+                                                                              ^
+internal/services/rule_engine.go:632:77: unused-parameter: parameter 'inputs' seems to be unused, consider removing or renaming it as _ (revive)
+func (e *RollCheckExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+                                                                            ^
+internal/services/rule_engine.go:638:80: unused-parameter: parameter 'inputs' seems to be unused, consider removing or renaming it as _ (revive)
+func (e *DamageActionExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+                                                                               ^
+internal/services/rule_engine.go:644:78: unused-parameter: parameter 'inputs' seems to be unused, consider removing or renaming it as _ (revive)
+func (e *HealActionExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+                                                                             ^
+internal/services/rule_engine.go:650:80: unused-parameter: parameter 'inputs' seems to be unused, consider removing or renaming it as _ (revive)
+func (e *EffectActionExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+                                                                               ^
+internal/services/rule_engine.go:656:82: unused-parameter: parameter 'inputs' seems to be unused, consider removing or renaming it as _ (revive)
+func (e *ResourceActionExecutor) Execute(_ context.Context, _ *models.LogicNode, inputs map[string]interface{}, state *ExecutionState) (map[string]interface{}, error) {
+                                                                                 ^
+internal/services/constants.go:13:2: const `sizeSmall` is unused (unused)
+	sizeSmall  = "small"
+	^
+internal/services/constants.go:14:2: const `sizeMedium` is unused (unused)
+	sizeMedium = "medium"
+	^
+internal/services/constants.go:15:2: const `sizeLarge` is unused (unused)
+	sizeLarge  = "large"
+	^
+internal/services/constants.go:20:2: const `actionTypeSpell` is unused (unused)
+	actionTypeSpell       = "spell"
+	^
+internal/services/constants.go:21:2: const `actionTypeAbility` is unused (unused)
+	actionTypeAbility     = "ability"
+	^
+internal/services/constants.go:22:2: const `actionTypeAttack` is unused (unused)
+	actionTypeAttack      = "attack"
+	^
+internal/services/constants.go:23:2: const `actionTypeMelee` is unused (unused)
+	actionTypeMelee       = "melee"
+	^
+internal/services/constants.go:24:2: const `actionTypeRanged` is unused (unused)
+	actionTypeRanged      = "ranged"
+	^
+internal/services/constants.go:25:2: const `actionTypeMovement` is unused (unused)
+	actionTypeMovement    = "movement"
+	^
+internal/services/constants.go:26:2: const `actionTypeKillingBlow` is unused (unused)
+	actionTypeKillingBlow = "killing_blow"
+	^
+internal/services/constants.go:40:2: const `categoryAbility` is unused (unused)
+	categoryAbility = "ability"
+	^
+internal/services/constants.go:41:2: const `categorySpell` is unused (unused)
+	categorySpell   = "spell"
+	^
+internal/services/constants.go:42:2: const `categoryItem` is unused (unused)
+	categoryItem    = "item"
+	^
+internal/services/constants.go:47:2: const `classWarlock` is unused (unused)
+	classWarlock = "warlock"
+	^
+internal/services/constants.go:48:2: const `classWizard` is unused (unused)
+	classWizard  = "wizard"
+	^
+internal/services/constants.go:49:2: const `classFighter` is unused (unused)
+	classFighter = "fighter"
+	^
+internal/services/constants.go:50:2: const `classRogue` is unused (unused)
+	classRogue   = "rogue"
+	^
+internal/services/constants.go:51:2: const `classCleric` is unused (unused)
+	classCleric  = "cleric"
+	^
+internal/services/constants.go:52:2: const `classRanger` is unused (unused)
+	classRanger  = "ranger"
+	^
+internal/services/constants.go:57:2: const `encounterTypeCombat` is unused (unused)
+	encounterTypeCombat      = "combat"
+	^
+internal/services/constants.go:58:2: const `encounterTypeSocial` is unused (unused)
+	encounterTypeSocial      = "social"
+	^
+internal/services/constants.go:59:2: const `encounterTypeExploration` is unused (unused)
+	encounterTypeExploration = "exploration"
+	^
+internal/services/constants.go:60:2: const `encounterTypePuzzle` is unused (unused)
+	encounterTypePuzzle      = "puzzle"
+	^
+internal/services/constants.go:65:2: const `diceD4` is unused (unused)
+	diceD4  = "1d4"
+	^
+internal/services/constants.go:66:2: const `diceD6` is unused (unused)
+	diceD6  = "1d6"
+	^
+internal/services/constants.go:67:2: const `diceD8` is unused (unused)
+	diceD8  = "1d8"
+	^
+internal/services/constants.go:68:2: const `diceD10` is unused (unused)
+	diceD10 = "1d10"
+	^
+internal/services/constants.go:69:2: const `diceD12` is unused (unused)
+	diceD12 = "1d12"
+	^
+internal/services/constants.go:70:2: const `diceD20` is unused (unused)
+	diceD20 = "1d20"
+	^
+internal/services/constants.go:75:2: const `defaultDamageFormula` is unused (unused)
+	defaultDamageFormula = "1d6"
+	^
+internal/services/economic_simulator.go:284:3: missing cases in switch of type models.WorldEventType: models.EventSupernatural, models.EventPlanar (exhaustive)
+		switch event.Type {
+		^
+internal/services/economic_simulator.go:311:2: missing cases in switch of type models.SettlementType: models.SettlementTown, models.SettlementRuins (exhaustive)
+	switch settlement.Type {
+	^
+internal/services/faction_personality.go:117:2: missing cases in switch of type models.FactionType: models.FactionReligious, models.FactionPolitical, models.FactionCriminal, models.FactionMerchant, models.FactionMilitary, models.FactionCult, models.FactionAncientOrder (exhaustive)
+	switch faction.Type {
+	^
+internal/services/settlement_generator.go:463:2: missing cases in switch of type models.SettlementType: models.SettlementRuins (exhaustive)
+	switch settlementType {
+	^
+internal/services/ai_balance_analyzer.go:147:3: nestingReduce: invert if cond, replace body with `continue`, move old body after the statement (gocritic)
+		if node.Type == models.NodeTypeActionDamage {
+		^
+internal/services/ai_battle_map_generator.go:155:54: hugeParam: generated is heavy (184 bytes); consider passing it by pointer (gocritic)
+func (abmg *AIBattleMapGenerator) convertToBattleMap(generated GeneratedBattleMap, req models.GenerateBattleMapRequest, gridX, gridY int) *models.BattleMap {
+                                                     ^
+internal/services/ai_battle_map_generator.go:142:1: unnamedResult: consider giving a name to these results (gocritic)
+func (abmg *AIBattleMapGenerator) determineGridSize(desiredSize string) (int, int) {
+^
+internal/services/ai_narrative_engine.go:64:110: hugeParam: decision is heavy (144 bytes); consider passing it by pointer (gocritic)
+func (ps *PlayerProfileService) AnalyzePlayerDecision(ctx context.Context, profile *models.NarrativeProfile, decision models.DecisionRecord) (*models.NarrativeProfile, error) {
+                                                                                                             ^
+internal/services/ai_narrative_engine.go:275:73: hugeParam: action is heavy (184 bytes); consider passing it by pointer (gocritic)
+func (ce *ConsequenceEngine) CalculateConsequences(ctx context.Context, action models.PlayerAction, worldState map[string]interface{}) ([]models.ConsequenceEvent, error) {
+                                                                        ^
+internal/services/combat.go:156:87: hugeParam: request is heavy (120 bytes); consider passing it by pointer (gocritic)
+func (s *CombatService) processAttack(combat *models.Combat, actor *models.Combatant, request models.CombatRequest, action *models.CombatAction) error {
+                                                                                      ^
+internal/services/conditional_reality.go:474:83: hugeParam: modifier is heavy (120 bytes); consider passing it by pointer (gocritic)
+func (crs *ConditionalRealitySystem) applyModifier(template *models.RuleTemplate, modifier RuleModifier) {
+                                                                                  ^
+internal/services/conditional_reality.go:527:104: hugeParam: newContext is heavy (96 bytes); consider passing it by pointer (gocritic)
+func (cm *ContextManager) notifySubscribers(ctx context.Context, sessionID string, contextType string, newContext models.ConditionalContext) {
+                                                                                                       ^
+internal/services/conditional_reality.go:199:3: nestingReduce: invert if cond, replace body with `continue`, move old body after the statement (gocritic)
+		if ctx.ContextType == models.ConditionTypePlane {
+		^
+internal/services/encounter.go:100:1: paramTypeCombine: func(_ context.Context, encounterID string, outcome string) error could be replaced with func(_ context.Context, encounterID, outcome string) error (gocritic)
+func (s *EncounterService) CompleteEncounter(_ context.Context, encounterID string, outcome string) error {
+^
+internal/services/encounter.go:120:1: paramTypeCombine: func(_ context.Context, encounterID string, newDifficulty string) (*models.Encounter, error) could be replaced with func(_ context.Context, encounterID, newDifficulty string) (*models.Encounter, error) (gocritic)
+func (s *EncounterService) ScaleEncounter(_ context.Context, encounterID string, newDifficulty string) (*models.Encounter, error) {
+^
+internal/services/faction_personality.go:566:14: appendAssign: append result not assigned to the same slice (gocritic)
+	combined := append(remaining[:50], recent...)
+	            ^
+internal/services/faction_personality.go:377:91: hugeParam: option is heavy (112 bytes); consider passing it by pointer (gocritic)
+func (fps *FactionPersonalityService) scoreOption(personality *models.FactionPersonality, option models.DecisionOption) float64 {
+                                                                                          ^
+internal/services/faction_personality.go:501:97: hugeParam: interaction is heavy (96 bytes); consider passing it by pointer (gocritic)
+func (fps *FactionPersonalityService) LearnFromInteraction(_ context.Context, factionID string, interaction models.PlayerInteraction) error {
+                                                                                                ^
+internal/services/faction_personality.go:570:104: hugeParam: memory is heavy (120 bytes); consider passing it by pointer (gocritic)
+func (fps *FactionPersonalityService) updateLearningFromMemory(personality *models.FactionPersonality, memory models.FactionMemory) {
+                                                                                                       ^
+internal/services/faction_system.go:31:92: hugeParam: req is heavy (80 bytes); consider passing it by pointer (gocritic)
+func (s *FactionSystemService) CreateFaction(ctx context.Context, gameSessionID uuid.UUID, req models.FactionCreationRequest) (*models.Faction, error) {
+                                                                                           ^
+internal/services/faction_system.go:696:83: hugeParam: req is heavy (80 bytes); consider passing it by pointer (gocritic)
+func (s *FactionSystemService) generateProceduralFaction(gameSessionID uuid.UUID, req models.FactionCreationRequest) *models.Faction {
+                                                                                  ^
+internal/services/faction_system.go:514:38: sprintfQuotedString: use %q instead of "%s" for quoted strings (gocritic)
+		AffectedFactions:     models.JSONB(fmt.Sprintf(`["%s"]`, faction.ID)),
+		                                   ^
+internal/services/faction_system.go:538:38: sprintfQuotedString: use %q instead of "%s" for quoted strings (gocritic)
+		AffectedFactions:     models.JSONB(fmt.Sprintf(`["%s"]`, faction.ID)),
+		                                   ^
+internal/services/living_ecosystem.go:203:93: hugeParam: goal is heavy (136 bytes); consider passing it by pointer (gocritic)
+func (les *LivingEcosystemService) simulateGoalProgress(_ context.Context, npc *models.NPC, goal models.NPCGoal, timeDelta time.Duration) (*models.EmergentWorldEvent, float64) {
+                                                                                            ^
+internal/services/living_ecosystem.go:327:96: hugeParam: activity is heavy (88 bytes); consider passing it by pointer (gocritic)
+func (les *LivingEcosystemService) generateScheduleEvent(ctx context.Context, npc *models.NPC, activity models.NPCSchedule) *models.EmergentWorldEvent {
+                                                                                               ^
+internal/services/npc.go:195:38: hugeParam: st is heavy (96 bytes); consider passing it by pointer (gocritic)
+func (s *NPCService) hasSavingThrows(st models.SavingThrows) bool {
+                                     ^
+internal/services/procedural_culture.go:1056:24: appendAssign: append result not assigned to the same slice (gocritic)
+			building.Features = append(architecture.CommonFeatures[:2], "altar", "sacred space")
+			                    ^
+internal/services/procedural_culture.go:37:93: hugeParam: parameters is heavy (80 bytes); consider passing it by pointer (gocritic)
+func (pcs *ProceduralCultureService) GenerateCulture(ctx context.Context, sessionID string, parameters CultureGenParameters) (*models.ProceduralCulture, error) {
+                                                                                            ^
+internal/services/procedural_culture.go:82:98: hugeParam: params is heavy (80 bytes); consider passing it by pointer (gocritic)
+func (pcs *ProceduralCultureService) generateCultureFoundation(ctx context.Context, name string, params CultureGenParameters) (*CultureFoundation, error) {
+                                                                                                 ^
+internal/services/procedural_culture.go:886:58: hugeParam: _ is heavy (80 bytes); consider passing it by pointer (gocritic)
+func (pcs *ProceduralCultureService) generateCultureName(_ CultureGenParameters) string {
+                                                         ^
+internal/services/procedural_culture.go:1037:70: hugeParam: architecture is heavy (136 bytes); consider passing it by pointer (gocritic)
+func (pcs *ProceduralCultureService) generateBuildingTypes(_ string, architecture models.ArchitectureStyle) map[string]models.BuildingStyle {
+                                                                     ^
+internal/services/rule_engine.go:506:1: unnamedResult: consider giving a name to these results (gocritic)
+func (e *RandomExecutor) parseDiceNotation(notation string) (int, map[string]interface{}, error) {
+^
+internal/services/settlement_generator.go:73:103: hugeParam: req is heavy (104 bytes); consider passing it by pointer (gocritic)
+func (s *SettlementGeneratorService) GenerateSettlement(ctx context.Context, gameSessionID uuid.UUID, req models.SettlementGenerationRequest) (*models.Settlement, error) {
+                                                                                                      ^
+internal/services/settlement_generator.go:115:107: hugeParam: req is heavy (104 bytes); consider passing it by pointer (gocritic)
+func (s *SettlementGeneratorService) generateBaseSettlement(ctx context.Context, gameSessionID uuid.UUID, req models.SettlementGenerationRequest) (*models.Settlement, error) {
+                                                                                                          ^
+internal/services/campaign_test.go:789:16: appendAssign: append result not assigned to the same slice (gocritic)
+	allThreads := append(activeThreads, &models.PlotThread{
+	              ^
+internal/services/character_builder.go:685:1: File is not properly formatted (gofmt)
+func (cb *CharacterBuilder) addListTrait(customRaceStats map[string]interface{}, raceData *RaceData, 
+^
+internal/services/game_session.go:38:1: File is not properly formatted (gofmt)
+	
+^
+internal/services/interfaces_job.go:76:1: File is not properly formatted (gofmt)
+}
+^
+internal/services/saving_throw_helpers.go:36:1: File is not properly formatted (gofmt)
+	
+^
+internal/services/campaign_test.go:52:1: File is not properly formatted (gofmt)
+func executeRepoTest(t *testing.T, 
+^
+internal/services/npc_test.go:367:1: File is not properly formatted (gofmt)
+		name           string
+^
+internal/services/ai_encounter_builder.go:475:1: `if ok` has complex nested blocks (complexity: 6) (nestif)
+	if solutionList, ok := data.([]interface{}); ok {
+^
+internal/services/character_builder.go:340:1: `if len(classData.Spellcasting) > 0` has complex nested blocks (complexity: 11) (nestif)
+	if len(classData.Spellcasting) > 0 {
+^
+internal/services/combat.go:186:1: `if attackRoll.Result >= target.AC || attackRoll.Critical` has complex nested blocks (complexity: 8) (nestif)
+	if attackRoll.Result >= target.AC || attackRoll.Critical {
+^
+internal/services/combat_analytics.go:480:1: `if action.TargetID != nil && action.ActionType == constants.ActionAttack` has complex nested blocks (complexity: 6) (nestif)
+		if action.TargetID != nil && action.ActionType == constants.ActionAttack {
+^
+internal/services/combat_automation.go:135:1: `if rule != nil && rule.AdvantageOnInitiative` has complex nested blocks (complexity: 6) (nestif)
+		if rule != nil && rule.AdvantageOnInitiative {
+^
+internal/services/faction_personality.go:480:1: `if memoryCount > 0` has complex nested blocks (complexity: 5) (nestif)
+	if memoryCount > 0 {
+^
+internal/services/inventory.go:79:1: `if targetItem.Item.Type == models.ItemTypeWeapon` has complex nested blocks (complexity: 7) (nestif)
+	if targetItem.Item.Type == models.ItemTypeWeapon {
+^
+internal/services/npc.go:218:1: `if cr <= 4` has complex nested blocks (complexity: 6) (nestif)
+	if cr <= 4 {
+^
+internal/services/procedural_culture.go:260:1: `if err == nil && json.Unmarshal([]byte(response), &artData) == nil` has complex nested blocks (complexity: 9) (nestif)
+	if err == nil && json.Unmarshal([]byte(response), &artData) == nil {
+^
+internal/services/procedural_culture.go:340:1: `if err == nil && json.Unmarshal([]byte(response), &beliefData) == nil` has complex nested blocks (complexity: 13) (nestif)
+	if err == nil && json.Unmarshal([]byte(response), &beliefData) == nil {
+^
+internal/services/procedural_culture.go:467:1: `if err == nil && json.Unmarshal([]byte(response), &archData) == nil` has complex nested blocks (complexity: 5) (nestif)
+	if err == nil && json.Unmarshal([]byte(response), &archData) == nil {
+^
+internal/services/procedural_culture.go:526:1: `if err == nil && json.Unmarshal([]byte(response), &dishData) == nil` has complex nested blocks (complexity: 5) (nestif)
+		if err == nil && json.Unmarshal([]byte(response), &dishData) == nil {
+^
+internal/services/combat_automation_test.go:22:101: createTestCombatAutomationService - result 2 (*github.com/ctclostio/DnD-Game/backend/internal/services/mocks.MockNPCRepository) is never used (unparam)
+func createTestCombatAutomationService() (*CombatAutomationService, *MockCombatAnalyticsRepository, *mocks.MockNPCRepository) {
+                                                                                                    ^
+internal/services/campaign_test.go:56:37: unnecessary leading newline (whitespace)
+	validateResult func(interface{})) {
+	                                   ^
+internal/cache/strategies.go:244:16: Error return value of `cs.client.Set` is not checked (errcheck)
+		cs.client.Set(ctx, activeKey, "1", ttl)
+		             ^
+internal/cache/strategies.go:185:15: string `all` has 2 occurrences, make it a constant (goconst)
+	filterKey := "all"
+	             ^
+internal/cache/redis.go:9:1: File is not properly formatted (gofmt)
+	redis "github.com/redis/go-redis/v9"
+^
+internal/cache/strategies.go:60:1: File is not properly formatted (gofmt)
+		"characters:list:*",      // Invalidate all character lists
+^
+internal/cache/strategies.go:334:2: Consider pre-allocating `keys` (prealloc)
+	var keys []string
+	^
+internal/jobs/handlers.go:246:28: Error return value of `(*github.com/hibiken/asynq.ResultWriter).Write` is not checked (errcheck)
+		task.ResultWriter().Write(resultData)
+		                         ^
+internal/jobs/queue.go:95:45: unused-parameter: parameter 'ctx' seems to be unused, consider removing or renaming it as _ (revive)
+		ErrorHandler: asynq.ErrorHandlerFunc(func(ctx context.Context, task *asynq.Task, err error) {
+		                                          ^
+internal/jobs/queue.go:104:31: unused-parameter: parameter 'e' seems to be unused, consider removing or renaming it as _ (revive)
+		RetryDelayFunc: func(n int, e error, t *asynq.Task) time.Duration {
+		                            ^
+internal/jobs/queue.go:304:33: unused-parameter: parameter 'ctx' seems to be unused, consider removing or renaming it as _ (revive)
+func (jq *JobQueue) HealthCheck(ctx context.Context) error {
+                                ^
+internal/jobs/handlers.go:308:45: unused-parameter: parameter 'ctx' seems to be unused, consider removing or renaming it as _ (revive)
+func (jh *JobHandlers) HandleCampaignBackup(ctx context.Context, task *asynq.Task) error {
+                                            ^
+internal/jobs/handlers.go:326:48: unused-parameter: parameter 'ctx' seems to be unused, consider removing or renaming it as _ (revive)
+func (jh *JobHandlers) HandleImageOptimization(ctx context.Context, task *asynq.Task) error {
+                                               ^
+internal/jobs/handlers.go:356:47: unused-parameter: parameter 'ctx' seems to be unused, consider removing or renaming it as _ (revive)
+func (jh *JobHandlers) HandleAnalyticsProcess(ctx context.Context, task *asynq.Task) error {
+                                              ^
+internal/jobs/handlers.go:9:1: File is not properly formatted (gofmt)
+	"github.com/hibiken/asynq"
+^
+internal/jobs/queue.go:10:1: File is not properly formatted (gofmt)
+	"github.com/hibiken/asynq"
+^
+internal/jobs/queue.go:239:17: stringintconv: conversion from TaskState (int) to string yields a string of one rune, not a string of digits (govet)
+			Str("state", string(info.State)).
+			             ^
+internal/testutil/mocks/llm_provider.go:14:1: cyclomatic complexity 23 of func `(*MockLLMProvider).GenerateCompletion` is high (> 15) (gocyclo)
+func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error) {
+^
+internal/testutil/mocks/llm_provider.go:223:46: unused-parameter: parameter 'user' seems to be unused, consider removing or renaming it as _ (revive)
+	m.ResponseFunc = func(_ context.Context, _, user string) (string, error) {
+	                                            ^
+internal/testutil/mocks/llm_provider.go:65:67: emptyStringTest: replace `len(substr) > 0` with `substr != ""` (gocritic)
+	return len(str) >= len(substr) && (str == substr || str != "" && len(substr) > 0 && str[0:len(substr)] == substr || (len(str) > len(substr) && str[len(str)-len(substr):] == substr) || (len(substr) > 0 && len(str) > len(substr) && findSubstring(str, substr)))
+	                                                                 ^
+internal/handlers/dm_assistant.go:79: 79-103 lines are duplicate of `internal/handlers/dm_assistant.go:162-186` (dupl)
+func (h *Handlers) GetDMAssistantNPC(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from context
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
+
+	// Get NPC ID from URL
+	vars := mux.Vars(r)
+	npcID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid NPC ID")
+		return
+	}
+
+	// Get NPC
+	npc, err := h.dmAssistantService.GetNPCByID(r.Context(), npcID)
+	if err != nil {
+		response.NotFound(w, r, "NPC")
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, npc)
+}
+internal/handlers/dm_assistant.go:162: 162-186 lines are duplicate of `internal/handlers/dm_assistant.go:79-103` (dupl)
+func (h *Handlers) GetDMAssistantLocation(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from context
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
+
+	// Get location ID from URL
+	vars := mux.Vars(r)
+	locationID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid location ID")
+		return
+	}
+
+	// Get location
+	location, err := h.dmAssistantService.GetLocationByID(r.Context(), locationID)
+	if err != nil {
+		response.NotFound(w, r, "Location")
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, location)
+}
+internal/handlers/game_session_integration_test.go:396: 396-406 lines are duplicate of `internal/handlers/game_session_integration_test.go:490-500` (dupl)
+	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
+		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
+			h, _ := SetupTestHandlers(t, testCtx)
+			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
+			api := router.PathPrefix("/api/v1").Subrouter()
+
+			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
+			api.HandleFunc("/sessions/{id}", authMiddleware.Authenticate(h.GetGameSession)).Methods("GET")
+			api.HandleFunc("/sessions/{id}/join", authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
+		},
+	})
+internal/handlers/game_session_integration_test.go:490: 490-500 lines are duplicate of `internal/handlers/game_session_integration_test.go:396-406` (dupl)
+	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
+		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
+			h, _ := SetupTestHandlers(t, testCtx)
+			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
+			api := router.PathPrefix("/api/v1").Subrouter()
+
+			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
+			api.HandleFunc("/sessions/{id}/join", authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
+			api.HandleFunc("/sessions/{id}/leave", authMiddleware.Authenticate(h.LeaveGameSession)).Methods("POST")
+		},
+	})
+internal/handlers/world_building.go:300: 300-323 lines are duplicate of `internal/handlers/world_building.go:368-391` (dupl)
+func (h *WorldBuildingHandlers) ProgressWorldEvents(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "Unauthorized")
+		return
+	}
+
+	vars := mux.Vars(r)
+	sessionID, err := uuid.Parse(vars["sessionId"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid session ID")
+		return
+	}
+
+	// TODO: Verify user is DM of this session
+
+	err = h.worldEventEngine.SimulateEventProgression(r.Context(), sessionID)
+	if err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, map[string]string{"status": "progressed"})
+}
+internal/handlers/world_building.go:368: 368-391 lines are duplicate of `internal/handlers/world_building.go:300-323` (dupl)
+func (h *WorldBuildingHandlers) SimulateEconomics(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "Unauthorized")
+		return
+	}
+
+	vars := mux.Vars(r)
+	sessionID, err := uuid.Parse(vars["sessionId"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid session ID")
+		return
+	}
+
+	// TODO: Verify user is DM of this session
+
+	err = h.economicSim.SimulateEconomicCycle(r.Context(), sessionID)
+	if err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, map[string]string{"status": "simulated"})
+}
+internal/handlers/world_building.go:76: 76-97 lines are duplicate of `internal/handlers/world_building.go:394-415` (dupl)
+func (h *WorldBuildingHandlers) GetSettlement(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "Unauthorized")
+		return
+	}
+
+	vars := mux.Vars(r)
+	settlementID, err := uuid.Parse(vars["settlementId"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid settlement ID")
+		return
+	}
+
+	settlement, err := h.worldRepo.GetSettlement(settlementID)
+	if err != nil {
+		response.NotFound(w, r, "settlement")
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, settlement)
+}
+internal/handlers/world_building.go:394: 394-415 lines are duplicate of `internal/handlers/world_building.go:76-97` (dupl)
+func (h *WorldBuildingHandlers) GetSettlementMarket(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "Unauthorized")
+		return
+	}
+
+	vars := mux.Vars(r)
+	settlementID, err := uuid.Parse(vars["settlementId"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid settlement ID")
+		return
+	}
+
+	market, err := h.worldRepo.GetMarketBySettlement(settlementID)
+	if err != nil {
+		response.NotFound(w, r, "market")
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, market)
+}
+internal/handlers/custom_race.go:128: 128-167 lines are duplicate of `internal/handlers/custom_race.go:170-209` (dupl)
+func (h *Handlers) ApproveCustomRace(w http.ResponseWriter, r *http.Request) {
+	// Get race ID from URL
+	vars := mux.Vars(r)
+	raceID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid race ID")
+		return
+	}
+
+	// Get user ID from context
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
+
+	// Parse request
+	var req struct {
+		Notes string `json:"notes"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, r, "Invalid request body")
+		return
+	}
+
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		response.BadRequest(w, r, "Invalid user ID")
+		return
+	}
+
+	// Approve race
+	if err := h.customRaceService.ApproveCustomRace(r.Context(), raceID, userUUID, req.Notes); err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, map[string]string{"status": "approved"})
+}
+internal/handlers/custom_race.go:170: 170-209 lines are duplicate of `internal/handlers/custom_race.go:212-251` (dupl)
+func (h *Handlers) RejectCustomRace(w http.ResponseWriter, r *http.Request) {
+	// Get race ID from URL
+	vars := mux.Vars(r)
+	raceID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid race ID")
+		return
+	}
+
+	// Get user ID from context
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
+
+	// Parse request
+	var req struct {
+		Notes string `json:"notes"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, r, "Invalid request body")
+		return
+	}
+
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		response.BadRequest(w, r, "Invalid user ID")
+		return
+	}
+
+	// Reject race
+	if err := h.customRaceService.RejectCustomRace(r.Context(), raceID, userUUID, req.Notes); err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, map[string]string{"status": "rejected"})
+}
+internal/handlers/custom_race.go:212: 212-251 lines are duplicate of `internal/handlers/custom_race.go:128-167` (dupl)
+func (h *Handlers) RequestRevisionCustomRace(w http.ResponseWriter, r *http.Request) {
+	// Get race ID from URL
+	vars := mux.Vars(r)
+	raceID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid race ID")
+		return
+	}
+
+	// Get user ID from context
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		response.Unauthorized(w, r, "")
+		return
+	}
+
+	// Parse request
+	var req struct {
+		Notes string `json:"notes"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, r, "Invalid request body")
+		return
+	}
+
+	// Convert userID to UUID
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		response.BadRequest(w, r, "Invalid user ID")
+		return
+	}
+
+	// Request revision
+	if err := h.customRaceService.RequestRevision(r.Context(), raceID, userUUID, req.Notes); err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, map[string]string{"status": "revision_needed"})
+}
+internal/handlers/campaign.go:33: 33-73 lines are duplicate of `internal/handlers/campaign.go:75-115` (dupl)
+func (h *CampaignHandler) CreateStoryArc(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		response.Unauthorized(w, r, "Unauthorized")
+		return
+	}
+
+	vars := mux.Vars(r)
+	sessionID, err := uuid.Parse(vars["sessionId"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid session ID")
+		return
+	}
+
+	// Verify user is DM
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
+	if err != nil {
+		response.NotFound(w, r, "Session not found")
+		return
+	}
+
+	if session.DMID != claims.UserID {
+		response.Forbidden(w, r, "Only the DM can create story arcs")
+		return
+	}
+
+	var req models.CreateStoryArcRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, r, "Invalid request body")
+		return
+	}
+
+	arc, err := h.campaignService.CreateStoryArc(ctx, sessionID, req)
+	if err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	response.JSON(w, r, http.StatusCreated, arc)
+}
+internal/handlers/campaign.go:75: 75-115 lines are duplicate of `internal/handlers/campaign.go:344-384` (dupl)
+func (h *CampaignHandler) GenerateStoryArc(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		response.Unauthorized(w, r, "Unauthorized")
+		return
+	}
+
+	vars := mux.Vars(r)
+	sessionID, err := uuid.Parse(vars["sessionId"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid session ID")
+		return
+	}
+
+	// Verify user is DM
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
+	if err != nil {
+		response.NotFound(w, r, "Session not found")
+		return
+	}
+
+	if session.DMID != claims.UserID {
+		response.Forbidden(w, r, "Only the DM can generate story arcs")
+		return
+	}
+
+	var req models.GenerateStoryArcRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, r, "Invalid request body")
+		return
+	}
+
+	arc, err := h.campaignService.GenerateStoryArc(ctx, sessionID, req)
+	if err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	response.JSON(w, r, http.StatusCreated, arc)
+}
+internal/handlers/campaign.go:344: 344-384 lines are duplicate of `internal/handlers/campaign.go:33-73` (dupl)
+func (h *CampaignHandler) GenerateForeshadowing(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	claims, ok := auth.GetUserFromContext(ctx)
+	if !ok {
+		response.Unauthorized(w, r, "Unauthorized")
+		return
+	}
+
+	vars := mux.Vars(r)
+	sessionID, err := uuid.Parse(vars["sessionId"])
+	if err != nil {
+		response.BadRequest(w, r, "Invalid session ID")
+		return
+	}
+
+	// Verify user is DM
+	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
+	if err != nil {
+		response.NotFound(w, r, "Session not found")
+		return
+	}
+
+	if session.DMID != claims.UserID {
+		response.Forbidden(w, r, "Only the DM can generate foreshadowing")
+		return
+	}
+
+	var req models.GenerateForeshadowingRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, r, "Invalid request body")
+		return
+	}
+
+	element, err := h.campaignService.GenerateForeshadowing(ctx, sessionID, req)
+	if err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	response.JSON(w, r, http.StatusCreated, element)
+}
+internal/handlers/skill_check.go:38:1: cyclomatic complexity 20 of func `(*Handlers).PerformSkillCheck` is high (> 15) (gocyclo)
+func (h *Handlers) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
+^
+internal/handlers/character_creation.go:298:1: cyclomatic complexity 18 of func `(*CharacterCreationHandler).validateCharacterBuild` is high (> 15) (gocyclo)
+func (h *CharacterCreationHandler) validateCharacterBuild(character *models.Character) []string {
+^
+internal/handlers/game.go:73:1: cyclomatic complexity 17 of func `(*Handlers).UpdateGameSession` is high (> 15) (gocyclo)
+func (h *Handlers) UpdateGameSession(w http.ResponseWriter, r *http.Request) {
+^
+internal/handlers/pagination_examples.go:272:10: context-keys-type: should not use basic type untyped string as key in context.WithValue (revive)
+		ctx := context.WithValue(r.Context(), "pagination", params)
+		       ^
+internal/handlers/character_integration_test.go:53:1: unnamedResult: consider giving a name to these results (gocritic)
+func setupIntegrationTest(t *testing.T) (*testContext, func()) {
+^
+internal/handlers/inventory_test.go:377:3: commentedOutCode: may want to remove commented-out code (gocritic)
+		// Expected: 3 + 55 + (2*5) + (1*10) = 78
+		^
+internal/handlers/handler_helpers.go:62:1: File is not properly formatted (gofmt)
+func HandleServiceOperation[T any](w http.ResponseWriter, r *http.Request, 
+^
+internal/handlers/pagination_examples.go:41:1: File is not properly formatted (gofmt)
+	
+^
+internal/handlers/character_creation.go:47:1: `if h.customRaceService != nil` has complex nested blocks (complexity: 9) (nestif)
+	if h.customRaceService != nil {
+^
+internal/handlers/narrative.go:192:1: `if ok` has complex nested blocks (complexity: 6) (nestif)
+	if preferences, ok := updates["preferences"].(map[string]interface{}); ok {
+^
+internal/handlers/skill_check.go:80:1: `if req.Advantage || req.Disadvantage` has complex nested blocks (complexity: 12) (nestif)
+	if req.Advantage || req.Disadvantage {
+^
+internal/handlers/character_test.go:115:1: `if tt.body != nil` has complex nested blocks (complexity: 13) (nestif)
+			if tt.body != nil {
+^
+internal/handlers/migration_helpers.go:39:25: should rewrite http.NewRequestWithContext or add (*Request).WithContext (noctx)
+	r, _ := http.NewRequest("", "", http.NoBody)
+	                       ^
+internal/handlers/migration_helpers.go:49:25: should rewrite http.NewRequestWithContext or add (*Request).WithContext (noctx)
+	r, _ := http.NewRequest("", "", http.NoBody)
+	                       ^
+internal/handlers/handler_helpers.go:64:22: unnecessary leading newline (whitespace)
+	successStatus int) {
+	                    ^
+internal/handlers/handler_helpers.go:77:35: unnecessary leading newline (whitespace)
+	operation func() ([]*T, error)) {
+	                                 ^
+internal/handlers/handler_helpers.go:91:57: unnecessary leading newline (whitespace)
+	characterID, userID string) (*models.Character, bool) {
+	                                                       ^
+internal/handlers/handler_helpers.go:111:30: unnecessary leading newline (whitespace)
+	createFunc func(*T) error) {
+	                            ^
+internal/middleware/cache.go:304:10: Error return value of `w.Write` is not checked (errcheck)
+		w.Write(cached.Body)
+		       ^
+internal/middleware/validation_v2.go:108:1: cyclomatic complexity 34 of func `(*ValidationMiddlewareV2).getErrorMessage` is high (> 15) (gocyclo)
+func (vm *ValidationMiddlewareV2) getErrorMessage(field, tag, param string, value interface{}) string {
+^
+internal/middleware/cache.go:460:59: unused-parameter: parameter 'method' seems to be unused, consider removing or renaming it as _ (revive)
+func (im *InvalidationMiddleware) getInvalidationPatterns(method, path string) []string {
+                                                          ^
+internal/middleware/cache.go:374:6: type `mockResponseWriter` is unused (unused)
+type mockResponseWriter struct {
+     ^
+internal/middleware/cache.go:380:30: func `(*mockResponseWriter).Header` is unused (unused)
+func (m *mockResponseWriter) Header() http.Header {
+                             ^
+internal/middleware/cache.go:387:30: func `(*mockResponseWriter).Write` is unused (unused)
+func (m *mockResponseWriter) Write(b []byte) (int, error) {
+                             ^
+internal/middleware/cache.go:391:30: func `(*mockResponseWriter).WriteHeader` is unused (unused)
+func (m *mockResponseWriter) WriteHeader(statusCode int) {
+                             ^
+internal/middleware/cache.go:22:1: File is not properly formatted (gofmt)
+	
+^
+internal/middleware/cache.go:237:1: `if cacheControl != ""` has complex nested blocks (complexity: 6) (nestif)
+	if cacheControl != "" {
+^
+internal/middleware/error_handler_gin.go:19:1: `if len(c.Errors) > 0` has complex nested blocks (complexity: 7) (nestif)
+		if len(c.Errors) > 0 {
+^
+internal/middleware/recovery.go:63:1: `if err != nil` has complex nested blocks (complexity: 5) (nestif)
+				if err := recover(); err != nil {
+^
+pkg/security/random.go:36:24: redefines-builtin-id: redefinition of the built-in function max (revive)
+func GenerateSecureInt(max int64) (int64, error) {
+                       ^
+pkg/security/random_test.go:99:2: redefines-builtin-id: redefinition of the built-in function max (revive)
+	const max = 10
+	^
+pkg/security/random_test.go:126:5: emptyStringTest: replace `len(id) == 0` with `id == ""` (gocritic)
+	if len(id) == 0 {
+	   ^
+pkg/security/random_test.go:57:7: emptyStringTest: replace `len(token) == 0` with `token == ""` (gocritic)
+			if len(token) == 0 && tt.length > 0 {
+			   ^
+pkg/security/random.go:25:1: File is not properly formatted (gofmt)
+	
+^
+pkg/security/random_test.go:13:1: File is not properly formatted (gofmt)
+	
+^
+internal/handlers/combat_integration_test.go:400:2: commentedOutCode: may want to remove commented-out code (gocritic)
+	// otherPlayerID := ctx.CreateTestUser("other_player", "other@test.com", "password123") // not used
+	^
+internal/handlers/auth_integration_test.go:424:1: `if tt.expectedError != ""` has complex nested blocks (complexity: 7) (nestif)
+			if tt.expectedError != "" {
+^

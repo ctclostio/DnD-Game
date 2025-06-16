@@ -301,7 +301,12 @@ func (cm *CacheMiddleware) serveCachedResponse(w http.ResponseWriter, r *http.Re
 
 	// Write body (unless HEAD request)
 	if r.Method != http.MethodHead {
-		w.Write(cached.Body)
+		if _, err := w.Write(cached.Body); err != nil {
+			// Log write error but don't fail - response is already committed
+			if cm.logger != nil {
+				cm.logger.Error().Err(err).Msg("Failed to write cached response body")
+			}
+		}
 	}
 
 	// Log cache hit
