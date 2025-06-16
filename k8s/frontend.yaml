@@ -19,6 +19,8 @@ spec:
         app.kubernetes.io/name: dnd-game
         app.kubernetes.io/component: frontend
     spec:
+      serviceAccountName: dnd-game-frontend
+      automountServiceAccountToken: false
       containers:
       - name: frontend
         image: dnd-frontend:latest # Replace with your image
@@ -47,9 +49,11 @@ spec:
           requests:
             memory: "128Mi"
             cpu: "100m"
+            ephemeral-storage: "200Mi"
           limits:
             memory: "256Mi"
             cpu: "500m"
+            ephemeral-storage: "500Mi"
         livenessProbe:
           httpGet:
             path: /health

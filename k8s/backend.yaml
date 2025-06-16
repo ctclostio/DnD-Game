@@ -24,13 +24,32 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: dnd-game-backend
+      automountServiceAccountToken: false
       initContainers:
       - name: wait-for-db
         image: busybox:1.35
         command: ['sh', '-c', 'until nc -z postgres-service 5432; do echo waiting for postgres; sleep 2; done']
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+            ephemeral-storage: "50Mi"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+            ephemeral-storage: "100Mi"
       - name: wait-for-redis
         image: busybox:1.35
         command: ['sh', '-c', 'until nc -z redis-service 6379; do echo waiting for redis; sleep 2; done']
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+            ephemeral-storage: "50Mi"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+            ephemeral-storage: "100Mi"
       - name: run-migrations
         image: dnd-backend:latest # Replace with your image
         command: ["/app/server", "-migrate"]
@@ -39,6 +58,15 @@ spec:
             name: dnd-game-config
         - secretRef:
             name: dnd-game-secrets
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+            ephemeral-storage: "100Mi"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+            ephemeral-storage: "200Mi"
       containers:
       - name: backend
         image: dnd-backend:latest # Replace with your image
@@ -56,9 +84,11 @@ spec:
           requests:
             memory: "256Mi"
             cpu: "250m"
+            ephemeral-storage: "500Mi"
           limits:
             memory: "512Mi"
             cpu: "1000m"
+            ephemeral-storage: "1Gi"
         livenessProbe:
           httpGet:
             path: /health/live

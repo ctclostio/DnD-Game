@@ -35,6 +35,8 @@ spec:
         app.kubernetes.io/name: redis
         app.kubernetes.io/component: cache
     spec:
+      serviceAccountName: dnd-game-redis
+      automountServiceAccountToken: false
       containers:
       - name: redis
         image: redis:7-alpine
@@ -64,9 +66,11 @@ spec:
           requests:
             memory: "256Mi"
             cpu: "100m"
+            ephemeral-storage: "200Mi"
           limits:
             memory: "512Mi"
             cpu: "500m"
+            ephemeral-storage: "500Mi"
         livenessProbe:
           exec:
             command:

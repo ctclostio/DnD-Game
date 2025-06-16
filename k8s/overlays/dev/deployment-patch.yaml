@@ -17,9 +17,11 @@ spec:
           requests:
             memory: "128Mi"
             cpu: "100m"
+            ephemeral-storage: "200Mi"
           limits:
             memory: "256Mi"
             cpu: "500m"
+            ephemeral-storage: "500Mi"
 
 ---
 # Frontend deployment patch for development
@@ -38,9 +40,11 @@ spec:
           requests:
             memory: "64Mi"
             cpu: "50m"
+            ephemeral-storage: "100Mi"
           limits:
             memory: "128Mi"
             cpu: "200m"
+            ephemeral-storage: "200Mi"
 
 ---
 # Postgres StatefulSet patch for development
@@ -58,9 +62,11 @@ spec:
           requests:
             memory: "128Mi"
             cpu: "100m"
+            ephemeral-storage: "200Mi"
           limits:
             memory: "256Mi"
             cpu: "500m"
+            ephemeral-storage: "500Mi"
 
 ---
 # Redis deployment patch for development
@@ -78,6 +84,8 @@ spec:
           requests:
             memory: "64Mi"
             cpu: "50m"
+            ephemeral-storage: "100Mi"
           limits:
             memory: "128Mi"
             cpu: "200m"
+            ephemeral-storage: "200Mi"
