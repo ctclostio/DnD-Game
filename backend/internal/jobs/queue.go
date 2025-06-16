@@ -38,6 +38,7 @@ type JobQueue struct {
 	client    *asynq.Client
 	server    *asynq.Server
 	mux       *asynq.ServeMux
+	redisOpt  asynq.RedisClientOpt
 	logger    *logger.LoggerV2
 	handlers  map[JobType]JobHandler
 	mu        sync.RWMutex
@@ -119,6 +120,7 @@ func NewJobQueue(cfg *config.RedisConfig, log *logger.LoggerV2) (*JobQueue, erro
 		client:   client,
 		server:   server,
 		mux:      mux,
+		redisOpt: redisOpt,
 		logger:   log,
 		handlers: make(map[JobType]JobHandler),
 	}
@@ -262,7 +264,7 @@ func (jq *JobQueue) Stop() error {
 
 // GetTaskInfo retrieves information about a task
 func (jq *JobQueue) GetTaskInfo(taskID string) (*asynq.TaskInfo, error) {
-	inspector := asynq.NewInspector(jq.client.RedisConnOpt())
+	inspector := asynq.NewInspector(jq.redisOpt)
 	defer inspector.Close()
 
 	return inspector.GetTaskInfo(QueueDefault, taskID)
@@ -270,7 +272,7 @@ func (jq *JobQueue) GetTaskInfo(taskID string) (*asynq.TaskInfo, error) {
 
 // CancelTask cancels a scheduled or retrying task
 func (jq *JobQueue) CancelTask(taskID string) error {
-	inspector := asynq.NewInspector(jq.client.RedisConnOpt())
+	inspector := asynq.NewInspector(jq.redisOpt)
 	defer inspector.Close()
 
 	return inspector.DeleteTask(QueueDefault, taskID)
@@ -278,7 +280,7 @@ func (jq *JobQueue) CancelTask(taskID string) error {
 
 // GetQueueStats returns statistics for all queues
 func (jq *JobQueue) GetQueueStats() (map[string]*asynq.QueueInfo, error) {
-	inspector := asynq.NewInspector(jq.client.RedisConnOpt())
+	inspector := asynq.NewInspector(jq.redisOpt)
 	defer inspector.Close()
 
 	queues, err := inspector.Queues()

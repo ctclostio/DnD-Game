@@ -7,10 +7,10 @@ import (
 	"net/http"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
-	"github.com/ctclostio/DnD-Game/backend/internal/errors"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/pagination"
-	"github.com/ctclostio/DnD-Game/backend/internal/response"
+	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
+	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 // GetCharactersPaginated handles paginated character list requests
@@ -77,7 +77,7 @@ func (h *Handlers) GetCharactersPaginated(w http.ResponseWriter, r *http.Request
 	// Set cache control
 	w.Header().Set("Cache-Control", "private, max-age=60")
 
-	response.Success(w, r, result)
+	response.JSON(w, r, http.StatusOK, result)
 }
 
 // GetGameSessionsPaginated handles paginated game session requests
@@ -124,7 +124,7 @@ func (h *Handlers) GetGameSessionsPaginated(w http.ResponseWriter, r *http.Reque
 		w.Header().Set("Cache-Control", "private, max-age=300")
 	}
 
-	response.Success(w, r, result)
+	response.JSON(w, r, http.StatusOK, result)
 }
 
 // GetCharactersCursor handles cursor-based pagination for characters
@@ -164,7 +164,7 @@ func (h *Handlers) GetCharactersCursor(w http.ResponseWriter, r *http.Request) {
 	// Set cache control
 	w.Header().Set("Cache-Control", "private, max-age=60")
 
-	response.Success(w, r, result)
+	response.JSON(w, r, http.StatusOK, result)
 }
 
 // SearchCharacters handles paginated character search
@@ -206,7 +206,7 @@ func (h *Handlers) SearchCharacters(w http.ResponseWriter, r *http.Request) {
 	// Write pagination headers
 	pagination.WritePaginationHeaders(w, result.Pagination)
 
-	response.Success(w, r, result)
+	response.JSON(w, r, http.StatusOK, result)
 }
 
 // GetCampaignsPaginated handles paginated campaign requests
@@ -247,7 +247,7 @@ func (h *Handlers) GetCampaignsPaginated(w http.ResponseWriter, r *http.Request)
 	// Write pagination headers
 	pagination.WritePaginationHeaders(w, result.Pagination)
 
-	response.Success(w, r, enrichedResult)
+	response.JSON(w, r, http.StatusOK, enrichedResult)
 }
 
 // Middleware example for automatic pagination

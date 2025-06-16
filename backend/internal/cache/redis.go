@@ -38,8 +38,6 @@ func NewRedisClient(cfg *config.RedisConfig, log *logger.LoggerV2) (*RedisClient
 		ReadTimeout:  3 * time.Second,          // Read timeout
 		WriteTimeout: 3 * time.Second,          // Write timeout
 		PoolTimeout:  4 * time.Second,          // Amount of time to wait for a connection
-		IdleTimeout:  5 * time.Minute,          // Close connections after remaining idle for this duration
-		MaxConnAge:   30 * time.Minute,         // Close connections older than this duration
 	}
 
 	// Create client
