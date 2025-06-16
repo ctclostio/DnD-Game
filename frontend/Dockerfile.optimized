@@ -96,13 +96,15 @@ COPY --from=builder /app/build /usr/share/nginx/html
 COPY docker/runtime-env.sh /docker-entrypoint.d/40-runtime-env.sh
 RUN chmod +x /docker-entrypoint.d/40-runtime-env.sh
 
-# Set correct permissions
+# Set correct permissions and make files read-only
 RUN chown -R appuser:appgroup /usr/share/nginx/html && \
     chown -R appuser:appgroup /var/cache/nginx && \
     chown -R appuser:appgroup /var/log/nginx && \
     chown -R appuser:appgroup /etc/nginx/conf.d && \
     touch /var/run/nginx.pid && \
-    chown -R appuser:appgroup /var/run/nginx.pid
+    chown -R appuser:appgroup /var/run/nginx.pid && \
+    chmod -R 444 /usr/share/nginx/html && \
+    chmod 444 /etc/nginx/conf.d/*.conf
 
 # Switch to non-root user
 USER appuser

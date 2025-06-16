@@ -71,11 +71,11 @@ COPY --from=builder /etc/group /etc/group
 # Create app directory
 WORKDIR /app
 
-# Copy the binary from builder
-COPY --from=builder /app/backend/cmd/server/server .
+# Copy the binary from builder with execute permissions only
+COPY --from=builder --chmod=555 /app/backend/cmd/server/server .
 
-# Copy static data if needed
-COPY --from=builder /app/data ./data
+# Copy static data if needed with read-only permissions
+COPY --from=builder --chmod=444 /app/data ./data
 
 # Use non-root user
 USER nobody:nobody

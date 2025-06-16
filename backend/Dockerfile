@@ -39,8 +39,10 @@ COPY --from=builder /app/backend/cmd/server/server .
 # Copy data directory with proper ownership
 COPY --from=builder --chown=appuser:appgroup /app/data ./data
 
-# Change ownership of the binary
-RUN chown appuser:appgroup server
+# Change ownership of the binary and set read-only permissions
+RUN chown appuser:appgroup server && \
+    chmod 550 server && \
+    chmod -R 440 ./data
 
 # Switch to non-root user
 USER appuser

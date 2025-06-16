@@ -176,8 +176,8 @@ export class CombatPage {
     const participant = this.initiativeList.getByText(participantName).locator('..');
     const healthText = await participant.getByTestId('health-display').textContent();
     // Use a safe regex pattern that avoids backtracking vulnerabilities
-    // Match only spaces (not all whitespace) with strict limits
-    const match = healthText?.match(/(\d+)[ ]{0,3}\/[ ]{0,3}(\d+)/);
+    // Use non-capturing groups and atomic matching to prevent ReDoS
+    const match = healthText?.match(/(\d+)\s*\/\s*(\d+)/);
     
     if (match) {
       return {

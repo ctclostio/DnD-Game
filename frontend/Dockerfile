@@ -48,10 +48,12 @@ COPY --from=builder --chown=appuser:appgroup /app/build /usr/share/nginx/html
 # Copy nginx configuration
 COPY --chown=appuser:appgroup frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Update nginx config to run as non-root
+# Update nginx config to run as non-root and set read-only permissions
 RUN sed -i 's/user nginx;/user appuser;/g' /etc/nginx/nginx.conf && \
     touch /var/run/nginx.pid && \
-    chown -R appuser:appgroup /var/run/nginx.pid /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
+    chown -R appuser:appgroup /var/run/nginx.pid /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \
+    chmod -R 444 /usr/share/nginx/html && \
+    chmod 444 /etc/nginx/conf.d/default.conf
 
 # Switch to non-root user
 USER appuser
