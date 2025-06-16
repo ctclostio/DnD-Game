@@ -5,9 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"sort"
 	"strings"
@@ -319,18 +317,20 @@ func (cm *CacheMiddleware) serveCachedResponse(w http.ResponseWriter, r *http.Re
 
 // revalidateInBackground refreshes cache in the background
 func (cm *CacheMiddleware) revalidateInBackground(r *http.Request, cacheKey string) {
-	// Clone the request for background processing
-	req := r.Clone(context.Background())
+	// TODO: Implement background revalidation
+	// This would require:
+	// 1. Clone the request for background processing
+	// req := r.Clone(context.Background())
 	
-	// Create a mock response writer to capture the response
-	recorder := &responseRecorder{
-		ResponseWriter: &mockResponseWriter{},
-		statusCode:     http.StatusOK,
-		headers:        make(http.Header),
-		body:           &bytes.Buffer{},
-	}
+	// 2. Create a mock response writer to capture the response
+	// recorder := &responseRecorder{
+	// 	ResponseWriter: &mockResponseWriter{},
+	// 	statusCode:     http.StatusOK,
+	// 	headers:        make(http.Header),
+	// 	body:           &bytes.Buffer{},
+	// }
 
-	// TODO: Execute the request against the actual handler
+	// 3. Execute the request against the actual handler
 	// This would require access to the handler chain
 	
 	if cm.logger != nil {

@@ -32,8 +32,9 @@ import (
 // @Failure 401 {object} response.ErrorResponse
 // @Router /api/characters [get]
 func (h *Handlers) GetCharactersPaginated(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userID, _ := auth.GetUserIDFromContext(ctx)
+	// In actual implementation, we would get context and userID
+	// ctx := r.Context()
+	// userID, _ := auth.GetUserIDFromContext(ctx)
 
 	// Parse pagination parameters
 	params := pagination.FromRequest(r)
@@ -95,7 +96,8 @@ func (h *Handlers) GetCharactersPaginated(w http.ResponseWriter, r *http.Request
 // @Success 200 {object} pagination.PageResult{data=[]models.GameSession}
 // @Router /api/game-sessions [get]
 func (h *Handlers) GetGameSessionsPaginated(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// ctx would be used in actual implementation
+	// ctx := r.Context()
 
 	// Parse pagination parameters
 	params := pagination.FromRequest(r)
@@ -138,8 +140,9 @@ func (h *Handlers) GetGameSessionsPaginated(w http.ResponseWriter, r *http.Reque
 // @Success 200 {object} pagination.CursorResult{data=[]models.Character}
 // @Router /api/characters/cursor [get]
 func (h *Handlers) GetCharactersCursor(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userID, _ := auth.GetUserIDFromContext(ctx)
+	// In actual implementation, we would get context and userID
+	// ctx := r.Context()
+	// userID, _ := auth.GetUserIDFromContext(ctx)
 
 	// Parse pagination parameters
 	params := pagination.FromRequest(r)
@@ -177,8 +180,9 @@ func (h *Handlers) GetCharactersCursor(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} pagination.PageResult{data=[]models.Character}
 // @Router /api/characters/search [get]
 func (h *Handlers) SearchCharacters(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userID, _ := auth.GetUserIDFromContext(ctx)
+	// In actual implementation, we would get context and userID
+	// ctx := r.Context()
+	// userID, _ := auth.GetUserIDFromContext(ctx)
 
 	// Get search query
 	query := r.URL.Query().Get("q")
@@ -305,8 +309,9 @@ func GetPaginationParams(ctx context.Context) *pagination.PaginationParams {
 
 // ExportAllCharacters demonstrates batch processing with pagination
 func (h *Handlers) ExportAllCharacters(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userID, _ := auth.GetUserIDFromContext(ctx)
+	// In actual implementation, we would get context and userID
+	// ctx := r.Context()
+	// userID, _ := auth.GetUserIDFromContext(ctx)
 
 	// Example: Batch export using pagination
 	// In a real implementation, you would:
