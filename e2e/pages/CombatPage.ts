@@ -167,6 +167,7 @@ export class CombatPage {
 
   async getRound(): Promise<number> {
     const roundText = await this.roundCounter.textContent();
+    // Simple regex with no backtracking issues
     const match = roundText?.match(/round (\d+)/i);
     return match ? parseInt(match[1]) : 1;
   }
@@ -174,7 +175,9 @@ export class CombatPage {
   async getParticipantHealth(participantName: string): Promise<{ current: number; max: number }> {
     const participant = this.initiativeList.getByText(participantName).locator('..');
     const healthText = await participant.getByTestId('health-display').textContent();
-    const match = healthText?.match(/(\d+)\s*\/\s*(\d+)/);
+    // Use a more efficient regex pattern to avoid catastrophic backtracking
+    // Limit whitespace matching to prevent DOS vulnerabilities
+    const match = healthText?.match(/(\d+)\s{0,5}\/\s{0,5}(\d+)/);
     
     if (match) {
       return {

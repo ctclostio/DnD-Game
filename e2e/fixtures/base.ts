@@ -44,13 +44,14 @@ export const test = base.extend<MyFixtures>({
 });
 
 export { expect } from '@playwright/test';
+import { testConfig } from './test-config';
 
 // Test data generators
 export const testData = {
   generateUser: () => ({
     username: `testuser_${Date.now()}`,
     email: `test_${Date.now()}@example.com`,
-    password: 'TestPassword123!',
+    password: testConfig.defaultTestPassword,
   }),
   
   generateCharacter: () => ({
