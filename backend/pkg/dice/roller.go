@@ -2,14 +2,14 @@ package dice
 
 import (
 	"errors"
-	"math/rand"
 	"regexp"
 	"strconv"
-	"time"
+
+	"github.com/ctclostio/DnD-Game/backend/pkg/game"
 )
 
 type Roller struct {
-	rng *rand.Rand
+	rng *game.Random
 }
 
 type RollResult struct {
@@ -20,7 +20,7 @@ type RollResult struct {
 
 func NewRoller() *Roller {
 	return &Roller{
-		rng: rand.New(rand.NewSource(time.Now().UnixNano())),
+		rng: game.NewRandom(),
 	}
 }
 
@@ -57,7 +57,7 @@ func (r *Roller) Roll(notation string) (*RollResult, error) {
 	}
 
 	for i := 0; i < count; i++ {
-		roll := r.rng.Intn(sides) + 1
+		roll := r.rng.RollDice(sides)
 		result.Dice[i] = roll
 		result.Total += roll
 	}

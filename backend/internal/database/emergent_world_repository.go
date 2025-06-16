@@ -10,6 +10,7 @@ import (
 
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/pkg/security"
 )
 
 // EmergentWorldRepository handles database operations for the emergent world system
@@ -939,5 +940,12 @@ func (r *EmergentWorldRepository) GetSimulationLogs(sessionID string, limit int)
 
 // Helper function to generate UUID
 func generateUUID() string {
-	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), rand.Int63())
+	// Use cryptographically secure ID generation
+	id, err := security.GenerateSecureID()
+	if err != nil {
+		// Fallback to timestamp-based ID if secure generation fails
+		// This ensures the function never fails, but logs should be added in production
+		return fmt.Sprintf("%d-%x", time.Now().UnixNano(), time.Now().Unix())
+	}
+	return id
 }
