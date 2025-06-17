@@ -167,12 +167,26 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 	combat *models.Combat,
 	actions []*models.CombatActionLog,
 ) []*models.CombatantReport {
-	reports := []*models.CombatantReport{}
+	// Create and initialize stats for all combatants
+	combatantStats := cas.initializeCombatantStats(analyticsID, combat, actions)
 
-	// Create a map to track analytics for each combatant
+	// Process all actions to update stats
+	for _, action := range actions {
+		cas.processActionForActor(combatantStats, action)
+		cas.processActionForTarget(combatantStats, action)
+		cas.processSaveAction(combatantStats, action)
+	}
+
+	return cas.generateCombatantReports(combatantStats)
+}
+
+func (cas *CombatAnalyticsService) initializeCombatantStats(
+	analyticsID uuid.UUID,
+	combat *models.Combat,
+	actions []*models.CombatActionLog,
+) map[string]*models.CombatantAnalytics {
 	combatantStats := make(map[string]*models.CombatantAnalytics)
 
-	// Initialize stats for all combatants
 	for i := range combat.Combatants {
 		combatant := &combat.Combatants[i]
 		stats := &models.CombatantAnalytics{
@@ -189,89 +203,144 @@ func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
 		}
 
 		if combatant.HP <= 0 {
-			// Find when they were defeated
-			for _, action := range actions {
-				if action.TargetID != nil && *action.TargetID == combatant.ID && action.Outcome == constants.OutcomeKillingBlow {
-					stats.RoundsSurvived = action.RoundNumber
-					break
-				}
-			}
+			stats.RoundsSurvived = cas.findDefeatedRound(combatant.ID, actions)
 		}
 
 		combatantStats[combatant.ID] = stats
 	}
 
-	// Process all actions to update stats
+	return combatantStats
+}
+
+func (cas *CombatAnalyticsService) findDefeatedRound(combatantID string, actions []*models.CombatActionLog) int {
 	for _, action := range actions {
-		if stats, ok := combatantStats[action.ActorID]; ok {
-			// Update attacker stats
-			switch action.ActionType {
-			case constants.ActionAttack:
-				stats.AttacksMade++
-				switch action.Outcome {
-				case constants.OutcomeHit, constants.ActionCritical:
-					stats.AttacksHit++
-					if action.Outcome == constants.ActionCritical {
-						stats.CriticalHits++
-					}
-				case "miss":
-					stats.AttacksMissed++
-				case "critical_miss":
-					stats.AttacksMissed++
-					stats.CriticalMisses++
-				}
-				stats.DamageDealt += action.DamageDealt
-			case constants.ActionTypeSpell, constants.ActionTypeAbility:
-				stats.DamageDealt += action.DamageDealt
-				// Track ability usage
-				abilities := []string{}
-				_ = json.Unmarshal(stats.AbilitiesUsed, &abilities)
-				abilities = append(abilities, action.ActionType)
-				abilitiesJSON, _ := json.Marshal(abilities)
-				stats.AbilitiesUsed = models.JSONB(abilitiesJSON)
-			case "heal":
-				stats.HealingDone += action.DamageDealt
-			}
-		}
-
-		// Update target stats
-		if action.TargetID != nil {
-			if stats, ok := combatantStats[*action.TargetID]; ok {
-				switch action.ActionType {
-				case constants.ActionAttack, constants.ActionTypeSpell:
-					stats.DamageTaken += action.DamageDealt
-				case constants.ActionHeal:
-					stats.HealingReceived += action.DamageDealt
-				}
-
-				// Track conditions
-				if len(action.ConditionsApplied) > 0 {
-					conditions := []string{}
-					_ = json.Unmarshal(stats.ConditionsSuffered, &conditions)
-
-					var newConditions []string
-					_ = json.Unmarshal(action.ConditionsApplied, &newConditions)
-					conditions = append(conditions, newConditions...)
-
-					conditionsJSON, _ := json.Marshal(conditions)
-					stats.ConditionsSuffered = models.JSONB(conditionsJSON)
-				}
-			}
-		}
-
-		// Track saves
-		if action.ActionType == "save" {
-			if stats, ok := combatantStats[action.ActorID]; ok {
-				if action.Outcome == "success" {
-					stats.SavesMade++
-				} else {
-					stats.SavesFailed++
-				}
-			}
+		if action.TargetID != nil && *action.TargetID == combatantID && action.Outcome == constants.OutcomeKillingBlow {
+			return action.RoundNumber
 		}
 	}
+	return 0
+}
 
-	// Generate reports for each combatant
+func (cas *CombatAnalyticsService) processActionForActor(
+	combatantStats map[string]*models.CombatantAnalytics,
+	action *models.CombatActionLog,
+) {
+	stats, ok := combatantStats[action.ActorID]
+	if !ok {
+		return
+	}
+
+	switch action.ActionType {
+	case constants.ActionAttack:
+		cas.processAttackAction(stats, action)
+	case constants.ActionTypeSpell, constants.ActionTypeAbility:
+		cas.processSpellOrAbilityAction(stats, action)
+	case "heal":
+		stats.HealingDone += action.DamageDealt
+	}
+}
+
+func (cas *CombatAnalyticsService) processAttackAction(
+	stats *models.CombatantAnalytics,
+	action *models.CombatActionLog,
+) {
+	stats.AttacksMade++
+	switch action.Outcome {
+	case constants.OutcomeHit, constants.ActionCritical:
+		stats.AttacksHit++
+		if action.Outcome == constants.ActionCritical {
+			stats.CriticalHits++
+		}
+	case "miss":
+		stats.AttacksMissed++
+	case "critical_miss":
+		stats.AttacksMissed++
+		stats.CriticalMisses++
+	}
+	stats.DamageDealt += action.DamageDealt
+}
+
+func (cas *CombatAnalyticsService) processSpellOrAbilityAction(
+	stats *models.CombatantAnalytics,
+	action *models.CombatActionLog,
+) {
+	stats.DamageDealt += action.DamageDealt
+	
+	// Track ability usage
+	abilities := []string{}
+	_ = json.Unmarshal(stats.AbilitiesUsed, &abilities)
+	abilities = append(abilities, action.ActionType)
+	abilitiesJSON, _ := json.Marshal(abilities)
+	stats.AbilitiesUsed = models.JSONB(abilitiesJSON)
+}
+
+func (cas *CombatAnalyticsService) processActionForTarget(
+	combatantStats map[string]*models.CombatantAnalytics,
+	action *models.CombatActionLog,
+) {
+	if action.TargetID == nil {
+		return
+	}
+
+	stats, ok := combatantStats[*action.TargetID]
+	if !ok {
+		return
+	}
+
+	switch action.ActionType {
+	case constants.ActionAttack, constants.ActionTypeSpell:
+		stats.DamageTaken += action.DamageDealt
+	case constants.ActionHeal:
+		stats.HealingReceived += action.DamageDealt
+	}
+
+	cas.trackConditions(stats, action)
+}
+
+func (cas *CombatAnalyticsService) trackConditions(
+	stats *models.CombatantAnalytics,
+	action *models.CombatActionLog,
+) {
+	if len(action.ConditionsApplied) == 0 {
+		return
+	}
+
+	conditions := []string{}
+	_ = json.Unmarshal(stats.ConditionsSuffered, &conditions)
+
+	var newConditions []string
+	_ = json.Unmarshal(action.ConditionsApplied, &newConditions)
+	conditions = append(conditions, newConditions...)
+
+	conditionsJSON, _ := json.Marshal(conditions)
+	stats.ConditionsSuffered = models.JSONB(conditionsJSON)
+}
+
+func (cas *CombatAnalyticsService) processSaveAction(
+	combatantStats map[string]*models.CombatantAnalytics,
+	action *models.CombatActionLog,
+) {
+	if action.ActionType != "save" {
+		return
+	}
+
+	stats, ok := combatantStats[action.ActorID]
+	if !ok {
+		return
+	}
+
+	if action.Outcome == "success" {
+		stats.SavesMade++
+	} else {
+		stats.SavesFailed++
+	}
+}
+
+func (cas *CombatAnalyticsService) generateCombatantReports(
+	combatantStats map[string]*models.CombatantAnalytics,
+) []*models.CombatantReport {
+	reports := []*models.CombatantReport{}
+
 	for _, stats := range combatantStats {
 		report := &models.CombatantReport{
 			Analytics:         stats,
@@ -504,56 +573,82 @@ func (cas *CombatAnalyticsService) analyzeTargeting(actions []*models.CombatActi
 
 func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActionLog, reports []*models.CombatantReport) int {
 	// Analyze coordination and teamwork
-	score := 5
+	metrics := cas.calculateTeamworkMetrics(actions, reports)
+	return cas.scoreTeamwork(metrics)
+}
 
-	comboAttacks := 0
-	coordinatedHealing := 0
-	setupActions := 0
+type teamworkMetrics struct {
+	comboAttacks       int
+	coordinatedHealing int
+	setupActions       int
+}
 
-	// Look for patterns indicating teamwork
+func (cas *CombatAnalyticsService) calculateTeamworkMetrics(actions []*models.CombatActionLog, reports []*models.CombatantReport) teamworkMetrics {
+	metrics := teamworkMetrics{}
+
 	for i, action := range actions {
-		// Check for combo attacks (multiple attacks on same target in same round)
-		if action.ActionType == constants.ActionAttack && i > 0 {
-			prevAction := actions[i-1]
-			if prevAction.RoundNumber == action.RoundNumber &&
-				prevAction.TargetID != nil && action.TargetID != nil &&
-				*prevAction.TargetID == *action.TargetID {
-				comboAttacks++
-			}
+		if cas.isComboAttack(i, action, actions) {
+			metrics.comboAttacks++
 		}
 
-		// Check for timely healing
-		if action.ActionType == constants.ActionHeal && action.TargetID != nil {
-			// Was the target low on health?
-			for _, report := range reports {
-				if report.Analytics.CombatantID == *action.TargetID {
-					if report.Analytics.DamageTaken > report.Analytics.FinalHP {
-						coordinatedHealing++
-					}
-					break
-				}
-			}
+		if cas.isCoordinatedHealing(action, reports) {
+			metrics.coordinatedHealing++
 		}
 
-		// Check for setup actions (buffs, debuffs)
-		if action.ActionType == constants.ActionTypeSpell || action.ActionType == constants.ActionTypeAbility {
-			var conditions []string
-			_ = json.Unmarshal(action.ConditionsApplied, &conditions)
-			if len(conditions) > 0 {
-				setupActions++
-			}
+		if cas.isSetupAction(action) {
+			metrics.setupActions++
 		}
 	}
 
-	if comboAttacks > 5 {
+	return metrics
+}
+
+func (cas *CombatAnalyticsService) isComboAttack(index int, action *models.CombatActionLog, actions []*models.CombatActionLog) bool {
+	if action.ActionType != constants.ActionAttack || index == 0 {
+		return false
+	}
+
+	prevAction := actions[index-1]
+	return prevAction.RoundNumber == action.RoundNumber &&
+		prevAction.TargetID != nil && action.TargetID != nil &&
+		*prevAction.TargetID == *action.TargetID
+}
+
+func (cas *CombatAnalyticsService) isCoordinatedHealing(action *models.CombatActionLog, reports []*models.CombatantReport) bool {
+	if action.ActionType != constants.ActionHeal || action.TargetID == nil {
+		return false
+	}
+
+	for _, report := range reports {
+		if report.Analytics.CombatantID == *action.TargetID {
+			return report.Analytics.DamageTaken > report.Analytics.FinalHP
+		}
+	}
+	return false
+}
+
+func (cas *CombatAnalyticsService) isSetupAction(action *models.CombatActionLog) bool {
+	if action.ActionType != constants.ActionTypeSpell && action.ActionType != constants.ActionTypeAbility {
+		return false
+	}
+
+	var conditions []string
+	_ = json.Unmarshal(action.ConditionsApplied, &conditions)
+	return len(conditions) > 0
+}
+
+func (cas *CombatAnalyticsService) scoreTeamwork(metrics teamworkMetrics) int {
+	score := 5
+
+	if metrics.comboAttacks > 5 {
 		score += 2
 	}
 
-	if coordinatedHealing > 3 {
+	if metrics.coordinatedHealing > 3 {
 		score++
 	}
 
-	if setupActions > 4 {
+	if metrics.setupActions > 4 {
 		score += 2
 	}
 
@@ -563,64 +658,98 @@ func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActio
 func (cas *CombatAnalyticsService) findMissedOpportunities(actions []*models.CombatActionLog, combat *models.Combat) []string {
 	opportunities := []string{}
 
-	// Analyze for common tactical mistakes
-	aoeOpportunities := 0
-	healingDelays := 0
-
-	for _, action := range actions {
-		// Check for missed AoE opportunities
-		if action.ActionType == constants.ActionAttack && action.TargetID != nil {
-			// Count enemies in same round
-			enemiesClose := 0
-			for _, otherAction := range actions {
-				if otherAction.RoundNumber == action.RoundNumber &&
-					otherAction.ActorType == "npc" {
-					enemiesClose++
-				}
-			}
-			if enemiesClose >= 3 {
-				aoeOpportunities++
-			}
-		}
-	}
-
+	aoeOpportunities := cas.countMissedAoEOpportunities(actions)
 	if aoeOpportunities > 3 {
 		opportunities = append(opportunities, "Multiple opportunities for area-of-effect spells were missed")
 	}
 
+	// Note: healingDelays calculation was not implemented in original code
+	// Keeping the check for consistency
+	healingDelays := 0
 	if healingDelays > 2 {
 		opportunities = append(opportunities, "Healing was delayed, resulting in preventable unconsciousness")
 	}
 
-	// Check for poor resource management
-	var lastRoundActions []*models.CombatActionLog
-	for _, action := range actions {
-		if action.RoundNumber == combat.Round {
-			lastRoundActions = append(lastRoundActions, action)
-		}
-	}
-
-	highLevelResourcesUnused := false
-	for _, action := range lastRoundActions {
-		if action.ResourcesUsed != nil {
-			var resources map[string]interface{}
-			_ = json.Unmarshal(action.ResourcesUsed, &resources)
-			if slots, ok := resources["spell_slots_remaining"].(map[string]interface{}); ok {
-				for level, remaining := range slots {
-					if level >= "3" && remaining.(float64) > 0 {
-						highLevelResourcesUnused = true
-						break
-					}
-				}
-			}
-		}
-	}
-
-	if highLevelResourcesUnused {
+	if cas.hasUnusedHighLevelResources(actions, combat.Round) {
 		opportunities = append(opportunities, "High-level spell slots remained unused")
 	}
 
 	return opportunities
+}
+
+func (cas *CombatAnalyticsService) countMissedAoEOpportunities(actions []*models.CombatActionLog) int {
+	aoeOpportunities := 0
+
+	for _, action := range actions {
+		if cas.shouldHaveUsedAoE(action, actions) {
+			aoeOpportunities++
+		}
+	}
+
+	return aoeOpportunities
+}
+
+func (cas *CombatAnalyticsService) shouldHaveUsedAoE(action *models.CombatActionLog, allActions []*models.CombatActionLog) bool {
+	if action.ActionType != constants.ActionAttack || action.TargetID == nil {
+		return false
+	}
+
+	enemiesInRound := cas.countEnemiesInRound(action.RoundNumber, allActions)
+	return enemiesInRound >= 3
+}
+
+func (cas *CombatAnalyticsService) countEnemiesInRound(roundNumber int, actions []*models.CombatActionLog) int {
+	count := 0
+	for _, action := range actions {
+		if action.RoundNumber == roundNumber && action.ActorType == "npc" {
+			count++
+		}
+	}
+	return count
+}
+
+func (cas *CombatAnalyticsService) hasUnusedHighLevelResources(actions []*models.CombatActionLog, finalRound int) bool {
+	lastRoundActions := cas.getActionsForRound(actions, finalRound)
+
+	for _, action := range lastRoundActions {
+		if cas.hasHighLevelSpellSlotsRemaining(action) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (cas *CombatAnalyticsService) getActionsForRound(actions []*models.CombatActionLog, round int) []*models.CombatActionLog {
+	var roundActions []*models.CombatActionLog
+	for _, action := range actions {
+		if action.RoundNumber == round {
+			roundActions = append(roundActions, action)
+		}
+	}
+	return roundActions
+}
+
+func (cas *CombatAnalyticsService) hasHighLevelSpellSlotsRemaining(action *models.CombatActionLog) bool {
+	if action.ResourcesUsed == nil {
+		return false
+	}
+
+	var resources map[string]interface{}
+	_ = json.Unmarshal(action.ResourcesUsed, &resources)
+	
+	slots, ok := resources["spell_slots_remaining"].(map[string]interface{})
+	if !ok {
+		return false
+	}
+
+	for level, remaining := range slots {
+		if level >= "3" && remaining.(float64) > 0 {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (cas *CombatAnalyticsService) generateRecommendations(

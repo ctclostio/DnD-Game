@@ -289,69 +289,55 @@ func TestSettlementGeneratorService_GenerateSettlement(t *testing.T) {
 	})
 }
 
-func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
+func TestSettlementGeneratorService_DeterminePopulationSize(t *testing.T) {
 	service := &SettlementGeneratorService{}
-
-	t.Run("determinePopulationSize", func(t *testing.T) {
-		tests := []struct {
-			settlementType models.SettlementType
-			expected       string
-		}{
-			{models.SettlementHamlet, "small"},
-			{models.SettlementVillage, "small"},
-			{models.SettlementTown, "medium"},
-			{models.SettlementCity, "large"},
-			{models.SettlementMetropolis, "large"},
-		}
-
-		for _, tt := range tests {
-			result := service.determinePopulationSize(tt.settlementType)
-			require.Equal(t, tt.expected, result)
-		}
-	})
-
-	t.Run("calculatePopulation", func(t *testing.T) {
-		tests := []struct {
-			name           string
-			settlementType models.SettlementType
-			size           string
-			minExpected    int
-			maxExpected    int
-		}{
-			{"small hamlet", models.SettlementHamlet, "small", 20, 30},
-			{"medium town", models.SettlementTown, "medium", 800, 1200},
-			{"large city", models.SettlementCity, "large", 8000, 12000},
-			{"ruins", models.SettlementRuins, "small", 0, 0},
-		}
-
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				// Run multiple times to check randomness
-				for i := 0; i < 10; i++ {
-					result := service.calculatePopulation(tt.settlementType, tt.size)
-					require.GreaterOrEqual(t, result, tt.minExpected)
-					require.LessOrEqual(t, result, tt.maxExpected)
-				}
-			})
-		}
-	})
-
-	// Helper for testing count calculations
-	testCountCalculation := func(name string, calculateFunc func(models.SettlementType) int, testData []struct {
+	tests := []struct {
 		settlementType models.SettlementType
+		expected       string
+	}{
+		{models.SettlementHamlet, "small"},
+		{models.SettlementVillage, "small"},
+		{models.SettlementTown, "medium"},
+		{models.SettlementCity, "large"},
+		{models.SettlementMetropolis, "large"},
+	}
+
+	for _, tt := range tests {
+		result := service.determinePopulationSize(tt.settlementType)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestSettlementGeneratorService_CalculatePopulation(t *testing.T) {
+	service := &SettlementGeneratorService{}
+	tests := []struct {
+		name           string
+		settlementType models.SettlementType
+		size           string
 		minExpected    int
 		maxExpected    int
-	}) {
-		t.Run(name, func(t *testing.T) {
-			for _, tt := range testData {
-				result := calculateFunc(tt.settlementType)
-				require.GreaterOrEqual(t, result, tt.minExpected, "Settlement type: %v", tt.settlementType)
-				require.LessOrEqual(t, result, tt.maxExpected, "Settlement type: %v", tt.settlementType)
+	}{
+		{"small hamlet", models.SettlementHamlet, "small", 20, 30},
+		{"medium town", models.SettlementTown, "medium", 800, 1200},
+		{"large city", models.SettlementCity, "large", 8000, 12000},
+		{"ruins", models.SettlementRuins, "small", 0, 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Run multiple times to check randomness
+			for i := 0; i < 10; i++ {
+				result := service.calculatePopulation(tt.settlementType, tt.size)
+				require.GreaterOrEqual(t, result, tt.minExpected)
+				require.LessOrEqual(t, result, tt.maxExpected)
 			}
 		})
 	}
+}
 
-	testCountCalculation("calculateNPCCount", service.calculateNPCCount, []struct {
+func TestSettlementGeneratorService_CalculateNPCCount(t *testing.T) {
+	service := &SettlementGeneratorService{}
+	tests := []struct {
 		settlementType models.SettlementType
 		minExpected    int
 		maxExpected    int
@@ -362,9 +348,18 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 		{models.SettlementCity, 12, 14},
 		{models.SettlementMetropolis, 20, 22},
 		{models.SettlementRuins, 1, 3},
-	})
+	}
 
-	testCountCalculation("calculateShopCount", service.calculateShopCount, []struct {
+	for _, tt := range tests {
+		result := service.calculateNPCCount(tt.settlementType)
+		require.GreaterOrEqual(t, result, tt.minExpected, "Settlement type: %v", tt.settlementType)
+		require.LessOrEqual(t, result, tt.maxExpected, "Settlement type: %v", tt.settlementType)
+	}
+}
+
+func TestSettlementGeneratorService_CalculateShopCount(t *testing.T) {
+	service := &SettlementGeneratorService{}
+	tests := []struct {
 		settlementType models.SettlementType
 		minExpected    int
 		maxExpected    int
@@ -375,145 +370,156 @@ func TestSettlementGeneratorService_HelperFunctions(t *testing.T) {
 		{models.SettlementCity, 8, 9},
 		{models.SettlementMetropolis, 15, 16},
 		{models.SettlementRuins, 0, 1},
-	})
+	}
 
-	t.Run("calculateWealthLevel", func(t *testing.T) {
-		tests := []struct {
-			name           string
-			settlementType models.SettlementType
-			population     int
-			minExpected    int
-			maxExpected    int
-		}{
-			{"poor hamlet", models.SettlementHamlet, 50, 1, 4},
-			{"average town", models.SettlementTown, 1000, 4, 6},
-			{"wealthy city", models.SettlementCity, 15000, 7, 10},
-			{"ruins", models.SettlementRuins, 0, 1, 2},
-		}
+	for _, tt := range tests {
+		result := service.calculateShopCount(tt.settlementType)
+		require.GreaterOrEqual(t, result, tt.minExpected, "Settlement type: %v", tt.settlementType)
+		require.LessOrEqual(t, result, tt.maxExpected, "Settlement type: %v", tt.settlementType)
+	}
+}
 
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				// Run multiple times due to randomness
-				for i := 0; i < 10; i++ {
-					result := service.calculateWealthLevel(tt.settlementType, tt.population)
-					require.GreaterOrEqual(t, result, tt.minExpected)
-					require.LessOrEqual(t, result, tt.maxExpected)
-					require.GreaterOrEqual(t, result, 1)
-					require.LessOrEqual(t, result, 10)
-				}
-			})
-		}
-	})
+func TestSettlementGeneratorService_CalculateWealthLevel(t *testing.T) {
+	service := &SettlementGeneratorService{}
+	tests := []struct {
+		name           string
+		settlementType models.SettlementType
+		population     int
+		minExpected    int
+		maxExpected    int
+	}{
+		{"poor hamlet", models.SettlementHamlet, 50, 1, 4},
+		{"average town", models.SettlementTown, 1000, 4, 6},
+		{"wealthy city", models.SettlementCity, 15000, 7, 10},
+		{"ruins", models.SettlementRuins, 0, 1, 2},
+	}
 
-	t.Run("inferTerrainType", func(t *testing.T) {
-		tests := []struct {
-			region   string
-			expected string
-		}{
-			{"Northern Mountains", "mountainous"},
-			{"Dark Forest", "forest"},
-			{"Scorching Desert", "desert"},
-			{"Coastal Trading Post", "coastal"},
-			{"Murky Swamplands", "swamp"},
-			{"Rolling Plains", "plains"},
-			{"Random Region", "varied"},
-		}
-
-		for _, tt := range tests {
-			result := service.inferTerrainType(tt.region)
-			require.Equal(t, tt.expected, result)
-		}
-	})
-
-	t.Run("inferClimate", func(t *testing.T) {
-		tests := []struct {
-			region   string
-			expected string
-		}{
-			{"Northern Wastes", "cold"},
-			{"Southern Jungles", "tropical"},
-			{"Desert Expanse", "arid"},
-			{"Swamp Delta", "humid"},
-			{"Central Valley", "temperate"},
-		}
-
-		for _, tt := range tests {
-			result := service.inferClimate(tt.region)
-			require.Equal(t, tt.expected, result)
-		}
-	})
-
-	t.Run("getNPCRoles", func(t *testing.T) {
-		tests := []struct {
-			settlementType models.SettlementType
-			expectedRoles  []string
-		}{
-			{
-				models.SettlementHamlet,
-				[]string{"farmer", "hunter"},
-			},
-			{
-				models.SettlementCity,
-				[]string{"noble", "guildmaster", "magistrate", "spy", "cultist"},
-			},
-			{
-				models.SettlementRuins,
-				[]string{"hermit", "scavenger", "mad prophet"},
-			},
-		}
-
-		baseRoles := []string{"merchant", "guard", "innkeeper", "blacksmith", "priest"}
-
-		for _, tt := range tests {
-			result := service.getNPCRoles(tt.settlementType)
-
-			// Check base roles are included
-			for _, role := range baseRoles {
-				require.Contains(t, result, role)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Run multiple times due to randomness
+			for i := 0; i < 10; i++ {
+				result := service.calculateWealthLevel(tt.settlementType, tt.population)
+				require.GreaterOrEqual(t, result, tt.minExpected)
+				require.LessOrEqual(t, result, tt.maxExpected)
+				require.GreaterOrEqual(t, result, 1)
+				require.LessOrEqual(t, result, 10)
 			}
+		})
+	}
+}
 
-			// Check specific roles are included
-			for _, role := range tt.expectedRoles {
-				require.Contains(t, result, role)
-			}
+func TestSettlementGeneratorService_InferTerrainType(t *testing.T) {
+	service := &SettlementGeneratorService{}
+	tests := []struct {
+		region   string
+		expected string
+	}{
+		{"Northern Mountains", "mountainous"},
+		{"Dark Forest", "forest"},
+		{"Scorching Desert", "desert"},
+		{"Coastal Trading Post", "coastal"},
+		{"Murky Swamplands", "swamp"},
+		{"Rolling Plains", "plains"},
+		{"Random Region", "varied"},
+	}
+
+	for _, tt := range tests {
+		result := service.inferTerrainType(tt.region)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestSettlementGeneratorService_InferClimate(t *testing.T) {
+	service := &SettlementGeneratorService{}
+	tests := []struct {
+		region   string
+		expected string
+	}{
+		{"Northern Wastes", "cold"},
+		{"Southern Jungles", "tropical"},
+		{"Desert Expanse", "arid"},
+		{"Swamp Delta", "humid"},
+		{"Central Valley", "temperate"},
+	}
+
+	for _, tt := range tests {
+		result := service.inferClimate(tt.region)
+		require.Equal(t, tt.expected, result)
+	}
+}
+
+func TestSettlementGeneratorService_GetNPCRoles(t *testing.T) {
+	service := &SettlementGeneratorService{}
+	tests := []struct {
+		settlementType models.SettlementType
+		expectedRoles  []string
+	}{
+		{
+			models.SettlementHamlet,
+			[]string{"farmer", "hunter"},
+		},
+		{
+			models.SettlementCity,
+			[]string{"noble", "guildmaster", "magistrate", "spy", "cultist"},
+		},
+		{
+			models.SettlementRuins,
+			[]string{"hermit", "scavenger", "mad prophet"},
+		},
+	}
+
+	baseRoles := []string{"merchant", "guard", "innkeeper", "blacksmith", "priest"}
+
+	for _, tt := range tests {
+		result := service.getNPCRoles(tt.settlementType)
+
+		// Check base roles are included
+		for _, role := range baseRoles {
+			require.Contains(t, result, role)
 		}
-	})
 
-	t.Run("getShopTypes", func(t *testing.T) {
-		tests := []struct {
-			settlementType models.SettlementType
-			expectedShops  []string
-		}{
-			{
-				models.SettlementVillage,
-				[]string{"weaponsmith", "inn"},
-			},
-			{
-				models.SettlementCity,
-				[]string{"magic", "jeweler", "library", "herbalist"},
-			},
-			{
-				models.SettlementMetropolis,
-				[]string{"enchanter", "artificer", "grand bazaar", "auction house"},
-			},
+		// Check specific roles are included
+		for _, role := range tt.expectedRoles {
+			require.Contains(t, result, role)
+		}
+	}
+}
+
+func TestSettlementGeneratorService_GetShopTypes(t *testing.T) {
+	service := &SettlementGeneratorService{}
+	tests := []struct {
+		settlementType models.SettlementType
+		expectedShops  []string
+	}{
+		{
+			models.SettlementVillage,
+			[]string{"weaponsmith", "inn"},
+		},
+		{
+			models.SettlementCity,
+			[]string{"magic", "jeweler", "library", "herbalist"},
+		},
+		{
+			models.SettlementMetropolis,
+			[]string{"enchanter", "artificer", "grand bazaar", "auction house"},
+		},
+	}
+
+	baseShops := []string{"general", "tavern"}
+
+	for _, tt := range tests {
+		result := service.getShopTypes(tt.settlementType)
+
+		// Check base shops are included
+		for _, shop := range baseShops {
+			require.Contains(t, result, shop)
 		}
 
-		baseShops := []string{"general", "tavern"}
-
-		for _, tt := range tests {
-			result := service.getShopTypes(tt.settlementType)
-
-			// Check base shops are included
-			for _, shop := range baseShops {
-				require.Contains(t, result, shop)
-			}
-
-			// Check specific shops are included
-			for _, shop := range tt.expectedShops {
-				require.Contains(t, result, shop)
-			}
+		// Check specific shops are included
+		for _, shop := range tt.expectedShops {
+			require.Contains(t, result, shop)
 		}
-	})
+	}
 }
 
 func TestSettlementGeneratorService_GenerateMarketConditions(t *testing.T) {
