@@ -16,6 +16,7 @@ import (
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
@@ -157,7 +158,7 @@ func createAuthenticatedRequest(t *testing.T, method, url string, body interface
 	}
 
 	req := httptest.NewRequest(method, url, bodyReader)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 	// Generate token and add to request
 	tokenPair, err := jwtManager.GenerateTokenPair(userID, "testuser", "test@example.com", "player")

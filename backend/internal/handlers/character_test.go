@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -107,7 +108,7 @@ func TestCharacterHandler_RequestValidation(t *testing.T) {
 			// Create request
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(tt.method, tt.path, bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 			// Add auth context if userID is provided (placeholder for middleware)
 
@@ -188,7 +189,7 @@ func TestCharacterHandler_UpdateCharacter(t *testing.T) {
 			// Create request
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPut, "/api/characters/"+tt.characterID, bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 			// Add route vars
 			_ = mux.SetURLVars(req, map[string]string{"id": tt.characterID})
@@ -260,7 +261,7 @@ func TestCharacterHandler_SpellSlots(t *testing.T) {
 			}
 
 			req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 			_ = mux.SetURLVars(req, map[string]string{"id": characterID})
 
 			// Add auth context
@@ -296,7 +297,7 @@ func TestCharacterHandler_CustomClass(t *testing.T) {
 
 		bodyBytes, _ := json.Marshal(body)
 		req := httptest.NewRequest(http.MethodPost, "/api/characters/custom-class/generate", bytes.NewReader(bodyBytes))
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 		// Add auth context
 		// Context would be added by auth middleware in real handler

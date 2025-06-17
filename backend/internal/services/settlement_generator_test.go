@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
@@ -352,8 +353,8 @@ func TestSettlementGeneratorService_CalculateNPCCount(t *testing.T) {
 
 	for _, tt := range tests {
 		result := service.calculateNPCCount(tt.settlementType)
-		require.GreaterOrEqual(t, result, tt.minExpected, "Settlement type: %v", tt.settlementType)
-		require.LessOrEqual(t, result, tt.maxExpected, "Settlement type: %v", tt.settlementType)
+		require.GreaterOrEqual(t, result, tt.minExpected, constants.TestSettlementTypeFormat, tt.settlementType)
+		require.LessOrEqual(t, result, tt.maxExpected, constants.TestSettlementTypeFormat, tt.settlementType)
 	}
 }
 
@@ -374,8 +375,8 @@ func TestSettlementGeneratorService_CalculateShopCount(t *testing.T) {
 
 	for _, tt := range tests {
 		result := service.calculateShopCount(tt.settlementType)
-		require.GreaterOrEqual(t, result, tt.minExpected, "Settlement type: %v", tt.settlementType)
-		require.LessOrEqual(t, result, tt.maxExpected, "Settlement type: %v", tt.settlementType)
+		require.GreaterOrEqual(t, result, tt.minExpected, constants.TestSettlementTypeFormat, tt.settlementType)
+		require.LessOrEqual(t, result, tt.maxExpected, constants.TestSettlementTypeFormat, tt.settlementType)
 	}
 }
 

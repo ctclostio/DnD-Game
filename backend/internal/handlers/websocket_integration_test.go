@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 	ws "github.com/ctclostio/DnD-Game/backend/internal/websocket"
@@ -63,16 +64,16 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 
 		// Convert http to ws URL
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-		wsURL = fmt.Sprintf("%s?room=%s", wsURL, session.ID)
+		wsURL = fmt.Sprintf(constants.WebSocketURLFormat, wsURL, session.ID)
 
 		// Connect to WebSocket with proper origin header
 		header := http.Header{}
-		header.Set("Origin", "http://localhost:3000")
+		header.Set("Origin", constants.LocalhostURL)
 		conn, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
 		defer func() {
 			if err := conn.Close(); err != nil {
-				t.Logf("Failed to close WebSocket connection: %v", err)
+				t.Logf(constants.WebSocketCloseError, err)
 			}
 		}()
 
@@ -109,12 +110,12 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 
 		// Connect to WebSocket with proper origin header
 		header := http.Header{}
-		header.Set("Origin", "http://localhost:3000")
+		header.Set("Origin", constants.LocalhostURL)
 		conn, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
 		defer func() {
 			if err := conn.Close(); err != nil {
-				t.Logf("Failed to close WebSocket connection: %v", err)
+				t.Logf(constants.WebSocketCloseError, err)
 			}
 		}()
 
@@ -150,12 +151,12 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 
 		// Connect to WebSocket with proper origin header
 		header := http.Header{}
-		header.Set("Origin", "http://localhost:3000")
+		header.Set("Origin", constants.LocalhostURL)
 		conn, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
 		defer func() {
 			if err := conn.Close(); err != nil {
-				t.Logf("Failed to close WebSocket connection: %v", err)
+				t.Logf(constants.WebSocketCloseError, err)
 			}
 		}()
 
@@ -197,11 +198,11 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 
 		// Setup headers with origin
 		header := http.Header{}
-		header.Set("Origin", "http://localhost:3000")
+		header.Set("Origin", constants.LocalhostURL)
 
 		// Connect first user
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-		wsURL = fmt.Sprintf("%s?room=%s", wsURL, session.ID)
+		wsURL = fmt.Sprintf(constants.WebSocketURLFormat, wsURL, session.ID)
 		conn1, _, err := websocket.DefaultDialer.Dial(wsURL, header)
 		require.NoError(t, err)
 		defer func() { _ = conn1.Close() }()
@@ -282,11 +283,11 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 
 		// Setup headers with origin
 		header := http.Header{}
-		header.Set("Origin", "http://localhost:3000")
+		header.Set("Origin", constants.LocalhostURL)
 
 		// Connect to room 1
 		wsURL1 := "ws" + strings.TrimPrefix(server.URL, "http")
-		wsURL1 = fmt.Sprintf("%s?room=%s", wsURL1, session.ID)
+		wsURL1 = fmt.Sprintf(constants.WebSocketURLFormat, wsURL1, session.ID)
 		conn1, _, err := websocket.DefaultDialer.Dial(wsURL1, header)
 		require.NoError(t, err)
 		defer func() { _ = conn1.Close() }()
@@ -310,7 +311,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 
 		// Connect to room 2
 		wsURL2 := "ws" + strings.TrimPrefix(server.URL, "http")
-		wsURL2 = fmt.Sprintf("%s?room=%s", wsURL2, session2.ID)
+		wsURL2 = fmt.Sprintf(constants.WebSocketURLFormat, wsURL2, session2.ID)
 		conn2, _, err := websocket.DefaultDialer.Dial(wsURL2, header)
 		require.NoError(t, err)
 		defer func() { _ = conn2.Close() }()
@@ -358,11 +359,11 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		defer server.Close()
 
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-		wsURL = fmt.Sprintf("%s?room=%s", wsURL, session.ID)
+		wsURL = fmt.Sprintf(constants.WebSocketURLFormat, wsURL, session.ID)
 
 		// Setup headers with origin
 		header := http.Header{}
-		header.Set("Origin", "http://localhost:3000")
+		header.Set("Origin", constants.LocalhostURL)
 
 		// First connection
 		conn1, _, err := websocket.DefaultDialer.Dial(wsURL, header)
@@ -414,11 +415,11 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		defer server.Close()
 
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-		wsURL = fmt.Sprintf("%s?room=%s", wsURL, session.ID)
+		wsURL = fmt.Sprintf(constants.WebSocketURLFormat, wsURL, session.ID)
 
 		// Setup headers with origin
 		header := http.Header{}
-		header.Set("Origin", "http://localhost:3000")
+		header.Set("Origin", constants.LocalhostURL)
 
 		// Create multiple users
 		numUsers := 5
@@ -489,7 +490,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 		for _, conn := range connections {
 			if conn != nil {
 				if err := conn.Close(); err != nil {
-					t.Logf("Failed to close WebSocket connection: %v", err)
+					t.Logf(constants.WebSocketCloseError, err)
 				}
 			}
 		}

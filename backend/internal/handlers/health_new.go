@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/health"
 )
 
@@ -66,9 +67,9 @@ func (h *Handlers) Health(w http.ResponseWriter, _ *http.Request) {
 		Service:   "dnd-game-api",
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }
@@ -84,12 +85,12 @@ func (h *Handlers) Health(w http.ResponseWriter, _ *http.Request) {
 // @Router /health/live [get]
 func (h *Handlers) LivenessProbe(w http.ResponseWriter, _ *http.Request) {
 	// Basic liveness check - if we can respond, we're alive
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(map[string]string{
 		"status":    "alive",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }
@@ -156,9 +157,9 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }
@@ -216,22 +217,22 @@ func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }
 
 // Standalone HealthCheckV2 function for backward compatibility
 func HealthCheckV2(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(map[string]string{
 		"status":    "healthy",
 		"service":   "dnd-game-api",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }

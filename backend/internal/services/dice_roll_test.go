@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
@@ -27,8 +28,8 @@ func TestDiceRollService_RollDice(t *testing.T) {
 		{
 			name: "successful d20 roll",
 			roll: &models.DiceRoll{
-				GameSessionID: "session-123",
-				UserID:        "user-123",
+				GameSessionID: constants.TestSessionID,
+				UserID:        constants.TestUserID,
 				RollNotation:  "1d20",
 				Purpose:       "Attack roll",
 			},
@@ -54,8 +55,8 @@ func TestDiceRollService_RollDice(t *testing.T) {
 		{
 			name: "multiple dice with modifier",
 			roll: &models.DiceRoll{
-				GameSessionID: "session-123",
-				UserID:        "user-123",
+				GameSessionID: constants.TestSessionID,
+				UserID:        constants.TestUserID,
 				RollNotation:  "2d6+3",
 				Purpose:       "Damage roll",
 			},
@@ -80,8 +81,8 @@ func TestDiceRollService_RollDice(t *testing.T) {
 		{
 			name: "negative modifier",
 			roll: &models.DiceRoll{
-				GameSessionID: "session-123",
-				UserID:        "user-123",
+				GameSessionID: constants.TestSessionID,
+				UserID:        constants.TestUserID,
 				RollNotation:  "1d20-2",
 				Purpose:       "Saving throw",
 			},
@@ -99,24 +100,24 @@ func TestDiceRollService_RollDice(t *testing.T) {
 		},
 		{
 			name:          "missing game session ID",
-			roll:          &models.DiceRoll{UserID: "user-123", RollNotation: "1d20"},
+			roll:          &models.DiceRoll{UserID: constants.TestUserID, RollNotation: "1d20"},
 			expectedError: "game session ID is required",
 		},
 		{
 			name:          "missing user ID",
-			roll:          &models.DiceRoll{GameSessionID: "session-123", RollNotation: "1d20"},
+			roll:          &models.DiceRoll{GameSessionID: constants.TestSessionID, RollNotation: "1d20"},
 			expectedError: "user ID is required",
 		},
 		{
 			name:          "missing roll notation",
-			roll:          &models.DiceRoll{GameSessionID: "session-123", UserID: "user-123"},
+			roll:          &models.DiceRoll{GameSessionID: constants.TestSessionID, UserID: constants.TestUserID},
 			expectedError: "roll notation is required",
 		},
 		{
 			name: "invalid roll notation - no dice",
 			roll: &models.DiceRoll{
-				GameSessionID: "session-123",
-				UserID:        "user-123",
+				GameSessionID: constants.TestSessionID,
+				UserID:        constants.TestUserID,
 				RollNotation:  "not a roll",
 			},
 			expectedError: "invalid roll notation",
@@ -124,8 +125,8 @@ func TestDiceRollService_RollDice(t *testing.T) {
 		{
 			name: "invalid dice type",
 			roll: &models.DiceRoll{
-				GameSessionID: "session-123",
-				UserID:        "user-123",
+				GameSessionID: constants.TestSessionID,
+				UserID:        constants.TestUserID,
 				RollNotation:  "1d7",
 			},
 			expectedError: "invalid dice type",
@@ -133,8 +134,8 @@ func TestDiceRollService_RollDice(t *testing.T) {
 		{
 			name: "repository error",
 			roll: &models.DiceRoll{
-				GameSessionID: "session-123",
-				UserID:        "user-123",
+				GameSessionID: constants.TestSessionID,
+				UserID:        constants.TestUserID,
 				RollNotation:  "1d20",
 			},
 			setupMock: func(m *mocks.MockDiceRollRepository) {
@@ -183,42 +184,42 @@ func TestDiceRollService_GetRollsBySession(t *testing.T) {
 	}{
 		{
 			name:      "successful retrieval",
-			sessionID: "session-123",
+			sessionID: constants.TestSessionID,
 			limit:     10,
 			offset:    0,
 			setupMock: func(m *mocks.MockDiceRollRepository) {
 				rolls := []*models.DiceRoll{
 					{
 						ID:            "roll-1",
-						GameSessionID: "session-123",
-						UserID:        "user-123",
+						GameSessionID: constants.TestSessionID,
+						UserID:        constants.TestUserID,
 						RollNotation:  "1d20+5",
 						Total:         18,
 						Purpose:       "Attack roll",
 					},
 					{
 						ID:            "roll-2",
-						GameSessionID: "session-123",
+						GameSessionID: constants.TestSessionID,
 						UserID:        "user-456",
 						RollNotation:  "2d6+3",
 						Total:         10,
 						Purpose:       "Damage roll",
 					},
 				}
-				m.On("GetByGameSession", ctx, "session-123", 0, 10).Return(rolls, nil)
+				m.On("GetByGameSession", ctx, constants.TestSessionID, 0, 10).Return(rolls, nil)
 			},
 			expected: []*models.DiceRoll{
 				{
 					ID:            "roll-1",
-					GameSessionID: "session-123",
-					UserID:        "user-123",
+					GameSessionID: constants.TestSessionID,
+					UserID:        constants.TestUserID,
 					RollNotation:  "1d20+5",
 					Total:         18,
 					Purpose:       "Attack roll",
 				},
 				{
 					ID:            "roll-2",
-					GameSessionID: "session-123",
+					GameSessionID: constants.TestSessionID,
 					UserID:        "user-456",
 					RollNotation:  "2d6+3",
 					Total:         10,
@@ -238,11 +239,11 @@ func TestDiceRollService_GetRollsBySession(t *testing.T) {
 		},
 		{
 			name:      "repository error",
-			sessionID: "session-123",
+			sessionID: constants.TestSessionID,
 			limit:     10,
 			offset:    0,
 			setupMock: func(m *mocks.MockDiceRollRepository) {
-				m.On("GetByGameSession", ctx, "session-123", 0, 10).Return(nil, errors.New("database error"))
+				m.On("GetByGameSession", ctx, constants.TestSessionID, 0, 10).Return(nil, errors.New("database error"))
 			},
 			expectedError: "database error",
 		},
@@ -285,40 +286,40 @@ func TestDiceRollService_GetRollsByUser(t *testing.T) {
 	}{
 		{
 			name:   "successful retrieval",
-			userID: "user-123",
+			userID: constants.TestUserID,
 			limit:  20,
 			offset: 0,
 			setupMock: func(m *mocks.MockDiceRollRepository) {
 				rolls := []*models.DiceRoll{
 					{
 						ID:            "roll-1",
-						GameSessionID: "session-123",
-						UserID:        "user-123",
+						GameSessionID: constants.TestSessionID,
+						UserID:        constants.TestUserID,
 						RollNotation:  "1d20",
 						Total:         15,
 					},
 					{
 						ID:            "roll-2",
 						GameSessionID: "session-456",
-						UserID:        "user-123",
+						UserID:        constants.TestUserID,
 						RollNotation:  "3d6",
 						Total:         12,
 					},
 				}
-				m.On("GetByUser", ctx, "user-123", 0, 20).Return(rolls, nil)
+				m.On("GetByUser", ctx, constants.TestUserID, 0, 20).Return(rolls, nil)
 			},
 			expected: []*models.DiceRoll{
 				{
 					ID:            "roll-1",
-					GameSessionID: "session-123",
-					UserID:        "user-123",
+					GameSessionID: constants.TestSessionID,
+					UserID:        constants.TestUserID,
 					RollNotation:  "1d20",
 					Total:         15,
 				},
 				{
 					ID:            "roll-2",
 					GameSessionID: "session-456",
-					UserID:        "user-123",
+					UserID:        constants.TestUserID,
 					RollNotation:  "3d6",
 					Total:         12,
 				},
@@ -448,7 +449,7 @@ func TestDiceRollService_RollInitiative(t *testing.T) {
 	}{
 		{
 			name:      "successful initiative rolls",
-			sessionID: "session-123",
+			sessionID: constants.TestSessionID,
 			participants: []struct {
 				UserID      string
 				CharacterID string
@@ -480,7 +481,7 @@ func TestDiceRollService_RollInitiative(t *testing.T) {
 		},
 		{
 			name:      "repository error",
-			sessionID: "session-123",
+			sessionID: constants.TestSessionID,
 			participants: []struct {
 				UserID      string
 				CharacterID string

@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
@@ -88,26 +89,26 @@ func TestInventoryService_AddItemToCharacter(t *testing.T) {
 	}{
 		{
 			name:        "successful add item",
-			characterID: "char-123",
-			itemID:      "item-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestItemID,
 			quantity:    2,
 			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
 				// Character exists
-				char := mocks.CreateTestCharacter("char-123", "user-123", "Test Character", "Human", "Fighter")
-				charRepo.On("GetByID", ctx, "char-123").Return(char, nil)
+				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, "Test Character", "Human", "Fighter")
+				charRepo.On("GetByID", ctx, constants.TestCharacterID).Return(char, nil)
 
 				// Item exists
-				item := mocks.CreateTestItem("item-456", "Healing Potion", models.ItemTypeConsumable, 50, 0.5)
-				invRepo.On("GetItem", "item-456").Return(item, nil)
+				item := mocks.CreateTestItem(constants.TestItemID, "Healing Potion", models.ItemTypeConsumable, 50, 0.5)
+				invRepo.On("GetItem", constants.TestItemID).Return(item, nil)
 
 				// Add to inventory
-				invRepo.On("AddItemToInventory", "char-123", "item-456", 2).Return(nil)
+				invRepo.On("AddItemToInventory", constants.TestCharacterID, constants.TestItemID, 2).Return(nil)
 			},
 		},
 		{
-			name:        "character not found",
+			name:        constants.TestCharacterNotFound,
 			characterID: "nonexistent",
-			itemID:      "item-456",
+			itemID:      constants.TestItemID,
 			quantity:    1,
 			setupMock: func(_ *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
 				charRepo.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("not found"))
@@ -116,67 +117,67 @@ func TestInventoryService_AddItemToCharacter(t *testing.T) {
 		},
 		{
 			name:        "character nil response",
-			characterID: "char-123",
-			itemID:      "item-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestItemID,
 			quantity:    1,
 			setupMock: func(_ *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
-				charRepo.On("GetByID", ctx, "char-123").Return(nil, nil)
+				charRepo.On("GetByID", ctx, constants.TestCharacterID).Return(nil, nil)
 			},
-			expectedError: "character not found",
+			expectedError: constants.TestCharacterNotFound,
 		},
 		{
 			name:        "item not found",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			itemID:      "nonexistent",
 			quantity:    1,
 			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
-				char := mocks.CreateTestCharacter("char-123", "user-123", "Test Character", "Human", "Fighter")
-				charRepo.On("GetByID", ctx, "char-123").Return(char, nil)
+				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, "Test Character", "Human", "Fighter")
+				charRepo.On("GetByID", ctx, constants.TestCharacterID).Return(char, nil)
 				invRepo.On("GetItem", "nonexistent").Return(nil, errors.New("not found"))
 			},
 			expectedError: "not found",
 		},
 		{
 			name:        "item nil response",
-			characterID: "char-123",
-			itemID:      "item-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestItemID,
 			quantity:    1,
 			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
-				char := mocks.CreateTestCharacter("char-123", "user-123", "Test Character", "Human", "Fighter")
-				charRepo.On("GetByID", ctx, "char-123").Return(char, nil)
-				invRepo.On("GetItem", "item-456").Return(nil, nil)
+				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, "Test Character", "Human", "Fighter")
+				charRepo.On("GetByID", ctx, constants.TestCharacterID).Return(char, nil)
+				invRepo.On("GetItem", constants.TestItemID).Return(nil, nil)
 			},
 			expectedError: "item not found",
 		},
 		{
 			name:        "add to inventory error",
-			characterID: "char-123",
-			itemID:      "item-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestItemID,
 			quantity:    1,
 			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
-				char := mocks.CreateTestCharacter("char-123", "user-123", "Test Character", "Human", "Fighter")
-				charRepo.On("GetByID", ctx, "char-123").Return(char, nil)
+				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, "Test Character", "Human", "Fighter")
+				charRepo.On("GetByID", ctx, constants.TestCharacterID).Return(char, nil)
 
-				item := mocks.CreateTestItem("item-456", "Healing Potion", models.ItemTypeConsumable, 50, 0.5)
-				invRepo.On("GetItem", "item-456").Return(item, nil)
+				item := mocks.CreateTestItem(constants.TestItemID, "Healing Potion", models.ItemTypeConsumable, 50, 0.5)
+				invRepo.On("GetItem", constants.TestItemID).Return(item, nil)
 
-				invRepo.On("AddItemToInventory", "char-123", "item-456", 1).Return(errors.New("database error"))
+				invRepo.On("AddItemToInventory", constants.TestCharacterID, constants.TestItemID, 1).Return(errors.New(constants.TestDatabaseError))
 			},
-			expectedError: "database error",
+			expectedError: constants.TestDatabaseError,
 		},
 		{
 			name:        "zero quantity",
-			characterID: "char-123",
-			itemID:      "item-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestItemID,
 			quantity:    0,
 			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
-				char := mocks.CreateTestCharacter("char-123", "user-123", "Test Character", "Human", "Fighter")
-				charRepo.On("GetByID", ctx, "char-123").Return(char, nil)
+				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, "Test Character", "Human", "Fighter")
+				charRepo.On("GetByID", ctx, constants.TestCharacterID).Return(char, nil)
 
-				item := mocks.CreateTestItem("item-456", "Healing Potion", models.ItemTypeConsumable, 50, 0.5)
-				invRepo.On("GetItem", "item-456").Return(item, nil)
+				item := mocks.CreateTestItem(constants.TestItemID, "Healing Potion", models.ItemTypeConsumable, 50, 0.5)
+				invRepo.On("GetItem", constants.TestItemID).Return(item, nil)
 
-				invRepo.On("AddItemToInventory", "char-123", "item-456", 0).Return(nil)
+				invRepo.On("AddItemToInventory", constants.TestCharacterID, constants.TestItemID, 0).Return(nil)
 			},
 		},
 	}
@@ -216,39 +217,39 @@ func TestInventoryService_EquipItem(t *testing.T) {
 	}{
 		{
 			name:        "equip weapon successfully",
-			characterID: "char-123",
-			itemID:      "sword-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestSwordID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Get inventory with one-handed sword
-				sword := mocks.CreateTestItem("sword-456", "Longsword", models.ItemTypeWeapon, 15, 3.0)
+				sword := mocks.CreateTestItem(constants.TestSwordID, "Longsword", models.ItemTypeWeapon, 15, 3.0)
 				sword.Properties["two_handed"] = false
 
-				invItem := mocks.CreateTestInventoryItem("char-123", "sword-456", 1, false, false, sword)
-				m.On("GetCharacterInventory", "char-123").Return([]*models.InventoryItem{invItem}, nil)
+				invItem := mocks.CreateTestInventoryItem(constants.TestCharacterID, constants.TestSwordID, 1, false, false, sword)
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return([]*models.InventoryItem{invItem}, nil)
 
 				// Equip the sword
-				m.On("EquipItem", "char-123", "sword-456", true).Return(nil)
+				m.On("EquipItem", constants.TestCharacterID, constants.TestSwordID, true).Return(nil)
 			},
 		},
 		{
 			name:        "equip two-handed weapon",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			itemID:      "greatsword-789",
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Get inventory with two-handed sword
 				greatsword := mocks.CreateTestItem("greatsword-789", "Greatsword", models.ItemTypeWeapon, 50, 6.0)
 				greatsword.Properties["two_handed"] = true
 
-				invItem := mocks.CreateTestInventoryItem("char-123", "greatsword-789", 1, false, false, greatsword)
-				m.On("GetCharacterInventory", "char-123").Return([]*models.InventoryItem{invItem}, nil)
+				invItem := mocks.CreateTestInventoryItem(constants.TestCharacterID, "greatsword-789", 1, false, false, greatsword)
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return([]*models.InventoryItem{invItem}, nil)
 
 				// Equip the greatsword
-				m.On("EquipItem", "char-123", "greatsword-789", true).Return(nil)
+				m.On("EquipItem", constants.TestCharacterID, "greatsword-789", true).Return(nil)
 			},
 		},
 		{
 			name:        "equip armor - unequip existing",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			itemID:      "plate-mail",
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Get inventory with existing armor equipped
@@ -256,20 +257,20 @@ func TestInventoryService_EquipItem(t *testing.T) {
 				newArmor := mocks.CreateTestItem("plate-mail", "Plate Mail", models.ItemTypeArmor, 1500, 65.0)
 
 				invItems := []*models.InventoryItem{
-					mocks.CreateTestInventoryItem("char-123", "leather-armor", 1, true, false, oldArmor),
-					mocks.CreateTestInventoryItem("char-123", "plate-mail", 1, false, false, newArmor),
+					mocks.CreateTestInventoryItem(constants.TestCharacterID, "leather-armor", 1, true, false, oldArmor),
+					mocks.CreateTestInventoryItem(constants.TestCharacterID, "plate-mail", 1, false, false, newArmor),
 				}
-				m.On("GetCharacterInventory", "char-123").Return(invItems, nil)
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return(invItems, nil)
 
 				// Unequip old armor first
-				m.On("EquipItem", "char-123", "leather-armor", false).Return(nil)
+				m.On("EquipItem", constants.TestCharacterID, "leather-armor", false).Return(nil)
 				// Equip new armor
-				m.On("EquipItem", "char-123", "plate-mail", true).Return(nil)
+				m.On("EquipItem", constants.TestCharacterID, "plate-mail", true).Return(nil)
 			},
 		},
 		{
 			name:        "not enough hands for two-handed weapon",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			itemID:      "greatsword-789",
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Already have two one-handed weapons equipped
@@ -281,31 +282,31 @@ func TestInventoryService_EquipItem(t *testing.T) {
 				greatsword.Properties["two_handed"] = true
 
 				invItems := []*models.InventoryItem{
-					mocks.CreateTestInventoryItem("char-123", "sword-1", 1, true, false, sword1),
-					mocks.CreateTestInventoryItem("char-123", "sword-2", 1, true, false, sword2),
-					mocks.CreateTestInventoryItem("char-123", "greatsword-789", 1, false, false, greatsword),
+					mocks.CreateTestInventoryItem(constants.TestCharacterID, "sword-1", 1, true, false, sword1),
+					mocks.CreateTestInventoryItem(constants.TestCharacterID, "sword-2", 1, true, false, sword2),
+					mocks.CreateTestInventoryItem(constants.TestCharacterID, "greatsword-789", 1, false, false, greatsword),
 				}
-				m.On("GetCharacterInventory", "char-123").Return(invItems, nil)
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return(invItems, nil)
 			},
 			expectedError: "not enough hands to equip this weapon",
 		},
 		{
 			name:        "item not in inventory",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			itemID:      "nonexistent",
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("GetCharacterInventory", "char-123").Return([]*models.InventoryItem{}, nil)
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return([]*models.InventoryItem{}, nil)
 			},
 			expectedError: "item not found in inventory",
 		},
 		{
 			name:        "inventory retrieval error",
-			characterID: "char-123",
-			itemID:      "item-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestItemID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("GetCharacterInventory", "char-123").Return(nil, errors.New("database error"))
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return(nil, errors.New(constants.TestDatabaseError))
 			},
-			expectedError: "database error",
+			expectedError: constants.TestDatabaseError,
 		},
 	}
 
@@ -324,77 +325,77 @@ func TestInventoryService_AttuneToItem(t *testing.T) {
 	}{
 		{
 			name:        "successful attunement",
-			characterID: "char-123",
-			itemID:      "ring-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestRingID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Get inventory with attuneable item
-				ring := mocks.CreateTestItem("ring-456", "Ring of Protection", models.ItemTypeMagic, 500, 0.1)
+				ring := mocks.CreateTestItem(constants.TestRingID, "Ring of Protection", models.ItemTypeMagic, 500, 0.1)
 				ring.RequiresAttunement = true
 
-				invItem := mocks.CreateTestInventoryItem("char-123", "ring-456", 1, true, false, ring)
-				m.On("GetCharacterInventory", "char-123").Return([]*models.InventoryItem{invItem}, nil)
+				invItem := mocks.CreateTestInventoryItem(constants.TestCharacterID, constants.TestRingID, 1, true, false, ring)
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return([]*models.InventoryItem{invItem}, nil)
 
 				// Attune to item
-				m.On("AttuneItem", "char-123", "ring-456").Return(nil)
+				m.On("AttuneItem", constants.TestCharacterID, constants.TestRingID).Return(nil)
 			},
 		},
 		{
 			name:        "item does not require attunement",
-			characterID: "char-123",
-			itemID:      "sword-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestSwordID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Get inventory with non-attuneable item
-				sword := mocks.CreateTestItem("sword-456", "Longsword", models.ItemTypeWeapon, 15, 3.0)
+				sword := mocks.CreateTestItem(constants.TestSwordID, "Longsword", models.ItemTypeWeapon, 15, 3.0)
 				sword.RequiresAttunement = false
 
-				invItem := mocks.CreateTestInventoryItem("char-123", "sword-456", 1, true, false, sword)
-				m.On("GetCharacterInventory", "char-123").Return([]*models.InventoryItem{invItem}, nil)
+				invItem := mocks.CreateTestInventoryItem(constants.TestCharacterID, constants.TestSwordID, 1, true, false, sword)
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return([]*models.InventoryItem{invItem}, nil)
 			},
 			expectedError: "item does not require attunement",
 		},
 		{
 			name:        "already attuned to item",
-			characterID: "char-123",
-			itemID:      "ring-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestRingID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Get inventory with already attuned item
-				ring := mocks.CreateTestItem("ring-456", "Ring of Protection", models.ItemTypeMagic, 500, 0.1)
+				ring := mocks.CreateTestItem(constants.TestRingID, "Ring of Protection", models.ItemTypeMagic, 500, 0.1)
 				ring.RequiresAttunement = true
 
-				invItem := mocks.CreateTestInventoryItem("char-123", "ring-456", 1, true, true, ring)
-				m.On("GetCharacterInventory", "char-123").Return([]*models.InventoryItem{invItem}, nil)
+				invItem := mocks.CreateTestInventoryItem(constants.TestCharacterID, constants.TestRingID, 1, true, true, ring)
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return([]*models.InventoryItem{invItem}, nil)
 			},
 			expectedError: "already attuned to this item",
 		},
 		{
 			name:        "item not in inventory",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			itemID:      "nonexistent",
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("GetCharacterInventory", "char-123").Return([]*models.InventoryItem{}, nil)
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return([]*models.InventoryItem{}, nil)
 			},
 			expectedError: "item not found in inventory",
 		},
 		{
 			name:        "inventory retrieval error",
-			characterID: "char-123",
-			itemID:      "ring-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestRingID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("GetCharacterInventory", "char-123").Return(nil, errors.New("database error"))
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return(nil, errors.New(constants.TestDatabaseError))
 			},
-			expectedError: "database error",
+			expectedError: constants.TestDatabaseError,
 		},
 		{
 			name:        "attune error",
-			characterID: "char-123",
-			itemID:      "ring-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestRingID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				ring := mocks.CreateTestItem("ring-456", "Ring of Protection", models.ItemTypeMagic, 500, 0.1)
+				ring := mocks.CreateTestItem(constants.TestRingID, "Ring of Protection", models.ItemTypeMagic, 500, 0.1)
 				ring.RequiresAttunement = true
 
-				invItem := mocks.CreateTestInventoryItem("char-123", "ring-456", 1, true, false, ring)
-				m.On("GetCharacterInventory", "char-123").Return([]*models.InventoryItem{invItem}, nil)
-				m.On("AttuneItem", "char-123", "ring-456").Return(errors.New("attunement failed"))
+				invItem := mocks.CreateTestInventoryItem(constants.TestCharacterID, constants.TestRingID, 1, true, false, ring)
+				m.On("GetCharacterInventory", constants.TestCharacterID).Return([]*models.InventoryItem{invItem}, nil)
+				m.On("AttuneItem", constants.TestCharacterID, constants.TestRingID).Return(errors.New("attunement failed"))
 			},
 			expectedError: "attunement failed",
 		},
@@ -420,18 +421,18 @@ func TestInventoryService_UpdateCharacterCurrency(t *testing.T) {
 	}{
 		{
 			name:        "add currency successfully",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			copper:      5,
 			silver:      3,
 			gold:        10,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				existingCurrency := &models.Currency{
-					CharacterID: "char-123",
+					CharacterID: constants.TestCharacterID,
 					Copper:      10,
 					Silver:      5,
 					Gold:        2,
 				}
-				m.On("GetCharacterCurrency", "char-123").Return(existingCurrency, nil)
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(existingCurrency, nil)
 				m.On("UpdateCharacterCurrency", mock.MatchedBy(func(c *models.Currency) bool {
 					return c.Copper == 15 && c.Silver == 8 && c.Gold == 12
 				})).Return(nil)
@@ -439,18 +440,18 @@ func TestInventoryService_UpdateCharacterCurrency(t *testing.T) {
 		},
 		{
 			name:        "subtract currency successfully",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			copper:      -5,
 			silver:      -2,
 			gold:        -1,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				existingCurrency := &models.Currency{
-					CharacterID: "char-123",
+					CharacterID: constants.TestCharacterID,
 					Copper:      10,
 					Silver:      5,
 					Gold:        2,
 				}
-				m.On("GetCharacterCurrency", "char-123").Return(existingCurrency, nil)
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(existingCurrency, nil)
 				m.On("UpdateCharacterCurrency", mock.MatchedBy(func(c *models.Currency) bool {
 					return c.Copper == 5 && c.Silver == 3 && c.Gold == 1
 				})).Return(nil)
@@ -458,36 +459,36 @@ func TestInventoryService_UpdateCharacterCurrency(t *testing.T) {
 		},
 		{
 			name:        "insufficient funds",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			gold:        -10,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				existingCurrency := &models.Currency{
-					CharacterID: "char-123",
+					CharacterID: constants.TestCharacterID,
 					Gold:        2,
 				}
-				m.On("GetCharacterCurrency", "char-123").Return(existingCurrency, nil)
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(existingCurrency, nil)
 			},
 			expectedError: "insufficient funds",
 		},
 		{
 			name:        "get currency error",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			gold:        10,
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("GetCharacterCurrency", "char-123").Return(nil, errors.New("database error"))
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(nil, errors.New(constants.TestDatabaseError))
 			},
-			expectedError: "database error",
+			expectedError: constants.TestDatabaseError,
 		},
 		{
 			name:        "update currency error",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			gold:        10,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				existingCurrency := &models.Currency{
-					CharacterID: "char-123",
+					CharacterID: constants.TestCharacterID,
 					Gold:        2,
 				}
-				m.On("GetCharacterCurrency", "char-123").Return(existingCurrency, nil)
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(existingCurrency, nil)
 				m.On("UpdateCharacterCurrency", mock.Anything).Return(errors.New("update failed"))
 			},
 			expectedError: "update failed",
@@ -527,7 +528,7 @@ func TestInventoryService_PurchaseItem(t *testing.T) {
 	}{
 		{
 			name:        "successful purchase",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			itemID:      "potion-456",
 			quantity:    3,
 			setupMock: func(m *mocks.MockInventoryRepository) {
@@ -537,15 +538,15 @@ func TestInventoryService_PurchaseItem(t *testing.T) {
 
 				// Get currency (has 200 gold = 20000 copper)
 				currency := &models.Currency{
-					CharacterID: "char-123",
+					CharacterID: constants.TestCharacterID,
 					Gold:        200,
 				}
-				m.On("GetCharacterCurrency", "char-123").Return(currency, nil)
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(currency, nil)
 
 				// Update currency (150 copper cost for 3 potions)
 				m.On("UpdateCharacterCurrency", mock.MatchedBy(func(c *models.Currency) bool {
 					// 20000 - 150 = 19850 copper = 19 platinum, 8 gold, 1 electrum
-					return c.CharacterID == "char-123" &&
+					return c.CharacterID == constants.TestCharacterID &&
 						c.Platinum == 19 &&
 						c.Gold == 8 &&
 						c.Electrum == 1 &&
@@ -554,12 +555,12 @@ func TestInventoryService_PurchaseItem(t *testing.T) {
 				})).Return(nil)
 
 				// Add items to inventory
-				m.On("AddItemToInventory", "char-123", "potion-456", 3).Return(nil)
+				m.On("AddItemToInventory", constants.TestCharacterID, "potion-456", 3).Return(nil)
 			},
 		},
 		{
 			name:        "item not found",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			itemID:      "nonexistent",
 			quantity:    1,
 			setupMock: func(m *mocks.MockInventoryRepository) {
@@ -569,17 +570,17 @@ func TestInventoryService_PurchaseItem(t *testing.T) {
 		},
 		{
 			name:        "item nil response",
-			characterID: "char-123",
-			itemID:      "item-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestItemID,
 			quantity:    1,
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("GetItem", "item-456").Return(nil, nil)
+				m.On("GetItem", constants.TestItemID).Return(nil, nil)
 			},
 			expectedError: "item not found",
 		},
 		{
 			name:        "insufficient funds",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			itemID:      "expensive-item",
 			quantity:    1,
 			setupMock: func(m *mocks.MockInventoryRepository) {
@@ -589,47 +590,47 @@ func TestInventoryService_PurchaseItem(t *testing.T) {
 
 				// Poor character
 				currency := &models.Currency{
-					CharacterID: "char-123",
+					CharacterID: constants.TestCharacterID,
 					Gold:        10,
 				}
-				m.On("GetCharacterCurrency", "char-123").Return(currency, nil)
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(currency, nil)
 			},
 			expectedError: "insufficient funds",
 		},
 		{
 			name:        "currency update error",
-			characterID: "char-123",
-			itemID:      "item-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestItemID,
 			quantity:    1,
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				item := mocks.CreateTestItem("item-456", "Item", models.ItemTypeOther, 10, 1.0)
-				m.On("GetItem", "item-456").Return(item, nil)
+				item := mocks.CreateTestItem(constants.TestItemID, "Item", models.ItemTypeOther, 10, 1.0)
+				m.On("GetItem", constants.TestItemID).Return(item, nil)
 
 				currency := &models.Currency{
-					CharacterID: "char-123",
+					CharacterID: constants.TestCharacterID,
 					Gold:        100,
 				}
-				m.On("GetCharacterCurrency", "char-123").Return(currency, nil)
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(currency, nil)
 				m.On("UpdateCharacterCurrency", mock.Anything).Return(errors.New("update failed"))
 			},
 			expectedError: "update failed",
 		},
 		{
 			name:        "add to inventory error",
-			characterID: "char-123",
-			itemID:      "item-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestItemID,
 			quantity:    1,
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				item := mocks.CreateTestItem("item-456", "Item", models.ItemTypeOther, 10, 1.0)
-				m.On("GetItem", "item-456").Return(item, nil)
+				item := mocks.CreateTestItem(constants.TestItemID, "Item", models.ItemTypeOther, 10, 1.0)
+				m.On("GetItem", constants.TestItemID).Return(item, nil)
 
 				currency := &models.Currency{
-					CharacterID: "char-123",
+					CharacterID: constants.TestCharacterID,
 					Gold:        100,
 				}
-				m.On("GetCharacterCurrency", "char-123").Return(currency, nil)
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(currency, nil)
 				m.On("UpdateCharacterCurrency", mock.Anything).Return(nil)
-				m.On("AddItemToInventory", "char-123", "item-456", 1).Return(errors.New("inventory full"))
+				m.On("AddItemToInventory", constants.TestCharacterID, constants.TestItemID, 1).Return(errors.New("inventory full"))
 			},
 			expectedError: "inventory full",
 		},
@@ -651,28 +652,28 @@ func TestInventoryService_SellItem(t *testing.T) {
 	}{
 		{
 			name:        "successful sale",
-			characterID: "char-123",
-			itemID:      "sword-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestSwordID,
 			quantity:    1,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Get item (worth 100 gold)
-				sword := mocks.CreateTestItem("sword-456", "Longsword", models.ItemTypeWeapon, 10000, 3.0)
-				m.On("GetItem", "sword-456").Return(sword, nil)
+				sword := mocks.CreateTestItem(constants.TestSwordID, "Longsword", models.ItemTypeWeapon, 10000, 3.0)
+				m.On("GetItem", constants.TestSwordID).Return(sword, nil)
 
 				// Remove from inventory
-				m.On("RemoveItemFromInventory", "char-123", "sword-456", 1).Return(nil)
+				m.On("RemoveItemFromInventory", constants.TestCharacterID, constants.TestSwordID, 1).Return(nil)
 
 				// Get current currency
 				currency := &models.Currency{
-					CharacterID: "char-123",
+					CharacterID: constants.TestCharacterID,
 					Gold:        10,
 				}
-				m.On("GetCharacterCurrency", "char-123").Return(currency, nil)
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(currency, nil)
 
 				// Update currency (sale price is 50% = 5000 copper)
 				m.On("UpdateCharacterCurrency", mock.MatchedBy(func(c *models.Currency) bool {
 					// 1000 + 5000 = 6000 copper = 6 platinum
-					return c.CharacterID == "char-123" &&
+					return c.CharacterID == constants.TestCharacterID &&
 						c.Platinum == 6 &&
 						c.Gold == 0 &&
 						c.Electrum == 0 &&
@@ -683,7 +684,7 @@ func TestInventoryService_SellItem(t *testing.T) {
 		},
 		{
 			name:        "item not found",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			itemID:      "nonexistent",
 			quantity:    1,
 			setupMock: func(m *mocks.MockInventoryRepository) {
@@ -693,32 +694,32 @@ func TestInventoryService_SellItem(t *testing.T) {
 		},
 		{
 			name:        "remove from inventory error",
-			characterID: "char-123",
-			itemID:      "item-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestItemID,
 			quantity:    1,
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				item := mocks.CreateTestItem("item-456", "Item", models.ItemTypeOther, 100, 1.0)
-				m.On("GetItem", "item-456").Return(item, nil)
-				m.On("RemoveItemFromInventory", "char-123", "item-456", 1).Return(errors.New("item not in inventory"))
+				item := mocks.CreateTestItem(constants.TestItemID, "Item", models.ItemTypeOther, 100, 1.0)
+				m.On("GetItem", constants.TestItemID).Return(item, nil)
+				m.On("RemoveItemFromInventory", constants.TestCharacterID, constants.TestItemID, 1).Return(errors.New("item not in inventory"))
 			},
 			expectedError: "item not in inventory",
 		},
 		{
 			name:        "currency retrieval error",
-			characterID: "char-123",
-			itemID:      "item-456",
+			characterID: constants.TestCharacterID,
+			itemID:      constants.TestItemID,
 			quantity:    1,
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				item := mocks.CreateTestItem("item-456", "Item", models.ItemTypeOther, 100, 1.0)
-				m.On("GetItem", "item-456").Return(item, nil)
-				m.On("RemoveItemFromInventory", "char-123", "item-456", 1).Return(nil)
-				m.On("GetCharacterCurrency", "char-123").Return(nil, errors.New("database error"))
+				item := mocks.CreateTestItem(constants.TestItemID, "Item", models.ItemTypeOther, 100, 1.0)
+				m.On("GetItem", constants.TestItemID).Return(item, nil)
+				m.On("RemoveItemFromInventory", constants.TestCharacterID, constants.TestItemID, 1).Return(nil)
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(nil, errors.New(constants.TestDatabaseError))
 			},
-			expectedError: "database error",
+			expectedError: constants.TestDatabaseError,
 		},
 		{
 			name:        "sell multiple items",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			itemID:      "arrow-789",
 			quantity:    20,
 			setupMock: func(m *mocks.MockInventoryRepository) {
@@ -726,13 +727,13 @@ func TestInventoryService_SellItem(t *testing.T) {
 				arrow := mocks.CreateTestItem("arrow-789", "Arrow", models.ItemTypeOther, 1, 0.05)
 				m.On("GetItem", "arrow-789").Return(arrow, nil)
 
-				m.On("RemoveItemFromInventory", "char-123", "arrow-789", 20).Return(nil)
+				m.On("RemoveItemFromInventory", constants.TestCharacterID, "arrow-789", 20).Return(nil)
 
 				currency := &models.Currency{
-					CharacterID: "char-123",
+					CharacterID: constants.TestCharacterID,
 					Copper:      5,
 				}
-				m.On("GetCharacterCurrency", "char-123").Return(currency, nil)
+				m.On("GetCharacterCurrency", constants.TestCharacterID).Return(currency, nil)
 
 				// Sale price is 10 copper (20 * 1 / 2)
 				m.On("UpdateCharacterCurrency", mock.MatchedBy(func(c *models.Currency) bool {
@@ -758,7 +759,7 @@ func TestInventoryService_GetCharacterWeight(t *testing.T) {
 	}{
 		{
 			name:        "get weight successfully",
-			characterID: "char-123",
+			characterID: constants.TestCharacterID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				weight := &models.InventoryWeight{
 					CurrentWeight:     75.5,
@@ -766,7 +767,7 @@ func TestInventoryService_GetCharacterWeight(t *testing.T) {
 					Encumbered:        false,
 					HeavilyEncumbered: false,
 				}
-				m.On("GetCharacterWeight", "char-123").Return(weight, nil)
+				m.On("GetCharacterWeight", constants.TestCharacterID).Return(weight, nil)
 			},
 			expected: &models.InventoryWeight{
 				CurrentWeight:     75.5,
@@ -798,9 +799,9 @@ func TestInventoryService_GetCharacterWeight(t *testing.T) {
 			name:        "repository error",
 			characterID: "char-789",
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("GetCharacterWeight", "char-789").Return(nil, errors.New("database error"))
+				m.On("GetCharacterWeight", "char-789").Return(nil, errors.New(constants.TestDatabaseError))
 			},
-			expectedError: "database error",
+			expectedError: constants.TestDatabaseError,
 		},
 	}
 
@@ -871,9 +872,9 @@ func TestInventoryService_CreateItem(t *testing.T) {
 				Name: "Failed Item",
 			},
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("CreateItem", mock.AnythingOfType("*models.Item")).Return(errors.New("database error"))
+				m.On("CreateItem", mock.AnythingOfType("*models.Item")).Return(errors.New(constants.TestDatabaseError))
 			},
-			expectedError: "database error",
+			expectedError: constants.TestDatabaseError,
 		},
 	}
 
@@ -936,9 +937,9 @@ func TestInventoryService_GetItemsByType(t *testing.T) {
 			name:     "repository error",
 			itemType: models.ItemTypeMagic,
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("GetItemsByType", models.ItemTypeMagic).Return(nil, errors.New("database error"))
+				m.On("GetItemsByType", models.ItemTypeMagic).Return(nil, errors.New(constants.TestDatabaseError))
 			},
-			expectedError: "database error",
+			expectedError: constants.TestDatabaseError,
 		},
 	}
 
@@ -972,42 +973,42 @@ func TestInventoryService_PassThroughMethods(t *testing.T) {
 	service := services.NewInventoryService(mockInvRepo, nil)
 
 	t.Run("RemoveItemFromCharacter", func(t *testing.T) {
-		mockInvRepo.On("RemoveItemFromInventory", "char-123", "item-456", 2).Return(nil).Once()
-		err := service.RemoveItemFromCharacter("char-123", "item-456", 2)
+		mockInvRepo.On("RemoveItemFromInventory", constants.TestCharacterID, constants.TestItemID, 2).Return(nil).Once()
+		err := service.RemoveItemFromCharacter(constants.TestCharacterID, constants.TestItemID, 2)
 		assert.NoError(t, err)
 	})
 
 	t.Run("GetCharacterInventory", func(t *testing.T) {
 		expected := []*models.InventoryItem{
-			mocks.CreateTestInventoryItem("char-123", "item-456", 1, false, false, nil),
+			mocks.CreateTestInventoryItem(constants.TestCharacterID, constants.TestItemID, 1, false, false, nil),
 		}
-		mockInvRepo.On("GetCharacterInventory", "char-123").Return(expected, nil).Once()
+		mockInvRepo.On("GetCharacterInventory", constants.TestCharacterID).Return(expected, nil).Once()
 
-		inventory, err := service.GetCharacterInventory("char-123")
+		inventory, err := service.GetCharacterInventory(constants.TestCharacterID)
 		assert.NoError(t, err)
 		assert.Equal(t, expected, inventory)
 	})
 
 	t.Run("UnequipItem", func(t *testing.T) {
-		mockInvRepo.On("EquipItem", "char-123", "item-456", false).Return(nil).Once()
-		err := service.UnequipItem("char-123", "item-456")
+		mockInvRepo.On("EquipItem", constants.TestCharacterID, constants.TestItemID, false).Return(nil).Once()
+		err := service.UnequipItem(constants.TestCharacterID, constants.TestItemID)
 		assert.NoError(t, err)
 	})
 
 	t.Run("UnattuneFromItem", func(t *testing.T) {
-		mockInvRepo.On("UnattuneItem", "char-123", "item-456").Return(nil).Once()
-		err := service.UnattuneFromItem("char-123", "item-456")
+		mockInvRepo.On("UnattuneItem", constants.TestCharacterID, constants.TestItemID).Return(nil).Once()
+		err := service.UnattuneFromItem(constants.TestCharacterID, constants.TestItemID)
 		assert.NoError(t, err)
 	})
 
 	t.Run("GetCharacterCurrency", func(t *testing.T) {
 		expected := &models.Currency{
-			CharacterID: "char-123",
+			CharacterID: constants.TestCharacterID,
 			Gold:        100,
 		}
-		mockInvRepo.On("GetCharacterCurrency", "char-123").Return(expected, nil).Once()
+		mockInvRepo.On("GetCharacterCurrency", constants.TestCharacterID).Return(expected, nil).Once()
 
-		currency, err := service.GetCharacterCurrency("char-123")
+		currency, err := service.GetCharacterCurrency(constants.TestCharacterID)
 		assert.NoError(t, err)
 		assert.Equal(t, expected, currency)
 	})

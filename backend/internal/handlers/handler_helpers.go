@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
@@ -17,14 +18,14 @@ import (
 func ExtractUserAndSessionID(w http.ResponseWriter, r *http.Request) (userID string, sessionID uuid.UUID, ok bool) {
 	user, userOk := auth.GetUserFromContext(r.Context())
 	if !userOk {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return "", uuid.Nil, false
 	}
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return "", uuid.Nil, false
 	}
 
@@ -129,10 +130,10 @@ func HandleCharacterOwnedCreation[T any](w http.ResponseWriter, r *http.Request,
 		return
 	}
 	
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(entity); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }

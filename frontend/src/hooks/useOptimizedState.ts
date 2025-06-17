@@ -80,30 +80,39 @@ export function useOptimizedForm<T extends Record<string, unknown>>(
     return options?.validator || (() => ({}));
   }, [options?.validator]);
   
+  // Helper function to filter error messages
+  const filterErrors = (errors: Record<string, string>) => {
+    return Object.entries(errors).reduce((acc, [key, error]) => {
+      if (error) acc[key] = error;
+      return acc;
+    }, {} as Record<string, string>);
+  };
+
+  // Helper function to update field value
+  const updateFieldValue = <K extends keyof T>(prev: T, field: K, value: T[K]) => {
+    if (prev[field] === value) return prev;
+    return { ...prev, [field]: value };
+  };
+
   // Update single field
   const setFieldValue = useCallback(<K extends keyof T>(field: K, value: T[K]) => {
     unstable_batchedUpdates(() => {
       setValues(prev => {
-      if (prev[field] === value) return prev;
-      
-      const newValues = { ...prev, [field]: value };
-      
-      // Mark field as touched
-      setTouched(prevTouched => ({ ...prevTouched, [field]: true }));
-      
-      // Validate on change if enabled
-      if (options?.validateOnChange) {
-        const newErrors = validate(newValues);
-        // Filter out empty error strings
-        const filteredErrors = Object.entries(newErrors).reduce((acc, [key, error]) => {
-          if (error) acc[key] = error;
-          return acc;
-        }, {} as Record<string, string>);
-        setErrors(filteredErrors);
-      }
-      
-      return newValues;
-    });
+        const newValues = updateFieldValue(prev, field, value);
+        if (newValues === prev) return prev;
+        
+        // Mark field as touched
+        setTouched(prevTouched => ({ ...prevTouched, [field]: true }));
+        
+        // Validate on change if enabled
+        if (options?.validateOnChange) {
+          const newErrors = validate(newValues);
+          const filteredErrors = filterErrors(newErrors);
+          setErrors(filteredErrors);
+        }
+        
+        return newValues;
+      });
     });
   }, [validate, options?.validateOnChange]);
   
@@ -115,18 +124,18 @@ export function useOptimizedForm<T extends Record<string, unknown>>(
     });
   }, []);
   
+  // Helper function to check if updates have changes
+  const hasFieldChanges = <T extends Record<string, unknown>>(prev: T, updates: Partial<T>) => {
+    return Object.entries(updates).some(([key, value]) => prev[key] !== value);
+  };
+
   // Bulk update values
   const setMultipleValues = useCallback((updates: Partial<T>) => {
     unstable_batchedUpdates(() => {
       setValues(prev => {
-      const hasChanges = Object.entries(updates).some(
-        ([key, value]) => prev[key] !== value
-      );
-      
-      if (!hasChanges) return prev;
-      
-      return { ...prev, ...updates };
-    });
+        if (!hasFieldChanges(prev, updates)) return prev;
+        return { ...prev, ...updates };
+      });
     });
   }, []);
   

@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
@@ -14,14 +15,14 @@ import (
 func (h *Handlers) CreateGameSession(w http.ResponseWriter, r *http.Request) {
 	var session models.GameSession
 	if err := json.NewDecoder(r.Body).Decode(&session); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
 	// Get user claims from auth context (DM role is enforced by middleware)
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -43,7 +44,7 @@ func (h *Handlers) GetGameSession(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -77,7 +78,7 @@ func (h *Handlers) UpdateGameSession(w http.ResponseWriter, r *http.Request) {
 	// Get user claims from auth context (DM role is enforced by middleware)
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -96,7 +97,7 @@ func (h *Handlers) UpdateGameSession(w http.ResponseWriter, r *http.Request) {
 	// Decode into a map to handle partial updates
 	var updateData map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&updateData); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -152,14 +153,14 @@ func (h *Handlers) JoinGameSession(w http.ResponseWriter, r *http.Request) {
 		CharacterID *string `json:"character_id,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -178,7 +179,7 @@ func (h *Handlers) LeaveGameSession(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -194,7 +195,7 @@ func (h *Handlers) GetUserGameSessions(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -213,7 +214,7 @@ func (h *Handlers) GetActiveSessions(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -265,7 +266,7 @@ func (h *Handlers) KickPlayer(w http.ResponseWriter, r *http.Request) {
 	// Get user claims from auth context (DM role is enforced by middleware)
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 

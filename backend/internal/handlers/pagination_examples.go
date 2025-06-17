@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/pagination"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
@@ -75,7 +76,7 @@ func (h *Handlers) GetCharactersPaginated(w http.ResponseWriter, r *http.Request
 	pagination.WritePaginationHeaders(w, result.Pagination)
 
 	// Set cache control
-	w.Header().Set("Cache-Control", "private, max-age=60")
+	w.Header().Set(constants.CacheControl, "private, max-age=60")
 
 	response.JSON(w, r, http.StatusOK, result)
 }
@@ -119,9 +120,9 @@ func (h *Handlers) GetGameSessionsPaginated(w http.ResponseWriter, r *http.Reque
 
 	// Set cache control for active sessions (shorter cache)
 	if status, ok := params.Filters["status"].(string); ok && status == "active" {
-		w.Header().Set("Cache-Control", "private, max-age=30")
+		w.Header().Set(constants.CacheControl, "private, max-age=30")
 	} else {
-		w.Header().Set("Cache-Control", "private, max-age=300")
+		w.Header().Set(constants.CacheControl, "private, max-age=300")
 	}
 
 	response.JSON(w, r, http.StatusOK, result)
@@ -162,7 +163,7 @@ func (h *Handlers) GetCharactersCursor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set cache control
-	w.Header().Set("Cache-Control", "private, max-age=60")
+	w.Header().Set(constants.CacheControl, "private, max-age=60")
 
 	response.JSON(w, r, http.StatusOK, result)
 }
@@ -201,7 +202,7 @@ func (h *Handlers) SearchCharacters(w http.ResponseWriter, r *http.Request) {
 	result := pagination.NewPageResult([]interface{}{}, params, 0)
 
 	// No cache for search results
-	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set(constants.CacheControl, "no-cache, no-store, must-revalidate")
 
 	// Write pagination headers
 	pagination.WritePaginationHeaders(w, result.Pagination)
@@ -319,7 +320,7 @@ func (h *Handlers) ExportAllCharacters(w http.ResponseWriter, r *http.Request) {
 	// 2. Stream the results to avoid memory issues
 	// 3. Handle errors gracefully
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	w.Header().Set("Content-Disposition", "attachment; filename=characters.json")
 
 	// For this example, we'll just return an empty array

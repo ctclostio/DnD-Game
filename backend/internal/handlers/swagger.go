@@ -3,6 +3,8 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 )
 
 // SwaggerUI serves the Swagger UI HTML page
@@ -54,7 +56,7 @@ func SwaggerUI(w http.ResponseWriter, _ *http.Request) {
 </body>
 </html>`
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set(constants.ContentType, "text/html; charset=utf-8")
 	if _, err := fmt.Fprint(w, html); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -81,8 +83,8 @@ func (h *Handlers) SwaggerJSON(w http.ResponseWriter, _ *http.Request) {
     "host": "localhost:8080",
     "basePath": "/api/v1",
     "schemes": ["http", "https"],
-    "consumes": ["application/json"],
-    "produces": ["application/json"],
+    "consumes": [constants.ApplicationJSON],
+    "produces": [constants.ApplicationJSON],
     "securityDefinitions": {
         "Bearer": {
             "type": "apiKey",
@@ -206,7 +208,7 @@ func (h *Handlers) SwaggerJSON(w http.ResponseWriter, _ *http.Request) {
     }
 }`
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if _, err := fmt.Fprint(w, spec); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

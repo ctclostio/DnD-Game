@@ -3,13 +3,15 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 )
 
 // sendJSONResponse sends a JSON response with proper error handling
 func sendJSONResponse(w http.ResponseWriter, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }
@@ -18,7 +20,7 @@ func sendJSONResponse(w http.ResponseWriter, data interface{}) {
 func sendSuccessResponse(w http.ResponseWriter, message string) {
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]string{"status": message}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }

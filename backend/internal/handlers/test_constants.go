@@ -1,5 +1,7 @@
 package handlers
 
+import "github.com/ctclostio/DnD-Game/backend/internal/constants"
+
 // API endpoint constants
 const (
 	APIv1Prefix       = "/api/v1"
@@ -15,8 +17,8 @@ const (
 
 // HTTP header constants
 const (
-	ContentTypeHeader = "Content-Type"
-	ContentTypeJSON   = "application/json"
+	ContentTypeHeader = constants.ContentType
+	ContentTypeJSON   = constants.ApplicationJSON
 	AuthHeader        = "Authorization"
 	BearerPrefix      = "Bearer "
 )

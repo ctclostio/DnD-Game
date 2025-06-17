@@ -455,10 +455,10 @@ func (h *Handlers) ExportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 
 	switch format {
 	case constants.FormatJSON:
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 		w.Header().Set("Content-Disposition", "attachment; filename="+template.Name+".json")
 		if err := json.NewEncoder(w).Encode(template); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 			return
 		}
 	default:

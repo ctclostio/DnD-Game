@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -69,7 +70,7 @@ func TestDiceHandler_RollDice(t *testing.T) {
 			// Create request
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPost, "/api/dice/roll", bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 			// Add auth context (placeholder)
 

@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
@@ -46,7 +47,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 	h := handlers.NewHandlers(svc, ctx.DB, nil)
 
 	router := mux.NewRouter()
-	api := router.PathPrefix("/api/v1").Subrouter()
+	api := router.PathPrefix(constants.APIv1Prefix).Subrouter()
 
 	// Apply middleware
 	api.Use(middleware.RequestIDMiddleware)
@@ -68,8 +69,8 @@ func TestAuthFlow_Integration(t *testing.T) {
 
 	t.Run("Register New User", func(t *testing.T) {
 		body, _ := json.Marshal(testUser)
-		req := httptest.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
+		req := httptest.NewRequest("POST", constants.AuthRegisterPath, bytes.NewBuffer(body))
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -104,8 +105,8 @@ func TestAuthFlow_Integration(t *testing.T) {
 		}
 
 		body, _ := json.Marshal(duplicateUser)
-		req := httptest.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
+		req := httptest.NewRequest("POST", constants.AuthRegisterPath, bytes.NewBuffer(body))
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -113,8 +114,8 @@ func TestAuthFlow_Integration(t *testing.T) {
 
 		// Try to register the same username again
 		body, _ = json.Marshal(duplicateUser)
-		req = httptest.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
+		req = httptest.NewRequest("POST", constants.AuthRegisterPath, bytes.NewBuffer(body))
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 		w = httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -135,8 +136,8 @@ func TestAuthFlow_Integration(t *testing.T) {
 		}
 
 		body, _ := json.Marshal(loginReq)
-		req := httptest.NewRequest("POST", "/api/v1/auth/login", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
+		req := httptest.NewRequest("POST", constants.AuthLoginPath, bytes.NewBuffer(body))
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -161,8 +162,8 @@ func TestAuthFlow_Integration(t *testing.T) {
 		}
 
 		body, _ := json.Marshal(loginReq)
-		req := httptest.NewRequest("POST", "/api/v1/auth/login", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
+		req := httptest.NewRequest("POST", constants.AuthLoginPath, bytes.NewBuffer(body))
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -184,8 +185,8 @@ func TestAuthFlow_Integration(t *testing.T) {
 		}
 
 		body, _ := json.Marshal(loginReq)
-		req := httptest.NewRequest("POST", "/api/v1/auth/login", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
+		req := httptest.NewRequest("POST", constants.AuthLoginPath, bytes.NewBuffer(body))
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -199,7 +200,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 		accessToken := authData["access_token"].(string)
 
 		// Now test /me endpoint
-		req = httptest.NewRequest("GET", "/api/v1/auth/me", http.NoBody)
+		req = httptest.NewRequest("GET", constants.AuthMePath, http.NoBody)
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 
 		w = httptest.NewRecorder()
@@ -226,8 +227,8 @@ func TestAuthFlow_Integration(t *testing.T) {
 		}
 
 		body, _ := json.Marshal(loginReq)
-		req := httptest.NewRequest("POST", "/api/v1/auth/login", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
+		req := httptest.NewRequest("POST", constants.AuthLoginPath, bytes.NewBuffer(body))
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -247,7 +248,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 
 		body, _ = json.Marshal(refreshReq)
 		req = httptest.NewRequest("POST", "/api/v1/auth/refresh", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 		w = httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -274,8 +275,8 @@ func TestAuthFlow_Integration(t *testing.T) {
 		}
 
 		body, _ := json.Marshal(loginReq)
-		req := httptest.NewRequest("POST", "/api/v1/auth/login", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
+		req := httptest.NewRequest("POST", constants.AuthLoginPath, bytes.NewBuffer(body))
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -305,7 +306,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 
 		body, _ = json.Marshal(refreshReq)
 		req = httptest.NewRequest("POST", "/api/v1/auth/refresh", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 		w = httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -314,7 +315,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("Unauthorized Access Without Token", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/api/v1/auth/me", http.NoBody)
+		req := httptest.NewRequest("GET", constants.AuthMePath, http.NoBody)
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -323,7 +324,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 	})
 
 	t.Run("Invalid Token Format", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/api/v1/auth/me", http.NoBody)
+		req := httptest.NewRequest("GET", constants.AuthMePath, http.NoBody)
 		req.Header.Set("Authorization", "InvalidTokenFormat")
 
 		w := httptest.NewRecorder()
@@ -362,7 +363,7 @@ func TestPasswordValidation_Integration(t *testing.T) {
 	h := handlers.NewHandlers(svc, ctx.DB, nil)
 
 	router := mux.NewRouter()
-	api := router.PathPrefix("/api/v1").Subrouter()
+	api := router.PathPrefix(constants.APIv1Prefix).Subrouter()
 	api.Use(middleware.LoggingMiddleware(log))
 	api.HandleFunc("/auth/register", h.Register).Methods("POST")
 
@@ -413,8 +414,8 @@ func TestPasswordValidation_Integration(t *testing.T) {
 			}
 
 			body, _ := json.Marshal(user)
-			req := httptest.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(body))
-			req.Header.Set("Content-Type", "application/json")
+			req := httptest.NewRequest("POST", constants.AuthRegisterPath, bytes.NewBuffer(body))
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)

@@ -30,6 +30,35 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => jest.fn(),
 }));
 
+// Helper functions to reduce nesting
+const validateStandardArrayOptions = (selects: HTMLElement[], standardArrayValues: number[]) => {
+  selects.forEach((select) => {
+    const options = within(select).getAllByRole('option');
+    const values = options.map(opt => opt.textContent);
+    validateArrayContainsValues(values, standardArrayValues);
+  });
+};
+
+const validateArrayContainsValues = (values: (string | null)[], expectedValues: number[]) => {
+  expectedValues.forEach(value => {
+    expect(values).toContain(value.toString());
+  });
+};
+
+const validateScoreDisplays = (scoreDisplays: HTMLElement[], expectedValue: string) => {
+  scoreDisplays.forEach(display => {
+    expect(display).toHaveTextContent(expectedValue);
+  });
+};
+
+const validateRolledScores = (scoreDisplays: HTMLElement[]) => {
+  scoreDisplays.forEach(display => {
+    const value = parseInt(display.textContent || '0');
+    expect(value).toBeGreaterThanOrEqual(3);
+    expect(value).toBeLessThanOrEqual(18);
+  });
+};
+
 describe.skip('CharacterBuilder', () => {
   let store: any;
 
@@ -325,13 +354,7 @@ describe.skip('CharacterBuilder', () => {
       const standardArrayValues = [15, 14, 13, 12, 10, 8];
       const selects = screen.getAllByRole('combobox');
       
-      selects.forEach((select) => {
-        const options = within(select).getAllByRole('option');
-        const values = options.map(opt => opt.textContent);
-        standardArrayValues.forEach(value => {
-          expect(values).toContain(value.toString());
-        });
-      });
+      validateStandardArrayOptions(selects, standardArrayValues);
     });
 
     it('should switch to point buy system', async () => {
@@ -343,9 +366,7 @@ describe.skip('CharacterBuilder', () => {
       
       // All scores should start at 8
       const scoreDisplays = screen.getAllByTestId(/ability-score-/);
-      scoreDisplays.forEach(display => {
-        expect(display).toHaveTextContent('8');
-      });
+      validateScoreDisplays(scoreDisplays, '8');
     });
 
     it('should calculate point buy costs correctly', async () => {
@@ -375,11 +396,7 @@ describe.skip('CharacterBuilder', () => {
 
       // Should show rolled values
       const scoreDisplays = screen.getAllByTestId(/ability-score-/);
-      scoreDisplays.forEach(display => {
-        const value = parseInt(display.textContent || '0');
-        expect(value).toBeGreaterThanOrEqual(3);
-        expect(value).toBeLessThanOrEqual(18);
-      });
+      validateRolledScores(scoreDisplays);
 
       // Should show individual roll results
       expect(screen.getByText(/Rolls:/)).toBeInTheDocument();

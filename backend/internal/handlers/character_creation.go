@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 )
@@ -86,9 +87,9 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 	// Add AI availability status
 	options["aiEnabled"] = h.aiCharService.IsEnabled()
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(options); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }
@@ -174,9 +175,9 @@ func (h *CharacterCreationHandler) CreateCharacter(w http.ResponseWriter, r *htt
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(character); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }
@@ -238,9 +239,9 @@ func (h *CharacterCreationHandler) CreateCustomCharacter(w http.ResponseWriter, 
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(character); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }
@@ -262,12 +263,12 @@ func (h *CharacterCreationHandler) RollAbilityScores(w http.ResponseWriter, r *h
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"scores": scores,
 		"method": req.Method,
 	}); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }
@@ -288,9 +289,9 @@ func (h *CharacterCreationHandler) ValidateCharacter(w http.ResponseWriter, r *h
 		"errors": errors,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }

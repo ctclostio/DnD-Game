@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -72,7 +73,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 				body, _ = json.Marshal(tt.body)
 			}
 			req := httptest.NewRequest(tt.method, tt.path, bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 			// Route vars would be set by router in real handler
 			// req = mux.SetURLVars(req, map[string]string{"characterId": characterID})
 
@@ -209,7 +210,7 @@ func TestInventoryHandler_Currency(t *testing.T) {
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPost,
 				"/api/characters/"+characterID+"/currency", bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 			// Route vars would be set by router in real handler
 			// req = mux.SetURLVars(req, map[string]string{"characterId": characterID})
 

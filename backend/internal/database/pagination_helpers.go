@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/pagination"
 	"github.com/jmoiron/sqlx"
@@ -86,7 +87,7 @@ func (pr *PaginatedRepository) GetCharactersPaginated(ctx context.Context, userI
 			sortColumn = params.SortBy
 		}
 	}
-	baseQuery += fmt.Sprintf(" ORDER BY %s %s", sortColumn, params.SortDir)
+	baseQuery += fmt.Sprintf(constants.SQLOrderByFormat, sortColumn, params.SortDir)
 
 	// Add pagination
 	baseQuery += LimitOffsetClause
@@ -160,7 +161,7 @@ func (pr *PaginatedRepository) GetGameSessionsPaginated(ctx context.Context, par
 			sortColumn = params.SortBy
 		}
 	}
-	baseQuery += fmt.Sprintf(" ORDER BY %s %s", sortColumn, params.SortDir)
+	baseQuery += fmt.Sprintf(constants.SQLOrderByFormat, sortColumn, params.SortDir)
 
 	// Add pagination
 	baseQuery += LimitOffsetClause
@@ -219,7 +220,7 @@ func (pr *PaginatedRepository) GetCampaignsPaginated(ctx context.Context, userID
 	} else if params.SortBy == "player_count" {
 		sortColumn = "player_count"
 	}
-	baseQuery += fmt.Sprintf(" ORDER BY %s %s", sortColumn, params.SortDir)
+	baseQuery += fmt.Sprintf(constants.SQLOrderByFormat, sortColumn, params.SortDir)
 
 	// Add pagination
 	baseQuery += LimitOffsetClause

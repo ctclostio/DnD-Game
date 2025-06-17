@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -108,7 +109,7 @@ func TestGameHandler_CreateGameSession(t *testing.T) {
 			}
 
 			req := httptest.NewRequest(http.MethodPost, "/api/sessions", bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 			// Add auth context (placeholder)
 
@@ -207,7 +208,7 @@ func TestGameHandler_JoinGameSession(t *testing.T) {
 			// Create request
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPost, "/api/sessions/"+tt.sessionID+"/join", bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 			// Route vars would be set by router in real handler
 			// req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
 
@@ -260,7 +261,7 @@ func TestGameHandler_UpdatePlayerStatus(t *testing.T) {
 			// Create request
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPut, "/api/sessions/"+sessionID+"/status", bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 			_ = mux.SetURLVars(req, map[string]string{"id": sessionID})
 
 			// Add auth context

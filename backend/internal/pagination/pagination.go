@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 )
 
 // Sort direction constants
@@ -387,27 +389,27 @@ type Links struct {
 // GenerateLinks creates pagination links
 func GenerateLinks(baseURL string, params *PaginationParams, totalPages int) Links {
 	links := Links{
-		Self: fmt.Sprintf("%s?page=%d&limit=%d", baseURL, params.Page, params.Limit),
+		Self: fmt.Sprintf(constants.PaginationURLFormat, baseURL, params.Page, params.Limit),
 	}
 
 	// First page
 	if params.Page > 1 {
-		links.First = fmt.Sprintf("%s?page=1&limit=%d", baseURL, params.Limit)
+		links.First = fmt.Sprintf(constants.PaginationURLFormat, baseURL, 1, params.Limit)
 	}
 
 	// Last page
 	if totalPages > 0 && params.Page < totalPages {
-		links.Last = fmt.Sprintf("%s?page=%d&limit=%d", baseURL, totalPages, params.Limit)
+		links.Last = fmt.Sprintf(constants.PaginationURLFormat, baseURL, totalPages, params.Limit)
 	}
 
 	// Previous page
 	if params.Page > 1 {
-		links.Prev = fmt.Sprintf("%s?page=%d&limit=%d", baseURL, params.Page-1, params.Limit)
+		links.Prev = fmt.Sprintf(constants.PaginationURLFormat, baseURL, params.Page-1, params.Limit)
 	}
 
 	// Next page
 	if params.Page < totalPages {
-		links.Next = fmt.Sprintf("%s?page=%d&limit=%d", baseURL, params.Page+1, params.Limit)
+		links.Next = fmt.Sprintf(constants.PaginationURLFormat, baseURL, params.Page+1, params.Limit)
 	}
 
 	return links

@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -164,7 +165,7 @@ func TestCombatHandler_RequestValidation(t *testing.T) {
 
 			// Create request
 			req := httptest.NewRequest(http.MethodPost, "/api/combat/start", bytes.NewReader(bodyBytes))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 			// Parse and validate request body
 			var reqData struct {

@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
@@ -81,7 +82,7 @@ func TestGameSessionSecurity(t *testing.T) {
 		jsonBody, _ := json.Marshal(body)
 
 		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 		claims := &auth.Claims{
 			UserID:   player1.ID,
 			Username: "testuser",
@@ -105,7 +106,7 @@ func TestGameSessionSecurity(t *testing.T) {
 			jsonBody, _ := json.Marshal(body)
 
 			req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 			claims := &auth.Claims{
 				UserID:   player1.ID,
 				Username: "testuser",
@@ -195,7 +196,7 @@ func TestGameSessionSecurity(t *testing.T) {
 				jsonBody, _ := json.Marshal(body)
 
 				req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
-				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 				// Create user claims and add to context
 				claims := &auth.Claims{
 					UserID:   tt.userID,
@@ -336,7 +337,7 @@ func TestGameSessionSecurity(t *testing.T) {
 				body := map[string]interface{}{}
 				jsonBody, _ := json.Marshal(body)
 				req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/kick/"+tt.playerToKick, bytes.NewBuffer(jsonBody))
-				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 				claims := &auth.Claims{
 					UserID:   tt.dmUserID,
 					Username: "test",

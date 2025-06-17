@@ -138,9 +138,9 @@ func (h *Handlers) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
 	// For now, we'll skip the websocket broadcast
 	// TODO: Implement session lookup if needed
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }
@@ -170,9 +170,9 @@ func (h *Handlers) GetCharacterChecks(w http.ResponseWriter, r *http.Request) {
 		"abilities":    h.getAbilityChecks(character),
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
 		return
 	}
 }

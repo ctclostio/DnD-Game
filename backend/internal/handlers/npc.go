@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
@@ -18,13 +19,13 @@ func (h *Handlers) CreateNPC(w http.ResponseWriter, r *http.Request) {
 	// Get user claims from auth context
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
 	var npc models.NPC
 	if err := json.NewDecoder(r.Body).Decode(&npc); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -59,7 +60,7 @@ func (h *Handlers) GetNPC(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -106,7 +107,7 @@ func (h *Handlers) UpdateNPC(w http.ResponseWriter, r *http.Request) {
 	// Get user claims from auth context
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -131,7 +132,7 @@ func (h *Handlers) UpdateNPC(w http.ResponseWriter, r *http.Request) {
 
 	var npc models.NPC
 	if err := json.NewDecoder(r.Body).Decode(&npc); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -156,7 +157,7 @@ func (h *Handlers) DeleteNPC(w http.ResponseWriter, r *http.Request) {
 	// Get user claims from auth context
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -192,7 +193,7 @@ func (h *Handlers) SearchNPCs(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from auth context
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -251,7 +252,7 @@ func (h *Handlers) CreateNPCFromTemplate(w http.ResponseWriter, r *http.Request)
 	// Get user claims from auth context
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -261,7 +262,7 @@ func (h *Handlers) CreateNPCFromTemplate(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -295,7 +296,7 @@ func (h *Handlers) NPCQuickActions(w http.ResponseWriter, r *http.Request) {
 	// Get user claims from auth context
 	claims, ok := auth.GetUserFromContext(r.Context())
 	if !ok {
-		response.Unauthorized(w, r, "Unauthorized")
+		response.Unauthorized(w, r, constants.ErrUnauthorized)
 		return
 	}
 
@@ -325,7 +326,7 @@ func (h *Handlers) NPCQuickActions(w http.ResponseWriter, r *http.Request) {
 			DamageType string `json:"damageType"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			response.BadRequest(w, r, "Invalid request body")
+			response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 			return
 		}
 
@@ -339,7 +340,7 @@ func (h *Handlers) NPCQuickActions(w http.ResponseWriter, r *http.Request) {
 			Amount int `json:"amount"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			response.BadRequest(w, r, "Invalid request body")
+			response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 			return
 		}
 

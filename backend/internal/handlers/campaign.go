@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/pkg/errors"
@@ -39,16 +40,16 @@ func (h *CampaignHandler) CreateStoryArc(w http.ResponseWriter, r *http.Request)
 	}
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
 	// Verify user is DM
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		response.NotFound(w, r, "Session not found")
+		response.NotFound(w, r, constants.ErrSessionNotFound)
 		return
 	}
 
@@ -59,7 +60,7 @@ func (h *CampaignHandler) CreateStoryArc(w http.ResponseWriter, r *http.Request)
 
 	var req models.CreateStoryArcRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -81,16 +82,16 @@ func (h *CampaignHandler) GenerateStoryArc(w http.ResponseWriter, r *http.Reques
 	}
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
 	// Verify user is DM
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		response.NotFound(w, r, "Session not found")
+		response.NotFound(w, r, constants.ErrSessionNotFound)
 		return
 	}
 
@@ -101,7 +102,7 @@ func (h *CampaignHandler) GenerateStoryArc(w http.ResponseWriter, r *http.Reques
 
 	var req models.GenerateStoryArcRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -118,9 +119,9 @@ func (h *CampaignHandler) GetStoryArcs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
@@ -142,13 +143,13 @@ func (h *CampaignHandler) UpdateStoryArc(w http.ResponseWriter, r *http.Request)
 	}
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
-	arcID, err := uuid.Parse(vars["arcId"])
+	arcID, err := uuid.Parse(vars[constants.ParamArcID])
 	if err != nil {
 		response.BadRequest(w, r, "Invalid arc ID")
 		return
@@ -157,7 +158,7 @@ func (h *CampaignHandler) UpdateStoryArc(w http.ResponseWriter, r *http.Request)
 	// Verify user is DM
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		response.NotFound(w, r, "Session not found")
+		response.NotFound(w, r, constants.ErrSessionNotFound)
 		return
 	}
 
@@ -168,7 +169,7 @@ func (h *CampaignHandler) UpdateStoryArc(w http.ResponseWriter, r *http.Request)
 
 	var req models.UpdateStoryArcRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -191,16 +192,16 @@ func (h *CampaignHandler) CreateSessionMemory(w http.ResponseWriter, r *http.Req
 	}
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
 	// Verify user is DM
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		response.NotFound(w, r, "Session not found")
+		response.NotFound(w, r, constants.ErrSessionNotFound)
 		return
 	}
 
@@ -211,7 +212,7 @@ func (h *CampaignHandler) CreateSessionMemory(w http.ResponseWriter, r *http.Req
 
 	var req models.CreateSessionMemoryRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -228,9 +229,9 @@ func (h *CampaignHandler) GetSessionMemories(w http.ResponseWriter, r *http.Requ
 	ctx := r.Context()
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
@@ -254,9 +255,9 @@ func (h *CampaignHandler) GenerateRecap(w http.ResponseWriter, r *http.Request) 
 	ctx := r.Context()
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
@@ -286,16 +287,16 @@ func (h *CampaignHandler) CreatePlotThread(w http.ResponseWriter, r *http.Reques
 	}
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
 	// Verify user is DM
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		response.NotFound(w, r, "Session not found")
+		response.NotFound(w, r, constants.ErrSessionNotFound)
 		return
 	}
 
@@ -306,7 +307,7 @@ func (h *CampaignHandler) CreatePlotThread(w http.ResponseWriter, r *http.Reques
 
 	var thread models.PlotThread
 	if err := json.NewDecoder(r.Body).Decode(&thread); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -322,9 +323,9 @@ func (h *CampaignHandler) GetPlotThreads(w http.ResponseWriter, r *http.Request)
 	ctx := r.Context()
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
@@ -350,16 +351,16 @@ func (h *CampaignHandler) GenerateForeshadowing(w http.ResponseWriter, r *http.R
 	}
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
 	// Verify user is DM
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		response.NotFound(w, r, "Session not found")
+		response.NotFound(w, r, constants.ErrSessionNotFound)
 		return
 	}
 
@@ -370,7 +371,7 @@ func (h *CampaignHandler) GenerateForeshadowing(w http.ResponseWriter, r *http.R
 
 	var req models.GenerateForeshadowingRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -392,16 +393,16 @@ func (h *CampaignHandler) GetUnrevealedForeshadowing(w http.ResponseWriter, r *h
 	}
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
 	// Verify user is DM
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		response.NotFound(w, r, "Session not found")
+		response.NotFound(w, r, constants.ErrSessionNotFound)
 		return
 	}
 
@@ -428,23 +429,23 @@ func (h *CampaignHandler) RevealForeshadowing(w http.ResponseWriter, r *http.Req
 	}
 
 	vars := mux.Vars(r)
-	elementID, err := uuid.Parse(vars["elementId"])
+	elementID, err := uuid.Parse(vars[constants.ParamElementID])
 	if err != nil {
 		response.BadRequest(w, r, "Invalid element ID")
 		return
 	}
 
 	// Get session ID from query params
-	sessionID, err := uuid.Parse(r.URL.Query().Get("sessionId"))
+	sessionID, err := uuid.Parse(r.URL.Query().Get(constants.ParamSessionID))
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
 	// Verify user is DM
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		response.NotFound(w, r, "Session not found")
+		response.NotFound(w, r, constants.ErrSessionNotFound)
 		return
 	}
 
@@ -457,7 +458,7 @@ func (h *CampaignHandler) RevealForeshadowing(w http.ResponseWriter, r *http.Req
 		SessionNumber int `json:"session_number"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -480,16 +481,16 @@ func (h *CampaignHandler) AddTimelineEvent(w http.ResponseWriter, r *http.Reques
 	}
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
 	// Verify user is in session
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		response.NotFound(w, r, "Session not found")
+		response.NotFound(w, r, constants.ErrSessionNotFound)
 		return
 	}
 
@@ -516,7 +517,7 @@ func (h *CampaignHandler) AddTimelineEvent(w http.ResponseWriter, r *http.Reques
 
 	var event models.CampaignTimeline
 	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -535,9 +536,9 @@ func (h *CampaignHandler) GetTimeline(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
@@ -588,16 +589,16 @@ func (h *CampaignHandler) UpdateNPCRelationship(w http.ResponseWriter, r *http.R
 	}
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
 	// Verify user is DM
 	session, err := h.gameService.GetSessionByID(ctx, sessionID.String())
 	if err != nil {
-		response.NotFound(w, r, "Session not found")
+		response.NotFound(w, r, constants.ErrSessionNotFound)
 		return
 	}
 
@@ -608,7 +609,7 @@ func (h *CampaignHandler) UpdateNPCRelationship(w http.ResponseWriter, r *http.R
 
 	var relationship models.NPCRelationship
 	if err := json.NewDecoder(r.Body).Decode(&relationship); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -626,13 +627,13 @@ func (h *CampaignHandler) GetNPCRelationships(w http.ResponseWriter, r *http.Req
 	ctx := r.Context()
 
 	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars["sessionId"])
+	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
 	}
 
-	npcID, err := uuid.Parse(vars["npcId"])
+	npcID, err := uuid.Parse(vars[constants.ParamNPCID])
 	if err != nil {
 		response.BadRequest(w, r, "Invalid NPC ID")
 		return
