@@ -47,7 +47,9 @@ func (m *MockGameSessionService) JoinSession(ctx context.Context, sessionID, use
 }
 
 func (m *MockGameSessionService) LeaveSession(ctx context.Context, sessionID, userID string) error {
+	// LeaveSession removes a user from the session
 	args := m.Called(ctx, sessionID, userID)
+	// Return error status for leave operation
 	return args.Error(0)
 }
 

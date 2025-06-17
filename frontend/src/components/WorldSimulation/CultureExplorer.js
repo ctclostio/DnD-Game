@@ -114,8 +114,8 @@ const CultureExplorer = ({ sessionId, isDM }) => {
         {lang.idioms && lang.idioms.length > 0 && (
           <div className="language-section">
             <h5>Idioms</h5>
-            {lang.idioms.map((idiom, idx) => (
-              <div key={idx} className="idiom">
+            {lang.idioms.map((idiom) => (
+              <div key={idiom.expression} className="idiom">
                 <p className="expression">"{idiom.expression}"</p>
                 <p className="meaning">Meaning: {idiom.meaning}</p>
               </div>
@@ -139,8 +139,8 @@ const CultureExplorer = ({ sessionId, isDM }) => {
           <div className="deities-section">
             <h5>Deities</h5>
             <div className="deity-cards">
-              {beliefs.deities.map((deity, idx) => (
-                <div key={idx} className="deity-card">
+              {beliefs.deities.map((deity) => (
+                <div key={deity.name} className="deity-card">
                   <h6>{deity.name}</h6>
                   <p className="deity-title">{deity.title}</p>
                   <p className="deity-domains">Domains: {deity.domain.join(', ')}</p>
@@ -154,8 +154,8 @@ const CultureExplorer = ({ sessionId, isDM }) => {
         <div className="beliefs-section">
           <h5>Core Beliefs</h5>
           <ul>
-            {beliefs.core_beliefs.map((belief, idx) => (
-              <li key={idx}>{belief}</li>
+            {beliefs.core_beliefs.map((belief) => (
+              <li key={belief}>{belief}</li>
             ))}
           </ul>
         </div>
@@ -176,8 +176,8 @@ const CultureExplorer = ({ sessionId, isDM }) => {
         <h4><FaHandshake /> Customs & Traditions</h4>
         
         <div className="customs-grid">
-          {selectedCulture.customs.map((custom, idx) => (
-            <div key={idx} className="custom-card">
+          {selectedCulture.customs.map((custom) => (
+            <div key={custom.name} className="custom-card">
               <h5>{custom.name}</h5>
               <span className="custom-type">{custom.type}</span>
               <p>{custom.description}</p>
@@ -192,8 +192,8 @@ const CultureExplorer = ({ sessionId, isDM }) => {
         <div className="taboos-section">
           <h5>Cultural Taboos</h5>
           <ul className="taboo-list">
-            {selectedCulture.taboos.map((taboo, idx) => (
-              <li key={idx} className="taboo-item">{taboo}</li>
+            {selectedCulture.taboos.map((taboo) => (
+              <li key={taboo} className="taboo-item">{taboo}</li>
             ))}
           </ul>
         </div>
@@ -214,8 +214,8 @@ const CultureExplorer = ({ sessionId, isDM }) => {
             <div className="detail-group">
               <h6>Primary Mediums</h6>
               <div className="tag-list">
-                {selectedCulture.art_style.primary_mediums.map((medium, idx) => (
-                  <span key={idx} className="tag">{medium}</span>
+                {selectedCulture.art_style.primary_mediums.map((medium) => (
+                  <span key={medium} className="tag">{medium}</span>
                 ))}
               </div>
             </div>
@@ -223,8 +223,8 @@ const CultureExplorer = ({ sessionId, isDM }) => {
             <div className="detail-group">
               <h6>Common Motifs</h6>
               <div className="tag-list">
-                {selectedCulture.art_style.common_motifs.map((motif, idx) => (
-                  <span key={idx} className="tag">{motif}</span>
+                {selectedCulture.art_style.common_motifs.map((motif) => (
+                  <span key={motif} className="tag">{motif}</span>
                 ))}
               </div>
             </div>
@@ -232,9 +232,9 @@ const CultureExplorer = ({ sessionId, isDM }) => {
             <div className="detail-group">
               <h6>Color Palette</h6>
               <div className="color-palette">
-                {selectedCulture.art_style.color_palette.map((color, idx) => (
+                {selectedCulture.art_style.color_palette.map((color) => (
                   <div 
-                    key={idx} 
+                    key={color} 
                     className="color-swatch"
                     style={{ backgroundColor: color.toLowerCase() }}
                     title={color}
@@ -258,8 +258,8 @@ const CultureExplorer = ({ sessionId, isDM }) => {
         <div className="cuisine-section">
           <h4><FaUtensils /> Cuisine</h4>
           <div className="dishes-grid">
-            {selectedCulture.cuisine.map((dish, idx) => (
-              <div key={idx} className="dish-card">
+            {selectedCulture.cuisine.map((dish) => (
+              <div key={dish.name} className="dish-card">
                 <h6>{dish.name}</h6>
                 <span className="dish-type">{dish.type}</span>
                 <p className="ingredients">Ingredients: {dish.ingredients.join(', ')}</p>
@@ -284,8 +284,8 @@ const CultureExplorer = ({ sessionId, isDM }) => {
 
         <div className="social-classes">
           <h5>Social Classes</h5>
-          {social.classes.map((socialClass, idx) => (
-            <div key={idx} className="social-class">
+          {social.classes.map((socialClass) => (
+            <div key={socialClass.name} className="social-class">
               <div className="class-header">
                 <h6>{socialClass.name}</h6>
                 <span className="class-rank">Rank {socialClass.rank}</span>
@@ -509,7 +509,7 @@ const CultureExplorer = ({ sessionId, isDM }) => {
               />
               <div className="trait-tags">
                 {generationParams.special_traits.map((trait, idx) => (
-                  <span key={idx} className="trait-tag">
+                  <span key={trait} className="trait-tag">
                     {trait}
                     <button onClick={() => {
                       setGenerationParams({

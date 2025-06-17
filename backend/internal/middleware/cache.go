@@ -84,72 +84,100 @@ type CachedResponse struct {
 // Handler returns the cache middleware handler
 func (cm *CacheMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Only cache GET and HEAD requests
-		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		// Skip caching for non-cacheable requests
+		if !cm.isCacheableRequest(r) {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		// Check if route should be excluded
-		if cm.shouldExclude(r.URL.Path) {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Generate cache key
 		cacheKey := cm.generateCacheKey(r)
-
-		// Try to get from cache
 		ctx := r.Context()
-		cached, err := cm.getFromCache(ctx, cacheKey)
-		if err == nil && cached != nil {
-			// Check if still fresh
-			if time.Since(cached.CachedAt) <= cached.TTL {
-				cm.serveCachedResponse(w, r, cached, false)
-				return
-			}
 
-			// Check if we can serve stale while revalidating
-			if time.Since(cached.CachedAt) <= cached.TTL+cm.config.StaleWhileRevalidate {
-				cm.serveCachedResponse(w, r, cached, true)
-				
-				// Revalidate in background
-				go cm.revalidateInBackground(r, cacheKey)
-				return
-			}
+		// Try to serve from cache
+		if served := cm.tryServeFromCache(w, r, ctx, cacheKey); served {
+			return
 		}
 
-		// Cache miss or expired - capture response
-		recorder := &responseRecorder{
-			ResponseWriter: w,
-			statusCode:     http.StatusOK,
-			headers:        make(http.Header),
-			body:           &bytes.Buffer{},
-		}
-
-		next.ServeHTTP(recorder, r)
-
-		// Cache the response if appropriate
-		if cm.shouldCache(recorder) {
-			ttl := cm.getTTL(recorder.headers)
-			response := &CachedResponse{
-				StatusCode: recorder.statusCode,
-				Headers:    recorder.headers,
-				Body:       recorder.body.Bytes(),
-				CachedAt:   time.Now(),
-				TTL:        ttl,
-			}
-
-			if err := cm.saveToCache(ctx, cacheKey, response, ttl); err != nil {
-				if cm.logger != nil {
-					cm.logger.Error().
-						Err(err).
-						Str("cache_key", cacheKey).
-						Msg("Failed to cache response")
-				}
-			}
-		}
+		// Handle cache miss
+		cm.handleCacheMiss(w, r, ctx, cacheKey, next)
 	})
+}
+
+// isCacheableRequest checks if request should be cached
+func (cm *CacheMiddleware) isCacheableRequest(r *http.Request) bool {
+	// Only cache GET and HEAD requests
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		return false
+	}
+
+	// Check if route should be excluded
+	return !cm.shouldExclude(r.URL.Path)
+}
+
+// tryServeFromCache attempts to serve response from cache
+func (cm *CacheMiddleware) tryServeFromCache(w http.ResponseWriter, r *http.Request, ctx context.Context, cacheKey string) bool {
+	cached, err := cm.getFromCache(ctx, cacheKey)
+	if err != nil || cached == nil {
+		return false
+	}
+
+	age := time.Since(cached.CachedAt)
+	
+	// Serve fresh content
+	if age <= cached.TTL {
+		cm.serveCachedResponse(w, r, cached, false)
+		return true
+	}
+
+	// Serve stale content while revalidating
+	if age <= cached.TTL+cm.config.StaleWhileRevalidate {
+		cm.serveCachedResponse(w, r, cached, true)
+		go cm.revalidateInBackground(r, cacheKey)
+		return true
+	}
+
+	return false
+}
+
+// handleCacheMiss handles requests when cache is missed
+func (cm *CacheMiddleware) handleCacheMiss(w http.ResponseWriter, r *http.Request, ctx context.Context, cacheKey string, next http.Handler) {
+	recorder := cm.createResponseRecorder(w)
+	next.ServeHTTP(recorder, r)
+
+	if !cm.shouldCache(recorder) {
+		return
+	}
+
+	cm.cacheResponse(ctx, cacheKey, recorder)
+}
+
+// createResponseRecorder creates a new response recorder
+func (cm *CacheMiddleware) createResponseRecorder(w http.ResponseWriter) *responseRecorder {
+	return &responseRecorder{
+		ResponseWriter: w,
+		statusCode:     http.StatusOK,
+		headers:        make(http.Header),
+		body:           &bytes.Buffer{},
+	}
+}
+
+// cacheResponse saves the response to cache
+func (cm *CacheMiddleware) cacheResponse(ctx context.Context, cacheKey string, recorder *responseRecorder) {
+	ttl := cm.getTTL(recorder.headers)
+	response := &CachedResponse{
+		StatusCode: recorder.statusCode,
+		Headers:    recorder.headers,
+		Body:       recorder.body.Bytes(),
+		CachedAt:   time.Now(),
+		TTL:        ttl,
+	}
+
+	if err := cm.saveToCache(ctx, cacheKey, response, ttl); err != nil && cm.logger != nil {
+		cm.logger.Error().
+			Err(err).
+			Str("cache_key", cacheKey).
+			Msg("Failed to cache response")
+	}
 }
 
 // generateCacheKey generates a cache key for the request
@@ -232,34 +260,73 @@ func (cm *CacheMiddleware) shouldCache(rec *responseRecorder) bool {
 
 // getTTL extracts TTL from response headers or uses default
 func (cm *CacheMiddleware) getTTL(headers http.Header) time.Duration {
-	// Check Cache-Control max-age
-	cacheControl := headers.Get("Cache-Control")
-	if cacheControl != "" {
-		parts := strings.Split(cacheControl, ",")
-		for _, part := range parts {
-			part = strings.TrimSpace(part)
-			if strings.HasPrefix(part, "max-age=") {
-				if seconds := strings.TrimPrefix(part, "max-age="); seconds != "" {
-					var s int
-					if _, err := fmt.Sscanf(seconds, "%d", &s); err == nil && s > 0 {
-						return time.Duration(s) * time.Second
-					}
-				}
-			}
-		}
+	// Try to get TTL from Cache-Control header
+	if ttl := cm.getTTLFromCacheControl(headers); ttl > 0 {
+		return ttl
 	}
 
-	// Check Expires header
-	if expires := headers.Get("Expires"); expires != "" {
-		if t, err := http.ParseTime(expires); err == nil {
-			ttl := time.Until(t)
-			if ttl > 0 {
-				return ttl
-			}
-		}
+	// Try to get TTL from Expires header
+	if ttl := cm.getTTLFromExpires(headers); ttl > 0 {
+		return ttl
 	}
 
 	return cm.config.DefaultTTL
+}
+
+// getTTLFromCacheControl extracts TTL from Cache-Control header
+func (cm *CacheMiddleware) getTTLFromCacheControl(headers http.Header) time.Duration {
+	cacheControl := headers.Get("Cache-Control")
+	if cacheControl == "" {
+		return 0
+	}
+
+	parts := strings.Split(cacheControl, ",")
+	for _, part := range parts {
+		if ttl := cm.parseMaxAge(strings.TrimSpace(part)); ttl > 0 {
+			return ttl
+		}
+	}
+
+	return 0
+}
+
+// parseMaxAge parses max-age directive from Cache-Control
+func (cm *CacheMiddleware) parseMaxAge(directive string) time.Duration {
+	if !strings.HasPrefix(directive, "max-age=") {
+		return 0
+	}
+
+	seconds := strings.TrimPrefix(directive, "max-age=")
+	if seconds == "" {
+		return 0
+	}
+
+	var s int
+	if _, err := fmt.Sscanf(seconds, "%d", &s); err != nil || s <= 0 {
+		return 0
+	}
+
+	return time.Duration(s) * time.Second
+}
+
+// getTTLFromExpires extracts TTL from Expires header
+func (cm *CacheMiddleware) getTTLFromExpires(headers http.Header) time.Duration {
+	expires := headers.Get("Expires")
+	if expires == "" {
+		return 0
+	}
+
+	t, err := http.ParseTime(expires)
+	if err != nil {
+		return 0
+	}
+
+	ttl := time.Until(t)
+	if ttl <= 0 {
+		return 0
+	}
+
+	return ttl
 }
 
 // getFromCache retrieves a response from cache

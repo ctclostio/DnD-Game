@@ -272,24 +272,12 @@ func (cs *CacheService) GetActiveSessionIDs(ctx context.Context) ([]string, erro
 
 // WarmCache pre-loads frequently accessed data
 func (cs *CacheService) WarmCache(ctx context.Context, dataType string, items []interface{}) error {
-	switch dataType {
-	case "characters":
-		for _, item := range items {
-			if char, ok := item.(*models.Character); ok {
-				if err := cs.SetCharacter(ctx, char); err != nil {
-					cs.logger.Error().Err(err).Str("character_id", char.ID).Msg("Failed to warm character cache")
-				}
-			}
-		}
-	case "sessions":
-		for _, item := range items {
-			if session, ok := item.(*models.GameSession); ok {
-				if err := cs.SetGameSession(ctx, session); err != nil {
-					cs.logger.Error().Err(err).Str("session_id", session.ID).Msg("Failed to warm session cache")
-				}
-			}
-		}
+	warmer := cs.getWarmerFunc(dataType)
+	if warmer == nil {
+		return fmt.Errorf("unsupported data type: %s", dataType)
 	}
+
+	warmer(ctx, items)
 
 	cs.logger.Info().
 		Str("data_type", dataType).
@@ -297,6 +285,49 @@ func (cs *CacheService) WarmCache(ctx context.Context, dataType string, items []
 		Msg("Cache warmed")
 
 	return nil
+}
+
+// getWarmerFunc returns the appropriate warmer function for the data type
+func (cs *CacheService) getWarmerFunc(dataType string) func(context.Context, []interface{}) {
+	warmers := map[string]func(context.Context, []interface{}){
+		"characters": cs.warmCharacters,
+		"sessions":   cs.warmSessions,
+	}
+	return warmers[dataType]
+}
+
+// warmCharacters warms the cache with character data
+func (cs *CacheService) warmCharacters(ctx context.Context, items []interface{}) {
+	for _, item := range items {
+		char, ok := item.(*models.Character)
+		if !ok {
+			continue
+		}
+		
+		if err := cs.SetCharacter(ctx, char); err != nil {
+			cs.logger.Error().
+				Err(err).
+				Str("character_id", char.ID).
+				Msg("Failed to warm character cache")
+		}
+	}
+}
+
+// warmSessions warms the cache with session data
+func (cs *CacheService) warmSessions(ctx context.Context, items []interface{}) {
+	for _, item := range items {
+		session, ok := item.(*models.GameSession)
+		if !ok {
+			continue
+		}
+		
+		if err := cs.SetGameSession(ctx, session); err != nil {
+			cs.logger.Error().
+				Err(err).
+				Str("session_id", session.ID).
+				Msg("Failed to warm session cache")
+		}
+	}
 }
 
 // GetCacheStats returns cache statistics

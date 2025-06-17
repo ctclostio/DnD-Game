@@ -23,8 +23,8 @@ func (m *MockLLMProviderDMTest) GenerateCompletion(ctx context.Context, prompt, 
 }
 
 func (m *MockLLMProviderDMTest) GenerateContent(ctx context.Context, prompt, systemPrompt string) (string, error) {
-	args := m.Called(ctx, prompt, systemPrompt)
-	return args.String(0), args.Error(1)
+	// GenerateContent calls GenerateCompletion as they serve the same purpose
+	return m.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 
 func TestAIDMAssistantService_GenerateNPCDialog(t *testing.T) {

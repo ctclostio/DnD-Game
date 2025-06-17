@@ -46,7 +46,9 @@ func (m *MockCharacterRepository) GetByUserID(userID int64) ([]*models.Character
 }
 
 func (m *MockCharacterRepository) Update(char *models.Character) error {
+	// Update modifies existing character
 	args := m.Called(char)
+	// Return update operation status
 	return args.Error(0)
 }
 
@@ -95,7 +97,9 @@ func (m *MockUserRepository) GetByEmail(email string) (*models.User, error) {
 }
 
 func (m *MockUserRepository) Update(user *models.User) error {
+	// Update user information
 	args := m.Called(user)
+	// Return user update status
 	return args.Error(0)
 }
 
@@ -126,7 +130,9 @@ func (m *MockGameSessionRepository) GetByCode(code string) (*models.GameSession,
 }
 
 func (m *MockGameSessionRepository) Update(session *models.GameSession) error {
+	// Update game session state
 	args := m.Called(session)
+	// Return session update result
 	return args.Error(0)
 }
 
@@ -170,7 +176,9 @@ func (m *MockCombatRepository) GetBySessionID(sessionID int64) (*models.Combat, 
 }
 
 func (m *MockCombatRepository) Update(combat *models.Combat) error {
+	// Update combat state and turn info
 	args := m.Called(combat)
+	// Return combat update result
 	return args.Error(0)
 }
 
@@ -201,7 +209,9 @@ func (m *MockInventoryRepository) GetItemsByCharacterID(charID int64) ([]*models
 }
 
 func (m *MockInventoryRepository) UpdateItem(item *models.InventoryItem) error {
+	// Update inventory item details
 	args := m.Called(item)
+	// Return item update status
 	return args.Error(0)
 }
 
@@ -265,12 +275,16 @@ func (m *MockCharacterService) GetByUserID(userID int64) ([]*models.Character, e
 }
 
 func (m *MockCharacterService) Update(char *models.Character) error {
+	// Update character through service layer
 	args := m.Called(char)
+	// Return service update result
 	return args.Error(0)
 }
 
 func (m *MockCharacterService) Delete(id int64) error {
+	// Delete character through service layer
 	args := m.Called(id)
+	// Return deletion status
 	return args.Error(0)
 }
 
@@ -316,7 +330,9 @@ func (m *MockCombatService) NextTurn(combatID int64) error {
 }
 
 func (m *MockCombatService) EndCombat(combatID int64) error {
+	// End combat and clean up state
 	args := m.Called(combatID)
+	// Return end combat status
 	return args.Error(0)
 }
 
@@ -331,8 +347,8 @@ func (m *MockLLMProvider) GenerateCompletion(ctx context.Context, prompt, system
 }
 
 func (m *MockLLMProvider) GenerateContent(ctx context.Context, prompt, systemPrompt string) (string, error) {
-	args := m.Called(ctx, prompt, systemPrompt)
-	return args.String(0), args.Error(1)
+	// GenerateContent calls GenerateCompletion as they serve the same purpose
+	return m.GenerateCompletion(ctx, prompt, systemPrompt)
 }
 
 func (m *MockLLMProvider) GenerateResponse(prompt string, options map[string]interface{}) (string, error) {

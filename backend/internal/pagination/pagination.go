@@ -59,52 +59,84 @@ func FromRequest(r *http.Request) *PaginationParams {
 	params := DefaultPaginationParams()
 	query := r.URL.Query()
 
-	// Page-based pagination
-	if page := query.Get("page"); page != "" {
+	parsePagination(params, query)
+	parseCursor(params, query)
+	parseSorting(params, query)
+	parseFilters(params, query)
+
+	return params
+}
+
+// parsePagination extracts page and limit parameters
+func parsePagination(params *PaginationParams, query map[string][]string) {
+	if page := getQueryParam(query, "page"); page != "" {
 		if p, err := strconv.Atoi(page); err == nil && p > 0 {
 			params.Page = p
 		}
 	}
 
-	// Limit
-	if limit := query.Get("limit"); limit != "" {
+	if limit := getQueryParam(query, "limit"); limit != "" {
 		if l, err := strconv.Atoi(limit); err == nil && l > 0 {
-			params.Limit = l
-			// Cap limit to prevent abuse
-			if params.Limit > 100 {
-				params.Limit = 100
-			}
+			params.Limit = normalizeLimit(l)
 		}
 	}
+}
 
-	// Cursor-based pagination
-	if cursor := query.Get("cursor"); cursor != "" {
+// parseCursor extracts cursor parameter
+func parseCursor(params *PaginationParams, query map[string][]string) {
+	if cursor := getQueryParam(query, "cursor"); cursor != "" {
 		params.Cursor = cursor
 	}
+}
 
-	// Sorting
-	if sortBy := query.Get("sort_by"); sortBy != "" {
+// parseSorting extracts sorting parameters
+func parseSorting(params *PaginationParams, query map[string][]string) {
+	if sortBy := getQueryParam(query, "sort_by"); sortBy != "" {
 		params.SortBy = sortBy
 	}
 
-	if sortDir := query.Get("sort_dir"); sortDir != "" {
-		if sortDir == SortDirectionDesc || sortDir == SortDirectionAsc {
+	if sortDir := getQueryParam(query, "sort_dir"); sortDir != "" {
+		if isValidSortDirection(sortDir) {
 			params.SortDir = sortDir
 		}
 	}
+}
 
-	// Filters (simple implementation - enhance as needed)
+// parseFilters extracts filter parameters
+func parseFilters(params *PaginationParams, query map[string][]string) {
 	params.Filters = make(map[string]interface{})
+	
 	for key, values := range query {
-		if strings.HasPrefix(key, "filter_") {
-			filterKey := strings.TrimPrefix(key, "filter_")
-			if len(values) > 0 {
-				params.Filters[filterKey] = values[0]
-			}
+		if !strings.HasPrefix(key, "filter_") || len(values) == 0 {
+			continue
 		}
+		
+		filterKey := strings.TrimPrefix(key, "filter_")
+		params.Filters[filterKey] = values[0]
 	}
+}
 
-	return params
+// getQueryParam safely gets a query parameter value
+func getQueryParam(query map[string][]string, key string) string {
+	values, ok := query[key]
+	if !ok || len(values) == 0 {
+		return ""
+	}
+	return values[0]
+}
+
+// normalizeLimit caps the limit to prevent abuse
+func normalizeLimit(limit int) int {
+	const maxLimit = 100
+	if limit > maxLimit {
+		return maxLimit
+	}
+	return limit
+}
+
+// isValidSortDirection checks if sort direction is valid
+func isValidSortDirection(dir string) bool {
+	return dir == SortDirectionDesc || dir == SortDirectionAsc
 }
 
 // Validate validates pagination parameters
