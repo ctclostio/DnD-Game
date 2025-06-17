@@ -11,8 +11,8 @@ export interface I18nConfig {
 
 class I18n {
   private locale: string;
-  private fallbackLocale: string;
-  private translations: Record<string, TranslationKey>;
+  private readonly fallbackLocale: string;
+  private readonly translations: Record<string, TranslationKey>;
   private listeners: Set<() => void> = new Set();
 
   constructor(config: I18nConfig) {

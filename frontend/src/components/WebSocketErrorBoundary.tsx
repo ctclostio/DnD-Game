@@ -14,7 +14,7 @@ interface State {
 
 export class WebSocketErrorBoundary extends Component<Props, State> {
   private reconnectTimer: NodeJS.Timeout | null = null;
-  private maxReconnectAttempts = 3;
+  private readonly maxReconnectAttempts = 3;
 
   constructor(props: Props) {
     super(props);

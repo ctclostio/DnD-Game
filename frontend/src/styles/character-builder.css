@@ -317,6 +317,10 @@ input:checked + .slider:before {
 .score-value {
   width: 60px;
   text-align: center;
+  display: block;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary-color);
 }
 
 .modifier {
@@ -437,12 +441,6 @@ input:checked + .slider:before {
   margin-bottom: 0.5rem;
 }
 
-.score-value {
-  display: block;
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--primary-color);
-}
 
 /* Navigation */
 .builder-navigation {

@@ -401,10 +401,13 @@
 
 .detail-header {
   margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .detail-header h3 {
-  margin: 0 0 10px 0;
+  margin: 0;
   color: var(--text-primary);
 }
 
@@ -764,7 +767,7 @@
 
 .value-fill {
   height: 100%;
-  background: var(--primary);
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
   transition: width 0.3s ease;
 }
 
@@ -1021,17 +1024,6 @@
   overflow-y: auto;
 }
 
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.detail-header h3 {
-  margin: 0;
-  color: var(--text-primary);
-}
 
 .interaction-buttons {
   display: flex;
@@ -1125,18 +1117,6 @@
   text-transform: capitalize;
 }
 
-.value-bar {
-  height: 8px;
-  background: var(--bg-secondary);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.value-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
-  transition: width 0.3s ease;
-}
 
 .origin-story {
   background: var(--bg-dark);

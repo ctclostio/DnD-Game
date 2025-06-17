@@ -12,7 +12,7 @@ const FactionPersonalities = ({ sessionId, isDM }) => {
   const [selectedFaction, setSelectedFaction] = useState(null);
   const [personality, setPersonality] = useState(null);
   const [agendas, setAgendas] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [showDecisionModal, setShowDecisionModal] = useState(false);
   const [decision, setDecision] = useState({
     type: 'diplomatic',

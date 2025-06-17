@@ -47,7 +47,6 @@ let totalFixed = 0;
 
 filesToFix.forEach(filePath => {
   let content = fs.readFileSync(filePath, 'utf8');
-  const originalContent = content;
   
   // Check if file already imports accessibility utils
   const hasAccessibilityImport = content.includes('accessibility');

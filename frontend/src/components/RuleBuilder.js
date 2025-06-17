@@ -19,7 +19,7 @@ import '../styles/rule-builder.css';
 
 const RuleBuilder = () => {
   const [activeTab, setActiveTab] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   

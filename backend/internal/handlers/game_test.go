@@ -18,6 +18,19 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Helper functions to reduce code duplication in mock implementations
+
+func handleMockError(args mock.Arguments, index int) error {
+	return args.Error(index)
+}
+
+func handleMockSingleReturn[T any](args mock.Arguments, valueIndex, errorIndex int) (*T, error) {
+	if args.Get(valueIndex) == nil {
+		return nil, args.Error(errorIndex)
+	}
+	return args.Get(valueIndex).(*T), args.Error(errorIndex)
+}
+
 // MockGameSessionService is a mock implementation of the game session service
 type MockGameSessionService struct {
 	mock.Mock
@@ -25,32 +38,29 @@ type MockGameSessionService struct {
 
 func (m *MockGameSessionService) CreateSession(ctx context.Context, session *models.GameSession) error {
 	args := m.Called(ctx, session)
-	return args.Error(0)
+	return handleMockError(args, 0)
 }
 
 func (m *MockGameSessionService) GetSession(ctx context.Context, id string) (*models.GameSession, error) {
 	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.GameSession), args.Error(1)
+	return handleMockSingleReturn[models.GameSession](args, 0, 1)
 }
 
 func (m *MockGameSessionService) ValidateUserInSession(ctx context.Context, sessionID, userID string) error {
 	args := m.Called(ctx, sessionID, userID)
-	return args.Error(0)
+	return handleMockError(args, 0)
 }
 
 func (m *MockGameSessionService) JoinSession(ctx context.Context, sessionID, userID string, characterID *string) error {
 	args := m.Called(ctx, sessionID, userID, characterID)
-	return args.Error(0)
+	return handleMockError(args, 0)
 }
 
 func (m *MockGameSessionService) LeaveSession(ctx context.Context, sessionID, userID string) error {
 	// LeaveSession removes a user from the session
 	args := m.Called(ctx, sessionID, userID)
 	// Return error status for leave operation
-	return args.Error(0)
+	return handleMockError(args, 0)
 }
 
 func TestGameHandler_CreateGameSession(t *testing.T) {

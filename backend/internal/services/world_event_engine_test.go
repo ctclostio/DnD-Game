@@ -14,6 +14,26 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
+// Helper functions to reduce code duplication in mock implementations
+
+func mockErrorReturn(args mock.Arguments, index int) error {
+	return args.Error(index)
+}
+
+func mockSingleReturn[T any](args mock.Arguments, valueIndex, errorIndex int) (*T, error) {
+	if args.Get(valueIndex) == nil {
+		return nil, args.Error(errorIndex)
+	}
+	return args.Get(valueIndex).(*T), args.Error(errorIndex)
+}
+
+func mockSliceReturn[T any](args mock.Arguments, valueIndex, errorIndex int) ([]*T, error) {
+	if args.Get(valueIndex) == nil {
+		return nil, args.Error(errorIndex)
+	}
+	return args.Get(valueIndex).([]*T), args.Error(errorIndex)
+}
+
 // MockWorldBuildingRepository implements all methods of WorldBuildingRepository
 type MockWorldBuildingRepository struct {
 	mock.Mock
@@ -22,7 +42,7 @@ type MockWorldBuildingRepository struct {
 // Settlement operations
 func (m *MockWorldBuildingRepository) CreateSettlement(settlement *models.Settlement) error {
 	args := m.Called(settlement)
-	return args.Error(0)
+	return mockErrorReturn(args, 0)
 }
 
 func (m *MockWorldBuildingRepository) GetSettlement(id uuid.UUID) (*models.Settlement, error) {
@@ -99,7 +119,7 @@ func (m *MockWorldBuildingRepository) UpdateFactionRelationship(faction1ID, fact
 // World Event operations
 func (m *MockWorldBuildingRepository) CreateWorldEvent(event *models.WorldEvent) error {
 	args := m.Called(event)
-	return args.Error(0)
+	return mockErrorReturn(args, 0)
 }
 
 func (m *MockWorldBuildingRepository) GetActiveWorldEvents(gameSessionID uuid.UUID) ([]*models.WorldEvent, error) {
@@ -112,7 +132,7 @@ func (m *MockWorldBuildingRepository) GetActiveWorldEvents(gameSessionID uuid.UU
 
 func (m *MockWorldBuildingRepository) ProgressWorldEvent(eventID uuid.UUID) error {
 	args := m.Called(eventID)
-	return args.Error(0)
+	return mockErrorReturn(args, 0)
 }
 
 func (m *MockWorldBuildingRepository) GetWorldEventByID(eventID uuid.UUID) (*models.WorldEvent, error) {
@@ -125,13 +145,13 @@ func (m *MockWorldBuildingRepository) GetWorldEventByID(eventID uuid.UUID) (*mod
 
 func (m *MockWorldBuildingRepository) UpdateWorldEvent(event *models.WorldEvent) error {
 	args := m.Called(event)
-	return args.Error(0)
+	return mockErrorReturn(args, 0)
 }
 
 // Market operations
 func (m *MockWorldBuildingRepository) CreateOrUpdateMarket(market *models.Market) error {
 	args := m.Called(market)
-	return args.Error(0)
+	return mockErrorReturn(args, 0)
 }
 
 func (m *MockWorldBuildingRepository) GetMarketBySettlement(settlementID uuid.UUID) (*models.Market, error) {

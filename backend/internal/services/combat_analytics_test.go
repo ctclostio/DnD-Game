@@ -13,6 +13,26 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
+// Helper functions to reduce code duplication in mock implementations
+
+func handleErrorResult(args mock.Arguments, index int) error {
+	return args.Error(index)
+}
+
+func handleSingleResult[T any](args mock.Arguments, valueIndex, errorIndex int) (*T, error) {
+	if args.Get(valueIndex) == nil {
+		return nil, args.Error(errorIndex)
+	}
+	return args.Get(valueIndex).(*T), args.Error(errorIndex)
+}
+
+func handleSliceResult[T any](args mock.Arguments, valueIndex, errorIndex int) ([]*T, error) {
+	if args.Get(valueIndex) == nil {
+		return nil, args.Error(errorIndex)
+	}
+	return args.Get(valueIndex).([]*T), args.Error(errorIndex)
+}
+
 func TestCombatAnalytics_TrackCombatAction(t *testing.T) {
 	t.Run("successful damage action recording", func(t *testing.T) {
 		mockRepo := new(MockCombatAnalyticsRepository)
@@ -414,41 +434,32 @@ func (m *MockCombatAnalyticsRepository) GetCombatActions(combatID uuid.UUID) ([]
 
 func (m *MockCombatAnalyticsRepository) CreateCombatAnalytics(analytics *models.CombatAnalytics) error {
 	args := m.Called(analytics)
-	return args.Error(0)
+	return handleErrorResult(args, 0)
 }
 
 func (m *MockCombatAnalyticsRepository) GetCombatAnalytics(combatID uuid.UUID) (*models.CombatAnalytics, error) {
 	args := m.Called(combatID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.CombatAnalytics), args.Error(1)
+	return handleSingleResult[models.CombatAnalytics](args, 0, 1)
 }
 
 func (m *MockCombatAnalyticsRepository) UpdateCombatAnalytics(id uuid.UUID, updates map[string]interface{}) error {
 	args := m.Called(id, updates)
-	return args.Error(0)
+	return handleErrorResult(args, 0)
 }
 
 func (m *MockCombatAnalyticsRepository) CreateCombatantAnalytics(analytics *models.CombatantAnalytics) error {
 	args := m.Called(analytics)
-	return args.Error(0)
+	return handleErrorResult(args, 0)
 }
 
 func (m *MockCombatAnalyticsRepository) GetCombatantAnalytics(analyticsID uuid.UUID) ([]*models.CombatantAnalytics, error) {
 	args := m.Called(analyticsID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.CombatantAnalytics), args.Error(1)
+	return handleSliceResult[models.CombatantAnalytics](args, 0, 1)
 }
 
 func (m *MockCombatAnalyticsRepository) GetCombatAnalyticsBySession(sessionID uuid.UUID) ([]*models.CombatAnalytics, error) {
 	args := m.Called(sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.CombatAnalytics), args.Error(1)
+	return handleSliceResult[models.CombatAnalytics](args, 0, 1)
 }
 
 // Mock combat service
@@ -459,62 +470,47 @@ type MockCombatService struct {
 // Add missing methods for CombatAnalyticsRepository
 func (m *MockCombatAnalyticsRepository) UpdateCombatantAnalytics(id uuid.UUID, updates map[string]interface{}) error {
 	args := m.Called(id, updates)
-	return args.Error(0)
+	return handleErrorResult(args, 0)
 }
 
 func (m *MockCombatAnalyticsRepository) CreateAutoCombatResolution(resolution *models.AutoCombatResolution) error {
 	args := m.Called(resolution)
-	return args.Error(0)
+	return handleErrorResult(args, 0)
 }
 
 func (m *MockCombatAnalyticsRepository) GetAutoCombatResolution(id uuid.UUID) (*models.AutoCombatResolution, error) {
 	args := m.Called(id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.AutoCombatResolution), args.Error(1)
+	return handleSingleResult[models.AutoCombatResolution](args, 0, 1)
 }
 
 func (m *MockCombatAnalyticsRepository) GetAutoCombatResolutionsBySession(sessionID uuid.UUID) ([]*models.AutoCombatResolution, error) {
 	args := m.Called(sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.AutoCombatResolution), args.Error(1)
+	return handleSliceResult[models.AutoCombatResolution](args, 0, 1)
 }
 
 func (m *MockCombatAnalyticsRepository) CreateBattleMap(battleMap *models.BattleMap) error {
 	args := m.Called(battleMap)
-	return args.Error(0)
+	return handleErrorResult(args, 0)
 }
 
 func (m *MockCombatAnalyticsRepository) GetBattleMap(id uuid.UUID) (*models.BattleMap, error) {
 	args := m.Called(id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.BattleMap), args.Error(1)
+	return handleSingleResult[models.BattleMap](args, 0, 1)
 }
 
 func (m *MockCombatAnalyticsRepository) GetBattleMapByCombat(combatID uuid.UUID) (*models.BattleMap, error) {
 	args := m.Called(combatID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.BattleMap), args.Error(1)
+	return handleSingleResult[models.BattleMap](args, 0, 1)
 }
 
 func (m *MockCombatAnalyticsRepository) GetBattleMapsBySession(sessionID uuid.UUID) ([]*models.BattleMap, error) {
 	args := m.Called(sessionID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]*models.BattleMap), args.Error(1)
+	return handleSliceResult[models.BattleMap](args, 0, 1)
 }
 
 func (m *MockCombatAnalyticsRepository) UpdateBattleMap(id uuid.UUID, updates map[string]interface{}) error {
 	args := m.Called(id, updates)
-	return args.Error(0)
+	return handleErrorResult(args, 0)
 }
 
 func (m *MockCombatAnalyticsRepository) CreateOrUpdateInitiativeRule(rule *models.SmartInitiativeRule) error {
