@@ -31,7 +31,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 
 			// API routes
-			api := router.PathPrefix("/api/v1").Subrouter()
+			api := router.PathPrefix(APIv1Prefix).Subrouter()
 
 			// Auth routes (needed for authentication)
 			api.HandleFunc("/auth/register", h.Register).Methods("POST")
@@ -51,24 +51,24 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	defer cleanup()
 
 	// Create test users
-	dmUserID := ctx.CreateTestUser("dm", "dm@example.com", "password123")
-	player1ID := ctx.CreateTestUser("player1", "player1@example.com", "password123")
-	player2ID := ctx.CreateTestUser("player2", "player2@example.com", "password123")
-	player3ID := ctx.CreateTestUser("player3", "player3@example.com", "password123")
+	dmUserID := ctx.CreateTestUser(TestDMUsername, TestDMEmail, DefaultPassword)
+	player1ID := ctx.CreateTestUser(TestPlayer1Username, TestPlayer1Email, DefaultPassword)
+	player2ID := ctx.CreateTestUser(TestPlayer2Username, TestPlayer2Email, DefaultPassword)
+	player3ID := ctx.CreateTestUser(TestPlayer3Username, TestPlayer3Email, DefaultPassword)
 
 	// Create characters for players
-	char1ID := ctx.CreateTestCharacter(player1ID, "Aragorn")
-	_ = ctx.CreateTestCharacter(player2ID, "Legolas") // char2ID - used in skipped test
-	char3ID := ctx.CreateTestCharacter(player3ID, "Gimli")
+	char1ID := ctx.CreateTestCharacter(player1ID, CharacterAragorn)
+	_ = ctx.CreateTestCharacter(player2ID, CharacterLegolas) // char2ID - used in skipped test
+	char3ID := ctx.CreateTestCharacter(player3ID, CharacterGimli)
 
 	// Create a test session that will be used by all subtests
 	var sessionID string
 	createReq := map[string]interface{}{
-		"name":        "The Fellowship Campaign",
-		"description": "A journey to destroy the One Ring",
-		"max_players": 6,
+		NameField:        FellowshipCampaignName,
+		DescriptionField: FellowshipCampaignDesc,
+		MaxPlayersField: 6,
 	}
-	w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions", createReq, dmUserID)
+	w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath[:len(APISessionsPath)-1], createReq, dmUserID)
 	require.Equal(t, http.StatusCreated, w.Code)
 
 	resp := ctx.AssertSuccessResponse(w)
@@ -79,9 +79,9 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 
 	t.Run("Create Game Session", func(t *testing.T) {
 		// This test just verifies the session was created properly
-		assert.Equal(t, "The Fellowship Campaign", sessionData["name"])
+		assert.Equal(t, FellowshipCampaignName, sessionData[NameField])
 		assert.Equal(t, dmUserID, sessionData["dmId"])
-		assert.NotEmpty(t, sessionData["code"])
+		assert.NotEmpty(t, sessionData[CodeField])
 		assert.True(t, sessionData["isActive"].(bool))
 
 		// Verify session in database
@@ -89,7 +89,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	})
 
 	t.Run("Get Game Session - DM Access", func(t *testing.T) {
-		w := ctx.MakeAuthenticatedRequest("GET", "/api/v1/sessions/"+sessionID, nil, dmUserID)
+		w := ctx.MakeAuthenticatedRequest("GET", APISessionsPath+sessionID, nil, dmUserID)
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		resp := ctx.AssertSuccessResponse(w)
@@ -97,31 +97,31 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		require.True(t, ok, "Expected data to be a map")
 
 		assert.Equal(t, sessionID, sessionData["id"])
-		assert.Equal(t, "The Fellowship Campaign", sessionData["name"])
+		assert.Equal(t, FellowshipCampaignName, sessionData[NameField])
 		assert.Equal(t, dmUserID, sessionData["dmId"])
 	})
 
 	t.Run("Get Game Session - Non-participant Forbidden", func(t *testing.T) {
-		w := ctx.MakeAuthenticatedRequest("GET", "/api/v1/sessions/"+sessionID, nil, player1ID)
+		w := ctx.MakeAuthenticatedRequest("GET", APISessionsPath+sessionID, nil, player1ID)
 		assert.Equal(t, http.StatusForbidden, w.Code)
 
 		var resp response.Response
 		ctx.DecodeResponse(w, &resp)
-		assert.Contains(t, resp.Error.Message, "don't have access")
+		assert.Contains(t, resp.Error.Message, ErrDontHaveAccess)
 	})
 
 	t.Run("List Game Sessions", func(t *testing.T) {
 		// Create another session to test filtering
-		otherDMID := ctx.CreateTestUser("otherdm", "otherdm@example.com", "password123")
+		otherDMID := ctx.CreateTestUser(TestOtherDMUsername, TestOtherDMEmail, DefaultPassword)
 		createReq := map[string]interface{}{
-			"name":        "Another Campaign",
-			"description": "A different adventure",
+			NameField:        AnotherCampaignName,
+			DescriptionField: AnotherCampaignDesc,
 		}
-		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions", createReq, otherDMID)
+		w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath[:len(APISessionsPath)-1], createReq, otherDMID)
 		require.Equal(t, http.StatusCreated, w.Code)
 
 		// DM should see only their session
-		w = ctx.MakeAuthenticatedRequest("GET", "/api/v1/sessions", nil, dmUserID)
+		w = ctx.MakeAuthenticatedRequest("GET", APISessionsPath[:len(APISessionsPath)-1], nil, dmUserID)
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		resp := ctx.AssertSuccessResponse(w)
@@ -135,7 +135,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 			require.True(t, ok)
 			if sessionMap["id"] == sessionID {
 				found = true
-				assert.Equal(t, "The Fellowship Campaign", sessionMap["name"])
+				assert.Equal(t, FellowshipCampaignName, sessionMap[NameField])
 			}
 		}
 		assert.True(t, found, "Created session should be in list")
@@ -144,10 +144,10 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	t.Run("Join Game Session with Character", func(t *testing.T) {
 		t.Logf("Attempting to join session: %s", sessionID)
 		joinReq := map[string]interface{}{
-			"character_id": char1ID,
+			CharacterIDField: char1ID,
 		}
 
-		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/join", joinReq, player1ID)
+		w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath+sessionID+"/join", joinReq, player1ID)
 		if w.Code != http.StatusOK {
 			t.Logf("Join response: %d, body: %s", w.Code, w.Body.String())
 		}
@@ -179,7 +179,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 
 		// Now player should be able to access the session
 		t.Logf("Player1 ID: %s, Session ID: %s", player1ID, sessionID)
-		w = ctx.MakeAuthenticatedRequest("GET", "/api/v1/sessions/"+sessionID, nil, player1ID)
+		w = ctx.MakeAuthenticatedRequest("GET", APISessionsPath+sessionID, nil, player1ID)
 		if w.Code != http.StatusOK {
 			t.Logf("Access denied. Response: %d, body: %s", w.Code, w.Body.String())
 		}
@@ -193,29 +193,29 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 
 	t.Run("Cannot Join Same Session Twice", func(t *testing.T) {
 		joinReq := map[string]interface{}{
-			"character_id": char1ID,
+			CharacterIDField: char1ID,
 		}
 
-		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/join", joinReq, player1ID)
+		w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath+sessionID+"/join", joinReq, player1ID)
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 
 		var resp response.Response
 		ctx.DecodeResponse(w, &resp)
-		assert.Contains(t, resp.Error.Message, "already")
+		assert.Contains(t, resp.Error.Message, ErrAlreadyInSession)
 	})
 
 	t.Run("Join Without Character", func(t *testing.T) {
 		// Player 3 tries to join without specifying a character
 		joinReq := map[string]interface{}{}
 
-		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/join", joinReq, player3ID)
+		w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath+sessionID+"/join", joinReq, player3ID)
 
 		// Depending on implementation, this might be allowed (spectator mode) or forbidden
 		// Adjust based on your actual implementation
 		if w.Code == http.StatusBadRequest {
 			var resp response.Response
 			ctx.DecodeResponse(w, &resp)
-			assert.Contains(t, resp.Error.Message, "character")
+			assert.Contains(t, resp.Error.Message, ErrCharacterRequired)
 		} else {
 			assert.Equal(t, http.StatusOK, w.Code)
 		}
@@ -224,12 +224,12 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	t.Run("Leave Game Session", func(t *testing.T) {
 		// First, ensure player3 joins (they might already be in from previous test)
 		joinReq := map[string]interface{}{
-			"character_id": char3ID,
+			CharacterIDField: char3ID,
 		}
-		_ = ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/join", joinReq, player3ID)
+		_ = ctx.MakeAuthenticatedRequest("POST", APISessionsPath+sessionID+"/join", joinReq, player3ID)
 
 		// Now leave
-		w = ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/leave", nil, player3ID)
+		w = ctx.MakeAuthenticatedRequest("POST", APISessionsPath+sessionID+"/leave", nil, player3ID)
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		resp := ctx.AssertSuccessResponse(w)
@@ -239,17 +239,17 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		testutil.AssertRowNotExists(t, ctx.SQLXDB, "game_participants", "user_id", player3ID)
 
 		// Should no longer have access
-		w = ctx.MakeAuthenticatedRequest("GET", "/api/v1/sessions/"+sessionID, nil, player3ID)
+		w = ctx.MakeAuthenticatedRequest("GET", APISessionsPath+sessionID, nil, player3ID)
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
 
 	t.Run("Update Game Session", func(t *testing.T) {
 		updateReq := map[string]interface{}{
-			"name":        "The Fellowship - Book II",
-			"description": "The journey continues through Moria",
+			NameField:        FellowshipCampaignUpd,
+			DescriptionField: FellowshipDescUpd,
 		}
 
-		w := ctx.MakeAuthenticatedRequest("PUT", "/api/v1/sessions/"+sessionID, updateReq, dmUserID)
+		w := ctx.MakeAuthenticatedRequest("PUT", APISessionsPath+sessionID, updateReq, dmUserID)
 
 		// Check if update endpoint exists
 		if w.Code == http.StatusNotFound {
@@ -259,21 +259,21 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		// Verify update
-		w = ctx.MakeAuthenticatedRequest("GET", "/api/v1/sessions/"+sessionID, nil, dmUserID)
+		w = ctx.MakeAuthenticatedRequest("GET", APISessionsPath+sessionID, nil, dmUserID)
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		resp := ctx.AssertSuccessResponse(w)
 		sessionData, ok := resp.Data.(map[string]interface{})
 		require.True(t, ok, "Expected data to be a map")
-		assert.Equal(t, "The Fellowship - Book II", sessionData["name"])
+		assert.Equal(t, FellowshipCampaignUpd, sessionData[NameField])
 	})
 
 	t.Run("Only DM Can Update Session", func(t *testing.T) {
 		updateReq := map[string]interface{}{
-			"name": "Hacked Session Name",
+			NameField: "Hacked Session Name",
 		}
 
-		w := ctx.MakeAuthenticatedRequest("PUT", "/api/v1/sessions/"+sessionID, updateReq, player1ID)
+		w := ctx.MakeAuthenticatedRequest("PUT", APISessionsPath+sessionID, updateReq, player1ID)
 
 		// Should be forbidden or not found
 		assert.Contains(t, []int{http.StatusForbidden, http.StatusNotFound}, w.Code)
@@ -282,10 +282,10 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	t.Run("End Game Session", func(t *testing.T) {
 		// Create a new session to end
 		createReq := map[string]interface{}{
-			"name":        "Session to End",
-			"description": "This will be ended",
+			NameField:        SessionToEndName,
+			DescriptionField: SessionToEndDesc,
 		}
-		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions", createReq, dmUserID)
+		w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath[:len(APISessionsPath)-1], createReq, dmUserID)
 		require.Equal(t, http.StatusCreated, w.Code)
 
 		var tempSession models.GameSession
@@ -293,14 +293,14 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 
 		// Try to end/deactivate the session
 		// This might be a DELETE or a PUT to set is_active=false
-		w = ctx.MakeAuthenticatedRequest("DELETE", "/api/v1/sessions/"+tempSession.ID, nil, dmUserID)
+		w = ctx.MakeAuthenticatedRequest("DELETE", APISessionsPath+tempSession.ID, nil, dmUserID)
 
 		if w.Code == http.StatusNotFound {
 			// Try updating is_active instead
 			updateReq := map[string]interface{}{
-				"is_active": false,
+				IsActiveField: false,
 			}
-			w = ctx.MakeAuthenticatedRequest("PUT", "/api/v1/sessions/"+tempSession.ID, updateReq, dmUserID)
+			w = ctx.MakeAuthenticatedRequest("PUT", APISessionsPath+tempSession.ID, updateReq, dmUserID)
 		}
 
 		// Verify session is ended/inactive
@@ -324,7 +324,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 
 			// API routes
-			api := router.PathPrefix("/api/v1").Subrouter()
+			api := router.PathPrefix(APIv1Prefix).Subrouter()
 
 			// Game session routes
 			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
@@ -339,17 +339,17 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 	defer cleanup()
 
 	// Create users and session
-	dmID := ctx.CreateTestUser("wsdm", "wsdm@example.com", "password123")
-	playerID := ctx.CreateTestUser("wsplayer", "wsplayer@example.com", "password123")
-	charID := ctx.CreateTestCharacter(playerID, "WSHero")
+	dmID := ctx.CreateTestUser(TestWSDMUsername, TestWSDMEmail, DefaultPassword)
+	playerID := ctx.CreateTestUser(TestWSPlayerUsername, TestWSPlayerEmail, DefaultPassword)
+	charID := ctx.CreateTestCharacter(playerID, CharacterWSHero)
 
 	// Create session
 	createReq := map[string]interface{}{
-		"name":        "WebSocket Test Session",
-		"description": "Testing real-time features",
-		"max_players": 6,
+		NameField:        WebSocketSessionName,
+		DescriptionField: WebSocketSessionDesc,
+		MaxPlayersField: 6,
 	}
-	w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions", createReq, dmID)
+	w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath[:len(APISessionsPath)-1], createReq, dmID)
 	require.Equal(t, http.StatusCreated, w.Code)
 
 	var session models.GameSession
@@ -358,9 +358,9 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 	t.Run("Player Online Status", func(t *testing.T) {
 		// Join session
 		joinReq := map[string]interface{}{
-			"character_id": charID,
+			CharacterIDField: charID,
 		}
-		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+session.ID+"/join", joinReq, playerID)
+		w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath+session.ID+"/join", joinReq, playerID)
 		require.Equal(t, http.StatusOK, w.Code)
 
 		// Check initial online status (should be false)
@@ -377,7 +377,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 
 	t.Run("Session Participant List", func(t *testing.T) {
 		// Get session with participants
-		w := ctx.MakeAuthenticatedRequest("GET", "/api/v1/sessions/"+session.ID, nil, dmID)
+		w := ctx.MakeAuthenticatedRequest("GET", APISessionsPath+session.ID, nil, dmID)
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var sessionResp map[string]interface{}
@@ -397,7 +397,7 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
 			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
-			api := router.PathPrefix("/api/v1").Subrouter()
+			api := router.PathPrefix(APIv1Prefix).Subrouter()
 
 			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
 			api.HandleFunc("/sessions/{id}", authMiddleware.Authenticate(h.GetGameSession)).Methods("GET")
@@ -407,18 +407,18 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 	defer cleanup()
 
 	// Create users
-	dm1ID := ctx.CreateTestUser("secdm1", "secdm1@example.com", "password123")
-	dm2ID := ctx.CreateTestUser("secdm2", "secdm2@example.com", "password123")
-	playerID := ctx.CreateTestUser("secplayer", "secplayer@example.com", "password123")
-	hackerID := ctx.CreateTestUser("hacker", "hacker@example.com", "password123")
+	dm1ID := ctx.CreateTestUser(TestSecDM1Username, TestSecDM1Email, DefaultPassword)
+	dm2ID := ctx.CreateTestUser(TestSecDM2Username, TestSecDM2Email, DefaultPassword)
+	playerID := ctx.CreateTestUser(TestSecPlayerUsername, TestSecPlayerEmail, DefaultPassword)
+	hackerID := ctx.CreateTestUser(TestHackerUsername, TestHackerEmail, DefaultPassword)
 
 	// Create sessions
-	session1ID := ctx.CreateTestGameSession(dm1ID, "Secure Session 1", "SEC001")
-	session2ID := ctx.CreateTestGameSession(dm2ID, "Secure Session 2", "SEC002")
+	session1ID := ctx.CreateTestGameSession(dm1ID, SecureSession1Name, SessionCodeSEC001)
+	session2ID := ctx.CreateTestGameSession(dm2ID, SecureSession2Name, SessionCodeSEC002)
 
 	t.Run("Cannot Access Other DM's Session", func(t *testing.T) {
 		// DM2 tries to access DM1's session
-		w := ctx.MakeAuthenticatedRequest("GET", "/api/v1/sessions/"+session1ID, nil, dm2ID)
+		w := ctx.MakeAuthenticatedRequest("GET", APISessionsPath+session1ID, nil, dm2ID)
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
 
@@ -431,12 +431,12 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 		_, err := ctx.SQLXDB.Exec("UPDATE game_sessions SET is_active = false WHERE id = ?", session2ID)
 		require.NoError(t, err)
 
-		charID := ctx.CreateTestCharacter(playerID, "SecHero")
+		charID := ctx.CreateTestCharacter(playerID, CharacterSecHero)
 		joinReq := map[string]interface{}{
-			"character_id": charID,
+			CharacterIDField: charID,
 		}
 
-		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+session2ID+"/join", joinReq, playerID)
+		w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath+session2ID+"/join", joinReq, playerID)
 		// Should fail to join inactive session
 		assert.NotEqual(t, http.StatusOK, w.Code)
 	})
@@ -445,18 +445,18 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 		// Try to create session with duplicate code
 		// This should be handled by the service layer
 		createReq := map[string]interface{}{
-			"name": "Duplicate Code Session",
-			"code": "SEC001", // Same as session1
+			NameField: "Duplicate Code Session",
+			CodeField: SessionCodeSEC001, // Same as session1
 		}
 
-		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions", createReq, hackerID)
+		w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath[:len(APISessionsPath)-1], createReq, hackerID)
 
 		// The service should generate a unique code, not use the provided one
 		// Or it should reject if code is provided and duplicate
 		if w.Code == http.StatusCreated {
 			var session models.GameSession
 			ctx.DecodeResponseData(w, &session)
-			assert.NotEqual(t, "SEC001", session.Code, "Should not allow duplicate codes")
+			assert.NotEqual(t, SessionCodeSEC001, session.Code, "Should not allow duplicate codes")
 		}
 	})
 
@@ -466,14 +466,14 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 
 		// Hacker tries to join with player's character
 		joinReq := map[string]interface{}{
-			"character_id": playerCharID,
+			CharacterIDField: playerCharID,
 		}
 
 		// Reactivate session for this test
 		_, err := ctx.SQLXDB.Exec("UPDATE game_sessions SET is_active = true WHERE id = ?", session1ID)
 		require.NoError(t, err)
 
-		w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+session1ID+"/join", joinReq, hackerID)
+		w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath+session1ID+"/join", joinReq, hackerID)
 
 		// Debug response
 		t.Logf("Join response: status=%d, body=%s", w.Code, w.Body.String())
@@ -491,7 +491,7 @@ func TestGameSessionConcurrency_Integration(t *testing.T) {
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
 			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
-			api := router.PathPrefix("/api/v1").Subrouter()
+			api := router.PathPrefix(APIv1Prefix).Subrouter()
 
 			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
 			api.HandleFunc("/sessions/{id}/join", authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
@@ -506,20 +506,20 @@ func TestGameSessionConcurrency_Integration(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, tableCount, "game_sessions table should exist")
 
-	dmID := ctx.CreateTestUser("concdm", "concdm@example.com", "password123")
+	dmID := ctx.CreateTestUser(TestConcDMUsername, TestConcDMEmail, DefaultPassword)
 
 	// Create multiple players
 	playerIDs := make([]string, 0, 5)
 	charIDs := make([]string, 0, 5)
 	for i := 0; i < 5; i++ {
-		playerID := ctx.CreateTestUser(testutil.RandomString(8), testutil.RandomString(8)+"@example.com", "password123")
+		playerID := ctx.CreateTestUser(testutil.RandomString(8), testutil.RandomString(8)+EmailDomain, DefaultPassword)
 		charID := ctx.CreateTestCharacter(playerID, testutil.RandomString(8))
 		playerIDs = append(playerIDs, playerID)
 		charIDs = append(charIDs, charID)
 	}
 
 	// Create session
-	sessionID := ctx.CreateTestGameSession(dmID, "Concurrent Session", "CONC123")
+	sessionID := ctx.CreateTestGameSession(dmID, ConcurrentSessionName, SessionCodeCONC123)
 
 	t.Run("Concurrent Joins", func(t *testing.T) {
 		// Have all players try to join simultaneously
@@ -528,9 +528,9 @@ func TestGameSessionConcurrency_Integration(t *testing.T) {
 		for i := range playerIDs {
 			go func(idx int) {
 				joinReq := map[string]interface{}{
-					"character_id": charIDs[idx],
+					CharacterIDField: charIDs[idx],
 				}
-				w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/join", joinReq, playerIDs[idx])
+				w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath+sessionID+"/join", joinReq, playerIDs[idx])
 				assert.Equal(t, http.StatusOK, w.Code)
 				done <- true
 			}(i)
@@ -559,7 +559,7 @@ func TestGameSessionConcurrency_Integration(t *testing.T) {
 
 		for i := range playerIDs {
 			go func(idx int) {
-				w := ctx.MakeAuthenticatedRequest("POST", "/api/v1/sessions/"+sessionID+"/leave", nil, playerIDs[idx])
+				w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath+sessionID+"/leave", nil, playerIDs[idx])
 				assert.Equal(t, http.StatusOK, w.Code)
 				done <- true
 			}(i)
