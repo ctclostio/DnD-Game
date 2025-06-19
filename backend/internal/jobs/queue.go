@@ -31,6 +31,9 @@ const (
 	QueueCritical = "critical"
 	QueueDefault  = "default"
 	QueueLow      = "low"
+	
+	// Error messages
+	ErrFailedToUnmarshalPayload = "failed to unmarshal payload: %w"
 )
 
 // JobQueue manages background job processing

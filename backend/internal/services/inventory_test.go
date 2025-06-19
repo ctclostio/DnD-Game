@@ -94,11 +94,11 @@ func TestInventoryService_AddItemToCharacter(t *testing.T) {
 			quantity:    2,
 			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
 				// Character exists
-				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, "Test Character", "Human", "Fighter")
+				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, constants.TestCharacterName, "Human", "Fighter")
 				charRepo.On("GetByID", ctx, constants.TestCharacterID).Return(char, nil)
 
 				// Item exists
-				item := mocks.CreateTestItem(constants.TestItemID, "Healing Potion", models.ItemTypeConsumable, 50, 0.5)
+				item := mocks.CreateTestItem(constants.TestItemID, constants.TestHealingPotion, models.ItemTypeConsumable, 50, 0.5)
 				invRepo.On("GetItem", constants.TestItemID).Return(item, nil)
 
 				// Add to inventory
@@ -131,7 +131,7 @@ func TestInventoryService_AddItemToCharacter(t *testing.T) {
 			itemID:      "nonexistent",
 			quantity:    1,
 			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
-				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, "Test Character", "Human", "Fighter")
+				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, constants.TestCharacterName, "Human", "Fighter")
 				charRepo.On("GetByID", ctx, constants.TestCharacterID).Return(char, nil)
 				invRepo.On("GetItem", "nonexistent").Return(nil, errors.New("not found"))
 			},
@@ -143,7 +143,7 @@ func TestInventoryService_AddItemToCharacter(t *testing.T) {
 			itemID:      constants.TestItemID,
 			quantity:    1,
 			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
-				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, "Test Character", "Human", "Fighter")
+				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, constants.TestCharacterName, "Human", "Fighter")
 				charRepo.On("GetByID", ctx, constants.TestCharacterID).Return(char, nil)
 				invRepo.On("GetItem", constants.TestItemID).Return(nil, nil)
 			},
@@ -155,10 +155,10 @@ func TestInventoryService_AddItemToCharacter(t *testing.T) {
 			itemID:      constants.TestItemID,
 			quantity:    1,
 			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
-				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, "Test Character", "Human", "Fighter")
+				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, constants.TestCharacterName, "Human", "Fighter")
 				charRepo.On("GetByID", ctx, constants.TestCharacterID).Return(char, nil)
 
-				item := mocks.CreateTestItem(constants.TestItemID, "Healing Potion", models.ItemTypeConsumable, 50, 0.5)
+				item := mocks.CreateTestItem(constants.TestItemID, constants.TestHealingPotion, models.ItemTypeConsumable, 50, 0.5)
 				invRepo.On("GetItem", constants.TestItemID).Return(item, nil)
 
 				invRepo.On("AddItemToInventory", constants.TestCharacterID, constants.TestItemID, 1).Return(errors.New(constants.TestDatabaseError))
@@ -171,10 +171,10 @@ func TestInventoryService_AddItemToCharacter(t *testing.T) {
 			itemID:      constants.TestItemID,
 			quantity:    0,
 			setupMock: func(invRepo *mocks.MockInventoryRepository, charRepo *mocks.MockCharacterRepository) {
-				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, "Test Character", "Human", "Fighter")
+				char := mocks.CreateTestCharacter(constants.TestCharacterID, constants.TestUserID, constants.TestCharacterName, "Human", "Fighter")
 				charRepo.On("GetByID", ctx, constants.TestCharacterID).Return(char, nil)
 
-				item := mocks.CreateTestItem(constants.TestItemID, "Healing Potion", models.ItemTypeConsumable, 50, 0.5)
+				item := mocks.CreateTestItem(constants.TestItemID, constants.TestHealingPotion, models.ItemTypeConsumable, 50, 0.5)
 				invRepo.On("GetItem", constants.TestItemID).Return(item, nil)
 
 				invRepo.On("AddItemToInventory", constants.TestCharacterID, constants.TestItemID, 0).Return(nil)
@@ -221,7 +221,7 @@ func TestInventoryService_EquipItem(t *testing.T) {
 			itemID:      constants.TestSwordID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Get inventory with one-handed sword
-				sword := mocks.CreateTestItem(constants.TestSwordID, "Longsword", models.ItemTypeWeapon, 15, 3.0)
+				sword := mocks.CreateTestItem(constants.TestSwordID, constants.TestLongsword, models.ItemTypeWeapon, 15, 3.0)
 				sword.Properties["two_handed"] = false
 
 				invItem := mocks.CreateTestInventoryItem(constants.TestCharacterID, constants.TestSwordID, 1, false, false, sword)
@@ -329,7 +329,7 @@ func TestInventoryService_AttuneToItem(t *testing.T) {
 			itemID:      constants.TestRingID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Get inventory with attuneable item
-				ring := mocks.CreateTestItem(constants.TestRingID, "Ring of Protection", models.ItemTypeMagic, 500, 0.1)
+				ring := mocks.CreateTestItem(constants.TestRingID, constants.TestRingOfProtection, models.ItemTypeMagic, 500, 0.1)
 				ring.RequiresAttunement = true
 
 				invItem := mocks.CreateTestInventoryItem(constants.TestCharacterID, constants.TestRingID, 1, true, false, ring)
@@ -345,7 +345,7 @@ func TestInventoryService_AttuneToItem(t *testing.T) {
 			itemID:      constants.TestSwordID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Get inventory with non-attuneable item
-				sword := mocks.CreateTestItem(constants.TestSwordID, "Longsword", models.ItemTypeWeapon, 15, 3.0)
+				sword := mocks.CreateTestItem(constants.TestSwordID, constants.TestLongsword, models.ItemTypeWeapon, 15, 3.0)
 				sword.RequiresAttunement = false
 
 				invItem := mocks.CreateTestInventoryItem(constants.TestCharacterID, constants.TestSwordID, 1, true, false, sword)
@@ -359,7 +359,7 @@ func TestInventoryService_AttuneToItem(t *testing.T) {
 			itemID:      constants.TestRingID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Get inventory with already attuned item
-				ring := mocks.CreateTestItem(constants.TestRingID, "Ring of Protection", models.ItemTypeMagic, 500, 0.1)
+				ring := mocks.CreateTestItem(constants.TestRingID, constants.TestRingOfProtection, models.ItemTypeMagic, 500, 0.1)
 				ring.RequiresAttunement = true
 
 				invItem := mocks.CreateTestInventoryItem(constants.TestCharacterID, constants.TestRingID, 1, true, true, ring)
@@ -390,7 +390,7 @@ func TestInventoryService_AttuneToItem(t *testing.T) {
 			characterID: constants.TestCharacterID,
 			itemID:      constants.TestRingID,
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				ring := mocks.CreateTestItem(constants.TestRingID, "Ring of Protection", models.ItemTypeMagic, 500, 0.1)
+				ring := mocks.CreateTestItem(constants.TestRingID, constants.TestRingOfProtection, models.ItemTypeMagic, 500, 0.1)
 				ring.RequiresAttunement = true
 
 				invItem := mocks.CreateTestInventoryItem(constants.TestCharacterID, constants.TestRingID, 1, true, false, ring)

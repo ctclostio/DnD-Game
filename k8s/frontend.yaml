@@ -23,7 +23,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: frontend
-        image: dnd-frontend:latest # Replace with your image
+        image: dnd-frontend:1.0.0 # TODO: Update version as needed
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3000

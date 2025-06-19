@@ -60,7 +60,7 @@ func (jh *JobHandlers) RegisterAll(queue *JobQueue) {
 func (jh *JobHandlers) HandleAIGeneration(ctx context.Context, task *asynq.Task) error {
 	var payload AIGenerationPayload
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return fmt.Errorf(ErrFailedToUnmarshalPayload, err)
 	}
 
 	// Log the job
@@ -146,7 +146,7 @@ func (jh *JobHandlers) HandleAIGeneration(ctx context.Context, task *asynq.Task)
 func (jh *JobHandlers) HandleEmailNotification(ctx context.Context, task *asynq.Task) error {
 	var payload EmailPayload
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return fmt.Errorf(ErrFailedToUnmarshalPayload, err)
 	}
 
 	// Log the job
@@ -175,7 +175,7 @@ func (jh *JobHandlers) HandleReportGeneration(ctx context.Context, task *asynq.T
 	}
 	
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return fmt.Errorf(ErrFailedToUnmarshalPayload, err)
 	}
 
 	jh.logger.Info().
@@ -207,7 +207,7 @@ func (jh *JobHandlers) HandleReportGeneration(ctx context.Context, task *asynq.T
 func (jh *JobHandlers) HandleDataExport(ctx context.Context, task *asynq.Task) error {
 	var payload ExportPayload
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return fmt.Errorf(ErrFailedToUnmarshalPayload, err)
 	}
 
 	jh.logger.Info().
@@ -273,7 +273,7 @@ func (jh *JobHandlers) HandleDataExport(ctx context.Context, task *asynq.Task) e
 func (jh *JobHandlers) HandleCharacterBackup(ctx context.Context, task *asynq.Task) error {
 	var payload BackupPayload
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return fmt.Errorf(ErrFailedToUnmarshalPayload, err)
 	}
 
 	jh.logger.Info().
@@ -313,7 +313,7 @@ func (jh *JobHandlers) HandleCharacterBackup(ctx context.Context, task *asynq.Ta
 func (jh *JobHandlers) HandleCampaignBackup(ctx context.Context, task *asynq.Task) error {
 	var payload BackupPayload
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return fmt.Errorf(ErrFailedToUnmarshalPayload, err)
 	}
 
 	jh.logger.Info().
@@ -338,7 +338,7 @@ func (jh *JobHandlers) HandleImageOptimization(ctx context.Context, task *asynq.
 	}
 	
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return fmt.Errorf(ErrFailedToUnmarshalPayload, err)
 	}
 
 	jh.logger.Info().
@@ -366,7 +366,7 @@ func (jh *JobHandlers) HandleAnalyticsProcess(ctx context.Context, task *asynq.T
 	}
 	
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return fmt.Errorf(ErrFailedToUnmarshalPayload, err)
 	}
 
 	jh.logger.Info().
@@ -389,7 +389,7 @@ func (jh *JobHandlers) HandleAnalyticsProcess(ctx context.Context, task *asynq.T
 func (jh *JobHandlers) HandleCleanupExpired(ctx context.Context, task *asynq.Task) error {
 	var payload CleanupPayload
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return fmt.Errorf(ErrFailedToUnmarshalPayload, err)
 	}
 
 	jh.logger.Info().

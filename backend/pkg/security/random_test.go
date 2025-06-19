@@ -75,31 +75,41 @@ func TestGenerateSecureInt(t *testing.T) {
 	
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			n, err := GenerateSecureInt(tt.max)
-			if tt.expectErr {
-				if err == nil {
-					t.Errorf("Expected error but got none")
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("GenerateSecureInt failed: %v", err)
-			}
-			if n < 0 || n >= tt.max {
-				t.Errorf("Generated number %d outside range [0, %d)", n, tt.max)
-			}
+			testGenerateSecureIntCase(t, tt.max, tt.expectErr)
 		})
 	}
 	
-	// Test distribution
+	testGenerateSecureIntDistribution(t)
+}
+
+func testGenerateSecureIntCase(t *testing.T, max int64, expectErr bool) {
+	n, err := GenerateSecureInt(max)
+	if expectErr {
+		if err == nil {
+			t.Errorf("Expected error but got none")
+		}
+		return
+	}
+	if err != nil {
+		t.Fatalf("GenerateSecureInt failed: %v", err)
+	}
+	if n < 0 || n >= max {
+		t.Errorf("Generated number %d outside range [0, %d)", n, max)
+	}
+}
+
+func testGenerateSecureIntDistribution(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping distribution test in short mode")
 	}
 	
 	const max = 10
+	counts := generateDistributionCounts(t, max, 10000)
+	verifyAllValuesGenerated(t, counts, max)
+}
+
+func generateDistributionCounts(t *testing.T, max int64, iterations int) map[int64]int {
 	counts := make(map[int64]int)
-	iterations := 10000
-	
 	for i := 0; i < iterations; i++ {
 		n, err := GenerateSecureInt(max)
 		if err != nil {
@@ -107,8 +117,10 @@ func TestGenerateSecureInt(t *testing.T) {
 		}
 		counts[n]++
 	}
-	
-	// Check that all values were generated
+	return counts
+}
+
+func verifyAllValuesGenerated(t *testing.T, counts map[int64]int, max int64) {
 	for i := int64(0); i < max; i++ {
 		if counts[i] == 0 {
 			t.Errorf("Value %d was never generated", i)

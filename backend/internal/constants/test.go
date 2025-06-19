@@ -23,10 +23,13 @@ const (
 
 // Test Names and Descriptions
 const (
-	TestCharacterName = "Test Character"
-	TestItemName      = "Test Item"
-	TestSessionName   = "Test Session"
-	TestDescription   = "Test Description"
+	TestCharacterName    = "Test Character"
+	TestItemName         = "Test Item"
+	TestSessionName      = "Test Session"
+	TestDescription      = "Test Description"
+	TestHealingPotion    = "Healing Potion"
+	TestRingOfProtection = "Ring of Protection"
+	TestLongsword        = "Longsword"
 )
 
 // Test Format Strings

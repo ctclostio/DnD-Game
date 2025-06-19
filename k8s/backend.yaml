@@ -51,7 +51,7 @@ spec:
             cpu: "100m"
             ephemeral-storage: "100Mi"
       - name: run-migrations
-        image: dnd-backend:latest # Replace with your image
+        image: dnd-backend:1.0.0 # TODO: Update version as needed
         command: ["/app/server", "-migrate"]
         envFrom:
         - configMapRef:
@@ -69,7 +69,7 @@ spec:
             ephemeral-storage: "200Mi"
       containers:
       - name: backend
-        image: dnd-backend:latest # Replace with your image
+        image: dnd-backend:1.0.0 # TODO: Update version as needed
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080

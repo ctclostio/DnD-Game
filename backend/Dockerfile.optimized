@@ -46,7 +46,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 # ========================================
 # Stage 3: Security scanner
 # ========================================
-FROM aquasec/trivy:latest AS scanner
+FROM aquasec/trivy:0.48.0 AS scanner
 
 WORKDIR /app
 
