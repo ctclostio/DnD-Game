@@ -59,42 +59,57 @@ func RecoveryWithConfig(config RecoveryConfig) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				if err := recover(); err != nil {
-					// Get stack trace
-					stack := make([]byte, config.StackSize)
-					length := runtime.Stack(stack, config.PrintStack)
-					stack = stack[:length]
-
-					// Log the error with structured logging
-					if config.Logger != nil {
-						config.Logger.WithContext(r.Context()).
-							Error().
-							Interface("panic", err).
-							Str("method", r.Method).
-							Str("path", r.URL.Path).
-							Str("remote_addr", r.RemoteAddr).
-							Str("user_agent", r.UserAgent()).
-							Str("stack_trace", string(stack)).
-							Bool("full_stack", config.PrintStack).
-							Msg("Panic recovered in HTTP handler")
-					}
-
-					// Handle the error
-					if config.ErrorHandler != nil {
-						config.ErrorHandler(w, r, err)
-					} else {
-						// Default error handling
-						w.Header().Set("Content-Type", "application/json")
-						w.WriteHeader(http.StatusInternalServerError)
-						if _, err := fmt.Fprintf(w, `{"error":"Internal server error"}`); err != nil {
-							fmt.Printf("failed to write error response: %v\n", err)
-						}
-					}
-				}
-			}()
-
+			defer handlePanic(w, r, &config)
 			next.ServeHTTP(w, r)
 		})
+	}
+}
+
+// handlePanic recovers from panics and handles the error
+func handlePanic(w http.ResponseWriter, r *http.Request, config *RecoveryConfig) {
+	if err := recover(); err != nil {
+		stack := captureStackTrace(config.StackSize, config.PrintStack)
+		logPanic(r, err, stack, config)
+		respondToError(w, r, err, config)
+	}
+}
+
+// captureStackTrace captures the current stack trace
+func captureStackTrace(stackSize int, fullStack bool) []byte {
+	stack := make([]byte, stackSize)
+	length := runtime.Stack(stack, fullStack)
+	return stack[:length]
+}
+
+// logPanic logs the panic with structured logging
+func logPanic(r *http.Request, err interface{}, stack []byte, config *RecoveryConfig) {
+	if config.Logger == nil {
+		return
+	}
+	
+	config.Logger.WithContext(r.Context()).
+		Error().
+		Interface("panic", err).
+		Str("method", r.Method).
+		Str("path", r.URL.Path).
+		Str("remote_addr", r.RemoteAddr).
+		Str("user_agent", r.UserAgent()).
+		Str("stack_trace", string(stack)).
+		Bool("full_stack", config.PrintStack).
+		Msg("Panic recovered in HTTP handler")
+}
+
+// respondToError sends the error response to the client
+func respondToError(w http.ResponseWriter, r *http.Request, err interface{}, config *RecoveryConfig) {
+	if config.ErrorHandler != nil {
+		config.ErrorHandler(w, r, err)
+		return
+	}
+	
+	// Default error handling
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusInternalServerError)
+	if _, writeErr := fmt.Fprintf(w, `{"error":"Internal server error"}`); writeErr != nil {
+		fmt.Printf("failed to write error response: %v\n", writeErr)
 	}
 }

@@ -52,63 +52,107 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case <-h.shutdown:
-			for client := range h.clients {
-				close(client.send)
-				_ = client.conn.Close()
-			}
+			h.handleShutdown()
 			return
 		case client := <-h.register:
-			h.clients[client] = true
-			if client.roomID != "" {
-				if h.rooms[client.roomID] == nil {
-					h.rooms[client.roomID] = make(map[*Client]bool)
-				}
-				h.rooms[client.roomID][client] = true
-			}
-			logger.Info().
-				Str("client_id", client.id).
-				Str("username", client.username).
-				Str("room_id", client.roomID).
-				Str("role", client.role).
-				Msg("Client connected to room")
-
+			h.handleRegister(client)
 		case client := <-h.unregister:
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
-				if client.roomID != "" && h.rooms[client.roomID] != nil {
-					delete(h.rooms[client.roomID], client)
-				}
-				close(client.send)
-				logger.Info().
-					Str("client_id", client.id).
-					Str("username", client.username).
-					Str("room_id", client.roomID).
-					Msg("Client disconnected from room")
-			}
-
+			h.handleUnregister(client)
 		case message := <-h.broadcast:
-			var msg Message
-			if err := json.Unmarshal(message, &msg); err != nil {
-				logger.Error().
-					Err(err).
-					Msg("Error unmarshaling message")
-				continue
-			}
-
-			// Broadcast to room
-			if msg.RoomID != "" && h.rooms[msg.RoomID] != nil {
-				for client := range h.rooms[msg.RoomID] {
-					select {
-					case client.send <- message:
-					default:
-						close(client.send)
-						delete(h.clients, client)
-						delete(h.rooms[msg.RoomID], client)
-					}
-				}
-			}
+			h.handleBroadcast(message)
 		}
 	}
+}
+
+// handleShutdown closes all client connections
+func (h *Hub) handleShutdown() {
+	for client := range h.clients {
+		close(client.send)
+		_ = client.conn.Close()
+	}
+}
+
+// handleRegister adds a new client to the hub
+func (h *Hub) handleRegister(client *Client) {
+	h.clients[client] = true
+	if client.roomID != "" {
+		h.addClientToRoom(client)
+	}
+	h.logClientConnection(client, "Client connected to room")
+}
+
+// addClientToRoom adds a client to a specific room
+func (h *Hub) addClientToRoom(client *Client) {
+	if h.rooms[client.roomID] == nil {
+		h.rooms[client.roomID] = make(map[*Client]bool)
+	}
+	h.rooms[client.roomID][client] = true
+}
+
+// handleUnregister removes a client from the hub
+func (h *Hub) handleUnregister(client *Client) {
+	if _, ok := h.clients[client]; !ok {
+		return
+	}
+	
+	delete(h.clients, client)
+	if client.roomID != "" && h.rooms[client.roomID] != nil {
+		delete(h.rooms[client.roomID], client)
+	}
+	close(client.send)
+	h.logClientConnection(client, "Client disconnected from room")
+}
+
+// handleBroadcast sends a message to all clients in a room
+func (h *Hub) handleBroadcast(message []byte) {
+	msg, err := h.parseMessage(message)
+	if err != nil {
+		return
+	}
+
+	if msg.RoomID != "" && h.rooms[msg.RoomID] != nil {
+		h.broadcastToRoom(msg.RoomID, message)
+	}
+}
+
+// parseMessage unmarshals a message
+func (h *Hub) parseMessage(message []byte) (*Message, error) {
+	var msg Message
+	if err := json.Unmarshal(message, &msg); err != nil {
+		logger.Error().
+			Err(err).
+			Msg("Error unmarshaling message")
+		return nil, err
+	}
+	return &msg, nil
+}
+
+// broadcastToRoom sends a message to all clients in a specific room
+func (h *Hub) broadcastToRoom(roomID string, message []byte) {
+	for client := range h.rooms[roomID] {
+		select {
+		case client.send <- message:
+		default:
+			h.removeUnresponsiveClient(client, roomID)
+		}
+	}
+}
+
+// removeUnresponsiveClient removes a client that can't receive messages
+func (h *Hub) removeUnresponsiveClient(client *Client, roomID string) {
+	close(client.send)
+	delete(h.clients, client)
+	delete(h.rooms[roomID], client)
+}
+
+// logClientConnection logs client connection/disconnection events
+func (h *Hub) logClientConnection(client *Client, message string) {
+	logger.Info().
+		Str("client_id", client.id).
+		Str("username", client.username).
+		Str("room_id", client.roomID).
+		Str("role", client.role).
+		Msg(message)
 }
 
 func (c *Client) ReadPump() {

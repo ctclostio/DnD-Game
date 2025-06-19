@@ -86,7 +86,7 @@ func TestGameSessionSecurity(t *testing.T) {
 		claims := &auth.Claims{
 			UserID:   player1.ID,
 			Username: "testuser",
-			Email:    "test@example.com",
+			Email:    handlers.TestEmail,
 			Role:     "player",
 		}
 		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
@@ -110,7 +110,7 @@ func TestGameSessionSecurity(t *testing.T) {
 			claims := &auth.Claims{
 				UserID:   player1.ID,
 				Username: "testuser",
-				Email:    "test@example.com",
+				Email:    handlers.TestEmail,
 				Role:     "player",
 			}
 			req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
@@ -201,7 +201,7 @@ func TestGameSessionSecurity(t *testing.T) {
 				claims := &auth.Claims{
 					UserID:   tt.userID,
 					Username: "testuser",
-					Email:    "test@example.com",
+					Email:    handlers.TestEmail,
 					Role:     "player",
 				}
 				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
@@ -276,7 +276,7 @@ func TestGameSessionSecurity(t *testing.T) {
 				claims := &auth.Claims{
 					UserID:   tt.userID,
 					Username: "testuser",
-					Email:    "test@example.com",
+					Email:    handlers.TestEmail,
 					Role:     "player",
 				}
 				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
@@ -341,7 +341,7 @@ func TestGameSessionSecurity(t *testing.T) {
 				claims := &auth.Claims{
 					UserID:   tt.dmUserID,
 					Username: "test",
-					Email:    "test@example.com",
+					Email:    handlers.TestEmail,
 					Role:     "dm",
 				}
 				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
@@ -387,7 +387,7 @@ func TestGameSessionSecurity(t *testing.T) {
 		claims := &auth.Claims{
 			UserID:   player1.ID,
 			Username: "testuser",
-			Email:    "test@example.com",
+			Email:    handlers.TestEmail,
 			Role:     "player",
 		}
 		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
@@ -419,7 +419,7 @@ func TestGameSessionSecurity(t *testing.T) {
 		claims2 := &auth.Claims{
 			UserID:   player1.ID,
 			Username: "testuser",
-			Email:    "test@example.com",
+			Email:    handlers.TestEmail,
 			Role:     "player",
 		}
 		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims2))

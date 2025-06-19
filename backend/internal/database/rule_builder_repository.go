@@ -10,6 +10,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Error messages
+const (
+	ErrIteratingRows = "error iterating rows: %w"
+)
+
 // RuleBuilderRepository handles database operations for rule builder
 type RuleBuilderRepository struct {
 	db *DB
@@ -271,7 +276,7 @@ func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPubl
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
+		return nil, fmt.Errorf(ErrIteratingRows, err)
 	}
 
 	return templates, nil
@@ -378,7 +383,7 @@ func (r *RuleBuilderRepository) GetNodeTemplates() ([]models.NodeTemplate, error
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
+		return nil, fmt.Errorf(ErrIteratingRows, err)
 	}
 
 	return templates, nil
@@ -606,7 +611,7 @@ func (r *RuleBuilderRepository) GetConditionalModifiers(ruleID string) ([]models
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
+		return nil, fmt.Errorf(ErrIteratingRows, err)
 	}
 
 	return modifiers, nil

@@ -34,7 +34,7 @@ const Register: React.FC = () => {
     if (!/[0-9]/.test(password)) {
       errors.push('Password must contain at least one number');
     }
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password)) {
       errors.push('Password must contain at least one special character');
     }
     
@@ -128,8 +128,8 @@ const Register: React.FC = () => {
               <div className="password-requirements">
                 <small>Password requirements:</small>
                 <ul>
-                  {passwordErrors.map((error, index) => (
-                    <li key={index} className="error-text">{error}</li>
+                  {passwordErrors.map((error) => (
+                    <li key={error} className="error-text">{error}</li>
                   ))}
                 </ul>
               </div>

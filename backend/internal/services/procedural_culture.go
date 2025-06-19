@@ -599,9 +599,6 @@ Return as JSON with keys: style_name, instruments (array), rhythms (array), occa
 
 // generateClothingStyle creates fashion traditions
 func (pcs *ProceduralCultureService) generateClothingStyle(ctx context.Context, cultureName string, foundation *CultureFoundation) models.ClothingStyle {
-	clothingTypes := []string{"everyday", "formal", "ceremonial"}
-	genderRoles := []string{"all", "masculine", "feminine"}
-
 	clothingStyle := models.ClothingStyle{
 		EverydayWear:   make(map[string]models.ClothingItem),
 		FormalWear:     make(map[string]models.ClothingItem),
@@ -613,9 +610,50 @@ func (pcs *ProceduralCultureService) generateClothingStyle(ctx context.Context, 
 	clothingStyle.Materials = pcs.getClothingMaterials(foundation.Environment)
 	clothingStyle.Colors = pcs.generateColorPalette(cultureName)
 
+	// Generate clothing items for each type and gender
+	pcs.generateClothingItems(ctx, cultureName, foundation, &clothingStyle)
+
+	// Generate jewelry
+	clothingStyle.Jewelry = pcs.generateJewelry(cultureName, foundation)
+
+	return clothingStyle
+}
+
+// generateClothingItems creates clothing for different types and genders
+func (pcs *ProceduralCultureService) generateClothingItems(ctx context.Context, cultureName string, foundation *CultureFoundation, clothingStyle *models.ClothingStyle) {
+	clothingTypes := []string{"everyday", "formal", "ceremonial"}
+	genderRoles := []string{"all", "masculine", "feminine"}
+
 	for _, clothingType := range clothingTypes {
 		for _, gender := range genderRoles {
-			prompt := fmt.Sprintf(`Design %s %s clothing for the %s culture:
+			item := pcs.generateSingleClothingItem(ctx, cultureName, foundation, clothingStyle, clothingType, gender)
+			if item.Name != "" {
+				pcs.assignClothingItem(clothingStyle, clothingType, gender, item)
+			}
+		}
+	}
+}
+
+// generateSingleClothingItem creates a single clothing item
+func (pcs *ProceduralCultureService) generateSingleClothingItem(ctx context.Context, cultureName string, foundation *CultureFoundation, clothingStyle *models.ClothingStyle, clothingType, gender string) models.ClothingItem {
+	prompt := pcs.buildClothingPrompt(cultureName, foundation, clothingStyle, clothingType, gender)
+	
+	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+	if err != nil {
+		return models.ClothingItem{}
+	}
+
+	var itemData map[string]interface{}
+	if err := json.Unmarshal([]byte(response), &itemData); err != nil {
+		return models.ClothingItem{}
+	}
+
+	return pcs.parseClothingItem(itemData, gender, clothingStyle)
+}
+
+// buildClothingPrompt creates the prompt for clothing generation
+func (pcs *ProceduralCultureService) buildClothingPrompt(cultureName string, foundation *CultureFoundation, clothingStyle *models.ClothingStyle, clothingType, gender string) string {
+	return fmt.Sprintf(`Design %s %s clothing for the %s culture:
 Environment: %s
 Materials: %v
 Values: %v
@@ -623,58 +661,48 @@ Values: %v
 Create a distinctive garment with name, description, and decorative elements.
 
 Return as JSON with keys: name, description, decorations (array)`,
-				gender, clothingType, cultureName, foundation.Environment,
-				clothingStyle.Materials, foundation.Values)
+		gender, clothingType, cultureName, foundation.Environment,
+		clothingStyle.Materials, foundation.Values)
+}
 
-			response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
-			if err != nil {
-				continue
-			}
+// parseClothingItem extracts clothing data from LLM response
+func (pcs *ProceduralCultureService) parseClothingItem(itemData map[string]interface{}, gender string, clothingStyle *models.ClothingStyle) models.ClothingItem {
+	item := models.ClothingItem{
+		WornBy:    gender,
+		Materials: clothingStyle.Materials[:2],
+		Colors:    clothingStyle.Colors[:2],
+	}
 
-			var itemData map[string]interface{}
-			if err := json.Unmarshal([]byte(response), &itemData); err != nil {
-				continue
-			}
+	if name, ok := itemData["name"].(string); ok {
+		item.Name = name
+	}
 
-			item := models.ClothingItem{
-				WornBy:    gender,
-				Materials: clothingStyle.Materials[:2],
-				Colors:    clothingStyle.Colors[:2],
-			}
+	if desc, ok := itemData["description"].(string); ok {
+		item.Description = desc
+	}
 
-			// Extract clothing item data
-			if name, ok := itemData["name"].(string); ok {
-				item.Name = name
-			}
-
-			if desc, ok := itemData["description"].(string); ok {
-				item.Description = desc
-			}
-
-			if decorations, ok := itemData["decorations"].([]interface{}); ok {
-				for _, d := range decorations {
-					if decoration, ok := d.(string); ok {
-						item.Decorations = append(item.Decorations, decoration)
-					}
-				}
-			}
-
-			key := fmt.Sprintf("%s_%s", gender, clothingType)
-			switch clothingType {
-			case "everyday":
-				clothingStyle.EverydayWear[key] = item
-			case "formal":
-				clothingStyle.FormalWear[key] = item
-			case "ceremonial":
-				clothingStyle.CeremonialWear[key] = item
+	if decorations, ok := itemData["decorations"].([]interface{}); ok {
+		for _, d := range decorations {
+			if decoration, ok := d.(string); ok {
+				item.Decorations = append(item.Decorations, decoration)
 			}
 		}
 	}
 
-	// Generate jewelry
-	clothingStyle.Jewelry = pcs.generateJewelry(cultureName, foundation)
+	return item
+}
 
-	return clothingStyle
+// assignClothingItem places the item in the appropriate clothing category
+func (pcs *ProceduralCultureService) assignClothingItem(clothingStyle *models.ClothingStyle, clothingType, gender string, item models.ClothingItem) {
+	key := fmt.Sprintf("%s_%s", gender, clothingType)
+	switch clothingType {
+	case "everyday":
+		clothingStyle.EverydayWear[key] = item
+	case "formal":
+		clothingStyle.FormalWear[key] = item
+	case "ceremonial":
+		clothingStyle.CeremonialWear[key] = item
+	}
 }
 
 // generateNamingConventions creates naming traditions
