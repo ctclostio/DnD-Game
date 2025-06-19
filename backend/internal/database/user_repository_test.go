@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
 func TestUserRepository_Create(t *testing.T) {
@@ -26,8 +27,8 @@ func TestUserRepository_Create(t *testing.T) {
 	t.Run("successful user creation", func(t *testing.T) {
 		user := &models.User{
 			Username:     "testuser",
-			Email:        "test@example.com",
-			PasswordHash: "$2a$10$hashedpassword",
+			Email:        testutil.TestEmail,
+			PasswordHash: testutil.TestPasswordHash,
 		}
 
 		mock.ExpectQuery(
@@ -36,7 +37,7 @@ func TestUserRepository_Create(t *testing.T) {
 			user.Username, user.Email, user.PasswordHash,
 		).WillReturnRows(
 			sqlmock.NewRows([]string{"id", "created_at", "updated_at"}).
-				AddRow("user-123", time.Now(), time.Now()),
+				AddRow(testutil.TestUserID3, time.Now(), time.Now()),
 		)
 
 		err := repo.Create(context.Background(), user)
@@ -49,7 +50,7 @@ func TestUserRepository_Create(t *testing.T) {
 		user := &models.User{
 			Username:     "existing",
 			Email:        "new@example.com",
-			PasswordHash: "$2a$10$hashedpassword",
+			PasswordHash: testutil.TestPasswordHash,
 		}
 
 		mock.ExpectQuery(
@@ -67,7 +68,7 @@ func TestUserRepository_Create(t *testing.T) {
 		user := &models.User{
 			Username:     "newuser",
 			Email:        "existing@example.com",
-			PasswordHash: "$2a$10$hashedpassword",
+			PasswordHash: testutil.TestPasswordHash,
 		}
 
 		mock.ExpectQuery(
@@ -93,10 +94,10 @@ func TestUserRepository_GetByID(t *testing.T) {
 
 	t.Run("successful retrieval", func(t *testing.T) {
 		expectedUser := &models.User{
-			ID:           "user-42",
+			ID:           testutil.TestUserID2,
 			Username:     "testuser",
-			Email:        "test@example.com",
-			PasswordHash: "$2a$10$hashedpassword",
+			Email:        testutil.TestEmail,
+			PasswordHash: testutil.TestPasswordHash,
 			CreatedAt:    time.Now(),
 			UpdatedAt:    time.Now(),
 		}
@@ -110,12 +111,12 @@ func TestUserRepository_GetByID(t *testing.T) {
 
 		mock.ExpectQuery(
 			`SELECT id, username, email, password_hash, COALESCE\(role, 'player'\) as role, created_at, updated_at FROM users WHERE id = \?`,
-		).WithArgs("user-42").WillReturnRows(rows)
+		).WithArgs(testutil.TestUserID2).WillReturnRows(rows)
 
-		user, err := repo.GetByID(context.Background(), "user-42")
+		user, err := repo.GetByID(context.Background(), testutil.TestUserID2)
 		assert.NoError(t, err)
 		assert.NotNil(t, user)
-		assert.Equal(t, "user-42", user.ID)
+		assert.Equal(t, testutil.TestUserID2, user.ID)
 		assert.Equal(t, "testuser", user.Username)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -147,7 +148,7 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 			ID:           "user-123",
 			Username:     "aragorn",
 			Email:        "aragorn@gondor.com",
-			PasswordHash: "$2a$10$hashedpassword",
+			PasswordHash: testutil.TestPasswordHash,
 			CreatedAt:    time.Now(),
 			UpdatedAt:    time.Now(),
 		}
@@ -196,8 +197,8 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 		expectedUser := &models.User{
 			ID:           "user-456",
 			Username:     "testuser",
-			Email:        "test@example.com",
-			PasswordHash: "$2a$10$hashedpassword",
+			Email:        testutil.TestEmail,
+			PasswordHash: testutil.TestPasswordHash,
 			CreatedAt:    time.Now(),
 			UpdatedAt:    time.Now(),
 		}

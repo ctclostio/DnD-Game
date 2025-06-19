@@ -7,6 +7,8 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
+	
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 )
 
 //go:embed migrations/*.sql
@@ -17,19 +19,19 @@ func RunMigrations(db *DB) error {
 	// Create source from embedded files
 	source, err := iofs.New(migrations, "migrations")
 	if err != nil {
-		return fmt.Errorf("failed to create migration source: %w", err)
+		return fmt.Errorf(constants.ErrFailedToCreateMigrationSource, err)
 	}
 
 	// Create database driver
 	driver, err := postgres.WithInstance(db.DB.DB, &postgres.Config{})
 	if err != nil {
-		return fmt.Errorf("failed to create migration driver: %w", err)
+		return fmt.Errorf(constants.ErrFailedToCreateMigrationDriver, err)
 	}
 
 	// Create migrate instance
 	m, err := migrate.NewWithInstance("iofs", source, "postgres", driver)
 	if err != nil {
-		return fmt.Errorf("failed to create migrate instance: %w", err)
+		return fmt.Errorf(constants.ErrFailedToCreateMigrateInstance, err)
 	}
 
 	// Run migrations
@@ -46,19 +48,19 @@ func RollbackMigration(db *DB) error {
 	// Create source from embedded files
 	source, err := iofs.New(migrations, "migrations")
 	if err != nil {
-		return fmt.Errorf("failed to create migration source: %w", err)
+		return fmt.Errorf(constants.ErrFailedToCreateMigrationSource, err)
 	}
 
 	// Create database driver
 	driver, err := postgres.WithInstance(db.DB.DB, &postgres.Config{})
 	if err != nil {
-		return fmt.Errorf("failed to create migration driver: %w", err)
+		return fmt.Errorf(constants.ErrFailedToCreateMigrationDriver, err)
 	}
 
 	// Create migrate instance
 	m, err := migrate.NewWithInstance("iofs", source, "postgres", driver)
 	if err != nil {
-		return fmt.Errorf("failed to create migrate instance: %w", err)
+		return fmt.Errorf(constants.ErrFailedToCreateMigrateInstance, err)
 	}
 
 	// Rollback one migration
@@ -75,19 +77,19 @@ func GetMigrationVersion(db *DB) (uint, bool, error) {
 	// Create source from embedded files
 	source, err := iofs.New(migrations, "migrations")
 	if err != nil {
-		return 0, false, fmt.Errorf("failed to create migration source: %w", err)
+		return 0, false, fmt.Errorf(constants.ErrFailedToCreateMigrationSource, err)
 	}
 
 	// Create database driver
 	driver, err := postgres.WithInstance(db.DB.DB, &postgres.Config{})
 	if err != nil {
-		return 0, false, fmt.Errorf("failed to create migration driver: %w", err)
+		return 0, false, fmt.Errorf(constants.ErrFailedToCreateMigrationDriver, err)
 	}
 
 	// Create migrate instance
 	m, err := migrate.NewWithInstance("iofs", source, "postgres", driver)
 	if err != nil {
-		return 0, false, fmt.Errorf("failed to create migrate instance: %w", err)
+		return 0, false, fmt.Errorf(constants.ErrFailedToCreateMigrateInstance, err)
 	}
 
 	return m.Version()

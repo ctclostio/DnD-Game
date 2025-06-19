@@ -18,6 +18,7 @@ const (
 	// Entity-specific not found errors
 	ErrCharacterNotFound   = "character not found"
 	ErrSessionNotFound     = "session not found"
+	ErrGameSessionNotFound = "game session not found"
 	ErrUserNotFound        = "user not found"
 	ErrItemNotFound        = "item not found"
 	ErrCampaignNotFound    = "campaign not found"
@@ -94,4 +95,18 @@ const (
 	ErrLimitExceeded       = "%s limit exceeded"
 	ErrMaxRetriesExceeded  = "maximum retries exceeded"
 	ErrRateLimitExceeded   = "rate limit exceeded"
+	
+	// Database operation format strings
+	ErrFailedToMarshalParameters = "failed to marshal parameters: %w"
+	ErrFailedToMarshalMetadata   = "failed to marshal metadata: %w"
+	ErrFailedToUnmarshalMetadata = "failed to unmarshal metadata: %w"
+	ErrFailedToGetRowsAffected   = "failed to get rows affected: %w"
+	
+	// Migration errors
+	ErrFailedToCreateMigrationSource   = "failed to create migration source: %w"
+	ErrFailedToCreateMigrationDriver   = "failed to create migration driver: %w"
+	ErrFailedToCreateMigrateInstance   = "failed to create migrate instance: %w"
+	
+	// API errors
+	ErrInvalidRequestBody = "Invalid request body"
 )

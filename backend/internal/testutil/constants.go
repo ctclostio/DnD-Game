@@ -6,8 +6,11 @@ const (
 	TestEmail        = "test@example.com"
 	TestUsername     = "testuser"
 	TestUserID       = "user-456"
+	TestUserID2      = "user-42"
+	TestUserID3      = "user-123"
 	TestPassword     = "SecurePass123!"
 	TestPasswordWeak = "weak"
+	TestPasswordHash = "$2a$10$hashedpassword"
 	
 	// Test IDs
 	TestRequestID   = "request-123"

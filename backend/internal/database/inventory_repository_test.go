@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
 func TestInventoryRepository_CreateItem(t *testing.T) {
@@ -25,7 +26,7 @@ func TestInventoryRepository_CreateItem(t *testing.T) {
 
 	t.Run("successful item creation", func(t *testing.T) {
 		item := &models.Item{
-			ID:          "test-item-id",
+			ID:          testutil.TestItemID,
 			Name:        "Longsword",
 			Type:        models.ItemTypeWeapon,
 			Rarity:      models.ItemRarityCommon,
@@ -91,7 +92,7 @@ func TestInventoryRepository_GetItem(t *testing.T) {
 
 	t.Run("successful retrieval", func(t *testing.T) {
 		expectedItem := &models.Item{
-			ID:          "test-item-id",
+			ID:          testutil.TestItemID,
 			Name:        "Bag of Holding",
 			Type:        models.ItemTypeMagic,
 			Rarity:      models.ItemRarityUncommon,
@@ -106,7 +107,7 @@ func TestInventoryRepository_GetItem(t *testing.T) {
 		propertiesJSON, _ := json.Marshal(expectedItem.Properties)
 
 		mock.ExpectQuery(`SELECT id, name, type, rarity, weight, value, properties, requires_attunement, attunement_requirements, description, created_at, updated_at FROM items WHERE id = \?`).
-			WithArgs("test-item-id").
+			WithArgs(testutil.TestItemID).
 			WillReturnRows(sqlmock.NewRows([]string{
 				"id", "name", "type", "rarity", "weight", "value", "properties",
 				"requires_attunement", "attunement_requirements", "description",
@@ -118,7 +119,7 @@ func TestInventoryRepository_GetItem(t *testing.T) {
 				expectedItem.Description, expectedItem.CreatedAt, expectedItem.UpdatedAt,
 			))
 
-		item, err := repo.GetItem("test-item-id")
+		item, err := repo.GetItem(testutil.TestItemID)
 		assert.NoError(t, err)
 		assert.NotNil(t, item)
 		assert.Equal(t, expectedItem.Name, item.Name)
@@ -147,7 +148,7 @@ func TestInventoryRepository_AddItemToInventory(t *testing.T) {
 	repo := NewInventoryRepository(dbWrapper)
 
 	t.Run("add new item to inventory", func(t *testing.T) {
-		characterID := "char-123"
+		characterID := testutil.TestCharacterID
 		itemID := "item-456"
 		quantity := 1
 
@@ -180,7 +181,7 @@ func TestInventoryRepository_GetCharacterInventory(t *testing.T) {
 	repo := NewInventoryRepository(dbWrapper)
 
 	t.Run("get character inventory with items", func(t *testing.T) {
-		characterID := "char-123"
+		characterID := testutil.TestCharacterID
 
 		// Mock the query that joins character_inventory with items
 		rows := sqlmock.NewRows([]string{
@@ -218,7 +219,7 @@ func TestInventoryRepository_GetCharacterCurrency(t *testing.T) {
 	repo := NewInventoryRepository(dbWrapper)
 
 	t.Run("get existing currency", func(t *testing.T) {
-		characterID := "char-123"
+		characterID := testutil.TestCharacterID
 		expectedCurrency := &models.Currency{
 			CharacterID: characterID,
 			Copper:      50,

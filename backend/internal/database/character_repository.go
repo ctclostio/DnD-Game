@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -124,7 +125,7 @@ func (r *characterRepository) GetByID(ctx context.Context, id string) (*models.C
 		&spellsJSON, &character.CreatedAt, &character.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("character not found")
+			return nil, fmt.Errorf(constants.ErrCharacterNotFound)
 		}
 		return nil, fmt.Errorf("failed to scan character data: %w", err)
 	}
@@ -249,7 +250,7 @@ func (r *characterRepository) Update(ctx context.Context, character *models.Char
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("character not found")
+		return fmt.Errorf(constants.ErrCharacterNotFound)
 	}
 
 	return nil
@@ -270,7 +271,7 @@ func (r *characterRepository) Delete(ctx context.Context, id string) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("character not found")
+		return fmt.Errorf(constants.ErrCharacterNotFound)
 	}
 
 	return nil

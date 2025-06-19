@@ -10,6 +10,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
@@ -224,7 +225,7 @@ func (r *NarrativeRepository) CreatePlayerAction(action *models.PlayerAction) er
 
 	metadataJSON, err := json.Marshal(action.Metadata)
 	if err != nil {
-		return fmt.Errorf("failed to marshal metadata: %w", err)
+		return fmt.Errorf(constants.ErrFailedToMarshalMetadata, err)
 	}
 
 	query := `
@@ -271,7 +272,7 @@ func (r *NarrativeRepository) CreateConsequenceEvent(consequence *models.Consequ
 
 	metadataJSON, err := json.Marshal(consequence.Metadata)
 	if err != nil {
-		return fmt.Errorf("failed to marshal metadata: %w", err)
+		return fmt.Errorf(constants.ErrFailedToMarshalMetadata, err)
 	}
 
 	query := `
@@ -364,7 +365,7 @@ func (r *NarrativeRepository) GetPendingConsequences(sessionID string, currentTi
 		}
 
 		if err := json.Unmarshal(metadataJSON, &consequence.Metadata); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
+			return nil, fmt.Errorf(constants.ErrFailedToUnmarshalMetadata, err)
 		}
 
 		consequences = append(consequences, consequence)
@@ -385,7 +386,7 @@ func (r *NarrativeRepository) CreateNarrativeEvent(event *models.NarrativeEvent)
 
 	metadataJSON, err := json.Marshal(event.Metadata)
 	if err != nil {
-		return fmt.Errorf("failed to marshal metadata: %w", err)
+		return fmt.Errorf(constants.ErrFailedToMarshalMetadata, err)
 	}
 
 	query := `
@@ -522,7 +523,7 @@ func (r *NarrativeRepository) CreateNarrativeMemory(memory *models.NarrativeMemo
 
 	metadataJSON, err := json.Marshal(memory.Metadata)
 	if err != nil {
-		return fmt.Errorf("failed to marshal metadata: %w", err)
+		return fmt.Errorf(constants.ErrFailedToMarshalMetadata, err)
 	}
 
 	query := `
@@ -596,7 +597,7 @@ func (r *NarrativeRepository) GetActiveMemories(characterID string, limit int) (
 		}
 
 		if err := json.Unmarshal(metadataJSON, &memory.Metadata); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
+			return nil, fmt.Errorf(constants.ErrFailedToUnmarshalMetadata, err)
 		}
 
 		memories = append(memories, memory)
@@ -637,7 +638,7 @@ func (r *NarrativeRepository) CreateNarrativeThread(thread *models.NarrativeThre
 
 	metadataJSON, err := json.Marshal(thread.Metadata)
 	if err != nil {
-		return fmt.Errorf("failed to marshal metadata: %w", err)
+		return fmt.Errorf(constants.ErrFailedToMarshalMetadata, err)
 	}
 
 	query := `
@@ -715,7 +716,7 @@ func (r *NarrativeRepository) GetActiveNarrativeThreads() ([]models.NarrativeThr
 		}
 
 		if err := json.Unmarshal(metadataJSON, &thread.Metadata); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
+			return nil, fmt.Errorf(constants.ErrFailedToUnmarshalMetadata, err)
 		}
 
 		threads = append(threads, thread)

@@ -105,7 +105,7 @@ func (r *gameSessionRepository) GetByID(ctx context.Context, id string) (*models
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("game session not found")
+			return nil, fmt.Errorf(constants.ErrGameSessionNotFound)
 		}
 		return nil, fmt.Errorf("failed to get game session by id: %w", err)
 	}
@@ -206,7 +206,7 @@ func (r *gameSessionRepository) Update(ctx context.Context, session *models.Game
 		session.AllowedCharacterLevel, session.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return fmt.Errorf("game session not found")
+			return fmt.Errorf(constants.ErrGameSessionNotFound)
 		}
 		return fmt.Errorf("failed to update game session: %w", err)
 	}
@@ -225,7 +225,7 @@ func (r *gameSessionRepository) Delete(ctx context.Context, id string) error {
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("failed to get rows affected: %w", err)
+		return fmt.Errorf(constants.ErrFailedToGetRowsAffected, err)
 	}
 
 	if rowsAffected == 0 {
@@ -303,7 +303,7 @@ func (r *gameSessionRepository) RemoveParticipant(ctx context.Context, sessionID
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("failed to get rows affected: %w", err)
+		return fmt.Errorf(constants.ErrFailedToGetRowsAffected, err)
 	}
 
 	if rowsAffected == 0 {
@@ -364,7 +364,7 @@ func (r *gameSessionRepository) UpdateParticipantOnlineStatus(ctx context.Contex
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("failed to get rows affected: %w", err)
+		return fmt.Errorf(constants.ErrFailedToGetRowsAffected, err)
 	}
 
 	if rowsAffected == 0 {

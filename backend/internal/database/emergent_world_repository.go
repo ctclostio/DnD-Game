@@ -135,7 +135,7 @@ func (r *EmergentWorldRepository) UpdateWorldState(state *models.WorldState) err
 func (r *EmergentWorldRepository) CreateNPCGoal(goal *models.NPCGoal) error {
 	parametersJSON, err := json.Marshal(goal.Parameters)
 	if err != nil {
-		return fmt.Errorf("failed to marshal parameters: %w", err)
+		return fmt.Errorf(constants.ErrFailedToMarshalParameters, err)
 	}
 
 	query := `
@@ -219,7 +219,7 @@ func (r *EmergentWorldRepository) GetNPCGoals(npcID string) ([]models.NPCGoal, e
 func (r *EmergentWorldRepository) UpdateNPCGoal(goal *models.NPCGoal) error {
 	parametersJSON, err := json.Marshal(goal.Parameters)
 	if err != nil {
-		return fmt.Errorf("failed to marshal parameters: %w", err)
+		return fmt.Errorf(constants.ErrFailedToMarshalParameters, err)
 	}
 
 	query := `
@@ -249,7 +249,7 @@ func (r *EmergentWorldRepository) UpdateNPCGoal(goal *models.NPCGoal) error {
 func (r *EmergentWorldRepository) CreateNPCSchedule(schedule *models.NPCSchedule) error {
 	parametersJSON, err := json.Marshal(schedule.Parameters)
 	if err != nil {
-		return fmt.Errorf("failed to marshal parameters: %w", err)
+		return fmt.Errorf(constants.ErrFailedToMarshalParameters, err)
 	}
 
 	query := `

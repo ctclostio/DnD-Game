@@ -7,6 +7,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 )
 
+// Common format strings
+const (
+	threePartFormat = "%s %s %s"
+)
+
 // QueryBuilder provides helper functions to construct SQL queries
 type QueryBuilder struct{}
 
@@ -32,17 +37,17 @@ func (qb *QueryBuilder) SelectCount(table string) string {
 
 // Where adds a WHERE clause
 func (qb *QueryBuilder) Where(query, condition string) string {
-	return fmt.Sprintf("%s %s %s", query, constants.SQLWhere, condition)
+	return fmt.Sprintf(threePartFormat, query, constants.SQLWhere, condition)
 }
 
 // And adds an AND condition
 func (qb *QueryBuilder) And(query, condition string) string {
-	return fmt.Sprintf("%s %s %s", query, constants.SQLAnd, condition)
+	return fmt.Sprintf(threePartFormat, query, constants.SQLAnd, condition)
 }
 
 // Or adds an OR condition
 func (qb *QueryBuilder) Or(query, condition string) string {
-	return fmt.Sprintf("%s %s %s", query, constants.SQLOr, condition)
+	return fmt.Sprintf(threePartFormat, query, constants.SQLOr, condition)
 }
 
 // OrderBy adds an ORDER BY clause
