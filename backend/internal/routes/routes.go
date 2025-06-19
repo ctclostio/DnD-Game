@@ -21,6 +21,7 @@ type Config struct {
 	CSRFStore               *auth.CSRFStore
 	AuthRateLimiter         *middleware.RateLimiter
 	APIRateLimiter          *middleware.RateLimiter
+	IsProduction            bool
 }
 
 // RegisterRoutes sets up all application routes
@@ -29,7 +30,7 @@ func RegisterRoutes(router *mux.Router, cfg *Config) {
 	api := router.PathPrefix("/api/v1").Subrouter()
 
 	// Apply CSRF middleware to all routes
-	api.Use(auth.CSRFMiddleware(cfg.CSRFStore))
+	api.Use(auth.CSRFMiddleware(cfg.CSRFStore, cfg.IsProduction))
 
 	// Apply general API rate limiting
 	api.Use(cfg.APIRateLimiter.Middleware())
@@ -46,9 +47,11 @@ func RegisterRoutes(router *mux.Router, cfg *Config) {
 	// CSRF token endpoint
 	api.HandleFunc("/csrf-token", cfg.Handlers.GetCSRFToken).Methods("GET")
 
-	// Swagger documentation
-	router.HandleFunc("/swagger", handlers.SwaggerUI).Methods("GET")
-	api.HandleFunc("/swagger.json", cfg.Handlers.SwaggerJSON).Methods("GET")
+	// Swagger documentation - only in development mode
+	if !cfg.IsProduction {
+		router.HandleFunc("/swagger", handlers.SwaggerUI).Methods("GET")
+		api.HandleFunc("/swagger.json", cfg.Handlers.SwaggerJSON).Methods("GET")
+	}
 
 	// Register route groups
 	RegisterAuthRoutes(api, cfg)

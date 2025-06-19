@@ -88,7 +88,7 @@ func (s *CSRFStore) ValidateToken(token string) bool {
 }
 
 // handleSafeCSRFMethod handles CSRF token generation for safe HTTP methods.
-func handleSafeCSRFMethod(w http.ResponseWriter, r *http.Request, store *CSRFStore, next http.Handler) {
+func handleSafeCSRFMethod(w http.ResponseWriter, r *http.Request, store *CSRFStore, isProduction bool, next http.Handler) {
 	// Generate and set CSRF token for GET requests (also applies to HEAD, OPTIONS as per original logic)
 	token, err := store.GenerateToken()
 	if err == nil {
@@ -97,7 +97,7 @@ func handleSafeCSRFMethod(w http.ResponseWriter, r *http.Request, store *CSRFSto
 			Value:    token,
 			Path:     "/",
 			HttpOnly: false, // Must be readable by JavaScript
-			Secure:   r.TLS != nil,
+			Secure:   isProduction, // Always true in production, false in development
 			SameSite: http.SameSiteStrictMode,
 			MaxAge:   int(csrfTokenTTL.Seconds()),
 		})
@@ -136,12 +136,12 @@ func validateCSRFForStateChange(w http.ResponseWriter, r *http.Request, store *C
 }
 
 // CSRFMiddleware provides CSRF protection
-func CSRFMiddleware(store *CSRFStore) func(http.Handler) http.Handler {
+func CSRFMiddleware(store *CSRFStore, isProduction bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Skip CSRF for safe methods
 			if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
-				handleSafeCSRFMethod(w, r, store, next)
+				handleSafeCSRFMethod(w, r, store, isProduction, next)
 				return
 			}
 

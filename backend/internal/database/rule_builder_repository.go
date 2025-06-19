@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -10,10 +11,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
-// Error messages
-const (
-	ErrIteratingRows = "error iterating rows: %w"
-)
+// Error messages - moved to constants package
 
 // RuleBuilderRepository handles database operations for rule builder
 type RuleBuilderRepository struct {
@@ -256,7 +254,7 @@ func (r *RuleBuilderRepository) scanRuleTemplates(rows *sql.Rows) ([]models.Rule
 	}
 	
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf(ErrIteratingRows, err)
+		return nil, fmt.Errorf(constants.ErrIteratingRows, err)
 	}
 	
 	return templates, nil
@@ -419,7 +417,7 @@ func (r *RuleBuilderRepository) GetNodeTemplates() ([]models.NodeTemplate, error
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf(ErrIteratingRows, err)
+		return nil, fmt.Errorf(constants.ErrIteratingRows, err)
 	}
 
 	return templates, nil
@@ -647,7 +645,7 @@ func (r *RuleBuilderRepository) GetConditionalModifiers(ruleID string) ([]models
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf(ErrIteratingRows, err)
+		return nil, fmt.Errorf(constants.ErrIteratingRows, err)
 	}
 
 	return modifiers, nil

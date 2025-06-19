@@ -9,6 +9,7 @@
 
 # Go specific
 /backend/cmd/server/server
+/backend/server
 /backend/vendor/
 *.test
 *.out

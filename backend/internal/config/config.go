@@ -65,7 +65,7 @@ func Load() (*Config, error) {
 
 	// Server configuration
 	cfg.Server.Port = getEnv("PORT", "8080")
-	cfg.Server.Environment = getEnv("ENV", "development")
+	cfg.Server.Environment = getEnv("ENV", "production") // Default to production for safety
 
 	// Database configuration
 	cfg.Database.Host = getEnv("DB_HOST", "localhost")
@@ -168,5 +168,24 @@ func (c *Config) Validate() error {
 	if c.AI.Provider != "mock" && c.AI.APIKey == "" {
 		return fmt.Errorf("AI API key is required when AI provider is not 'mock' (AI_API_KEY environment variable)")
 	}
+	
+	// Production-specific validations
+	if c.Server.Environment == "production" {
+		// Ensure mock providers are not used in production
+		if c.AI.Provider == "mock" {
+			return fmt.Errorf("mock AI provider cannot be used in production")
+		}
+		
+		// Ensure proper database SSL mode
+		if c.Database.SSLMode == "disable" {
+			return fmt.Errorf("database SSL mode 'disable' is not recommended for production")
+		}
+		
+		// Ensure JWT secret is sufficiently long for production
+		if len(c.Auth.JWTSecret) < 64 {
+			return fmt.Errorf("JWT secret must be at least 64 characters long in production")
+		}
+	}
+	
 	return nil
 }

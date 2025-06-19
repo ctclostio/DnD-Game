@@ -16,13 +16,11 @@ const (
 
 // Common HTTP Error Messages
 const (
-	ErrInvalidRequestBody = "Invalid request body"
-	ErrInvalidInput       = "Invalid input"
-	ErrNotFound           = "Not found"
-	ErrUnauthorized       = "Unauthorized"
-	ErrForbidden          = "Forbidden"
-	ErrInternalServer     = "Internal server error"
-	ErrFailedToEncode     = "Failed to encode response"
+	// Moved to errors.go to avoid duplication
+	ErrNotFound       = "Not found"
+	ErrUnauthorized   = "Unauthorized"
+	ErrForbidden      = "Forbidden"
+	ErrInternalServer = "Internal server error"
 )
 
 // Database Error Messages
@@ -33,16 +31,13 @@ const (
 
 // Session Error Messages
 const (
-	ErrSessionNotFound    = "Session not found"
-	ErrInvalidSessionID   = "Invalid session ID"
-	ErrSessionIDRequired  = "session ID is required"
+	// Moved to errors.go to avoid duplication
 	ErrSessionNameRequired = "session name is required"
 )
 
 // Character Error Messages
 const (
-	ErrCharacterNotFound  = "Character not found"
-	ErrInvalidCharacterID = "Invalid character ID"
+	// Moved to errors.go to avoid duplication
 )
 
 // Common Parameter Names
@@ -69,9 +64,9 @@ const (
 // Other Common Errors
 const (
 	ErrDatabaseError      = "Database error"
-	ErrInvalidItemID      = "Invalid item ID"
+	// ErrInvalidItemID moved to errors.go
 	ErrPlayerNotInSession = "Player not in session"
-	ErrCombatNotActive    = "Combat not active"
+	// ErrCombatNotActive moved to errors.go
 	ErrUnauthorizedAction = "Unauthorized action"
 )
 

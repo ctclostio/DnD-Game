@@ -71,6 +71,5 @@ func NewTestUser() *TestUserConfig {
 const (
 	TestRole        = "player"
 	TestAdminRole   = "admin"
-	TestCharacterID = "test-character-id"
-	TestSessionID   = "test-session-id"
+	// TestCharacterID and TestSessionID moved to constants.go
 )

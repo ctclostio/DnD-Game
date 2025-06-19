@@ -11,53 +11,68 @@ const (
 	ClassRanger    = "ranger"
 	ClassSorcerer  = "sorcerer"
 	ClassWizard    = "wizard"
-	// ClassWarlock already defined in strings.go
+	ClassWarlock   = "warlock"
+	ClassRogue     = "rogue"
 )
 
 // Size categories
 const (
 	SizeSmall  = "small"
 	SizeMedium = "medium"
-	// SizeLarge already defined in strings.go
+	SizeLarge  = "large"
 )
 
 // Rarity levels
 const (
+	RarityCommon   = "common"
 	RarityUncommon = "uncommon"
 	RarityRare     = "rare"
-	// RarityCommon and RarityVeryRare already defined in strings.go
+	RarityVeryRare = "very_rare"
+	RarityLegendary = "legendary"
 )
 
 // Action and ability types
 const (
-	ActionAttack      = "attack"
-	ActionHeal        = "heal"
-	ActionHit         = "hit"
-	ActionCritical    = "critical"
-	ActionKillingBlow = "killing_blow"
-	ActionCombat      = "combat"
-	ActionAbility     = "ability"
-	ActionTypeSpell   = "spell"
-	ActionTypeAbility = "ability"
+	ActionAttack         = "attack"
+	ActionHeal           = "heal"
+	ActionHit            = "hit"
+	ActionCritical       = "critical"
+	ActionKillingBlow    = "killing_blow"
+	ActionCombat         = "combat"
+	ActionAbility        = "ability"
+	ActionTypeSpell      = "spell"
+	ActionTypeAbility    = "ability"
+	ActionTypeBonusAction = "bonus_action"
+	ActionTypeRetreat    = "retreat"
 	// ActionSpell can use CategorySpell from strings.go
 )
 
 // Difficulty levels
 const (
 	DifficultyEasy   = "easy"
+	DifficultyMedium = "medium"
+	DifficultyHard   = "hard"
 	DifficultyDeadly = "deadly"
-	// DifficultyHard already defined in strings.go
 )
 
 // Terrain and climate types
 const (
-	TerrainSwamp   = "swamp"
-	TerrainDesert  = "desert"
-	TerrainCoastal = "coastal"
-	TerrainOutdoor = "outdoor"
-	ClimateCold    = "cold"
-	ClimateArid    = "arid"
-	// TerrainMountainous, TerrainForest, ClimateTropical already defined
+	TerrainSwamp       = "swamp"
+	TerrainDesert      = "desert"
+	TerrainCoastal     = "coastal"
+	TerrainOutdoor     = "outdoor"
+	TerrainMountainous = "mountainous"
+	TerrainForest      = "forest"
+	ClimateCold        = "cold"
+	ClimateArid        = "arid"
+	ClimateTropical    = "tropical"
+)
+
+// Map types
+const (
+	MapTypeDungeon = "dungeon"
+	MapTypeWilderness = "wilderness"
+	MapTypeUrban = "urban"
 )
 
 // Economic status
@@ -81,17 +96,20 @@ const (
 	OutcomeDecisiveVictory = "decisive_victory"
 	OutcomeHit             = "hit"
 	OutcomeKillingBlow     = "killing_blow"
-	// OutcomeCostlyVictory, OutcomeDefeat already defined
+	OutcomeCostlyVictory   = "costly_victory"
+	OutcomeDefeat          = "defeat"
 	// RelationNeutral can be used for neutral outcome
 )
 
 // More dice types
 const (
-	DiceD4  = "1d4"
-	DiceD6  = "1d6"
-	DiceD10 = "1d10"
-	DiceD20 = "1d20"
-	// DiceD8, DiceD12, DiceD100 already defined
+	DiceD4   = "1d4"
+	DiceD6   = "1d6"
+	DiceD8   = "1d8"
+	DiceD10  = "1d10"
+	DiceD12  = "1d12"
+	DiceD20  = "1d20"
+	DiceD100 = "1d100"
 )
 
 // Special constants
@@ -99,7 +117,54 @@ const (
 	MockProvider         = "mock"
 	FormatJSON           = "json"
 	CategoryAbility      = "ability"
+	CategorySpell        = "spell"
 	DefaultDamageFormula = "1d6"
 	EncounterTypeCombat  = "combat"
 	// TrueString already defined in abilities.go
+)
+
+// Operator constants
+const (
+	OperatorEquals      = "equals"
+	OperatorContains    = "contains"
+	OperatorGreaterThan = "greater_than"
+	OperatorLessThan    = "less_than"
+	OperatorIn          = "in"
+)
+
+// Time constants
+const (
+	TimeNight = "night"
+	TimeDay   = "day"
+	TimeDawn  = "dawn"
+	TimeDusk  = "dusk"
+)
+
+// Encounter status constants
+const (
+	EncounterStatusPlanned    = "planned"
+	EncounterStatusInProgress = "in_progress"
+	EncounterStatusCompleted  = "completed"
+)
+
+// Objective constants
+const (
+	ObjectiveDefeatAll = "defeat_all"
+	ObjectiveSurvive   = "survive"
+	ObjectiveReach     = "reach"
+	ObjectiveProtect   = "protect"
+)
+
+// Relation constants
+const (
+	RelationNeutral = "neutral"
+	RelationAlly    = "ally"
+	RelationEnemy   = "enemy"
+)
+
+// Culture values
+const (
+	CultureValues     = "values"
+	CultureInfluence  = "cultural_influence"
+	EventConflict     = "conflict"
 )

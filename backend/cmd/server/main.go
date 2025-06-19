@@ -32,7 +32,7 @@ func main() {
 		CallerInfo:   true,
 		StackTrace:   true,
 		ServiceName:  "dnd-game-backend",
-		Environment:  getEnvOrDefault("ENVIRONMENT", "development"),
+		Environment:  getEnvOrDefault("ENVIRONMENT", getEnvOrDefault("ENV", "production")),
 		TimeFormat:   time.RFC3339Nano,
 		SamplingRate: 1.0,
 		Fields: logger.Fields{
@@ -70,6 +70,14 @@ func main() {
 		Str("server_port", cfg.Server.Port).
 		Bool("ai_enabled", cfg.AI.Provider != constants.MockProvider).
 		Msg("Configuration loaded successfully")
+	
+	// Warn if running in development mode
+	if cfg.Server.Environment == "development" {
+		log.Warn().
+			Msg("⚠️  SERVER IS RUNNING IN DEVELOPMENT MODE - NOT SUITABLE FOR PRODUCTION")
+		log.Warn().
+			Msg("⚠️  Security features are relaxed. Set ENV=production for production use")
+	}
 
 	// Initialize database with logging
 	log.Info().Msg("Initializing database connection")
@@ -229,6 +237,7 @@ func main() {
 		CSRFStore:       csrfStore,
 		AuthRateLimiter: authRateLimiter,
 		APIRateLimiter:  apiRateLimiter,
+		IsProduction:    !isDevelopment,
 	}
 
 	// Setup all routes

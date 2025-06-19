@@ -77,7 +77,7 @@ const (
 	MaxPageSize     = 100
 
 	// Status Values
-	StatusActive    = "active"
+	// StatusActive moved to database.go
 	StatusInactive  = "inactive"
 	StatusPending   = "pending"
 	StatusCompleted = "completed"
