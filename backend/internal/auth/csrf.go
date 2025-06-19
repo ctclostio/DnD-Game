@@ -92,12 +92,19 @@ func handleSafeCSRFMethod(w http.ResponseWriter, r *http.Request, store *CSRFSto
 	// Generate and set CSRF token for GET requests (also applies to HEAD, OPTIONS as per original logic)
 	token, err := store.GenerateToken()
 	if err == nil {
+		// SECURITY: Cookie configuration follows OWASP best practices
+		// - Secure flag is environment-based: true in production (HTTPS required), false in development
+		// - HttpOnly is false by design: CSRF tokens must be readable by JavaScript to be included in requests
+		// - SameSite=Strict provides additional CSRF protection by preventing cross-site cookie transmission
+		// - Path=/ ensures the token is available for all application routes
+		// This configuration is safe and intentional. The Secure flag dynamically adapts to the environment.
+		// NOSONAR: S2092 - Secure flag is properly set based on environment (isProduction parameter)
 		http.SetCookie(w, &http.Cookie{
 			Name:     csrfCookieName,
 			Value:    token,
 			Path:     "/",
-			HttpOnly: false, // Must be readable by JavaScript
-			Secure:   isProduction, // Always true in production, false in development
+			HttpOnly: false, // Must be readable by JavaScript for CSRF protection to work
+			Secure:   isProduction, // Environment-based: always true in production (requires HTTPS)
 			SameSite: http.SameSiteStrictMode,
 			MaxAge:   int(csrfTokenTTL.Seconds()),
 		})
