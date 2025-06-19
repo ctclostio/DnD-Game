@@ -187,37 +187,56 @@ func (cm *CacheMiddleware) generateCacheKey(r *http.Request) string {
 		r.URL.Path,
 	}
 
-	// Include query parameters if configured
-	if cm.config.IncludeQuery && r.URL.RawQuery != "" {
-		// Sort query parameters for consistent keys
-		query := r.URL.Query()
-		keys := make([]string, 0, len(query))
-		for k := range query {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-
-		var queryParts []string
-		for _, k := range keys {
-			for _, v := range query[k] {
-				queryParts = append(queryParts, fmt.Sprintf("%s=%s", k, v))
-			}
-		}
-		parts = append(parts, strings.Join(queryParts, "&"))
+	// Add query parameters to key
+	if queryPart := cm.buildQueryPart(r); queryPart != "" {
+		parts = append(parts, queryPart)
 	}
 
-	// Include specified headers
-	for _, header := range cm.config.IncludeHeaders {
-		if value := r.Header.Get(header); value != "" {
-			parts = append(parts, fmt.Sprintf("%s:%s", header, value))
-		}
-	}
+	// Add headers to key
+	parts = append(parts, cm.buildHeaderParts(r)...)
 
 	// Generate hash of all parts
 	key := strings.Join(parts, "|")
 	hash := sha256.Sum256([]byte(key))
 	
 	return "response:" + hex.EncodeToString(hash[:])
+}
+
+// buildQueryPart builds the query parameter part of the cache key
+func (cm *CacheMiddleware) buildQueryPart(r *http.Request) string {
+	if !cm.config.IncludeQuery || r.URL.RawQuery == "" {
+		return ""
+	}
+
+	// Sort query parameters for consistent keys
+	query := r.URL.Query()
+	keys := make([]string, 0, len(query))
+	for k := range query {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var queryParts []string
+	for _, k := range keys {
+		for _, v := range query[k] {
+			queryParts = append(queryParts, fmt.Sprintf("%s=%s", k, v))
+		}
+	}
+	
+	return strings.Join(queryParts, "&")
+}
+
+// buildHeaderParts builds the header parts of the cache key
+func (cm *CacheMiddleware) buildHeaderParts(r *http.Request) []string {
+	var headerParts []string
+	
+	for _, header := range cm.config.IncludeHeaders {
+		if value := r.Header.Get(header); value != "" {
+			headerParts = append(headerParts, fmt.Sprintf("%s:%s", header, value))
+		}
+	}
+	
+	return headerParts
 }
 
 // shouldExclude checks if the route should be excluded from caching
@@ -530,32 +549,41 @@ func (im *InvalidationMiddleware) invalidateRelatedCache(r *http.Request) {
 
 // getInvalidationPatterns returns cache patterns to invalidate based on the request
 func (im *InvalidationMiddleware) getInvalidationPatterns(method, path string) []string {
+	patterns := []string{
+		// Always invalidate the specific resource
+		fmt.Sprintf("response:*%s*", path),
+	}
+
+	// Add endpoint-specific patterns
+	patterns = append(patterns, im.getEndpointPatterns(path)...)
+
+	return patterns
+}
+
+// getEndpointPatterns returns additional patterns based on the endpoint type
+func (im *InvalidationMiddleware) getEndpointPatterns(path string) []string {
 	var patterns []string
 
-	// Character-related endpoints
-	if strings.Contains(path, "/characters") {
-		if strings.HasSuffix(path, "/characters") {
-			// Creating a new character - invalidate list
-			patterns = append(patterns, "response:*characters*")
-		} else if matched := strings.Contains(path, "/characters/"); matched {
-			// Updating specific character - invalidate that character and lists
-			patterns = append(patterns, 
-				fmt.Sprintf("response:*%s*", path),
-				"response:*characters*",
-			)
+	// Define pattern rules for different endpoints
+	patternRules := map[string][]string{
+		"/characters":     {"response:*characters*"},
+		"/game-sessions":  {"response:*game-sessions*", "response:*sessions*"},
+		"/campaigns":      {"response:*campaigns*"},
+		"/inventory":      {"response:*inventory*", "response:*items*"},
+		"/users":          {"response:*users*"},
+	}
+
+	// Check each rule and add matching patterns
+	for endpoint, endpointPatterns := range patternRules {
+		if strings.Contains(path, endpoint) {
+			patterns = append(patterns, endpointPatterns...)
+			
+			// For specific resource updates, also invalidate the list
+			if strings.Contains(path, endpoint+"/") {
+				patterns = append(patterns, fmt.Sprintf("response:*%s*", path))
+			}
 		}
 	}
-
-	// Game session endpoints
-	if strings.Contains(path, "/game-sessions") {
-		patterns = append(patterns,
-			"response:*game-sessions*",
-			"response:*sessions*",
-		)
-	}
-
-	// Generic pattern for the specific resource
-	patterns = append(patterns, fmt.Sprintf("response:*%s*", path))
 
 	return patterns
 }

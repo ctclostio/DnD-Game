@@ -59,10 +59,17 @@ func FromRequest(r *http.Request) *PaginationParams {
 	params := DefaultPaginationParams()
 	query := r.URL.Query()
 
-	parsePagination(params, query)
-	parseCursor(params, query)
-	parseSorting(params, query)
-	parseFilters(params, query)
+	// Parse all parameters in a single pass
+	paramParsers := []func(*PaginationParams, map[string][]string){
+		parsePagination,
+		parseCursor,
+		parseSorting,
+		parseFilters,
+	}
+
+	for _, parser := range paramParsers {
+		parser(params, query)
+	}
 
 	return params
 }
@@ -294,34 +301,41 @@ func (b *SQLBuilder) AddFilter(column string, value interface{}) *SQLBuilder {
 	return b
 }
 
+// allowedSortColumns defines columns that can be used for sorting
+var allowedSortColumns = map[string]bool{
+	"id":         true,
+	"created_at": true,
+	"updated_at": true,
+	"name":       true,
+	"level":      true,
+	"status":     true,
+}
+
 // AddSort adds sorting
 func (b *SQLBuilder) AddSort(defaultColumn string) *SQLBuilder {
+	sortColumn := b.getSanitizedSortColumn(defaultColumn)
+	b.baseQuery += fmt.Sprintf(constants.SQLOrderByFormat, sortColumn, b.params.SortDir)
+	return b
+}
+
+// getSanitizedSortColumn returns a validated sort column
+func (b *SQLBuilder) getSanitizedSortColumn(defaultColumn string) string {
 	sortColumn := b.params.SortBy
 	if sortColumn == "" {
-		sortColumn = defaultColumn
+		return defaultColumn
 	}
 
 	// Validate sort column to prevent SQL injection
-	allowedColumns := map[string]bool{
-		"id":         true,
-		"created_at": true,
-		"updated_at": true,
-		"name":       true,
-		"level":      true,
-		"status":     true,
+	if allowedSortColumns[sortColumn] {
+		return sortColumn
 	}
 
-	if !allowedColumns[sortColumn] {
-		sortColumn = defaultColumn
-	}
-
-	b.baseQuery += fmt.Sprintf(" ORDER BY %s %s", sortColumn, b.params.SortDir)
-	return b
+	return defaultColumn
 }
 
 // AddPagination adds limit and offset
 func (b *SQLBuilder) AddPagination() *SQLBuilder {
-	b.baseQuery += " LIMIT ? OFFSET ?"
+	b.baseQuery += constants.SQLLimitOffsetFormat
 	b.bindings = append(b.bindings, b.params.Limit, b.params.GetOffset())
 	return b
 }
@@ -370,7 +384,26 @@ type Scanner interface {
 
 // Execute runs the paginated query
 func (pq *PaginatedQuery) Execute(ctx context.Context) (*PageResult, error) {
-	// Build query
+	// Build query with filters, sorting and pagination
+	builder := pq.buildQuery()
+
+	// Get total count
+	total, err := pq.executeCountQuery(ctx, builder)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get paginated results
+	results, err := pq.executePaginatedQuery(ctx, builder)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewPageResult(results, pq.Params, total), nil
+}
+
+// buildQuery creates the SQL builder with all parameters
+func (pq *PaginatedQuery) buildQuery() *SQLBuilder {
 	builder := NewSQLBuilder(pq.BaseQuery, pq.CountQuery, pq.Params)
 
 	// Add filters from params
@@ -381,14 +414,21 @@ func (pq *PaginatedQuery) Execute(ctx context.Context) (*PageResult, error) {
 	// Add sorting and pagination
 	builder.AddSort("created_at").AddPagination()
 
-	// Execute count query
+	return builder
+}
+
+// executeCountQuery runs the count query
+func (pq *PaginatedQuery) executeCountQuery(ctx context.Context, builder *SQLBuilder) (int64, error) {
 	var total int64
 	err := pq.DB.QueryRowContext(ctx, builder.GetCountQuery()).Scan(&total)
 	if err != nil {
-		return nil, fmt.Errorf("failed to count results: %w", err)
+		return 0, fmt.Errorf("failed to count results: %w", err)
 	}
+	return total, nil
+}
 
-	// Execute main query
+// executePaginatedQuery runs the main query and scans results
+func (pq *PaginatedQuery) executePaginatedQuery(ctx context.Context, builder *SQLBuilder) ([]interface{}, error) {
 	query, bindings := builder.Build()
 	rows, err := pq.DB.QueryContext(ctx, query, bindings...)
 	if err != nil {
@@ -396,7 +436,11 @@ func (pq *PaginatedQuery) Execute(ctx context.Context) (*PageResult, error) {
 	}
 	defer rows.Close()
 
-	// Scan results
+	return pq.scanRows(rows)
+}
+
+// scanRows scans all rows using the provided scan function
+func (pq *PaginatedQuery) scanRows(rows Rows) ([]interface{}, error) {
 	var results []interface{}
 	for rows.Next() {
 		item, err := pq.ScanFunc(rows)
@@ -405,8 +449,7 @@ func (pq *PaginatedQuery) Execute(ctx context.Context) (*PageResult, error) {
 		}
 		results = append(results, item)
 	}
-
-	return NewPageResult(results, pq.Params, total), nil
+	return results, nil
 }
 
 // Links generates pagination links for API responses

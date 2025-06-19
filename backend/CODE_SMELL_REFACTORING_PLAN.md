@@ -7,22 +7,36 @@ Technical debt: ~153 hours
 
 ## Progress Tracking
 
-### ✅ Completed (Phase 1 - Constants)
+### ✅ Completed (Phase 1 & 2 - Constants & Database Layer)
 1. **Error Message Constants** - Created `internal/constants/errors.go`
-   - 90+ error message patterns
-   - Eliminates "character not found", "session not found" duplicates
+   - 110+ error message patterns including database operations
+   - Eliminates "character not found", "session not found", "game session not found" duplicates
+   - Added database error format strings (marshal/unmarshal, rows affected)
+   - Added migration error constants
    
 2. **Common String Constants** - Created `internal/constants/strings.go`
    - HTTP headers, content types, SQL fragments
    - Database column names, status values
    
-3. **Test Data Constants** - Created `internal/testutil/constants.go`
-   - Common test data like "user-456", "Test Character"
+3. **Test Data Constants** - Created/Updated `internal/testutil/constants.go`
+   - Common test data like "user-456", "user-42", "user-123"
+   - Test password hash, email, API endpoints
    - Eliminates duplication in test files
    
 4. **SQL Query Helpers** - Created `internal/database/query_helpers.go`
    - Query builder pattern for common SQL operations
    - Reduces "ORDER BY", "LIMIT ? OFFSET ?" duplicates
+   - Added threePartFormat constant for query construction
+
+5. **Database Repository Fixes** - Updated multiple repository files
+   - Fixed character_repository.go, game_session_repository.go
+   - Fixed emergent_world_repository.go, narrative_repository.go
+   - Fixed migrate.go, inventory_repository_test.go, user_repository_test.go
+   
+6. **Handler Layer Fixes** - Updated handler files
+   - Fixed auth.go (3 occurrences of "Invalid request body")
+   - Fixed character.go (6 occurrences of "Invalid request body", 3 of "Character not found")
+   - Added API endpoint constants for integration tests
 
 ### 🔄 In Progress (Phase 2 - High Complexity Methods)
 

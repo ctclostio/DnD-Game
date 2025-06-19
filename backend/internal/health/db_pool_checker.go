@@ -68,65 +68,81 @@ func (d *DBPoolChecker) Name() string { return "database_pool" }
 
 // Check performs comprehensive database and pool health checks
 func (d *DBPoolChecker) Check(ctx context.Context) error {
+	if err := d.validateDatabase(); err != nil {
+		return err
+	}
+	
+	d.ensureThresholds()
+	
+	// Test connectivity and performance
+	queryDuration, err := d.testConnectivity(ctx)
+	if err != nil {
+		return fmt.Errorf("database connectivity check failed: %w", err)
+	}
+	
+	if queryDuration > d.CriticalThresholds.QueryTimeout {
+		return fmt.Errorf("database query exceeded critical timeout: %v", queryDuration)
+	}
+	
+	// Check pool health
+	return d.checkPoolHealth()
+}
+
+// validateDatabase ensures the database is initialized
+func (d *DBPoolChecker) validateDatabase() error {
 	if d.DB == nil {
 		return fmt.Errorf(ErrDatabaseNotInitialized)
 	}
+	return nil
+}
 
-	// Set default thresholds if not configured
+// ensureThresholds sets default thresholds if not configured
+func (d *DBPoolChecker) ensureThresholds() {
 	if d.WarnThresholds.ConnectionUsagePercent == 0 {
 		d.WarnThresholds = DefaultWarnThresholds()
 	}
 	if d.CriticalThresholds.ConnectionUsagePercent == 0 {
 		d.CriticalThresholds = DefaultCriticalThresholds()
 	}
+}
 
-	// Test database connectivity with timeout
-	queryCtx, cancel := context.WithTimeout(ctx, d.CriticalThresholds.QueryTimeout)
-	defer cancel()
-
-	start := time.Now()
-	var result int
-	err := d.DB.QueryRowContext(queryCtx, "SELECT 1").Scan(&result)
-	queryDuration := time.Since(start)
-
-	if err != nil {
-		return fmt.Errorf("database connectivity check failed: %w", err)
-	}
-
-	// Check query performance
-	if queryDuration > d.CriticalThresholds.QueryTimeout {
-		return fmt.Errorf("database query exceeded critical timeout: %v", queryDuration)
-	}
-
-	// Get pool statistics
+// checkPoolHealth validates pool statistics against thresholds
+func (d *DBPoolChecker) checkPoolHealth() error {
 	stats := d.DB.Stats()
-
-	// Calculate usage percentage
-	usagePercent := 0
-	if stats.MaxOpenConnections > 0 {
-		usagePercent = int((float64(stats.InUse) / float64(stats.MaxOpenConnections)) * 100)
+	usagePercent := d.calculateUsagePercent(stats)
+	
+	// Check critical thresholds
+	if err := d.checkCriticalThreshold(usagePercent, d.CriticalThresholds.ConnectionUsagePercent,
+		"connection pool usage at %d%%", usagePercent); err != nil {
+		return err
 	}
-
-	// Check critical conditions
-	if usagePercent >= d.CriticalThresholds.ConnectionUsagePercent {
-		return fmt.Errorf("critical: connection pool usage at %d%%", usagePercent)
+	
+	if err := d.checkCriticalThreshold(int(stats.WaitCount), int(d.CriticalThresholds.WaitCount),
+		"%d connections waiting for available slot", stats.WaitCount); err != nil {
+		return err
 	}
-
-	if stats.WaitCount >= d.CriticalThresholds.WaitCount {
-		return fmt.Errorf("critical: %d connections waiting for available slot", stats.WaitCount)
-	}
-
+	
 	if stats.WaitDuration >= d.CriticalThresholds.WaitDuration {
 		return fmt.Errorf("critical: connections waited %v total", stats.WaitDuration)
 	}
-
-	// Check warning conditions (these don't fail the health check)
-	if usagePercent >= d.WarnThresholds.ConnectionUsagePercent {
-		// Log warning but don't fail
-		// TODO: Add logging for warning conditions
-	}
-
+	
 	return nil
+}
+
+// checkCriticalThreshold checks if a value exceeds a critical threshold
+func (d *DBPoolChecker) checkCriticalThreshold(value, threshold int, format string, args ...interface{}) error {
+	if value >= threshold {
+		return fmt.Errorf("critical: "+format, args...)
+	}
+	return nil
+}
+
+// calculateUsagePercent calculates the connection pool usage percentage
+func (d *DBPoolChecker) calculateUsagePercent(stats sql.DBStats) int {
+	if stats.MaxOpenConnections == 0 {
+		return 0
+	}
+	return int((float64(stats.InUse) / float64(stats.MaxOpenConnections)) * 100)
 }
 
 // GetDetailedHealth returns comprehensive pool health information
@@ -184,17 +200,17 @@ func (d *DBPoolChecker) testConnectivity(ctx context.Context) (time.Duration, er
 }
 
 func (d *DBPoolChecker) calculateMetrics(stats sql.DBStats) (int, time.Duration) {
-	usagePercent := 0
-	if stats.MaxOpenConnections > 0 {
-		usagePercent = int((float64(stats.InUse) / float64(stats.MaxOpenConnections)) * 100)
-	}
-
-	avgWaitTime := time.Duration(0)
-	if stats.WaitCount > 0 {
-		avgWaitTime = time.Duration(int64(stats.WaitDuration) / stats.WaitCount)
-	}
-
+	usagePercent := d.calculateUsagePercent(stats)
+	avgWaitTime := d.calculateAvgWaitTime(stats)
 	return usagePercent, avgWaitTime
+}
+
+// calculateAvgWaitTime calculates the average wait time per connection
+func (d *DBPoolChecker) calculateAvgWaitTime(stats sql.DBStats) time.Duration {
+	if stats.WaitCount == 0 {
+		return 0
+	}
+	return time.Duration(int64(stats.WaitDuration) / stats.WaitCount)
 }
 
 func (d *DBPoolChecker) populateMetrics(metrics map[string]interface{}, stats sql.DBStats, usagePercent int, avgWaitTime, queryDuration time.Duration) {
@@ -270,19 +286,15 @@ func (d *DBPoolChecker) GetPoolMetrics() map[string]interface{} {
 			"error": ErrDatabaseNotInitialized,
 		}
 	}
-
+	
 	stats := d.DB.Stats()
+	usagePercent, avgWaitTime := d.calculateMetrics(stats)
+	
+	return d.buildMetricsMap(stats, usagePercent, avgWaitTime)
+}
 
-	usagePercent := 0
-	if stats.MaxOpenConnections > 0 {
-		usagePercent = int((float64(stats.InUse) / float64(stats.MaxOpenConnections)) * 100)
-	}
-
-	avgWaitTime := time.Duration(0)
-	if stats.WaitCount > 0 {
-		avgWaitTime = time.Duration(int64(stats.WaitDuration) / stats.WaitCount)
-	}
-
+// buildMetricsMap creates a metrics map from pool statistics
+func (d *DBPoolChecker) buildMetricsMap(stats sql.DBStats, usagePercent int, avgWaitTime time.Duration) map[string]interface{} {
 	return map[string]interface{}{
 		"open_connections":     stats.OpenConnections,
 		"in_use":               stats.InUse,

@@ -133,27 +133,35 @@ func (cs *CacheService) SetUser(ctx context.Context, user *models.User) error {
 func (cs *CacheService) InvalidateUser(ctx context.Context, userID string) error {
 	strategy := cs.strategies["user"]
 	patterns := strategy.GetInvalidationPatterns(userID)
-
+	
 	for _, pattern := range patterns {
-		keys, err := cs.getKeysByPattern(ctx, pattern)
-		if err != nil {
-			cs.logger.Error().Err(err).Str("pattern", pattern).Msg("Failed to get keys for invalidation")
-			continue
-		}
-
-		if len(keys) > 0 {
-			if err := cs.client.Delete(ctx, keys...); err != nil {
-				cs.logger.Error().Err(err).Str("pattern", pattern).Msg("Failed to delete keys")
-			} else {
-				cs.logger.Debug().
-					Str("pattern", pattern).
-					Int("keys_deleted", len(keys)).
-					Msg("Cache invalidated")
-			}
-		}
+		cs.invalidatePattern(ctx, pattern)
 	}
-
+	
 	return nil
+}
+
+// invalidatePattern deletes all keys matching the given pattern
+func (cs *CacheService) invalidatePattern(ctx context.Context, pattern string) {
+	keys, err := cs.getKeysByPattern(ctx, pattern)
+	if err != nil {
+		cs.logger.Error().Err(err).Str("pattern", pattern).Msg("Failed to get keys for invalidation")
+		return
+	}
+	
+	if len(keys) == 0 {
+		return
+	}
+	
+	if err := cs.client.Delete(ctx, keys...); err != nil {
+		cs.logger.Error().Err(err).Str("pattern", pattern).Msg("Failed to delete keys")
+		return
+	}
+	
+	cs.logger.Debug().
+		Str("pattern", pattern).
+		Int("keys_deleted", len(keys)).
+		Msg("Cache invalidated")
 }
 
 // GetCharacter retrieves a cached character
@@ -256,78 +264,105 @@ func (cs *CacheService) GetActiveSessionIDs(ctx context.Context) ([]string, erro
 	if err != nil {
 		return nil, err
 	}
+	
+	return cs.extractSessionIDsFromKeys(keys), nil
+}
 
-	// Extract session IDs from keys
+// extractSessionIDsFromKeys extracts session IDs from cache keys
+func (cs *CacheService) extractSessionIDsFromKeys(keys []string) []string {
 	sessionIDs := make([]string, 0, len(keys))
+	const sessionKeyPrefixParts = 3 // sessions:active:{id}
+	
 	for _, key := range keys {
-		// Key format: sessions:active:{sessionID}
-		parts := splitKey(key, ":")
-		if len(parts) >= 3 {
-			sessionIDs = append(sessionIDs, parts[2])
+		if id := extractIDFromKey(key, sessionKeyPrefixParts); id != "" {
+			sessionIDs = append(sessionIDs, id)
 		}
 	}
+	
+	return sessionIDs
+}
 
-	return sessionIDs, nil
+// extractIDFromKey extracts the ID from a cache key
+func extractIDFromKey(key string, requiredParts int) string {
+	parts := splitKey(key, ":")
+	if len(parts) >= requiredParts {
+		return parts[requiredParts-1]
+	}
+	return ""
+}
+
+// warmers maps data types to their warming functions
+var warmers = map[string]string{
+	"characters": "warmCharacters",
+	"sessions":   "warmSessions",
 }
 
 // WarmCache pre-loads frequently accessed data
 func (cs *CacheService) WarmCache(ctx context.Context, dataType string, items []interface{}) error {
-	warmer := cs.getWarmerFunc(dataType)
-	if warmer == nil {
+	if _, supported := warmers[dataType]; !supported {
 		return fmt.Errorf("unsupported data type: %s", dataType)
 	}
-
-	warmer(ctx, items)
-
+	
+	switch dataType {
+	case "characters":
+		cs.warmCharacters(ctx, items)
+	case "sessions":
+		cs.warmSessions(ctx, items)
+	}
+	
 	cs.logger.Info().
 		Str("data_type", dataType).
 		Int("items_count", len(items)).
 		Msg("Cache warmed")
-
+	
 	return nil
-}
-
-// getWarmerFunc returns the appropriate warmer function for the data type
-func (cs *CacheService) getWarmerFunc(dataType string) func(context.Context, []interface{}) {
-	warmers := map[string]func(context.Context, []interface{}){
-		"characters": cs.warmCharacters,
-		"sessions":   cs.warmSessions,
-	}
-	return warmers[dataType]
 }
 
 // warmCharacters warms the cache with character data
 func (cs *CacheService) warmCharacters(ctx context.Context, items []interface{}) {
-	for _, item := range items {
-		char, ok := item.(*models.Character)
-		if !ok {
-			continue
-		}
-		
-		if err := cs.SetCharacter(ctx, char); err != nil {
-			cs.logger.Error().
-				Err(err).
-				Str("character_id", char.ID).
-				Msg("Failed to warm character cache")
-		}
-	}
+	cs.warmItems(ctx, items, cs.warmSingleCharacter)
 }
 
 // warmSessions warms the cache with session data
 func (cs *CacheService) warmSessions(ctx context.Context, items []interface{}) {
+	cs.warmItems(ctx, items, cs.warmSingleSession)
+}
+
+// warmItems is a generic function to warm cache with items
+func (cs *CacheService) warmItems(ctx context.Context, items []interface{}, warmer func(context.Context, interface{}) error) {
 	for _, item := range items {
-		session, ok := item.(*models.GameSession)
-		if !ok {
-			continue
-		}
-		
-		if err := cs.SetGameSession(ctx, session); err != nil {
-			cs.logger.Error().
-				Err(err).
-				Str("session_id", session.ID).
-				Msg("Failed to warm session cache")
+		if err := warmer(ctx, item); err != nil {
+			cs.logger.Error().Err(err).Msg("Failed to warm cache item")
 		}
 	}
+}
+
+// warmSingleCharacter warms cache with a single character
+func (cs *CacheService) warmSingleCharacter(ctx context.Context, item interface{}) error {
+	char, ok := item.(*models.Character)
+	if !ok {
+		return nil // Skip non-character items
+	}
+	
+	if err := cs.SetCharacter(ctx, char); err != nil {
+		return fmt.Errorf("failed to warm character %s: %w", char.ID, err)
+	}
+	
+	return nil
+}
+
+// warmSingleSession warms cache with a single session
+func (cs *CacheService) warmSingleSession(ctx context.Context, item interface{}) error {
+	session, ok := item.(*models.GameSession)
+	if !ok {
+		return nil // Skip non-session items
+	}
+	
+	if err := cs.SetGameSession(ctx, session); err != nil {
+		return fmt.Errorf("failed to warm session %s: %w", session.ID, err)
+	}
+	
+	return nil
 }
 
 // GetCacheStats returns cache statistics
