@@ -202,7 +202,7 @@ func TestExtractTokenFromHeader(t *testing.T) {
 	})
 }
 
-func TestClaims_Validate(t *testing.T) {
+func TestClaimsValidate(t *testing.T) {
 	t.Run("valid claims", func(t *testing.T) {
 		claims := &Claims{
 			UserID: testUserID,

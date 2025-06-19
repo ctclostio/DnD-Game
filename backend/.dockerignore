@@ -1,0 +1,45 @@
+# Git files
+.git
+.gitignore
+
+# Development files
+.env
+.env.*
+*.log
+*.tmp
+*.bak
+
+# Documentation
+*.md
+docs/
+README.md
+
+# Test files
+*_test.go
+testdata/
+coverage.*
+
+# Build artifacts
+/server
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Docker files (avoid copying into context)
+Dockerfile*
+docker-compose*.yml
+
+# Scripts (except healthcheck)
+scripts/*
+!scripts/healthcheck.sh

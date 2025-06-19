@@ -6,27 +6,27 @@ import (
 
 const skipRepositoryTestMsg = "Repository tests need to be rewritten for new interface"
 
-func TestCharacterRepository_Create(t *testing.T) {
+func TestCharacterRepositoryCreate(t *testing.T) {
 	// For now, just a placeholder test that passes
 	t.Skip(skipRepositoryTestMsg)
 }
 
-func TestCharacterRepository_GetByID(t *testing.T) {
+func TestCharacterRepositoryGetByID(t *testing.T) {
 	// For now, just a placeholder test that passes
 	t.Skip(skipRepositoryTestMsg)
 }
 
-func TestCharacterRepository_GetByUserID(t *testing.T) {
+func TestCharacterRepositoryGetByUserID(t *testing.T) {
 	// For now, just a placeholder test that passes
 	t.Skip(skipRepositoryTestMsg)
 }
 
-func TestCharacterRepository_Update(t *testing.T) {
+func TestCharacterRepositoryUpdate(t *testing.T) {
 	// For now, just a placeholder test that passes
 	t.Skip(skipRepositoryTestMsg)
 }
 
-func TestCharacterRepository_Delete(t *testing.T) {
+func TestCharacterRepositoryDelete(t *testing.T) {
 	// For now, just a placeholder test that passes
 	t.Skip(skipRepositoryTestMsg)
 }

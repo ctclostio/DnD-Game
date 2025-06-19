@@ -15,7 +15,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
-func TestInventoryRepository_CreateItem(t *testing.T) {
+func TestInventoryRepositoryCreateItem(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -81,7 +81,7 @@ func TestInventoryRepository_CreateItem(t *testing.T) {
 	})
 }
 
-func TestInventoryRepository_GetItem(t *testing.T) {
+func TestInventoryRepositoryGetItem(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -138,7 +138,7 @@ func TestInventoryRepository_GetItem(t *testing.T) {
 	})
 }
 
-func TestInventoryRepository_AddItemToInventory(t *testing.T) {
+func TestInventoryRepositoryAddItemToInventory(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -171,7 +171,7 @@ func TestInventoryRepository_AddItemToInventory(t *testing.T) {
 	})
 }
 
-func TestInventoryRepository_GetCharacterInventory(t *testing.T) {
+func TestInventoryRepositoryGetCharacterInventory(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -209,7 +209,7 @@ func TestInventoryRepository_GetCharacterInventory(t *testing.T) {
 	})
 }
 
-func TestInventoryRepository_GetCharacterCurrency(t *testing.T) {
+func TestInventoryRepositoryGetCharacterCurrency(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()

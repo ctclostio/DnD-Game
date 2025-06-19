@@ -15,7 +15,12 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
-func TestUserRepository_Create(t *testing.T) {
+const (
+	testNameSuccessfulRetrieval = "successful retrieval"
+	testNameUserNotFound        = "user not found"
+)
+
+func TestUserRepositoryCreate(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -42,7 +47,7 @@ func TestUserRepository_Create(t *testing.T) {
 
 		err := repo.Create(context.Background(), user)
 		assert.NoError(t, err)
-		assert.Equal(t, "user-123", user.ID)
+		assert.Equal(t, testutil.TestUserID3, user.ID)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -83,7 +88,7 @@ func TestUserRepository_Create(t *testing.T) {
 	})
 }
 
-func TestUserRepository_GetByID(t *testing.T) {
+func TestUserRepositoryGetByID(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -92,7 +97,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 	dbWrapper := &DB{DB: sqlxDB}
 	repo := NewUserRepository(dbWrapper)
 
-	t.Run("successful retrieval", func(t *testing.T) {
+	t.Run(testNameSuccessfulRetrieval, func(t *testing.T) {
 		expectedUser := &models.User{
 			ID:           testutil.TestUserID2,
 			Username:     "testuser",
@@ -121,12 +126,12 @@ func TestUserRepository_GetByID(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
-	t.Run("user not found", func(t *testing.T) {
+	t.Run(testNameUserNotFound, func(t *testing.T) {
 		mock.ExpectQuery(
 			`SELECT id, username, email, password_hash, COALESCE\(role, 'player'\) as role, created_at, updated_at FROM users WHERE id = \?`,
-		).WithArgs("non-existent").WillReturnError(sql.ErrNoRows)
+		).WithArgs(testutil.TestNonexistent).WillReturnError(sql.ErrNoRows)
 
-		user, err := repo.GetByID(context.Background(), "non-existent")
+		user, err := repo.GetByID(context.Background(), testutil.TestNonexistent)
 		assert.Error(t, err)
 		assert.Equal(t, models.ErrUserNotFound, err)
 		assert.Nil(t, user)
@@ -134,7 +139,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 	})
 }
 
-func TestUserRepository_GetByUsername(t *testing.T) {
+func TestUserRepositoryGetByUsername(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -143,9 +148,9 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 	dbWrapper := &DB{DB: sqlxDB}
 	repo := NewUserRepository(dbWrapper)
 
-	t.Run("successful retrieval", func(t *testing.T) {
+	t.Run(testNameSuccessfulRetrieval, func(t *testing.T) {
 		expectedUser := &models.User{
-			ID:           "user-123",
+			ID:           testutil.TestUserID3,
 			Username:     "aragorn",
 			Email:        "aragorn@gondor.com",
 			PasswordHash: testutil.TestPasswordHash,
@@ -171,7 +176,7 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
-	t.Run("user not found", func(t *testing.T) {
+	t.Run(testNameUserNotFound, func(t *testing.T) {
 		mock.ExpectQuery(
 			`SELECT id, username, email, password_hash, COALESCE\(role, 'player'\) as role, created_at, updated_at FROM users WHERE username = \?`,
 		).WithArgs("nonexistent").WillReturnError(sql.ErrNoRows)
@@ -184,7 +189,7 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 	})
 }
 
-func TestUserRepository_GetByEmail(t *testing.T) {
+func TestUserRepositoryGetByEmail(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -193,7 +198,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 	dbWrapper := &DB{DB: sqlxDB}
 	repo := NewUserRepository(dbWrapper)
 
-	t.Run("successful retrieval", func(t *testing.T) {
+	t.Run(testNameSuccessfulRetrieval, func(t *testing.T) {
 		expectedUser := &models.User{
 			ID:           "user-456",
 			Username:     "testuser",
@@ -212,17 +217,17 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 
 		mock.ExpectQuery(
 			`SELECT id, username, email, password_hash, COALESCE\(role, 'player'\) as role, created_at, updated_at FROM users WHERE email = \?`,
-		).WithArgs("test@example.com").WillReturnRows(rows)
+		).WithArgs(testutil.TestEmail).WillReturnRows(rows)
 
-		user, err := repo.GetByEmail(context.Background(), "test@example.com")
+		user, err := repo.GetByEmail(context.Background(), testutil.TestEmail)
 		assert.NoError(t, err)
 		assert.NotNil(t, user)
-		assert.Equal(t, "test@example.com", user.Email)
+		assert.Equal(t, testutil.TestEmail, user.Email)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
 
-func TestUserRepository_Update(t *testing.T) {
+func TestUserRepositoryUpdate(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -233,7 +238,7 @@ func TestUserRepository_Update(t *testing.T) {
 
 	t.Run("successful update", func(t *testing.T) {
 		user := &models.User{
-			ID:           "user-123",
+			ID:           testutil.TestUserID3,
 			Username:     "updateduser",
 			Email:        "updated@example.com",
 			PasswordHash: "$2a$10$newhashedpassword",
@@ -251,9 +256,9 @@ func TestUserRepository_Update(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
-	t.Run("user not found", func(t *testing.T) {
+	t.Run(testNameUserNotFound, func(t *testing.T) {
 		user := &models.User{
-			ID:           "non-existent",
+			ID:           testutil.TestNonexistent,
 			Username:     "updateduser",
 			Email:        "updated@example.com",
 			PasswordHash: "$2a$10$newhashedpassword",
@@ -274,7 +279,7 @@ func TestUserRepository_Update(t *testing.T) {
 	})
 }
 
-func TestUserRepository_Delete(t *testing.T) {
+func TestUserRepositoryDelete(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -286,19 +291,19 @@ func TestUserRepository_Delete(t *testing.T) {
 	t.Run("successful delete", func(t *testing.T) {
 		mock.ExpectExec(
 			`DELETE FROM users WHERE id = \?`,
-		).WithArgs("user-123").WillReturnResult(sqlmock.NewResult(0, 1))
+		).WithArgs(testutil.TestUserID3).WillReturnResult(sqlmock.NewResult(0, 1))
 
-		err := repo.Delete(context.Background(), "user-123")
+		err := repo.Delete(context.Background(), testutil.TestUserID3)
 		assert.NoError(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
-	t.Run("user not found", func(t *testing.T) {
+	t.Run(testNameUserNotFound, func(t *testing.T) {
 		mock.ExpectExec(
 			`DELETE FROM users WHERE id = \?`,
-		).WithArgs("non-existent").WillReturnResult(sqlmock.NewResult(0, 0))
+		).WithArgs(testutil.TestNonexistent).WillReturnResult(sqlmock.NewResult(0, 0))
 
-		err := repo.Delete(context.Background(), "non-existent")
+		err := repo.Delete(context.Background(), testutil.TestNonexistent)
 		assert.Error(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
