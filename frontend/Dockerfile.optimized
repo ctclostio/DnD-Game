@@ -11,7 +11,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files only for better caching
-COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+COPY package.json package-lock.json ./
 
 # Install dependencies based on lockfile
 RUN \
@@ -32,13 +32,13 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy package files
-COPY --chmod=644 package.json package-lock.json* ./
+COPY --chmod=644 package.json package-lock.json ./
 
 # Copy only necessary source code as read-only
 COPY --chmod=444 public ./public
 COPY --chmod=444 src ./src
 COPY --chmod=644 tsconfig.json ./
-COPY --chmod=644 .eslintrc* ./
+COPY --chmod=644 .eslintrc.js ./
 
 # Change ownership to build user
 RUN chown -R builduser:buildgroup /app
@@ -145,7 +145,7 @@ RUN apk add --no-cache git
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json ./
 
 # Install all dependencies including devDependencies
 RUN npm install
@@ -156,7 +156,7 @@ RUN npm install
 COPY public ./public
 COPY src ./src
 COPY tsconfig.json ./
-COPY .eslintrc* ./
+COPY .eslintrc.js ./
 
 # Set ownership for development
 RUN chown -R devuser:devgroup /app
@@ -182,11 +182,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy package files and source as read-only
-COPY --chmod=644 package.json package-lock.json* ./
+COPY --chmod=644 package.json package-lock.json ./
 COPY --chmod=444 public ./public
 COPY --chmod=444 src ./src
 COPY --chmod=644 tsconfig.json ./
-COPY --chmod=644 jest.config.* ./
+COPY --chmod=644 jest.config.js ./
 
 # Change ownership for test execution
 RUN chown -R testuser:testgroup /app
@@ -208,11 +208,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy package files and source as read-only
-COPY --chmod=644 package.json package-lock.json* ./
+COPY --chmod=644 package.json package-lock.json ./
 COPY --chmod=444 public ./public
 COPY --chmod=444 src ./src
 COPY --chmod=644 tsconfig.json ./
-COPY --chmod=644 .eslintrc* ./
+COPY --chmod=644 .eslintrc.js ./
 
 # Change ownership for analysis
 RUN chown -R analyzeruser:analyzergroup /app

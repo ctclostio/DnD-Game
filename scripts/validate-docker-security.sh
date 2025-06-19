@@ -101,6 +101,14 @@ check_dockerfile() {
     if grep -E "^COPY.*--chmod=[0-9]+" "$dockerfile" >/dev/null; then
         echo -e "${GREEN}✓ Using --chmod to set explicit permissions${NC}"
     fi
+    
+    # Check for glob patterns in COPY commands
+    if grep -E "^COPY.*[*?[]" "$dockerfile" >/dev/null; then
+        echo -e "${RED}❌ Found glob patterns in COPY commands (security risk)${NC}"
+        ((ISSUES++))
+    else
+        echo -e "${GREEN}✓ No glob patterns in COPY commands${NC}"
+    fi
 }
 
 # Main checks
