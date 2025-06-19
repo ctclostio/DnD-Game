@@ -43,3 +43,65 @@ docker-compose*.yml
 # Scripts (except healthcheck)
 scripts/*
 !scripts/healthcheck.sh
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Configuration files with secrets
+config/local.*
+config/development.*
+config/*.secret.*
+
+# SSH keys
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+known_hosts
+
+# AWS credentials
+.aws/
+
+# Google Cloud credentials
+.gcloud/
+*.json
+
+# Azure credentials
+.azure/
+
+# Terraform files
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Ansible files
+*.retry
+vault.yml
+
+# Any password files
+*password*
+*passwd*
+
+# Token files
+*token*
+*secret*
+
+# Key and certificate files
+*.key
+*.pem
+
+# Node modules (if any frontend code exists)
+node_modules/
+
+# Keep only necessary JSON files
+!package.json
+!tsconfig.json
+!go.mod
+!go.sum

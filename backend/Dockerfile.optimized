@@ -33,8 +33,10 @@ COPY --from=deps /go/pkg /go/pkg
 # Copy go mod files
 COPY go.mod go.sum ./
 
-# Copy source code
-COPY . .
+# Copy only necessary source code (backend, data)
+# .dockerignore ensures sensitive files are excluded
+COPY backend/ ./backend/
+COPY data/ ./data/
 
 # Build the application with optimizations
 WORKDIR /app/backend/cmd/server
@@ -112,8 +114,11 @@ COPY go.mod go.sum ./
 # Download dependencies
 RUN go mod download
 
-# Copy source code (will be mounted in development)
-COPY . .
+# Copy only necessary source code
+# In development, code is typically mounted via docker-compose
+COPY backend/ ./backend/
+COPY data/ ./data/
+COPY .air.toml ./
 
 # Expose ports
 EXPOSE 8080 2345

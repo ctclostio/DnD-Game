@@ -1,6 +1,10 @@
 # Build stage
 FROM node:24-alpine AS builder
 
+# Create non-root user for build
+RUN addgroup -g 1001 -S buildgroup && \
+    adduser -u 1001 -S builduser -G buildgroup
+
 WORKDIR /app
 
 # Copy package files
@@ -9,14 +13,25 @@ COPY frontend/package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY frontend/ ./
+# Copy only necessary source code
+# Excludes files listed in .dockerignore
+COPY --chown=builduser:buildgroup frontend/public ./public
+COPY --chown=builduser:buildgroup frontend/src ./src
+COPY --chown=builduser:buildgroup frontend/tsconfig.json ./
+COPY --chown=builduser:buildgroup frontend/.eslintrc* ./
+
+# Switch to non-root user for build
+USER builduser
 
 # Build the application
 RUN npm run build
 
 # Development stage
 FROM node:24-alpine AS development
+
+# Create non-root user
+RUN addgroup -g 1001 -S devgroup && \
+    adduser -u 1001 -S devuser -G devgroup
 
 WORKDIR /app
 
@@ -26,8 +41,17 @@ COPY frontend/package*.json ./
 # Install all dependencies (including devDependencies)
 RUN npm install
 
-# Copy source code
-COPY frontend/ ./
+# Copy only necessary source code with proper ownership
+COPY --chown=devuser:devgroup frontend/public ./public
+COPY --chown=devuser:devgroup frontend/src ./src
+COPY --chown=devuser:devgroup frontend/tsconfig.json ./
+COPY --chown=devuser:devgroup frontend/.eslintrc* ./
+
+# Change ownership of node_modules
+RUN chown -R devuser:devgroup node_modules
+
+# Switch to non-root user
+USER devuser
 
 # Expose port
 EXPOSE 3000

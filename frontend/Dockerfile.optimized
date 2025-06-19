@@ -34,8 +34,11 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Copy source code
-COPY . .
+# Copy only necessary source code
+COPY public ./public
+COPY src ./src
+COPY tsconfig.json ./
+COPY .eslintrc* ./
 
 # Set build arguments for optimization
 ARG NODE_ENV=production
@@ -142,8 +145,12 @@ COPY package.json package-lock.json* ./
 # Install all dependencies including devDependencies
 RUN npm install
 
-# Copy source code (will be mounted in development)
-COPY . .
+# Copy only necessary source code
+# In development, code is typically volume-mounted
+COPY public ./public
+COPY src ./src
+COPY tsconfig.json ./
+COPY .eslintrc* ./
 
 # Expose ports
 EXPOSE 3000
@@ -166,8 +173,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy package files and source
-COPY package.json package-lock.json* ./
-COPY . .
+COPY --chown=testuser:testgroup package.json package-lock.json* ./
+COPY --chown=testuser:testgroup public ./public
+COPY --chown=testuser:testgroup src ./src
+COPY --chown=testuser:testgroup tsconfig.json ./
+COPY --chown=testuser:testgroup jest.config.* ./
+
+# Switch to non-root user
+USER testuser
 
 # Run tests
 RUN npm run test -- --coverage --watchAll=false
@@ -183,8 +196,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy package files and source
-COPY package.json package-lock.json* ./
-COPY . .
+COPY --chown=analyzeruser:analyzergroup package.json package-lock.json* ./
+COPY --chown=analyzeruser:analyzergroup public ./public
+COPY --chown=analyzeruser:analyzergroup src ./src
+COPY --chown=analyzeruser:analyzergroup tsconfig.json ./
+COPY --chown=analyzeruser:analyzergroup .eslintrc* ./
+
+# Switch to non-root user
+USER analyzeruser
 
 # Run linting and type checking
 RUN npm run lint && \
