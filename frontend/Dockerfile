@@ -13,12 +13,19 @@ COPY frontend/package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy only necessary source code
+# Copy only necessary source code as read-only
 # Excludes files listed in .dockerignore
-COPY --chown=builduser:buildgroup frontend/public ./public
-COPY --chown=builduser:buildgroup frontend/src ./src
-COPY --chown=builduser:buildgroup frontend/tsconfig.json ./
-COPY --chown=builduser:buildgroup frontend/.eslintrc* ./
+COPY --chmod=444 frontend/public ./public
+COPY --chmod=444 frontend/src ./src
+COPY --chmod=444 frontend/tsconfig.json ./
+COPY --chmod=444 frontend/.eslintrc* ./
+
+# Set proper ownership and permissions
+# Source files should be read-only, build directory needs write access
+RUN chown -R builduser:buildgroup /app && \
+    chmod -R 644 /app/public /app/src && \
+    chmod 644 /app/tsconfig.json && \
+    chmod -R 755 /app/node_modules
 
 # Switch to non-root user for build
 USER builduser
@@ -41,14 +48,15 @@ COPY frontend/package*.json ./
 # Install all dependencies (including devDependencies)
 RUN npm install
 
-# Copy only necessary source code with proper ownership
-COPY --chown=devuser:devgroup frontend/public ./public
-COPY --chown=devuser:devgroup frontend/src ./src
-COPY --chown=devuser:devgroup frontend/tsconfig.json ./
-COPY --chown=devuser:devgroup frontend/.eslintrc* ./
+# Copy only necessary source code with proper permissions
+# Development needs write access for hot reloading
+COPY --chmod=755 frontend/public ./public
+COPY --chmod=755 frontend/src ./src
+COPY --chmod=644 frontend/tsconfig.json ./
+COPY --chmod=644 frontend/.eslintrc* ./
 
-# Change ownership of node_modules
-RUN chown -R devuser:devgroup node_modules
+# Set ownership for development (write access needed)
+RUN chown -R devuser:devgroup /app
 
 # Switch to non-root user
 USER devuser
@@ -66,18 +74,19 @@ FROM nginx:alpine AS production
 RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
 
-# Copy built files from builder with proper ownership
-COPY --from=builder --chown=appuser:appgroup /app/build /usr/share/nginx/html
+# Copy built files from builder as read-only
+COPY --from=builder --chmod=444 /app/build /usr/share/nginx/html
 
-# Copy nginx configuration
-COPY --chown=appuser:appgroup frontend/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx configuration as read-only
+COPY --chmod=444 frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Update nginx config to run as non-root and set read-only permissions
+# Update nginx config to run as non-root
+# Set proper ownership for runtime directories only
 RUN sed -i 's/user nginx;/user appuser;/g' /etc/nginx/nginx.conf && \
     touch /var/run/nginx.pid && \
-    chown -R appuser:appgroup /var/run/nginx.pid /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \
-    chmod -R 444 /usr/share/nginx/html && \
-    chmod 444 /etc/nginx/conf.d/default.conf
+    chown -R appuser:appgroup /var/run/nginx.pid /var/cache/nginx /var/log/nginx && \
+    chown -R appuser:appgroup /usr/share/nginx/html && \
+    chown appuser:appgroup /etc/nginx/conf.d/default.conf
 
 # Switch to non-root user
 USER appuser

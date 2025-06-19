@@ -32,13 +32,16 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY --chmod=644 package.json package-lock.json* ./
 
-# Copy only necessary source code
-COPY public ./public
-COPY src ./src
-COPY tsconfig.json ./
-COPY .eslintrc* ./
+# Copy only necessary source code as read-only
+COPY --chmod=444 public ./public
+COPY --chmod=444 src ./src
+COPY --chmod=644 tsconfig.json ./
+COPY --chmod=644 .eslintrc* ./
+
+# Change ownership to build user
+RUN chown -R builduser:buildgroup /app
 
 # Set build arguments for optimization
 ARG NODE_ENV=production
@@ -51,6 +54,9 @@ ARG VERSION
 ENV NODE_ENV=${NODE_ENV}
 ENV GENERATE_SOURCEMAP=false
 ENV INLINE_RUNTIME_CHUNK=false
+
+# Switch to non-root user for build
+USER builduser
 
 RUN npm run build
 
@@ -85,19 +91,18 @@ RUN apk add --no-cache \
 RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
 
-# Copy custom nginx config
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
-COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+# Copy custom nginx config as read-only
+COPY --chmod=444 nginx/nginx.conf /etc/nginx/nginx.conf
+COPY --chmod=444 nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# Copy security headers config
-COPY nginx/security-headers.conf /etc/nginx/conf.d/security-headers.conf
+# Copy security headers config as read-only
+COPY --chmod=444 nginx/security-headers.conf /etc/nginx/conf.d/security-headers.conf
 
-# Copy built application
-COPY --from=builder /app/build /usr/share/nginx/html
+# Copy built application as read-only
+COPY --from=builder --chmod=444 /app/build /usr/share/nginx/html
 
-# Copy runtime configuration script
-COPY docker/runtime-env.sh /docker-entrypoint.d/40-runtime-env.sh
-RUN chmod +x /docker-entrypoint.d/40-runtime-env.sh
+# Copy runtime configuration script with execute permissions
+COPY --chmod=755 docker/runtime-env.sh /docker-entrypoint.d/40-runtime-env.sh
 
 # Set correct permissions and make files read-only
 RUN chown -R appuser:appgroup /usr/share/nginx/html && \
@@ -147,10 +152,14 @@ RUN npm install
 
 # Copy only necessary source code
 # In development, code is typically volume-mounted
+# Development needs write permissions for hot reloading
 COPY public ./public
 COPY src ./src
 COPY tsconfig.json ./
 COPY .eslintrc* ./
+
+# Set ownership for development
+RUN chown -R devuser:devgroup /app
 
 # Expose ports
 EXPOSE 3000
@@ -172,12 +181,15 @@ WORKDIR /app
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy package files and source
-COPY --chown=testuser:testgroup package.json package-lock.json* ./
-COPY --chown=testuser:testgroup public ./public
-COPY --chown=testuser:testgroup src ./src
-COPY --chown=testuser:testgroup tsconfig.json ./
-COPY --chown=testuser:testgroup jest.config.* ./
+# Copy package files and source as read-only
+COPY --chmod=644 package.json package-lock.json* ./
+COPY --chmod=444 public ./public
+COPY --chmod=444 src ./src
+COPY --chmod=644 tsconfig.json ./
+COPY --chmod=644 jest.config.* ./
+
+# Change ownership for test execution
+RUN chown -R testuser:testgroup /app
 
 # Switch to non-root user
 USER testuser
@@ -195,12 +207,15 @@ WORKDIR /app
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy package files and source
-COPY --chown=analyzeruser:analyzergroup package.json package-lock.json* ./
-COPY --chown=analyzeruser:analyzergroup public ./public
-COPY --chown=analyzeruser:analyzergroup src ./src
-COPY --chown=analyzeruser:analyzergroup tsconfig.json ./
-COPY --chown=analyzeruser:analyzergroup .eslintrc* ./
+# Copy package files and source as read-only
+COPY --chmod=644 package.json package-lock.json* ./
+COPY --chmod=444 public ./public
+COPY --chmod=444 src ./src
+COPY --chmod=644 tsconfig.json ./
+COPY --chmod=644 .eslintrc* ./
+
+# Change ownership for analysis
+RUN chown -R analyzeruser:analyzergroup /app
 
 # Switch to non-root user
 USER analyzeruser

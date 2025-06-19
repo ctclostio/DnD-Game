@@ -33,10 +33,10 @@ COPY --from=deps /go/pkg /go/pkg
 # Copy go mod files
 COPY go.mod go.sum ./
 
-# Copy only necessary source code (backend, data)
+# Copy only necessary source code as read-only (backend, data)
 # .dockerignore ensures sensitive files are excluded
-COPY backend/ ./backend/
-COPY data/ ./data/
+COPY --chmod=444 backend/ ./backend/
+COPY --chmod=444 data/ ./data/
 
 # Build the application with optimizations
 WORKDIR /app/backend/cmd/server
@@ -114,11 +114,11 @@ COPY go.mod go.sum ./
 # Download dependencies
 RUN go mod download
 
-# Copy only necessary source code
+# Copy only necessary source code with proper permissions
 # In development, code is typically mounted via docker-compose
-COPY backend/ ./backend/
-COPY data/ ./data/
-COPY .air.toml ./
+COPY --chmod=755 backend/ ./backend/
+COPY --chmod=755 data/ ./data/
+COPY --chmod=644 .air.toml ./
 
 # Expose ports
 EXPOSE 8080 2345
@@ -147,11 +147,11 @@ RUN addgroup -g 1001 -S appgroup && \
 
 WORKDIR /app
 
-# Copy the binary from builder
-COPY --from=builder /app/backend/cmd/server/server .
+# Copy the binary from builder with execute permissions
+COPY --from=builder --chmod=550 /app/backend/cmd/server/server .
 
-# Copy static data
-COPY --from=builder /app/data ./data
+# Copy static data as read-only
+COPY --from=builder --chmod=440 /app/data ./data
 
 # Copy healthcheck script
 COPY --from=builder --chmod=755 /app/backend/scripts/healthcheck.sh /usr/local/bin/healthcheck.sh

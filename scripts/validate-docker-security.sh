@@ -88,6 +88,19 @@ check_dockerfile() {
     if grep -E "FROM.*:latest" "$dockerfile" >/dev/null; then
         echo -e "${YELLOW}⚠ Using :latest tag (consider pinning versions)${NC}"
     fi
+    
+    # Check for insecure COPY --chown patterns
+    if grep -E "^COPY.*--chown.*[^/]$" "$dockerfile" | grep -v "\-\-chmod" >/dev/null; then
+        echo -e "${RED}❌ Found COPY --chown without explicit permissions${NC}"
+        ((ISSUES++))
+    else
+        echo -e "${GREEN}✓ No insecure COPY --chown patterns found${NC}"
+    fi
+    
+    # Check for proper use of --chmod
+    if grep -E "^COPY.*--chmod=[0-9]+" "$dockerfile" >/dev/null; then
+        echo -e "${GREEN}✓ Using --chmod to set explicit permissions${NC}"
+    fi
 }
 
 # Main checks
