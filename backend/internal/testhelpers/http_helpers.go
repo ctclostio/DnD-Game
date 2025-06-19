@@ -16,6 +16,12 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 )
 
+// HTTP header constants
+const (
+	HeaderContentType   = "Content-Type"
+	ContentTypeJSON     = "application/json"
+)
+
 // HTTPTestCase represents a standard HTTP test case structure
 type HTTPTestCase struct {
 	Name           string
@@ -42,7 +48,7 @@ func CreateTestRequest(method, path string, body interface{}) *http.Request {
 	}
 
 	req := httptest.NewRequest(method, path, bodyReader)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(HeaderContentType, ContentTypeJSON)
 	return req
 }
 
@@ -96,7 +102,7 @@ func AssertJSONResponse(t *testing.T, recorder *httptest.ResponseRecorder, expec
 	assert.Equal(t, expectedStatus, recorder.Code, "Unexpected status code")
 
 	if recorder.Body.Len() > 0 {
-		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"),
+		assert.Equal(t, ContentTypeJSON, recorder.Header().Get(HeaderContentType),
 			"Expected JSON content type")
 	}
 }
@@ -185,7 +191,7 @@ func CreateMultipartRequest(method, path string, fields map[string]string, files
 	}
 
 	req := httptest.NewRequest(method, path, body)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set(HeaderContentType, writer.FormDataContentType())
 
 	return req, nil
 }

@@ -11,6 +11,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test constants
+const (
+	testMessage    = "test message"
+	testRequestID  = "request-123"
+	testUserID     = "user-456"
+	testTraceID    = "trace-789"
+	testHTTPMethod = "GET"
+	testHTTPPath   = "/api/test"
+)
+
 func TestNew(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -97,7 +107,7 @@ func TestLogger_WithContext(t *testing.T) {
 	ctx = context.WithValue(ctx, UserIDKey, "test-user-id")
 
 	contextLogger := logger.WithContext(ctx)
-	contextLogger.Info().Msg("test message")
+	contextLogger.Info().Msg(testMessage)
 
 	var logEntry map[string]interface{}
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
@@ -105,7 +115,7 @@ func TestLogger_WithContext(t *testing.T) {
 	assert.Equal(t, "test-request-id", logEntry["request_id"])
 	assert.Equal(t, "test-correlation-id", logEntry["correlation_id"])
 	assert.Equal(t, "test-user-id", logEntry["user_id"])
-	assert.Equal(t, "test message", logEntry["message"])
+	assert.Equal(t, testMessage, logEntry["message"])
 }
 
 // testLoggerWith is a helper function to test logger context methods
@@ -117,7 +127,7 @@ func testLoggerWith(t *testing.T, withFunc func(*Logger) *Logger, expectedField,
 	}
 
 	contextLogger := withFunc(logger)
-	contextLogger.Info().Msg("test message")
+	contextLogger.Info().Msg(testMessage)
 
 	var logEntry map[string]interface{}
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
@@ -127,8 +137,8 @@ func testLoggerWith(t *testing.T, withFunc func(*Logger) *Logger, expectedField,
 
 func TestLogger_WithRequestID(t *testing.T) {
 	testLoggerWith(t, func(l *Logger) *Logger {
-		return l.WithRequestID("req-123")
-	}, "request_id", "req-123")
+		return l.WithRequestID(testRequestID)
+	}, "request_id", testRequestID)
 }
 
 func TestLogger_WithCorrelationID(t *testing.T) {
@@ -166,7 +176,7 @@ func TestLogger_WithField(t *testing.T) {
 	}
 
 	fieldLogger := logger.WithField("custom_field", "custom_value")
-	fieldLogger.Info().Msg("test message")
+	fieldLogger.Info().Msg(testMessage)
 
 	var logEntry map[string]interface{}
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
@@ -187,7 +197,7 @@ func TestLogger_WithFields(t *testing.T) {
 	}
 
 	fieldsLogger := logger.WithFields(fields)
-	fieldsLogger.Info().Msg("test message")
+	fieldsLogger.Info().Msg(testMessage)
 
 	var logEntry map[string]interface{}
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
@@ -470,10 +480,10 @@ func BenchmarkLogger_WithFields(b *testing.B) {
 func TestContextHelpers(t *testing.T) {
 	ctx := context.Background()
 
-	ctx = ContextWithRequestID(ctx, "req-123")
+	ctx = ContextWithRequestID(ctx, testRequestID)
 	ctx = ContextWithCorrelationID(ctx, "corr-456")
 
-	assert.Equal(t, "req-123", ctx.Value(RequestIDKey))
+	assert.Equal(t, testRequestID, ctx.Value(RequestIDKey))
 	assert.Equal(t, "corr-456", ctx.Value(CorrelationIDKey))
 	assert.Equal(t, "corr-456", GetCorrelationIDFromContext(ctx))
 }

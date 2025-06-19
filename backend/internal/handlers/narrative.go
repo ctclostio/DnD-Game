@@ -839,7 +839,7 @@ func (h *NarrativeHandlers) verifyActionPermissions(ctx context.Context, claims 
 	}
 
 	if character.UserID != claims.UserID {
-		return fmt.Errorf("unauthorized")
+		return fmt.Errorf(errUnauthorized)
 	}
 
 	// Verify session participation
@@ -862,7 +862,7 @@ func (h *NarrativeHandlers) handleActionPermissionError(w http.ResponseWriter, e
 	switch err.Error() {
 	case errCharacterNotFound:
 		http.Error(w, "Character not found", http.StatusNotFound)
-	case "unauthorized":
+	case errUnauthorized:
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 	case "not a participant in this session":
 		http.Error(w, "Not a participant in this session", http.StatusForbidden)
@@ -902,19 +902,19 @@ func (h *NarrativeHandlers) gatherPersonalizationData(ctx context.Context, claim
 	}
 
 	if character.UserID != claims.UserID {
-		return nil, fmt.Errorf("unauthorized")
+		return nil, fmt.Errorf(errUnauthorized)
 	}
 
 	// Get event
 	event, err := h.narrativeRepo.GetWorldEvent(eventID)
 	if err != nil {
-		return nil, fmt.Errorf("event not found")
+		return nil, fmt.Errorf(errEventNotFound)
 	}
 
 	// Get profile
 	profile, err := h.narrativeRepo.GetNarrativeProfile(characterID)
 	if err != nil {
-		return nil, fmt.Errorf("profile not found")
+		return nil, fmt.Errorf(errProfileNotFound)
 	}
 
 	// Get backstory (optional)
@@ -935,11 +935,11 @@ func (h *NarrativeHandlers) handlePersonalizationError(w http.ResponseWriter, er
 	switch err.Error() {
 	case errCharacterNotFound:
 		http.Error(w, "Character not found", http.StatusNotFound)
-	case "unauthorized":
+	case errUnauthorized:
 		http.Error(w, "Unauthorized", http.StatusForbidden)
-	case "event not found":
+	case errEventNotFound:
 		http.Error(w, "Event not found", http.StatusNotFound)
-	case "profile not found":
+	case errProfileNotFound:
 		http.Error(w, "Profile not found", http.StatusNotFound)
 	default:
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

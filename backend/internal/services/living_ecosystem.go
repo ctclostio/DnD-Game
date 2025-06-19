@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
@@ -59,7 +60,32 @@ func (les *LivingEcosystemService) SimulateWorldProgress(ctx context.Context, se
 	}
 
 	// Start simulation log
-	simLog := &models.SimulationLog{
+	simLog := les.createSimulationLog(sessionID)
+
+	// Simulate various aspects of the world
+	events := les.runAllSimulations(ctx, sessionID, timeDelta, simLog)
+
+	// Save all events
+	les.saveSimulationResults(events, simLog)
+
+	// Update world state
+	worldState.LastSimulated = time.Now()
+	if err := les.worldRepo.UpdateWorldState(worldState); err != nil {
+		simLog.Details["update_error"] = err.Error()
+		simLog.Success = false
+	}
+
+	// Save simulation log
+	simLog.EndTime = time.Now()
+	if err := les.worldRepo.CreateSimulationLog(simLog); err != nil {
+		return fmt.Errorf("failed to save simulation log: %w", err)
+	}
+
+	return nil
+}
+
+func (les *LivingEcosystemService) createSimulationLog(sessionID string) *models.SimulationLog {
+	return &models.SimulationLog{
 		ID:             uuid.New().String(),
 		SessionID:      sessionID,
 		SimulationType: "world_progress",
@@ -68,55 +94,40 @@ func (les *LivingEcosystemService) SimulateWorldProgress(ctx context.Context, se
 		Details:        make(map[string]interface{}),
 		Success:        true,
 	}
+}
 
-	// Simulate various aspects of the world
+type simulationFunc func(context.Context, string, time.Duration) ([]models.EmergentWorldEvent, error)
+
+type simulationStep struct {
+	name     string
+	simulate simulationFunc
+}
+
+func (les *LivingEcosystemService) runAllSimulations(ctx context.Context, sessionID string, timeDelta time.Duration, simLog *models.SimulationLog) []models.EmergentWorldEvent {
 	events := []models.EmergentWorldEvent{}
-
-	// 1. Simulate NPC activities
-	npcEvents, err := les.simulateNPCActivities(ctx, sessionID, timeDelta)
-	if err != nil {
-		simLog.Details["npc_error"] = err.Error()
-	} else {
-		events = append(events, npcEvents...)
-		simLog.Details["npc_events"] = len(npcEvents)
+	
+	simulations := []simulationStep{
+		{"npc", les.simulateNPCActivities},
+		{"economic", les.simulateEconomicChanges},
+		{"political", les.simulatePoliticalDevelopments},
+		{"natural", les.simulateNaturalEvents},
+		{"cultural", les.simulateCulturalEvolution},
 	}
 
-	// 2. Simulate economic changes
-	economicEvents, err := les.simulateEconomicChanges(ctx, sessionID, timeDelta)
-	if err != nil {
-		simLog.Details["economic_error"] = err.Error()
-	} else {
-		events = append(events, economicEvents...)
-		simLog.Details["economic_events"] = len(economicEvents)
+	for _, sim := range simulations {
+		simEvents, err := sim.simulate(ctx, sessionID, timeDelta)
+		if err != nil {
+			simLog.Details[sim.name+"_error"] = err.Error()
+		} else {
+			events = append(events, simEvents...)
+			simLog.Details[sim.name+"_events"] = len(simEvents)
+		}
 	}
 
-	// 3. Simulate political developments
-	politicalEvents, err := les.simulatePoliticalDevelopments(ctx, sessionID, timeDelta)
-	if err != nil {
-		simLog.Details["political_error"] = err.Error()
-	} else {
-		events = append(events, politicalEvents...)
-		simLog.Details["political_events"] = len(politicalEvents)
-	}
+	return events
+}
 
-	// 4. Simulate natural events
-	naturalEvents, err := les.simulateNaturalEvents(ctx, sessionID, timeDelta)
-	if err != nil {
-		simLog.Details["natural_error"] = err.Error()
-	} else {
-		events = append(events, naturalEvents...)
-		simLog.Details["natural_events"] = len(naturalEvents)
-	}
-
-	// 5. Simulate cultural evolution
-	culturalEvents, err := les.simulateCulturalEvolution(ctx, sessionID, timeDelta)
-	if err != nil {
-		simLog.Details["cultural_error"] = err.Error()
-	} else {
-		events = append(events, culturalEvents...)
-		simLog.Details["cultural_events"] = len(culturalEvents)
-	}
-
+func (les *LivingEcosystemService) saveSimulationResults(events []models.EmergentWorldEvent, simLog *models.SimulationLog) {
 	// Save all events
 	for i := range events {
 		if err := les.worldRepo.CreateWorldEvent(&events[i]); err != nil {
@@ -126,77 +137,92 @@ func (les *LivingEcosystemService) SimulateWorldProgress(ctx context.Context, se
 			simLog.EventsCreated++
 		}
 	}
-
-	// Update world state
-	worldState.LastSimulated = time.Now()
-	worldState.WorldData["last_events"] = events
-	if err := les.worldRepo.UpdateWorldState(worldState); err != nil {
-		simLog.Details["update_error"] = err.Error()
-		simLog.Success = false
-	}
-
-	// Save simulation log
-	simLog.EndTime = time.Now()
-	_ = les.worldRepo.CreateSimulationLog(simLog)
-
-	return nil
 }
 
 // simulateNPCActivities simulates autonomous NPC actions
 func (les *LivingEcosystemService) simulateNPCActivities(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.EmergentWorldEvent, error) {
-	events := []models.EmergentWorldEvent{}
-
 	// Get all NPCs in the session
 	npcs, err := les.npcRepo.GetByGameSession(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Simulate each NPC based on their goals and personality
+	events := []models.EmergentWorldEvent{}
 	for _, npc := range npcs {
-		// Get NPC goals
-		goals, err := les.worldRepo.GetNPCGoals(npc.ID)
-		if err != nil {
-			continue
-		}
-
-		// Process each active goal
-		for i := range goals {
-			goal := &goals[i]
-			if goal.Status != constants.StatusActive {
-				continue
-			}
-
-			// Simulate progress on goal
-			event, progress := les.simulateGoalProgress(ctx, npc, *goal, timeDelta)
-			if event != nil {
-				events = append(events, *event)
-			}
-
-			// Update goal progress
-			goal.Progress = progress
-			if progress >= 1.0 {
-				goal.Status = constants.StatusCompleted
-				now := time.Now()
-				goal.CompletedAt = &now
-			}
-			_ = les.worldRepo.UpdateNPCGoal(goal)
-		}
-
-		// Check if NPC should create new goals
-		if len(goals) < 3 && rand.Float64() < 0.3 {
-			newGoal := les.generateNPCGoal(ctx, npc)
-			if newGoal != nil {
-				_ = les.worldRepo.CreateNPCGoal(newGoal)
-			}
-		}
-
-		// Simulate NPC schedule activities
-		scheduleEvents := les.simulateNPCSchedule(ctx, npc, timeDelta)
-		events = append(events, scheduleEvents...)
+		npcEvents := les.simulateSingleNPC(ctx, npc, timeDelta)
+		events = append(events, npcEvents...)
 	}
 
 	return events, nil
+}
+
+// simulateSingleNPC processes a single NPC's activities
+func (les *LivingEcosystemService) simulateSingleNPC(ctx context.Context, npc *models.NPC, timeDelta time.Duration) []models.EmergentWorldEvent {
+	events := []models.EmergentWorldEvent{}
+
+	// Process NPC goals
+	goalEvents := les.processNPCGoals(ctx, npc, timeDelta)
+	events = append(events, goalEvents...)
+
+	// Simulate NPC schedule activities
+	scheduleEvents := les.simulateNPCSchedule(ctx, npc, timeDelta)
+	events = append(events, scheduleEvents...)
+
+	return events
+}
+
+// processNPCGoals handles all goal-related logic for an NPC
+func (les *LivingEcosystemService) processNPCGoals(ctx context.Context, npc *models.NPC, timeDelta time.Duration) []models.EmergentWorldEvent {
+	events := []models.EmergentWorldEvent{}
+
+	// Get NPC goals
+	goals, err := les.worldRepo.GetNPCGoals(npc.ID)
+	if err != nil {
+		return events
+	}
+
+	// Process each active goal
+	for i := range goals {
+		goal := &goals[i]
+		if goal.Status == constants.StatusActive {
+			event := les.processActiveGoal(ctx, npc, goal, timeDelta)
+			if event != nil {
+				events = append(events, *event)
+			}
+		}
+	}
+
+	// Generate new goals if needed
+	if les.shouldCreateNewGoal(goals) {
+		newGoal := les.generateNPCGoal(ctx, npc)
+		if newGoal != nil {
+			_ = les.worldRepo.CreateNPCGoal(newGoal)
+		}
+	}
+
+	return events
+}
+
+// processActiveGoal handles progress for a single active goal
+func (les *LivingEcosystemService) processActiveGoal(ctx context.Context, npc *models.NPC, goal *models.NPCGoal, timeDelta time.Duration) *models.EmergentWorldEvent {
+	// Simulate progress on goal
+	event, progress := les.simulateGoalProgress(ctx, npc, *goal, timeDelta)
+
+	// Update goal progress
+	goal.Progress = progress
+	if progress >= 1.0 {
+		goal.Status = constants.StatusCompleted
+		now := time.Now()
+		goal.CompletedAt = &now
+	}
+	_ = les.worldRepo.UpdateNPCGoal(goal)
+
+	return event
+}
+
+// shouldCreateNewGoal determines if an NPC should create a new goal
+func (les *LivingEcosystemService) shouldCreateNewGoal(goals []models.NPCGoal) bool {
+	return len(goals) < 3 && rand.Float64() < 0.3
 }
 
 // simulateGoalProgress simulates progress on an NPC goal
@@ -493,96 +519,148 @@ Create a brief description (2-3 sentences) of this economic event and its immedi
 
 // updateSettlementProsperity updates a settlement's economic status
 func (les *LivingEcosystemService) updateSettlementProsperity(_ context.Context, settlement *models.Settlement, timeDelta time.Duration) {
-	// Base prosperity change
-	prosperityChange := 0.0
+	// Calculate prosperity change based on various factors
+	prosperityChange := les.calculateProsperityChange(settlement, timeDelta)
+	
+	// TODO: Implement prosperity update when repository method is available
+	_ = prosperityChange // placeholder until persistence implemented
+}
 
+func (les *LivingEcosystemService) calculateProsperityChange(settlement *models.Settlement, timeDelta time.Duration) float64 {
+	var prosperityChange float64
+	
 	// Factor in trade routes
-	if tradeRoutes, ok := map[string]interface{}{}["trade_routes"].([]interface{}); ok {
-		prosperityChange += float64(len(tradeRoutes)) * 0.01
-	}
-
-	// Factor in resources
-	if resources, ok := map[string]interface{}{}["resources"].([]interface{}); ok {
-		prosperityChange += float64(len(resources)) * 0.005
-	}
-
+	prosperityChange += les.calculateTradeRouteBonus(settlement.TradeRoutes)
+	
+	// Factor in exports/imports
+	prosperityChange += les.calculateResourceBonus(settlement.PrimaryExports)
+	
 	// Factor in population
-	if settlement.Population > 10000 {
-		prosperityChange += 0.01
-	} else if settlement.Population < 1000 {
-		prosperityChange -= 0.01
+	prosperityChange += les.calculatePopulationBonus(settlement.Population)
+	
+	// Apply time-based change (weekly rate)
+	return prosperityChange * (timeDelta.Hours() / 168.0)
+}
+
+func (les *LivingEcosystemService) calculateTradeRouteBonus(tradeRoutesJSON models.JSONB) float64 {
+	if tradeRoutesJSON == nil {
+		return 0.0
 	}
+	
+	var tradeRoutes []interface{}
+	if err := json.Unmarshal(tradeRoutesJSON, &tradeRoutes); err == nil {
+		return float64(len(tradeRoutes)) * 0.01
+	}
+	return 0.0
+}
 
-	// Apply time-based change
-	prosperityChange *= timeDelta.Hours() / 168.0 // Weekly rate
-	_ = prosperityChange                          // placeholder until persistence implemented
+func (les *LivingEcosystemService) calculateResourceBonus(exportsJSON models.JSONB) float64 {
+	if exportsJSON == nil {
+		return 0.0
+	}
+	
+	var exports []interface{}
+	if err := json.Unmarshal(exportsJSON, &exports); err == nil {
+		return float64(len(exports)) * 0.005
+	}
+	return 0.0
+}
 
-	// Update prosperity
-	// TODO: Implement UpdateSettlement method in repository
-	// if prosperity, ok := map[string]interface{}{}["prosperity"].(float64); ok {
-	// 	map[string]interface{}{}["prosperity"] = math.Max(0, math.Min(1, prosperity+prosperityChange))
-	// 	les.settlementRepo.UpdateSettlement(settlement.ID, settlement)
-	// }
+func (les *LivingEcosystemService) calculatePopulationBonus(population int) float64 {
+	if population > 10000 {
+		return 0.01
+	} else if population < 1000 {
+		return -0.01
+	}
+	return 0.0
 }
 
 // simulatePoliticalDevelopments simulates political changes and faction activities
 func (les *LivingEcosystemService) simulatePoliticalDevelopments(ctx context.Context, sessionID string, timeDelta time.Duration) ([]models.EmergentWorldEvent, error) {
-	events := []models.EmergentWorldEvent{}
-
 	// Get factions
-	sessionUUID, err := uuid.Parse(sessionID)
-	if err != nil {
-		return nil, err
-	}
-	factions, err := les.factionRepo.GetFactionsByGameSession(sessionUUID)
+	factions, err := les.getFactions(sessionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Process faction agendas
-	for _, faction := range factions {
-		// Get faction personality
-		personality, err := les.worldRepo.GetFactionPersonality(faction.ID.String())
-		if err != nil {
-			continue
-		}
-
-		// Process active agendas
-		agendas, err := les.worldRepo.GetFactionAgendas(faction.ID.String())
-		if err != nil {
-			continue
-		}
-
-		for i := range agendas {
-			agenda := &agendas[i]
-			if agenda.Status != constants.StatusActive {
-				continue
-			}
-
-			// Simulate agenda progress
-			event := les.simulateAgendaProgress(ctx, faction, personality, agenda, timeDelta)
-			if event != nil {
-				events = append(events, *event)
-			}
-
-			// Update agenda
-			_ = les.worldRepo.UpdateFactionAgenda(agenda)
-		}
-
-		// Check for new political opportunities
-		if rand.Float64() < 0.15*(timeDelta.Hours()/168.0) { // 15% chance per week
-			event := les.generatePoliticalOpportunity(ctx, faction, personality)
-			if event != nil {
-				events = append(events, *event)
-			}
-		}
-	}
+	// Process all factions
+	events := les.processFactionActivities(ctx, factions, timeDelta)
 
 	// Simulate faction interactions
 	interactionEvents := les.simulateFactionInteractions(ctx, factions, timeDelta)
 	events = append(events, interactionEvents...)
 
 	return events, nil
+}
+
+func (les *LivingEcosystemService) getFactions(sessionID string) ([]*models.Faction, error) {
+	sessionUUID, err := uuid.Parse(sessionID)
+	if err != nil {
+		return nil, err
+	}
+	return les.factionRepo.GetFactionsByGameSession(sessionUUID)
+}
+
+func (les *LivingEcosystemService) processFactionActivities(ctx context.Context, factions []*models.Faction, timeDelta time.Duration) []models.EmergentWorldEvent {
+	events := []models.EmergentWorldEvent{}
+
+	for _, faction := range factions {
+		factionEvents := les.processSingleFaction(ctx, faction, timeDelta)
+		events = append(events, factionEvents...)
+	}
+
+	return events
+}
+
+func (les *LivingEcosystemService) processSingleFaction(ctx context.Context, faction *models.Faction, timeDelta time.Duration) []models.EmergentWorldEvent {
+	events := []models.EmergentWorldEvent{}
+
+	// Get faction personality
+	personality, err := les.worldRepo.GetFactionPersonality(faction.ID.String())
+	if err != nil {
+		return events
+	}
+
+	// Process agendas
+	agendaEvents := les.processFactionAgendas(ctx, faction, personality, timeDelta)
+	events = append(events, agendaEvents...)
+
+	// Check for new opportunities
+	if les.shouldGenerateOpportunity(timeDelta) {
+		event := les.generatePoliticalOpportunity(ctx, faction, personality)
+		if event != nil {
+			events = append(events, *event)
+		}
+	}
+
+	return events
+}
+
+func (les *LivingEcosystemService) processFactionAgendas(ctx context.Context, faction *models.Faction, personality *models.FactionPersonality, timeDelta time.Duration) []models.EmergentWorldEvent {
+	events := []models.EmergentWorldEvent{}
+
+	agendas, err := les.worldRepo.GetFactionAgendas(faction.ID.String())
+	if err != nil {
+		return events
+	}
+
+	for i := range agendas {
+		agenda := &agendas[i]
+		if agenda.Status == constants.StatusActive {
+			event := les.simulateAgendaProgress(ctx, faction, personality, agenda, timeDelta)
+			if event != nil {
+				events = append(events, *event)
+			}
+			_ = les.worldRepo.UpdateFactionAgenda(agenda)
+		}
+	}
+
+	return events
+}
+
+func (les *LivingEcosystemService) shouldGenerateOpportunity(timeDelta time.Duration) bool {
+	// 15% chance per week
+	return rand.Float64() < 0.15*(timeDelta.Hours()/168.0)
 }
 
 // simulateAgendaProgress advances a faction's political agenda
@@ -831,6 +909,23 @@ func (les *LivingEcosystemService) getFactionRelationship(_, faction2 *models.Fa
 }
 
 func (les *LivingEcosystemService) generateFactionInteraction(ctx context.Context, faction1, faction2 *models.Faction, relationship float64) *models.EmergentWorldEvent {
+	// Select interaction type based on relationship
+	interaction := les.selectInteractionType(relationship)
+
+	// Generate description using LLM
+	description := les.generateInteractionDescription(ctx, faction1, faction2, interaction, relationship)
+	if description == "" {
+		return nil
+	}
+
+	// Calculate relationship change
+	relationshipChange := les.calculateRelationshipChange(interaction)
+
+	return les.createFactionInteractionEvent(faction1, faction2, interaction, description, relationshipChange)
+}
+
+// selectInteractionType chooses an interaction based on relationship
+func (les *LivingEcosystemService) selectInteractionType(relationship float64) string {
 	var interactionTypes []string
 
 	if relationship < -25 {
@@ -841,8 +936,11 @@ func (les *LivingEcosystemService) generateFactionInteraction(ctx context.Contex
 		interactionTypes = []string{"diplomatic_meeting", "trade_negotiation", "border_dispute", "information_exchange"}
 	}
 
-	interaction := interactionTypes[rand.Intn(len(interactionTypes))]
+	return interactionTypes[rand.Intn(len(interactionTypes))]
+}
 
+// generateInteractionDescription creates a description using LLM
+func (les *LivingEcosystemService) generateInteractionDescription(ctx context.Context, faction1, faction2 *models.Faction, interaction string, relationship float64) string {
 	prompt := fmt.Sprintf(`Generate a faction interaction event:
 Faction 1: %s
 Faction 2: %s
@@ -854,22 +952,27 @@ Create a description (2-3 sentences) of this interaction and its outcome.`,
 
 	description, err := les.llm.GenerateContent(ctx, prompt, "")
 	if err != nil {
-		return nil
+		return ""
 	}
+	return description
+}
 
-	// Calculate relationship change
-	relationshipChange := 0.0
+// calculateRelationshipChange determines how the interaction affects the relationship
+func (les *LivingEcosystemService) calculateRelationshipChange(interaction string) float64 {
 	switch interaction {
 	case "border_skirmish", "trade_embargo", "spy_captured":
-		relationshipChange = -(rand.Float64()*10 + 5)
+		return -(rand.Float64()*10 + 5)
 	case "trade_deal", "military_cooperation", "royal_marriage":
-		relationshipChange = rand.Float64()*10 + 5
+		return rand.Float64()*10 + 5
 	case "cultural_exchange":
-		relationshipChange = rand.Float64()*5 + 2
+		return rand.Float64()*5 + 2
 	default:
-		relationshipChange = (rand.Float64() - 0.5) * 10
+		return (rand.Float64() - 0.5) * 10
 	}
+}
 
+// createFactionInteractionEvent builds the event object
+func (les *LivingEcosystemService) createFactionInteractionEvent(faction1, faction2 *models.Faction, interaction, description string, relationshipChange float64) *models.EmergentWorldEvent {
 	return &models.EmergentWorldEvent{
 		ID:          uuid.New().String(),
 		SessionID:   faction1.GameSessionID.String(),
