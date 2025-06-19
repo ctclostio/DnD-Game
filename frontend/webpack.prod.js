@@ -9,7 +9,8 @@ const { InjectManifest } = require('workbox-webpack-plugin');
 
 module.exports = merge(common, {
   mode: 'production',
-  devtool: 'source-map',
+  // SECURITY: Source maps disabled in production to prevent source code exposure
+  // devtool: 'source-map', // Removed for security - exposes source code in production
   output: {
     filename: 'js/[name].[contenthash:8].js',
     chunkFilename: 'js/[name].[contenthash:8].chunk.js',

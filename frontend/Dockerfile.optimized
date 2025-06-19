@@ -136,6 +136,8 @@ CMD ["nginx", "-g", "daemon off;"]
 
 # ========================================
 # Stage 5: Development
+# IMPORTANT: This stage is for development only. DO NOT use for production deployments.
+# Production deployments should use the "production" stage (Stage 4).
 # ========================================
 FROM node:20-alpine AS development
 
@@ -165,6 +167,8 @@ RUN chown -R devuser:devgroup /app
 EXPOSE 3000
 
 # Environment for development
+# NOSONAR: S4507 - NODE_ENV=development is intentional for the development stage
+# This stage is NOT for production use. Production uses the "production" stage.
 ENV NODE_ENV=development
 ENV CHOKIDAR_USEPOLLING=true
 

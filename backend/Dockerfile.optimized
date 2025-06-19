@@ -94,6 +94,9 @@ ENTRYPOINT ["/app/server"]
 
 # ========================================
 # Development stage with debugging tools
+# IMPORTANT: This stage is for development only. DO NOT use for production deployments.
+# Production deployments should use the "final" stage (Stage 4).
+# This stage includes debugging tools (dlv) and hot reload (air).
 # ========================================
 FROM golang:1.21-alpine AS development
 

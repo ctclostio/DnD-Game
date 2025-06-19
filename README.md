@@ -165,6 +165,38 @@ See [SECURITY.md](./SECURITY.md) for detailed security configuration and best pr
 ### Reporting Security Issues
 Please report security vulnerabilities privately to security@yourdomain.com
 
+## Production Deployment
+
+### ⚠️ Important Security Notice
+**Never use development Docker stages or configurations in production!**
+
+### Quick Start
+1. Copy environment template:
+   ```bash
+   cp .env.production.template .env.production
+   # Edit .env.production with your values
+   ```
+
+2. Build production images:
+   ```bash
+   ./scripts/build-production.sh
+   ```
+
+3. Deploy with production compose:
+   ```bash
+   docker-compose -f docker-compose.production.yml up -d
+   ```
+
+### Security Requirements
+- Source maps are disabled in production builds
+- Use `--target production` for frontend builds
+- Use `--target final` for backend builds
+- Set `ENV=production` (never `development`)
+- JWT secrets must be 64+ characters
+- Database SSL is required
+
+For detailed production deployment instructions, see [DOCKER_PRODUCTION_GUIDE.md](./DOCKER_PRODUCTION_GUIDE.md).
+
 ## Contributing
 
 1. Fork the repository

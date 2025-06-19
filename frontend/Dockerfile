@@ -34,6 +34,8 @@ USER builduser
 RUN npm run build
 
 # Development stage
+# IMPORTANT: This stage is for development only. DO NOT use for production deployments.
+# Production deployments should use the "production" stage.
 FROM node:24-alpine AS development
 
 # Create non-root user
