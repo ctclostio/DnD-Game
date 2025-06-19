@@ -33,57 +33,11 @@ func TestCSRFCookieSecurityFlags(t *testing.T) {
 	
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create a test handler
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			})
+			// Execute request and get cookie
+			csrfCookie := executeRequestAndGetCSRFCookie(t, store, tt.isProduction)
 			
-			// Wrap with CSRF middleware
-			csrfHandler := CSRFMiddleware(store, tt.isProduction)(handler)
-			
-			// Create test request
-			req := httptest.NewRequest("GET", "/test", nil)
-			rec := httptest.NewRecorder()
-			
-			// Execute request
-			csrfHandler.ServeHTTP(rec, req)
-			
-			// Check cookie was set
-			cookies := rec.Result().Cookies()
-			if len(cookies) == 0 {
-				t.Fatal("Expected CSRF cookie to be set")
-			}
-			
-			// Find CSRF cookie
-			var csrfCookie *http.Cookie
-			for _, cookie := range cookies {
-				if cookie.Name == "csrf_token" {
-					csrfCookie = cookie
-					break
-				}
-			}
-			
-			if csrfCookie == nil {
-				t.Fatal("CSRF cookie not found")
-			}
-			
-			// Validate security flags
-			if csrfCookie.Secure != tt.expectedSecure {
-				t.Errorf("Secure flag mismatch: got %v, want %v", csrfCookie.Secure, tt.expectedSecure)
-			}
-			
-			// Validate other security requirements
-			if csrfCookie.HttpOnly != false {
-				t.Error("HttpOnly must be false for CSRF tokens to be accessible by JavaScript")
-			}
-			
-			if csrfCookie.SameSite != http.SameSiteStrictMode {
-				t.Errorf("SameSite should be Strict, got %v", csrfCookie.SameSite)
-			}
-			
-			if csrfCookie.Path != "/" {
-				t.Errorf("Path should be /, got %s", csrfCookie.Path)
-			}
+			// Validate cookie security flags
+			validateCSRFCookieFlags(t, csrfCookie, tt.expectedSecure)
 			
 			// Log security configuration for clarity
 			t.Logf("Cookie security configuration - Secure: %v, HttpOnly: %v, SameSite: %v",
@@ -148,5 +102,61 @@ func TestCSRFTokenValidation(t *testing.T) {
 	// Validate non-existent token fails
 	if store.ValidateToken("invalid-token") {
 		t.Error("Invalid token should not validate")
+	}
+}
+
+// Helper functions to reduce cognitive complexity
+
+// executeRequestAndGetCSRFCookie executes a request and returns the CSRF cookie
+func executeRequestAndGetCSRFCookie(t *testing.T, store *CSRFStore, isProduction bool) *http.Cookie {
+	// Create a test handler
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	
+	// Wrap with CSRF middleware
+	csrfHandler := CSRFMiddleware(store, isProduction)(handler)
+	
+	// Create and execute test request
+	req := httptest.NewRequest("GET", "/test", nil)
+	rec := httptest.NewRecorder()
+	csrfHandler.ServeHTTP(rec, req)
+	
+	// Get CSRF cookie
+	return findCSRFCookie(t, rec.Result().Cookies())
+}
+
+// findCSRFCookie finds and returns the CSRF cookie from a list of cookies
+func findCSRFCookie(t *testing.T, cookies []*http.Cookie) *http.Cookie {
+	if len(cookies) == 0 {
+		t.Fatal("Expected CSRF cookie to be set")
+	}
+	
+	for _, cookie := range cookies {
+		if cookie.Name == "csrf_token" {
+			return cookie
+		}
+	}
+	
+	t.Fatal("CSRF cookie not found")
+	return nil
+}
+
+// validateCSRFCookieFlags validates the security flags on a CSRF cookie
+func validateCSRFCookieFlags(t *testing.T, cookie *http.Cookie, expectedSecure bool) {
+	if cookie.Secure != expectedSecure {
+		t.Errorf("Secure flag mismatch: got %v, want %v", cookie.Secure, expectedSecure)
+	}
+	
+	if cookie.HttpOnly != false {
+		t.Error("HttpOnly must be false for CSRF tokens to be accessible by JavaScript")
+	}
+	
+	if cookie.SameSite != http.SameSiteStrictMode {
+		t.Errorf("SameSite should be Strict, got %v", cookie.SameSite)
+	}
+	
+	if cookie.Path != "/" {
+		t.Errorf("Path should be /, got %s", cookie.Path)
 	}
 }

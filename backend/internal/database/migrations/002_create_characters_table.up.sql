@@ -12,14 +12,7 @@ CREATE TABLE IF NOT EXISTS characters (
     speed INTEGER NOT NULL DEFAULT 30,
     
     -- Attributes stored as JSONB for flexibility
-    attributes JSONB NOT NULL DEFAULT '{
-        "strength": 10,
-        "dexterity": 10,
-        "constitution": 10,
-        "intelligence": 10,
-        "wisdom": 10,
-        "charisma": 10
-    }'::jsonb,
+    attributes JSONB NOT NULL DEFAULT '{"strength": 10, "dexterity": 10, "constitution": 10, "intelligence": 10, "wisdom": 10, "charisma": 10}'::jsonb,
     
     -- Arrays stored as JSONB
     skills JSONB DEFAULT '[]'::jsonb,

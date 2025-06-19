@@ -101,21 +101,7 @@ func main() {
 	log.Info().Msg("JWT manager initialized")
 
 	// Create AI provider
-	var llmProvider services.LLMProvider
-	switch cfg.AI.Provider {
-	case "openai":
-		llmProvider = services.NewOpenAIProvider(cfg.AI.APIKey, cfg.AI.Model)
-		log.Info().Str("provider", "openai").Str("model", cfg.AI.Model).Msg("OpenAI provider initialized")
-	case "anthropic":
-		llmProvider = services.NewAnthropicProvider(cfg.AI.APIKey, cfg.AI.Model)
-		log.Info().Str("provider", "anthropic").Str("model", cfg.AI.Model).Msg("Anthropic provider initialized")
-	case "openrouter":
-		llmProvider = services.NewOpenRouterProvider(cfg.AI.APIKey, cfg.AI.Model)
-		log.Info().Str("provider", "openrouter").Str("model", cfg.AI.Model).Msg("OpenRouter provider initialized")
-	default:
-		llmProvider = &services.MockLLMProvider{}
-		log.Warn().Msg("Using mock LLM provider")
-	}
+	llmProvider := createAIProvider(cfg, log)
 
 	// Create AI services
 	log.Info().Msg("Initializing AI services")
@@ -322,4 +308,22 @@ func getEnvOrDefault(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// createAIProvider creates the appropriate LLM provider based on configuration
+func createAIProvider(cfg *config.Config, log *logger.LoggerV2) services.LLMProvider {
+	switch cfg.AI.Provider {
+	case "openai":
+		log.Info().Str("provider", "openai").Str("model", cfg.AI.Model).Msg("OpenAI provider initialized")
+		return services.NewOpenAIProvider(cfg.AI.APIKey, cfg.AI.Model)
+	case "anthropic":
+		log.Info().Str("provider", "anthropic").Str("model", cfg.AI.Model).Msg("Anthropic provider initialized")
+		return services.NewAnthropicProvider(cfg.AI.APIKey, cfg.AI.Model)
+	case "openrouter":
+		log.Info().Str("provider", "openrouter").Str("model", cfg.AI.Model).Msg("OpenRouter provider initialized")
+		return services.NewOpenRouterProvider(cfg.AI.APIKey, cfg.AI.Model)
+	default:
+		log.Warn().Msg("Using mock LLM provider")
+		return &services.MockLLMProvider{}
+	}
 }

@@ -134,9 +134,44 @@ func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
 
 // Validate validates the configuration
 func (c *Config) Validate() error {
+	// Validate server configuration
+	if err := c.validateServer(); err != nil {
+		return err
+	}
+	
+	// Validate database configuration
+	if err := c.validateDatabase(); err != nil {
+		return err
+	}
+	
+	// Validate authentication configuration
+	if err := c.validateAuth(); err != nil {
+		return err
+	}
+	
+	// Validate AI configuration
+	if err := c.validateAI(); err != nil {
+		return err
+	}
+	
+	// Production-specific validations
+	if c.Server.Environment == "production" {
+		return c.validateProduction()
+	}
+	
+	return nil
+}
+
+// validateServer validates server configuration
+func (c *Config) validateServer() error {
 	if c.Server.Port == "" {
 		return fmt.Errorf("server port is required")
 	}
+	return nil
+}
+
+// validateDatabase validates database configuration
+func (c *Config) validateDatabase() error {
 	if c.Database.Host == "" {
 		return fmt.Errorf("database host is required")
 	}
@@ -149,6 +184,11 @@ func (c *Config) Validate() error {
 	if c.Database.DatabaseName == "" {
 		return fmt.Errorf("database name is required")
 	}
+	return nil
+}
+
+// validateAuth validates authentication configuration
+func (c *Config) validateAuth() error {
 	if c.Auth.JWTSecret == "" {
 		return fmt.Errorf("JWT secret is required (JWT_SECRET environment variable)")
 	}
@@ -164,27 +204,32 @@ func (c *Config) Validate() error {
 	if c.Auth.BcryptCost < 4 || c.Auth.BcryptCost > 31 {
 		return fmt.Errorf("bcrypt cost must be between 4 and 31")
 	}
-	// Validate AI configuration if provider is not mock
+	return nil
+}
+
+// validateAI validates AI configuration
+func (c *Config) validateAI() error {
 	if c.AI.Provider != "mock" && c.AI.APIKey == "" {
 		return fmt.Errorf("AI API key is required when AI provider is not 'mock' (AI_API_KEY environment variable)")
 	}
+	return nil
+}
+
+// validateProduction validates production-specific requirements
+func (c *Config) validateProduction() error {
+	// Ensure mock providers are not used in production
+	if c.AI.Provider == "mock" {
+		return fmt.Errorf("mock AI provider cannot be used in production")
+	}
 	
-	// Production-specific validations
-	if c.Server.Environment == "production" {
-		// Ensure mock providers are not used in production
-		if c.AI.Provider == "mock" {
-			return fmt.Errorf("mock AI provider cannot be used in production")
-		}
-		
-		// Ensure proper database SSL mode
-		if c.Database.SSLMode == "disable" {
-			return fmt.Errorf("database SSL mode 'disable' is not recommended for production")
-		}
-		
-		// Ensure JWT secret is sufficiently long for production
-		if len(c.Auth.JWTSecret) < 64 {
-			return fmt.Errorf("JWT secret must be at least 64 characters long in production")
-		}
+	// Ensure proper database SSL mode
+	if c.Database.SSLMode == "disable" {
+		return fmt.Errorf("database SSL mode 'disable' is not recommended for production")
+	}
+	
+	// Ensure JWT secret is sufficiently long for production
+	if len(c.Auth.JWTSecret) < 64 {
+		return fmt.Errorf("JWT secret must be at least 64 characters long in production")
 	}
 	
 	return nil
