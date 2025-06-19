@@ -1,0 +1,115 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# GitHub specific
+.github/
+.github_token
+
+# Environment files - CRITICAL for security
+.env
+.env.*
+*.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.aider*
+
+# Documentation
+*.md
+docs/
+LICENSE
+
+# Test files and coverage
+*_test.go
+*.test
+coverage/
+.nyc_output/
+e2e/
+__tests__/
+*.spec.js
+*.spec.ts
+*.test.js
+*.test.ts
+
+# Local development files
+CLAUDE.local.md
+.claude/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Build artifacts (these are built inside Docker)
+/bin/
+/dist/
+/out/
+/backend/vendor/
+/frontend/build/
+/frontend/dist/
+/frontend/bundle-report.html
+node_modules/
+
+# Docker files themselves (avoid recursion)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.circleci/
+.travis.yml
+.gitlab-ci.yml
+
+# Package manager files (we'll copy package.json separately)
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Go specific (for backend)
+go.work
+go.sum
+
+# Kubernetes secrets
+k8s/secret.yaml
+k8s/secrets/
+
+# Any other sensitive files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+private/
+secrets/
+credentials/
