@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -480,8 +481,7 @@ func (h *CampaignHandler) AddTimelineEvent(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	vars := mux.Vars(r)
-	sessionID, err := uuid.Parse(vars[constants.ParamSessionID])
+	sessionID, err := h.parseSessionID(r)
 	if err != nil {
 		response.BadRequest(w, r, constants.ErrInvalidSessionID)
 		return
@@ -495,22 +495,7 @@ func (h *CampaignHandler) AddTimelineEvent(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Check if user is participant or DM
-	isParticipant := false
-	if session.DMID == claims.UserID {
-		isParticipant = true
-	} else {
-		participants, err := h.gameService.GetSessionParticipants(ctx, sessionID.String())
-		if err == nil {
-			for _, p := range participants {
-				if p.UserID == claims.UserID {
-					isParticipant = true
-					break
-				}
-			}
-		}
-	}
-
-	if !isParticipant {
+	if !h.isUserInSession(ctx, session, claims.UserID) {
 		response.Forbidden(w, r, "User not in session")
 		return
 	}
@@ -646,4 +631,34 @@ func (h *CampaignHandler) GetNPCRelationships(w http.ResponseWriter, r *http.Req
 	}
 
 	response.JSON(w, r, http.StatusOK, relationships)
+}
+
+// Helper functions to reduce cognitive complexity
+
+// parseSessionID extracts and validates the session ID from request
+func (h *CampaignHandler) parseSessionID(r *http.Request) (uuid.UUID, error) {
+	vars := mux.Vars(r)
+	return uuid.Parse(vars[constants.ParamSessionID])
+}
+
+// isUserInSession checks if the user is either the DM or a participant in the session
+func (h *CampaignHandler) isUserInSession(ctx context.Context, session *models.GameSession, userID string) bool {
+	// Check if user is DM
+	if session.DMID == userID {
+		return true
+	}
+
+	// Check if user is participant
+	participants, err := h.gameService.GetSessionParticipants(ctx, session.ID)
+	if err != nil {
+		return false
+	}
+
+	for _, p := range participants {
+		if p.UserID == userID {
+			return true
+		}
+	}
+
+	return false
 }

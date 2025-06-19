@@ -67,15 +67,22 @@ CREATE INDEX idx_npc_templates_type ON npc_templates(type);
 CREATE INDEX idx_npc_templates_challenge_rating ON npc_templates(challenge_rating);
 
 -- Insert some basic NPC templates
-INSERT INTO npc_templates (name, source, type, size, alignment, armor_class, hit_dice, speed, attributes, challenge_rating, abilities, actions) VALUES
-('Goblin', 'MM', 'humanoid', 'small', 'neutral evil', 15, '2d6', '{"walk": 30}', '{"strength": 8, "dexterity": 14, "constitution": 10, "intelligence": 10, "wisdom": 8, "charisma": 8}', 0.25, 
-'[{"name": "Nimble Escape", "description": "The goblin can take the Disengage or Hide action as a bonus action on each of its turns."}]',
-'[{"name": "Scimitar", "type": "action", "attackBonus": 4, "damage": "1d6+2", "damageType": "slashing"}, {"name": "Shortbow", "type": "action", "attackBonus": 4, "damage": "1d6+2", "damageType": "piercing", "range": "80/320 ft."}]'),
+DO $$
+DECLARE
+    default_walk_speed CONSTANT JSONB := '{"walk": 30}'::jsonb;
+    mm_source CONSTANT TEXT := 'MM';
+    action_type CONSTANT TEXT := 'action';
+BEGIN
+    INSERT INTO npc_templates (name, source, type, size, alignment, armor_class, hit_dice, speed, attributes, challenge_rating, abilities, actions) VALUES
+    ('Goblin', mm_source, 'humanoid', 'small', 'neutral evil', 15, '2d6', default_walk_speed, '{"strength": 8, "dexterity": 14, "constitution": 10, "intelligence": 10, "wisdom": 8, "charisma": 8}', 0.25, 
+    '[{"name": "Nimble Escape", "description": "The goblin can take the Disengage or Hide action as a bonus action on each of its turns."}]',
+    '[{"name": "Scimitar", "type": "' || action_type || '", "attackBonus": 4, "damage": "1d6+2", "damageType": "slashing"}, {"name": "Shortbow", "type": "' || action_type || '", "attackBonus": 4, "damage": "1d6+2", "damageType": "piercing", "range": "80/320 ft."}]'),
 
-('Orc', 'MM', 'humanoid', 'medium', 'chaotic evil', 13, '2d8+6', '{"walk": 30}', '{"strength": 16, "dexterity": 12, "constitution": 16, "intelligence": 7, "wisdom": 11, "charisma": 10}', 0.5,
-'[{"name": "Aggressive", "description": "As a bonus action, the orc can move up to its speed toward a hostile creature that it can see."}]',
-'[{"name": "Greataxe", "type": "action", "attackBonus": 5, "damage": "1d12+3", "damageType": "slashing"}, {"name": "Javelin", "type": "action", "attackBonus": 5, "damage": "1d6+3", "damageType": "piercing", "range": "30/120 ft."}]'),
+    ('Orc', mm_source, 'humanoid', 'medium', 'chaotic evil', 13, '2d8+6', default_walk_speed, '{"strength": 16, "dexterity": 12, "constitution": 16, "intelligence": 7, "wisdom": 11, "charisma": 10}', 0.5,
+    '[{"name": "Aggressive", "description": "As a bonus action, the orc can move up to its speed toward a hostile creature that it can see."}]',
+    '[{"name": "Greataxe", "type": "' || action_type || '", "attackBonus": 5, "damage": "1d12+3", "damageType": "slashing"}, {"name": "Javelin", "type": "' || action_type || '", "attackBonus": 5, "damage": "1d6+3", "damageType": "piercing", "range": "30/120 ft."}]'),
 
-('Wolf', 'MM', 'beast', 'medium', 'unaligned', 13, '2d8+2', '{"walk": 40}', '{"strength": 12, "dexterity": 15, "constitution": 12, "intelligence": 3, "wisdom": 12, "charisma": 6}', 0.25,
-'[{"name": "Keen Hearing and Smell", "description": "The wolf has advantage on Wisdom (Perception) checks that rely on hearing or smell."}, {"name": "Pack Tactics", "description": "The wolf has advantage on attack rolls against a creature if at least one of the wolf''s allies is within 5 feet of the creature and the ally isn''t incapacitated."}]',
-'[{"name": "Bite", "type": "action", "attackBonus": 4, "damage": "2d4+2", "damageType": "piercing", "description": "If the target is a creature, it must succeed on a DC 11 Strength saving throw or be knocked prone."}]');
+    ('Wolf', mm_source, 'beast', 'medium', 'unaligned', 13, '2d8+2', '{"walk": 40}'::jsonb, '{"strength": 12, "dexterity": 15, "constitution": 12, "intelligence": 3, "wisdom": 12, "charisma": 6}', 0.25,
+    '[{"name": "Keen Hearing and Smell", "description": "The wolf has advantage on Wisdom (Perception) checks that rely on hearing or smell."}, {"name": "Pack Tactics", "description": "The wolf has advantage on attack rolls against a creature if at least one of the wolf''s allies is within 5 feet of the creature and the ally isn''t incapacitated."}]',
+    '[{"name": "Bite", "type": "' || action_type || '", "attackBonus": 4, "damage": "2d4+2", "damageType": "piercing", "description": "If the target is a creature, it must succeed on a DC 11 Strength saving throw or be knocked prone."}]');
+END $$;

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"path/filepath"
@@ -44,45 +45,8 @@ func (h *CharacterCreationHandler) GetCharacterOptions(w http.ResponseWriter, r 
 		return
 	}
 
-	// Add user's custom races
-	if h.customRaceService != nil {
-		userUUID, err := uuid.Parse(userID)
-		if err == nil {
-			// Get user's own custom races
-			userRaces, err := h.customRaceService.GetUserCustomRaces(r.Context(), userUUID)
-			if err == nil {
-				customRaceOptions := make([]map[string]interface{}, 0)
-				for _, race := range userRaces {
-					if race.ApprovalStatus == models.ApprovalStatusApproved || race.CreatedBy == userUUID {
-						customRaceOptions = append(customRaceOptions, map[string]interface{}{
-							"id":          race.ID,
-							"name":        race.Name,
-							"description": race.Description,
-							"status":      race.ApprovalStatus,
-							"isCustom":    true,
-						})
-					}
-				}
-
-				// Get public custom races
-				publicRaces, err := h.customRaceService.GetPublicCustomRaces(r.Context())
-				if err == nil {
-					for _, race := range publicRaces {
-						customRaceOptions = append(customRaceOptions, map[string]interface{}{
-							"id":          race.ID,
-							"name":        race.Name,
-							"description": race.Description,
-							"status":      race.ApprovalStatus,
-							"isCustom":    true,
-							"isPublic":    true,
-						})
-					}
-				}
-
-				options["customRaces"] = customRaceOptions
-			}
-		}
-	}
+	// Add custom races if available
+	h.addCustomRacesToOptions(r.Context(), userID, options)
 
 	// Add AI availability status
 	options["aiEnabled"] = h.aiCharService.IsEnabled()
@@ -327,4 +291,83 @@ func (h *CharacterCreationHandler) validateCharacterBuild(character *models.Char
 	}
 
 	return errors
+}
+
+// Helper functions to reduce cognitive complexity
+
+// addCustomRacesToOptions adds custom races to character creation options
+func (h *CharacterCreationHandler) addCustomRacesToOptions(ctx context.Context, userID string, options map[string]interface{}) {
+	if h.customRaceService == nil {
+		return
+	}
+
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return
+	}
+
+	customRaceOptions := h.collectCustomRaces(ctx, userUUID)
+	if len(customRaceOptions) > 0 {
+		options["customRaces"] = customRaceOptions
+	}
+}
+
+// collectCustomRaces collects both user and public custom races
+func (h *CharacterCreationHandler) collectCustomRaces(ctx context.Context, userUUID uuid.UUID) []map[string]interface{} {
+	customRaceOptions := make([]map[string]interface{}, 0)
+
+	// Add user's custom races
+	userRaceOptions := h.getUserCustomRaces(ctx, userUUID)
+	customRaceOptions = append(customRaceOptions, userRaceOptions...)
+
+	// Add public custom races
+	publicRaceOptions := h.getPublicCustomRaces(ctx)
+	customRaceOptions = append(customRaceOptions, publicRaceOptions...)
+
+	return customRaceOptions
+}
+
+// getUserCustomRaces gets and formats user's custom races
+func (h *CharacterCreationHandler) getUserCustomRaces(ctx context.Context, userUUID uuid.UUID) []map[string]interface{} {
+	userRaces, err := h.customRaceService.GetUserCustomRaces(ctx, userUUID)
+	if err != nil {
+		return nil
+	}
+
+	var raceOptions []map[string]interface{}
+	for _, race := range userRaces {
+		if race.ApprovalStatus == models.ApprovalStatusApproved || race.CreatedBy == userUUID {
+			raceOptions = append(raceOptions, formatCustomRace(race, false))
+		}
+	}
+	return raceOptions
+}
+
+// getPublicCustomRaces gets and formats public custom races
+func (h *CharacterCreationHandler) getPublicCustomRaces(ctx context.Context) []map[string]interface{} {
+	publicRaces, err := h.customRaceService.GetPublicCustomRaces(ctx)
+	if err != nil {
+		return nil
+	}
+
+	var raceOptions []map[string]interface{}
+	for _, race := range publicRaces {
+		raceOptions = append(raceOptions, formatCustomRace(race, true))
+	}
+	return raceOptions
+}
+
+// formatCustomRace formats a custom race for the response
+func formatCustomRace(race *models.CustomRace, isPublic bool) map[string]interface{} {
+	result := map[string]interface{}{
+		"id":          race.ID,
+		"name":        race.Name,
+		"description": race.Description,
+		"status":      race.ApprovalStatus,
+		"isCustom":    true,
+	}
+	if isPublic {
+		result["isPublic"] = true
+	}
+	return result
 }

@@ -25,6 +25,16 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
+// Test constants to avoid duplication
+const (
+	testCharactersPath     = "/api/v1/characters"
+	testCharacterByIDPath  = "/api/v1/characters/{id}"
+	testCharacterIDPath    = "/api/v1/characters/"
+	testCharacterInventory = "/api/v1/characters/{characterId}/inventory"
+	testCharacterEquipItem = "/api/v1/characters/{characterId}/inventory/{itemId}/equip"
+	testUserEmail          = "test@example.com"
+)
+
 type testContext struct {
 	t          *testing.T
 	handlers   *Handlers
@@ -120,17 +130,17 @@ func setupIntegrationTest(t *testing.T) (*testContext, func()) {
 	authMiddleware := auth.NewMiddleware(jwtManager)
 
 	// Character routes
-	router.HandleFunc("/api/v1/characters", authMiddleware.Authenticate(handlers.GetCharacters)).Methods("GET")
-	router.HandleFunc("/api/v1/characters", authMiddleware.Authenticate(handlers.CreateCharacter)).Methods("POST")
-	router.HandleFunc("/api/v1/characters/{id}", authMiddleware.Authenticate(handlers.GetCharacter)).Methods("GET")
-	router.HandleFunc("/api/v1/characters/{id}", authMiddleware.Authenticate(handlers.UpdateCharacter)).Methods("PUT")
-	router.HandleFunc("/api/v1/characters/{id}", authMiddleware.Authenticate(handlers.DeleteCharacter)).Methods("DELETE")
+	router.HandleFunc(testCharactersPath, authMiddleware.Authenticate(handlers.GetCharacters)).Methods("GET")
+	router.HandleFunc(testCharactersPath, authMiddleware.Authenticate(handlers.CreateCharacter)).Methods("POST")
+	router.HandleFunc(testCharacterByIDPath, authMiddleware.Authenticate(handlers.GetCharacter)).Methods("GET")
+	router.HandleFunc(testCharacterByIDPath, authMiddleware.Authenticate(handlers.UpdateCharacter)).Methods("PUT")
+	router.HandleFunc(testCharacterByIDPath, authMiddleware.Authenticate(handlers.DeleteCharacter)).Methods("DELETE")
 
 	// Inventory routes
 	inventoryHandler := NewInventoryHandler(svc.Inventory)
-	router.HandleFunc("/api/v1/characters/{characterId}/inventory", authMiddleware.Authenticate(inventoryHandler.GetCharacterInventory)).Methods("GET")
-	router.HandleFunc("/api/v1/characters/{characterId}/inventory", authMiddleware.Authenticate(inventoryHandler.AddItemToInventory)).Methods("POST")
-	router.HandleFunc("/api/v1/characters/{characterId}/inventory/{itemId}/equip", authMiddleware.Authenticate(inventoryHandler.EquipItem)).Methods("POST")
+	router.HandleFunc(testCharacterInventory, authMiddleware.Authenticate(inventoryHandler.GetCharacterInventory)).Methods("GET")
+	router.HandleFunc(testCharacterInventory, authMiddleware.Authenticate(inventoryHandler.AddItemToInventory)).Methods("POST")
+	router.HandleFunc(testCharacterEquipItem, authMiddleware.Authenticate(inventoryHandler.EquipItem)).Methods("POST")
 
 	cleanup := func() {
 		_ = sqlxDB.Close()
@@ -161,7 +171,7 @@ func createAuthenticatedRequest(t *testing.T, method, url string, body interface
 	req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 
 	// Generate token and add to request
-	tokenPair, err := jwtManager.GenerateTokenPair(userID, "testuser", "test@example.com", "player")
+	tokenPair, err := jwtManager.GenerateTokenPair(userID, "testuser", testUserEmail, "player")
 	require.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer "+tokenPair.AccessToken)
 
@@ -176,7 +186,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 
 	// Seed test user
 	testutil.SeedTestUser(t, ctx.db.DB,
-		userID, "testuser", "test@example.com", "player")
+		userID, "testuser", testUserEmail, "player")
 
 	t.Run("Create Character", func(t *testing.T) {
 		charData := models.Character{
@@ -194,7 +204,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 			},
 		}
 
-		req := createAuthenticatedRequest(t, "POST", "/api/v1/characters", charData, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "POST", testCharactersPath, charData, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
@@ -222,7 +232,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 		testutil.SeedTestCharacter(t, ctx.db.DB,
 			"char-2", userID, "Legolas")
 
-		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters", nil, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "GET", testCharactersPath, nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
@@ -254,7 +264,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 		err := ctx.db.Get(&charID, "SELECT id FROM characters WHERE name = 'Aragorn'")
 		require.NoError(t, err)
 
-		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters/"+charID, nil, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "GET", testCharacterIDPath+charID, nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
@@ -307,7 +317,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 			t.Logf("Direct service GetCharacterByID success: Name=%s", char.Name)
 		}
 
-		req := createAuthenticatedRequest(t, "PUT", "/api/v1/characters/"+charID, updateData, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "PUT", testCharacterIDPath+charID, updateData, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
@@ -328,7 +338,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 		// Use the char-2 ID we created earlier
 		charID := "char-2"
 
-		req := createAuthenticatedRequest(t, "DELETE", "/api/v1/characters/"+charID, nil, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "DELETE", testCharacterIDPath+charID, nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
@@ -352,7 +362,7 @@ func TestCharacterAPI_Integration(t *testing.T) {
 			"char-other", otherUserID, "Gimli")
 
 		// Try to get the other user's character
-		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters", nil, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "GET", testCharactersPath, nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
@@ -389,7 +399,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 	itemID := "item-test-123"
 
 	// Seed test data ONCE before all subtests
-	testutil.SeedTestUser(t, ctx.db.DB, userID, "testuser", "test@example.com", "player")
+	testutil.SeedTestUser(t, ctx.db.DB, userID, "testuser", testUserEmail, "player")
 	testutil.SeedTestCharacter(t, ctx.db.DB, charID, userID, "Thorin")
 	testutil.SeedTestItem(t, ctx.db.DB, itemID, "Longsword", "weapon", 1500)
 
@@ -399,7 +409,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 			"quantity": 1,
 		}
 
-		req := createAuthenticatedRequest(t, "POST", "/api/v1/characters/"+charID+"/inventory", reqBody, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "POST", testCharacterIDPath+charID+"/inventory", reqBody, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
@@ -416,7 +426,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 	})
 
 	t.Run("Get Character Inventory", func(t *testing.T) {
-		req := createAuthenticatedRequest(t, "GET", "/api/v1/characters/"+charID+"/inventory", nil, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "GET", testCharacterIDPath+charID+"/inventory", nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
@@ -448,7 +458,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 				"item_id":  itemID,
 				"quantity": 1,
 			}
-			addReq := createAuthenticatedRequest(t, "POST", "/api/v1/characters/"+charID+"/inventory", addReqBody, userID, ctx.jwtManager)
+			addReq := createAuthenticatedRequest(t, "POST", testCharacterIDPath+charID+"/inventory", addReqBody, userID, ctx.jwtManager)
 			addW := httptest.NewRecorder()
 			ctx.router.ServeHTTP(addW, addReq)
 
@@ -485,7 +495,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 		}
 
 		// Now equip the item
-		req := createAuthenticatedRequest(t, "POST", "/api/v1/characters/"+charID+"/inventory/"+itemID+"/equip", nil, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "POST", testCharacterIDPath+charID+"/inventory/"+itemID+"/equip", nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
