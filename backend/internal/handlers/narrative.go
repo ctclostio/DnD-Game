@@ -18,10 +18,7 @@ import (
 
 // Error messages
 const (
-	errCharacterNotFound = "character not found"
-	errUnauthorized      = "unauthorized"
-	errEventNotFound     = "event not found"
-	errProfileNotFound   = "profile not found"
+	errUnauthorized = "unauthorized"
 )
 
 // NarrativeHandlers manages narrative-related HTTP endpoints
@@ -91,7 +88,7 @@ func (h *NarrativeHandlers) GetNarrativeProfile(w http.ResponseWriter, r *http.R
 	// Verify character ownership
 	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
-		http.Error(w, "Character not found", http.StatusNotFound)
+		http.Error(w, constants.ErrCharacterNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -145,7 +142,7 @@ func (h *NarrativeHandlers) CreateNarrativeProfile(w http.ResponseWriter, r *htt
 	// Verify character ownership
 	character, err := h.characterRepo.GetByID(r.Context(), profile.CharacterID)
 	if err != nil {
-		http.Error(w, "Character not found", http.StatusNotFound)
+		http.Error(w, constants.ErrCharacterNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -177,7 +174,7 @@ func (h *NarrativeHandlers) UpdateNarrativeProfile(w http.ResponseWriter, r *htt
 	// Verify character ownership
 	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
-		http.Error(w, "Character not found", http.StatusNotFound)
+		http.Error(w, constants.ErrCharacterNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -194,7 +191,7 @@ func (h *NarrativeHandlers) UpdateNarrativeProfile(w http.ResponseWriter, r *htt
 
 	profile, err := h.narrativeRepo.GetNarrativeProfile(characterID)
 	if err != nil {
-		http.Error(w, "Profile not found", http.StatusNotFound)
+		http.Error(w, constants.ErrProfileNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -246,7 +243,7 @@ func (h *NarrativeHandlers) GetBackstoryElements(w http.ResponseWriter, r *http.
 	// Verify character ownership
 	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
-		http.Error(w, "Character not found", http.StatusNotFound)
+		http.Error(w, constants.ErrCharacterNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -476,7 +473,7 @@ func (h *NarrativeHandlers) GetWorldEvent(w http.ResponseWriter, r *http.Request
 
 	event, err := h.narrativeRepo.GetWorldEvent(eventID)
 	if err != nil {
-		http.Error(w, "Event not found", http.StatusNotFound)
+		http.Error(w, constants.ErrEventNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -551,7 +548,7 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 	// Verify character ownership
 	character, err := h.characterRepo.GetByID(r.Context(), request.CharacterID)
 	if err != nil {
-		http.Error(w, "Character not found", http.StatusNotFound)
+		http.Error(w, constants.ErrCharacterNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -572,7 +569,7 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 	// Get profile and backstory
 	profile, err := h.narrativeRepo.GetNarrativeProfile(request.CharacterID)
 	if err != nil {
-		http.Error(w, "Profile not found", http.StatusNotFound)
+		http.Error(w, constants.ErrProfileNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -633,7 +630,7 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 	// Get event
 	event, err := h.narrativeRepo.GetWorldEvent(request.EventID)
 	if err != nil {
-		http.Error(w, "Event not found", http.StatusNotFound)
+		http.Error(w, constants.ErrEventNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -667,7 +664,7 @@ func (h *NarrativeHandlers) GetCharacterMemories(w http.ResponseWriter, r *http.
 	// Verify character ownership
 	character, err := h.characterRepo.GetByID(r.Context(), characterID)
 	if err != nil {
-		http.Error(w, "Character not found", http.StatusNotFound)
+		http.Error(w, constants.ErrCharacterNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -835,7 +832,7 @@ func (h *NarrativeHandlers) verifyActionPermissions(ctx context.Context, claims 
 	// Verify character ownership
 	character, err := h.characterRepo.GetByID(ctx, action.CharacterID)
 	if err != nil {
-		return fmt.Errorf(errCharacterNotFound)
+		return fmt.Errorf(constants.ErrCharacterNotFound)
 	}
 
 	if character.UserID != claims.UserID {
@@ -860,8 +857,8 @@ func (h *NarrativeHandlers) verifyActionPermissions(ctx context.Context, claims 
 // handleActionPermissionError sends the appropriate error response
 func (h *NarrativeHandlers) handleActionPermissionError(w http.ResponseWriter, err error) {
 	switch err.Error() {
-	case errCharacterNotFound:
-		http.Error(w, "Character not found", http.StatusNotFound)
+	case constants.ErrCharacterNotFound:
+		http.Error(w, constants.ErrCharacterNotFound, http.StatusNotFound)
 	case errUnauthorized:
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 	case "not a participant in this session":
@@ -898,7 +895,7 @@ func (h *NarrativeHandlers) gatherPersonalizationData(ctx context.Context, claim
 	// Verify character ownership
 	character, err := h.characterRepo.GetByID(ctx, characterID)
 	if err != nil {
-		return nil, fmt.Errorf(errCharacterNotFound)
+		return nil, fmt.Errorf(constants.ErrCharacterNotFound)
 	}
 
 	if character.UserID != claims.UserID {
@@ -908,13 +905,13 @@ func (h *NarrativeHandlers) gatherPersonalizationData(ctx context.Context, claim
 	// Get event
 	event, err := h.narrativeRepo.GetWorldEvent(eventID)
 	if err != nil {
-		return nil, fmt.Errorf(errEventNotFound)
+		return nil, fmt.Errorf(constants.ErrEventNotFound)
 	}
 
 	// Get profile
 	profile, err := h.narrativeRepo.GetNarrativeProfile(characterID)
 	if err != nil {
-		return nil, fmt.Errorf(errProfileNotFound)
+		return nil, fmt.Errorf(constants.ErrProfileNotFound)
 	}
 
 	// Get backstory (optional)
@@ -933,14 +930,14 @@ func (h *NarrativeHandlers) gatherPersonalizationData(ctx context.Context, claim
 // handlePersonalizationError sends appropriate error response
 func (h *NarrativeHandlers) handlePersonalizationError(w http.ResponseWriter, err error) {
 	switch err.Error() {
-	case errCharacterNotFound:
-		http.Error(w, "Character not found", http.StatusNotFound)
+	case constants.ErrCharacterNotFound:
+		http.Error(w, constants.ErrCharacterNotFound, http.StatusNotFound)
 	case errUnauthorized:
 		http.Error(w, "Unauthorized", http.StatusForbidden)
-	case errEventNotFound:
-		http.Error(w, "Event not found", http.StatusNotFound)
-	case errProfileNotFound:
-		http.Error(w, "Profile not found", http.StatusNotFound)
+	case constants.ErrEventNotFound:
+		http.Error(w, constants.ErrEventNotFound, http.StatusNotFound)
+	case constants.ErrProfileNotFound:
+		http.Error(w, constants.ErrProfileNotFound, http.StatusNotFound)
 	default:
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
