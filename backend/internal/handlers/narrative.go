@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -276,35 +277,9 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Verify character ownership
-	character, err := h.characterRepo.GetByID(r.Context(), action.CharacterID)
-	if err != nil {
-		http.Error(w, "Character not found", http.StatusNotFound)
-		return
-	}
-
-	if character.UserID != claims.UserID {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
-		return
-	}
-
-	// Verify session participation
-	participants, err := h.gameRepo.GetParticipants(r.Context(), action.SessionID)
-	if err != nil {
-		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
-		return
-	}
-
-	isParticipant := false
-	for _, p := range participants {
-		if p.UserID == claims.UserID {
-			isParticipant = true
-			break
-		}
-	}
-
-	if !isParticipant {
-		http.Error(w, "Not a participant in this session", http.StatusForbidden)
+	// Verify permissions
+	if err := h.verifyActionPermissions(r.Context(), claims, &action); err != nil {
+		h.handleActionPermissionError(w, err)
 		return
 	}
 
@@ -315,18 +290,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 	}
 
 	// Calculate consequences asynchronously
-	go func() {
-		ctx := r.Context()
-		worldState := h.buildWorldState(ctx, action.SessionID)
-		consequences, err := h.narrativeEngine.ConsequenceEngine.CalculateConsequences(ctx, action, worldState)
-		if err == nil {
-			for i := range consequences {
-				_ = h.narrativeRepo.CreateConsequenceEvent(&consequences[i])
-			}
-			action.PotentialConsequences = len(consequences)
-			_ = h.narrativeRepo.UpdatePlayerAction(&action)
-		}
-	}()
+	go h.processActionConsequences(r.Context(), action)
 
 	// Update narrative profile with decision
 	profile, err := h.narrativeRepo.GetNarrativeProfile(action.CharacterID)
@@ -540,53 +504,18 @@ func (h *NarrativeHandlers) PersonalizeEvent(w http.ResponseWriter, r *http.Requ
 	eventID := vars["eventId"]
 	characterID := vars["characterId"]
 
-	// Verify character ownership
-	character, err := h.characterRepo.GetByID(r.Context(), characterID)
+	// Verify ownership and gather data
+	data, err := h.gatherPersonalizationData(r.Context(), claims, characterID, eventID)
 	if err != nil {
-		http.Error(w, "Character not found", http.StatusNotFound)
+		h.handlePersonalizationError(w, err)
 		return
 	}
 
-	if character.UserID != claims.UserID {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
-		return
-	}
-
-	// Get event
-	event, err := h.narrativeRepo.GetWorldEvent(eventID)
+	// Generate and save narrative
+	narrative, err := h.createPersonalizedNarrative(r.Context(), data)
 	if err != nil {
-		http.Error(w, "Event not found", http.StatusNotFound)
+		http.Error(w, "Failed to create narrative", http.StatusInternalServerError)
 		return
-	}
-
-	// Get profile and backstory
-	profile, err := h.narrativeRepo.GetNarrativeProfile(characterID)
-	if err != nil {
-		http.Error(w, "Profile not found", http.StatusNotFound)
-		return
-	}
-
-	backstory, err := h.narrativeRepo.GetBackstoryElements(characterID)
-	if err != nil {
-		backstory = []models.BackstoryElement{}
-	}
-
-	// Generate personalized narrative
-	narrative, err := h.narrativeEngine.GeneratePersonalizedNarrative(r.Context(), event, profile, backstory)
-	if err != nil {
-		http.Error(w, "Failed to personalize event", http.StatusInternalServerError)
-		return
-	}
-
-	// Save personalized narrative
-	if err := h.narrativeRepo.CreatePersonalizedNarrative(narrative); err != nil {
-		http.Error(w, "Failed to save personalized narrative", http.StatusInternalServerError)
-		return
-	}
-
-	// Update backstory usage
-	for _, callback := range narrative.BackstoryCallbacks {
-		_ = h.narrativeRepo.IncrementBackstoryUsage(callback.BackstoryElementID)
 	}
 
 	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
@@ -891,4 +820,141 @@ func interfaceSliceToStringSlice(input []interface{}) []string {
 		}
 	}
 	return result
+}
+
+// verifyActionPermissions checks if the user can perform the action
+func (h *NarrativeHandlers) verifyActionPermissions(ctx context.Context, claims *auth.Claims, action *models.PlayerAction) error {
+	// Verify character ownership
+	character, err := h.characterRepo.GetByID(ctx, action.CharacterID)
+	if err != nil {
+		return fmt.Errorf("character not found")
+	}
+
+	if character.UserID != claims.UserID {
+		return fmt.Errorf("unauthorized")
+	}
+
+	// Verify session participation
+	participants, err := h.gameRepo.GetParticipants(ctx, action.SessionID)
+	if err != nil {
+		return fmt.Errorf("failed to get participants")
+	}
+
+	for _, p := range participants {
+		if p.UserID == claims.UserID {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("not a participant in this session")
+}
+
+// handleActionPermissionError sends the appropriate error response
+func (h *NarrativeHandlers) handleActionPermissionError(w http.ResponseWriter, err error) {
+	switch err.Error() {
+	case "character not found":
+		http.Error(w, "Character not found", http.StatusNotFound)
+	case "unauthorized":
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+	case "not a participant in this session":
+		http.Error(w, "Not a participant in this session", http.StatusForbidden)
+	default:
+		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+	}
+}
+
+// processActionConsequences calculates and stores action consequences
+func (h *NarrativeHandlers) processActionConsequences(ctx context.Context, action models.PlayerAction) {
+	worldState := h.buildWorldState(ctx, action.SessionID)
+	consequences, err := h.narrativeEngine.ConsequenceEngine.CalculateConsequences(ctx, action, worldState)
+	if err != nil {
+		return
+	}
+	
+	for i := range consequences {
+		_ = h.narrativeRepo.CreateConsequenceEvent(&consequences[i])
+	}
+	action.PotentialConsequences = len(consequences)
+	_ = h.narrativeRepo.UpdatePlayerAction(&action)
+}
+
+// personalizationData holds data needed for narrative personalization
+type personalizationData struct {
+	event     *models.NarrativeEvent
+	profile   *models.NarrativeProfile
+	backstory []models.BackstoryElement
+}
+
+// gatherPersonalizationData collects all required data for personalization
+func (h *NarrativeHandlers) gatherPersonalizationData(ctx context.Context, claims *auth.Claims, characterID, eventID string) (*personalizationData, error) {
+	// Verify character ownership
+	character, err := h.characterRepo.GetByID(ctx, characterID)
+	if err != nil {
+		return nil, fmt.Errorf("character not found")
+	}
+
+	if character.UserID != claims.UserID {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	// Get event
+	event, err := h.narrativeRepo.GetWorldEvent(eventID)
+	if err != nil {
+		return nil, fmt.Errorf("event not found")
+	}
+
+	// Get profile
+	profile, err := h.narrativeRepo.GetNarrativeProfile(characterID)
+	if err != nil {
+		return nil, fmt.Errorf("profile not found")
+	}
+
+	// Get backstory (optional)
+	backstory, err := h.narrativeRepo.GetBackstoryElements(characterID)
+	if err != nil {
+		backstory = []models.BackstoryElement{}
+	}
+
+	return &personalizationData{
+		event:     event,
+		profile:   profile,
+		backstory: backstory,
+	}, nil
+}
+
+// handlePersonalizationError sends appropriate error response
+func (h *NarrativeHandlers) handlePersonalizationError(w http.ResponseWriter, err error) {
+	switch err.Error() {
+	case "character not found":
+		http.Error(w, "Character not found", http.StatusNotFound)
+	case "unauthorized":
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+	case "event not found":
+		http.Error(w, "Event not found", http.StatusNotFound)
+	case "profile not found":
+		http.Error(w, "Profile not found", http.StatusNotFound)
+	default:
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
+// createPersonalizedNarrative generates and saves a personalized narrative
+func (h *NarrativeHandlers) createPersonalizedNarrative(ctx context.Context, data *personalizationData) (*models.PersonalizedNarrative, error) {
+	// Generate narrative
+	narrative, err := h.narrativeEngine.GeneratePersonalizedNarrative(ctx, data.event, data.profile, data.backstory)
+	if err != nil {
+		return nil, err
+	}
+
+	// Save narrative
+	if err := h.narrativeRepo.CreatePersonalizedNarrative(narrative); err != nil {
+		return nil, err
+	}
+
+	// Update backstory usage
+	for _, callback := range narrative.BackstoryCallbacks {
+		_ = h.narrativeRepo.IncrementBackstoryUsage(callback.BackstoryElementID)
+	}
+
+	return narrative, nil
 }

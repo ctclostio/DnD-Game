@@ -167,7 +167,7 @@ func TestGameHandler_GetGameSession(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create request
-			req := httptest.NewRequest(http.MethodGet, "/api/sessions/"+tt.sessionID, http.NoBody)
+			req := httptest.NewRequest(http.MethodGet, APISessionsBase+tt.sessionID, http.NoBody)
 			req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
 			// Add auth context (placeholder)
 
@@ -219,7 +219,7 @@ func TestGameHandler_JoinGameSession(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create request
 			body, _ := json.Marshal(tt.body)
-			req := httptest.NewRequest(http.MethodPost, "/api/sessions/"+tt.sessionID+"/join", bytes.NewReader(body))
+			req := httptest.NewRequest(http.MethodPost, APISessionsBase+tt.sessionID+"/join", bytes.NewReader(body))
 			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 			// Route vars would be set by router in real handler
 			// req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
@@ -272,7 +272,7 @@ func TestGameHandler_UpdatePlayerStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create request
 			body, _ := json.Marshal(tt.body)
-			req := httptest.NewRequest(http.MethodPut, "/api/sessions/"+sessionID+"/status", bytes.NewReader(body))
+			req := httptest.NewRequest(http.MethodPut, APISessionsBase+sessionID+"/status", bytes.NewReader(body))
 			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 			_ = mux.SetURLVars(req, map[string]string{"id": sessionID})
 

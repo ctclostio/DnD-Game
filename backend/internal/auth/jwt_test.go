@@ -205,7 +205,7 @@ func TestExtractTokenFromHeader(t *testing.T) {
 func TestClaims_Validate(t *testing.T) {
 	t.Run("valid claims", func(t *testing.T) {
 		claims := &Claims{
-			UserID: "user-123",
+			UserID: testUserID,
 			Type:   AccessToken,
 		}
 		err := claims.Validate()
@@ -223,7 +223,7 @@ func TestClaims_Validate(t *testing.T) {
 
 	t.Run("invalid token type", func(t *testing.T) {
 		claims := &Claims{
-			UserID: "user-123",
+			UserID: testUserID,
 			Type:   TokenType("invalid"),
 		}
 		err := claims.Validate()
@@ -233,7 +233,7 @@ func TestClaims_Validate(t *testing.T) {
 }
 
 func TestNewClaims(t *testing.T) {
-	userID := "user-123"
+	userID := testUserID
 	username := "testuser"
 	email := "test@example.com"
 	role := "player"

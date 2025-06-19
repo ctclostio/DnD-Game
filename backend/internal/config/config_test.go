@@ -351,7 +351,7 @@ func TestValidate(t *testing.T) {
 					DatabaseName: "db",
 				},
 				Auth: AuthConfig{
-					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					JWTSecret:            testConfigJWTSecret,
 					AccessTokenDuration:  15 * time.Minute,
 					RefreshTokenDuration: 7 * 24 * time.Hour,
 					BcryptCost:           3, // Too low
@@ -375,7 +375,7 @@ func TestValidate(t *testing.T) {
 					DatabaseName: "db",
 				},
 				Auth: AuthConfig{
-					JWTSecret:            "a-very-long-secret-key-that-is-at-least-32-chars",
+					JWTSecret:            testConfigJWTSecret,
 					AccessTokenDuration:  15 * time.Minute,
 					RefreshTokenDuration: 7 * 24 * time.Hour,
 					BcryptCost:           10,

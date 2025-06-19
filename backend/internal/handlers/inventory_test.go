@@ -29,7 +29,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 		{
 			name:   "add item to inventory",
 			method: http.MethodPost,
-			path:   "/api/characters/" + characterID + "/inventory",
+			path:   APICharactersBase + characterID + "/inventory",
 			body: map[string]interface{}{
 				"itemId":   uuid.New().String(),
 				"quantity": 3,
@@ -39,7 +39,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 		{
 			name:   "remove item from inventory",
 			method: http.MethodDelete,
-			path:   "/api/characters/" + characterID + "/inventory/" + uuid.New().String(),
+			path:   APICharactersBase + characterID + "/inventory/" + uuid.New().String(),
 			body: map[string]interface{}{
 				"quantity": 1,
 			},
@@ -48,7 +48,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 		{
 			name:   "invalid quantity",
 			method: http.MethodPost,
-			path:   "/api/characters/" + characterID + "/inventory",
+			path:   APICharactersBase + characterID + "/inventory",
 			body: map[string]interface{}{
 				"itemId":   uuid.New().String(),
 				"quantity": -1,
@@ -59,7 +59,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 		{
 			name:           "get inventory",
 			method:         http.MethodGet,
-			path:           "/api/characters/" + characterID + "/inventory",
+			path:           APICharactersBase + characterID + "/inventory",
 			body:           nil,
 			expectedStatus: http.StatusOK,
 		},
@@ -137,7 +137,7 @@ func TestInventoryHandler_EquipItems(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create request
 			req := httptest.NewRequest(http.MethodPost,
-				"/api/characters/"+characterID+"/inventory/"+itemID+"/"+tt.action, http.NoBody)
+				APICharactersBase+characterID+"/inventory/"+itemID+"/"+tt.action, http.NoBody)
 			req = mux.SetURLVars(req, map[string]string{
 				"characterId": characterID,
 				"itemId":      itemID,
@@ -209,7 +209,7 @@ func TestInventoryHandler_Currency(t *testing.T) {
 			// Create request
 			body, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest(http.MethodPost,
-				"/api/characters/"+characterID+"/currency", bytes.NewReader(body))
+				APICharactersBase+characterID+"/currency", bytes.NewReader(body))
 			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 			// Route vars would be set by router in real handler
 			// req = mux.SetURLVars(req, map[string]string{"characterId": characterID})
