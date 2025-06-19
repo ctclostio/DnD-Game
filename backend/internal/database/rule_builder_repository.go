@@ -195,6 +195,19 @@ func (r *RuleBuilderRepository) GetRuleTemplate(templateID string) (*models.Rule
 
 // GetRuleTemplates gets rule templates with filters
 func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPublic bool) ([]models.RuleTemplate, error) {
+	query, args := r.buildRuleTemplatesQuery(userID, category, isPublic)
+	
+	rows, err := r.db.QueryContext(context.Background(), query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+	
+	return r.scanRuleTemplates(rows)
+}
+
+// buildRuleTemplatesQuery builds the query and arguments for rule templates
+func (r *RuleBuilderRepository) buildRuleTemplatesQuery(userID, category string, isPublic bool) (string, []interface{}) {
 	query := `
 		SELECT id, name, description, category, complexity,
 			   logic_graph, parameters, conditional_modifiers,
@@ -203,9 +216,24 @@ func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPubl
 		FROM rule_templates
 		WHERE 1=1
 	`
-
+	
 	args := []interface{}{}
+	
+	// Add visibility filter
+	query, args = r.addVisibilityFilter(query, args, userID, isPublic)
+	
+	// Add category filter
+	if category != "" && category != "all" {
+		query += " AND category = ?"
+		args = append(args, category)
+	}
+	
+	query += " ORDER BY usage_count DESC, average_rating DESC"
+	return r.db.Rebind(query), args
+}
 
+// addVisibilityFilter adds visibility conditions to the query
+func (r *RuleBuilderRepository) addVisibilityFilter(query string, args []interface{}, userID string, isPublic bool) (string, []interface{}) {
 	if isPublic {
 		query += " AND is_public = ?"
 		args = append(args, true)
@@ -213,73 +241,81 @@ func (r *RuleBuilderRepository) GetRuleTemplates(userID, category string, isPubl
 		query += " AND (is_public = true OR created_by = ?)"
 		args = append(args, userID)
 	}
+	return query, args
+}
 
-	if category != "" && category != "all" {
-		query += " AND category = ?"
-		args = append(args, category)
-	}
-
-	query += " ORDER BY usage_count DESC, average_rating DESC"
-
-	query = r.db.Rebind(query)
-	rows, err := r.db.QueryContext(context.Background(), query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = rows.Close() }()
-
+// scanRuleTemplates scans rows into rule templates
+func (r *RuleBuilderRepository) scanRuleTemplates(rows *sql.Rows) ([]models.RuleTemplate, error) {
 	templates := make([]models.RuleTemplate, 0, 10)
 	for rows.Next() {
-		var template models.RuleTemplate
-		var logicGraphJSON, parametersJSON, condModsJSON, tagsJSON []byte
-
-		err := rows.Scan(
-			&template.ID,
-			&template.Name,
-			&template.Description,
-			&template.Category,
-			&template.Complexity,
-			&logicGraphJSON,
-			&parametersJSON,
-			&condModsJSON,
-			&tagsJSON,
-			&template.IsPublic,
-			&template.CreatedByID,
-			&template.AverageRating,
-			&template.UsageCount,
-			&template.CreatedAt,
-			&template.UpdatedAt,
-		)
-
+		template, err := r.scanRuleTemplate(rows)
 		if err != nil {
 			return nil, err
 		}
-
-		// Unmarshal JSON fields
-		if err := json.Unmarshal(logicGraphJSON, &template.LogicGraph); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal logic graph: %w", err)
-		}
-
-		if err := json.Unmarshal(parametersJSON, &template.Parameters); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal parameters: %w", err)
-		}
-
-		if err := json.Unmarshal(condModsJSON, &template.ConditionalModifiers); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal conditional modifiers: %w", err)
-		}
-
-		if err := json.Unmarshal(tagsJSON, &template.Tags); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal tags: %w", err)
-		}
-
-		templates = append(templates, template)
+		templates = append(templates, *template)
 	}
-
+	
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf(ErrIteratingRows, err)
 	}
-
+	
 	return templates, nil
+}
+
+// scanRuleTemplate scans a single row into a rule template
+func (r *RuleBuilderRepository) scanRuleTemplate(row interface{ Scan(dest ...interface{}) error }) (*models.RuleTemplate, error) {
+	var template models.RuleTemplate
+	var logicGraphJSON, parametersJSON, condModsJSON, tagsJSON []byte
+	
+	err := row.Scan(
+		&template.ID,
+		&template.Name,
+		&template.Description,
+		&template.Category,
+		&template.Complexity,
+		&logicGraphJSON,
+		&parametersJSON,
+		&condModsJSON,
+		&tagsJSON,
+		&template.IsPublic,
+		&template.CreatedByID,
+		&template.AverageRating,
+		&template.UsageCount,
+		&template.CreatedAt,
+		&template.UpdatedAt,
+	)
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	// Unmarshal all JSON fields
+	if err := r.unmarshalTemplateJSONFields(&template, logicGraphJSON, parametersJSON, condModsJSON, tagsJSON); err != nil {
+		return nil, err
+	}
+	
+	return &template, nil
+}
+
+// unmarshalTemplateJSONFields unmarshals all JSON fields of a rule template
+func (r *RuleBuilderRepository) unmarshalTemplateJSONFields(template *models.RuleTemplate, logicGraph, params, condMods, tags []byte) error {
+	if err := json.Unmarshal(logicGraph, &template.LogicGraph); err != nil {
+		return fmt.Errorf("failed to unmarshal logic graph: %w", err)
+	}
+	
+	if err := json.Unmarshal(params, &template.Parameters); err != nil {
+		return fmt.Errorf("failed to unmarshal parameters: %w", err)
+	}
+	
+	if err := json.Unmarshal(condMods, &template.ConditionalModifiers); err != nil {
+		return fmt.Errorf("failed to unmarshal conditional modifiers: %w", err)
+	}
+	
+	if err := json.Unmarshal(tags, &template.Tags); err != nil {
+		return fmt.Errorf("failed to unmarshal tags: %w", err)
+	}
+	
+	return nil
 }
 
 // UpdateRuleTemplate updates a rule template

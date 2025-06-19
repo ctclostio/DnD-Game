@@ -779,7 +779,26 @@ func (r *WorldBuildingRepository) SimulateEconomicChanges(gameSessionID uuid.UUI
 	// This would be called periodically to update market conditions
 	// based on active world events, trade route disruptions, etc.
 
-	// Get all active events that have economic impacts
+	events, err := r.getActiveEconomicEvents(gameSessionID)
+	if err != nil {
+		return err
+	}
+
+	for _, event := range events {
+		r.applyEventEconomicImpacts(event)
+	}
+
+	return nil
+}
+
+// economicEvent represents an event with economic impacts
+type economicEvent struct {
+	ID      uuid.UUID
+	Impacts map[string]interface{}
+}
+
+// getActiveEconomicEvents retrieves all active events with economic impacts
+func (r *WorldBuildingRepository) getActiveEconomicEvents(gameSessionID uuid.UUID) ([]*economicEvent, error) {
 	query := `
 		SELECT id, economic_impacts 
 		FROM world_events 
@@ -787,46 +806,93 @@ func (r *WorldBuildingRepository) SimulateEconomicChanges(gameSessionID uuid.UUI
 
 	rows, err := r.db.Query(query, gameSessionID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() { _ = rows.Close() }()
 
-	// Process each event's economic impacts
+	var events []*economicEvent
 	for rows.Next() {
-		var eventID uuid.UUID
-		var economicImpacts []byte
-
-		if err := rows.Scan(&eventID, &economicImpacts); err != nil {
-			continue
+		event, err := r.scanEconomicEvent(rows)
+		if err != nil {
+			continue // Skip invalid events
 		}
+		events = append(events, event)
+	}
 
-		// Parse impacts and apply to relevant markets
-		var impacts map[string]interface{}
-		if err := json.Unmarshal(economicImpacts, &impacts); err != nil {
-			continue
-		}
+	return events, nil
+}
 
-		// Apply impacts to settlements mentioned in the event
-		// This is a simplified version - a full implementation would be more complex
-		if settlementIDs, ok := impacts["affected_settlements"].([]interface{}); ok {
-			for _, settlementID := range settlementIDs {
-				if sidStr, ok := settlementID.(string); ok {
-					if sid, err := uuid.Parse(sidStr); err == nil {
-						// Get and update the market
-						market, err := r.GetMarketBySettlement(sid)
-						if err == nil && market != nil {
-							// Apply economic modifiers based on event type
-							if modifier, ok := impacts["price_modifier"].(float64); ok {
-								market.CommonGoodsModifier *= modifier
-								market.FoodPriceModifier *= modifier
-							}
-							_ = r.CreateOrUpdateMarket(market)
-						}
-					}
-				}
+// scanEconomicEvent scans a single economic event from the database
+func (r *WorldBuildingRepository) scanEconomicEvent(row interface{ Scan(...interface{}) error }) (*economicEvent, error) {
+	var eventID uuid.UUID
+	var economicImpacts []byte
+
+	if err := row.Scan(&eventID, &economicImpacts); err != nil {
+		return nil, err
+	}
+
+	var impacts map[string]interface{}
+	if err := json.Unmarshal(economicImpacts, &impacts); err != nil {
+		return nil, err
+	}
+
+	return &economicEvent{
+		ID:      eventID,
+		Impacts: impacts,
+	}, nil
+}
+
+// applyEventEconomicImpacts applies economic impacts from an event to affected settlements
+func (r *WorldBuildingRepository) applyEventEconomicImpacts(event *economicEvent) {
+	settlementIDs := r.extractAffectedSettlements(event.Impacts)
+	modifier := r.extractPriceModifier(event.Impacts)
+	
+	if modifier == 0 {
+		return // No price changes to apply
+	}
+
+	for _, settlementID := range settlementIDs {
+		r.updateSettlementMarket(settlementID, modifier)
+	}
+}
+
+// extractAffectedSettlements extracts settlement IDs from event impacts
+func (r *WorldBuildingRepository) extractAffectedSettlements(impacts map[string]interface{}) []uuid.UUID {
+	settlementIDs, ok := impacts["affected_settlements"].([]interface{})
+	if !ok {
+		return nil
+	}
+
+	var validIDs []uuid.UUID
+	for _, id := range settlementIDs {
+		if sidStr, ok := id.(string); ok {
+			if sid, err := uuid.Parse(sidStr); err == nil {
+				validIDs = append(validIDs, sid)
 			}
 		}
 	}
 
-	return nil
+	return validIDs
+}
+
+// extractPriceModifier extracts the price modifier from event impacts
+func (r *WorldBuildingRepository) extractPriceModifier(impacts map[string]interface{}) float64 {
+	if modifier, ok := impacts["price_modifier"].(float64); ok {
+		return modifier
+	}
+	return 0
+}
+
+// updateSettlementMarket updates a settlement's market with the given price modifier
+func (r *WorldBuildingRepository) updateSettlementMarket(settlementID uuid.UUID, modifier float64) {
+	market, err := r.GetMarketBySettlement(settlementID)
+	if err != nil || market == nil {
+		return // Skip if market not found
+	}
+
+	// Apply economic modifiers
+	market.CommonGoodsModifier *= modifier
+	market.FoodPriceModifier *= modifier
+	
+	_ = r.CreateOrUpdateMarket(market)
 }

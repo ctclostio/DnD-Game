@@ -208,55 +208,95 @@ func (ce *CombatEngine) DamageRoll(damageDice string, damageModifier int, damage
 }
 
 func (ce *CombatEngine) ApplyDamage(combatant *models.Combatant, damage []models.Damage) int {
-	totalDamage := 0
-
-	for _, d := range damage {
-		finalDamage := d.Amount
-
-		// Check resistances
-		for _, resistance := range combatant.Resistances {
-			if resistance == d.Type {
-				finalDamage = int(math.Floor(float64(finalDamage) / 2))
-				break
-			}
-		}
-
-		// Check immunities
-		for _, immunity := range combatant.Immunities {
-			if immunity == d.Type {
-				finalDamage = 0
-				break
-			}
-		}
-
-		// Check vulnerabilities
-		for _, vulnerability := range combatant.Vulnerabilities {
-			if vulnerability == d.Type {
-				finalDamage *= 2
-				break
-			}
-		}
-
-		totalDamage += finalDamage
-	}
-
+	totalDamage := ce.calculateTotalDamage(combatant, damage)
+	
 	// Apply damage to temp HP first
-	if combatant.TempHP > 0 {
-		if totalDamage <= combatant.TempHP {
-			combatant.TempHP -= totalDamage
-			totalDamage = 0
-		} else {
-			totalDamage -= combatant.TempHP
-			combatant.TempHP = 0
-		}
-	}
-
+	totalDamage = ce.applyToTempHP(combatant, totalDamage)
+	
 	// Apply remaining damage to HP
 	combatant.HP -= totalDamage
 	if combatant.HP < 0 {
 		combatant.HP = 0
 	}
 
+	return totalDamage
+}
+
+// calculateTotalDamage calculates the total damage after resistances, immunities, and vulnerabilities
+func (ce *CombatEngine) calculateTotalDamage(combatant *models.Combatant, damage []models.Damage) int {
+	totalDamage := 0
+	for _, d := range damage {
+		totalDamage += ce.calculateModifiedDamage(combatant, d)
+	}
+	return totalDamage
+}
+
+// calculateModifiedDamage calculates damage for a single damage instance with modifiers
+func (ce *CombatEngine) calculateModifiedDamage(combatant *models.Combatant, damage models.Damage) int {
+	// Check immunity first (no damage)
+	if ce.hasImmunity(combatant, damage.Type) {
+		return 0
+	}
+	
+	finalDamage := damage.Amount
+	
+	// Check resistance (half damage)
+	if ce.hasResistance(combatant, damage.Type) {
+		finalDamage = int(math.Floor(float64(finalDamage) / 2))
+	}
+	
+	// Check vulnerability (double damage)
+	if ce.hasVulnerability(combatant, damage.Type) {
+		finalDamage *= 2
+	}
+	
+	return finalDamage
+}
+
+// hasResistance checks if combatant has resistance to damage type
+func (ce *CombatEngine) hasResistance(combatant *models.Combatant, damageType models.DamageType) bool {
+	for _, resistance := range combatant.Resistances {
+		if resistance == damageType {
+			return true
+		}
+	}
+	return false
+}
+
+// hasImmunity checks if combatant has immunity to damage type
+func (ce *CombatEngine) hasImmunity(combatant *models.Combatant, damageType models.DamageType) bool {
+	for _, immunity := range combatant.Immunities {
+		if immunity == damageType {
+			return true
+		}
+	}
+	return false
+}
+
+// hasVulnerability checks if combatant has vulnerability to damage type
+func (ce *CombatEngine) hasVulnerability(combatant *models.Combatant, damageType models.DamageType) bool {
+	for _, vulnerability := range combatant.Vulnerabilities {
+		if vulnerability == damageType {
+			return true
+		}
+	}
+	return false
+}
+
+// applyToTempHP applies damage to temporary HP first
+func (ce *CombatEngine) applyToTempHP(combatant *models.Combatant, totalDamage int) int {
+	if combatant.TempHP == 0 {
+		return totalDamage
+	}
+	
+	if totalDamage <= combatant.TempHP {
+		combatant.TempHP -= totalDamage
+		return 0
+	}
+	
+	// Damage exceeds temp HP
+	totalDamage -= combatant.TempHP
+	combatant.TempHP = 0
 	return totalDamage
 }
 

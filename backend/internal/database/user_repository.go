@@ -24,57 +24,73 @@ func NewUserRepository(db *DB) UserRepository {
 
 // Create creates a new user
 func (r *userRepository) Create(ctx context.Context, user *models.User) error {
-	// For SQLite compatibility, generate UUID and timestamps in application
 	if r.db.DriverName() == "sqlite3" {
-		user.ID = uuid.New().String()
-		user.CreatedAt = time.Now()
-		user.UpdatedAt = time.Now()
-		user.Role = "player" // Default role
-
-		query := `
-			INSERT INTO users (id, username, email, password_hash, role, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?)`
-
-		_, err := r.db.ExecContextRebind(ctx, query,
-			user.ID, user.Username, user.Email, user.PasswordHash, user.Role,
-			user.CreatedAt, user.UpdatedAt)
-		if err != nil {
-			// Check for constraint violations
-			if strings.Contains(err.Error(), "UNIQUE") {
-				if strings.Contains(err.Error(), "username") {
-					return models.ErrDuplicateUsername
-				}
-				if strings.Contains(err.Error(), "email") {
-					return models.ErrDuplicateEmail
-				}
-			}
-			return fmt.Errorf("failed to create user: %w", err)
-		}
-		return nil
+		return r.createSQLite(ctx, user)
 	}
+	return r.createPostgreSQL(ctx, user)
+}
 
-	// PostgreSQL version with RETURNING clause
+// createSQLite creates a user for SQLite database
+func (r *userRepository) createSQLite(ctx context.Context, user *models.User) error {
+	// Generate UUID and timestamps in application
+	r.initializeUserDefaults(user)
+	
+	query := `
+		INSERT INTO users (id, username, email, password_hash, role, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
+	
+	_, err := r.db.ExecContextRebind(ctx, query,
+		user.ID, user.Username, user.Email, user.PasswordHash, user.Role,
+		user.CreatedAt, user.UpdatedAt)
+	
+	return r.handleCreateError(err)
+}
+
+// createPostgreSQL creates a user for PostgreSQL database
+func (r *userRepository) createPostgreSQL(ctx context.Context, user *models.User) error {
 	query := `
 		INSERT INTO users (username, email, password_hash)
 		VALUES (?, ?, ?)
 		RETURNING id, created_at, updated_at`
-
+	
 	err := r.db.QueryRowContextRebind(ctx, query, user.Username, user.Email, user.PasswordHash).
 		Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
-	if err != nil {
-		// Check for constraint violations
-		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE") {
-			if strings.Contains(err.Error(), "username") {
-				return models.ErrDuplicateUsername
-			}
-			if strings.Contains(err.Error(), "email") {
-				return models.ErrDuplicateEmail
-			}
-		}
-		return fmt.Errorf("failed to create user: %w", err)
-	}
+	
+	return r.handleCreateError(err)
+}
 
-	return nil
+// initializeUserDefaults sets default values for a new user
+func (r *userRepository) initializeUserDefaults(user *models.User) {
+	user.ID = uuid.New().String()
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
+	user.Role = "player" // Default role
+}
+
+// handleCreateError handles errors from user creation
+func (r *userRepository) handleCreateError(err error) error {
+	if err == nil {
+		return nil
+	}
+	
+	// Check for constraint violations
+	if r.isDuplicateError(err) {
+		if strings.Contains(err.Error(), "username") {
+			return models.ErrDuplicateUsername
+		}
+		if strings.Contains(err.Error(), "email") {
+			return models.ErrDuplicateEmail
+		}
+	}
+	
+	return fmt.Errorf("failed to create user: %w", err)
+}
+
+// isDuplicateError checks if the error is a duplicate key error
+func (r *userRepository) isDuplicateError(err error) bool {
+	errStr := err.Error()
+	return strings.Contains(errStr, "duplicate key") || 
+	       strings.Contains(errStr, "UNIQUE")
 }
 
 // GetByID retrieves a user by ID
