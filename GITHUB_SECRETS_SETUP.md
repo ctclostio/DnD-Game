@@ -6,15 +6,13 @@ This guide explains how to set up GitHub secrets for the D&D Game repository to 
 
 The following secrets need to be configured in your GitHub repository:
 
-### 1. `TEST_DB_PASSWORD`
+### 1. `TEST_DB_PASSWORD` (REQUIRED)
 - **Purpose**: PostgreSQL password for test database in CI/CD
-- **Default fallback**: `postgres` (for backward compatibility)
 - **Recommended value**: A strong, randomly generated password
 - **Example**: `xK9#mP2$vL5^qR8&hN3@`
 
-### 2. `TEST_JWT_SECRET`
+### 2. `TEST_JWT_SECRET` (REQUIRED)
 - **Purpose**: JWT signing secret for test environment
-- **Default fallback**: `test-secret-key-that-is-at-least-32-characters-long`
 - **Recommended value**: A 64-character random string
 - **Example**: `a7f3b9d5e2c8a1b6d4f7e9c3b5a8d2e6f1a4c7b9d3e5f8a2c4b7d9e1f3a5c8b2`
 
@@ -53,11 +51,11 @@ The secrets are used in the following workflows:
 Example usage in workflows:
 ```yaml
 env:
-  DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD || 'postgres' }}
-  JWT_SECRET: ${{ secrets.TEST_JWT_SECRET || 'test-secret-key-that-is-at-least-32-characters-long' }}
+  DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+  JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
 ```
 
-The `|| 'fallback'` syntax provides backward compatibility if secrets aren't configured yet.
+**Note**: These secrets are required - CI/CD will fail if they are not configured.
 
 ## Generating Secure Values
 
@@ -86,7 +84,7 @@ After setting up the secrets:
 - Never commit actual secret values to the repository
 - Use different secrets for production environments
 - Rotate secrets periodically for better security
-- The fallback values are only for backward compatibility and should not be relied upon
+- CI/CD will fail if these secrets are not configured - this is by design for security
 
 ## Related Security Improvements
 

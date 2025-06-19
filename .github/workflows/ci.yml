@@ -56,7 +56,7 @@ jobs:
         image: postgres:14
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD || 'postgres' }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
           POSTGRES_DB: dnd_test
         options: >-
           --health-cmd pg_isready
@@ -86,10 +86,10 @@ jobs:
           DB_HOST: localhost
           DB_PORT: 5432
           DB_USER: postgres
-          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD || 'postgres' }}
+          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
           DB_NAME: dnd_test
           DB_SSLMODE: disable
-          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET || 'test-secret-key-that-is-at-least-32-characters-long' }}
+          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
         run: |
           cd backend
           go run cmd/server/main.go migrate up
@@ -99,10 +99,10 @@ jobs:
           DB_HOST: localhost
           DB_PORT: 5432
           DB_USER: postgres
-          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD || 'postgres' }}
+          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
           DB_NAME: dnd_test
           DB_SSLMODE: disable
-          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET || 'test-secret-key-that-is-at-least-32-characters-long' }}
+          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           GO_ENV: test
