@@ -222,7 +222,7 @@ func (les *LivingEcosystemService) processActiveGoal(ctx context.Context, npc *m
 
 // shouldCreateNewGoal determines if an NPC should create a new goal
 func (les *LivingEcosystemService) shouldCreateNewGoal(goals []models.NPCGoal) bool {
-	return len(goals) < 3 && rand.Float64() < 0.3
+	return len(goals) < 3 && rand.Float64() < 0.3 // NOSONAR: math/rand is appropriate for game mechanics (NPC goal probability)
 }
 
 // simulateGoalProgress simulates progress on an NPC goal
@@ -660,7 +660,7 @@ func (les *LivingEcosystemService) processFactionAgendas(ctx context.Context, fa
 
 func (les *LivingEcosystemService) shouldGenerateOpportunity(timeDelta time.Duration) bool {
 	// 15% chance per week
-	return rand.Float64() < 0.15*(timeDelta.Hours()/168.0)
+	return rand.Float64() < 0.15*(timeDelta.Hours()/168.0) // NOSONAR: math/rand is appropriate for game mechanics (political opportunity generation)
 }
 
 // simulateAgendaProgress advances a faction's political agenda
@@ -936,7 +936,7 @@ func (les *LivingEcosystemService) selectInteractionType(relationship float64) s
 		interactionTypes = []string{"diplomatic_meeting", "trade_negotiation", "border_dispute", "information_exchange"}
 	}
 
-	return interactionTypes[rand.Intn(len(interactionTypes))]
+	return interactionTypes[rand.Intn(len(interactionTypes))] // NOSONAR: math/rand is appropriate for game mechanics (faction interaction selection)
 }
 
 // generateInteractionDescription creates a description using LLM

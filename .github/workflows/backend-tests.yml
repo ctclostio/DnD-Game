@@ -26,7 +26,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
+          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD || 'testpass' }}
           POSTGRES_DB: dnd_test
         ports:
           - 5432:5432
@@ -67,10 +67,10 @@ jobs:
         DATABASE_HOST: localhost
         DATABASE_PORT: 5432
         DATABASE_USER: testuser
-        DATABASE_PASSWORD: testpass
+        DATABASE_PASSWORD: ${{ secrets.TEST_DB_PASSWORD || 'testpass' }}
         DATABASE_NAME: dnd_test
         DATABASE_SSLMODE: disable
-        JWT_SECRET: test-secret-key
+        JWT_SECRET: ${{ secrets.TEST_JWT_SECRET || 'test-secret-key' }}
         CGO_ENABLED: 1
 
     - name: Generate coverage report
@@ -81,10 +81,10 @@ jobs:
         DATABASE_HOST: localhost
         DATABASE_PORT: 5432
         DATABASE_USER: testuser
-        DATABASE_PASSWORD: testpass
+        DATABASE_PASSWORD: ${{ secrets.TEST_DB_PASSWORD || 'testpass' }}
         DATABASE_NAME: dnd_test
         DATABASE_SSLMODE: disable
-        JWT_SECRET: test-secret-key
+        JWT_SECRET: ${{ secrets.TEST_JWT_SECRET || 'test-secret-key' }}
         CGO_ENABLED: 1
 
     - name: Upload coverage to Codecov
