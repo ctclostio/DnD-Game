@@ -109,4 +109,5 @@ const (
 	
 	// API errors
 	ErrInvalidRequestBody = "Invalid request body"
+	ErrCharacterNotFoundCap = "Character not found"
 )

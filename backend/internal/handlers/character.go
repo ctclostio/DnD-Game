@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
@@ -57,7 +58,7 @@ func (h *Handlers) GetCharacter(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) CreateCharacter(w http.ResponseWriter, r *http.Request) {
 	var character models.Character
 	if err := json.NewDecoder(r.Body).Decode(&character); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -91,7 +92,7 @@ func (h *Handlers) UpdateCharacter(w http.ResponseWriter, r *http.Request) {
 	// Verify ownership before update
 	existing, err := h.characterService.GetCharacterByID(r.Context(), id)
 	if err != nil {
-		response.NotFound(w, r, "Character not found")
+		response.NotFound(w, r, constants.ErrCharacterNotFoundCap)
 		return
 	}
 
@@ -102,7 +103,7 @@ func (h *Handlers) UpdateCharacter(w http.ResponseWriter, r *http.Request) {
 
 	var character models.Character
 	if err := json.NewDecoder(r.Body).Decode(&character); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -138,7 +139,7 @@ func (h *Handlers) DeleteCharacter(w http.ResponseWriter, r *http.Request) {
 	// Verify ownership before delete
 	character, err := h.characterService.GetCharacterByID(r.Context(), id)
 	if err != nil {
-		response.NotFound(w, r, "Character not found")
+		response.NotFound(w, r, constants.ErrCharacterNotFoundCap)
 		return
 	}
 
@@ -164,7 +165,7 @@ func (h *Handlers) CastSpell(w http.ResponseWriter, r *http.Request) {
 		SpellLevel int `json:"spellLevel"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -201,7 +202,7 @@ func (h *Handlers) GenerateCustomClass(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -274,7 +275,7 @@ func (h *Handlers) AddExperience(w http.ResponseWriter, r *http.Request) {
 	// Verify ownership
 	character, err := h.characterService.GetCharacterByID(r.Context(), characterID)
 	if err != nil {
-		response.NotFound(w, r, "Character not found")
+		response.NotFound(w, r, constants.ErrCharacterNotFoundCap)
 		return
 	}
 
@@ -287,7 +288,7 @@ func (h *Handlers) AddExperience(w http.ResponseWriter, r *http.Request) {
 		Experience int `json:"experience"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
@@ -332,7 +333,7 @@ func (h *Handlers) Rest(w http.ResponseWriter, r *http.Request) {
 		RestType string `json:"restType"` // "short" or "long"
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 

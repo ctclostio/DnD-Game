@@ -43,4 +43,10 @@ const (
 	
 	// Settlement test data
 	TestSettlementType = "Settlement type: %v"
+	
+	// API endpoints
+	APICharacters   = "/api/v1/characters"
+	APICharacterByID = "/api/v1/characters/{id}"
+	APICharacterBase = "/api/v1/characters/"
+	APIInventory    = "/inventory"
 )
