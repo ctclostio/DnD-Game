@@ -16,6 +16,14 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 )
 
+// Error messages
+const (
+	errCharacterNotFound = "character not found"
+	errUnauthorized      = "unauthorized"
+	errEventNotFound     = "event not found"
+	errProfileNotFound   = "profile not found"
+)
+
 // NarrativeHandlers manages narrative-related HTTP endpoints
 type NarrativeHandlers struct {
 	narrativeEngine *services.NarrativeEngine
@@ -827,7 +835,7 @@ func (h *NarrativeHandlers) verifyActionPermissions(ctx context.Context, claims 
 	// Verify character ownership
 	character, err := h.characterRepo.GetByID(ctx, action.CharacterID)
 	if err != nil {
-		return fmt.Errorf("character not found")
+		return fmt.Errorf(errCharacterNotFound)
 	}
 
 	if character.UserID != claims.UserID {
@@ -852,7 +860,7 @@ func (h *NarrativeHandlers) verifyActionPermissions(ctx context.Context, claims 
 // handleActionPermissionError sends the appropriate error response
 func (h *NarrativeHandlers) handleActionPermissionError(w http.ResponseWriter, err error) {
 	switch err.Error() {
-	case "character not found":
+	case errCharacterNotFound:
 		http.Error(w, "Character not found", http.StatusNotFound)
 	case "unauthorized":
 		http.Error(w, "Unauthorized", http.StatusForbidden)
@@ -890,7 +898,7 @@ func (h *NarrativeHandlers) gatherPersonalizationData(ctx context.Context, claim
 	// Verify character ownership
 	character, err := h.characterRepo.GetByID(ctx, characterID)
 	if err != nil {
-		return nil, fmt.Errorf("character not found")
+		return nil, fmt.Errorf(errCharacterNotFound)
 	}
 
 	if character.UserID != claims.UserID {
@@ -925,7 +933,7 @@ func (h *NarrativeHandlers) gatherPersonalizationData(ctx context.Context, claim
 // handlePersonalizationError sends appropriate error response
 func (h *NarrativeHandlers) handlePersonalizationError(w http.ResponseWriter, err error) {
 	switch err.Error() {
-	case "character not found":
+	case errCharacterNotFound:
 		http.Error(w, "Character not found", http.StatusNotFound)
 	case "unauthorized":
 		http.Error(w, "Unauthorized", http.StatusForbidden)

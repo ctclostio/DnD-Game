@@ -98,68 +98,91 @@ func (cas *CombatAnalyticsService) calculateCombatAnalytics(
 	actions []*models.CombatActionLog,
 	combatUUID uuid.UUID,
 ) *models.CombatAnalytics {
-	// Calculate total damage and healing
-	totalDamage := 0
-	totalHealing := 0
-	killingBlows := []map[string]interface{}{}
-
-	// Track damage by combatant for MVP calculation
-	damageByActor := make(map[string]int)
-
-	for _, action := range actions {
-		if action.ActionType == constants.ActionAttack || action.ActionType == constants.ActionTypeSpell {
-			totalDamage += action.DamageDealt
-			damageByActor[action.ActorID] += action.DamageDealt
-		}
-
-		if action.ActionType == constants.ActionHeal {
-			totalHealing += action.DamageDealt // Healing stored as positive damage
-		}
-
-		// Check for killing blows
-		if action.Outcome == constants.OutcomeKillingBlow {
-			killingBlows = append(killingBlows, map[string]interface{}{
-				"dealer_id": action.ActorID,
-				"target_id": action.TargetID,
-				"damage":    action.DamageDealt,
-			})
-		}
-	}
-
-	// Determine MVP
-	mvpID := ""
-	mvpType := ""
-	maxDamage := 0
-
-	for actorID, damage := range damageByActor {
-		if damage > maxDamage {
-			maxDamage = damage
-			mvpID = actorID
-			// Determine if MVP is character or NPC
-			for i := range combat.Combatants {
-				if combat.Combatants[i].ID == actorID {
-					mvpType = string(combat.Combatants[i].Type)
-					break
-				}
-			}
-		}
-	}
-
-	killingBlowsJSON, _ := json.Marshal(killingBlows)
+	stats := cas.calculateActionStats(actions)
+	mvpInfo := cas.determineMVP(stats.damageByActor, combat.Combatants)
+	killingBlowsJSON, _ := json.Marshal(stats.killingBlows)
 
 	return &models.CombatAnalytics{
 		ID:               uuid.New(),
 		CombatID:         combatUUID,
 		GameSessionID:    sessionID,
 		CombatDuration:   combat.Round,
-		TotalDamageDealt: totalDamage,
-		TotalHealingDone: totalHealing,
+		TotalDamageDealt: stats.totalDamage,
+		TotalHealingDone: stats.totalHealing,
 		KillingBlows:     models.JSONB(killingBlowsJSON),
-		MVPID:            mvpID,
-		MVPType:          mvpType,
+		MVPID:            mvpInfo.id,
+		MVPType:          mvpInfo.combatantType,
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
 	}
+}
+
+type actionStats struct {
+	totalDamage   int
+	totalHealing  int
+	damageByActor map[string]int
+	killingBlows  []map[string]interface{}
+}
+
+type mvpInfo struct {
+	id            string
+	combatantType string
+}
+
+func (cas *CombatAnalyticsService) calculateActionStats(actions []*models.CombatActionLog) actionStats {
+	stats := actionStats{
+		damageByActor: make(map[string]int),
+		killingBlows:  []map[string]interface{}{},
+	}
+
+	for _, action := range actions {
+		cas.processActionForStats(action, &stats)
+	}
+
+	return stats
+}
+
+func (cas *CombatAnalyticsService) processActionForStats(action *models.CombatActionLog, stats *actionStats) {
+	if action.ActionType == constants.ActionAttack || action.ActionType == constants.ActionTypeSpell {
+		stats.totalDamage += action.DamageDealt
+		stats.damageByActor[action.ActorID] += action.DamageDealt
+	}
+
+	if action.ActionType == constants.ActionHeal {
+		stats.totalHealing += action.DamageDealt // Healing stored as positive damage
+	}
+
+	if action.Outcome == constants.OutcomeKillingBlow {
+		stats.killingBlows = append(stats.killingBlows, map[string]interface{}{
+			"dealer_id": action.ActorID,
+			"target_id": action.TargetID,
+			"damage":    action.DamageDealt,
+		})
+	}
+}
+
+func (cas *CombatAnalyticsService) determineMVP(damageByActor map[string]int, combatants []models.Combatant) mvpInfo {
+	var mvp mvpInfo
+	maxDamage := 0
+
+	for actorID, damage := range damageByActor {
+		if damage > maxDamage {
+			maxDamage = damage
+			mvp.id = actorID
+			mvp.combatantType = cas.getCombatantType(actorID, combatants)
+		}
+	}
+
+	return mvp
+}
+
+func (cas *CombatAnalyticsService) getCombatantType(actorID string, combatants []models.Combatant) string {
+	for i := range combatants {
+		if combatants[i].ID == actorID {
+			return string(combatants[i].Type)
+		}
+	}
+	return ""
 }
 
 func (cas *CombatAnalyticsService) calculateCombatantAnalytics(
@@ -538,37 +561,56 @@ func (cas *CombatAnalyticsService) analyzeResourceUse(actions []*models.CombatAc
 }
 
 func (cas *CombatAnalyticsService) analyzeTargeting(actions []*models.CombatActionLog, combat *models.Combat) int {
-	// Analyze target selection priorities
 	score := 5
+	targetingData := cas.analyzeTargetPriorities(actions, combat)
+	
+	if targetingData.dangerousEnemiesEliminated > 0 {
+		score += min(3, targetingData.dangerousEnemiesEliminated)
+	}
 
-	// Track who was targeted and when
-	targetPriority := make(map[string]int)
-	dangerousEnemiesEliminated := 0
+	return min(10, score)
+}
+
+type targetingAnalysis struct {
+	targetPriority              map[string]int
+	dangerousEnemiesEliminated int
+}
+
+func (cas *CombatAnalyticsService) analyzeTargetPriorities(actions []*models.CombatActionLog, combat *models.Combat) targetingAnalysis {
+	analysis := targetingAnalysis{
+		targetPriority: make(map[string]int),
+	}
 
 	for _, action := range actions {
-		if action.TargetID != nil && action.ActionType == constants.ActionAttack {
-			targetPriority[*action.TargetID]++
-
-			if action.Outcome == constants.OutcomeKillingBlow {
-				// Check if this was a high-priority target
-				for i := range combat.Combatants {
-					if combat.Combatants[i].ID == *action.TargetID {
-						// Simple heuristic: casters and high damage dealers are priority
-						if combat.Combatants[i].Type == models.CombatantTypeNPC && action.RoundNumber < 5 {
-							dangerousEnemiesEliminated++
-						}
-						break
-					}
-				}
+		if cas.isTargetedAttack(action) {
+			analysis.targetPriority[*action.TargetID]++
+			
+			if cas.isHighPriorityElimination(action, combat) {
+				analysis.dangerousEnemiesEliminated++
 			}
 		}
 	}
 
-	if dangerousEnemiesEliminated > 0 {
-		score += min(3, dangerousEnemiesEliminated)
+	return analysis
+}
+
+func (cas *CombatAnalyticsService) isTargetedAttack(action *models.CombatActionLog) bool {
+	return action.TargetID != nil && action.ActionType == constants.ActionAttack
+}
+
+func (cas *CombatAnalyticsService) isHighPriorityElimination(action *models.CombatActionLog, combat *models.Combat) bool {
+	if action.Outcome != constants.OutcomeKillingBlow {
+		return false
 	}
 
-	return min(10, score)
+	for i := range combat.Combatants {
+		if combat.Combatants[i].ID == *action.TargetID {
+			// Simple heuristic: early elimination of NPCs indicates good target prioritization
+			return combat.Combatants[i].Type == models.CombatantTypeNPC && action.RoundNumber < 5
+		}
+	}
+	
+	return false
 }
 
 func (cas *CombatAnalyticsService) analyzeTeamwork(actions []*models.CombatActionLog, reports []*models.CombatantReport) int {
