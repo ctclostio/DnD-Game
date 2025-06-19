@@ -961,13 +961,13 @@ Create a description (2-3 sentences) of this interaction and its outcome.`,
 func (les *LivingEcosystemService) calculateRelationshipChange(interaction string) float64 {
 	switch interaction {
 	case "border_skirmish", "trade_embargo", "spy_captured":
-		return -(rand.Float64()*10 + 5)
+		return -(rand.Float64()*10 + 5) // NOSONAR: math/rand is appropriate for game mechanics (faction relationship changes)
 	case "trade_deal", "military_cooperation", "royal_marriage":
-		return rand.Float64()*10 + 5
+		return rand.Float64()*10 + 5 // NOSONAR: math/rand is appropriate for game mechanics (faction relationship changes)
 	case "cultural_exchange":
-		return rand.Float64()*5 + 2
+		return rand.Float64()*5 + 2 // NOSONAR: math/rand is appropriate for game mechanics (faction relationship changes)
 	default:
-		return (rand.Float64() - 0.5) * 10
+		return (rand.Float64() - 0.5) * 10 // NOSONAR: math/rand is appropriate for game mechanics (faction relationship changes)
 	}
 }
 
