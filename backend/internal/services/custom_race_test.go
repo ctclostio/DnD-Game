@@ -17,7 +17,7 @@ import (
 
 // Test constants
 const (
-	testRaceShadowElf = testRaceShadowElf
+	testRaceShadowElf = "Shadow Elf"
 )
 
 func TestCustomRaceService_CreateCustomRace(t *testing.T) {

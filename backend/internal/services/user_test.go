@@ -29,9 +29,9 @@ const (
 	testEmailExisting = "existing@example.com"
 	
 	// User IDs and error messages
-	testUserID123     = testUserID123
-	testErrDatabase   = "database error"
-	testErrUserNotFound = testErrUserNotFound
+	testUserID123     = "123"
+	testUserErrDatabase   = "database error"
+	testErrUserNotFound = "user not found"
 )
 
 func TestUserService_Register(t *testing.T) {
@@ -154,9 +154,9 @@ func TestUserService_Register(t *testing.T) {
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByUsername", ctx, "testuser").Return(nil, nil)
 				m.On("GetByEmail", ctx, testEmailValid).Return(nil, nil)
-				m.On("Create", ctx, mock.Anything).Return(errors.New(testErrDatabase))
+				m.On("Create", ctx, mock.Anything).Return(errors.New(testUserErrDatabase))
 			},
-			expectedError: testErrDatabase,
+			expectedError: testUserErrDatabase,
 		},
 	}
 
@@ -410,9 +410,9 @@ func TestUserService_UpdateUser(t *testing.T) {
 					CreatedAt:    time.Now(),
 				}
 				m.On("GetByID", ctx, testUserID123).Return(existingUser, nil)
-				m.On("Update", ctx, mock.Anything).Return(errors.New(testErrDatabase))
+				m.On("Update", ctx, mock.Anything).Return(errors.New(testUserErrDatabase))
 			},
-			expectedError: testErrDatabase,
+			expectedError: testUserErrDatabase,
 		},
 	}
 

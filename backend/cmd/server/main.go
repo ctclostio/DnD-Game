@@ -25,7 +25,52 @@ import (
 )
 
 func main() {
-	// Initialize logger first
+	// Initialize logger
+	log := initializeLogger()
+
+	// Load and validate configuration
+	cfg := loadConfiguration(log)
+
+	// Log configuration details
+	logConfiguration(log, cfg)
+	
+	// Warn if running in development mode
+	warnDevelopmentMode(log, cfg)
+
+	// Initialize database
+	db, repos := initializeDatabase(cfg, log)
+	defer closeDatabase(db, log)
+
+	// Initialize auth manager
+	jwtManager := initializeAuthManager(cfg, log)
+
+	// Create AI provider
+	llmProvider := createAIProvider(cfg, log)
+
+	// Initialize all services
+	svc := initializeServices(cfg, db, repos, llmProvider, jwtManager, log)
+
+	// Start refresh token cleanup
+	startRefreshTokenCleanup(svc.RefreshTokens, log)
+
+	// Initialize WebSocket hub
+	hub := initializeWebSocket(jwtManager, log)
+
+	// Create handlers
+	h := handlers.NewHandlers(svc, db, hub)
+	log.Info().Msg("Handlers initialized")
+
+	// Setup HTTP server
+	handler := setupHTTPServer(cfg, h, jwtManager, log)
+
+	// Run server and handle shutdown
+	runServer(cfg, handler, svc.RefreshTokens, hub, log)
+
+	log.Info().Msg("Server shutdown complete")
+}
+
+// initializeLogger creates and configures the logger
+func initializeLogger() *logger.LoggerV2 {
 	logConfig := logger.ConfigV2{
 		Level:        getEnvOrDefault("LOG_LEVEL", "info"),
 		Pretty:       getEnvOrDefault("LOG_PRETTY", "false") == "true",
@@ -43,81 +88,102 @@ func main() {
 
 	log, err := logger.NewV2(&logConfig)
 	if err != nil {
-		// Fallback to standard library if logger fails
 		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Log startup
 	log.Info().
 		Str("service", logConfig.ServiceName).
 		Str("environment", logConfig.Environment).
 		Msg("Starting D&D Game Backend")
 
-	// Load configuration
+	return log
+}
+
+// loadConfiguration loads and validates the configuration
+func loadConfiguration(log *logger.LoggerV2) *config.Config {
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load configuration")
 	}
 
-	// Validate configuration
 	if err := cfg.Validate(); err != nil {
 		log.Fatal().Err(err).Msg("Invalid configuration")
 	}
 
+	return cfg
+}
+
+// logConfiguration logs the configuration details
+func logConfiguration(log *logger.LoggerV2, cfg *config.Config) {
 	log.Info().
 		Str("database_host", cfg.Database.Host).
 		Str("server_port", cfg.Server.Port).
 		Bool("ai_enabled", cfg.AI.Provider != constants.MockProvider).
 		Msg("Configuration loaded successfully")
-	
-	// Warn if running in development mode
+}
+
+// warnDevelopmentMode warns if running in development mode
+func warnDevelopmentMode(log *logger.LoggerV2, cfg *config.Config) {
 	if cfg.Server.Environment == "development" {
 		log.Warn().
 			Msg("⚠️  SERVER IS RUNNING IN DEVELOPMENT MODE - NOT SUITABLE FOR PRODUCTION")
 		log.Warn().
 			Msg("⚠️  Security features are relaxed. Set ENV=production for production use")
 	}
+}
 
-	// Initialize database with logging
+// initializeDatabase initializes the database connection
+func initializeDatabase(cfg *config.Config, log *logger.LoggerV2) (*database.DB, *database.Repositories) {
 	log.Info().Msg("Initializing database connection")
 	db, repos, err := database.InitializeWithLogging(cfg, log)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize database")
 	}
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Error().Err(err).Msg("Failed to close database connection")
-		}
-	}()
 	log.Info().Msg("Database initialized successfully")
+	return db, repos
+}
 
-	// Create JWT manager
+// closeDatabase closes the database connection
+func closeDatabase(db *database.DB, log *logger.LoggerV2) {
+	if err := db.Close(); err != nil {
+		log.Error().Err(err).Msg("Failed to close database connection")
+	}
+}
+
+// initializeAuthManager creates the JWT manager
+func initializeAuthManager(cfg *config.Config, log *logger.LoggerV2) *auth.JWTManager {
 	jwtManager := auth.NewJWTManager(
 		cfg.Auth.JWTSecret,
 		cfg.Auth.AccessTokenDuration,
 		cfg.Auth.RefreshTokenDuration,
 	)
 	log.Info().Msg("JWT manager initialized")
+	return jwtManager
+}
 
-	// Create AI provider
-	llmProvider := createAIProvider(cfg, log)
-
-	// Create AI services
+// initializeServices creates all application services
+func initializeServices(
+	cfg *config.Config,
+	db *database.DB,
+	repos *database.Repositories,
+	llmProvider services.LLMProvider,
+	jwtManager *auth.JWTManager,
+	log *logger.LoggerV2,
+) *services.Services {
 	log.Info().Msg("Initializing AI services")
+	
+	// AI services
 	aiRaceGenerator := services.NewAIRaceGeneratorService(llmProvider)
 	aiDMAssistant := services.NewAIDMAssistantService(llmProvider)
 	aiEncounterBuilder := services.NewAIEncounterBuilder(llmProvider)
 	aiCampaignManager := services.NewAICampaignManager(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != constants.MockProvider}, log)
 	aiBattleMapGenerator := services.NewAIBattleMapGenerator(llmProvider, &services.AIConfig{Enabled: cfg.AI.Provider != constants.MockProvider}, log)
 
-	// Create services
 	log.Info().Msg("Initializing core services")
 
-	// Token service with cleanup
+	// Token service
 	refreshTokenService := services.NewRefreshTokenService(repos.RefreshTokens, jwtManager)
-	refreshTokenService.StartCleanupTask(1 * time.Hour)
-	log.Info().Msg("Refresh token cleanup task started")
 
 	// Combat services
 	combatService := services.NewCombatService()
@@ -146,13 +212,13 @@ func main() {
 	balanceAnalyzer := services.NewAIBalanceAnalyzer(cfg, llmProvider, ruleEngine, combatService)
 	conditionalReality := services.NewConditionalRealitySystem(ruleEngine)
 
-	// Create game session service with security dependencies
+	// Game session service with security dependencies
 	gameSessionService := services.NewGameSessionService(repos.GameSessions)
 	gameSessionService.SetCharacterRepository(repos.Characters)
 	gameSessionService.SetUserRepository(repos.Users)
 
 	// Aggregate all services
-	svc := &services.Services{
+	return &services.Services{
 		DB:                 db,
 		Users:              services.NewUserService(repos.Users),
 		Characters:         services.NewCharacterService(repos.Characters, repos.CustomClasses, llmProvider),
@@ -183,26 +249,37 @@ func main() {
 		AICampaignManager:  aiCampaignManager,
 		BattleMapGen:       aiBattleMapGenerator,
 	}
+}
 
-	// Initialize WebSocket hub
+// startRefreshTokenCleanup starts the refresh token cleanup task
+func startRefreshTokenCleanup(service *services.RefreshTokenService, log *logger.LoggerV2) {
+	service.StartCleanupTask(1 * time.Hour)
+	log.Info().Msg("Refresh token cleanup task started")
+}
+
+// initializeWebSocket initializes the WebSocket hub
+func initializeWebSocket(jwtManager *auth.JWTManager, log *logger.LoggerV2) *websocket.Hub {
 	hub := websocket.InitHub()
 	websocket.SetJWTManager(jwtManager)
 	log.Info().Msg("WebSocket hub started")
+	return hub
+}
 
-	// Create handlers
-	h := handlers.NewHandlers(svc, db, hub)
-	log.Info().Msg("Handlers initialized")
-
-	// Setup routes
+// setupHTTPServer configures the HTTP server with all middleware and routes
+func setupHTTPServer(
+	cfg *config.Config,
+	h *handlers.Handlers,
+	jwtManager *auth.JWTManager,
+	log *logger.LoggerV2,
+) http.Handler {
 	r := mux.NewRouter()
 
 	// Add middleware
 	r.Use(middleware.RequestIDMiddleware)
-	r.Use(middleware.RequestContextMiddleware) // Add context enrichment
-	r.Use(middleware.LoggingMiddleware(log))   // This now uses the V2 version
-	r.Use(middleware.ErrorHandlerV2(log))      // Enable error handler with LoggerV2
-	// TODO: Create LoggerV2 version of RecoveryMiddleware
-	// r.Use(middleware.RecoveryMiddleware(log))
+	r.Use(middleware.RequestContextMiddleware)
+	r.Use(middleware.LoggingMiddleware(log))
+	r.Use(middleware.ErrorHandlerV2(log))
+	
 	isDevelopment := cfg.Server.Environment == "development"
 	r.Use(middleware.SecurityHeaders(isDevelopment))
 
@@ -213,8 +290,8 @@ func main() {
 	authMiddleware := auth.NewMiddleware(jwtManager)
 
 	// Create rate limiters
-	authRateLimiter := middleware.NewRateLimiter(15, time.Minute) // 15 requests per minute
-	apiRateLimiter := middleware.NewRateLimiter(200, time.Minute) // 200 requests per minute
+	authRateLimiter := middleware.NewRateLimiter(15, time.Minute)
+	apiRateLimiter := middleware.NewRateLimiter(200, time.Minute)
 
 	// Setup route config
 	routeConfig := &routes.Config{
@@ -233,7 +310,6 @@ func main() {
 	// Setup CORS
 	allowedOrigins := []string{"http://localhost:3000", "http://localhost:8080", "http://192.168.1.161:3000"}
 	if cfg.Server.Environment == "production" {
-		// TODO: Update with actual production domain before deployment
 		allowedOrigins = []string{"https://yourdomain.com"}
 	}
 
@@ -243,12 +319,20 @@ func main() {
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Request-ID"},
 		ExposedHeaders:   []string{"X-Request-ID", "X-Correlation-ID"},
 		AllowCredentials: true,
-		MaxAge:           86400, // 24 hours
+		MaxAge:           86400,
 	})
 
-	handler := c.Handler(r)
+	return c.Handler(r)
+}
 
-	// Create server
+// runServer starts the HTTP server and handles graceful shutdown
+func runServer(
+	cfg *config.Config,
+	handler http.Handler,
+	refreshTokenService *services.RefreshTokenService,
+	hub *websocket.Hub,
+	log *logger.LoggerV2,
+) {
 	srv := &http.Server{
 		Addr:         ":" + cfg.Server.Port,
 		Handler:      handler,
@@ -273,7 +357,7 @@ func main() {
 		Str("port", cfg.Server.Port).
 		Msg("D&D Game Backend is running")
 
-	// Wait for interrupt signal to gracefully shutdown the server
+	// Wait for interrupt signal
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-quit
@@ -286,20 +370,15 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Shutdown server
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Error().Err(err).Msg("Server forced to shutdown")
 	}
 
-	// Stop refresh token cleanup
 	refreshTokenService.StopCleanupTask()
 
-	// Close WebSocket hub
 	if err := hub.Shutdown(ctx); err != nil {
 		log.Error().Err(err).Msg("Failed to shutdown websocket hub")
 	}
-
-	log.Info().Msg("Server shutdown complete")
 }
 
 // Helper function to get environment variable with default

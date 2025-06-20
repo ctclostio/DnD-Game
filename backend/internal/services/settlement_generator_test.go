@@ -527,92 +527,124 @@ func TestSettlementGeneratorService_GenerateMarketConditions(t *testing.T) {
 	service := &SettlementGeneratorService{}
 
 	t.Run("basic market", func(t *testing.T) {
-		settlement := &models.Settlement{
-			ID:                 uuid.New(),
-			WealthLevel:        5,
-			CorruptionLevel:    3,
-			AncientRuinsNearby: false,
-		}
-
+		settlement := createBasicSettlement()
 		market := service.generateMarketConditions(settlement)
-
-		require.NotNil(t, market)
-		require.Equal(t, settlement.ID, market.SettlementID)
-		require.Equal(t, 1.0, market.FoodPriceModifier)
-		// CommonGoodsModifier can be 0.9, 1.0, or 1.3 due to random economic conditions
-		require.InDelta(t, 1.0, market.CommonGoodsModifier, 0.31)
-		require.False(t, market.BlackMarketActive)
-		require.False(t, market.ArtifactDealerPresent)
+		assertBasicMarketConditions(t, settlement, market)
 	})
 
 	t.Run("poor settlement", func(t *testing.T) {
-		settlement := &models.Settlement{
-			ID:          uuid.New(),
-			WealthLevel: 2,
-		}
-
+		settlement := createPoorSettlement()
 		market := service.generateMarketConditions(settlement)
-
-		require.Greater(t, market.CommonGoodsModifier, 1.0)
-		require.Greater(t, market.MagicalItemsModifier, 1.0)
+		assertPoorSettlementMarket(t, market)
 	})
 
 	t.Run("wealthy settlement", func(t *testing.T) {
-		settlement := &models.Settlement{
-			ID:          uuid.New(),
-			WealthLevel: 8,
-		}
-
+		settlement := createWealthySettlement()
 		market := service.generateMarketConditions(settlement)
-
-		// Wealthy settlements normally have lower prices (modifier < 1.0)
-		// but can have higher prices during economic depression
-		if market.EconomicDepression {
-			// During depression, prices can be higher
-			require.Greater(t, market.CommonGoodsModifier, 1.0)
-		} else if market.EconomicBoom {
-			// During boom, prices should be even lower
-			require.Less(t, market.CommonGoodsModifier, 0.9)
-		} else {
-			// Normal conditions for wealthy settlement
-			require.Less(t, market.CommonGoodsModifier, 1.0)
-		}
-
-		// Magical items are not affected by economic conditions in the implementation
-		require.Less(t, market.MagicalItemsModifier, 1.0)
+		assertWealthySettlementMarket(t, market)
 	})
 
 	t.Run("corrupted settlement", func(t *testing.T) {
-		settlement := &models.Settlement{
-			ID:              uuid.New(),
-			WealthLevel:     5,
-			CorruptionLevel: 7,
-		}
-
+		settlement := createCorruptedSettlement()
 		market := service.generateMarketConditions(settlement)
-
 		require.True(t, market.BlackMarketActive)
 	})
 
 	t.Run("settlement near ruins", func(t *testing.T) {
-		settlement := &models.Settlement{
-			ID:                 uuid.New(),
-			WealthLevel:        5,
-			AncientRuinsNearby: true,
-		}
-
-		// Run multiple times due to randomness
-		hasArtifactDealer := false
-		for i := 0; i < 20; i++ {
-			market := service.generateMarketConditions(settlement)
-			if market.ArtifactDealerPresent {
-				hasArtifactDealer = true
-				require.Less(t, market.AncientArtifactsModifier, 2.0)
-				break
-			}
-		}
-		require.True(t, hasArtifactDealer, "Should have artifact dealer at least once in 20 runs")
+		settlement := createSettlementNearRuins()
+		assertArtifactDealerPresence(t, service, settlement)
 	})
+}
+
+// Helper functions for creating test settlements
+func createBasicSettlement() *models.Settlement {
+	return &models.Settlement{
+		ID:                 uuid.New(),
+		WealthLevel:        5,
+		CorruptionLevel:    3,
+		AncientRuinsNearby: false,
+	}
+}
+
+func createPoorSettlement() *models.Settlement {
+	return &models.Settlement{
+		ID:          uuid.New(),
+		WealthLevel: 2,
+	}
+}
+
+func createWealthySettlement() *models.Settlement {
+	return &models.Settlement{
+		ID:          uuid.New(),
+		WealthLevel: 8,
+	}
+}
+
+func createCorruptedSettlement() *models.Settlement {
+	return &models.Settlement{
+		ID:              uuid.New(),
+		WealthLevel:     5,
+		CorruptionLevel: 7,
+	}
+}
+
+func createSettlementNearRuins() *models.Settlement {
+	return &models.Settlement{
+		ID:                 uuid.New(),
+		WealthLevel:        5,
+		AncientRuinsNearby: true,
+	}
+}
+
+// Helper functions for assertions
+func assertBasicMarketConditions(t *testing.T, settlement *models.Settlement, market *models.Market) {
+	require.NotNil(t, market)
+	require.Equal(t, settlement.ID, market.SettlementID)
+	require.Equal(t, 1.0, market.FoodPriceModifier)
+	// CommonGoodsModifier can be 0.9, 1.0, or 1.3 due to random economic conditions
+	require.InDelta(t, 1.0, market.CommonGoodsModifier, 0.31)
+	require.False(t, market.BlackMarketActive)
+	require.False(t, market.ArtifactDealerPresent)
+}
+
+func assertPoorSettlementMarket(t *testing.T, market *models.Market) {
+	require.Greater(t, market.CommonGoodsModifier, 1.0)
+	require.Greater(t, market.MagicalItemsModifier, 1.0)
+}
+
+func assertWealthySettlementMarket(t *testing.T, market *models.Market) {
+	validateEconomicConditions(t, market)
+	// Magical items are not affected by economic conditions in the implementation
+	require.Less(t, market.MagicalItemsModifier, 1.0)
+}
+
+func validateEconomicConditions(t *testing.T, market *models.Market) {
+	// Wealthy settlements normally have lower prices (modifier < 1.0)
+	// but can have higher prices during economic depression
+	if market.EconomicDepression {
+		// During depression, prices can be higher
+		require.Greater(t, market.CommonGoodsModifier, 1.0)
+	} else if market.EconomicBoom {
+		// During boom, prices should be even lower
+		require.Less(t, market.CommonGoodsModifier, 0.9)
+	} else {
+		// Normal conditions for wealthy settlement
+		require.Less(t, market.CommonGoodsModifier, 1.0)
+	}
+}
+
+func assertArtifactDealerPresence(t *testing.T, service *SettlementGeneratorService, settlement *models.Settlement) {
+	// Run multiple times due to randomness
+	hasArtifactDealer := false
+	for i := 0; i < 20; i++ {
+		market := service.generateMarketConditions(settlement)
+		if market.ArtifactDealerPresent {
+			hasArtifactDealer = true
+			require.Less(t, market.AncientArtifactsModifier, 2.0)
+			break
+		}
+	}
+	require.True(t, hasArtifactDealer, "Should have artifact dealer at least once in 20 runs")
 }
 
 func TestSettlementGeneratorService_ProceduralGenerators(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 
 // Test constants
 const (
-	testEncounterName = testEncounterName
+	testEncounterName = "Test Encounter"
 )
 
 // Basic compilation test to ensure the service compiles correctly
