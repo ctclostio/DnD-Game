@@ -51,7 +51,7 @@ func (h *CombatAutomationHandler) AutoResolveCombat(w http.ResponseWriter, r *ht
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, ErrInvalidSessionID)
 		return
 	}
 
@@ -69,7 +69,7 @@ func (h *CombatAutomationHandler) AutoResolveCombat(w http.ResponseWriter, r *ht
 
 	var req models.AutoResolveRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -117,7 +117,7 @@ func (h *CombatAutomationHandler) SmartInitiative(w http.ResponseWriter, r *http
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, ErrInvalidSessionID)
 		return
 	}
 
@@ -147,7 +147,7 @@ func (h *CombatAutomationHandler) SmartInitiative(w http.ResponseWriter, r *http
 
 	var req models.SmartInitiativeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -173,7 +173,7 @@ func (h *CombatAutomationHandler) GenerateBattleMap(w http.ResponseWriter, r *ht
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, ErrInvalidSessionID)
 		return
 	}
 
@@ -191,7 +191,7 @@ func (h *CombatAutomationHandler) GenerateBattleMap(w http.ResponseWriter, r *ht
 
 	var req models.GenerateBattleMapRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -253,7 +253,7 @@ func (h *CombatAutomationHandler) GetSessionCombatHistory(w http.ResponseWriter,
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, ErrInvalidSessionID)
 		return
 	}
 
@@ -287,7 +287,7 @@ func (h *CombatAutomationHandler) GetBattleMaps(w http.ResponseWriter, r *http.R
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, ErrInvalidSessionID)
 		return
 	}
 
@@ -332,7 +332,7 @@ func (h *CombatAutomationHandler) SetInitiativeRules(w http.ResponseWriter, r *h
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, ErrInvalidSessionID)
 		return
 	}
 
@@ -350,7 +350,7 @@ func (h *CombatAutomationHandler) SetInitiativeRules(w http.ResponseWriter, r *h
 
 	var rule models.SmartInitiativeRule
 	if err := json.NewDecoder(r.Body).Decode(&rule); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 

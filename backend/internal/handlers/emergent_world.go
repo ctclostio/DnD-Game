@@ -138,7 +138,7 @@ func (h *EmergentWorldHandlers) CreateNPCGoal(w http.ResponseWriter, r *http.Req
 
 	var goal models.NPCGoal
 	if err := json.NewDecoder(r.Body).Decode(&goal); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -213,7 +213,7 @@ func (h *EmergentWorldHandlers) MakeFactionDecision(w http.ResponseWriter, r *ht
 
 	var decision models.FactionDecision
 	if err := json.NewDecoder(r.Body).Decode(&decision); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -247,7 +247,7 @@ func (h *EmergentWorldHandlers) RecordFactionInteraction(w http.ResponseWriter, 
 
 	var interaction models.PlayerInteraction
 	if err := json.NewDecoder(r.Body).Decode(&interaction); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -271,7 +271,7 @@ func (h *EmergentWorldHandlers) GenerateCulture(w http.ResponseWriter, r *http.R
 
 	var params services.CultureGenParameters
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -305,7 +305,7 @@ func (h *EmergentWorldHandlers) GetCulture(w http.ResponseWriter, r *http.Reques
 
 	culture, err := h.worldRepo.GetCulture(cultureID)
 	if err != nil {
-		response.NotFound(w, r, "Culture not found")
+		response.NotFound(w, r, ErrCultureNotFound)
 		return
 	}
 
@@ -319,7 +319,7 @@ func (h *EmergentWorldHandlers) InteractWithCulture(w http.ResponseWriter, r *ht
 
 	var action services.PlayerCulturalAction
 	if err := json.NewDecoder(r.Body).Decode(&action); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -345,7 +345,7 @@ func (h *EmergentWorldHandlers) GetCultureLanguage(w http.ResponseWriter, r *htt
 
 	culture, err := h.worldRepo.GetCulture(cultureID)
 	if err != nil {
-		response.NotFound(w, r, "Culture not found")
+		response.NotFound(w, r, ErrCultureNotFound)
 		return
 	}
 
@@ -359,7 +359,7 @@ func (h *EmergentWorldHandlers) GetCultureBeliefs(w http.ResponseWriter, r *http
 
 	culture, err := h.worldRepo.GetCulture(cultureID)
 	if err != nil {
-		response.NotFound(w, r, "Culture not found")
+		response.NotFound(w, r, ErrCultureNotFound)
 		return
 	}
 
@@ -373,7 +373,7 @@ func (h *EmergentWorldHandlers) GetCultureCustoms(w http.ResponseWriter, r *http
 
 	culture, err := h.worldRepo.GetCulture(cultureID)
 	if err != nil {
-		response.NotFound(w, r, "Culture not found")
+		response.NotFound(w, r, ErrCultureNotFound)
 		return
 	}
 
@@ -424,7 +424,7 @@ func (h *EmergentWorldHandlers) TriggerWorldEvent(w http.ResponseWriter, r *http
 
 	var event models.WorldEvent
 	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 

@@ -20,35 +20,20 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
+// Test constants
+const (
+	testGameSessionsPath = "/api/v1/game/sessions/"
+)
+
 func TestGameSessionSecurity(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
 	t.Skip("integration environment not available")
-	// Setup test context
-	ctx := context.Background()
-	testCtx, cleanup := testutil.SetupIntegrationTest(t)
+	
+	// Setup test environment
+	ctx, testCtx, h, svc, cleanup := setupTestEnvironment(t)
 	defer cleanup()
-
-	// Create logger (not used in these tests)
-	// log, err := logger.NewV2(logger.DefaultConfig())
-	// require.NoError(t, err)
-
-	// Create services with repositories
-	gameService := services.NewGameSessionService(testCtx.Repos.GameSessions)
-	gameService.SetCharacterRepository(testCtx.Repos.Characters)
-	gameService.SetUserRepository(testCtx.Repos.Users)
-
-	svc := &services.Services{
-		DB:           testCtx.DB,
-		Users:        services.NewUserService(testCtx.Repos.Users),
-		Characters:   services.NewCharacterService(testCtx.Repos.Characters, nil, nil),
-		GameSessions: gameService,
-		JWTManager:   testCtx.JWTManager,
-	}
-
-	// Create handlers
-	h := handlers.NewHandlers(svc, testCtx.DB, nil)
 
 	// Create test users
 	dm := createTestUser(t, testCtx, "dm_user", "dm@example.com", "dm")
@@ -79,21 +64,8 @@ func TestGameSessionSecurity(t *testing.T) {
 		body := map[string]interface{}{
 			"character_id": char1.ID,
 		}
-		jsonBody, _ := json.Marshal(body)
-
-		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
-		req.Header.Set(constants.ContentType, constants.ApplicationJSON)
-		claims := &auth.Claims{
-			UserID:   player1.ID,
-			Username: "testuser",
-			Email:    handlers.TestEmail,
-			Role:     "player",
-		}
-		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
-		req = mux.SetURLVars(req, map[string]string{"id": session.ID})
-
-		rr := httptest.NewRecorder()
-		h.JoinGameSession(rr, req)
+		req := createAuthenticatedRequest("POST", testGameSessionsPath+session.ID+"/join", body, player1.ID, session.ID)
+		rr := executeRequest(h, req, h.JoinGameSession)
 
 		// Verify player1 joined successfully
 		require.Equal(t, http.StatusOK, rr.Code, "Player1 should be able to join initially")
@@ -103,21 +75,8 @@ func TestGameSessionSecurity(t *testing.T) {
 			body := map[string]interface{}{
 				"character_id": char1.ID,
 			}
-			jsonBody, _ := json.Marshal(body)
-
-			req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
-			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
-			claims := &auth.Claims{
-				UserID:   player1.ID,
-				Username: "testuser",
-				Email:    handlers.TestEmail,
-				Role:     "player",
-			}
-			req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
-			req = mux.SetURLVars(req, map[string]string{"id": session.ID})
-
-			rr := httptest.NewRecorder()
-			h.JoinGameSession(rr, req)
+			req := createAuthenticatedRequest("POST", testGameSessionsPath+session.ID+"/join", body, player1.ID, session.ID)
+			rr := executeRequest(h, req, h.JoinGameSession)
 
 			assert.Equal(t, http.StatusBadRequest, rr.Code)
 
@@ -195,7 +154,7 @@ func TestGameSessionSecurity(t *testing.T) {
 				}
 				jsonBody, _ := json.Marshal(body)
 
-				req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/join", bytes.NewBuffer(jsonBody))
+				req := httptest.NewRequest("POST", testGameSessionsPath+session.ID+"/join", bytes.NewBuffer(jsonBody))
 				req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 				// Create user claims and add to context
 				claims := &auth.Claims{
@@ -271,7 +230,7 @@ func TestGameSessionSecurity(t *testing.T) {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				req := httptest.NewRequest("GET", "/api/v1/game/sessions/"+tt.sessionID, http.NoBody)
+				req := httptest.NewRequest("GET", testGameSessionsPath+tt.sessionID, http.NoBody)
 				// Create user claims and add to context
 				claims := &auth.Claims{
 					UserID:   tt.userID,
@@ -336,7 +295,7 @@ func TestGameSessionSecurity(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
 				body := map[string]interface{}{}
 				jsonBody, _ := json.Marshal(body)
-				req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+session.ID+"/kick/"+tt.playerToKick, bytes.NewBuffer(jsonBody))
+				req := httptest.NewRequest("POST", testGameSessionsPath+session.ID+"/kick/"+tt.playerToKick, bytes.NewBuffer(jsonBody))
 				req.Header.Set(constants.ContentType, constants.ApplicationJSON)
 				claims := &auth.Claims{
 					UserID:   tt.dmUserID,
@@ -382,7 +341,7 @@ func TestGameSessionSecurity(t *testing.T) {
 		require.NoError(t, err)
 
 		// Try to join inactive session
-		req := httptest.NewRequest("POST", "/api/v1/game/sessions/"+inactiveSession.ID+"/join", bytes.NewBufferString("{}"))
+		req := httptest.NewRequest("POST", testGameSessionsPath+inactiveSession.ID+"/join", bytes.NewBufferString("{}"))
 		// Create user claims and add to context
 		claims := &auth.Claims{
 			UserID:   player1.ID,
@@ -414,7 +373,7 @@ func TestGameSessionSecurity(t *testing.T) {
 		require.NoError(t, err)
 
 		// Try to join completed session
-		req = httptest.NewRequest("POST", "/api/v1/game/sessions/"+completedSession.ID+"/join", bytes.NewBufferString("{}"))
+		req = httptest.NewRequest("POST", testGameSessionsPath+completedSession.ID+"/join", bytes.NewBufferString("{}"))
 		// Create user claims and add to context
 		claims2 := &auth.Claims{
 			UserID:   player1.ID,
@@ -460,4 +419,65 @@ func createTestCharacter(t *testing.T, ctx *testutil.IntegrationTestContext, use
 	err := ctx.Repos.Characters.Create(context.Background(), char)
 	require.NoError(t, err)
 	return char
+}
+
+// Helper functions to reduce cognitive complexity
+
+// setupTestEnvironment initializes the test environment
+func setupTestEnvironment(t *testing.T) (context.Context, *testutil.IntegrationTestContext, *handlers.Handlers, *services.Services, func()) {
+	ctx := context.Background()
+	testCtx, cleanup := testutil.SetupIntegrationTest(t)
+
+	// Create services with repositories
+	gameService := services.NewGameSessionService(testCtx.Repos.GameSessions)
+	gameService.SetCharacterRepository(testCtx.Repos.Characters)
+	gameService.SetUserRepository(testCtx.Repos.Users)
+
+	svc := &services.Services{
+		DB:           testCtx.DB,
+		Users:        services.NewUserService(testCtx.Repos.Users),
+		Characters:   services.NewCharacterService(testCtx.Repos.Characters, nil, nil),
+		GameSessions: gameService,
+		JWTManager:   testCtx.JWTManager,
+	}
+
+	// Create handlers
+	h := handlers.NewHandlers(svc, testCtx.DB, nil)
+
+	return ctx, testCtx, h, svc, cleanup
+}
+
+// createAuthenticatedRequest creates a request with user authentication
+func createAuthenticatedRequest(method, url string, body interface{}, userID, sessionID string) *http.Request {
+	var bodyReader *bytes.Buffer
+	if body != nil {
+		jsonBody, _ := json.Marshal(body)
+		bodyReader = bytes.NewBuffer(jsonBody)
+	} else {
+		bodyReader = bytes.NewBuffer(nil)
+	}
+
+	req := httptest.NewRequest(method, url, bodyReader)
+	req.Header.Set(constants.ContentType, constants.ApplicationJSON)
+	
+	claims := &auth.Claims{
+		UserID:   userID,
+		Username: "testuser",
+		Email:    handlers.TestEmail,
+		Role:     "player",
+	}
+	req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
+	
+	if sessionID != "" {
+		req = mux.SetURLVars(req, map[string]string{"id": sessionID})
+	}
+	
+	return req
+}
+
+// executeRequest executes a handler request and returns the response
+func executeRequest(h *handlers.Handlers, req *http.Request, handler func(http.ResponseWriter, *http.Request)) *httptest.ResponseRecorder {
+	rr := httptest.NewRecorder()
+	handler(rr, req)
+	return rr
 }

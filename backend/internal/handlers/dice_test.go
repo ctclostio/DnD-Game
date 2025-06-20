@@ -14,6 +14,12 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Test constants
+const (
+	testSessionID     = "session-123"
+	testDiceNotation  = "1d20+5"
+)
+
 func TestDiceHandler_RollDice(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -25,8 +31,8 @@ func TestDiceHandler_RollDice(t *testing.T) {
 		{
 			name: "valid dice roll request",
 			body: DiceRollRequest{
-				GameSessionID: "session-123",
-				RollNotation:  "1d20+5",
+				GameSessionID: testSessionID,
+				RollNotation:  testDiceNotation,
 				Purpose:       "Attack roll",
 			},
 			userID:         uuid.New().String(),
@@ -45,7 +51,7 @@ func TestDiceHandler_RollDice(t *testing.T) {
 		{
 			name: "invalid dice notation",
 			body: DiceRollRequest{
-				GameSessionID: "session-123",
+				GameSessionID: testSessionID,
 				RollNotation:  "invalid",
 				Purpose:       "Test",
 			},
@@ -56,7 +62,7 @@ func TestDiceHandler_RollDice(t *testing.T) {
 		{
 			name: "no authentication",
 			body: DiceRollRequest{
-				GameSessionID: "session-123",
+				GameSessionID: testSessionID,
 				RollNotation:  "1d20",
 				Purpose:       "Test",
 			},
@@ -106,21 +112,21 @@ func TestDiceHandler_GetRollHistory(t *testing.T) {
 	}{
 		{
 			name:           "valid request",
-			sessionID:      "session-123",
+			sessionID:      testSessionID,
 			userID:         uuid.New().String(),
 			limit:          "10",
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "no limit specified (should use default)",
-			sessionID:      "session-123",
+			sessionID:      testSessionID,
 			userID:         uuid.New().String(),
 			limit:          "",
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "invalid limit",
-			sessionID:      "session-123",
+			sessionID:      testSessionID,
 			userID:         uuid.New().String(),
 			limit:          "invalid",
 			expectedStatus: http.StatusBadRequest,
@@ -128,7 +134,7 @@ func TestDiceHandler_GetRollHistory(t *testing.T) {
 		},
 		{
 			name:           "no authentication",
-			sessionID:      "session-123",
+			sessionID:      testSessionID,
 			userID:         "",
 			limit:          "10",
 			expectedStatus: http.StatusUnauthorized,
@@ -228,7 +234,7 @@ func TestDiceRollPurposes(t *testing.T) {
 		{
 			purpose:     "skill_check",
 			description: "Skill check",
-			typical:     "1d20+5",
+			typical:     testDiceNotation,
 		},
 		{
 			purpose:     "saving_throw",
@@ -291,7 +297,7 @@ func TestAdvantageDisadvantage(t *testing.T) {
 	}{
 		{
 			name:         "normal d20 roll",
-			notation:     "1d20+5",
+			notation:     testDiceNotation,
 			rollType:     "normal",
 			expectedDice: 1,
 		},

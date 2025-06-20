@@ -32,6 +32,7 @@ const (
 	testCharacterIDPath    = "/api/v1/characters/"
 	testCharacterInventory = "/api/v1/characters/{characterId}/inventory"
 	testCharacterEquipItem = "/api/v1/characters/{characterId}/inventory/{itemId}/equip"
+	testInventoryPath      = "/inventory"
 	testUserEmail          = "test@example.com"
 )
 
@@ -409,7 +410,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 			"quantity": 1,
 		}
 
-		req := createAuthenticatedRequest(t, "POST", testCharacterIDPath+charID+"/inventory", reqBody, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "POST", testCharacterIDPath+charID+testInventoryPath, reqBody, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
@@ -426,7 +427,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 	})
 
 	t.Run("Get Character Inventory", func(t *testing.T) {
-		req := createAuthenticatedRequest(t, "GET", testCharacterIDPath+charID+"/inventory", nil, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "GET", testCharacterIDPath+charID+testInventoryPath, nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)
@@ -458,7 +459,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 				"item_id":  itemID,
 				"quantity": 1,
 			}
-			addReq := createAuthenticatedRequest(t, "POST", testCharacterIDPath+charID+"/inventory", addReqBody, userID, ctx.jwtManager)
+			addReq := createAuthenticatedRequest(t, "POST", testCharacterIDPath+charID+testInventoryPath, addReqBody, userID, ctx.jwtManager)
 			addW := httptest.NewRecorder()
 			ctx.router.ServeHTTP(addW, addReq)
 
@@ -486,7 +487,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 		}
 
 		// Debug: First try to get the inventory via API
-		getReq := createAuthenticatedRequest(t, "GET", "/api/v1/characters/"+charID+"/inventory", nil, userID, ctx.jwtManager)
+		getReq := createAuthenticatedRequest(t, "GET", testCharacterIDPath+charID+testInventoryPath, nil, userID, ctx.jwtManager)
 		getW := httptest.NewRecorder()
 		ctx.router.ServeHTTP(getW, getReq)
 		t.Logf("Get inventory response: status=%d", getW.Code)
@@ -495,7 +496,7 @@ func TestInventoryAPI_Integration(t *testing.T) {
 		}
 
 		// Now equip the item
-		req := createAuthenticatedRequest(t, "POST", testCharacterIDPath+charID+"/inventory/"+itemID+"/equip", nil, userID, ctx.jwtManager)
+		req := createAuthenticatedRequest(t, "POST", testCharacterIDPath+charID+testInventoryPath+"/"+itemID+"/equip", nil, userID, ctx.jwtManager)
 		w := httptest.NewRecorder()
 
 		ctx.router.ServeHTTP(w, req)

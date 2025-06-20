@@ -39,7 +39,7 @@ func (h *Handlers) GenerateEncounter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -146,7 +146,7 @@ func (h *Handlers) CompleteEncounter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -175,7 +175,7 @@ func (h *Handlers) ScaleEncounter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -205,7 +205,7 @@ func (h *Handlers) GetTacticalSuggestion(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -236,7 +236,7 @@ func (h *Handlers) LogEncounterEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -296,7 +296,7 @@ func (h *Handlers) UpdateEnemyStatus(w http.ResponseWriter, r *http.Request) {
 
 	var updates map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -325,7 +325,7 @@ func (h *Handlers) TriggerReinforcements(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 

@@ -25,14 +25,14 @@ func (h *Handlers) CreateCustomRace(w http.ResponseWriter, r *http.Request) {
 	// Parse request
 	var req models.CustomRaceRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
 	// Convert userID to UUID
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		response.BadRequest(w, r, "Invalid user ID")
+		response.BadRequest(w, r, ErrInvalidUserID)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h *Handlers) GetCustomRace(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	raceID, err := uuid.Parse(vars["id"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid race ID")
+		response.BadRequest(w, r, ErrInvalidRaceID)
 		return
 	}
 
@@ -98,7 +98,7 @@ func (h *Handlers) GetUserCustomRaces(w http.ResponseWriter, r *http.Request) {
 	// Convert userID to UUID
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		response.BadRequest(w, r, "Invalid user ID")
+		response.BadRequest(w, r, ErrInvalidUserID)
 		return
 	}
 
@@ -130,7 +130,7 @@ func (h *Handlers) ApproveCustomRace(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	raceID, err := uuid.Parse(vars["id"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid race ID")
+		response.BadRequest(w, r, ErrInvalidRaceID)
 		return
 	}
 
@@ -146,14 +146,14 @@ func (h *Handlers) ApproveCustomRace(w http.ResponseWriter, r *http.Request) {
 		Notes string `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
 	// Convert userID to UUID
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		response.BadRequest(w, r, "Invalid user ID")
+		response.BadRequest(w, r, ErrInvalidUserID)
 		return
 	}
 
@@ -172,7 +172,7 @@ func (h *Handlers) RejectCustomRace(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	raceID, err := uuid.Parse(vars["id"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid race ID")
+		response.BadRequest(w, r, ErrInvalidRaceID)
 		return
 	}
 
@@ -188,14 +188,14 @@ func (h *Handlers) RejectCustomRace(w http.ResponseWriter, r *http.Request) {
 		Notes string `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
 	// Convert userID to UUID
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		response.BadRequest(w, r, "Invalid user ID")
+		response.BadRequest(w, r, ErrInvalidUserID)
 		return
 	}
 
@@ -214,7 +214,7 @@ func (h *Handlers) RequestRevisionCustomRace(w http.ResponseWriter, r *http.Requ
 	vars := mux.Vars(r)
 	raceID, err := uuid.Parse(vars["id"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid race ID")
+		response.BadRequest(w, r, ErrInvalidRaceID)
 		return
 	}
 
@@ -230,14 +230,14 @@ func (h *Handlers) RequestRevisionCustomRace(w http.ResponseWriter, r *http.Requ
 		Notes string `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
 	// Convert userID to UUID
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		response.BadRequest(w, r, "Invalid user ID")
+		response.BadRequest(w, r, ErrInvalidUserID)
 		return
 	}
 
@@ -256,7 +256,7 @@ func (h *Handlers) MakeCustomRacePublic(w http.ResponseWriter, r *http.Request) 
 	vars := mux.Vars(r)
 	raceID, err := uuid.Parse(vars["id"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid race ID")
+		response.BadRequest(w, r, ErrInvalidRaceID)
 		return
 	}
 
@@ -270,7 +270,7 @@ func (h *Handlers) MakeCustomRacePublic(w http.ResponseWriter, r *http.Request) 
 	// Convert userID to UUID
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		response.BadRequest(w, r, "Invalid user ID")
+		response.BadRequest(w, r, ErrInvalidUserID)
 		return
 	}
 
@@ -301,7 +301,7 @@ func (h *Handlers) GetCustomRaceStats(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	raceID, err := uuid.Parse(vars["id"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid race ID")
+		response.BadRequest(w, r, ErrInvalidRaceID)
 		return
 	}
 
@@ -315,7 +315,7 @@ func (h *Handlers) GetCustomRaceStats(w http.ResponseWriter, r *http.Request) {
 	// Convert userID to UUID
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		response.BadRequest(w, r, "Invalid user ID")
+		response.BadRequest(w, r, ErrInvalidUserID)
 		return
 	}
 

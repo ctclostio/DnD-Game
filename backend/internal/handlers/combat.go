@@ -29,7 +29,7 @@ func (h *Handlers) StartCombat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -148,7 +148,7 @@ func (h *Handlers) ProcessCombatAction(w http.ResponseWriter, r *http.Request) {
 
 	var request models.CombatRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -243,7 +243,7 @@ func (h *Handlers) MakeSavingThrow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -288,7 +288,7 @@ func (h *Handlers) ApplyDamage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 
@@ -348,7 +348,7 @@ func (h *Handlers) HealCombatant(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, ErrInvalidRequestBody)
 		return
 	}
 

@@ -18,6 +18,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Test constants
+const (
+	testSessionNameRequired = "session name is required"
+)
+
 // Helper functions to reduce code duplication in mock implementations
 
 func handleMockError(args mock.Arguments, index int) error {
@@ -90,7 +95,7 @@ func TestGameHandler_CreateGameSession(t *testing.T) {
 			userID:         uuid.New().String(),
 			userRole:       "dm",
 			expectedStatus: http.StatusBadRequest,
-			expectedError:  "session name is required",
+			expectedError:  testSessionNameRequired,
 		},
 		{
 			name:           "invalid request body",
@@ -132,7 +137,7 @@ func TestGameHandler_CreateGameSession(t *testing.T) {
 				assert.NoError(t, err)
 
 				// Validate required fields
-				if _, ok := decoded["name"]; !ok && tt.expectedError == "session name is required" {
+				if _, ok := decoded["name"]; !ok && tt.expectedError == testSessionNameRequired {
 					assert.True(t, true, "Name is correctly missing")
 				}
 			}
@@ -318,7 +323,7 @@ func TestGameHandler_SessionValidation(t *testing.T) {
 				DMID:        uuid.New().String(),
 			},
 			shouldError: true,
-			errorMsg:    "session name is required",
+			errorMsg:    testSessionNameRequired,
 		},
 		{
 			name: "session name too long",
@@ -346,7 +351,7 @@ func TestGameHandler_SessionValidation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Validate session attributes
 			if tt.session.Name == "" && tt.shouldError {
-				assert.Equal(t, "session name is required", tt.errorMsg)
+				assert.Equal(t, testSessionNameRequired, tt.errorMsg)
 			}
 			if len(tt.session.Name) > 255 && tt.shouldError {
 				assert.Contains(t, tt.errorMsg, "must be less than 255 characters")

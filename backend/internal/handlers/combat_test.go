@@ -17,6 +17,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Test constants
+const (
+	testSessionID = "session-123"
+)
+
 // MockCombatService for testing
 type MockCombatService struct {
 	mock.Mock
@@ -109,7 +114,7 @@ func TestCombatHandler_RequestValidation(t *testing.T) {
 		{
 			name: "valid combat start request",
 			body: map[string]interface{}{
-				"gameSessionId": "session-123",
+				"gameSessionId": testSessionID,
 				"combatants": []map[string]interface{}{
 					{
 						"characterId": uuid.New().String(),
@@ -135,7 +140,7 @@ func TestCombatHandler_RequestValidation(t *testing.T) {
 		{
 			name: "empty combatants list",
 			body: map[string]interface{}{
-				"gameSessionId": "session-123",
+				"gameSessionId": testSessionID,
 				"combatants":    []map[string]interface{}{},
 			},
 			shouldError: true,
@@ -144,7 +149,7 @@ func TestCombatHandler_RequestValidation(t *testing.T) {
 		{
 			name: "invalid combatant data",
 			body: map[string]interface{}{
-				"gameSessionId": "session-123",
+				"gameSessionId": testSessionID,
 				"combatants": []map[string]interface{}{
 					{
 						// Missing required fields

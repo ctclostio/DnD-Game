@@ -15,6 +15,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Test constants
+const (
+	testInventoryPath = "/inventory"
+)
+
 func TestInventoryHandler_ManageInventory(t *testing.T) {
 	characterID := uuid.New().String()
 
@@ -29,7 +34,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 		{
 			name:   "add item to inventory",
 			method: http.MethodPost,
-			path:   APICharactersBase + characterID + "/inventory",
+			path:   APICharactersBase + characterID + testInventoryPath,
 			body: map[string]interface{}{
 				"itemId":   uuid.New().String(),
 				"quantity": 3,
@@ -48,7 +53,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 		{
 			name:   "invalid quantity",
 			method: http.MethodPost,
-			path:   APICharactersBase + characterID + "/inventory",
+			path:   APICharactersBase + characterID + testInventoryPath,
 			body: map[string]interface{}{
 				"itemId":   uuid.New().String(),
 				"quantity": -1,

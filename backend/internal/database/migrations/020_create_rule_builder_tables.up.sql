@@ -192,25 +192,32 @@ DECLARE
     cat_conditions CONSTANT TEXT := 'conditions';
     cat_actions CONSTANT TEXT := 'actions';
     cat_calculations CONSTANT TEXT := 'calculations';
+    color_triggers CONSTANT TEXT := '#ff6b6b';
+    color_conditions CONSTANT TEXT := '#f7b731';
+    color_actions_1 CONSTANT TEXT := '#ee5a24';
+    color_actions_2 CONSTANT TEXT := '#a55eea';
+    color_actions_3 CONSTANT TEXT := '#26de81';
+    color_calculations CONSTANT TEXT := '#0fb9b1';
+    color_special CONSTANT TEXT := '#4ecdc4';
 BEGIN
     INSERT INTO node_templates (name, node_type, subtype, default_properties, input_ports, output_ports, icon, color, category, is_system) VALUES
     -- Triggers
-    ('On Action', 'trigger_action', 'action', '{"action_types": ["attack", "cast_spell", "move"]}', '[]', '[{"id": "out", "name": "trigger", "data_type": "trigger"}]', 'bolt', '#ff6b6b', cat_triggers, true),
-    ('On Damage', 'trigger_damage', 'damage', '{"damage_types": [], "threshold": 0}', '[]', '[{"id": "out", "name": "trigger", "data_type": "trigger"}, {"id": "damage", "name": "damage_amount", "data_type": "number"}]', 'heart-broken', '#ff6b6b', cat_triggers, true),
-    ('Every Turn', 'trigger_time', 'turn', '{"whose_turn": "self", "phase": "start"}', '[]', '[{"id": "out", "name": "trigger", "data_type": "trigger"}]', 'clock', '#4ecdc4', cat_triggers, true),
+    ('On Action', 'trigger_action', 'action', '{"action_types": ["attack", "cast_spell", "move"]}', '[]', '[{"id": "out", "name": "trigger", "data_type": "trigger"}]', 'bolt', color_triggers, cat_triggers, true),
+    ('On Damage', 'trigger_damage', 'damage', '{"damage_types": [], "threshold": 0}', '[]', '[{"id": "out", "name": "trigger", "data_type": "trigger"}, {"id": "damage", "name": "damage_amount", "data_type": "number"}]', 'heart-broken', color_triggers, cat_triggers, true),
+    ('Every Turn', 'trigger_time', 'turn', '{"whose_turn": "self", "phase": "start"}', '[]', '[{"id": "out", "name": "trigger", "data_type": "trigger"}]', 'clock', color_special, cat_triggers, true),
 
     -- Conditions
-    ('If/Else', 'condition_check', 'boolean', '{}', '[{"id": "condition", "name": "condition", "data_type": "boolean"}]', '[{"id": "true", "name": "if true", "data_type": "any"}, {"id": "false", "name": "if false", "data_type": "any"}]', 'code-branch', '#f7b731', cat_conditions, true),
-    ('Compare Numbers', 'condition_compare', 'number', '{"operator": ">"}', '[{"id": "a", "name": "value A", "data_type": "number"}, {"id": "b", "name": "value B", "data_type": "number"}]', '[{"id": "result", "name": "result", "data_type": "boolean"}]', 'balance-scale', '#f7b731', cat_conditions, true),
-    ('Ability Check', 'condition_roll', 'check', '{"ability": "strength", "dc": 15}', '[{"id": "target", "name": "target", "data_type": "entity"}]', '[{"id": "success", "name": "success", "data_type": "boolean"}, {"id": "roll", "name": "roll_total", "data_type": "number"}]', 'dice-d20', '#f7b731', cat_conditions, true),
+    ('If/Else', 'condition_check', 'boolean', '{}', '[{"id": "condition", "name": "condition", "data_type": "boolean"}]', '[{"id": "true", "name": "if true", "data_type": "any"}, {"id": "false", "name": "if false", "data_type": "any"}]', 'code-branch', color_conditions, cat_conditions, true),
+    ('Compare Numbers', 'condition_compare', 'number', '{"operator": ">"}', '[{"id": "a", "name": "value A", "data_type": "number"}, {"id": "b", "name": "value B", "data_type": "number"}]', '[{"id": "result", "name": "result", "data_type": "boolean"}]', 'balance-scale', color_conditions, cat_conditions, true),
+    ('Ability Check', 'condition_roll', 'check', '{"ability": "strength", "dc": 15}', '[{"id": "target", "name": "target", "data_type": "entity"}]', '[{"id": "success", "name": "success", "data_type": "boolean"}, {"id": "roll", "name": "roll_total", "data_type": "number"}]', 'dice-d20', color_conditions, cat_conditions, true),
 
     -- Actions
-    ('Deal Damage', 'action_damage', 'damage', '{"damage_dice": "1d6", "damage_type": "fire"}', '[{"id": "target", "name": "target", "data_type": "entity"}, {"id": "amount", "name": "damage", "data_type": "number"}]', '[{"id": "out", "name": "continue", "data_type": "any"}]', 'sword', '#ee5a24', cat_actions, true),
-    ('Apply Effect', 'action_effect', 'effect', '{"effect_type": "condition", "duration": "1_turn"}', '[{"id": "target", "name": "target", "data_type": "entity"}]', '[{"id": "out", "name": "continue", "data_type": "any"}]', 'magic', '#a55eea', cat_actions, true),
-    ('Modify Resource', 'action_resource', 'resource', '{"resource": "spell_slots", "operation": "subtract"}', '[{"id": "target", "name": "target", "data_type": "entity"}, {"id": "amount", "name": "amount", "data_type": "number"}]', '[{"id": "out", "name": "continue", "data_type": "any"}]', 'database', '#26de81', cat_actions, true),
+    ('Deal Damage', 'action_damage', 'damage', '{"damage_dice": "1d6", "damage_type": "fire"}', '[{"id": "target", "name": "target", "data_type": "entity"}, {"id": "amount", "name": "damage", "data_type": "number"}]', '[{"id": "out", "name": "continue", "data_type": "any"}]', 'sword', color_actions_1, cat_actions, true),
+    ('Apply Effect', 'action_effect', 'effect', '{"effect_type": "condition", "duration": "1_turn"}', '[{"id": "target", "name": "target", "data_type": "entity"}]', '[{"id": "out", "name": "continue", "data_type": "any"}]', 'magic', color_actions_2, cat_actions, true),
+    ('Modify Resource', 'action_resource', 'resource', '{"resource": "spell_slots", "operation": "subtract"}', '[{"id": "target", "name": "target", "data_type": "entity"}, {"id": "amount", "name": "amount", "data_type": "number"}]', '[{"id": "out", "name": "continue", "data_type": "any"}]', 'database', color_actions_3, cat_actions, true),
 
     -- Calculations
-    ('Math Operation', 'calc_math', 'math', '{"operation": "+"}', '[{"id": "a", "name": "value A", "data_type": "number"}, {"id": "b", "name": "value B", "data_type": "number"}]', '[{"id": "result", "name": "result", "data_type": "number"}]', 'calculator', '#0fb9b1', cat_calculations, true),
-    ('Roll Dice', 'calc_random', 'dice', '{"dice_notation": "1d20"}', '[]', '[{"id": "result", "name": "result", "data_type": "number"}]', 'dice', '#0fb9b1', cat_calculations, true),
-    ('Get Property', 'calc_property', 'property', '{"property_path": "abilities.strength.modifier"}', '[{"id": "entity", "name": "entity", "data_type": "entity"}]', '[{"id": "value", "name": "value", "data_type": "any"}]', 'tag', '#0fb9b1', cat_calculations, true);
+    ('Math Operation', 'calc_math', 'math', '{"operation": "+"}', '[{"id": "a", "name": "value A", "data_type": "number"}, {"id": "b", "name": "value B", "data_type": "number"}]', '[{"id": "result", "name": "result", "data_type": "number"}]', 'calculator', color_calculations, cat_calculations, true),
+    ('Roll Dice', 'calc_random', 'dice', '{"dice_notation": "1d20"}', '[]', '[{"id": "result", "name": "result", "data_type": "number"}]', 'dice', color_calculations, cat_calculations, true),
+    ('Get Property', 'calc_property', 'property', '{"property_path": "abilities.strength.modifier"}', '[{"id": "entity", "name": "entity", "data_type": "entity"}]', '[{"id": "value", "name": "value", "data_type": "any"}]', 'tag', color_calculations, cat_calculations, true);
 END $$;

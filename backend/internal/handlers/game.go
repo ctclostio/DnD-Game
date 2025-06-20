@@ -101,34 +101,8 @@ func (h *Handlers) UpdateGameSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Apply only the fields that were provided
-	if name, ok := updateData["name"].(string); ok {
-		existing.Name = name
-	}
-	if desc, ok := updateData["description"].(string); ok {
-		existing.Description = desc
-	}
-	// Check both snake_case and camelCase for compatibility
-	if isActive, ok := updateData["is_active"].(bool); ok {
-		existing.IsActive = isActive
-	} else if isActive, ok := updateData["isActive"].(bool); ok {
-		existing.IsActive = isActive
-	}
-	if maxPlayers, ok := updateData["max_players"].(float64); ok {
-		existing.MaxPlayers = int(maxPlayers)
-	} else if maxPlayers, ok := updateData["maxPlayers"].(float64); ok {
-		existing.MaxPlayers = int(maxPlayers)
-	}
-	if isPublic, ok := updateData["is_public"].(bool); ok {
-		existing.IsPublic = isPublic
-	} else if isPublic, ok := updateData["isPublic"].(bool); ok {
-		existing.IsPublic = isPublic
-	}
-	if requiresInvite, ok := updateData["requires_invite"].(bool); ok {
-		existing.RequiresInvite = requiresInvite
-	} else if requiresInvite, ok := updateData["requiresInvite"].(bool); ok {
-		existing.RequiresInvite = requiresInvite
-	}
+	// Apply updates from request data
+	applyGameSessionUpdates(existing, updateData)
 
 	if err := h.gameService.UpdateSession(r.Context(), existing); err != nil {
 		response.InternalServerError(w, r, err)
@@ -297,4 +271,39 @@ func (h *Handlers) KickPlayer(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, map[string]string{
 		"message": "Player kicked successfully",
 	})
+}
+
+// Helper function to apply game session updates from request data
+func applyGameSessionUpdates(session *models.GameSession, updateData map[string]interface{}) {
+	// Apply only the fields that were provided
+	if name, ok := updateData["name"].(string); ok {
+		session.Name = name
+	}
+	if desc, ok := updateData["description"].(string); ok {
+		session.Description = desc
+	}
+	
+	// Check both snake_case and camelCase for compatibility
+	applyBoolUpdate(&session.IsActive, updateData, "is_active", "isActive")
+	applyIntUpdate(&session.MaxPlayers, updateData, "max_players", "maxPlayers")
+	applyBoolUpdate(&session.IsPublic, updateData, "is_public", "isPublic")
+	applyBoolUpdate(&session.RequiresInvite, updateData, "requires_invite", "requiresInvite")
+}
+
+// applyBoolUpdate updates a bool field from either snake_case or camelCase key
+func applyBoolUpdate(field *bool, data map[string]interface{}, snakeKey, camelKey string) {
+	if val, ok := data[snakeKey].(bool); ok {
+		*field = val
+	} else if val, ok := data[camelKey].(bool); ok {
+		*field = val
+	}
+}
+
+// applyIntUpdate updates an int field from either snake_case or camelCase key
+func applyIntUpdate(field *int, data map[string]interface{}, snakeKey, camelKey string) {
+	if val, ok := data[snakeKey].(float64); ok {
+		*field = int(val)
+	} else if val, ok := data[camelKey].(float64); ok {
+		*field = int(val)
+	}
 }

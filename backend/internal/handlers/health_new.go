@@ -10,6 +10,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/health"
 )
 
+// Service constants
+const (
+	serviceName = "dnd-game-api"
+)
+
 // HealthResponse represents the health check response
 type HealthResponse struct {
 	Status    string                       `json:"status"`
@@ -64,7 +69,7 @@ func (h *Handlers) Health(w http.ResponseWriter, _ *http.Request) {
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 		Version:   "1.0.0", // You might want to inject this from build
 		Uptime:    time.Since(startTime).String(),
-		Service:   "dnd-game-api",
+		Service:   serviceName,
 	}
 
 	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
@@ -148,7 +153,7 @@ func (h *Handlers) ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 		Version:   "1.0.0",
 		Uptime:    time.Since(startTime).String(),
-		Service:   "dnd-game-api",
+		Service:   serviceName,
 		Checks:    checks,
 	}
 
@@ -201,7 +206,7 @@ func (h *Handlers) DetailedHealth(w http.ResponseWriter, r *http.Request) {
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Version:   "1.0.0",
 			Uptime:    time.Since(startTime).String(),
-			Service:   "dnd-game-api",
+			Service:   serviceName,
 			Checks:    checks,
 		},
 		System: SystemInfo{
@@ -229,7 +234,7 @@ func HealthCheckV2(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	if err := json.NewEncoder(w).Encode(map[string]string{
 		"status":    "healthy",
-		"service":   "dnd-game-api",
+		"service":   serviceName,
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}); err != nil {
 		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)

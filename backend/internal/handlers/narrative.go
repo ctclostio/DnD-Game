@@ -135,7 +135,7 @@ func (h *NarrativeHandlers) CreateNarrativeProfile(w http.ResponseWriter, r *htt
 
 	var profile models.NarrativeProfile
 	if err := json.NewDecoder(r.Body).Decode(&profile); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, ErrInvalidRequestBody, http.StatusBadRequest)
 		return
 	}
 
@@ -185,7 +185,7 @@ func (h *NarrativeHandlers) UpdateNarrativeProfile(w http.ResponseWriter, r *htt
 
 	var updates map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, ErrInvalidRequestBody, http.StatusBadRequest)
 		return
 	}
 
@@ -278,7 +278,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 
 	var action models.PlayerAction
 	if err := json.NewDecoder(r.Body).Decode(&action); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, ErrInvalidRequestBody, http.StatusBadRequest)
 		return
 	}
 
@@ -372,7 +372,7 @@ func (h *NarrativeHandlers) TriggerConsequence(w http.ResponseWriter, r *http.Re
 		SessionID string `json:"session_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&triggerData); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, ErrInvalidRequestBody, http.StatusBadRequest)
 		return
 	}
 
@@ -415,7 +415,7 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 
 	var event models.NarrativeEvent
 	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, ErrInvalidRequestBody, http.StatusBadRequest)
 		return
 	}
 
@@ -541,7 +541,7 @@ func (h *NarrativeHandlers) GeneratePersonalizedStory(w http.ResponseWriter, r *
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, ErrInvalidRequestBody, http.StatusBadRequest)
 		return
 	}
 
@@ -603,7 +603,7 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, ErrInvalidRequestBody, http.StatusBadRequest)
 		return
 	}
 
@@ -714,7 +714,7 @@ func (h *NarrativeHandlers) CreateThread(w http.ResponseWriter, r *http.Request)
 
 	var thread models.NarrativeThread
 	if err := json.NewDecoder(r.Body).Decode(&thread); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, ErrInvalidRequestBody, http.StatusBadRequest)
 		return
 	}
 

@@ -13,6 +13,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
+// Route constants
+const (
+	characterByIDRoute = "/characters/{id}"
+)
+
 // CharacterHandlerV2 demonstrates the new standardized error handling
 type CharacterHandlerV2 struct {
 	characterService CharacterService
@@ -47,7 +52,7 @@ func (h *CharacterHandlerV2) GetCharacter(w http.ResponseWriter, r *http.Request
 
 	// Validate character ID format
 	if _, err := uuid.Parse(characterID); err != nil {
-		return errors.NewValidationError("Invalid character ID format").
+		return errors.NewValidationError(ErrInvalidCharacterID).
 			WithCode(string(errors.ErrCodeInvalidInput)).
 			WithDetails(map[string]interface{}{
 				"character_id": characterID,
@@ -82,7 +87,7 @@ func (h *CharacterHandlerV2) GetCharacter(w http.ResponseWriter, r *http.Request
 func (h *CharacterHandlerV2) CreateCharacter(w http.ResponseWriter, r *http.Request, userID uuid.UUID) error {
 	var req CreateCharacterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return errors.NewBadRequestError("Invalid request body").
+		return errors.NewBadRequestError(ErrInvalidRequestBody).
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
@@ -144,7 +149,7 @@ func (h *CharacterHandlerV2) UpdateCharacter(w http.ResponseWriter, r *http.Requ
 
 	// Validate character ID
 	if _, err := uuid.Parse(characterID); err != nil {
-		return errors.NewValidationError("Invalid character ID format").
+		return errors.NewValidationError(ErrInvalidCharacterID).
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
@@ -167,7 +172,7 @@ func (h *CharacterHandlerV2) UpdateCharacter(w http.ResponseWriter, r *http.Requ
 	// Parse update request
 	var req UpdateCharacterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return errors.NewBadRequestError("Invalid request body").
+		return errors.NewBadRequestError(ErrInvalidRequestBody).
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
@@ -219,7 +224,7 @@ func (h *CharacterHandlerV2) DeleteCharacter(w http.ResponseWriter, r *http.Requ
 
 	// Validate character ID
 	if _, err := uuid.Parse(characterID); err != nil {
-		return errors.NewValidationError("Invalid character ID format").
+		return errors.NewValidationError(ErrInvalidCharacterID).
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
@@ -261,7 +266,7 @@ func (h *CharacterHandlerV2) LevelUp(w http.ResponseWriter, r *http.Request, use
 
 	// Validate character ID
 	if _, err := uuid.Parse(characterID); err != nil {
-		return errors.NewValidationError("Invalid character ID format").
+		return errors.NewValidationError(ErrInvalidCharacterID).
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
@@ -294,7 +299,7 @@ func (h *CharacterHandlerV2) LevelUp(w http.ResponseWriter, r *http.Request, use
 	// Parse level up choices
 	var req LevelUpRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return errors.NewBadRequestError("Invalid request body").
+		return errors.NewBadRequestError(ErrInvalidRequestBody).
 			WithCode(string(errors.ErrCodeInvalidInput))
 	}
 
@@ -389,9 +394,9 @@ func (h *CharacterHandlerV2) RegisterRoutesV2(r *mux.Router) {
 	// All routes use authenticated handlers
 	r.HandleFunc("/characters", middleware.AuthenticatedHandler(h.GetCharacters)).Methods("GET")
 	r.HandleFunc("/characters", middleware.AuthenticatedHandler(h.CreateCharacter)).Methods("POST")
-	r.HandleFunc("/characters/{id}", middleware.AuthenticatedHandler(h.GetCharacter)).Methods("GET")
-	r.HandleFunc("/characters/{id}", middleware.AuthenticatedHandler(h.UpdateCharacter)).Methods("PUT")
-	r.HandleFunc("/characters/{id}", middleware.AuthenticatedHandler(h.DeleteCharacter)).Methods("DELETE")
+	r.HandleFunc(characterByIDRoute, middleware.AuthenticatedHandler(h.GetCharacter)).Methods("GET")
+	r.HandleFunc(characterByIDRoute, middleware.AuthenticatedHandler(h.UpdateCharacter)).Methods("PUT")
+	r.HandleFunc(characterByIDRoute, middleware.AuthenticatedHandler(h.DeleteCharacter)).Methods("DELETE")
 	r.HandleFunc("/characters/{id}/level-up", middleware.AuthenticatedHandler(h.LevelUp)).Methods("POST")
 }
 
