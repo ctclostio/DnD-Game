@@ -16,38 +16,65 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
-func TestGameSessionLifecycle_Integration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
-	t.Skip("integration environment not available")
-	// Setup with custom routes
-	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
+const (
+	// API path constants
+	sessionsAPIPath     = "/sessions"
+	sessionByIDPath     = "/sessions/{id}"
+	sessionJoinPath     = "/sessions/{id}/join"
+	sessionLeavePath    = "/sessions/{id}/leave"
+	
+	// Error message constants
+	expectedMapMessage  = "Expected data to be a map"
+)
+
+// Helper function to setup test environment with game session routes
+func setupGameSessionTestEnvironment(t *testing.T) (*testutil.IntegrationTestContext, func()) {
+	return testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
 		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
-			// Create handlers with all dependencies
 			h, _ := SetupTestHandlers(t, testCtx)
-
-			// Setup auth middleware
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
-
-			// API routes
 			api := router.PathPrefix(APIv1Prefix).Subrouter()
 
-			// Auth routes (needed for authentication)
+			// Auth routes
 			api.HandleFunc("/auth/register", h.Register).Methods("POST")
 			api.HandleFunc("/auth/login", h.Login).Methods("POST")
 			api.HandleFunc("/auth/logout", authMiddleware.Authenticate(h.Logout)).Methods("POST")
 			api.HandleFunc("/auth/me", authMiddleware.Authenticate(h.GetCurrentUser)).Methods("GET")
 
 			// Game session routes
-			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
-			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.GetUserGameSessions)).Methods("GET")
-			api.HandleFunc("/sessions/{id}", authMiddleware.Authenticate(h.GetGameSession)).Methods("GET")
-			api.HandleFunc("/sessions/{id}", authMiddleware.Authenticate(h.UpdateGameSession)).Methods("PUT")
-			api.HandleFunc("/sessions/{id}/join", authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
-			api.HandleFunc("/sessions/{id}/leave", authMiddleware.Authenticate(h.LeaveGameSession)).Methods("POST")
+			api.HandleFunc(sessionsAPIPath, authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
+			api.HandleFunc(sessionsAPIPath, authMiddleware.Authenticate(h.GetUserGameSessions)).Methods("GET")
+			api.HandleFunc(sessionByIDPath, authMiddleware.Authenticate(h.GetGameSession)).Methods("GET")
+			api.HandleFunc(sessionByIDPath, authMiddleware.Authenticate(h.UpdateGameSession)).Methods("PUT")
+			api.HandleFunc(sessionJoinPath, authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
+			api.HandleFunc(sessionLeavePath, authMiddleware.Authenticate(h.LeaveGameSession)).Methods("POST")
 		},
 	})
+}
+
+// Helper to assert session data
+func assertSessionData(t *testing.T, data interface{}) map[string]interface{} {
+	sessionData, ok := data.(map[string]interface{})
+	require.True(t, ok, expectedMapMessage)
+	return sessionData
+}
+
+// Helper to verify participants
+func verifyParticipants(t *testing.T, sessionResp map[string]interface{}) {
+	if participants, ok := sessionResp["participants"]; ok {
+		participantList, ok := participants.([]interface{})
+		assert.True(t, ok, "Participants should be a list")
+		assert.Greater(t, len(participantList), 0, "Should have at least one participant")
+	}
+}
+
+func TestGameSessionLifecycle_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+	t.Skip("integration environment not available")
+	
+	ctx, cleanup := setupGameSessionTestEnvironment(t)
 	defer cleanup()
 
 	// Create test users
@@ -73,7 +100,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 
 	resp := ctx.AssertSuccessResponse(w)
 	sessionData, ok := resp.Data.(map[string]interface{})
-	require.True(t, ok, "Expected data to be a map")
+	require.True(t, ok, expectedMapMessage)
 	sessionID = sessionData["id"].(string)
 	require.NotEmpty(t, sessionID, "Session ID should not be empty")
 
@@ -94,7 +121,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 
 		resp := ctx.AssertSuccessResponse(w)
 		sessionData, ok := resp.Data.(map[string]interface{})
-		require.True(t, ok, "Expected data to be a map")
+		require.True(t, ok, expectedMapMessage)
 
 		assert.Equal(t, sessionID, sessionData["id"])
 		assert.Equal(t, FellowshipCampaignName, sessionData[NameField])
@@ -205,20 +232,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	})
 
 	t.Run("Join Without Character", func(t *testing.T) {
-		// Player 3 tries to join without specifying a character
-		joinReq := map[string]interface{}{}
-
-		w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath+sessionID+"/join", joinReq, player3ID)
-
-		// Depending on implementation, this might be allowed (spectator mode) or forbidden
-		// Adjust based on your actual implementation
-		if w.Code == http.StatusBadRequest {
-			var resp response.Response
-			ctx.DecodeResponse(w, &resp)
-			assert.Contains(t, resp.Error.Message, ErrCharacterRequired)
-		} else {
-			assert.Equal(t, http.StatusOK, w.Code)
-		}
+		testJoinWithoutCharacter(t, ctx, sessionID, player3ID)
 	})
 
 	t.Run("Leave Game Session", func(t *testing.T) {
@@ -244,28 +258,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	})
 
 	t.Run("Update Game Session", func(t *testing.T) {
-		updateReq := map[string]interface{}{
-			NameField:        FellowshipCampaignUpd,
-			DescriptionField: FellowshipDescUpd,
-		}
-
-		w := ctx.MakeAuthenticatedRequest("PUT", APISessionsPath+sessionID, updateReq, dmUserID)
-
-		// Check if update endpoint exists
-		if w.Code == http.StatusNotFound {
-			t.Skip("Update endpoint not implemented")
-		}
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		// Verify update
-		w = ctx.MakeAuthenticatedRequest("GET", APISessionsPath+sessionID, nil, dmUserID)
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		resp := ctx.AssertSuccessResponse(w)
-		sessionData, ok := resp.Data.(map[string]interface{})
-		require.True(t, ok, "Expected data to be a map")
-		assert.Equal(t, FellowshipCampaignUpd, sessionData[NameField])
+		testUpdateGameSession(t, ctx, sessionID, dmUserID)
 	})
 
 	t.Run("Only DM Can Update Session", func(t *testing.T) {
@@ -280,38 +273,7 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 	})
 
 	t.Run("End Game Session", func(t *testing.T) {
-		// Create a new session to end
-		createReq := map[string]interface{}{
-			NameField:        SessionToEndName,
-			DescriptionField: SessionToEndDesc,
-		}
-		w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath[:len(APISessionsPath)-1], createReq, dmUserID)
-		require.Equal(t, http.StatusCreated, w.Code)
-
-		var tempSession models.GameSession
-		ctx.DecodeResponseData(w, &tempSession)
-
-		// Try to end/deactivate the session
-		// This might be a DELETE or a PUT to set is_active=false
-		w = ctx.MakeAuthenticatedRequest("DELETE", APISessionsPath+tempSession.ID, nil, dmUserID)
-
-		if w.Code == http.StatusNotFound {
-			// Try updating is_active instead
-			updateReq := map[string]interface{}{
-				IsActiveField: false,
-			}
-			w = ctx.MakeAuthenticatedRequest("PUT", APISessionsPath+tempSession.ID, updateReq, dmUserID)
-		}
-
-		// Verify session is ended/inactive
-		if w.Code == http.StatusOK || w.Code == http.StatusNoContent {
-			// Check if session still exists but is inactive
-			var isActive bool
-			err := ctx.SQLXDB.Get(&isActive, "SELECT is_active FROM game_sessions WHERE id = ?", tempSession.ID)
-			if err == nil {
-				assert.False(t, isActive, "Session should be inactive")
-			}
-		}
+		testEndGameSession(t, ctx, dmUserID)
 	})
 }
 
@@ -327,9 +289,9 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 			api := router.PathPrefix(APIv1Prefix).Subrouter()
 
 			// Game session routes
-			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
-			api.HandleFunc("/sessions/{id}", authMiddleware.Authenticate(h.GetGameSession)).Methods("GET")
-			api.HandleFunc("/sessions/{id}/join", authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
+			api.HandleFunc(sessionsAPIPath, authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
+			api.HandleFunc(sessionByIDPath, authMiddleware.Authenticate(h.GetGameSession)).Methods("GET")
+			api.HandleFunc(sessionJoinPath, authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
 
 			// WebSocket route (using websocket package handler)
 			ws.SetJWTManager(testCtx.JWTManager)
@@ -384,11 +346,7 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 		ctx.DecodeResponseData(w, &sessionResp)
 
 		// Check if participants are included
-		if participants, ok := sessionResp["participants"]; ok {
-			participantList, ok := participants.([]interface{})
-			assert.True(t, ok, "Participants should be a list")
-			assert.Greater(t, len(participantList), 0, "Should have at least one participant")
-		}
+		verifyParticipants(t, sessionResp)
 	})
 }
 
@@ -399,9 +357,9 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix(APIv1Prefix).Subrouter()
 
-			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
-			api.HandleFunc("/sessions/{id}", authMiddleware.Authenticate(h.GetGameSession)).Methods("GET")
-			api.HandleFunc("/sessions/{id}/join", authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
+			api.HandleFunc(sessionsAPIPath, authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
+			api.HandleFunc(sessionByIDPath, authMiddleware.Authenticate(h.GetGameSession)).Methods("GET")
+			api.HandleFunc(sessionJoinPath, authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
 		},
 	})
 	defer cleanup()
@@ -493,9 +451,9 @@ func TestGameSessionConcurrency_Integration(t *testing.T) {
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix(APIv1Prefix).Subrouter()
 
-			api.HandleFunc("/sessions", authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
-			api.HandleFunc("/sessions/{id}/join", authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
-			api.HandleFunc("/sessions/{id}/leave", authMiddleware.Authenticate(h.LeaveGameSession)).Methods("POST")
+			api.HandleFunc(sessionsAPIPath, authMiddleware.Authenticate(h.CreateGameSession)).Methods("POST")
+			api.HandleFunc(sessionJoinPath, authMiddleware.Authenticate(h.JoinGameSession)).Methods("POST")
+			api.HandleFunc(sessionLeavePath, authMiddleware.Authenticate(h.LeaveGameSession)).Methods("POST")
 		},
 	})
 	defer cleanup()
@@ -581,4 +539,74 @@ func TestGameSessionConcurrency_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 0, count, "No players should remain in session")
 	})
+}
+
+// Helper test functions to reduce cognitive complexity
+func testJoinWithoutCharacter(t *testing.T, ctx *testutil.IntegrationTestContext, sessionID, playerID string) {
+	joinReq := map[string]interface{}{}
+	w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath+sessionID+"/join", joinReq, playerID)
+
+	if w.Code == http.StatusBadRequest {
+		var resp response.Response
+		ctx.DecodeResponse(w, &resp)
+		assert.Contains(t, resp.Error.Message, ErrCharacterRequired)
+	} else {
+		assert.Equal(t, http.StatusOK, w.Code)
+	}
+}
+
+func testUpdateGameSession(t *testing.T, ctx *testutil.IntegrationTestContext, sessionID, dmUserID string) {
+	updateReq := map[string]interface{}{
+		NameField:        FellowshipCampaignUpd,
+		DescriptionField: FellowshipDescUpd,
+	}
+
+	w := ctx.MakeAuthenticatedRequest("PUT", APISessionsPath+sessionID, updateReq, dmUserID)
+
+	if w.Code == http.StatusNotFound {
+		t.Skip("Update endpoint not implemented")
+	}
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// Verify update
+	w = ctx.MakeAuthenticatedRequest("GET", APISessionsPath+sessionID, nil, dmUserID)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	resp := ctx.AssertSuccessResponse(w)
+	sessionData := assertSessionData(t, resp.Data)
+	assert.Equal(t, FellowshipCampaignUpd, sessionData[NameField])
+}
+
+func testEndGameSession(t *testing.T, ctx *testutil.IntegrationTestContext, dmUserID string) {
+	// Create a new session to end
+	createReq := map[string]interface{}{
+		NameField:        SessionToEndName,
+		DescriptionField: SessionToEndDesc,
+	}
+	w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath[:len(APISessionsPath)-1], createReq, dmUserID)
+	require.Equal(t, http.StatusCreated, w.Code)
+
+	var tempSession models.GameSession
+	ctx.DecodeResponseData(w, &tempSession)
+
+	// Try to end/deactivate the session
+	w = ctx.MakeAuthenticatedRequest("DELETE", APISessionsPath+tempSession.ID, nil, dmUserID)
+
+	if w.Code == http.StatusNotFound {
+		// Try updating is_active instead
+		updateReq := map[string]interface{}{
+			IsActiveField: false,
+		}
+		w = ctx.MakeAuthenticatedRequest("PUT", APISessionsPath+tempSession.ID, updateReq, dmUserID)
+	}
+
+	// Verify session is ended/inactive
+	if w.Code == http.StatusOK || w.Code == http.StatusNoContent {
+		var isActive bool
+		err := ctx.SQLXDB.Get(&isActive, "SELECT is_active FROM game_sessions WHERE id = ?", tempSession.ID)
+		if err == nil {
+			assert.False(t, isActive, "Session should be inactive")
+		}
+	}
 }

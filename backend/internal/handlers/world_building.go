@@ -13,6 +13,13 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
+// Error messages
+const (
+	errInvalidSettlementID = "Invalid settlement ID"
+	errInvalidReqBody = "Invalid request body"
+	errInvalidSessionID = "Invalid session ID"
+)
+
 // WorldBuildingHandlers handles world building related requests
 type WorldBuildingHandlers struct {
 	settlementGen    *services.SettlementGeneratorService
@@ -83,7 +90,7 @@ func (h *WorldBuildingHandlers) GetSettlement(w http.ResponseWriter, r *http.Req
 	vars := mux.Vars(r)
 	settlementID, err := uuid.Parse(vars["settlementId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid settlement ID")
+		response.BadRequest(w, r, errInvalidSettlementID)
 		return
 	}
 
@@ -107,7 +114,7 @@ func (h *WorldBuildingHandlers) CalculateItemPrice(w http.ResponseWriter, r *htt
 	vars := mux.Vars(r)
 	settlementID, err := uuid.Parse(vars["settlementId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid settlement ID")
+		response.BadRequest(w, r, errInvalidSettlementID)
 		return
 	}
 
@@ -116,7 +123,7 @@ func (h *WorldBuildingHandlers) CalculateItemPrice(w http.ResponseWriter, r *htt
 		ItemType  string  `json:"itemType"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, errInvalidReqBody)
 		return
 	}
 
@@ -197,7 +204,7 @@ func (h *WorldBuildingHandlers) UpdateFactionRelationship(w http.ResponseWriter,
 		Reason string `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, errInvalidReqBody)
 		return
 	}
 
@@ -221,7 +228,7 @@ func (h *WorldBuildingHandlers) SimulateFactionConflicts(w http.ResponseWriter, 
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, errInvalidSessionID)
 		return
 	}
 
@@ -249,7 +256,7 @@ func (h *WorldBuildingHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, errInvalidSessionID)
 		return
 	}
 
@@ -259,7 +266,7 @@ func (h *WorldBuildingHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.
 		EventType models.WorldEventType `json:"eventType"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, errInvalidReqBody)
 		return
 	}
 
@@ -283,7 +290,7 @@ func (h *WorldBuildingHandlers) GetActiveWorldEvents(w http.ResponseWriter, r *h
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, errInvalidSessionID)
 		return
 	}
 
@@ -307,7 +314,7 @@ func (h *WorldBuildingHandlers) ProgressWorldEvents(w http.ResponseWriter, r *ht
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, errInvalidSessionID)
 		return
 	}
 
@@ -339,7 +346,7 @@ func (h *WorldBuildingHandlers) CreateTradeRoute(w http.ResponseWriter, r *http.
 		EndSettlementID   string `json:"endSettlementId"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, errInvalidReqBody)
 		return
 	}
 
@@ -375,7 +382,7 @@ func (h *WorldBuildingHandlers) SimulateEconomics(w http.ResponseWriter, r *http
 	vars := mux.Vars(r)
 	sessionID, err := uuid.Parse(vars["sessionId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid session ID")
+		response.BadRequest(w, r, errInvalidSessionID)
 		return
 	}
 
@@ -401,7 +408,7 @@ func (h *WorldBuildingHandlers) GetSettlementMarket(w http.ResponseWriter, r *ht
 	vars := mux.Vars(r)
 	settlementID, err := uuid.Parse(vars["settlementId"])
 	if err != nil {
-		response.BadRequest(w, r, "Invalid settlement ID")
+		response.BadRequest(w, r, errInvalidSettlementID)
 		return
 	}
 

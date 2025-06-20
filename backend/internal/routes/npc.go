@@ -4,6 +4,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Route paths
+const (
+	npcByIDPath = "/npcs/{id}"
+)
+
 // RegisterNPCRoutes registers all NPC-related routes
 func RegisterNPCRoutes(api *mux.Router, cfg *Config) {
 	auth := cfg.AuthMiddleware.Authenticate
@@ -11,9 +16,9 @@ func RegisterNPCRoutes(api *mux.Router, cfg *Config) {
 
 	// NPC CRUD operations (DM only for create/update/delete)
 	api.HandleFunc("/npcs", dmOnly(cfg.Handlers.CreateNPC)).Methods("POST")
-	api.HandleFunc("/npcs/{id}", auth(cfg.Handlers.GetNPC)).Methods("GET")
-	api.HandleFunc("/npcs/{id}", dmOnly(cfg.Handlers.UpdateNPC)).Methods("PUT")
-	api.HandleFunc("/npcs/{id}", dmOnly(cfg.Handlers.DeleteNPC)).Methods("DELETE")
+	api.HandleFunc(npcByIDPath, auth(cfg.Handlers.GetNPC)).Methods("GET")
+	api.HandleFunc(npcByIDPath, dmOnly(cfg.Handlers.UpdateNPC)).Methods("PUT")
+	api.HandleFunc(npcByIDPath, dmOnly(cfg.Handlers.DeleteNPC)).Methods("DELETE")
 
 	// NPC queries
 	api.HandleFunc("/npcs/session/{sessionId}", auth(cfg.Handlers.GetNPCsBySession)).Methods("GET")

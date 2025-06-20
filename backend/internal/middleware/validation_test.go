@@ -11,6 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test constants
+const (
+	contentTypeHeaderTest = "Content-Type"
+	applicationJSONTest = "application/json"
+	testEmail = "test@example.com"
+)
+
 func TestValidationMiddleware_Validate(t *testing.T) {
 	vm := NewValidationMiddleware()
 
@@ -87,7 +94,7 @@ func TestValidationMiddleware_Validate(t *testing.T) {
 
 			req := httptest.NewRequest(tt.method, "/test", bytes.NewReader(body))
 			if len(body) > 0 {
-				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set(contentTypeHeaderTest, applicationJSONTest)
 			}
 
 			// Create response recorder
@@ -133,7 +140,7 @@ func TestValidationMiddleware_StructValidation(t *testing.T) {
 		{
 			name: "valid request",
 			request: TestRequest{
-				Email:    "test@example.com",
+				Email:    testEmail,
 				Age:      25,
 				Username: "testuser123",
 			},
@@ -152,7 +159,7 @@ func TestValidationMiddleware_StructValidation(t *testing.T) {
 		{
 			name: "age too young",
 			request: TestRequest{
-				Email:    "test@example.com",
+				Email:    testEmail,
 				Age:      17,
 				Username: "testuser123",
 			},
@@ -162,7 +169,7 @@ func TestValidationMiddleware_StructValidation(t *testing.T) {
 		{
 			name: "username too short",
 			request: TestRequest{
-				Email:    "test@example.com",
+				Email:    testEmail,
 				Age:      25,
 				Username: "ab",
 			},
@@ -177,7 +184,7 @@ func TestValidationMiddleware_StructValidation(t *testing.T) {
 			require.NoError(t, err)
 
 			req := httptest.NewRequest(http.MethodPost, "/test", bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set(contentTypeHeaderTest, applicationJSONTest)
 			rec := httptest.NewRecorder()
 
 			handler := vm.Validate(&TestRequest{})(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -225,7 +232,7 @@ func TestValidationMiddleware_NestedStructValidation(t *testing.T) {
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodPost, "/test", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(contentTypeHeaderTest, applicationJSONTest)
 	rec := httptest.NewRecorder()
 
 	handler := vm.Validate(&UserProfile{})(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

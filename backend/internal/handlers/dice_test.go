@@ -16,7 +16,7 @@ import (
 
 // Test constants
 const (
-	testSessionID     = "session-123"
+	diceTestSessionID     = "session-123"
 	testDiceNotation  = "1d20+5"
 )
 
@@ -31,7 +31,7 @@ func TestDiceHandler_RollDice(t *testing.T) {
 		{
 			name: "valid dice roll request",
 			body: DiceRollRequest{
-				GameSessionID: testSessionID,
+				GameSessionID: diceTestSessionID,
 				RollNotation:  testDiceNotation,
 				Purpose:       "Attack roll",
 			},
@@ -51,7 +51,7 @@ func TestDiceHandler_RollDice(t *testing.T) {
 		{
 			name: "invalid dice notation",
 			body: DiceRollRequest{
-				GameSessionID: testSessionID,
+				GameSessionID: diceTestSessionID,
 				RollNotation:  "invalid",
 				Purpose:       "Test",
 			},
@@ -62,7 +62,7 @@ func TestDiceHandler_RollDice(t *testing.T) {
 		{
 			name: "no authentication",
 			body: DiceRollRequest{
-				GameSessionID: testSessionID,
+				GameSessionID: diceTestSessionID,
 				RollNotation:  "1d20",
 				Purpose:       "Test",
 			},
@@ -112,21 +112,21 @@ func TestDiceHandler_GetRollHistory(t *testing.T) {
 	}{
 		{
 			name:           "valid request",
-			sessionID:      testSessionID,
+			sessionID:      diceTestSessionID,
 			userID:         uuid.New().String(),
 			limit:          "10",
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "no limit specified (should use default)",
-			sessionID:      testSessionID,
+			sessionID:      diceTestSessionID,
 			userID:         uuid.New().String(),
 			limit:          "",
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "invalid limit",
-			sessionID:      testSessionID,
+			sessionID:      diceTestSessionID,
 			userID:         uuid.New().String(),
 			limit:          "invalid",
 			expectedStatus: http.StatusBadRequest,
@@ -134,7 +134,7 @@ func TestDiceHandler_GetRollHistory(t *testing.T) {
 		},
 		{
 			name:           "no authentication",
-			sessionID:      testSessionID,
+			sessionID:      diceTestSessionID,
 			userID:         "",
 			limit:          "10",
 			expectedStatus: http.StatusUnauthorized,

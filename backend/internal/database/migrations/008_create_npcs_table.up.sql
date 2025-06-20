@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS npcs (
     armor_class INTEGER NOT NULL DEFAULT 10,
     hit_points INTEGER NOT NULL,
     max_hit_points INTEGER NOT NULL,
-    speed JSONB DEFAULT '{"walk": 30}',
-    attributes JSONB NOT NULL DEFAULT '{"strength": 10, "dexterity": 10, "constitution": 10, "intelligence": 10, "wisdom": 10, "charisma": 10}',
+    speed JSONB NOT NULL DEFAULT '{"walk": 30}'::jsonb,
+    attributes JSONB NOT NULL DEFAULT '{"strength": 10, "dexterity": 10, "constitution": 10, "intelligence": 10, "wisdom": 10, "charisma": 10}'::jsonb,
     saving_throws JSONB DEFAULT '{}',
     skills JSONB DEFAULT '[]',
     damage_resistances TEXT[] DEFAULT '{}',
@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS npc_templates (
     alignment VARCHAR(50),
     armor_class INTEGER NOT NULL DEFAULT 10,
     hit_dice VARCHAR(50) NOT NULL,
-    speed JSONB DEFAULT '{"walk": 30}',
-    attributes JSONB NOT NULL DEFAULT '{"strength": 10, "dexterity": 10, "constitution": 10, "intelligence": 10, "wisdom": 10, "charisma": 10}',
+    speed JSONB NOT NULL DEFAULT '{"walk": 30}'::jsonb,
+    attributes JSONB NOT NULL DEFAULT '{"strength": 10, "dexterity": 10, "constitution": 10, "intelligence": 10, "wisdom": 10, "charisma": 10}'::jsonb,
     saving_throws JSONB DEFAULT '{}',
     skills JSONB DEFAULT '[]',
     damage_resistances TEXT[] DEFAULT '{}',
@@ -72,6 +72,7 @@ DECLARE
     default_walk_speed CONSTANT JSONB := '{"walk": 30}'::jsonb;
     mm_source CONSTANT TEXT := 'MM';
     action_type CONSTANT TEXT := 'action';
+    default_attributes CONSTANT JSONB := '{"strength": 10, "dexterity": 10, "constitution": 10, "intelligence": 10, "wisdom": 10, "charisma": 10}'::jsonb;
 BEGIN
     INSERT INTO npc_templates (name, source, type, size, alignment, armor_class, hit_dice, speed, attributes, challenge_rating, abilities, actions) VALUES
     ('Goblin', mm_source, 'humanoid', 'small', 'neutral evil', 15, '2d6', default_walk_speed, '{"strength": 8, "dexterity": 14, "constitution": 10, "intelligence": 10, "wisdom": 8, "charisma": 8}', 0.25, 

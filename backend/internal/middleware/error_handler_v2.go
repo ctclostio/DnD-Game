@@ -13,13 +13,19 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
+// Common constants
+const (
+	xRequestIDHeader = "X-Request-ID"
+	authenticationRequiredMsg = "Authentication required"
+)
+
 // ErrorHandlerV2 is the enhanced error handling middleware
 func ErrorHandlerV2(log *logger.LoggerV2) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Add request ID to context if not present
 			ctx := r.Context()
-			requestID := r.Header.Get("X-Request-ID")
+			requestID := r.Header.Get(xRequestIDHeader)
 			if requestID == "" {
 				requestID = uuid.New().String()
 			}
@@ -27,7 +33,7 @@ func ErrorHandlerV2(log *logger.LoggerV2) func(http.Handler) http.Handler {
 			r = r.WithContext(ctx)
 
 			// Add request ID to response header
-			w.Header().Set("X-Request-ID", requestID)
+			w.Header().Set(xRequestIDHeader, requestID)
 
 			// Create a custom response writer to capture panic
 			rw := &panicCapturingResponseWriter{
@@ -115,7 +121,7 @@ func AuthenticatedHandler(h AuthenticatedHandlerFunc) http.HandlerFunc {
 		// Extract user ID from context (set by auth middleware)
 		userID, ok := r.Context().Value("user_id").(uuid.UUID)
 		if !ok {
-			response.Unauthorized(w, r, "Authentication required")
+			response.Unauthorized(w, r, authenticationRequiredMsg)
 			return
 		}
 
@@ -134,7 +140,7 @@ func GameSessionHandler(h GameSessionHandlerFunc) http.HandlerFunc {
 		// Extract user ID from context
 		userID, ok := r.Context().Value("user_id").(uuid.UUID)
 		if !ok {
-			response.Unauthorized(w, r, "Authentication required")
+			response.Unauthorized(w, r, authenticationRequiredMsg)
 			return
 		}
 
@@ -160,7 +166,7 @@ func DMOnlyHandler(h DMOnlyHandlerFunc) http.HandlerFunc {
 		// Extract user ID from context
 		userID, ok := r.Context().Value("user_id").(uuid.UUID)
 		if !ok {
-			response.Unauthorized(w, r, "Authentication required")
+			response.Unauthorized(w, r, authenticationRequiredMsg)
 			return
 		}
 

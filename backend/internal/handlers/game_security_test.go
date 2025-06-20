@@ -25,15 +25,25 @@ const (
 	testGameSessionsPath = "/api/v1/game/sessions/"
 )
 
-func TestGameSessionSecurity(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
-	t.Skip("integration environment not available")
-	
-	// Setup test environment
+// Test data structure to hold test setup
+type testData struct {
+	ctx       context.Context
+	testCtx   *testutil.IntegrationTestContext
+	h         *handlers.Handlers
+	svc       *services.Services
+	dm        *models.User
+	player1   *models.User
+	player2   *models.User
+	player3   *models.User
+	char1     *models.Character
+	char2     *models.Character
+	charHigh  *models.Character
+	session   *models.GameSession
+}
+
+// setupTestData creates all test data needed for security tests
+func setupTestData(t *testing.T) (*testData, func()) {
 	ctx, testCtx, h, svc, cleanup := setupTestEnvironment(t)
-	defer cleanup()
 
 	// Create test users
 	dm := createTestUser(t, testCtx, "dm_user", "dm@example.com", "dm")
@@ -59,340 +69,265 @@ func TestGameSessionSecurity(t *testing.T) {
 	err := svc.GameSessions.CreateSession(ctx, session)
 	require.NoError(t, err)
 
-	t.Run("JoinSession_Security", func(t *testing.T) {
-		// First, have player1 join the session
-		body := map[string]interface{}{
-			"character_id": char1.ID,
-		}
-		req := createAuthenticatedRequest("POST", testGameSessionsPath+session.ID+"/join", body, player1.ID, session.ID)
-		rr := executeRequest(h, req, h.JoinGameSession)
+	return &testData{
+		ctx:      ctx,
+		testCtx:  testCtx,
+		h:        h,
+		svc:      svc,
+		dm:       dm,
+		player1:  player1,
+		player2:  player2,
+		player3:  player3,
+		char1:    char1,
+		char2:    char2,
+		charHigh: charHighLevel,
+		session:  session,
+	}, cleanup
+}
 
-		// Verify player1 joined successfully
-		require.Equal(t, http.StatusOK, rr.Code, "Player1 should be able to join initially")
+// Helper to verify error response
+func verifyErrorResponse(t *testing.T, rr *httptest.ResponseRecorder, expectedError string) {
+	var response map[string]interface{}
+	err := json.NewDecoder(rr.Body).Decode(&response)
+	require.NoError(t, err)
+	
+	errMap, ok := response["error"].(map[string]interface{})
+	require.True(t, ok, "Expected error object in response")
+	assert.Contains(t, errMap["message"], expectedError)
+}
 
-		// Now run the security tests
-		t.Run("Cannot join twice", func(t *testing.T) {
-			body := map[string]interface{}{
-				"character_id": char1.ID,
-			}
-			req := createAuthenticatedRequest("POST", testGameSessionsPath+session.ID+"/join", body, player1.ID, session.ID)
-			rr := executeRequest(h, req, h.JoinGameSession)
+func TestGameSessionSecurity(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+	t.Skip("integration environment not available")
 
-			assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
 
-			// Debug: print the response body
-			bodyBytes := rr.Body.Bytes()
-			t.Logf("Response body: %s", string(bodyBytes))
+func TestJoinSessionSecurity(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+	t.Skip("integration environment not available")
 
-			var response map[string]interface{}
-			err := json.Unmarshal(bodyBytes, &response)
-			if err != nil {
-				t.Fatalf("Failed to decode response: %v, body: %s", err, string(bodyBytes))
-			}
-			require.NoError(t, err)
-			// The error message is nested in response.error.message
-			errorObj, ok := response["error"].(map[string]interface{})
-			require.True(t, ok, "Expected error object in response")
-			assert.Contains(t, errorObj["message"], "already in this session")
-		})
+	td, cleanup := setupTestData(t)
+	defer cleanup()
 
-		// Continue with other tests
-		tests := []struct {
-			name           string
-			userID         string
-			characterID    string
-			setupFunc      func()
-			expectedStatus int
-			expectedError  string
-		}{
-			{
-				name:           "Cannot join with another user's character",
-				userID:         player2.ID,
-				characterID:    char1.ID, // Belongs to player1
-				expectedStatus: http.StatusBadRequest,
-				expectedError:  "don't own this character",
-			},
-			{
-				name:        "Cannot join with high level character",
-				userID:      player1.ID,
-				characterID: charHighLevel.ID,
-				setupFunc: func() {
-					_ = svc.GameSessions.LeaveSession(ctx, session.ID, player1.ID)
-				},
-				expectedStatus: http.StatusBadRequest,
-				expectedError:  "exceeds session limit",
-			},
-			{
-				name:           "Can join without character",
-				userID:         player2.ID,
-				characterID:    "",
-				expectedStatus: http.StatusOK,
-			},
-			{
-				name:   "Cannot join full session",
-				userID: "another_user",
-				setupFunc: func() {
-					// Fill the session to capacity
-					session.MaxPlayers = 2 // DM + 1 player
-					_ = testCtx.Repos.GameSessions.Update(ctx, session)
-				},
-				expectedStatus: http.StatusBadRequest,
-				expectedError:  "session is full",
-			},
-		}
+	// First, have player1 join the session
+	body := map[string]interface{}{"character_id": td.char1.ID}
+	req := createAuthenticatedRequest("POST", testGameSessionsPath+td.session.ID+"/join", body, td.player1.ID, td.session.ID)
+	rr := executeRequest(td.h, req, td.h.JoinGameSession)
+	require.Equal(t, http.StatusOK, rr.Code, "Player1 should be able to join initially")
 
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				if tt.setupFunc != nil {
-					tt.setupFunc()
-				}
+	t.Run("Cannot join twice", func(t *testing.T) {
+		body := map[string]interface{}{"character_id": td.char1.ID}
+		req := createAuthenticatedRequest("POST", testGameSessionsPath+td.session.ID+"/join", body, td.player1.ID, td.session.ID)
+		rr := executeRequest(td.h, req, td.h.JoinGameSession)
 
-				// Create request
-				body := map[string]interface{}{}
-				if tt.characterID != "" {
-					body["character_id"] = tt.characterID
-				}
-				jsonBody, _ := json.Marshal(body)
-
-				req := httptest.NewRequest("POST", testGameSessionsPath+session.ID+"/join", bytes.NewBuffer(jsonBody))
-				req.Header.Set(constants.ContentType, constants.ApplicationJSON)
-				// Create user claims and add to context
-				claims := &auth.Claims{
-					UserID:   tt.userID,
-					Username: "testuser",
-					Email:    handlers.TestEmail,
-					Role:     "player",
-				}
-				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
-				req = mux.SetURLVars(req, map[string]string{"id": session.ID})
-
-				// Execute request
-				rr := httptest.NewRecorder()
-				h.JoinGameSession(rr, req)
-
-				// Check response
-				assert.Equal(t, tt.expectedStatus, rr.Code)
-				if tt.expectedError != "" {
-					var response map[string]interface{}
-					err := json.NewDecoder(rr.Body).Decode(&response)
-					require.NoError(t, err)
-
-					errMap, ok := response["error"].(map[string]interface{})
-					require.True(t, ok)
-					assert.Contains(t, errMap["message"], tt.expectedError)
-				}
-			})
-		}
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		verifyErrorResponse(t, rr, "already in this session")
 	})
 
-	t.Run("GetGameSession_Authorization", func(t *testing.T) {
-		// Ensure player1 can join the session
-		_ = svc.GameSessions.LeaveSession(ctx, session.ID, player1.ID)
-		session.MaxPlayers = 4
-		err = testCtx.Repos.GameSessions.Update(ctx, session)
-		require.NoError(t, err)
-		_ = svc.GameSessions.JoinSession(ctx, session.ID, player1.ID, &char1.ID)
-		// Create private session
-		privateSession := &models.GameSession{
-			DMID:        dm.ID,
-			Name:        "Private Session",
-			Description: "Should not be visible to non-participants",
-			IsPublic:    false,
-		}
-		err := svc.GameSessions.CreateSession(ctx, privateSession)
-		require.NoError(t, err)
+	t.Run("Cannot join with another user's character", func(t *testing.T) {
+		body := map[string]interface{}{"character_id": td.char1.ID} // Belongs to player1
+		req := createAuthenticatedRequest("POST", testGameSessionsPath+td.session.ID+"/join", body, td.player2.ID, td.session.ID)
+		rr := executeRequest(td.h, req, td.h.JoinGameSession)
 
-		tests := []struct {
-			name           string
-			userID         string
-			sessionID      string
-			expectedStatus int
-		}{
-			{
-				name:           "DM can view their session",
-				userID:         dm.ID,
-				sessionID:      privateSession.ID,
-				expectedStatus: http.StatusOK,
-			},
-			{
-				name:           "Non-participant cannot view private session",
-				userID:         player1.ID,
-				sessionID:      privateSession.ID,
-				expectedStatus: http.StatusForbidden,
-			},
-			{
-				name:           "Participant can view session",
-				userID:         player1.ID,
-				sessionID:      session.ID, // player1 joined this session
-				expectedStatus: http.StatusOK,
-			},
-		}
-
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				req := httptest.NewRequest("GET", testGameSessionsPath+tt.sessionID, http.NoBody)
-				// Create user claims and add to context
-				claims := &auth.Claims{
-					UserID:   tt.userID,
-					Username: "testuser",
-					Email:    handlers.TestEmail,
-					Role:     "player",
-				}
-				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
-				req = mux.SetURLVars(req, map[string]string{"id": tt.sessionID})
-
-				rr := httptest.NewRecorder()
-				h.GetGameSession(rr, req)
-
-				assert.Equal(t, tt.expectedStatus, rr.Code)
-			})
-		}
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		verifyErrorResponse(t, rr, "don't own this character")
 	})
 
-	t.Run("KickPlayer_Security", func(t *testing.T) {
-		// Ensure player2 is in the session for kick testing
-		_ = svc.GameSessions.LeaveSession(ctx, session.ID, player2.ID)
-		err := svc.GameSessions.JoinSession(ctx, session.ID, player2.ID, &char2.ID)
-		require.NoError(t, err)
+	t.Run("Cannot join with high level character", func(t *testing.T) {
+		// First leave the session
+		_ = td.svc.GameSessions.LeaveSession(td.ctx, td.session.ID, td.player1.ID)
 
-		tests := []struct {
-			name           string
-			dmUserID       string
-			playerToKick   string
-			expectedStatus int
-			expectedError  string
-		}{
-			{
-				name:           "DM can kick player",
-				dmUserID:       dm.ID,
-				playerToKick:   player2.ID,
-				expectedStatus: http.StatusOK,
-			},
-			{
-				name:           "Non-DM cannot kick player",
-				dmUserID:       player1.ID,
-				playerToKick:   player2.ID,
-				expectedStatus: http.StatusForbidden,
-				expectedError:  "Only the DM can kick",
-			},
-			{
-				name:           "DM cannot kick themselves",
-				dmUserID:       dm.ID,
-				playerToKick:   dm.ID,
-				expectedStatus: http.StatusBadRequest,
-				expectedError:  "cannot kick themselves",
-			},
-			{
-				name:           "Cannot kick non-existent player",
-				dmUserID:       dm.ID,
-				playerToKick:   "non_existent_id",
-				expectedStatus: http.StatusBadRequest,
-				expectedError:  "not in this session",
-			},
-		}
+		body := map[string]interface{}{"character_id": td.charHigh.ID}
+		req := createAuthenticatedRequest("POST", testGameSessionsPath+td.session.ID+"/join", body, td.player1.ID, td.session.ID)
+		rr := executeRequest(td.h, req, td.h.JoinGameSession)
 
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				body := map[string]interface{}{}
-				jsonBody, _ := json.Marshal(body)
-				req := httptest.NewRequest("POST", testGameSessionsPath+session.ID+"/kick/"+tt.playerToKick, bytes.NewBuffer(jsonBody))
-				req.Header.Set(constants.ContentType, constants.ApplicationJSON)
-				claims := &auth.Claims{
-					UserID:   tt.dmUserID,
-					Username: "test",
-					Email:    handlers.TestEmail,
-					Role:     "dm",
-				}
-				req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
-				req = mux.SetURLVars(req, map[string]string{
-					"id":       session.ID,
-					"playerId": tt.playerToKick,
-				})
-
-				rr := httptest.NewRecorder()
-				h.KickPlayer(rr, req)
-
-				assert.Equal(t, tt.expectedStatus, rr.Code)
-				if tt.expectedError != "" {
-					var response map[string]interface{}
-					err := json.NewDecoder(rr.Body).Decode(&response)
-					require.NoError(t, err)
-
-					errMap, ok := response["error"].(map[string]interface{})
-					require.True(t, ok)
-					assert.Contains(t, errMap["message"], tt.expectedError)
-				}
-			})
-		}
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		verifyErrorResponse(t, rr, "exceeds session limit")
 	})
 
-	t.Run("SessionState_Security", func(t *testing.T) {
-		// Test operations on inactive session
+	t.Run("Can join without character", func(t *testing.T) {
+		body := map[string]interface{}{}
+		req := createAuthenticatedRequest("POST", testGameSessionsPath+td.session.ID+"/join", body, td.player2.ID, td.session.ID)
+		rr := executeRequest(td.h, req, td.h.JoinGameSession)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("Cannot join full session", func(t *testing.T) {
+		// Fill the session to capacity
+		td.session.MaxPlayers = 2 // DM + 1 player
+		_ = td.testCtx.Repos.GameSessions.Update(td.ctx, td.session)
+
+		body := map[string]interface{}{}
+		req := createAuthenticatedRequest("POST", testGameSessionsPath+td.session.ID+"/join", body, "another_user", td.session.ID)
+		rr := executeRequest(td.h, req, td.h.JoinGameSession)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		verifyErrorResponse(t, rr, "session is full")
+	})
+
+}
+
+func TestGetGameSessionAuthorization(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+	t.Skip("integration environment not available")
+
+	td, cleanup := setupTestData(t)
+	defer cleanup()
+
+	// Ensure player1 can join the session
+	_ = td.svc.GameSessions.LeaveSession(td.ctx, td.session.ID, td.player1.ID)
+	td.session.MaxPlayers = 4
+	err := td.testCtx.Repos.GameSessions.Update(td.ctx, td.session)
+	require.NoError(t, err)
+	_ = td.svc.GameSessions.JoinSession(td.ctx, td.session.ID, td.player1.ID, &td.char1.ID)
+
+	// Create private session
+	privateSession := &models.GameSession{
+		DMID:        td.dm.ID,
+		Name:        "Private Session",
+		Description: "Should not be visible to non-participants",
+		IsPublic:    false,
+	}
+	err = td.svc.GameSessions.CreateSession(td.ctx, privateSession)
+	require.NoError(t, err)
+
+	t.Run("DM can view their session", func(t *testing.T) {
+		req := createAuthenticatedRequest("GET", testGameSessionsPath+privateSession.ID, nil, td.dm.ID, privateSession.ID)
+		rr := executeRequest(td.h, req, td.h.GetGameSession)
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("Non-participant cannot view private session", func(t *testing.T) {
+		req := createAuthenticatedRequest("GET", testGameSessionsPath+privateSession.ID, nil, td.player1.ID, privateSession.ID)
+		rr := executeRequest(td.h, req, td.h.GetGameSession)
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+	})
+
+	t.Run("Participant can view session", func(t *testing.T) {
+		req := createAuthenticatedRequest("GET", testGameSessionsPath+td.session.ID, nil, td.player1.ID, td.session.ID)
+		rr := executeRequest(td.h, req, td.h.GetGameSession)
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+}
+
+// Helper to create kick player request
+func createKickPlayerRequest(sessionID, playerToKick, userID string) *http.Request {
+	body := map[string]interface{}{}
+	jsonBody, _ := json.Marshal(body)
+	req := httptest.NewRequest("POST", testGameSessionsPath+sessionID+"/kick/"+playerToKick, bytes.NewBuffer(jsonBody))
+	req.Header.Set(constants.ContentType, constants.ApplicationJSON)
+	claims := &auth.Claims{
+		UserID:   userID,
+		Username: "test",
+		Email:    handlers.TestEmail,
+		Role:     "dm",
+	}
+	req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
+	req = mux.SetURLVars(req, map[string]string{
+		"id":       sessionID,
+		"playerId": playerToKick,
+	})
+	return req
+}
+
+func TestKickPlayerSecurity(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+	t.Skip("integration environment not available")
+
+	td, cleanup := setupTestData(t)
+	defer cleanup()
+
+	// Ensure player2 is in the session for kick testing
+	_ = td.svc.GameSessions.LeaveSession(td.ctx, td.session.ID, td.player2.ID)
+	err := td.svc.GameSessions.JoinSession(td.ctx, td.session.ID, td.player2.ID, &td.char2.ID)
+	require.NoError(t, err)
+
+	t.Run("DM can kick player", func(t *testing.T) {
+		req := createKickPlayerRequest(td.session.ID, td.player2.ID, td.dm.ID)
+		rr := executeRequest(td.h, req, td.h.KickPlayer)
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("Non-DM cannot kick player", func(t *testing.T) {
+		req := createKickPlayerRequest(td.session.ID, td.player2.ID, td.player1.ID)
+		rr := executeRequest(td.h, req, td.h.KickPlayer)
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		verifyErrorResponse(t, rr, "Only the DM can kick")
+	})
+
+	t.Run("DM cannot kick themselves", func(t *testing.T) {
+		req := createKickPlayerRequest(td.session.ID, td.dm.ID, td.dm.ID)
+		rr := executeRequest(td.h, req, td.h.KickPlayer)
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		verifyErrorResponse(t, rr, "cannot kick themselves")
+	})
+
+	t.Run("Cannot kick non-existent player", func(t *testing.T) {
+		req := createKickPlayerRequest(td.session.ID, "non_existent_id", td.dm.ID)
+		rr := executeRequest(td.h, req, td.h.KickPlayer)
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		verifyErrorResponse(t, rr, "not in this session")
+	})
+
+}
+
+func TestSessionStateSecurity(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+	t.Skip("integration environment not available")
+
+	td, cleanup := setupTestData(t)
+	defer cleanup()
+
+	t.Run("Cannot join inactive session", func(t *testing.T) {
+		// Create inactive session
 		inactiveSession := &models.GameSession{
-			DMID: dm.ID,
+			DMID: td.dm.ID,
 			Name: "Inactive Session",
 		}
-		err := svc.GameSessions.CreateSession(ctx, inactiveSession)
+		err := td.svc.GameSessions.CreateSession(td.ctx, inactiveSession)
 		require.NoError(t, err)
 
-		// Update session to be inactive (CreateSession sets it to active by default)
+		// Update session to be inactive
 		inactiveSession.IsActive = false
-		err = testCtx.Repos.GameSessions.Update(ctx, inactiveSession)
+		err = td.testCtx.Repos.GameSessions.Update(td.ctx, inactiveSession)
 		require.NoError(t, err)
 
 		// Try to join inactive session
-		req := httptest.NewRequest("POST", testGameSessionsPath+inactiveSession.ID+"/join", bytes.NewBufferString("{}"))
-		// Create user claims and add to context
-		claims := &auth.Claims{
-			UserID:   player1.ID,
-			Username: "testuser",
-			Email:    handlers.TestEmail,
-			Role:     "player",
-		}
-		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims))
-		req = mux.SetURLVars(req, map[string]string{"id": inactiveSession.ID})
-
-		rr := httptest.NewRecorder()
-		h.JoinGameSession(rr, req)
+		req := createAuthenticatedRequest("POST", testGameSessionsPath+inactiveSession.ID+"/join", map[string]interface{}{}, td.player1.ID, inactiveSession.ID)
+		rr := executeRequest(td.h, req, td.h.JoinGameSession)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		var response map[string]interface{}
-		err = json.NewDecoder(rr.Body).Decode(&response)
-		require.NoError(t, err)
-		errMap, ok := response["error"].(map[string]interface{})
-		require.True(t, ok)
-		assert.Contains(t, errMap["message"], "not active")
+		verifyErrorResponse(t, rr, "not active")
+	})
 
-		// Test operations on completed session
+	t.Run("Cannot join completed session", func(t *testing.T) {
+		// Create completed session
 		completedSession := &models.GameSession{
-			DMID:   dm.ID,
+			DMID:   td.dm.ID,
 			Name:   "Completed Session",
 			Status: models.GameStatusCompleted,
 		}
-		err = svc.GameSessions.CreateSession(ctx, completedSession)
+		err := td.svc.GameSessions.CreateSession(td.ctx, completedSession)
 		require.NoError(t, err)
 
 		// Try to join completed session
-		req = httptest.NewRequest("POST", testGameSessionsPath+completedSession.ID+"/join", bytes.NewBufferString("{}"))
-		// Create user claims and add to context
-		claims2 := &auth.Claims{
-			UserID:   player1.ID,
-			Username: "testuser",
-			Email:    handlers.TestEmail,
-			Role:     "player",
-		}
-		req = req.WithContext(context.WithValue(req.Context(), auth.UserContextKey, claims2))
-		req = mux.SetURLVars(req, map[string]string{"id": completedSession.ID})
-
-		rr = httptest.NewRecorder()
-		h.JoinGameSession(rr, req)
+		req := createAuthenticatedRequest("POST", testGameSessionsPath+completedSession.ID+"/join", map[string]interface{}{}, td.player1.ID, completedSession.ID)
+		rr := executeRequest(td.h, req, td.h.JoinGameSession)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		err = json.NewDecoder(rr.Body).Decode(&response)
-		require.NoError(t, err)
-		errMap, ok = response["error"].(map[string]interface{})
-		require.True(t, ok)
-		assert.Contains(t, errMap["message"], "completed session")
+		verifyErrorResponse(t, rr, "completed session")
 	})
 }
 

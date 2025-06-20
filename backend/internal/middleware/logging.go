@@ -9,6 +9,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
+// Common constants
+const (
+	xCorrelationIDHeader = "X-Correlation-ID"
+)
+
 // RequestLogger middleware logs all HTTP requests
 func RequestLogger(log *logger.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -24,7 +29,7 @@ func RequestLogger(log *logger.Logger) func(http.Handler) http.Handler {
 			// Add request ID and correlation ID to context
 			ctx := logger.ContextWithRequestID(r.Context(), requestID)
 
-			correlationID := r.Header.Get("X-Correlation-ID")
+			correlationID := r.Header.Get(xCorrelationIDHeader)
 			if correlationID == "" {
 				correlationID = requestID
 			}
@@ -36,7 +41,7 @@ func RequestLogger(log *logger.Logger) func(http.Handler) http.Handler {
 
 			// Add IDs to response header
 			w.Header().Set("X-Request-ID", requestID)
-			w.Header().Set("X-Correlation-ID", correlationID)
+			w.Header().Set(xCorrelationIDHeader, correlationID)
 
 			// Log request start
 			log.WithRequestID(requestID).
@@ -93,7 +98,7 @@ func (rw *responseWriter) Write(data []byte) (int, error) {
 func CorrelationID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check for existing correlation ID
-		correlationID := r.Header.Get("X-Correlation-ID")
+		correlationID := r.Header.Get(xCorrelationIDHeader)
 		if correlationID == "" {
 			correlationID = uuid.New().String()
 		}
@@ -103,7 +108,7 @@ func CorrelationID(next http.Handler) http.Handler {
 		r = r.WithContext(ctx)
 
 		// Add to response header
-		w.Header().Set("X-Correlation-ID", correlationID)
+		w.Header().Set(xCorrelationIDHeader, correlationID)
 
 		next.ServeHTTP(w, r)
 	})

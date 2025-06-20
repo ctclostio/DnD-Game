@@ -17,7 +17,7 @@ import (
 
 // Test constants
 const (
-	testInventoryPath = "/inventory"
+	inventoryTestPath = "/inventory"
 )
 
 func TestInventoryHandler_ManageInventory(t *testing.T) {
@@ -34,7 +34,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 		{
 			name:   "add item to inventory",
 			method: http.MethodPost,
-			path:   APICharactersBase + characterID + testInventoryPath,
+			path:   APICharactersBase + characterID + inventoryTestPath,
 			body: map[string]interface{}{
 				"itemId":   uuid.New().String(),
 				"quantity": 3,
@@ -53,7 +53,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 		{
 			name:   "invalid quantity",
 			method: http.MethodPost,
-			path:   APICharactersBase + characterID + testInventoryPath,
+			path:   APICharactersBase + characterID + inventoryTestPath,
 			body: map[string]interface{}{
 				"itemId":   uuid.New().String(),
 				"quantity": -1,

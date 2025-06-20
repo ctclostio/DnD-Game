@@ -14,6 +14,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
+// Common constants
+const (
+	gameSessionResource = "game session"
+)
+
 // CreateNPC handles NPC creation (DM only)
 func (h *Handlers) CreateNPC(w http.ResponseWriter, r *http.Request) {
 	// Get user claims from auth context
@@ -32,7 +37,7 @@ func (h *Handlers) CreateNPC(w http.ResponseWriter, r *http.Request) {
 	// Verify user is DM of the game session
 	session, err := h.gameService.GetSession(r.Context(), npc.GameSessionID)
 	if err != nil {
-		response.NotFound(w, r, "game session")
+		response.NotFound(w, r, gameSessionResource)
 		return
 	}
 
@@ -121,7 +126,7 @@ func (h *Handlers) UpdateNPC(w http.ResponseWriter, r *http.Request) {
 	// Verify user is DM of the game session
 	session, err := h.gameService.GetSession(r.Context(), existingNPC.GameSessionID)
 	if err != nil {
-		response.NotFound(w, r, "game session")
+		response.NotFound(w, r, gameSessionResource)
 		return
 	}
 
@@ -171,7 +176,7 @@ func (h *Handlers) DeleteNPC(w http.ResponseWriter, r *http.Request) {
 	// Verify user is DM of the game session
 	session, err := h.gameService.GetSession(r.Context(), npc.GameSessionID)
 	if err != nil {
-		response.NotFound(w, r, "game session")
+		response.NotFound(w, r, gameSessionResource)
 		return
 	}
 
@@ -269,7 +274,7 @@ func (h *Handlers) CreateNPCFromTemplate(w http.ResponseWriter, r *http.Request)
 	// Verify user is DM of the game session
 	session, err := h.gameService.GetSession(r.Context(), req.GameSessionID)
 	if err != nil {
-		response.NotFound(w, r, "game session")
+		response.NotFound(w, r, gameSessionResource)
 		return
 	}
 
@@ -310,7 +315,7 @@ func (h *Handlers) NPCQuickActions(w http.ResponseWriter, r *http.Request) {
 	// Verify user is DM of the game session
 	session, err := h.gameService.GetSession(r.Context(), npc.GameSessionID)
 	if err != nil {
-		response.NotFound(w, r, "game session")
+		response.NotFound(w, r, gameSessionResource)
 		return
 	}
 

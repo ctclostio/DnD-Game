@@ -15,6 +15,12 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
+// Error messages
+const (
+	errRuleTemplateNotFound = "Rule template not found"
+	errInvalidRequestBody = "Invalid request body"
+)
+
 // Rule Template Handlers
 
 // GetRuleTemplates handles GET /api/rules/templates
@@ -40,7 +46,7 @@ func (h *Handlers) GetRuleTemplate(w http.ResponseWriter, r *http.Request) {
 
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		response.NotFound(w, r, "Rule template not found")
+		response.NotFound(w, r, errRuleTemplateNotFound)
 		return
 	}
 
@@ -53,7 +59,7 @@ func (h *Handlers) CreateRuleTemplate(w http.ResponseWriter, r *http.Request) {
 
 	var template models.RuleTemplate
 	if err := json.NewDecoder(r.Body).Decode(&template); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, errInvalidRequestBody)
 		return
 	}
 
@@ -75,14 +81,14 @@ func (h *Handlers) UpdateRuleTemplate(w http.ResponseWriter, r *http.Request) {
 
 	var updates map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, errInvalidRequestBody)
 		return
 	}
 
 	// Verify ownership
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		response.NotFound(w, r, "Rule template not found")
+		response.NotFound(w, r, errRuleTemplateNotFound)
 		return
 	}
 
@@ -108,7 +114,7 @@ func (h *Handlers) DeleteRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	// Verify ownership
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		response.NotFound(w, r, "Rule template not found")
+		response.NotFound(w, r, errRuleTemplateNotFound)
 		return
 	}
 
@@ -134,14 +140,14 @@ func (h *Handlers) CompileRuleTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&compileRequest); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, errInvalidRequestBody)
 		return
 	}
 
 	// Get the template first
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		response.NotFound(w, r, "Rule template not found")
+		response.NotFound(w, r, errRuleTemplateNotFound)
 		return
 	}
 
@@ -164,13 +170,13 @@ func (h *Handlers) ValidateRuleTemplate(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&validateRequest); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, errInvalidRequestBody)
 		return
 	}
 
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		response.NotFound(w, r, "Rule template not found")
+		response.NotFound(w, r, errRuleTemplateNotFound)
 		return
 	}
 
@@ -235,7 +241,7 @@ func (h *Handlers) AnalyzeRuleBalance(w http.ResponseWriter, r *http.Request) {
 
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		response.NotFound(w, r, "Rule template not found")
+		response.NotFound(w, r, errRuleTemplateNotFound)
 		return
 	}
 
@@ -291,7 +297,7 @@ func (h *Handlers) ActivateRule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&activateRequest); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, errInvalidRequestBody)
 		return
 	}
 
@@ -330,7 +336,7 @@ func (h *Handlers) ExecuteRule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&executeRequest); err != nil {
-		response.BadRequest(w, r, "Invalid request body")
+		response.BadRequest(w, r, errInvalidRequestBody)
 		return
 	}
 
@@ -343,7 +349,7 @@ func (h *Handlers) ExecuteRule(w http.ResponseWriter, r *http.Request) {
 
 	template, err := h.ruleEngine.GetRuleTemplate(ruleInstance.TemplateID)
 	if err != nil {
-		response.NotFound(w, r, "Rule template not found")
+		response.NotFound(w, r, errRuleTemplateNotFound)
 		return
 	}
 
@@ -394,7 +400,7 @@ func (h *Handlers) GetConditionalModifiers(w http.ResponseWriter, r *http.Reques
 	// Get the rule template
 	template, err := h.ruleEngine.GetRuleTemplate(ruleID)
 	if err != nil {
-		response.NotFound(w, r, "Rule template not found")
+		response.NotFound(w, r, errRuleTemplateNotFound)
 		return
 	}
 
@@ -449,7 +455,7 @@ func (h *Handlers) ExportRuleTemplate(w http.ResponseWriter, r *http.Request) {
 
 	template, err := h.ruleEngine.GetRuleTemplate(templateID)
 	if err != nil {
-		response.NotFound(w, r, "Rule template not found")
+		response.NotFound(w, r, errRuleTemplateNotFound)
 		return
 	}
 

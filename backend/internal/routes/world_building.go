@@ -4,6 +4,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Route paths
+const (
+	settlementByIDPath = "/world/settlements/{id}"
+	factionByIDPath = "/world/factions/{id}"
+)
+
 // RegisterWorldBuildingRoutes registers all world building-related routes
 func RegisterWorldBuildingRoutes(api *mux.Router, cfg *Config) {
 	auth := cfg.AuthMiddleware.Authenticate
@@ -12,17 +18,17 @@ func RegisterWorldBuildingRoutes(api *mux.Router, cfg *Config) {
 	// Settlement management
 	api.HandleFunc("/world/settlements", auth(cfg.Handlers.GetSettlements)).Methods("GET")
 	api.HandleFunc("/world/settlements", dmOnly(cfg.Handlers.CreateSettlement)).Methods("POST")
-	api.HandleFunc("/world/settlements/{id}", auth(cfg.Handlers.GetSettlement)).Methods("GET")
-	api.HandleFunc("/world/settlements/{id}", dmOnly(cfg.Handlers.UpdateSettlement)).Methods("PUT")
-	api.HandleFunc("/world/settlements/{id}", dmOnly(cfg.Handlers.DeleteSettlement)).Methods("DELETE")
+	api.HandleFunc(settlementByIDPath, auth(cfg.Handlers.GetSettlement)).Methods("GET")
+	api.HandleFunc(settlementByIDPath, dmOnly(cfg.Handlers.UpdateSettlement)).Methods("PUT")
+	api.HandleFunc(settlementByIDPath, dmOnly(cfg.Handlers.DeleteSettlement)).Methods("DELETE")
 	api.HandleFunc("/world/settlements/generate", dmOnly(cfg.Handlers.GenerateSettlement)).Methods("POST")
 
 	// Faction management
 	api.HandleFunc("/world/factions", auth(cfg.Handlers.GetFactions)).Methods("GET")
 	api.HandleFunc("/world/factions", dmOnly(cfg.Handlers.CreateFaction)).Methods("POST")
-	api.HandleFunc("/world/factions/{id}", auth(cfg.Handlers.GetFaction)).Methods("GET")
-	api.HandleFunc("/world/factions/{id}", dmOnly(cfg.Handlers.UpdateFaction)).Methods("PUT")
-	api.HandleFunc("/world/factions/{id}", dmOnly(cfg.Handlers.DeleteFaction)).Methods("DELETE")
+	api.HandleFunc(factionByIDPath, auth(cfg.Handlers.GetFaction)).Methods("GET")
+	api.HandleFunc(factionByIDPath, dmOnly(cfg.Handlers.UpdateFaction)).Methods("PUT")
+	api.HandleFunc(factionByIDPath, dmOnly(cfg.Handlers.DeleteFaction)).Methods("DELETE")
 	api.HandleFunc("/world/factions/relationships", auth(cfg.Handlers.GetFactionRelationships)).Methods("GET")
 	api.HandleFunc("/world/factions/relationships", dmOnly(cfg.Handlers.UpdateFactionRelationship)).Methods("PUT")
 

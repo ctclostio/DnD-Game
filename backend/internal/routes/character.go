@@ -6,6 +6,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 )
 
+// Route paths
+const (
+	characterByIDPath = "/characters/{id}"
+)
+
 // RegisterCharacterRoutes registers all character-related routes
 func RegisterCharacterRoutes(api *mux.Router, cfg *Config) {
 	// All character routes require authentication
@@ -25,9 +30,9 @@ func RegisterCharacterRoutes(api *mux.Router, cfg *Config) {
 	// Character CRUD routes
 	api.HandleFunc("/characters", auth(cfg.Handlers.GetCharacters)).Methods("GET")
 	api.HandleFunc("/characters", auth(cfg.Handlers.CreateCharacter)).Methods("POST")
-	api.HandleFunc("/characters/{id}", auth(cfg.Handlers.GetCharacter)).Methods("GET")
-	api.HandleFunc("/characters/{id}", auth(cfg.Handlers.UpdateCharacter)).Methods("PUT")
-	api.HandleFunc("/characters/{id}", auth(cfg.Handlers.DeleteCharacter)).Methods("DELETE")
+	api.HandleFunc(characterByIDPath, auth(cfg.Handlers.GetCharacter)).Methods("GET")
+	api.HandleFunc(characterByIDPath, auth(cfg.Handlers.UpdateCharacter)).Methods("PUT")
+	api.HandleFunc(characterByIDPath, auth(cfg.Handlers.DeleteCharacter)).Methods("DELETE")
 
 	// Character action routes
 	api.HandleFunc("/characters/{id}/cast-spell", auth(cfg.Handlers.CastSpell)).Methods("POST")

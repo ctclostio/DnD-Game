@@ -11,6 +11,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/dice"
 )
 
+// Error messages
+const (
+	errFailedToRollDice = "Failed to roll dice"
+)
+
 type SkillCheckRequest struct {
 	CharacterID  string `json:"characterId"`
 	CheckType    string `json:"checkType"` // "skill", "save", "ability"
@@ -81,12 +86,12 @@ func (h *Handlers) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
 		// Roll twice
 		roll1, err := roller.Roll("1d20")
 		if err != nil {
-			http.Error(w, "Failed to roll dice", http.StatusInternalServerError)
+			http.Error(w, errFailedToRollDice, http.StatusInternalServerError)
 			return
 		}
 		roll2, err := roller.Roll("1d20")
 		if err != nil {
-			http.Error(w, "Failed to roll dice", http.StatusInternalServerError)
+			http.Error(w, errFailedToRollDice, http.StatusInternalServerError)
 			return
 		}
 		allRolls = []int{roll1.Total, roll2.Total}
@@ -108,7 +113,7 @@ func (h *Handlers) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
 		// Normal roll
 		result, err := roller.Roll("1d20")
 		if err != nil {
-			http.Error(w, "Failed to roll dice", http.StatusInternalServerError)
+			http.Error(w, errFailedToRollDice, http.StatusInternalServerError)
 			return
 		}
 		roll = result.Total

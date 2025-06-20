@@ -8,6 +8,12 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
+// Common constants
+const (
+	contentTypeHeader = "Content-Type"
+	applicationJSON = "application/json"
+)
+
 // ErrorHandler middleware handles errors in a consistent way
 func ErrorHandler(log *logger.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -45,7 +51,7 @@ func (w *errorHandlerResponseWriter) handlePanic(rec interface{}, r *http.Reques
 	}).Error().Msg("Panic recovered")
 
 	// Send error response
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(contentTypeHeader, applicationJSON)
 	w.WriteHeader(http.StatusInternalServerError)
 
 	response := map[string]interface{}{
@@ -78,7 +84,7 @@ func SendError(w http.ResponseWriter, err error, log *logger.Logger) {
 	}
 
 	// Send response
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(contentTypeHeader, applicationJSON)
 	w.WriteHeader(appErr.StatusCode)
 
 	// Prepare response (don't expose internal error details)
@@ -100,7 +106,7 @@ func SendError(w http.ResponseWriter, err error, log *logger.Logger) {
 
 // SendSuccess sends a success response
 func SendSuccess(w http.ResponseWriter, data interface{}, statusCode int) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(contentTypeHeader, applicationJSON)
 	w.WriteHeader(statusCode)
 
 	if data != nil {

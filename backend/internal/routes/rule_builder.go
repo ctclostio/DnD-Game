@@ -4,6 +4,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Route paths
+const (
+	ruleByIDPath = "/rules/{id}"
+)
+
 // RegisterRuleBuilderRoutes registers all rule builder-related routes
 func RegisterRuleBuilderRoutes(api *mux.Router, cfg *Config) {
 	auth := cfg.AuthMiddleware.Authenticate
@@ -12,9 +17,9 @@ func RegisterRuleBuilderRoutes(api *mux.Router, cfg *Config) {
 	// Rule management
 	api.HandleFunc("/rules", auth(cfg.Handlers.GetRules)).Methods("GET")
 	api.HandleFunc("/rules", dmOnly(cfg.Handlers.CreateRule)).Methods("POST")
-	api.HandleFunc("/rules/{id}", auth(cfg.Handlers.GetRule)).Methods("GET")
-	api.HandleFunc("/rules/{id}", dmOnly(cfg.Handlers.UpdateRule)).Methods("PUT")
-	api.HandleFunc("/rules/{id}", dmOnly(cfg.Handlers.DeleteRule)).Methods("DELETE")
+	api.HandleFunc(ruleByIDPath, auth(cfg.Handlers.GetRule)).Methods("GET")
+	api.HandleFunc(ruleByIDPath, dmOnly(cfg.Handlers.UpdateRule)).Methods("PUT")
+	api.HandleFunc(ruleByIDPath, dmOnly(cfg.Handlers.DeleteRule)).Methods("DELETE")
 	api.HandleFunc("/rules/{id}/activate", dmOnly(cfg.Handlers.ActivateRule)).Methods("POST")
 	api.HandleFunc("/rules/{id}/deactivate", dmOnly(cfg.Handlers.DeactivateRule)).Methods("POST")
 

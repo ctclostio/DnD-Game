@@ -19,6 +19,7 @@ import (
 // Error messages
 const (
 	errUnauthorized = "unauthorized"
+	errFailedToGetParticipants = "Failed to get participants"
 )
 
 // NarrativeHandlers manages narrative-related HTTP endpoints
@@ -332,7 +333,7 @@ func (h *NarrativeHandlers) GetPendingConsequences(w http.ResponseWriter, r *htt
 	// Verify session participation
 	participants, err := h.gameRepo.GetParticipants(r.Context(), sessionID)
 	if err != nil {
-		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+		http.Error(w, errFailedToGetParticipants, http.StatusInternalServerError)
 		return
 	}
 
@@ -379,7 +380,7 @@ func (h *NarrativeHandlers) TriggerConsequence(w http.ResponseWriter, r *http.Re
 	// Verify DM role
 	participants, err := h.gameRepo.GetParticipants(r.Context(), triggerData.SessionID)
 	if err != nil {
-		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+		http.Error(w, errFailedToGetParticipants, http.StatusInternalServerError)
 		return
 	}
 
@@ -423,7 +424,7 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 	if sessionID, ok := event.Metadata["session_id"].(string); ok {
 		participants, err := h.gameRepo.GetParticipants(r.Context(), sessionID)
 		if err != nil {
-			http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+			http.Error(w, errFailedToGetParticipants, http.StatusInternalServerError)
 			return
 		}
 
@@ -610,7 +611,7 @@ func (h *NarrativeHandlers) GenerateMultiplePerspectives(w http.ResponseWriter, 
 	// Verify DM role
 	participants, err := h.gameRepo.GetParticipants(r.Context(), request.SessionID)
 	if err != nil {
-		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+		http.Error(w, errFailedToGetParticipants, http.StatusInternalServerError)
 		return
 	}
 
@@ -722,7 +723,7 @@ func (h *NarrativeHandlers) CreateThread(w http.ResponseWriter, r *http.Request)
 	if sessionID, ok := thread.Metadata["session_id"].(string); ok {
 		participants, err := h.gameRepo.GetParticipants(r.Context(), sessionID)
 		if err != nil {
-			http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+			http.Error(w, errFailedToGetParticipants, http.StatusInternalServerError)
 			return
 		}
 
@@ -864,7 +865,7 @@ func (h *NarrativeHandlers) handleActionPermissionError(w http.ResponseWriter, e
 	case "not a participant in this session":
 		http.Error(w, "Not a participant in this session", http.StatusForbidden)
 	default:
-		http.Error(w, "Failed to get participants", http.StatusInternalServerError)
+		http.Error(w, errFailedToGetParticipants, http.StatusInternalServerError)
 	}
 }
 
