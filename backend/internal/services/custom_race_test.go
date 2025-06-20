@@ -18,6 +18,8 @@ import (
 // Test constants
 const (
 	testRaceShadowElf = "Shadow Elf"
+	testRaceGeneric = "Test Race"
+	testCustomRaceErrDatabase = "database error"
 )
 
 func TestCustomRaceService_CreateCustomRace(t *testing.T) {
@@ -151,7 +153,7 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 		userID := uuid.New()
 
 		request := models.CustomRaceRequest{
-			Name:        "Test Race",
+			Name:        testRaceGeneric,
 			Description: "Test description",
 		}
 
@@ -177,12 +179,12 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 		userID := uuid.New()
 
 		request := models.CustomRaceRequest{
-			Name:        "Test Race",
+			Name:        testRaceGeneric,
 			Description: "Test description",
 		}
 
 		generatedRace := &models.CustomRaceGenerationResult{
-			Name:         "Test Race",
+			Name:         testRaceGeneric,
 			Description:  "Generated description",
 			Size:         "Medium",
 			Speed:        30,
@@ -192,7 +194,7 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 		}
 
 		mockAI.On("GenerateCustomRace", ctx, request).Return(generatedRace, nil)
-		mockRepo.On("Create", ctx, mock.Anything).Return(errors.New("database error"))
+		mockRepo.On("Create", ctx, mock.Anything).Return(errors.New(testCustomRaceErrDatabase))
 
 		result, err := service.CreateCustomRace(ctx, userID, request)
 
@@ -251,7 +253,7 @@ func TestCustomRaceService_GetCustomRace(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("database error", func(t *testing.T) {
+	t.Run(testCustomRaceErrDatabase, func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 
@@ -260,7 +262,7 @@ func TestCustomRaceService_GetCustomRace(t *testing.T) {
 		ctx := testutil.TestContext()
 		raceID := uuid.New()
 
-		mockRepo.On("GetByID", ctx, raceID).Return(nil, errors.New("database error"))
+		mockRepo.On("GetByID", ctx, raceID).Return(nil, errors.New(testCustomRaceErrDatabase))
 
 		result, err := service.GetCustomRace(ctx, raceID)
 

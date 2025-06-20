@@ -16,6 +16,13 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Constants for LLM system prompts
+const (
+	systemPromptWorldBuilding = "You are a creative D&D world-building assistant."
+	systemPromptCultureGen = "You are a creative D&D world-building assistant specializing in unique cultural generation."
+	systemPromptLanguageGen = "You are a creative D&D world-building assistant specializing in language generation."
+)
+
 // ProceduralCultureService generates unique cultures with AI
 type ProceduralCultureService struct {
 	worldRepo *database.EmergentWorldRepository
@@ -99,7 +106,7 @@ Return as JSON with keys: values (map), taboos (array), origin_story, cultural_h
 		name, params.Environment, params.HistoricalContext,
 		params.NeighboringCultures, params.SpecialTraits)
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant specializing in unique cultural generation.")
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptCultureGen)
 	if err != nil {
 		return pcs.generateDefaultFoundation(name), nil
 	}
@@ -131,7 +138,7 @@ Generate:
 Return as JSON with keys: common_words (map), idioms (array of {expression, literal, meaning}), grammar_summary, honorifics (array)`,
 		cultureName, foundation.Values, foundation.Worldview)
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant specializing in language generation.")
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptLanguageGen)
 	if err != nil {
 		// Return default language on error
 		return models.CultureLanguage{
@@ -211,7 +218,7 @@ Generate a unique cultural practice including:
 Return as JSON with keys: name, description, frequency, participants, significance`,
 			customType, cultureName, foundation.Values, foundation.Taboos)
 
-		response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+		response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 
 		var customData map[string]interface{}
 		if err == nil && json.Unmarshal([]byte(response), &customData) == nil {
@@ -248,7 +255,7 @@ Create:
 Return as JSON with keys: mediums (array), motifs (array), colors (array of {color, meaning}), sacred_symbols (array of {name, description, meaning}), style_description`,
 		cultureName, foundation.Environment, foundation.Values, foundation.Worldview)
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 
 	var artData map[string]interface{}
 	artStyle := models.CultureArtStyle{
@@ -326,7 +333,7 @@ Return as JSON with keys: name, deities (array of {name, title, domains, persona
 		selectedType, cultureName, foundation.OriginStory,
 		foundation.CulturalHeroes, foundation.Values)
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 
 	var beliefData map[string]interface{}
 	beliefSystem := models.CultureBeliefSystem{
@@ -420,7 +427,7 @@ Include the cultural significance behind each greeting.
 Return as JSON map of context to greeting phrase.`,
 		cultureName, foundation.Values, foundation.SocialPriorities, contexts)
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 
 	if err == nil {
 		_ = json.Unmarshal([]byte(response), &greetings)
@@ -456,7 +463,7 @@ Create:
 Return as JSON with keys: style_name, features (array), defenses (array), decorations (array), layout_description`,
 		cultureName, foundation.Environment, materials, foundation.Values)
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 
 	architecture := models.ArchitectureStyle{
 		Materials:     materials,
@@ -520,7 +527,7 @@ Generate:
 Return as JSON with keys: name, ingredients (array), preparation, occasion, significance`,
 			cuisineType, cultureName, ingredients, foundation.Taboos)
 
-		response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+		response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 
 		var dishData map[string]interface{}
 		if err == nil && json.Unmarshal([]byte(response), &dishData) == nil {
@@ -574,7 +581,7 @@ Generate:
 Return as JSON with keys: style_name, instruments (array), rhythms (array), occasions (array), themes (array), dances (array)`,
 		cultureName, foundation.Values, foundation.CulturalHeroes)
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 
 	musicStyle := models.MusicStyle{
 		Scales: pcs.generateMusicalScales(),
@@ -638,7 +645,7 @@ func (pcs *ProceduralCultureService) generateClothingItems(ctx context.Context, 
 func (pcs *ProceduralCultureService) generateSingleClothingItem(ctx context.Context, cultureName string, foundation *CultureFoundation, clothingStyle *models.ClothingStyle, clothingType, gender string) models.ClothingItem {
 	prompt := pcs.buildClothingPrompt(cultureName, foundation, clothingStyle, clothingType, gender)
 	
-	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 	if err != nil {
 		return models.ClothingItem{}
 	}
@@ -724,7 +731,7 @@ Return as JSON with keys: given_patterns (array), family_patterns (array), title
 		cultureName, pcs.getLanguagePatterns(cultureName),
 		foundation.Values, foundation.SocialPriorities)
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 
 	namingConventions := models.NamingConventions{
 		NameMeanings: make(map[string]string),
@@ -768,7 +775,7 @@ Generate:
 Return as JSON with keys: classes (array of {name, rank, privileges, restrictions, occupations}), mobility, leadership, family_unit, outsider_treatment`,
 		selectedType, cultureName, foundation.Values, foundation.SocialPriorities)
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, "You are a creative D&D world-building assistant.")
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 
 	socialStructure := models.SocialStructure{
 		Type:        selectedType,

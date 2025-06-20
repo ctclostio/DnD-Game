@@ -14,6 +14,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test constants
+const (
+	testSQLQuery = "SELECT * FROM users"
+)
+
 func TestDefaultConfig(t *testing.T) {
 	cfg := DefaultConfig()
 
@@ -505,13 +510,13 @@ func TestTruncateQuery(t *testing.T) {
 	}{
 		{
 			name:     "short query",
-			input:    "SELECT * FROM users",
-			expected: "SELECT * FROM users",
+			input:    testSQLQuery,
+			expected: testSQLQuery,
 		},
 		{
 			name:     "query with newlines and tabs",
 			input:    "SELECT\n\t*\n\tFROM\n\tusers",
-			expected: "SELECT * FROM users",
+			expected: testSQLQuery,
 		},
 		{
 			name:     "long query",
@@ -521,7 +526,7 @@ func TestTruncateQuery(t *testing.T) {
 		{
 			name:     "query with multiple spaces",
 			input:    "SELECT     *     FROM     users",
-			expected: "SELECT * FROM users",
+			expected: testSQLQuery,
 		},
 	}
 
