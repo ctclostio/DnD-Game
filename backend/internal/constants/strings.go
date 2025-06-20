@@ -11,6 +11,7 @@ const (
 	HeaderLastModified    = "Last-Modified"
 	HeaderIfModifiedSince = "If-Modified-Since"
 	HeaderXRequestID      = "X-Request-ID"
+	HeaderXCorrelationID  = "X-Correlation-ID"
 	HeaderXUserID         = "X-User-ID"
 	HeaderXSessionID      = "X-Session-ID"
 

@@ -148,7 +148,7 @@ func TestCombatAnalytics_TrackCombatAction(t *testing.T) {
 		action := &models.CombatActionLog{
 			ID:          uuid.New(),
 			CombatID:    uuid.New(),
-			ActorID:     "char-1",
+			ActorID:     testCharacterID1,
 			ActorType:   "character",
 			ActionType:  "attack",
 			RoundNumber: 1,
@@ -181,7 +181,7 @@ func TestCombatAnalytics_FinalizeCombatAnalytics(t *testing.T) {
 			Round:         5,
 			Combatants: []models.Combatant{
 				{
-					ID:    "char-1",
+					ID:    testCharacterID1,
 					Name:  "Fighter",
 					Type:  models.CombatantTypeCharacter,
 					HP:    15,
@@ -202,7 +202,7 @@ func TestCombatAnalytics_FinalizeCombatAnalytics(t *testing.T) {
 			{
 				ID:          uuid.New(),
 				CombatID:    combatID,
-				ActorID:     "char-1",
+				ActorID:     testCharacterID1,
 				ActorType:   "character",
 				ActionType:  "attack",
 				TargetID:    &targetID,
@@ -225,7 +225,7 @@ func TestCombatAnalytics_FinalizeCombatAnalytics(t *testing.T) {
 		require.NotNil(t, result.Analytics)
 		require.Equal(t, 20, result.Analytics.TotalDamageDealt) // Based on single action with 20 damage
 		require.Equal(t, 0, result.Analytics.TotalHealingDone)  // No healing actions provided
-		require.Equal(t, "char-1", result.Analytics.MVPID)
+		require.Equal(t, testCharacterID1, result.Analytics.MVPID)
 
 		mockRepo.AssertExpectations(t)
 	})
@@ -277,7 +277,7 @@ func TestCombatAnalytics_GetCombatAnalytics(t *testing.T) {
 			CombatDuration:   10,
 			TotalDamageDealt: 150,
 			TotalHealingDone: 45,
-			MVPID:            "char-1",
+			MVPID:            testCharacterID1,
 			MVPType:          "character",
 			CreatedAt:        time.Now(),
 			UpdatedAt:        time.Now(),
@@ -293,7 +293,7 @@ func TestCombatAnalytics_GetCombatAnalytics(t *testing.T) {
 		require.Equal(t, combatID, result.CombatID)
 		require.Equal(t, 150, result.TotalDamageDealt)
 		require.Equal(t, 45, result.TotalHealingDone)
-		require.Equal(t, "char-1", result.MVPID)
+		require.Equal(t, testCharacterID1, result.MVPID)
 
 		mockRepo.AssertExpectations(t)
 	})
@@ -328,7 +328,7 @@ func TestCombatAnalytics_GetCombatantAnalytics(t *testing.T) {
 			{
 				ID:                uuid.New(),
 				CombatAnalyticsID: analyticsID,
-				CombatantID:       "char-1",
+				CombatantID:       testCharacterID1,
 				CombatantType:     "character",
 				CombatantName:     "Fighter",
 				DamageDealt:       65,
@@ -392,7 +392,7 @@ func TestCombatAnalytics_GetCombatAnalyticsBySession(t *testing.T) {
 				CombatDuration:   5,
 				TotalDamageDealt: 95,
 				TotalHealingDone: 25,
-				MVPID:            "char-1",
+				MVPID:            testCharacterID1,
 				MVPType:          "character",
 			},
 			{

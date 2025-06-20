@@ -32,6 +32,9 @@ const (
 	testUserID123     = "123"
 	testUserErrDatabase   = "database error"
 	testErrUserNotFound = "user not found"
+	testErrNotFound = "not found"
+	testErrEmptyUserID = "empty user ID"
+	testErrUserIDRequired = "user ID is required"
 )
 
 func TestUserService_Register(t *testing.T) {
@@ -244,7 +247,7 @@ func TestUserService_Login(t *testing.T) {
 				Password: testPasswordValid,
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
-				m.On("GetByUsername", ctx, "nonexistent").Return(nil, errors.New("not found"))
+				m.On("GetByUsername", ctx, "nonexistent").Return(nil, errors.New(testErrNotFound))
 			},
 			expectedError: "invalid username or password",
 		},
@@ -307,14 +310,14 @@ func TestUserService_GetUserByID(t *testing.T) {
 			name:   testErrUserNotFound,
 			userID: "nonexistent",
 			setupMock: func(m *mocks.MockUserRepository) {
-				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("not found"))
+				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(testErrNotFound))
 			},
-			expectedError: "not found",
+			expectedError: testErrNotFound,
 		},
 		{
-			name:          "empty user ID",
+			name:          testErrEmptyUserID,
 			userID:        "",
-			expectedError: "user ID is required",
+			expectedError: testErrUserIDRequired,
 		},
 	}
 
@@ -385,7 +388,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 				Username: "testuser",
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
-				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("not found"))
+				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(testErrNotFound))
 			},
 			expectedError: testErrUserNotFound,
 		},
@@ -395,7 +398,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 				ID:       "",
 				Username: "testuser",
 			},
-			expectedError: "user ID is required",
+			expectedError: testErrUserIDRequired,
 		},
 		{
 			name: "repository error on update",
@@ -505,7 +508,7 @@ func TestUserService_ChangePassword(t *testing.T) {
 			oldPassword: testPasswordOld,
 			newPassword: testPasswordNew,
 			setupMock: func(m *mocks.MockUserRepository) {
-				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("not found"))
+				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(testErrNotFound))
 			},
 			expectedError: testErrUserNotFound,
 		},
@@ -553,14 +556,14 @@ func TestUserService_DeleteUser(t *testing.T) {
 			name:   testErrUserNotFound,
 			userID: "nonexistent",
 			setupMock: func(m *mocks.MockUserRepository) {
-				m.On("Delete", ctx, "nonexistent").Return(errors.New("not found"))
+				m.On("Delete", ctx, "nonexistent").Return(errors.New(testErrNotFound))
 			},
-			expectedError: "not found",
+			expectedError: testErrNotFound,
 		},
 		{
-			name:          "empty user ID",
+			name:          testErrEmptyUserID,
 			userID:        "",
-			expectedError: "user ID is required",
+			expectedError: testErrUserIDRequired,
 		},
 	}
 

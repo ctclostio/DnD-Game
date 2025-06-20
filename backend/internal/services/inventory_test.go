@@ -305,7 +305,7 @@ func TestInventoryService_EquipItem(t *testing.T) {
 			itemID:      testItemGreatsword,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				// Already have two one-handed weapons equipped
-				sword1 := mocks.CreateTestItem("sword-1", "Short Sword", models.ItemTypeWeapon, 10, 2.0)
+				sword1 := mocks.CreateTestItem(testItemSword1, "Short Sword", models.ItemTypeWeapon, 10, 2.0)
 				sword1.Properties["two_handed"] = false
 				sword2 := mocks.CreateTestItem("sword-2", "Dagger", models.ItemTypeWeapon, 2, 1.0)
 				sword2.Properties["two_handed"] = false
@@ -944,7 +944,7 @@ func TestInventoryService_GetItemsByType(t *testing.T) {
 			itemType: models.ItemTypeWeapon,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				weapons := []*models.Item{
-					mocks.CreateTestItem("sword-1", "Longsword", models.ItemTypeWeapon, 15, 3.0),
+					mocks.CreateTestItem(testItemSword1, "Longsword", models.ItemTypeWeapon, 15, 3.0),
 					mocks.CreateTestItem("axe-1", "Battleaxe", models.ItemTypeWeapon, 10, 4.0),
 					mocks.CreateTestItem("bow-1", "Longbow", models.ItemTypeWeapon, 50, 2.0),
 				}

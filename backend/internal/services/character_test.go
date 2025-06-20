@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
@@ -22,12 +23,9 @@ const (
 	testCharRace    = "Human"
 	testCharClass   = "Ranger"
 
-	errDatabaseError    = "database error"
-	errCharacterNotFound = "character not found"
-	
 	// Test name constants
-	testNameCharacterNotFound = "character not found"
 	testNameRepositoryError   = "repository error"
+	testNameCharacterNotFound = "character not found"
 )
 
 func TestCharacterService_CreateCharacter(t *testing.T) {
@@ -116,9 +114,9 @@ func TestCharacterService_CreateCharacter(t *testing.T) {
 				Class:  testCharClass,
 			},
 			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {
-				charRepo.On("Create", ctx, mock.Anything).Return(errors.New(errDatabaseError))
+				charRepo.On("Create", ctx, mock.Anything).Return(errors.New(constants.ErrMsgDatabaseError))
 			},
-			expectedError: errDatabaseError,
+			expectedError: constants.ErrMsgDatabaseError,
 		},
 	}
 
@@ -178,17 +176,17 @@ func TestCharacterService_GetCharacterByID(t *testing.T) {
 			name:        testNameCharacterNotFound,
 			characterID: "nonexistent",
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(errCharacterNotFound))
+				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(constants.ErrCharacterNotFound))
 			},
-			expectedError: errCharacterNotFound,
+			expectedError: constants.ErrCharacterNotFound,
 		},
 		{
 			name:        testNameRepositoryError,
 			characterID: testCharacterID,
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				m.On("GetByID", ctx, testCharacterID).Return(nil, errors.New(errDatabaseError))
+				m.On("GetByID", ctx, testCharacterID).Return(nil, errors.New(constants.ErrMsgDatabaseError))
 			},
-			expectedError: errDatabaseError,
+			expectedError: constants.ErrMsgDatabaseError,
 		},
 	}
 
@@ -278,9 +276,9 @@ func TestCharacterService_UpdateCharacter(t *testing.T) {
 				Name: "Strider",
 			},
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(errCharacterNotFound))
+				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(constants.ErrCharacterNotFound))
 			},
-			expectedError: errCharacterNotFound,
+			expectedError: constants.ErrCharacterNotFound,
 		},
 	}
 
@@ -326,17 +324,17 @@ func TestCharacterService_DeleteCharacter(t *testing.T) {
 			name:        testNameCharacterNotFound,
 			characterID: "nonexistent",
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				m.On("Delete", ctx, "nonexistent").Return(errors.New(errCharacterNotFound))
+				m.On("Delete", ctx, "nonexistent").Return(errors.New(constants.ErrCharacterNotFound))
 			},
-			expectedError: errCharacterNotFound,
+			expectedError: constants.ErrCharacterNotFound,
 		},
 		{
 			name:        testNameRepositoryError,
 			characterID: testCharacterID,
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				m.On("Delete", ctx, testCharacterID).Return(errors.New(errDatabaseError))
+				m.On("Delete", ctx, testCharacterID).Return(errors.New(constants.ErrMsgDatabaseError))
 			},
-			expectedError: errDatabaseError,
+			expectedError: constants.ErrMsgDatabaseError,
 		},
 	}
 
@@ -421,9 +419,9 @@ func TestCharacterService_AddExperience(t *testing.T) {
 			characterID: "nonexistent",
 			xpToAdd:     100,
 			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {
-				charRepo.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(errCharacterNotFound))
+				charRepo.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(constants.ErrCharacterNotFound))
 			},
-			expectedError: errCharacterNotFound,
+			expectedError: constants.ErrCharacterNotFound,
 		},
 	}
 

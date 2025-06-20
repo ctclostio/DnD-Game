@@ -84,7 +84,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 
 		npc := &models.NPC{
 			Name:          testNPCOrc,
-			GameSessionID: "session-1",
+			GameSessionID: testSessionID,
 			MaxHitPoints:  42,
 			HitPoints:     0, // Not specified
 			Attributes: models.Attributes{
@@ -114,7 +114,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 
 		npc := &models.NPC{
 			Name:          "Dragon Wyrmling",
-			GameSessionID: "session-1",
+			GameSessionID: testSessionID,
 			MaxHitPoints:  52,
 			Attributes: models.Attributes{
 				Strength:     15, // +2 modifier
@@ -153,7 +153,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 			{
 				name: "missing name",
 				npc: &models.NPC{
-					GameSessionID: "session-1",
+					GameSessionID: testSessionID,
 					MaxHitPoints:  10,
 				},
 				expectedErr: "NPC name is required",
@@ -170,7 +170,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 				name: "invalid max hit points",
 				npc: &models.NPC{
 					Name:          testNPCGeneric,
-					GameSessionID: "session-1",
+					GameSessionID: testSessionID,
 					MaxHitPoints:  0,
 				},
 				expectedErr: "max hit points must be positive",
@@ -192,7 +192,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 
 		npc := &models.NPC{
 			Name:          "Weak Creature",
-			GameSessionID: "session-1",
+			GameSessionID: testSessionID,
 			MaxHitPoints:  5,
 			Attributes: models.Attributes{
 				Strength:     0,  // Invalid, should be set to 10
@@ -504,7 +504,7 @@ func TestNPCService_SearchNPCs(t *testing.T) {
 		service := NewNPCService(mockRepo)
 
 		filter := models.NPCSearchFilter{
-			GameSessionID: "session-1",
+			GameSessionID: testSessionID,
 			Type:          "Humanoid",
 			MinCR:         1,
 			MaxCR:         5,
@@ -534,18 +534,18 @@ func TestNPCService_CreateFromTemplate(t *testing.T) {
 		expectedNPC := &models.NPC{
 			ID:            "new-npc-1",
 			Name:          testNPCGoblinBoss,
-			GameSessionID: "session-1",
+			GameSessionID: testSessionID,
 			MaxHitPoints:  21,
 		}
 
 		mockRepo.On("CreateFromTemplate",
 			mock.Anything,
 			testTemplateID,
-			"session-1",
-			"user-1",
+			testSessionID,
+			testUserID,
 		).Return(expectedNPC, nil)
 
-		npc, err := service.CreateFromTemplate(context.Background(), "template-goblin-boss", "session-1", "user-1")
+		npc, err := service.CreateFromTemplate(context.Background(), testTemplateID, testSessionID, testUserID)
 
 		require.NoError(t, err)
 		require.NotNil(t, npc)
