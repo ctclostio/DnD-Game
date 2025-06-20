@@ -173,22 +173,37 @@ func (crs *ConditionalRealitySystem) evaluateLocationCondition(condition models.
 				continue
 			}
 
-			switch condition.Operator {
-			case constants.OperatorEquals:
-				return location == condition.Value.(string)
-			case "contains":
-				return strings.Contains(location, condition.Value.(string))
-			case "in":
-				locations, ok := condition.Value.([]string)
-				if !ok {
-					return false
-				}
-				for _, loc := range locations {
-					if location == loc {
-						return true
-					}
-				}
+			if crs.matchesLocationOperator(location, condition) {
+				return true
 			}
+		}
+	}
+	return false
+}
+
+// matchesLocationOperator checks if location matches the condition based on operator
+func (crs *ConditionalRealitySystem) matchesLocationOperator(location string, condition models.RuleCondition) bool {
+	switch condition.Operator {
+	case constants.OperatorEquals:
+		return location == condition.Value.(string)
+	case "contains":
+		return strings.Contains(location, condition.Value.(string))
+	case "in":
+		return crs.isLocationInList(location, condition.Value)
+	default:
+		return false
+	}
+}
+
+// isLocationInList checks if location is in the list of locations
+func (crs *ConditionalRealitySystem) isLocationInList(location string, value interface{}) bool {
+	locations, ok := value.([]string)
+	if !ok {
+		return false
+	}
+	for _, loc := range locations {
+		if location == loc {
+			return true
 		}
 	}
 	return false
@@ -472,47 +487,75 @@ func (crs *ConditionalRealitySystem) getEmotionModifiers(emotion string, intensi
 
 // applyModifier applies a modifier to a rule template
 func (crs *ConditionalRealitySystem) applyModifier(template *models.RuleTemplate, modifier RuleModifier) {
-	// Apply node overrides
-	for nodePattern, overrides := range modifier.Modifications.NodeOverrides {
+	crs.applyNodeOverrides(template, modifier.Modifications.NodeOverrides)
+	crs.applyParameterOverrides(template, modifier.Modifications.ParameterOverrides)
+	crs.disableNodes(template, modifier.Modifications.DisabledNodes)
+	crs.addAdditionalNodes(template, modifier.Modifications.AdditionalNodes)
+}
+
+// applyNodeOverrides applies node property overrides to matching nodes
+func (crs *ConditionalRealitySystem) applyNodeOverrides(template *models.RuleTemplate, nodeOverrides map[string]map[string]interface{}) {
+	for nodePattern, overrides := range nodeOverrides {
 		for i := range template.LogicGraph.Nodes {
 			node := &template.LogicGraph.Nodes[i]
-
-			// Check if node matches pattern
-			if nodePattern == "*" || strings.Contains(node.Type, nodePattern) {
-				// Apply property overrides
-				if node.Properties == nil {
-					node.Properties = make(map[string]interface{})
-				}
-				for prop, value := range overrides {
-					node.Properties[prop] = value
-				}
+			if crs.nodeMatchesPattern(node, nodePattern) {
+				crs.applyPropertyOverrides(node, overrides)
 			}
 		}
 	}
+}
 
-	// Apply parameter overrides
-	for param, value := range modifier.Modifications.ParameterOverrides {
-		// Find and update parameter
-		for i := range template.Parameters {
-			if template.Parameters[i].Name == param {
-				template.Parameters[i].DefaultValue = value
-				break
-			}
+// nodeMatchesPattern checks if a node matches the given pattern
+func (crs *ConditionalRealitySystem) nodeMatchesPattern(node *models.LogicNode, pattern string) bool {
+	return pattern == "*" || strings.Contains(node.Type, pattern)
+}
+
+// applyPropertyOverrides applies property overrides to a node
+func (crs *ConditionalRealitySystem) applyPropertyOverrides(node *models.LogicNode, overrides map[string]interface{}) {
+	if node.Properties == nil {
+		node.Properties = make(map[string]interface{})
+	}
+	for prop, value := range overrides {
+		node.Properties[prop] = value
+	}
+}
+
+// applyParameterOverrides updates template parameters with override values
+func (crs *ConditionalRealitySystem) applyParameterOverrides(template *models.RuleTemplate, paramOverrides map[string]interface{}) {
+	for param, value := range paramOverrides {
+		crs.updateParameter(template, param, value)
+	}
+}
+
+// updateParameter finds and updates a specific parameter
+func (crs *ConditionalRealitySystem) updateParameter(template *models.RuleTemplate, paramName string, value interface{}) {
+	for i := range template.Parameters {
+		if template.Parameters[i].Name == paramName {
+			template.Parameters[i].DefaultValue = value
+			break
 		}
 	}
+}
 
-	// Disable specified nodes
-	for _, nodeID := range modifier.Modifications.DisabledNodes {
-		for i := range template.LogicGraph.Nodes {
-			if template.LogicGraph.Nodes[i].ID == nodeID {
-				// Mark node as disabled
-				template.LogicGraph.Nodes[i].Properties["disabled"] = true
-			}
+// disableNodes marks specified nodes as disabled
+func (crs *ConditionalRealitySystem) disableNodes(template *models.RuleTemplate, disabledNodeIDs []string) {
+	for _, nodeID := range disabledNodeIDs {
+		crs.disableNode(template, nodeID)
+	}
+}
+
+// disableNode marks a single node as disabled
+func (crs *ConditionalRealitySystem) disableNode(template *models.RuleTemplate, nodeID string) {
+	for i := range template.LogicGraph.Nodes {
+		if template.LogicGraph.Nodes[i].ID == nodeID {
+			template.LogicGraph.Nodes[i].Properties["disabled"] = true
 		}
 	}
+}
 
-	// Add additional nodes
-	template.LogicGraph.Nodes = append(template.LogicGraph.Nodes, modifier.Modifications.AdditionalNodes...)
+// addAdditionalNodes appends new nodes to the template
+func (crs *ConditionalRealitySystem) addAdditionalNodes(template *models.RuleTemplate, nodes []models.LogicNode) {
+	template.LogicGraph.Nodes = append(template.LogicGraph.Nodes, nodes...)
 }
 
 // Subscribe adds a subscriber for context changes
