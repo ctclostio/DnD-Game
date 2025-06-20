@@ -65,14 +65,6 @@ export const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen, title]);
 
-  if (!isOpen) return null;
-
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (closeOnOverlayClick && (e.target as HTMLElement).dataset.overlay === 'true') {
-      onClose();
-    }
-  };
-
   // Add overlay click handler after mount
   useEffect(() => {
     if (!isOpen || !closeOnOverlayClick) return;
@@ -86,6 +78,14 @@ export const Modal: React.FC<ModalProps> = ({
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
   }, [isOpen, closeOnOverlayClick, onClose]);
+
+  if (!isOpen) return null;
+
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (closeOnOverlayClick && (e.target as HTMLElement).dataset.overlay === 'true') {
+      onClose();
+    }
+  };
 
   const modalContent = (
     <div 
