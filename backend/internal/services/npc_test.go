@@ -12,15 +12,44 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Test constants
+const (
+	// IDs
+	testNPCID      = "npc-1"
+	testSessionID  = "session-1"
+	testUserID     = "user-1"
+	testInvalidID  = "invalid-id"
+	testTemplateID = "template-goblin-boss"
+	
+	// Repository methods
+	testMethodCreate  = "Create"
+	testMethodUpdate  = "Update"
+	testMethodGetByID = "GetByID"
+	
+	// NPC names and types
+	testNPCOrc           = "Orc"
+	testNPCGoblinWarrior = "Goblin Warrior"
+	testNPCGoblinBoss    = "Goblin Boss"
+	testNPCType          = "Humanoid"
+	testNPCGeneric       = "Test NPC"
+	
+	// Damage types
+	testDamageSlashing = "slashing"
+	testDamageFire     = "fire"
+	
+	// Errors
+	testErrNotFound = "not found"
+)
+
 func TestNPCService_CreateNPC(t *testing.T) {
 	t.Run("successful NPC creation with all fields", func(t *testing.T) {
 		mockRepo := new(MockNPCRepository)
 		service := NewNPCService(mockRepo)
 
 		npc := &models.NPC{
-			Name:            "Goblin Warrior",
-			GameSessionID:   "session-1",
-			Type:            "Humanoid",
+			Name:            testNPCGoblinWarrior,
+			GameSessionID:   testSessionID,
+			Type:            testNPCType,
 			Size:            "Small",
 			MaxHitPoints:    15,
 			HitPoints:       15,
@@ -36,8 +65,8 @@ func TestNPCService_CreateNPC(t *testing.T) {
 			},
 		}
 
-		mockRepo.On("Create", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
-			return n.Name == "Goblin Warrior" &&
+		mockRepo.On(testMethodCreate, mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
+			return n.Name == testNPCGoblinWarrior &&
 				n.ExperiencePoints == 50 && // CR 0.25 = 50 XP
 				n.HitPoints == 15
 		})).Return(nil)
@@ -54,7 +83,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 		service := NewNPCService(mockRepo)
 
 		npc := &models.NPC{
-			Name:          "Orc",
+			Name:          testNPCOrc,
 			GameSessionID: "session-1",
 			MaxHitPoints:  42,
 			HitPoints:     0, // Not specified
@@ -68,7 +97,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 			},
 		}
 
-		mockRepo.On("Create", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
+		mockRepo.On(testMethodCreate, mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
 			return n.HitPoints == 42 // Should be set to max
 		})).Return(nil)
 
@@ -97,7 +126,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 			},
 		}
 
-		mockRepo.On("Create", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
+		mockRepo.On(testMethodCreate, mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
 			return n.SavingThrows.Strength.Modifier == 2 &&
 				n.SavingThrows.Constitution.Modifier == 1 &&
 				n.SavingThrows.Charisma.Modifier == 1
@@ -175,7 +204,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 			},
 		}
 
-		mockRepo.On("Create", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
+		mockRepo.On(testMethodCreate, mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
 			return n.Attributes.Strength == 10 &&
 				n.Attributes.Dexterity == 10
 		})).Return(nil)
@@ -210,12 +239,12 @@ func TestNPCService_CreateNPC(t *testing.T) {
 		for _, tt := range tests {
 			npc := &models.NPC{
 				Name:            "Test Creature",
-				GameSessionID:   "session-1",
+				GameSessionID:   testSessionID,
 				MaxHitPoints:    10,
 				ChallengeRating: tt.cr,
 			}
 
-			mockRepo.On("Create", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
+			mockRepo.On(testMethodCreate, mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
 				return n.ExperiencePoints == tt.expected
 			})).Return(nil).Once()
 
@@ -234,14 +263,14 @@ func TestNPCService_RollInitiative(t *testing.T) {
 		service := NewNPCService(mockRepo)
 
 		npc := &models.NPC{
-			ID:   "npc-1",
+			ID:   testNPCID,
 			Name: "Quick Rogue",
 			Attributes: models.Attributes{
 				Dexterity: 18, // +4 modifier
 			},
 		}
 
-		mockRepo.On("GetByID", mock.Anything, "npc-1").Return(npc, nil)
+		mockRepo.On(testMethodGetByID, mock.Anything, testNPCID).Return(npc, nil)
 
 		initiative, err := service.RollInitiative(context.Background(), "npc-1")
 
@@ -281,8 +310,8 @@ func TestNPCService_ApplyDamage(t *testing.T) {
 			DamageImmunities:  []string{},
 		}
 
-		mockRepo.On("GetByID", mock.Anything, "npc-1").Return(npc, nil)
-		mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
+		mockRepo.On(testMethodGetByID, mock.Anything, testNPCID).Return(npc, nil)
+		mockRepo.On(testMethodUpdate, mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
 			return n.HitPoints == 27 // 42 - 15
 		})).Return(nil)
 
@@ -305,8 +334,8 @@ func TestNPCService_ApplyDamage(t *testing.T) {
 			DamageImmunities:  []string{},
 		}
 
-		mockRepo.On("GetByID", mock.Anything, "npc-1").Return(npc, nil)
-		mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
+		mockRepo.On(testMethodGetByID, mock.Anything, testNPCID).Return(npc, nil)
+		mockRepo.On(testMethodUpdate, mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
 			return n.HitPoints == 5 // 13 - (16/2)
 		})).Return(nil)
 
@@ -329,7 +358,7 @@ func TestNPCService_ApplyDamage(t *testing.T) {
 			DamageImmunities:  []string{"fire", "poison"},
 		}
 
-		mockRepo.On("GetByID", mock.Anything, "npc-1").Return(npc, nil)
+		mockRepo.On(testMethodGetByID, mock.Anything, testNPCID).Return(npc, nil)
 		// Should not call Update since no damage is taken
 
 		err := service.ApplyDamage(context.Background(), "npc-1", 50, "fire")
@@ -350,8 +379,8 @@ func TestNPCService_ApplyDamage(t *testing.T) {
 			MaxHitPoints: 7,
 		}
 
-		mockRepo.On("GetByID", mock.Anything, "npc-1").Return(npc, nil)
-		mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
+		mockRepo.On(testMethodGetByID, mock.Anything, testNPCID).Return(npc, nil)
+		mockRepo.On(testMethodUpdate, mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
 			return n.HitPoints == 0 // Should be 0, not negative
 		})).Return(nil)
 
@@ -399,7 +428,7 @@ func TestNPCService_HealNPC(t *testing.T) {
 			service := NewNPCService(mockRepo)
 
 			mockRepo.On("GetByID", mock.Anything, tt.npc.ID).Return(tt.npc, nil)
-			mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
+			mockRepo.On(testMethodUpdate, mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
 				return n.HitPoints == tt.expectedHP
 			})).Return(nil)
 
@@ -423,7 +452,7 @@ func TestNPCService_UpdateNPC(t *testing.T) {
 			MaxHitPoints: 40,
 		}
 
-		mockRepo.On("Update", mock.Anything, npc).Return(nil)
+		mockRepo.On(testMethodUpdate, mock.Anything, npc).Return(nil)
 
 		err := service.UpdateNPC(context.Background(), npc)
 
@@ -442,7 +471,7 @@ func TestNPCService_UpdateNPC(t *testing.T) {
 			MaxHitPoints: 40,
 		}
 
-		mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
+		mockRepo.On(testMethodUpdate, mock.Anything, mock.MatchedBy(func(n *models.NPC) bool {
 			return n.HitPoints == 40 // Should be capped
 		})).Return(nil)
 
