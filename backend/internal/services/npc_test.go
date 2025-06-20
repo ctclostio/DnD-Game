@@ -161,7 +161,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 			{
 				name: "missing game session ID",
 				npc: &models.NPC{
-					Name:         "Test NPC",
+					Name:         testNPCGeneric,
 					MaxHitPoints: 10,
 				},
 				expectedErr: "game session ID is required",
@@ -169,7 +169,7 @@ func TestNPCService_CreateNPC(t *testing.T) {
 			{
 				name: "invalid max hit points",
 				npc: &models.NPC{
-					Name:          "Test NPC",
+					Name:          testNPCGeneric,
 					GameSessionID: "session-1",
 					MaxHitPoints:  0,
 				},
@@ -285,13 +285,13 @@ func TestNPCService_RollInitiative(t *testing.T) {
 		mockRepo := new(MockNPCRepository)
 		service := NewNPCService(mockRepo)
 
-		mockRepo.On("GetByID", mock.Anything, "invalid-id").
-			Return(nil, errors.New("not found"))
+		mockRepo.On("GetByID", mock.Anything, testInvalidID).
+			Return(nil, errors.New(testErrNotFound))
 
 		_, err := service.RollInitiative(context.Background(), "invalid-id")
 
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "not found")
+		require.Contains(t, err.Error(), testErrNotFound)
 		mockRepo.AssertExpectations(t)
 	})
 }
@@ -533,14 +533,14 @@ func TestNPCService_CreateFromTemplate(t *testing.T) {
 
 		expectedNPC := &models.NPC{
 			ID:            "new-npc-1",
-			Name:          "Goblin Boss",
+			Name:          testNPCGoblinBoss,
 			GameSessionID: "session-1",
 			MaxHitPoints:  21,
 		}
 
 		mockRepo.On("CreateFromTemplate",
 			mock.Anything,
-			"template-goblin-boss",
+			testTemplateID,
 			"session-1",
 			"user-1",
 		).Return(expectedNPC, nil)
@@ -549,7 +549,7 @@ func TestNPCService_CreateFromTemplate(t *testing.T) {
 
 		require.NoError(t, err)
 		require.NotNil(t, npc)
-		require.Equal(t, "Goblin Boss", npc.Name)
+		require.Equal(t, testNPCGoblinBoss, npc.Name)
 		mockRepo.AssertExpectations(t)
 	})
 }

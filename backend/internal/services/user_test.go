@@ -23,6 +23,10 @@ const (
 	testPasswordWeak  = "weak"
 	testPasswordOld   = "OldPass123!"
 	testPasswordNew   = "NewPass456!"
+	
+	// Email addresses
+	testEmailValid    = "test@example.com"
+	testEmailExisting = "existing@example.com"
 )
 
 func TestUserService_Register(t *testing.T) {
@@ -39,18 +43,18 @@ func TestUserService_Register(t *testing.T) {
 			name: "successful registration",
 			request: models.RegisterRequest{
 				Username: "testuser",
-				Email:    "test@example.com",
+				Email:    testEmailValid,
 				Password: testPasswordValid,
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				// Check that username doesn't exist
 				m.On("GetByUsername", ctx, "testuser").Return(nil, nil)
 				// Check that email doesn't exist
-				m.On("GetByEmail", ctx, "test@example.com").Return(nil, nil)
+				m.On("GetByEmail", ctx, testEmailValid).Return(nil, nil)
 				// Create user
 				m.On("Create", ctx, mock.MatchedBy(func(u *models.User) bool {
 					return u.Username == "testuser" &&
-						u.Email == "test@example.com" &&
+						u.Email == testEmailValid &&
 						u.PasswordHash != "" &&
 						u.ID == "" && // ID should be empty, repository will set it
 						u.Role == "" // Role should be empty, repository will set it
@@ -64,7 +68,7 @@ func TestUserService_Register(t *testing.T) {
 			validate: func(t *testing.T, user *models.User) {
 				assert.NotEmpty(t, user.ID)
 				assert.Equal(t, "testuser", user.Username)
-				assert.Equal(t, "test@example.com", user.Email)
+				assert.Equal(t, testEmailValid, user.Email)
 				assert.Equal(t, "player", user.Role)
 				assert.NotEmpty(t, user.PasswordHash)
 				assert.NotEqual(t, testUserPassword, user.PasswordHash) // Should be hashed
@@ -85,7 +89,7 @@ func TestUserService_Register(t *testing.T) {
 				existingUser := &models.User{
 					ID:       "123",
 					Username: "existinguser",
-					Email:    "existing@example.com",
+					Email:    testEmailExisting,
 				}
 				m.On("GetByUsername", ctx, "existinguser").Return(existingUser, nil)
 			},
@@ -95,16 +99,16 @@ func TestUserService_Register(t *testing.T) {
 			name: "email already exists",
 			request: models.RegisterRequest{
 				Username: "newuser",
-				Email:    "existing@example.com",
+				Email:    testEmailExisting,
 				Password: testPasswordValid,
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByUsername", ctx, "newuser").Return(nil, nil)
 				existingUser := &models.User{
 					ID:    "123",
-					Email: "existing@example.com",
+					Email: testEmailExisting,
 				}
-				m.On("GetByEmail", ctx, "existing@example.com").Return(existingUser, nil)
+				m.On("GetByEmail", ctx, testEmailExisting).Return(existingUser, nil)
 			},
 			expectedError: "email already registered",
 		},
@@ -112,7 +116,7 @@ func TestUserService_Register(t *testing.T) {
 			name: "weak password",
 			request: models.RegisterRequest{
 				Username: "testuser",
-				Email:    "test@example.com",
+				Email:    testEmailValid,
 				Password: "weak",
 			},
 			expectedError: "password must be at least 8 characters",
@@ -121,7 +125,7 @@ func TestUserService_Register(t *testing.T) {
 			name: "empty username",
 			request: models.RegisterRequest{
 				Username: "",
-				Email:    "test@example.com",
+				Email:    testEmailValid,
 				Password: testPasswordValid,
 			},
 			expectedError: "username is required",
@@ -139,12 +143,12 @@ func TestUserService_Register(t *testing.T) {
 			name: "repository error on create",
 			request: models.RegisterRequest{
 				Username: "testuser",
-				Email:    "test@example.com",
+				Email:    testEmailValid,
 				Password: testPasswordValid,
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByUsername", ctx, "testuser").Return(nil, nil)
-				m.On("GetByEmail", ctx, "test@example.com").Return(nil, nil)
+				m.On("GetByEmail", ctx, testEmailValid).Return(nil, nil)
 				m.On("Create", ctx, mock.Anything).Return(errors.New("database error"))
 			},
 			expectedError: "database error",
@@ -201,7 +205,7 @@ func TestUserService_Login(t *testing.T) {
 				user := &models.User{
 					ID:           "user-123",
 					Username:     "testuser",
-					Email:        "test@example.com",
+					Email:        testEmailValid,
 					Role:         "player",
 					PasswordHash: string(hashedPassword),
 				}
@@ -285,7 +289,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 				user := &models.User{
 					ID:       "user-123",
 					Username: "testuser",
-					Email:    "test@example.com",
+					Email:    testEmailValid,
 				}
 				m.On("GetByID", ctx, "user-123").Return(user, nil)
 			},

@@ -11,6 +11,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
+// Error messages
+const (
+	errUserIDRequired = "user ID is required"
+)
+
 type UserService struct {
 	repo database.UserRepository
 }
@@ -124,7 +129,7 @@ func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*mode
 // GetUserByID retrieves a user by ID
 func (s *UserService) GetUserByID(ctx context.Context, id string) (*models.User, error) {
 	if id == "" {
-		return nil, fmt.Errorf("user ID is required")
+		return nil, fmt.Errorf(errUserIDRequired)
 	}
 	return s.repo.GetByID(ctx, id)
 }
@@ -133,7 +138,7 @@ func (s *UserService) GetUserByID(ctx context.Context, id string) (*models.User,
 func (s *UserService) UpdateUser(ctx context.Context, user *models.User) error {
 	// Validate user ID
 	if user.ID == "" {
-		return fmt.Errorf("user ID is required")
+		return fmt.Errorf(errUserIDRequired)
 	}
 
 	// Check if user exists
@@ -181,7 +186,7 @@ func (s *UserService) ChangePassword(ctx context.Context, userID, oldPassword, n
 // DeleteUser deletes a user account
 func (s *UserService) DeleteUser(ctx context.Context, id string) error {
 	if id == "" {
-		return fmt.Errorf("user ID is required")
+		return fmt.Errorf(errUserIDRequired)
 	}
 	return s.repo.Delete(ctx, id)
 }

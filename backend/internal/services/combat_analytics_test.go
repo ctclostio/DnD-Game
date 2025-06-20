@@ -345,7 +345,7 @@ func TestCombatAnalytics_GetCombatantAnalytics(t *testing.T) {
 			{
 				ID:                uuid.New(),
 				CombatAnalyticsID: analyticsID,
-				CombatantID:       "char-2",
+				CombatantID:       testCharacterID2,
 				CombatantType:     "character",
 				CombatantName:     "Cleric",
 				DamageDealt:       30,
@@ -367,9 +367,9 @@ func TestCombatAnalytics_GetCombatantAnalytics(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Len(t, result, 2)
-		require.Equal(t, "char-1", result[0].CombatantID)
+		require.Equal(t, testCharacterID1, result[0].CombatantID)
 		require.Equal(t, 65, result[0].DamageDealt)
-		require.Equal(t, "char-2", result[1].CombatantID)
+		require.Equal(t, testCharacterID2, result[1].CombatantID)
 		require.Equal(t, 25, result[1].HealingDone)
 
 		mockRepo.AssertExpectations(t)
@@ -402,7 +402,7 @@ func TestCombatAnalytics_GetCombatAnalyticsBySession(t *testing.T) {
 				CombatDuration:   8,
 				TotalDamageDealt: 120,
 				TotalHealingDone: 35,
-				MVPID:            "char-2",
+				MVPID:            testCharacterID2,
 				MVPType:          "character",
 			},
 		}

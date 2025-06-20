@@ -15,6 +15,17 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
+// Test constants
+const (
+	testPurposeAttack   = "Attack roll"
+	testPurposeDamage   = "Damage roll"
+	testErrInvalidDice  = "invalid dice type"
+	testErrRepository   = "repository error"
+	testErrDatabase     = "database error"
+	testRollID1         = "roll-1"
+	testRollID2         = "roll-2"
+)
+
 func TestDiceRollService_RollDice(t *testing.T) {
 	ctx := context.Background()
 
@@ -31,7 +42,7 @@ func TestDiceRollService_RollDice(t *testing.T) {
 				GameSessionID: constants.TestSessionID,
 				UserID:        constants.TestUserID,
 				RollNotation:  "1d20",
-				Purpose:       "Attack roll",
+				Purpose:       testPurposeAttack,
 			},
 			setupMock: func(m *mocks.MockDiceRollRepository) {
 				m.On("Create", ctx, mock.MatchedBy(func(r *models.DiceRoll) bool {
@@ -58,7 +69,7 @@ func TestDiceRollService_RollDice(t *testing.T) {
 				GameSessionID: constants.TestSessionID,
 				UserID:        constants.TestUserID,
 				RollNotation:  "2d6+3",
-				Purpose:       "Damage roll",
+				Purpose:       testPurposeDamage,
 			},
 			setupMock: func(m *mocks.MockDiceRollRepository) {
 				m.On("Create", ctx, mock.MatchedBy(func(r *models.DiceRoll) bool {
@@ -123,25 +134,25 @@ func TestDiceRollService_RollDice(t *testing.T) {
 			expectedError: "invalid roll notation",
 		},
 		{
-			name: "invalid dice type",
+			name: testErrInvalidDice,
 			roll: &models.DiceRoll{
 				GameSessionID: constants.TestSessionID,
 				UserID:        constants.TestUserID,
 				RollNotation:  "1d7",
 			},
-			expectedError: "invalid dice type",
+			expectedError: testErrInvalidDice,
 		},
 		{
-			name: "repository error",
+			name: testErrRepository,
 			roll: &models.DiceRoll{
 				GameSessionID: constants.TestSessionID,
 				UserID:        constants.TestUserID,
 				RollNotation:  "1d20",
 			},
 			setupMock: func(m *mocks.MockDiceRollRepository) {
-				m.On("Create", ctx, mock.Anything).Return(errors.New("database error"))
+				m.On("Create", ctx, mock.Anything).Return(errors.New(testErrDatabase))
 			},
-			expectedError: "database error",
+			expectedError: testErrDatabase,
 		},
 	}
 
@@ -190,40 +201,40 @@ func TestDiceRollService_GetRollsBySession(t *testing.T) {
 			setupMock: func(m *mocks.MockDiceRollRepository) {
 				rolls := []*models.DiceRoll{
 					{
-						ID:            "roll-1",
+						ID:            testRollID1,
 						GameSessionID: constants.TestSessionID,
 						UserID:        constants.TestUserID,
 						RollNotation:  "1d20+5",
 						Total:         18,
-						Purpose:       "Attack roll",
+						Purpose:       testPurposeAttack,
 					},
 					{
-						ID:            "roll-2",
+						ID:            testRollID2,
 						GameSessionID: constants.TestSessionID,
 						UserID:        "user-456",
 						RollNotation:  "2d6+3",
 						Total:         10,
-						Purpose:       "Damage roll",
+						Purpose:       testPurposeDamage,
 					},
 				}
 				m.On("GetByGameSession", ctx, constants.TestSessionID, 0, 10).Return(rolls, nil)
 			},
 			expected: []*models.DiceRoll{
 				{
-					ID:            "roll-1",
+					ID:            testRollID1,
 					GameSessionID: constants.TestSessionID,
 					UserID:        constants.TestUserID,
 					RollNotation:  "1d20+5",
 					Total:         18,
-					Purpose:       "Attack roll",
+					Purpose:       testPurposeAttack,
 				},
 				{
-					ID:            "roll-2",
+					ID:            testRollID2,
 					GameSessionID: constants.TestSessionID,
 					UserID:        "user-456",
 					RollNotation:  "2d6+3",
 					Total:         10,
-					Purpose:       "Damage roll",
+					Purpose:       testPurposeDamage,
 				},
 			},
 		},
@@ -238,14 +249,14 @@ func TestDiceRollService_GetRollsBySession(t *testing.T) {
 			expected: []*models.DiceRoll{},
 		},
 		{
-			name:      "repository error",
+			name:      testErrRepository,
 			sessionID: constants.TestSessionID,
 			limit:     10,
 			offset:    0,
 			setupMock: func(m *mocks.MockDiceRollRepository) {
-				m.On("GetByGameSession", ctx, constants.TestSessionID, 0, 10).Return(nil, errors.New("database error"))
+				m.On("GetByGameSession", ctx, constants.TestSessionID, 0, 10).Return(nil, errors.New(testErrDatabase))
 			},
-			expectedError: "database error",
+			expectedError: testErrDatabase,
 		},
 	}
 
@@ -292,14 +303,14 @@ func TestDiceRollService_GetRollsByUser(t *testing.T) {
 			setupMock: func(m *mocks.MockDiceRollRepository) {
 				rolls := []*models.DiceRoll{
 					{
-						ID:            "roll-1",
+						ID:            testRollID1,
 						GameSessionID: constants.TestSessionID,
 						UserID:        constants.TestUserID,
 						RollNotation:  "1d20",
 						Total:         15,
 					},
 					{
-						ID:            "roll-2",
+						ID:            testRollID2,
 						GameSessionID: "session-456",
 						UserID:        constants.TestUserID,
 						RollNotation:  "3d6",
@@ -310,14 +321,14 @@ func TestDiceRollService_GetRollsByUser(t *testing.T) {
 			},
 			expected: []*models.DiceRoll{
 				{
-					ID:            "roll-1",
+					ID:            testRollID1,
 					GameSessionID: constants.TestSessionID,
 					UserID:        constants.TestUserID,
 					RollNotation:  "1d20",
 					Total:         15,
 				},
 				{
-					ID:            "roll-2",
+					ID:            testRollID2,
 					GameSessionID: "session-456",
 					UserID:        constants.TestUserID,
 					RollNotation:  "3d6",
@@ -401,7 +412,7 @@ func TestDiceRollService_SimulateRoll(t *testing.T) {
 			expectedError: "invalid dice notation format",
 		},
 		{
-			name:          "invalid dice type",
+			name:          testErrInvalidDice,
 			notation:      "1d7",
 			expectedError: "invalid dice type: d7",
 		},
@@ -480,7 +491,7 @@ func TestDiceRollService_RollInitiative(t *testing.T) {
 			},
 		},
 		{
-			name:      "repository error",
+			name:      testErrRepository,
 			sessionID: constants.TestSessionID,
 			participants: []struct {
 				UserID      string
@@ -490,7 +501,7 @@ func TestDiceRollService_RollInitiative(t *testing.T) {
 				{UserID: "user-1", CharacterID: "char-1", DexModifier: 0},
 			},
 			setupMock: func(m *mocks.MockDiceRollRepository) {
-				m.On("Create", ctx, mock.Anything).Return(errors.New("database error"))
+				m.On("Create", ctx, mock.Anything).Return(errors.New(testErrDatabase))
 			},
 			expectedError: "failed to roll initiative for user user-1: database error",
 		},

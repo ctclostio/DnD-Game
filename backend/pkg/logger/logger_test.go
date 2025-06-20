@@ -149,8 +149,8 @@ func TestLogger_WithCorrelationID(t *testing.T) {
 
 func TestLogger_WithUserID(t *testing.T) {
 	testLoggerWith(t, func(l *Logger) *Logger {
-		return l.WithUserID("user-456")
-	}, "user_id", "user-456")
+		return l.WithUserID(testUserID)
+	}, "user_id", testUserID)
 }
 
 func TestLogger_WithError(t *testing.T) {

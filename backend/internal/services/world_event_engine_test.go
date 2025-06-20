@@ -14,6 +14,13 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
+// Test constants
+const (
+	testTypeWorldEvent = "*models.WorldEvent"
+	testTypeUUID       = "uuid.UUID"
+	testTypeMarket     = "*models.Market"
+)
+
 // Helper functions to reduce code duplication in mock implementations
 
 func mockErrorReturn(args mock.Arguments, index int) error {
@@ -311,11 +318,11 @@ func TestWorldEventEngineService_GenerateWorldEvent(t *testing.T) {
 		aiResponse, _ := json.Marshal(aiEvent)
 		mockLLM.Response = string(aiResponse)
 
-		mockRepo.On("CreateWorldEvent", mock.AnythingOfType("*models.WorldEvent")).Return(nil)
+		mockRepo.On("CreateWorldEvent", mock.AnythingOfType(testTypeWorldEvent)).Return(nil)
 
 		// Mock market operations for applyEventEffects
-		mockRepo.On("GetMarketBySettlement", mock.AnythingOfType("uuid.UUID")).Return(nil, nil).Maybe()
-		mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType("*models.Market")).Return(nil).Maybe()
+		mockRepo.On("GetMarketBySettlement", mock.AnythingOfType(testTypeUUID)).Return(nil, nil).Maybe()
+		mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType(testTypeMarket)).Return(nil).Maybe()
 
 		service := NewWorldEventEngineService(mockLLM, mockRepo, mockFaction)
 
@@ -410,7 +417,7 @@ func TestWorldEventEngineService_GenerateWorldEvent(t *testing.T) {
 		aiResponse, _ := json.Marshal(aiEvent)
 		mockLLM.Response = string(aiResponse)
 
-		mockRepo.On("CreateWorldEvent", mock.AnythingOfType("*models.WorldEvent")).Return(errors.New("create error"))
+		mockRepo.On("CreateWorldEvent", mock.AnythingOfType(testTypeWorldEvent)).Return(errors.New("create error"))
 
 		service := NewWorldEventEngineService(mockLLM, mockRepo, mockFaction)
 
@@ -465,14 +472,14 @@ func TestWorldEventEngineService_SimulateEventProgression(t *testing.T) {
 		mockRepo.On("GetActiveWorldEvents", gameSessionID).Return(activeEvents, nil)
 		// The service processes events but doesn't necessarily update them
 		// due to random chance in shouldEventProgress
-		mockRepo.On("GetWorldEventByID", mock.AnythingOfType("uuid.UUID")).Return(event1, nil).Maybe()
-		mockRepo.On("UpdateWorldEvent", mock.AnythingOfType("*models.WorldEvent")).Return(nil).Maybe()
-		mockRepo.On("ProgressWorldEvent", mock.AnythingOfType("uuid.UUID")).Return(nil).Maybe()
+		mockRepo.On("GetWorldEventByID", mock.AnythingOfType(testTypeUUID)).Return(event1, nil).Maybe()
+		mockRepo.On("UpdateWorldEvent", mock.AnythingOfType(testTypeWorldEvent)).Return(nil).Maybe()
+		mockRepo.On("ProgressWorldEvent", mock.AnythingOfType(testTypeUUID)).Return(nil).Maybe()
 		// resolveEvent creates a resolution event
-		mockRepo.On("CreateWorldEvent", mock.AnythingOfType("*models.WorldEvent")).Return(nil).Maybe()
+		mockRepo.On("CreateWorldEvent", mock.AnythingOfType(testTypeWorldEvent)).Return(nil).Maybe()
 		// Market operations for applyEventEffects
-		mockRepo.On("GetMarketBySettlement", mock.AnythingOfType("uuid.UUID")).Return(nil, nil).Maybe()
-		mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType("*models.Market")).Return(nil).Maybe()
+		mockRepo.On("GetMarketBySettlement", mock.AnythingOfType(testTypeUUID)).Return(nil, nil).Maybe()
+		mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType(testTypeMarket)).Return(nil).Maybe()
 		// SimulateEventProgression may generate new events
 		mockRepo.On("GetSettlementsByGameSession", gameSessionID).Return([]*models.Settlement{}, nil).Maybe()
 		mockRepo.On("GetFactionsByGameSession", gameSessionID).Return([]*models.Faction{}, nil).Maybe()
@@ -502,9 +509,9 @@ func TestWorldEventEngineService_SimulateEventProgression(t *testing.T) {
 		mockRepo.On("GetSettlementsByGameSession", gameSessionID).Return([]*models.Settlement{}, nil).Maybe()
 		mockRepo.On("GetFactionsByGameSession", gameSessionID).Return([]*models.Faction{}, nil).Maybe()
 		// If it generates a new event
-		mockRepo.On("CreateWorldEvent", mock.AnythingOfType("*models.WorldEvent")).Return(nil).Maybe()
-		mockRepo.On("GetMarketBySettlement", mock.AnythingOfType("uuid.UUID")).Return(nil, nil).Maybe()
-		mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType("*models.Market")).Return(nil).Maybe()
+		mockRepo.On("CreateWorldEvent", mock.AnythingOfType(testTypeWorldEvent)).Return(nil).Maybe()
+		mockRepo.On("GetMarketBySettlement", mock.AnythingOfType(testTypeUUID)).Return(nil, nil).Maybe()
+		mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType(testTypeMarket)).Return(nil).Maybe()
 
 		service := NewWorldEventEngineService(mockLLM, mockRepo, mockFaction)
 
@@ -576,77 +583,70 @@ func TestWorldEventEngineService_RecordPartyAction(t *testing.T) {
 func TestWorldEventEngineService_shouldEventProgress(t *testing.T) {
 	service := &WorldEventEngineService{}
 
-	// Since shouldEventProgress uses random values, we'll test it multiple times
-	// and check for expected behavior patterns
+	// Test cases for different event types
+	tests := []struct {
+		name         string
+		event        *models.WorldEvent
+		expectedMin  float64
+		expectedMax  float64
+		expectedRate float64
+	}{
+		{
+			name: "minor event progression",
+			event: &models.WorldEvent{
+				IsActive:     true,
+				IsResolved:   false,
+				Severity:     models.SeverityMinor,
+				AncientCause: false,
+			},
+			expectedMin:  0.15,
+			expectedMax:  0.45,
+			expectedRate: 30,
+		},
+		{
+			name: "major event progression",
+			event: &models.WorldEvent{
+				IsActive:     true,
+				IsResolved:   false,
+				Severity:     models.SeverityMajor,
+				AncientCause: false,
+			},
+			expectedMin:  0.35,
+			expectedMax:  0.65,
+			expectedRate: 50,
+		},
+		{
+			name: "ancient major event progression",
+			event: &models.WorldEvent{
+				IsActive:     true,
+				IsResolved:   false,
+				Severity:     models.SeverityMajor,
+				AncientCause: true,
+			},
+			expectedMin:  0.55,
+			expectedMax:  0.85,
+			expectedRate: 70,
+		},
+	}
 
-	t.Run("minor event progression", func(t *testing.T) {
-		event := &models.WorldEvent{
-			IsActive:     true,
-			IsResolved:   false,
-			Severity:     models.SeverityMinor,
-			AncientCause: false,
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			progressRate := testEventProgressionRate(service, tt.event, 100)
+			require.True(t, progressRate >= tt.expectedMin && progressRate <= tt.expectedMax,
+				"Expected progress rate around %.0f%%, got %.2f%%", tt.expectedRate, progressRate*100)
+		})
+	}
+}
+
+// testEventProgressionRate runs multiple tests and returns the progression rate
+func testEventProgressionRate(service *WorldEventEngineService, event *models.WorldEvent, runs int) float64 {
+	progressCount := 0
+	for i := 0; i < runs; i++ {
+		if service.shouldEventProgress(event) {
+			progressCount++
 		}
-
-		// Run multiple times to get a sense of the probability
-		progressCount := 0
-		runs := 100
-		for i := 0; i < runs; i++ {
-			if service.shouldEventProgress(event) {
-				progressCount++
-			}
-		}
-
-		// Should progress roughly 30% of the time (±15% for test stability)
-		progressRate := float64(progressCount) / float64(runs)
-		require.True(t, progressRate >= 0.15 && progressRate <= 0.45,
-			"Expected progress rate around 30%%, got %.2f%%", progressRate*100)
-	})
-
-	t.Run("major event progression", func(t *testing.T) {
-		event := &models.WorldEvent{
-			IsActive:     true,
-			IsResolved:   false,
-			Severity:     models.SeverityMajor,
-			AncientCause: false,
-		}
-
-		// Run multiple times to get a sense of the probability
-		progressCount := 0
-		runs := 100
-		for i := 0; i < runs; i++ {
-			if service.shouldEventProgress(event) {
-				progressCount++
-			}
-		}
-
-		// Should progress roughly 50% of the time (±15% for test stability)
-		progressRate := float64(progressCount) / float64(runs)
-		require.True(t, progressRate >= 0.35 && progressRate <= 0.65,
-			"Expected progress rate around 50%%, got %.2f%%", progressRate*100)
-	})
-
-	t.Run("ancient major event progression", func(t *testing.T) {
-		event := &models.WorldEvent{
-			IsActive:     true,
-			IsResolved:   false,
-			Severity:     models.SeverityMajor,
-			AncientCause: true,
-		}
-
-		// Run multiple times to get a sense of the probability
-		progressCount := 0
-		runs := 100
-		for i := 0; i < runs; i++ {
-			if service.shouldEventProgress(event) {
-				progressCount++
-			}
-		}
-
-		// Should progress roughly 70% of the time (50% + 20%) (±15% for test stability)
-		progressRate := float64(progressCount) / float64(runs)
-		require.True(t, progressRate >= 0.55 && progressRate <= 0.85,
-			"Expected progress rate around 70%%, got %.2f%%", progressRate*100)
-	})
+	}
+	return float64(progressCount) / float64(runs)
 }
 
 func TestWorldEventEngineService_determineAffectedSettlements(t *testing.T) {
@@ -844,7 +844,7 @@ func TestWorldEventEngineService_Integration(t *testing.T) {
 		mockLLM.Response = string(aiResponse)
 
 		var createdEvent *models.WorldEvent
-		mockRepo.On("CreateWorldEvent", mock.AnythingOfType("*models.WorldEvent")).Run(func(args mock.Arguments) {
+		mockRepo.On("CreateWorldEvent", mock.AnythingOfType(testTypeWorldEvent)).Run(func(args mock.Arguments) {
 			createdEvent = args.Get(0).(*models.WorldEvent)
 			createdEvent.ID = uuid.New() // Simulate DB assigning ID
 		}).Return(nil)
@@ -861,8 +861,8 @@ func TestWorldEventEngineService_Integration(t *testing.T) {
 		// Simulate progression
 		mockRepo.On("GetActiveWorldEvents", gameSessionID).Return([]*models.WorldEvent{createdEvent}, nil)
 		mockRepo.On("GetWorldEventByID", createdEvent.ID).Return(createdEvent, nil).Maybe()
-		mockRepo.On("UpdateWorldEvent", mock.AnythingOfType("*models.WorldEvent")).Return(nil).Maybe()
-		mockRepo.On("ProgressWorldEvent", mock.AnythingOfType("uuid.UUID")).Return(nil).Maybe()
+		mockRepo.On("UpdateWorldEvent", mock.AnythingOfType(testTypeWorldEvent)).Return(nil).Maybe()
+		mockRepo.On("ProgressWorldEvent", mock.AnythingOfType(testTypeUUID)).Return(nil).Maybe()
 
 		err = service.SimulateEventProgression(ctx, gameSessionID)
 		require.NoError(t, err)
@@ -895,7 +895,7 @@ func BenchmarkWorldEventEngineService_GenerateWorldEvent(b *testing.B) {
 	mockRepo.On("GetSettlementsByGameSession", gameSessionID).Return([]*models.Settlement{}, nil)
 	mockRepo.On("GetFactionsByGameSession", gameSessionID).Return([]*models.Faction{}, nil)
 	mockRepo.On("GetActiveWorldEvents", gameSessionID).Return([]*models.WorldEvent{}, nil)
-	mockRepo.On("CreateWorldEvent", mock.AnythingOfType("*models.WorldEvent")).Return(nil)
+	mockRepo.On("CreateWorldEvent", mock.AnythingOfType(testTypeWorldEvent)).Return(nil)
 
 	service := NewWorldEventEngineService(mockLLM, mockRepo, mockFaction)
 

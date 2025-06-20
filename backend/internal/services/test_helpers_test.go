@@ -10,6 +10,125 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Test constants
+const (
+	testErrCombatNotFound = "combat not found"
+)
+
+// Helper functions for StartCombat
+func validateCombatInput(sessionID string, participants []models.Combatant) error {
+	if sessionID == "" {
+		return errors.New("session ID is required")
+	}
+
+	if len(participants) < 2 {
+		return errors.New("at least two combatants are required")
+	}
+
+	// Validate participants
+	for _, p := range participants {
+		if p.ID == "" {
+			return errors.New("combatant ID is required")
+		}
+		if p.Name == "" {
+			return errors.New("combatant name is required")
+		}
+		if p.HP <= 0 {
+			return errors.New("combatant must have positive HP")
+		}
+	}
+	return nil
+}
+
+func rollInitiativeForCombatants(participants []models.Combatant) {
+	for i := range participants {
+		participants[i].Initiative = rand.Intn(20) + 1 + participants[i].InitiativeRoll
+		if participants[i].Initiative == 0 {
+			participants[i].Initiative = rand.Intn(20) + 1
+		}
+	}
+}
+
+func createTurnOrder(participants []models.Combatant) []string {
+	turnOrder := make([]string, len(participants))
+	for i, p := range participants {
+		turnOrder[i] = p.ID
+	}
+
+	// Sort turn order by initiative
+	for i := 0; i < len(turnOrder)-1; i++ {
+		for j := i + 1; j < len(turnOrder); j++ {
+			init1 := getInitiativeForCombatant(participants, turnOrder[i])
+			init2 := getInitiativeForCombatant(participants, turnOrder[j])
+			if init2 > init1 {
+				turnOrder[i], turnOrder[j] = turnOrder[j], turnOrder[i]
+			}
+		}
+	}
+	return turnOrder
+}
+
+func getInitiativeForCombatant(participants []models.Combatant, combatantID string) int {
+	for _, p := range participants {
+		if p.ID == combatantID {
+			return p.Initiative
+		}
+	}
+	return 0
+}
+
+// Helper functions for ApplyDamage
+func calculateFinalDamage(target *models.Combatant, damage int, damageType string) int {
+	// Check immunities first
+	for _, immunity := range target.DamageImmunities {
+		if immunity == damageType {
+			return 0
+		}
+	}
+
+	finalDamage := damage
+
+	// Check resistances
+	for _, resistance := range target.DamageResistances {
+		if resistance == damageType {
+			finalDamage = damage / 2
+			break
+		}
+	}
+
+	// Check vulnerabilities
+	for _, vulnerability := range target.DamageVulnerabilities {
+		if vulnerability == damageType {
+			finalDamage = damage * 2
+			break
+		}
+	}
+
+	return finalDamage
+}
+
+func applyDamageToTarget(target *models.Combatant, damage int) {
+	target.HP -= damage
+	if target.HP < 0 {
+		target.HP = 0
+	}
+}
+
+func updateUnconsciousCondition(target *models.Combatant) {
+	if target.HP == 0 {
+		hasUnconscious := false
+		for _, cond := range target.Conditions {
+			if cond == models.ConditionUnconscious {
+				hasUnconscious = true
+				break
+			}
+		}
+		if !hasUnconscious {
+			target.Conditions = append(target.Conditions, models.ConditionUnconscious)
+		}
+	}
+}
+
 // CombatService adapter for tests
 type CombatService struct {
 	combats  map[string]*TestCombat
@@ -36,58 +155,15 @@ func NewCombatService(charRepo, diceRepo, llm interface{}) *CombatService {
 
 // StartCombat initializes a new combat
 func (s *CombatService) StartCombat(ctx context.Context, sessionID string, participants []models.Combatant) (*models.Combat, error) {
-	if sessionID == "" {
-		return nil, errors.New("session ID is required")
-	}
-
-	if len(participants) < 2 {
-		return nil, errors.New("at least two combatants are required")
-	}
-
-	// Validate participants
-	for _, p := range participants {
-		if p.ID == "" {
-			return nil, errors.New("combatant ID is required")
-		}
-		if p.Name == "" {
-			return nil, errors.New("combatant name is required")
-		}
-		if p.HP <= 0 {
-			return nil, errors.New("combatant must have positive HP")
-		}
+	if err := validateCombatInput(sessionID, participants); err != nil {
+		return nil, err
 	}
 
 	// Roll initiative for each combatant
-	for i := range participants {
-		participants[i].Initiative = rand.Intn(20) + 1 + participants[i].InitiativeRoll
-		if participants[i].Initiative == 0 {
-			participants[i].Initiative = rand.Intn(20) + 1
-		}
-	}
+	rollInitiativeForCombatants(participants)
 
 	// Sort by initiative (descending)
-	turnOrder := make([]string, len(participants))
-	for i, p := range participants {
-		turnOrder[i] = p.ID
-	}
-
-	// Sort turn order by initiative
-	for i := 0; i < len(turnOrder)-1; i++ {
-		for j := i + 1; j < len(turnOrder); j++ {
-			var init1, init2 int
-			for _, p := range participants {
-				if p.ID == turnOrder[i] {
-					init1 = p.Initiative
-				}
-				if p.ID == turnOrder[j] {
-					init2 = p.Initiative
-				}
-			}
-			if init2 > init1 {
-				turnOrder[i], turnOrder[j] = turnOrder[j], turnOrder[i]
-			}
-		}
-	}
+	turnOrder := createTurnOrder(participants)
 
 	combat := &models.Combat{
 		ID:            uuid.New().String(),
@@ -126,7 +202,7 @@ func (s *CombatService) GetCombatState(_ context.Context, combatID string) (*mod
 
 	testCombat, exists := s.combats[combatID]
 	if !exists {
-		return nil, errors.New("combat not found")
+		return nil, errors.New(testErrCombatNotFound)
 	}
 
 	// Update combatants from map to slice
@@ -142,7 +218,7 @@ func (s *CombatService) GetCombatState(_ context.Context, combatID string) (*mod
 // ExecuteAction processes a combat action
 func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, action *models.CombatAction) (*models.Combat, error) {
 	if combatID == "" {
-		return nil, errors.New("combat not found")
+		return nil, errors.New(testErrCombatNotFound)
 	}
 
 	if action == nil {
@@ -151,7 +227,7 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 
 	testCombat, exists := s.combats[combatID]
 	if !exists {
-		return nil, errors.New("combat not found")
+		return nil, errors.New(testErrCombatNotFound)
 	}
 
 	combat := testCombat.Combat
@@ -254,7 +330,7 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 func (s *CombatService) EndCombat(_ context.Context, combatID string) error {
 	testCombat, exists := s.combats[combatID]
 	if !exists {
-		return errors.New("combat not found")
+		return errors.New(testErrCombatNotFound)
 	}
 
 	if !testCombat.IsActive || testCombat.Status == models.CombatStatusCompleted {
@@ -299,7 +375,7 @@ func (s *CombatService) SetCombatState(combat *models.Combat) {
 func (s *CombatService) ApplyDamage(ctx context.Context, combatID, targetID string, damage int, damageType string) (*models.Combat, error) {
 	testCombat, exists := s.combats[combatID]
 	if !exists {
-		return nil, errors.New("combat not found")
+		return nil, errors.New(testErrCombatNotFound)
 	}
 
 	target, ok := testCombat.CombatantsMap[targetID]
@@ -307,52 +383,14 @@ func (s *CombatService) ApplyDamage(ctx context.Context, combatID, targetID stri
 		return nil, errors.New("target not found in combat")
 	}
 
-	// Check resistances/immunities/vulnerabilities
-	finalDamage := damage
+	// Calculate final damage based on resistances/immunities/vulnerabilities
+	finalDamage := calculateFinalDamage(target, damage, damageType)
 
-	// Check string-based lists
-	for _, immunity := range target.DamageImmunities {
-		if immunity == damageType {
-			finalDamage = 0
-			break
-		}
-	}
+	// Apply damage and update HP
+	applyDamageToTarget(target, finalDamage)
 
-	if finalDamage > 0 {
-		for _, resistance := range target.DamageResistances {
-			if resistance == damageType {
-				finalDamage = damage / 2
-				break
-			}
-		}
-
-		for _, vulnerability := range target.DamageVulnerabilities {
-			if vulnerability == damageType {
-				finalDamage = damage * 2
-				break
-			}
-		}
-	}
-
-	// Apply damage
-	target.HP -= finalDamage
-	if target.HP < 0 {
-		target.HP = 0
-	}
-
-	// Add unconscious condition if HP drops to 0
-	if target.HP == 0 {
-		hasUnconscious := false
-		for _, cond := range target.Conditions {
-			if cond == models.ConditionUnconscious {
-				hasUnconscious = true
-				break
-			}
-		}
-		if !hasUnconscious {
-			target.Conditions = append(target.Conditions, models.ConditionUnconscious)
-		}
-	}
+	// Handle unconscious condition
+	updateUnconsciousCondition(target)
 
 	return s.GetCombatState(ctx, combatID)
 }
@@ -365,7 +403,7 @@ func (s *CombatService) ApplyHealing(ctx context.Context, combatID, targetID str
 
 	testCombat, exists := s.combats[combatID]
 	if !exists {
-		return nil, errors.New("combat not found")
+		return nil, errors.New(testErrCombatNotFound)
 	}
 
 	target, ok := testCombat.CombatantsMap[targetID]
@@ -397,7 +435,7 @@ func (s *CombatService) ApplyHealing(ctx context.Context, combatID, targetID str
 func (s *CombatService) DeathSavingThrow(ctx context.Context, combatID, characterID string) (*models.Combat, *models.DeathSaveResult, error) {
 	testCombat, exists := s.combats[combatID]
 	if !exists {
-		return nil, nil, errors.New("combat not found")
+		return nil, nil, errors.New(testErrCombatNotFound)
 	}
 
 	character, ok := testCombat.CombatantsMap[characterID]

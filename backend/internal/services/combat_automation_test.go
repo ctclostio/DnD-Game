@@ -34,6 +34,7 @@ const (
 	testErrDatabase       = "database error"
 	testMethodGetInitRule = "GetInitiativeRule"
 	testMethodCreateAuto  = "CreateAutoCombatResolution"
+	testTypeAutoCombatRes = "*models.AutoCombatResolution"
 )
 
 // Using MockCombatAnalyticsRepository from combat_analytics_test.go
@@ -95,7 +96,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 				UseResources: true,
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
-				repo.On(testMethodCreateAuto, mock.AnythingOfType("*models.AutoCombatResolution")).
+				repo.On(testMethodCreateAuto, mock.AnythingOfType(testTypeAutoCombatRes)).
 					Return(nil)
 			},
 			expectError: false,
@@ -126,7 +127,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 				UseResources: true,
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
-				repo.On(testMethodCreateAuto, mock.AnythingOfType("*models.AutoCombatResolution")).
+				repo.On(testMethodCreateAuto, mock.AnythingOfType(testTypeAutoCombatRes)).
 					Return(nil)
 			},
 			expectError: false,
@@ -147,7 +148,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 				UseResources: false,
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
-				repo.On(testMethodCreateAuto, mock.AnythingOfType("*models.AutoCombatResolution")).
+				repo.On(testMethodCreateAuto, mock.AnythingOfType(testTypeAutoCombatRes)).
 					Return(nil)
 			},
 			expectError: false,
@@ -168,7 +169,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 				},
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
-				repo.On(testMethodCreateAuto, mock.AnythingOfType("*models.AutoCombatResolution")).
+				repo.On(testMethodCreateAuto, mock.AnythingOfType(testTypeAutoCombatRes)).
 					Return(errors.New(testErrDatabase))
 			},
 			expectError: true,
@@ -637,7 +638,7 @@ func BenchmarkCombatAutomationService_AutoResolveCombat(b *testing.B) {
 	sessionID := uuid.New()
 	characters := createTestCharacters(4, 5)
 
-	mockCombatRepo.On("CreateAutoCombatResolution", mock.AnythingOfType("*models.AutoCombatResolution")).
+	mockCombatRepo.On("CreateAutoCombatResolution", mock.AnythingOfType(testTypeAutoCombatRes)).
 		Return(nil)
 
 	request := models.AutoResolveRequest{

@@ -231,36 +231,59 @@ func RunHTTPTestCases(t *testing.T, router *gin.Engine, cases []HTTPTestCase) {
 	for i := range cases {
 		tc := &cases[i]
 		t.Run(tc.Name, func(t *testing.T) {
-			if tc.Setup != nil {
-				tc.Setup()
-			}
-			if tc.Cleanup != nil {
-				defer tc.Cleanup()
-			}
-
-			client := NewHTTPTestClient(t).SetRouter(router)
-
-			if tc.Auth && tc.UserID > 0 {
-				client = client.WithUser(tc.UserID)
-			}
-
-			// Make request
-			resp := client.Request(tc.Method, tc.Path, tc.Body)
-			testResp := NewHTTPTestResponse(t, resp)
-
-			// Assert status
-			testResp.AssertStatus(tc.ExpectedStatus)
-
-			// Assert body if provided
-			if tc.ExpectedBody != nil {
-				testResp.AssertJSON(tc.ExpectedBody)
-			}
-
-			// Assert error message if provided
-			if tc.ExpectedError != "" {
-				testResp.AssertBodyContains(tc.ExpectedError)
-			}
+			runSingleHTTPTestCase(t, router, tc)
 		})
+	}
+}
+
+// runSingleHTTPTestCase runs a single HTTP test case
+func runSingleHTTPTestCase(t *testing.T, router *gin.Engine, tc *HTTPTestCase) {
+	// Setup and cleanup
+	if tc.Setup != nil {
+		tc.Setup()
+	}
+	if tc.Cleanup != nil {
+		defer tc.Cleanup()
+	}
+
+	// Create and configure client
+	client := createHTTPTestClient(t, router, tc)
+
+	// Make request and get response
+	testResp := makeHTTPTestRequest(t, client, tc)
+
+	// Assert response
+	assertHTTPTestResponse(testResp, tc)
+}
+
+// createHTTPTestClient creates and configures an HTTP test client
+func createHTTPTestClient(t *testing.T, router *gin.Engine, tc *HTTPTestCase) *HTTPTestClient {
+	client := NewHTTPTestClient(t).SetRouter(router)
+	if tc.Auth && tc.UserID > 0 {
+		client = client.WithUser(tc.UserID)
+	}
+	return client
+}
+
+// makeHTTPTestRequest makes the HTTP request and returns the test response
+func makeHTTPTestRequest(t *testing.T, client *HTTPTestClient, tc *HTTPTestCase) *HTTPTestResponse {
+	resp := client.Request(tc.Method, tc.Path, tc.Body)
+	return NewHTTPTestResponse(t, resp)
+}
+
+// assertHTTPTestResponse performs all assertions on the response
+func assertHTTPTestResponse(testResp *HTTPTestResponse, tc *HTTPTestCase) {
+	// Assert status
+	testResp.AssertStatus(tc.ExpectedStatus)
+
+	// Assert body if provided
+	if tc.ExpectedBody != nil {
+		testResp.AssertJSON(tc.ExpectedBody)
+	}
+
+	// Assert error message if provided
+	if tc.ExpectedError != "" {
+		testResp.AssertBodyContains(tc.ExpectedError)
 	}
 }
 
