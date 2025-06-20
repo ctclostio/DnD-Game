@@ -145,18 +145,11 @@ const FactionPersonalities = ({ sessionId, isDM }) => {
         <h3>Faction AI Personalities</h3>
         <div className="faction-cards">
           {factions.map(faction => (
-            <div 
+            <button 
               key={faction.id}
               className={`faction-card ${selectedFaction?.id === faction.id ? 'selected' : ''}`}
               onClick={() => setSelectedFaction(faction)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setSelectedFaction(faction);
-                }
-              }}
-              role="button"
-              tabIndex={0}
+              type="button"
               aria-pressed={selectedFaction?.id === faction.id}
               style={{ borderColor: faction.color || '#95a5a6' }}
             >
@@ -169,7 +162,7 @@ const FactionPersonalities = ({ sessionId, isDM }) => {
                 <span>Power: {faction.power || 50}</span>
                 <span>Wealth: {faction.wealth || 50}</span>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>

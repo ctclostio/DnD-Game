@@ -9,6 +9,23 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Error message constants
+const (
+	errMsgEncounterNotFound = "encounter not found: %w"
+)
+
+// CombatEventParams contains parameters for logging combat events
+type CombatEventParams struct {
+	EncounterID      string
+	Round            int
+	EventType        string
+	ActorType        string
+	ActorID          string
+	ActorName        string
+	Description      string
+	MechanicalEffect map[string]interface{}
+}
+
 type EncounterService struct {
 	repo             *database.EncounterRepository
 	encounterBuilder *AIEncounterBuilder
@@ -51,7 +68,7 @@ func (s *EncounterService) GenerateEncounter(ctx context.Context, req *Encounter
 func (s *EncounterService) GetEncounter(_ context.Context, encounterID string) (*models.Encounter, error) {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
-		return nil, fmt.Errorf("encounter not found: %w", err)
+		return nil, fmt.Errorf(errMsgEncounterNotFound, err)
 	}
 
 	// Load objectives
@@ -70,7 +87,7 @@ func (s *EncounterService) GetEncountersBySession(_ context.Context, gameSession
 func (s *EncounterService) StartEncounter(_ context.Context, encounterID string) error {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
-		return fmt.Errorf("encounter not found: %w", err)
+		return fmt.Errorf(errMsgEncounterNotFound, err)
 	}
 
 	if encounter.Status != constants.EncounterStatusPlanned {
@@ -120,7 +137,7 @@ func (s *EncounterService) CompleteEncounter(_ context.Context, encounterID stri
 func (s *EncounterService) ScaleEncounter(_ context.Context, encounterID string, newDifficulty string) (*models.Encounter, error) {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
-		return nil, fmt.Errorf("encounter not found: %w", err)
+		return nil, fmt.Errorf(errMsgEncounterNotFound, err)
 	}
 
 	if encounter.ScalingOptions == nil {
@@ -170,7 +187,7 @@ func (s *EncounterService) ScaleEncounter(_ context.Context, encounterID string,
 func (s *EncounterService) GetTacticalSuggestion(ctx context.Context, encounterID, situation string) (string, error) {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
-		return "", fmt.Errorf("encounter not found: %w", err)
+		return "", fmt.Errorf(errMsgEncounterNotFound, err)
 	}
 
 	suggestion, err := s.encounterBuilder.GenerateTacticalSuggestion(ctx, encounter, situation)
@@ -194,16 +211,16 @@ func (s *EncounterService) GetTacticalSuggestion(ctx context.Context, encounterI
 }
 
 // LogCombatEvent records an event during combat
-func (s *EncounterService) LogCombatEvent(_ context.Context, encounterID string, round int, eventType, actorType, actorID, actorName, description string, mechanicalEffect map[string]interface{}) error {
+func (s *EncounterService) LogCombatEvent(_ context.Context, params CombatEventParams) error {
 	event := &models.EncounterEvent{
-		EncounterID:      encounterID,
-		RoundNumber:      round,
-		EventType:        eventType,
-		ActorType:        actorType,
-		ActorID:          &actorID,
-		ActorName:        actorName,
-		Description:      description,
-		MechanicalEffect: mechanicalEffect,
+		EncounterID:      params.EncounterID,
+		RoundNumber:      params.Round,
+		EventType:        params.EventType,
+		ActorType:        params.ActorType,
+		ActorID:          &params.ActorID,
+		ActorName:        params.ActorName,
+		Description:      params.Description,
+		MechanicalEffect: params.MechanicalEffect,
 	}
 
 	return s.repo.CreateEvent(event)
@@ -223,7 +240,7 @@ func (s *EncounterService) UpdateEnemyStatus(_ context.Context, enemyID string, 
 func (s *EncounterService) TriggerReinforcements(_ context.Context, encounterID string, waveIndex int) error {
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
-		return fmt.Errorf("encounter not found: %w", err)
+		return fmt.Errorf(errMsgEncounterNotFound, err)
 	}
 
 	if waveIndex >= len(encounter.ReinforcementWaves) {
@@ -263,7 +280,7 @@ func (s *EncounterService) CheckObjectives(ctx context.Context, encounterID stri
 
 	encounter, err := s.repo.GetByID(encounterID)
 	if err != nil {
-		return fmt.Errorf("encounter not found: %w", err)
+		return fmt.Errorf(errMsgEncounterNotFound, err)
 	}
 
 	for _, objective := range objectives {

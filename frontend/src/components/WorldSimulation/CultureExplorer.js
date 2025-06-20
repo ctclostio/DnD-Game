@@ -325,18 +325,11 @@ const CultureExplorer = ({ sessionId, isDM }) => {
 
         <div className="culture-cards">
           {cultures.map(culture => (
-            <div 
+            <button 
               key={culture.id}
               className={`culture-card ${selectedCulture?.id === culture.id ? 'selected' : ''}`}
               onClick={() => setSelectedCulture(culture)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setSelectedCulture(culture);
-                }
-              }}
-              role="button"
-              tabIndex={0}
+              type="button"
               aria-pressed={selectedCulture?.id === culture.id}
             >
               <div className="culture-icon">
@@ -353,7 +346,7 @@ const CultureExplorer = ({ sessionId, isDM }) => {
                     </span>
                   ))}
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>

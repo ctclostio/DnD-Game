@@ -242,14 +242,16 @@ func (h *Handlers) LogEncounterEvent(w http.ResponseWriter, r *http.Request) {
 
 	err := h.encounterService.LogCombatEvent(
 		r.Context(),
-		encounterID,
-		req.Round,
-		req.EventType,
-		req.ActorType,
-		req.ActorID,
-		req.ActorName,
-		req.Description,
-		req.MechanicalEffect,
+		services.CombatEventParams{
+			EncounterID:      encounterID,
+			Round:            req.Round,
+			EventType:        req.EventType,
+			ActorType:        req.ActorType,
+			ActorID:          req.ActorID,
+			ActorName:        req.ActorName,
+			Description:      req.Description,
+			MechanicalEffect: req.MechanicalEffect,
+		},
 	)
 
 	if err != nil {

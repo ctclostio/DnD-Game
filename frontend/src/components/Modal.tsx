@@ -68,30 +68,44 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (closeOnOverlayClick && e.target === e.currentTarget) {
+    if (closeOnOverlayClick && (e.target as HTMLElement).dataset.overlay === 'true') {
       onClose();
     }
   };
 
+  // Add overlay click handler after mount
+  useEffect(() => {
+    if (!isOpen || !closeOnOverlayClick) return;
+
+    const handleClick = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).dataset.overlay === 'true') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [isOpen, closeOnOverlayClick, onClose]);
+
   const modalContent = (
     <div 
       className={`modal-overlay ${settings.reduceMotion ? 'no-animation' : ''}`}
-      onClick={handleOverlayClick}
-      onKeyDown={(e) => {
-        if (closeOnOverlayClick && e.key === 'Escape') {
-          onClose();
-        }
-      }}
-      role="dialog"
-      aria-modal="true"
-      tabIndex={-1}
+      data-overlay="true"
     >
       <div
         ref={modalRef}
         className={`modal modal-${size} ${className}`}
         role={role}
+        aria-modal="true"
         aria-labelledby="modal-title"
         aria-describedby={ariaDescribedBy}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (closeOnOverlayClick && e.key === 'Escape') {
+            onClose();
+          }
+        }}
+        tabIndex={-1}
       >
         <div className="modal-header">
           <h2 id="modal-title" className="modal-title">{title}</h2>
