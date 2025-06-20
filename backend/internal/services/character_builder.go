@@ -110,79 +110,136 @@ func (cb *CharacterBuilder) GetAvailableOptions() (map[string]interface{}, error
 }
 
 func (cb *CharacterBuilder) BuildCharacter(params map[string]interface{}) (*models.Character, error) {
-	// Extract parameters
-	race, _ := params["race"].(string)
-	customRaceID, _ := params["customRaceId"].(string)
-	customRaceStats, hasCustomRace := params["customRaceStats"].(map[string]interface{})
-	subrace, _ := params["subrace"].(string)
-	class := params["class"].(string)
-	background := params["background"].(string)
-	name := params["name"].(string)
-	alignment := params["alignment"].(string)
-	abilityScores := params["abilityScores"].(map[string]int)
+	// Extract and validate parameters
+	buildParams, err := cb.extractBuildParameters(params)
+	if err != nil {
+		return nil, err
+	}
 
-	// Create character
-	character := &models.Character{
-		Name:       name,
-		Race:       race,
-		Subrace:    subrace,
-		Class:      class,
-		Background: background,
-		Alignment:  alignment,
+	// Create base character
+	character := cb.createBaseCharacter(buildParams)
+
+	// Load character data (race, class, background)
+	characterData, err := cb.loadCharacterData(buildParams, character)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build the complete character
+	cb.assembleCharacter(character, characterData, buildParams)
+
+	return character, nil
+}
+
+type buildParameters struct {
+	race            string
+	customRaceID    string
+	customRaceStats map[string]interface{}
+	hasCustomRace   bool
+	subrace         string
+	class           string
+	background      string
+	name            string
+	alignment       string
+	abilityScores   map[string]int
+}
+
+type characterData struct {
+	raceData       *RaceData
+	classData      *ClassData
+	backgroundData *BackgroundData
+}
+
+func (cb *CharacterBuilder) extractBuildParameters(params map[string]interface{}) (*buildParameters, error) {
+	bp := &buildParameters{}
+	
+	bp.race, _ = params["race"].(string)
+	bp.customRaceID, _ = params["customRaceId"].(string)
+	bp.customRaceStats, bp.hasCustomRace = params["customRaceStats"].(map[string]interface{})
+	bp.subrace, _ = params["subrace"].(string)
+	bp.class, _ = params["class"].(string)
+	bp.background, _ = params["background"].(string)
+	bp.name, _ = params["name"].(string)
+	bp.alignment, _ = params["alignment"].(string)
+	bp.abilityScores, _ = params["abilityScores"].(map[string]int)
+	
+	// Basic validation
+	if bp.name == "" {
+		return nil, errors.New("character name is required")
+	}
+	if bp.class == "" {
+		return nil, errors.New("character class is required")
+	}
+	
+	return bp, nil
+}
+
+func (cb *CharacterBuilder) createBaseCharacter(params *buildParameters) *models.Character {
+	return &models.Character{
+		Name:       params.name,
+		Race:       params.race,
+		Subrace:    params.subrace,
+		Class:      params.class,
+		Background: params.background,
+		Alignment:  params.alignment,
 		Level:      1,
 	}
+}
 
-	// Handle custom race vs standard race
-	var raceData *RaceData
+func (cb *CharacterBuilder) loadCharacterData(params *buildParameters, character *models.Character) (*characterData, error) {
+	data := &characterData{}
 	var err error
 
-	if hasCustomRace && customRaceID != "" {
+	// Load race data
+	data.raceData, err = cb.loadRaceDataWithCustom(params, character)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load class data
+	data.classData, err = cb.loadClassData(params.class)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load background data
+	data.backgroundData, err = cb.loadBackgroundData(params.background)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func (cb *CharacterBuilder) loadRaceDataWithCustom(params *buildParameters, character *models.Character) (*RaceData, error) {
+	if params.hasCustomRace && params.customRaceID != "" {
 		// Use custom race data
-		character.Race = customRaceStats["name"].(string)
-		character.CustomRaceID = &customRaceID
-		raceData = cb.convertCustomRaceToRaceData(customRaceStats)
-	} else {
-		// Load standard race data
-		raceData, err = cb.loadRaceData(race)
-		if err != nil {
-			return nil, err
-		}
+		character.Race = params.customRaceStats["name"].(string)
+		character.CustomRaceID = &params.customRaceID
+		return cb.convertCustomRaceToRaceData(params.customRaceStats), nil
 	}
+	
+	// Load standard race data
+	return cb.loadRaceData(params.race)
+}
 
-	classData, err := cb.loadClassData(class)
-	if err != nil {
-		return nil, err
-	}
-
-	backgroundData, err := cb.loadBackgroundData(background)
-	if err != nil {
-		return nil, err
-	}
-
+func (cb *CharacterBuilder) assembleCharacter(character *models.Character, data *characterData, params *buildParameters) {
 	// Apply ability scores and racial modifiers
-	character.Attributes = cb.calculateFinalAbilityScores(abilityScores, raceData, subrace)
+	character.Attributes = cb.calculateFinalAbilityScores(params.abilityScores, data.raceData, params.subrace)
 
 	// Calculate derived stats
 	character.ProficiencyBonus = cb.calculateProficiencyBonus(character.Level)
 	character.Initiative = cb.calculateModifier(character.Attributes.Dexterity)
-	character.Speed = raceData.Speed
+	character.Speed = data.raceData.Speed
 
-	// Apply class features
-	cb.applyClassFeatures(character, classData)
+	// Apply features
+	cb.applyClassFeatures(character, data.classData)
+	cb.applyRacialFeatures(character, data.raceData, params.subrace)
+	cb.applyBackground(character, data.backgroundData)
 
-	// Apply racial features
-	cb.applyRacialFeatures(character, raceData, subrace)
-
-	// Apply background
-	cb.applyBackground(character, backgroundData)
-
-	// Calculate saving throws
-	character.SavingThrows = cb.calculateSavingThrows(character, classData)
-
-	// Calculate skills
+	// Calculate final stats
+	character.SavingThrows = cb.calculateSavingThrows(character, data.classData)
 	character.Skills = cb.calculateSkills(character)
-
-	return character, nil
 }
 
 func (cb *CharacterBuilder) RollAbilityScores(method string) (map[string]int, error) {
@@ -266,49 +323,28 @@ func (cb *CharacterBuilder) calculateSavingThrows(character *models.Character, c
 	saves := models.SavingThrows{}
 	profBonus := character.ProficiencyBonus
 
-	// Strength
-	saves.Strength.Modifier = cb.calculateModifier(character.Attributes.Strength)
-	saves.Strength.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Strength")
-	if saves.Strength.Proficiency {
-		saves.Strength.Modifier += profBonus
-	}
-
-	// Dexterity
-	saves.Dexterity.Modifier = cb.calculateModifier(character.Attributes.Dexterity)
-	saves.Dexterity.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Dexterity")
-	if saves.Dexterity.Proficiency {
-		saves.Dexterity.Modifier += profBonus
-	}
-
-	// Constitution
-	saves.Constitution.Modifier = cb.calculateModifier(character.Attributes.Constitution)
-	saves.Constitution.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Constitution")
-	if saves.Constitution.Proficiency {
-		saves.Constitution.Modifier += profBonus
-	}
-
-	// Intelligence
-	saves.Intelligence.Modifier = cb.calculateModifier(character.Attributes.Intelligence)
-	saves.Intelligence.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Intelligence")
-	if saves.Intelligence.Proficiency {
-		saves.Intelligence.Modifier += profBonus
-	}
-
-	// Wisdom
-	saves.Wisdom.Modifier = cb.calculateModifier(character.Attributes.Wisdom)
-	saves.Wisdom.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Wisdom")
-	if saves.Wisdom.Proficiency {
-		saves.Wisdom.Modifier += profBonus
-	}
-
-	// Charisma
-	saves.Charisma.Modifier = cb.calculateModifier(character.Attributes.Charisma)
-	saves.Charisma.Proficiency = cb.contains(classData.SavingThrowProficiencies, "Charisma")
-	if saves.Charisma.Proficiency {
-		saves.Charisma.Modifier += profBonus
-	}
+	// Calculate each saving throw
+	saves.Strength = cb.calculateSingleSavingThrow(character.Attributes.Strength, "Strength", classData.SavingThrowProficiencies, profBonus)
+	saves.Dexterity = cb.calculateSingleSavingThrow(character.Attributes.Dexterity, "Dexterity", classData.SavingThrowProficiencies, profBonus)
+	saves.Constitution = cb.calculateSingleSavingThrow(character.Attributes.Constitution, "Constitution", classData.SavingThrowProficiencies, profBonus)
+	saves.Intelligence = cb.calculateSingleSavingThrow(character.Attributes.Intelligence, "Intelligence", classData.SavingThrowProficiencies, profBonus)
+	saves.Wisdom = cb.calculateSingleSavingThrow(character.Attributes.Wisdom, "Wisdom", classData.SavingThrowProficiencies, profBonus)
+	saves.Charisma = cb.calculateSingleSavingThrow(character.Attributes.Charisma, "Charisma", classData.SavingThrowProficiencies, profBonus)
 
 	return saves
+}
+
+func (cb *CharacterBuilder) calculateSingleSavingThrow(abilityScore int, abilityName string, proficiencies []string, profBonus int) models.SavingThrow {
+	save := models.SavingThrow{
+		Modifier:    cb.calculateModifier(abilityScore),
+		Proficiency: cb.contains(proficiencies, abilityName),
+	}
+	
+	if save.Proficiency {
+		save.Modifier += profBonus
+	}
+	
+	return save
 }
 
 func (cb *CharacterBuilder) calculateSkills(_ *models.Character) []models.Skill {
@@ -318,55 +354,89 @@ func (cb *CharacterBuilder) calculateSkills(_ *models.Character) []models.Skill 
 }
 
 func (cb *CharacterBuilder) applyClassFeatures(character *models.Character, classData *ClassData) {
-	// Parse hit dice
-	character.HitDice = classData.HitDice
-
-	// Calculate HP (max at level 1)
-	var baseHP int
-	switch classData.HitDice {
-	case "1d6":
-		baseHP = 6
-	case "1d8":
-		baseHP = 8
-	case "1d10":
-		baseHP = 10
-	case "1d12":
-		baseHP = 12
-	}
-	character.MaxHitPoints = baseHP + cb.calculateModifier(character.Attributes.Constitution)
-	character.HitPoints = character.MaxHitPoints
+	// Apply hit dice and calculate HP
+	cb.applyHitDiceAndHP(character, classData)
 
 	// Initialize spell slots for spellcasting classes
 	if len(classData.Spellcasting) > 0 {
-		// Extract spellcasting ability
-		if ability, ok := classData.Spellcasting["ability"].(string); ok {
-			character.Spells.SpellcastingAbility = ability
-
-			// Calculate spell save DC and attack bonus
-			abilityMod := cb.getAbilityModifier(character, ability)
-			character.Spells.SpellSaveDC = 8 + character.ProficiencyBonus + abilityMod
-			character.Spells.SpellAttackBonus = character.ProficiencyBonus + abilityMod
-		}
-
-		// Initialize spell slots directly
-		character.Spells.SpellSlots = InitializeSpellSlots(character.Class, character.Level)
-
-		// Set cantrips known if applicable
-		if cantripsKnown, ok := classData.Spellcasting["cantripsKnown"].([]interface{}); ok {
-			for _, levelData := range cantripsKnown {
-				if levelMap, ok := levelData.(map[string]interface{}); ok {
-					if level, ok := levelMap["level"].(float64); ok && int(level) == character.Level {
-						if known, ok := levelMap["known"].(float64); ok {
-							character.Spells.CantripsKnown = int(known)
-							break
-						}
-					}
-				}
-			}
-		}
+		cb.applySpellcastingFeatures(character, classData)
 	}
 
 	// TODO: Apply other class features based on level
+}
+
+func (cb *CharacterBuilder) applyHitDiceAndHP(character *models.Character, classData *ClassData) {
+	character.HitDice = classData.HitDice
+	
+	baseHP := cb.getBaseHPFromHitDice(classData.HitDice)
+	character.MaxHitPoints = baseHP + cb.calculateModifier(character.Attributes.Constitution)
+	character.HitPoints = character.MaxHitPoints
+}
+
+func (cb *CharacterBuilder) getBaseHPFromHitDice(hitDice string) int {
+	switch hitDice {
+	case "1d6":
+		return 6
+	case "1d8":
+		return 8
+	case "1d10":
+		return 10
+	case "1d12":
+		return 12
+	default:
+		return 8 // Default to d8 if unknown
+	}
+}
+
+func (cb *CharacterBuilder) applySpellcastingFeatures(character *models.Character, classData *ClassData) {
+	// Extract spellcasting ability
+	if ability, ok := classData.Spellcasting["ability"].(string); ok {
+		character.Spells.SpellcastingAbility = ability
+
+		// Calculate spell save DC and attack bonus
+		abilityMod := cb.getAbilityModifier(character, ability)
+		character.Spells.SpellSaveDC = 8 + character.ProficiencyBonus + abilityMod
+		character.Spells.SpellAttackBonus = character.ProficiencyBonus + abilityMod
+	}
+
+	// Initialize spell slots directly
+	character.Spells.SpellSlots = InitializeSpellSlots(character.Class, character.Level)
+
+	// Set cantrips known if applicable
+	cb.applyCantripsKnown(character, classData)
+}
+
+func (cb *CharacterBuilder) applyCantripsKnown(character *models.Character, classData *ClassData) {
+	cantripsKnown, ok := classData.Spellcasting["cantripsKnown"].([]interface{})
+	if !ok {
+		return
+	}
+
+	for _, levelData := range cantripsKnown {
+		if cb.extractCantripsForLevel(character, levelData) {
+			break
+		}
+	}
+}
+
+func (cb *CharacterBuilder) extractCantripsForLevel(character *models.Character, levelData interface{}) bool {
+	levelMap, ok := levelData.(map[string]interface{})
+	if !ok {
+		return false
+	}
+
+	level, ok := levelMap["level"].(float64)
+	if !ok || int(level) != character.Level {
+		return false
+	}
+
+	known, ok := levelMap["known"].(float64)
+	if ok {
+		character.Spells.CantripsKnown = int(known)
+		return true
+	}
+
+	return false
 }
 
 func (cb *CharacterBuilder) applyRacialFeatures(character *models.Character, raceData *RaceData, _ string) {

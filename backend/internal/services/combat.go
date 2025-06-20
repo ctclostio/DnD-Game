@@ -10,6 +10,14 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Error messages
+const (
+	errCombatNotFound    = "combat not found"
+	errActorNotFound     = "actor not found"
+	errTargetNotFound    = "target not found"
+	errCombatantNotFound = "combatant not found"
+)
+
 type CombatService struct {
 	engine  *game.CombatEngine
 	combats map[string]*models.Combat // In-memory storage for active combats
@@ -35,7 +43,7 @@ func (s *CombatService) StartCombat(_ context.Context, gameSessionID string, com
 func (s *CombatService) GetCombat(_ context.Context, combatID string) (*models.Combat, error) {
 	combat, exists := s.combats[combatID]
 	if !exists {
-		return nil, fmt.Errorf("combat not found")
+		return nil, fmt.Errorf(errCombatNotFound)
 	}
 	return combat, nil
 }
@@ -70,87 +78,94 @@ func (s *CombatService) ProcessAction(ctx context.Context, combatID string, requ
 	}
 
 	// Find actor
-	var actor *models.Combatant
-	for i := range combat.Combatants {
-		if combat.Combatants[i].ID == request.ActorID {
-			actor = &combat.Combatants[i]
-			break
-		}
-	}
+	actor := s.findCombatant(combat, request.ActorID)
 	if actor == nil {
-		return nil, fmt.Errorf("actor not found")
+		return nil, fmt.Errorf(errActorNotFound)
 	}
 
 	// Create action record
-	action := &models.CombatAction{
-		ID:          uuid.New().String(),
-		CombatID:    combatID,
-		Round:       combat.Round,
-		ActorID:     request.ActorID,
-		ActionType:  request.Action,
-		TargetID:    request.TargetID,
-		Description: request.Description,
-	}
+	action := s.createCombatAction(combatID, combat.Round, request)
 
-	// Process based on action type
-	switch request.Action {
-	case models.ActionTypeAttack:
-		err = s.processAttack(combat, actor, request, action)
-	case models.ActionTypeMove:
-		err = s.processMovement(combat, actor, request, action)
-	case models.ActionTypeDeathSave:
-		err = s.processDeathSave(combat, actor, action)
-	case models.ActionTypeDash:
-		err = s.processDash(combat, actor, action)
-	case models.ActionTypeDodge:
-		err = s.processDodge(combat, actor, action)
-	case models.ActionTypeEndTurn:
-		// End turn just creates the action, turn will advance below
-		action.Description = fmt.Sprintf("%s ends their turn", actor.Name)
-	case models.ActionTypeCast, models.ActionTypeCastSpell:
-		// TODO: Implement spell casting
-		err = fmt.Errorf("spell casting not yet implemented")
-	case models.ActionTypeHelp:
-		// TODO: Implement help action
-		err = fmt.Errorf("help action not yet implemented")
-	case models.ActionTypeHide:
-		// TODO: Implement hide action
-		err = fmt.Errorf("hide action not yet implemented")
-	case models.ActionTypeReady:
-		// TODO: Implement ready action
-		err = fmt.Errorf("ready action not yet implemented")
-	case models.ActionTypeSearch:
-		// TODO: Implement search action
-		err = fmt.Errorf("search action not yet implemented")
-	case models.ActionTypeUseItem:
-		// TODO: Implement use item action
-		err = fmt.Errorf("use item action not yet implemented")
-	case models.ActionTypeBonusAction:
-		// TODO: Implement bonus action
-		err = fmt.Errorf("bonus action not yet implemented")
-	case models.ActionTypeReaction:
-		// TODO: Implement reaction
-		err = fmt.Errorf("reaction not yet implemented")
-	case models.ActionTypeConcentration:
-		// TODO: Implement concentration check
-		err = fmt.Errorf("concentration check not yet implemented")
-	case models.ActionTypeSavingThrow:
-		// TODO: Implement saving throw
-		err = fmt.Errorf("saving throw not yet implemented")
-	default:
-		err = fmt.Errorf("unsupported action type: %s", request.Action)
-	}
-
+	// Process the action
+	err = s.executeAction(combat, actor, request, action)
 	if err != nil {
 		return nil, err
 	}
 
 	// Auto-advance turn after most actions (except reactions and some special cases)
-	if request.Action != models.ActionTypeReaction && request.Action != models.ActionTypeConcentration {
+	if s.shouldAdvanceTurn(request.Action) {
 		s.engine.NextTurn(combat)
 	}
 
 	return action, nil
+}
+
+func (s *CombatService) findCombatant(combat *models.Combat, combatantID string) *models.Combatant {
+	for i := range combat.Combatants {
+		if combat.Combatants[i].ID == combatantID {
+			return &combat.Combatants[i]
+		}
+	}
+	return nil
+}
+
+func (s *CombatService) createCombatAction(combatID string, round int, request models.CombatRequest) *models.CombatAction {
+	return &models.CombatAction{
+		ID:          uuid.New().String(),
+		CombatID:    combatID,
+		Round:       round,
+		ActorID:     request.ActorID,
+		ActionType:  request.Action,
+		TargetID:    request.TargetID,
+		Description: request.Description,
+	}
+}
+
+func (s *CombatService) shouldAdvanceTurn(actionType models.ActionType) bool {
+	return actionType != models.ActionTypeReaction && actionType != models.ActionTypeConcentration
+}
+
+func (s *CombatService) executeAction(combat *models.Combat, actor *models.Combatant, request models.CombatRequest, action *models.CombatAction) error {
+	// Handle implemented actions
+	switch request.Action {
+	case models.ActionTypeAttack:
+		return s.processAttack(combat, actor, request, action)
+	case models.ActionTypeMove:
+		return s.processMovement(combat, actor, request, action)
+	case models.ActionTypeDeathSave:
+		return s.processDeathSave(combat, actor, action)
+	case models.ActionTypeDash:
+		return s.processDash(combat, actor, action)
+	case models.ActionTypeDodge:
+		return s.processDodge(combat, actor, action)
+	case models.ActionTypeEndTurn:
+		action.Description = fmt.Sprintf("%s ends their turn", actor.Name)
+		return nil
+	default:
+		return s.handleUnimplementedAction(request.Action)
+	}
+}
+
+func (s *CombatService) handleUnimplementedAction(actionType models.ActionType) error {
+	unimplementedActions := map[models.ActionType]string{
+		models.ActionTypeCast:          "spell casting",
+		models.ActionTypeCastSpell:     "spell casting",
+		models.ActionTypeHelp:          "help action",
+		models.ActionTypeHide:          "hide action",
+		models.ActionTypeReady:         "ready action",
+		models.ActionTypeSearch:        "search action",
+		models.ActionTypeUseItem:       "use item action",
+		models.ActionTypeBonusAction:   "bonus action",
+		models.ActionTypeReaction:      "reaction",
+		models.ActionTypeConcentration: "concentration check",
+		models.ActionTypeSavingThrow:   "saving throw",
+	}
+
+	if actionName, ok := unimplementedActions[actionType]; ok {
+		return fmt.Errorf("%s not yet implemented", actionName)
+	}
+	
+	return fmt.Errorf("unsupported action type: %s", actionType)
 }
 
 func (s *CombatService) processAttack(combat *models.Combat, actor *models.Combatant, request models.CombatRequest, action *models.CombatAction) error {
@@ -160,59 +175,69 @@ func (s *CombatService) processAttack(combat *models.Combat, actor *models.Comba
 	}
 
 	// Find target
-	var target *models.Combatant
-	for i := range combat.Combatants {
-		if combat.Combatants[i].ID == request.TargetID {
-			target = &combat.Combatants[i]
-			break
-		}
-	}
+	target := s.findCombatant(combat, request.TargetID)
 	if target == nil {
-		return fmt.Errorf("target not found")
+		return fmt.Errorf(errTargetNotFound)
 	}
-
-	// Determine advantage/disadvantage
-	hasAdvantage := request.Advantage || s.engine.AttacksHaveAdvantage(target)
-	hasDisadvantage := request.Disadvantage || s.engine.HasAttackDisadvantage(actor)
 
 	// Make attack roll
-	attackRoll, err := s.engine.AttackRoll(actor.AttackBonus, hasAdvantage, hasDisadvantage)
+	attackRoll, err := s.performAttackRoll(actor, target, request)
 	if err != nil {
 		return err
 	}
 	action.Rolls = append(action.Rolls, *attackRoll)
 
-	// Check if hit
-	if attackRoll.Result >= target.AC || attackRoll.Critical {
-		// Roll damage (example with 1d8+3 damage)
-		damageRoll, damage, err := s.engine.DamageRoll("1d8", 3, models.DamageTypeSlashing, attackRoll.Critical)
-		if err != nil {
-			return err
-		}
-		action.Rolls = append(action.Rolls, *damageRoll)
-		action.Damage = damage
+	// Process hit or miss
+	if s.isHit(attackRoll, target) {
+		return s.processHit(actor, target, attackRoll, action)
+	}
+	
+	action.Description = fmt.Sprintf("%s misses %s", actor.Name, target.Name)
+	return nil
+}
 
-		// Apply damage
-		totalDamage := s.engine.ApplyDamage(target, damage)
+func (s *CombatService) performAttackRoll(actor, target *models.Combatant, request models.CombatRequest) (*models.Roll, error) {
+	hasAdvantage := request.Advantage || s.engine.AttacksHaveAdvantage(target)
+	hasDisadvantage := request.Disadvantage || s.engine.HasAttackDisadvantage(actor)
+	return s.engine.AttackRoll(actor.AttackBonus, hasAdvantage, hasDisadvantage)
+}
 
-		// Check for concentration
-		if target.IsConcentrating && totalDamage > 0 {
-			concRoll, success, err := s.engine.ConcentrationCheck(target, totalDamage)
-			if err == nil {
-				action.Rolls = append(action.Rolls, *concRoll)
-				if !success {
-					s.engine.BreakConcentration(target)
-					action.Effects = append(action.Effects, "Concentration broken")
-				}
-			}
-		}
+func (s *CombatService) isHit(attackRoll *models.Roll, target *models.Combatant) bool {
+	return attackRoll.Result >= target.AC || attackRoll.Critical
+}
 
-		action.Description = fmt.Sprintf("%s hits %s for %d damage", actor.Name, target.Name, totalDamage)
-	} else {
-		action.Description = fmt.Sprintf("%s misses %s", actor.Name, target.Name)
+func (s *CombatService) processHit(actor, target *models.Combatant, attackRoll *models.Roll, action *models.CombatAction) error {
+	// Roll damage (example with 1d8+3 damage)
+	damageRoll, damage, err := s.engine.DamageRoll("1d8", 3, models.DamageTypeSlashing, attackRoll.Critical)
+	if err != nil {
+		return err
+	}
+	action.Rolls = append(action.Rolls, *damageRoll)
+	action.Damage = damage
+
+	// Apply damage
+	totalDamage := s.engine.ApplyDamage(target, damage)
+
+	// Check for concentration if applicable
+	if target.IsConcentrating && totalDamage > 0 {
+		s.checkConcentration(target, totalDamage, action)
 	}
 
+	action.Description = fmt.Sprintf("%s hits %s for %d damage", actor.Name, target.Name, totalDamage)
 	return nil
+}
+
+func (s *CombatService) checkConcentration(target *models.Combatant, damage int, action *models.CombatAction) {
+	concRoll, success, err := s.engine.ConcentrationCheck(target, damage)
+	if err != nil {
+		return
+	}
+	
+	action.Rolls = append(action.Rolls, *concRoll)
+	if !success {
+		s.engine.BreakConcentration(target)
+		action.Effects = append(action.Effects, "Concentration broken")
+	}
 }
 
 func (s *CombatService) processMovement(_ *models.Combat, actor *models.Combatant, request models.CombatRequest, action *models.CombatAction) error {
@@ -298,7 +323,7 @@ func (s *CombatService) MakeSavingThrow(ctx context.Context, combatID, combatant
 		}
 	}
 	if combatant == nil {
-		return nil, false, fmt.Errorf("combatant not found")
+		return nil, false, fmt.Errorf(errCombatantNotFound)
 	}
 
 	return s.engine.SavingThrow(combatant, ability, dc, advantage, disadvantage)
@@ -318,7 +343,7 @@ func (s *CombatService) ApplyDamage(ctx context.Context, combatID, combatantID s
 		}
 	}
 	if combatant == nil {
-		return 0, fmt.Errorf("combatant not found")
+		return 0, fmt.Errorf(errCombatantNotFound)
 	}
 
 	return s.engine.ApplyDamage(combatant, damage), nil
@@ -338,7 +363,7 @@ func (s *CombatService) HealCombatant(ctx context.Context, combatID, combatantID
 		}
 	}
 	if combatant == nil {
-		return fmt.Errorf("combatant not found")
+		return fmt.Errorf(errCombatantNotFound)
 	}
 
 	// Heal cannot exceed max HP

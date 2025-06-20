@@ -14,6 +14,18 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
+// Test constants
+const (
+	testUserID      = "user-123"
+	testCharacterID = "char-123"
+	testCharName    = "Aragorn"
+	testCharRace    = "Human"
+	testCharClass   = "Ranger"
+
+	errDatabaseError    = "database error"
+	errCharacterNotFound = "character not found"
+)
+
 func TestCharacterService_CreateCharacter(t *testing.T) {
 	ctx := context.Background()
 
@@ -27,10 +39,10 @@ func TestCharacterService_CreateCharacter(t *testing.T) {
 		{
 			name: "successful character creation",
 			character: &models.Character{
-				UserID: "user-123",
-				Name:   "Aragorn",
-				Race:   "Human",
-				Class:  "Ranger",
+				UserID: testUserID,
+				Name:   testCharName,
+				Race:   testCharRace,
+				Class:  testCharClass,
 				Attributes: models.Attributes{
 					Strength:     16,
 					Dexterity:    14,
@@ -58,51 +70,51 @@ func TestCharacterService_CreateCharacter(t *testing.T) {
 		{
 			name: "missing user ID",
 			character: &models.Character{
-				Name:  "Aragorn",
-				Race:  "Human",
-				Class: "Ranger",
+				Name:  testCharName,
+				Race:  testCharRace,
+				Class: testCharClass,
 			},
 			expectedError: "user ID is required",
 		},
 		{
 			name: "missing character name",
 			character: &models.Character{
-				UserID: "user-123",
-				Race:   "Human",
-				Class:  "Ranger",
+				UserID: testUserID,
+				Race:   testCharRace,
+				Class:  testCharClass,
 			},
 			expectedError: "character name is required",
 		},
 		{
 			name: "missing race",
 			character: &models.Character{
-				UserID: "user-123",
-				Name:   "Aragorn",
-				Class:  "Ranger",
+				UserID: testUserID,
+				Name:   testCharName,
+				Class:  testCharClass,
 			},
 			expectedError: "character race is required",
 		},
 		{
 			name: "missing class",
 			character: &models.Character{
-				UserID: "user-123",
-				Name:   "Aragorn",
-				Race:   "Human",
+				UserID: testUserID,
+				Name:   testCharName,
+				Race:   testCharRace,
 			},
 			expectedError: "character class is required",
 		},
 		{
 			name: "repository error",
 			character: &models.Character{
-				UserID: "user-123",
-				Name:   "Aragorn",
-				Race:   "Human",
-				Class:  "Ranger",
+				UserID: testUserID,
+				Name:   testCharName,
+				Race:   testCharRace,
+				Class:  testCharClass,
 			},
 			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {
-				charRepo.On("Create", ctx, mock.Anything).Return(errors.New("database error"))
+				charRepo.On("Create", ctx, mock.Anything).Return(errors.New(errDatabaseError))
 			},
-			expectedError: "database error",
+			expectedError: errDatabaseError,
 		},
 	}
 
@@ -146,33 +158,33 @@ func TestCharacterService_GetCharacterByID(t *testing.T) {
 	}{
 		{
 			name:        "successful get character",
-			characterID: "char-123",
+			characterID: testCharacterID,
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				char := mocks.CreateTestCharacter("char-123", "user-123", "Aragorn", "Human", "Ranger")
-				m.On("GetByID", ctx, "char-123").Return(char, nil)
+				char := mocks.CreateTestCharacter(testCharacterID, testUserID, testCharName, testCharRace, testCharClass)
+				m.On("GetByID", ctx, testCharacterID).Return(char, nil)
 			},
 			validate: func(t *testing.T, char *models.Character) {
-				assert.Equal(t, "char-123", char.ID)
-				assert.Equal(t, "Aragorn", char.Name)
-				assert.Equal(t, "Human", char.Race)
-				assert.Equal(t, "Ranger", char.Class)
+				assert.Equal(t, testCharacterID, char.ID)
+				assert.Equal(t, testCharName, char.Name)
+				assert.Equal(t, testCharRace, char.Race)
+				assert.Equal(t, testCharClass, char.Class)
 			},
 		},
 		{
 			name:        "character not found",
 			characterID: "nonexistent",
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("character not found"))
+				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(errCharacterNotFound))
 			},
-			expectedError: "character not found",
+			expectedError: errCharacterNotFound,
 		},
 		{
 			name:        "repository error",
-			characterID: "char-123",
+			characterID: testCharacterID,
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				m.On("GetByID", ctx, "char-123").Return(nil, errors.New("database error"))
+				m.On("GetByID", ctx, testCharacterID).Return(nil, errors.New(errDatabaseError))
 			},
-			expectedError: "database error",
+			expectedError: errDatabaseError,
 		},
 	}
 
@@ -216,14 +228,14 @@ func TestCharacterService_UpdateCharacter(t *testing.T) {
 		{
 			name: "successful update with partial data",
 			update: &models.Character{
-				ID:    "char-123",
+				ID:    testCharacterID,
 				Name:  "Strider", // Only updating name
 				Level: 2,         // And level
 			},
 			setupMock: func(m *mocks.MockCharacterRepository) {
 				// Get existing character
-				existing := mocks.CreateTestCharacter("char-123", "user-123", "Aragorn", "Human", "Ranger")
-				m.On("GetByID", ctx, "char-123").Return(existing, nil)
+				existing := mocks.CreateTestCharacter(testCharacterID, testUserID, testCharName, testCharRace, testCharClass)
+				m.On("GetByID", ctx, testCharacterID).Return(existing, nil)
 
 				// Update with merged data - using mock.Anything to avoid complex matching
 				m.On("Update", ctx, mock.Anything).Return(nil)
@@ -232,7 +244,7 @@ func TestCharacterService_UpdateCharacter(t *testing.T) {
 		{
 			name: "update attributes",
 			update: &models.Character{
-				ID: "char-123",
+				ID: testCharacterID,
 				Attributes: models.Attributes{
 					Strength:     18, // Only strength changed
 					Dexterity:    14,
@@ -243,8 +255,8 @@ func TestCharacterService_UpdateCharacter(t *testing.T) {
 				},
 			},
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				existing := mocks.CreateTestCharacter("char-123", "user-123", "Aragorn", "Human", "Ranger")
-				m.On("GetByID", ctx, "char-123").Return(existing, nil)
+				existing := mocks.CreateTestCharacter(testCharacterID, testUserID, testCharName, testCharRace, testCharClass)
+				m.On("GetByID", ctx, testCharacterID).Return(existing, nil)
 				m.On("Update", ctx, mock.Anything).Return(nil)
 			},
 		},
@@ -262,9 +274,9 @@ func TestCharacterService_UpdateCharacter(t *testing.T) {
 				Name: "Strider",
 			},
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("character not found"))
+				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(errCharacterNotFound))
 			},
-			expectedError: "character not found",
+			expectedError: errCharacterNotFound,
 		},
 	}
 
@@ -301,26 +313,26 @@ func TestCharacterService_DeleteCharacter(t *testing.T) {
 	}{
 		{
 			name:        "successful deletion",
-			characterID: "char-123",
+			characterID: testCharacterID,
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				m.On("Delete", ctx, "char-123").Return(nil)
+				m.On("Delete", ctx, testCharacterID).Return(nil)
 			},
 		},
 		{
 			name:        "character not found",
 			characterID: "nonexistent",
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				m.On("Delete", ctx, "nonexistent").Return(errors.New("character not found"))
+				m.On("Delete", ctx, "nonexistent").Return(errors.New(errCharacterNotFound))
 			},
-			expectedError: "character not found",
+			expectedError: errCharacterNotFound,
 		},
 		{
 			name:        "repository error",
-			characterID: "char-123",
+			characterID: testCharacterID,
 			setupMock: func(m *mocks.MockCharacterRepository) {
-				m.On("Delete", ctx, "char-123").Return(errors.New("database error"))
+				m.On("Delete", ctx, testCharacterID).Return(errors.New(errDatabaseError))
 			},
-			expectedError: "database error",
+			expectedError: errDatabaseError,
 		},
 	}
 
@@ -359,11 +371,11 @@ func TestCharacterService_AddExperience(t *testing.T) {
 	}{
 		{
 			name:        "add XP without level up",
-			characterID: "char-123",
+			characterID: testCharacterID,
 			xpToAdd:     100,
 			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {
 				char := &models.Character{
-					ID:               "char-123",
+					ID:               testCharacterID,
 					Level:            1,
 					ExperiencePoints: 100,
 					Class:            "Fighter",
@@ -371,7 +383,7 @@ func TestCharacterService_AddExperience(t *testing.T) {
 						Constitution: 14,
 					},
 				}
-				charRepo.On("GetByID", ctx, "char-123").Return(char, nil)
+				charRepo.On("GetByID", ctx, testCharacterID).Return(char, nil)
 
 				// XP increases but no level up (need 300 for level 2)
 				charRepo.On("Update", ctx, mock.Anything).Return(nil)
@@ -379,11 +391,11 @@ func TestCharacterService_AddExperience(t *testing.T) {
 		},
 		{
 			name:        "add XP with level up",
-			characterID: "char-123",
+			characterID: testCharacterID,
 			xpToAdd:     250,
 			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {
 				char := &models.Character{
-					ID:               "char-123",
+					ID:               testCharacterID,
 					Level:            1,
 					ExperiencePoints: 100,
 					Class:            "Fighter",
@@ -394,7 +406,7 @@ func TestCharacterService_AddExperience(t *testing.T) {
 					},
 				}
 				// Mock GetByID to return character for all calls (AddExperience and LevelUp need it)
-				charRepo.On("GetByID", ctx, "char-123").Return(char, nil)
+				charRepo.On("GetByID", ctx, testCharacterID).Return(char, nil)
 
 				// Update will be called after level up
 				charRepo.On("Update", ctx, mock.Anything).Return(nil)
@@ -405,9 +417,9 @@ func TestCharacterService_AddExperience(t *testing.T) {
 			characterID: "nonexistent",
 			xpToAdd:     100,
 			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {
-				charRepo.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("character not found"))
+				charRepo.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(errCharacterNotFound))
 			},
-			expectedError: "character not found",
+			expectedError: errCharacterNotFound,
 		},
 	}
 
@@ -515,11 +527,11 @@ func TestCharacterService_UseSpellSlot(t *testing.T) {
 	}{
 		{
 			name:        "successful spell slot use",
-			characterID: "char-123",
+			characterID: testCharacterID,
 			slotLevel:   1,
 			setupMock: func(m *mocks.MockCharacterRepository) {
 				char := &models.Character{
-					ID: "char-123",
+					ID: testCharacterID,
 					Spells: models.SpellData{
 						SpellSlots: []models.SpellSlot{
 							{Level: 1, Total: 3, Remaining: 3},
@@ -527,7 +539,7 @@ func TestCharacterService_UseSpellSlot(t *testing.T) {
 						},
 					},
 				}
-				m.On("GetByID", ctx, "char-123").Return(char, nil)
+				m.On("GetByID", ctx, testCharacterID).Return(char, nil)
 
 				// Verify slot was decremented
 				m.On("Update", ctx, mock.Anything).Return(nil)
@@ -535,28 +547,28 @@ func TestCharacterService_UseSpellSlot(t *testing.T) {
 		},
 		{
 			name:        "no remaining spell slots",
-			characterID: "char-123",
+			characterID: testCharacterID,
 			slotLevel:   1,
 			setupMock: func(m *mocks.MockCharacterRepository) {
 				char := &models.Character{
-					ID: "char-123",
+					ID: testCharacterID,
 					Spells: models.SpellData{
 						SpellSlots: []models.SpellSlot{
 							{Level: 1, Total: 3, Remaining: 0},
 						},
 					},
 				}
-				m.On("GetByID", ctx, "char-123").Return(char, nil)
+				m.On("GetByID", ctx, testCharacterID).Return(char, nil)
 			},
 			expectedError: "no remaining spell slots of level 1",
 		},
 		{
 			name:        "character doesn't have that spell level",
-			characterID: "char-123",
+			characterID: testCharacterID,
 			slotLevel:   3,
 			setupMock: func(m *mocks.MockCharacterRepository) {
 				char := &models.Character{
-					ID: "char-123",
+					ID: testCharacterID,
 					Spells: models.SpellData{
 						SpellSlots: []models.SpellSlot{
 							{Level: 1, Total: 3, Remaining: 3},
@@ -564,7 +576,7 @@ func TestCharacterService_UseSpellSlot(t *testing.T) {
 						},
 					},
 				}
-				m.On("GetByID", ctx, "char-123").Return(char, nil)
+				m.On("GetByID", ctx, testCharacterID).Return(char, nil)
 			},
 			expectedError: "character does not have spell slots of level 3",
 		},

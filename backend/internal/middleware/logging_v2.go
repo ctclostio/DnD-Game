@@ -130,44 +130,75 @@ func (rw *loggingResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 // RequestContextMiddleware adds request context values
 func RequestContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Extract user ID from auth token if present
-		userID := extractUserIDFromRequest(r)
-		if userID != "" {
-			ctx := logger.ContextWithUserID(r.Context(), userID)
-			r = r.WithContext(ctx)
-		}
-
-		// Extract session ID from headers or query
-		sessionID := r.Header.Get("X-Session-ID")
-		if sessionID == "" {
-			sessionID = r.URL.Query().Get("session_id")
-		}
-		if sessionID != "" {
-			ctx := logger.ContextWithSessionID(r.Context(), sessionID)
-			r = r.WithContext(ctx)
-		}
-
-		// Extract character ID from headers or path
-		characterID := r.Header.Get("X-Character-ID")
-		if characterID == "" {
-			// Try to extract from path (e.g., /characters/{id})
-			if strings.Contains(r.URL.Path, "/characters/") {
-				parts := strings.Split(r.URL.Path, "/")
-				for i, part := range parts {
-					if part == "characters" && i+1 < len(parts) {
-						characterID = parts[i+1]
-						break
-					}
-				}
-			}
-		}
-		if characterID != "" {
-			ctx := logger.ContextWithCharacterID(r.Context(), characterID)
-			r = r.WithContext(ctx)
-		}
+		// Add user ID to context
+		r = addUserIDToContext(r)
+		
+		// Add session ID to context
+		r = addSessionIDToContext(r)
+		
+		// Add character ID to context
+		r = addCharacterIDToContext(r)
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func addUserIDToContext(r *http.Request) *http.Request {
+	userID := extractUserIDFromRequest(r)
+	if userID != "" {
+		ctx := logger.ContextWithUserID(r.Context(), userID)
+		return r.WithContext(ctx)
+	}
+	return r
+}
+
+func addSessionIDToContext(r *http.Request) *http.Request {
+	sessionID := extractSessionID(r)
+	if sessionID != "" {
+		ctx := logger.ContextWithSessionID(r.Context(), sessionID)
+		return r.WithContext(ctx)
+	}
+	return r
+}
+
+func extractSessionID(r *http.Request) string {
+	if sessionID := r.Header.Get("X-Session-ID"); sessionID != "" {
+		return sessionID
+	}
+	return r.URL.Query().Get("session_id")
+}
+
+func addCharacterIDToContext(r *http.Request) *http.Request {
+	characterID := extractCharacterID(r)
+	if characterID != "" {
+		ctx := logger.ContextWithCharacterID(r.Context(), characterID)
+		return r.WithContext(ctx)
+	}
+	return r
+}
+
+func extractCharacterID(r *http.Request) string {
+	// Check header first
+	if characterID := r.Header.Get("X-Character-ID"); characterID != "" {
+		return characterID
+	}
+	
+	// Try to extract from path
+	return extractCharacterIDFromPath(r.URL.Path)
+}
+
+func extractCharacterIDFromPath(path string) string {
+	if !strings.Contains(path, "/characters/") {
+		return ""
+	}
+	
+	parts := strings.Split(path, "/")
+	for i, part := range parts {
+		if part == "characters" && i+1 < len(parts) {
+			return parts[i+1]
+		}
+	}
+	return ""
 }
 
 // DatabaseQueryLogger logs database queries.
@@ -223,39 +254,44 @@ func getClientIPV2(r *http.Request) string {
 	return r.RemoteAddr
 }
 
+var sensitiveParams = []string{"password", "token", "secret", "api_key", "access_token", "refresh_token"}
+
 func sanitizeQuery(query string) string {
 	if query == "" {
 		return ""
 	}
 
-	// Remove sensitive parameters
-	sensitiveParams := []string{"password", "token", "secret", "api_key", "access_token", "refresh_token"}
-
 	params := strings.Split(query, "&")
 	sanitized := make([]string, 0, len(params))
 
 	for _, param := range params {
-		parts := strings.SplitN(param, "=", 2)
-		if len(parts) == 2 {
-			key := strings.ToLower(parts[0])
-			isSensitive := false
-			for _, sensitive := range sensitiveParams {
-				if strings.Contains(key, sensitive) {
-					isSensitive = true
-					break
-				}
-			}
-			if isSensitive {
-				sanitized = append(sanitized, parts[0]+"=[REDACTED]")
-			} else {
-				sanitized = append(sanitized, param)
-			}
-		} else {
-			sanitized = append(sanitized, param)
-		}
+		sanitizedParam := sanitizeQueryParam(param)
+		sanitized = append(sanitized, sanitizedParam)
 	}
 
 	return strings.Join(sanitized, "&")
+}
+
+func sanitizeQueryParam(param string) string {
+	parts := strings.SplitN(param, "=", 2)
+	if len(parts) != 2 {
+		return param
+	}
+	
+	if isSensitiveParam(parts[0]) {
+		return parts[0] + "=[REDACTED]"
+	}
+	return param
+}
+
+func isSensitiveParam(key string) bool {
+	lowerKey := strings.ToLower(key)
+	for _, sensitive := range sensitiveParams {
+		if strings.Contains(lowerKey, sensitive) {
+			return true
+		}
+	}
+	return false
 }
 
 func truncateQuery(query string) string {

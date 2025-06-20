@@ -13,35 +13,8 @@ import (
 )
 
 func TestLoggingMiddleware_CorrelationID(t *testing.T) {
-	// Create logger for testing
-	logConfig := logger.ConfigV2{
-		Level:        "debug",
-		Pretty:       false,
-		ServiceName:  "test",
-		Environment:  "test",
-		SamplingRate: 1.0, // Ensure no sampling issues
-	}
-	log, err := logger.NewV2(&logConfig)
-	require.NoError(t, err)
-
-	// Create test handler
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Verify context has IDs
-		ctx := r.Context()
-
-		// Get IDs from context using logger functions
-		reqID := logger.GetRequestIDFromContext(ctx)
-		corrID := logger.GetCorrelationIDFromContext(ctx)
-
-		// Write them to response for verification
-		w.Header().Set("X-Context-Request-ID", reqID)
-		w.Header().Set("X-Context-Correlation-ID", corrID)
-
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
-	})
-
-	// Apply logging middleware
+	log := createTestLogger(t)
+	handler := createIDVerificationHandler()
 	mw := middleware.LoggingMiddleware(log)
 	wrappedHandler := mw(handler)
 
@@ -81,46 +54,87 @@ func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
-			req := httptest.NewRequest("GET", "/test", http.NoBody)
-			if tt.requestID != "" {
-				req.Header.Set("X-Request-ID", tt.requestID)
-			}
-			if tt.correlationID != "" {
-				req.Header.Set("X-Correlation-ID", tt.correlationID)
-			}
-
-			// Create response recorder
+			req := createTestRequest(tt.requestID, tt.correlationID)
 			rr := httptest.NewRecorder()
 
-			// Serve request
 			wrappedHandler.ServeHTTP(rr, req)
 
-			// Check response headers
-			respReqID := rr.Header().Get("X-Request-ID")
-			respCorrID := rr.Header().Get("X-Correlation-ID")
-
-			assert.NotEmpty(t, respReqID, "Response should have X-Request-ID")
-			assert.NotEmpty(t, respCorrID, "Response should have X-Correlation-ID")
-
-			if tt.requestID != "" {
-				assert.Equal(t, tt.requestID, respReqID)
-			}
-			if tt.correlationID != "" {
-				assert.Equal(t, tt.correlationID, respCorrID)
-			}
-			if tt.checkCorrIDEquals {
-				assert.Equal(t, respReqID, respCorrID, "Correlation ID should equal Request ID when not provided")
-			}
-
-			// Verify context propagation
-			ctxReqID := rr.Header().Get("X-Context-Request-ID")
-			ctxCorrID := rr.Header().Get("X-Context-Correlation-ID")
-
-			assert.Equal(t, respReqID, ctxReqID, "Context should have same request ID as response")
-			assert.Equal(t, respCorrID, ctxCorrID, "Context should have same correlation ID as response")
+			verifyResponseIDs(t, rr, tt)
+			verifyContextPropagation(t, rr)
 		})
 	}
+}
+
+func createTestLogger(t *testing.T) *logger.LoggerV2 {
+	logConfig := logger.ConfigV2{
+		Level:        "debug",
+		Pretty:       false,
+		ServiceName:  "test",
+		Environment:  "test",
+		SamplingRate: 1.0,
+	}
+	log, err := logger.NewV2(&logConfig)
+	require.NoError(t, err)
+	return log
+}
+
+func createIDVerificationHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		reqID := logger.GetRequestIDFromContext(ctx)
+		corrID := logger.GetCorrelationIDFromContext(ctx)
+
+		w.Header().Set("X-Context-Request-ID", reqID)
+		w.Header().Set("X-Context-Correlation-ID", corrID)
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("OK"))
+	}
+}
+
+func createTestRequest(requestID, correlationID string) *http.Request {
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
+	if requestID != "" {
+		req.Header.Set("X-Request-ID", requestID)
+	}
+	if correlationID != "" {
+		req.Header.Set("X-Correlation-ID", correlationID)
+	}
+	return req
+}
+
+func verifyResponseIDs(t *testing.T, rr *httptest.ResponseRecorder, tt struct {
+	name              string
+	requestID         string
+	correlationID     string
+	expectedReqID     bool
+	expectedCorrID    bool
+	checkCorrIDEquals bool
+}) {
+	respReqID := rr.Header().Get("X-Request-ID")
+	respCorrID := rr.Header().Get("X-Correlation-ID")
+
+	assert.NotEmpty(t, respReqID, "Response should have X-Request-ID")
+	assert.NotEmpty(t, respCorrID, "Response should have X-Correlation-ID")
+
+	if tt.requestID != "" {
+		assert.Equal(t, tt.requestID, respReqID)
+	}
+	if tt.correlationID != "" {
+		assert.Equal(t, tt.correlationID, respCorrID)
+	}
+	if tt.checkCorrIDEquals {
+		assert.Equal(t, respReqID, respCorrID, "Correlation ID should equal Request ID when not provided")
+	}
+}
+
+func verifyContextPropagation(t *testing.T, rr *httptest.ResponseRecorder) {
+	respReqID := rr.Header().Get("X-Request-ID")
+	respCorrID := rr.Header().Get("X-Correlation-ID")
+	ctxReqID := rr.Header().Get("X-Context-Request-ID")
+	ctxCorrID := rr.Header().Get("X-Context-Correlation-ID")
+
+	assert.Equal(t, respReqID, ctxReqID, "Context should have same request ID as response")
+	assert.Equal(t, respCorrID, ctxCorrID, "Context should have same correlation ID as response")
 }
 
 func TestRequestContextMiddleware(t *testing.T) {

@@ -399,7 +399,15 @@ func (b *AIEncounterBuilder) parseEscapeAndStory(data map[string]interface{}, en
 }
 
 func (b *AIEncounterBuilder) parseEnemy(data map[string]interface{}) models.EncounterEnemy {
-	enemy := models.EncounterEnemy{
+	enemy := b.parseEnemyBasicInfo(data)
+	b.parseEnemyPersonalityTraits(data, &enemy)
+	b.parseEnemyAbilities(data, &enemy)
+	b.parseEnemyActions(data, &enemy)
+	return enemy
+}
+
+func (b *AIEncounterBuilder) parseEnemyBasicInfo(data map[string]interface{}) models.EncounterEnemy {
+	return models.EncounterEnemy{
 		Name:            getString(data, "name"),
 		Type:            getString(data, "type"),
 		ChallengeRating: getFloat(data, "challengeRating"),
@@ -414,8 +422,9 @@ func (b *AIEncounterBuilder) parseEnemy(data map[string]interface{}) models.Enco
 		IsAlive:         true,
 		MoraleThreshold: 50, // Default
 	}
+}
 
-	// Parse personality traits
+func (b *AIEncounterBuilder) parseEnemyPersonalityTraits(data map[string]interface{}, enemy *models.EncounterEnemy) {
 	if traits, ok := data["personalityTraits"].([]interface{}); ok {
 		for _, trait := range traits {
 			if traitStr, ok := trait.(string); ok {
@@ -423,8 +432,9 @@ func (b *AIEncounterBuilder) parseEnemy(data map[string]interface{}) models.Enco
 			}
 		}
 	}
+}
 
-	// Parse abilities
+func (b *AIEncounterBuilder) parseEnemyAbilities(data map[string]interface{}, enemy *models.EncounterEnemy) {
 	if abilities, ok := data["abilities"].([]interface{}); ok {
 		for _, ability := range abilities {
 			if abilityMap, ok := ability.(map[string]interface{}); ok {
@@ -437,8 +447,9 @@ func (b *AIEncounterBuilder) parseEnemy(data map[string]interface{}) models.Enco
 			}
 		}
 	}
+}
 
-	// Parse actions
+func (b *AIEncounterBuilder) parseEnemyActions(data map[string]interface{}, enemy *models.EncounterEnemy) {
 	if actions, ok := data["actions"].([]interface{}); ok {
 		for _, action := range actions {
 			if actionMap, ok := action.(map[string]interface{}); ok {
@@ -454,8 +465,6 @@ func (b *AIEncounterBuilder) parseEnemy(data map[string]interface{}) models.Enco
 			}
 		}
 	}
-
-	return enemy
 }
 
 func (b *AIEncounterBuilder) parseTacticalInfo(data map[string]interface{}) *models.TacticalInfo {
@@ -495,31 +504,48 @@ func (b *AIEncounterBuilder) parseTacticalInfo(data map[string]interface{}) *mod
 func (b *AIEncounterBuilder) parseSolutions(data interface{}) []models.Solution {
 	var solutions []models.Solution
 
-	if solutionList, ok := data.([]interface{}); ok {
-		for _, solution := range solutionList {
-			if solutionMap, ok := solution.(map[string]interface{}); ok {
-				sol := models.Solution{
-					Method:       getString(solutionMap, "method"),
-					Description:  getString(solutionMap, "description"),
-					DC:           getInt(solutionMap, "dc"),
-					Consequences: getString(solutionMap, "consequences"),
-				}
+	solutionList, ok := data.([]interface{})
+	if !ok {
+		return solutions
+	}
 
-				// Parse requirements
-				if reqs, ok := solutionMap["requirements"].([]interface{}); ok {
-					for _, req := range reqs {
-						if reqStr, ok := req.(string); ok {
-							sol.Requirements = append(sol.Requirements, reqStr)
-						}
-					}
-				}
-
-				solutions = append(solutions, sol)
-			}
+	for _, solution := range solutionList {
+		if sol := b.parseSingleSolution(solution); sol != nil {
+			solutions = append(solutions, *sol)
 		}
 	}
 
 	return solutions
+}
+
+func (b *AIEncounterBuilder) parseSingleSolution(solution interface{}) *models.Solution {
+	solutionMap, ok := solution.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	sol := &models.Solution{
+		Method:       getString(solutionMap, "method"),
+		Description:  getString(solutionMap, "description"),
+		DC:           getInt(solutionMap, "dc"),
+		Consequences: getString(solutionMap, "consequences"),
+	}
+
+	b.parseSolutionRequirements(solutionMap, sol)
+	return sol
+}
+
+func (b *AIEncounterBuilder) parseSolutionRequirements(solutionMap map[string]interface{}, sol *models.Solution) {
+	reqs, ok := solutionMap["requirements"].([]interface{})
+	if !ok {
+		return
+	}
+
+	for _, req := range reqs {
+		if reqStr, ok := req.(string); ok {
+			sol.Requirements = append(sol.Requirements, reqStr)
+		}
+	}
 }
 
 func (b *AIEncounterBuilder) parseReinforcements(data []interface{}) []models.ReinforcementWave {

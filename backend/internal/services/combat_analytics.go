@@ -268,19 +268,23 @@ func (cas *CombatAnalyticsService) processAttackAction(
 	action *models.CombatActionLog,
 ) {
 	stats.AttacksMade++
-	switch action.Outcome {
-	case constants.OutcomeHit, constants.ActionCritical:
+	cas.updateAttackOutcome(stats, action.Outcome)
+	stats.DamageDealt += action.DamageDealt
+}
+
+func (cas *CombatAnalyticsService) updateAttackOutcome(stats *models.CombatantAnalytics, outcome string) {
+	switch outcome {
+	case constants.OutcomeHit:
 		stats.AttacksHit++
-		if action.Outcome == constants.ActionCritical {
-			stats.CriticalHits++
-		}
+	case constants.ActionCritical:
+		stats.AttacksHit++
+		stats.CriticalHits++
 	case "miss":
 		stats.AttacksMissed++
 	case "critical_miss":
 		stats.AttacksMissed++
 		stats.CriticalMisses++
 	}
-	stats.DamageDealt += action.DamageDealt
 }
 
 func (cas *CombatAnalyticsService) processSpellOrAbilityAction(
@@ -383,83 +387,128 @@ func (cas *CombatAnalyticsService) generateCombatantReports(
 
 func (cas *CombatAnalyticsService) ratePerformance(stats *models.CombatantAnalytics) string {
 	score := 0
+	
+	score += cas.scoreDamageEfficiency(stats)
+	score += cas.scoreSurvival(stats)
+	score += cas.scoreImpact(stats)
+	score += cas.scoreSpecialContributions(stats)
+	
+	return cas.getPerformanceRating(score)
+}
 
-	// Damage efficiency
-	if stats.AttacksMade > 0 {
-		hitRate := float64(stats.AttacksHit) / float64(stats.AttacksMade)
-		if hitRate > 0.75 {
-			score += 3
-		} else if hitRate > 0.5 {
-			score += 2
-		} else if hitRate > 0.25 {
-			score++
-		}
+func (cas *CombatAnalyticsService) scoreDamageEfficiency(stats *models.CombatantAnalytics) int {
+	if stats.AttacksMade == 0 {
+		return 0
 	}
-
-	// Survival
-	if stats.FinalHP > 0 {
-		score += 2
-		if stats.DamageTaken == 0 {
-			score += 2 // No damage taken
-		}
+	
+	hitRate := float64(stats.AttacksHit) / float64(stats.AttacksMade)
+	switch {
+	case hitRate > 0.75:
+		return 3
+	case hitRate > 0.5:
+		return 2
+	case hitRate > 0.25:
+		return 1
+	default:
+		return 0
 	}
+}
 
-	// Impact
+func (cas *CombatAnalyticsService) scoreSurvival(stats *models.CombatantAnalytics) int {
+	if stats.FinalHP <= 0 {
+		return 0
+	}
+	
+	score := 2
+	if stats.DamageTaken == 0 {
+		score += 2 // No damage taken
+	}
+	return score
+}
+
+func (cas *CombatAnalyticsService) scoreImpact(stats *models.CombatantAnalytics) int {
 	if stats.DamageDealt > stats.DamageTaken*2 {
-		score += 2
+		return 2
 	}
+	return 0
+}
 
-	// Critical hits
+func (cas *CombatAnalyticsService) scoreSpecialContributions(stats *models.CombatantAnalytics) int {
+	score := 0
 	if stats.CriticalHits > 0 {
 		score++
 	}
-
-	// Healing contribution
 	if stats.HealingDone > 0 {
 		score += 2
 	}
+	return score
+}
 
-	if score >= 8 {
+func (cas *CombatAnalyticsService) getPerformanceRating(score int) string {
+	switch {
+	case score >= 8:
 		return "excellent"
-	} else if score >= 5 {
+	case score >= 5:
 		return "good"
-	} else if score >= 3 {
+	case score >= 3:
 		return "fair"
+	default:
+		return constants.EconomicPoor
 	}
-	return constants.EconomicPoor
 }
 
 func (cas *CombatAnalyticsService) generateHighlights(stats *models.CombatantAnalytics) []string {
 	highlights := []string{}
-
-	if stats.AttacksMade > 0 {
-		hitRate := float64(stats.AttacksHit) / float64(stats.AttacksMade)
-		if hitRate > 0.75 {
-			highlights = append(highlights, fmt.Sprintf("Exceptional accuracy: %.0f%% hit rate", hitRate*100))
-		}
-	}
-
-	if stats.CriticalHits > 1 {
-		highlights = append(highlights, fmt.Sprintf("Scored %d critical hits", stats.CriticalHits))
-	}
-
-	if stats.DamageDealt > 50 {
-		highlights = append(highlights, fmt.Sprintf("Dealt %d total damage", stats.DamageDealt))
-	}
-
-	if stats.HealingDone > 30 {
-		highlights = append(highlights, fmt.Sprintf("Healed %d HP to allies", stats.HealingDone))
-	}
-
-	if stats.DamageTaken == 0 && stats.RoundsSurvived > 3 {
-		highlights = append(highlights, "Avoided all damage")
-	}
-
-	if stats.SavesMade > stats.SavesFailed && stats.SavesMade > 2 {
-		highlights = append(highlights, "Strong saving throws")
-	}
-
+	
+	cas.addAccuracyHighlight(&highlights, stats)
+	cas.addCriticalHitHighlight(&highlights, stats)
+	cas.addDamageHighlight(&highlights, stats)
+	cas.addHealingHighlight(&highlights, stats)
+	cas.addDefenseHighlight(&highlights, stats)
+	cas.addSavingThrowHighlight(&highlights, stats)
+	
 	return highlights
+}
+
+func (cas *CombatAnalyticsService) addAccuracyHighlight(highlights *[]string, stats *models.CombatantAnalytics) {
+	if stats.AttacksMade == 0 {
+		return
+	}
+	
+	hitRate := float64(stats.AttacksHit) / float64(stats.AttacksMade)
+	if hitRate > 0.75 {
+		*highlights = append(*highlights, fmt.Sprintf("Exceptional accuracy: %.0f%% hit rate", hitRate*100))
+	}
+}
+
+func (cas *CombatAnalyticsService) addCriticalHitHighlight(highlights *[]string, stats *models.CombatantAnalytics) {
+	if stats.CriticalHits > 1 {
+		*highlights = append(*highlights, fmt.Sprintf("Scored %d critical hits", stats.CriticalHits))
+	}
+}
+
+func (cas *CombatAnalyticsService) addDamageHighlight(highlights *[]string, stats *models.CombatantAnalytics) {
+	if stats.DamageDealt > 50 {
+		*highlights = append(*highlights, fmt.Sprintf("Dealt %d total damage", stats.DamageDealt))
+	}
+}
+
+func (cas *CombatAnalyticsService) addHealingHighlight(highlights *[]string, stats *models.CombatantAnalytics) {
+	if stats.HealingDone > 30 {
+		*highlights = append(*highlights, fmt.Sprintf("Healed %d HP to allies", stats.HealingDone))
+	}
+}
+
+func (cas *CombatAnalyticsService) addDefenseHighlight(highlights *[]string, stats *models.CombatantAnalytics) {
+	if stats.DamageTaken == 0 && stats.RoundsSurvived > 3 {
+		*highlights = append(*highlights, "Avoided all damage")
+	}
+}
+
+func (cas *CombatAnalyticsService) addSavingThrowHighlight(highlights *[]string, stats *models.CombatantAnalytics) {
+	if stats.SavesMade > stats.SavesFailed && stats.SavesMade > 2 {
+		*highlights = append(*highlights, "Strong saving throws")
+	}
 }
 
 func (cas *CombatAnalyticsService) analyzeTactics(
@@ -800,44 +849,57 @@ func (cas *CombatAnalyticsService) generateRecommendations(
 	analysis *models.TacticalAnalysis,
 ) []string {
 	recommendations := []string{}
+	
+	cas.addTacticalRecommendations(&recommendations, analysis)
+	cas.addPerformanceRecommendations(&recommendations, reports)
+	cas.addDurationRecommendations(&recommendations, combat.Round)
+	
+	return recommendations
+}
 
-	// Based on tactical analysis scores
-	if analysis.PositioningScore < 5 {
-		recommendations = append(recommendations, "Focus on using cover and terrain advantages more effectively")
+func (cas *CombatAnalyticsService) addTacticalRecommendations(recommendations *[]string, analysis *models.TacticalAnalysis) {
+	tacticalChecks := []struct {
+		score   int
+		message string
+	}{
+		{analysis.PositioningScore, "Focus on using cover and terrain advantages more effectively"},
+		{analysis.ResourceManagement, "Improve resource management - save high-level spells for tougher enemies"},
+		{analysis.TargetPrioritization, "Prioritize dangerous enemies like spellcasters and high-damage dealers"},
+		{analysis.TeamworkScore, "Coordinate attacks and support actions for better synergy"},
 	}
-
-	if analysis.ResourceManagement < 5 {
-		recommendations = append(recommendations, "Improve resource management - save high-level spells for tougher enemies")
-	}
-
-	if analysis.TargetPrioritization < 5 {
-		recommendations = append(recommendations, "Prioritize dangerous enemies like spellcasters and high-damage dealers")
-	}
-
-	if analysis.TeamworkScore < 5 {
-		recommendations = append(recommendations, "Coordinate attacks and support actions for better synergy")
-	}
-
-	// Based on individual performance
-	poorPerformers := 0
-	for _, report := range reports {
-		if report.PerformanceRating == constants.EconomicPoor {
-			poorPerformers++
+	
+	for _, check := range tacticalChecks {
+		if check.score < 5 {
+			*recommendations = append(*recommendations, check.message)
 		}
 	}
+}
 
+func (cas *CombatAnalyticsService) addPerformanceRecommendations(recommendations *[]string, reports []*models.CombatantReport) {
+	poorPerformers := cas.countPoorPerformers(reports)
+	
 	if poorPerformers > len(reports)/3 {
-		recommendations = append(recommendations, "Consider adjusting difficulty or providing tactical guidance to struggling players")
+		*recommendations = append(*recommendations, "Consider adjusting difficulty or providing tactical guidance to struggling players")
 	}
+}
 
-	// Based on combat duration
-	if combat.Round > 10 {
-		recommendations = append(recommendations, "Combat lasted very long - consider more aggressive tactics to speed up encounters")
-	} else if combat.Round < 3 {
-		recommendations = append(recommendations, "Combat ended very quickly - consider adding environmental challenges or reinforcements")
+func (cas *CombatAnalyticsService) countPoorPerformers(reports []*models.CombatantReport) int {
+	count := 0
+	for _, report := range reports {
+		if report.PerformanceRating == constants.EconomicPoor {
+			count++
+		}
 	}
+	return count
+}
 
-	return recommendations
+func (cas *CombatAnalyticsService) addDurationRecommendations(recommendations *[]string, rounds int) {
+	switch {
+	case rounds > 10:
+		*recommendations = append(*recommendations, "Combat lasted very long - consider more aggressive tactics to speed up encounters")
+	case rounds < 3:
+		*recommendations = append(*recommendations, "Combat ended very quickly - consider adding environmental challenges or reinforcements")
+	}
 }
 
 func (cas *CombatAnalyticsService) generateCombatSummary(

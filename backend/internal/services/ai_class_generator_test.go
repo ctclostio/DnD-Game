@@ -23,6 +23,7 @@ const (
 	errInvalidSavingThrows = "classes must have exactly 2 saving throw proficiencies"
 	errNoLevel1Features = "class must have at least one level 1 feature"
 	errInvalidPrimaryAbility = "invalid primary ability"
+	testFeature1Name = "Feature 1"
 )
 
 func TestNewAIClassGenerator(t *testing.T) {
@@ -221,7 +222,7 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 				SavingThrowProficiencies: []string{"Wisdom", "Charisma"},
 				SkillChoices:             2,
 				ClassFeatures: []models.ClassFeature{
-					{Level: 1, Name: "Feature 1"},
+					{Level: 1, Name: testFeature1Name},
 					{Level: 3, Name: "Feature 2"},
 				},
 			},
@@ -257,7 +258,7 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 				PrimaryAbility:           "Wisdom",
 				SavingThrowProficiencies: []string{"Wisdom", "Charisma"},
 				ClassFeatures: []models.ClassFeature{
-					{Level: 3, Name: "Feature 1"},
+					{Level: 3, Name: testFeature1Name},
 				},
 			},
 			wantErr: true,
@@ -329,7 +330,7 @@ func TestAIClassGenerator_calculateBalanceScore(t *testing.T) {
 				PrimaryAbility:      "Charisma",
 				SpellcastingAbility: "Charisma",
 				ClassFeatures: []models.ClassFeature{
-					{Level: 1, Name: "Feature 1"},
+					{Level: 1, Name: testFeature1Name},
 					{Level: 1, Name: "Feature 2"},
 					{Level: 3, Name: "Feature 3"},
 					{Level: 5, Name: "Feature 4"},
