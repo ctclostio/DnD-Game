@@ -16,6 +16,26 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
+// Test constants
+const (
+	testCombatantTypeChar = "character"
+	testCombatantTypeNPC  = "npc"
+	testClassFighter      = "Fighter"
+	testClassWizard       = "Wizard"
+	testClassRogue        = "Rogue"
+	testMonsterGoblin     = "goblin"
+	testMonsterOrc        = "orc"
+	testCRQuarter         = "1/4"
+	testCRHalf            = "1/2"
+	testDifficultyEasy    = "easy"
+	testDifficultyMedium  = "medium"
+	testDifficultyHard    = "hard"
+	testResourceHPLost    = "hp_lost"
+	testErrDatabase       = "database error"
+	testMethodGetInitRule = "GetInitiativeRule"
+	testMethodCreateAuto  = "CreateAutoCombatResolution"
+)
+
 // Using MockCombatAnalyticsRepository from combat_analytics_test.go
 
 // Test helpers
@@ -45,7 +65,7 @@ func createTestCharacters(count, level int) []*models.Character {
 			},
 			MaxHitPoints: 10 + (level * 6),
 			HitPoints:    10 + (level * 6),
-			Class:        "Fighter",
+			Class:        testClassFighter,
 		}
 	}
 	return chars
@@ -67,22 +87,22 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 		{
 			name: "Easy Encounter - Decisive Victory",
 			request: models.AutoResolveRequest{
-				EncounterDifficulty: "easy",
+				EncounterDifficulty: testDifficultyEasy,
 				EnemyTypes: []models.EnemyInfo{
-					{Name: "goblin", Count: 4, CR: "1/4"},
+					{Name: testMonsterGoblin, Count: 4, CR: testCRQuarter},
 				},
 				TerrainType:  "open_field",
 				UseResources: true,
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
-				repo.On("CreateAutoCombatResolution", mock.AnythingOfType("*models.AutoCombatResolution")).
+				repo.On(testMethodCreateAuto, mock.AnythingOfType("*models.AutoCombatResolution")).
 					Return(nil)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, result *models.AutoCombatResolution) {
 				assert.NotNil(t, result)
 				assert.Equal(t, sessionID, result.GameSessionID)
-				assert.Equal(t, "easy", result.EncounterDifficulty)
+				assert.Equal(t, testDifficultyEasy, result.EncounterDifficulty)
 				assert.Equal(t, "quick", result.ResolutionType)
 				assert.True(t, result.ExperienceAwarded > 0)
 				assert.NotEmpty(t, result.NarrativeSummary)
@@ -91,28 +111,28 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 				var resources map[string]interface{}
 				err := json.Unmarshal([]byte(result.PartyResourcesUsed), &resources)
 				assert.NoError(t, err)
-				assert.Contains(t, resources, "hp_lost")
+				assert.Contains(t, resources, testResourceHPLost)
 			},
 		},
 		{
 			name: "Hard Encounter - Multiple Enemy Types",
 			request: models.AutoResolveRequest{
-				EncounterDifficulty: "hard",
+				EncounterDifficulty: testDifficultyHard,
 				EnemyTypes: []models.EnemyInfo{
-					{Name: "orc", Count: 3, CR: "1/2"},
+					{Name: testMonsterOrc, Count: 3, CR: testCRHalf},
 					{Name: "ogre", Count: 1, CR: "2"},
 				},
 				TerrainType:  "forest",
 				UseResources: true,
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
-				repo.On("CreateAutoCombatResolution", mock.AnythingOfType("*models.AutoCombatResolution")).
+				repo.On(testMethodCreateAuto, mock.AnythingOfType("*models.AutoCombatResolution")).
 					Return(nil)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, result *models.AutoCombatResolution) {
 				assert.NotNil(t, result)
-				assert.Equal(t, "hard", result.EncounterDifficulty)
+				assert.Equal(t, testDifficultyHard, result.EncounterDifficulty)
 				assert.True(t, result.RoundsSimulated >= 2)
 			},
 		},
@@ -127,7 +147,7 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 				UseResources: false,
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
-				repo.On("CreateAutoCombatResolution", mock.AnythingOfType("*models.AutoCombatResolution")).
+				repo.On(testMethodCreateAuto, mock.AnythingOfType("*models.AutoCombatResolution")).
 					Return(nil)
 			},
 			expectError: false,
@@ -148,8 +168,8 @@ func TestCombatAutomationService_AutoResolveCombat(t *testing.T) {
 				},
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
-				repo.On("CreateAutoCombatResolution", mock.AnythingOfType("*models.AutoCombatResolution")).
-					Return(errors.New("database error"))
+				repo.On(testMethodCreateAuto, mock.AnythingOfType("*models.AutoCombatResolution")).
+					Return(errors.New(testErrDatabase))
 			},
 			expectError: true,
 		},
@@ -210,7 +230,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 				},
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
-				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(nil, nil)
+				repo.On(testMethodGetInitRule, sessionID, mock.Anything).Return(nil, nil)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, entries []models.InitiativeEntry) {
@@ -243,7 +263,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 					BaseInitiativeBonus: 2,
 					AlertFeat:           true,
 				}
-				repo.On("GetInitiativeRule", sessionID, combatantID).Return(rule, nil)
+				repo.On(testMethodGetInitRule, sessionID, combatantID).Return(rule, nil)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, entries []models.InitiativeEntry) {
@@ -269,7 +289,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 				rule := &models.SmartInitiativeRule{
 					AdvantageOnInitiative: true,
 				}
-				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(rule, nil)
+				repo.On(testMethodGetInitRule, sessionID, mock.Anything).Return(rule, nil)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, entries []models.InitiativeEntry) {
@@ -296,7 +316,7 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 				rule := &models.SmartInitiativeRule{
 					SpecialRules: models.JSONB(specialRules),
 				}
-				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(rule, nil)
+				repo.On(testMethodGetInitRule, sessionID, mock.Anything).Return(rule, nil)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, entries []models.InitiativeEntry) {
@@ -332,14 +352,14 @@ func TestCombatAutomationService_SmartInitiative(t *testing.T) {
 			},
 			setupMocks: func(repo *MockCombatAnalyticsRepository) {
 				// First combatant has no special rules
-				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(nil, nil).Once()
+				repo.On(testMethodGetInitRule, sessionID, mock.Anything).Return(nil, nil).Once()
 
 				// Second combatant has alert feat
 				rule := &models.SmartInitiativeRule{AlertFeat: true}
-				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(rule, nil).Once()
+				repo.On(testMethodGetInitRule, sessionID, mock.Anything).Return(rule, nil).Once()
 
 				// Third combatant has no special rules
-				repo.On("GetInitiativeRule", sessionID, mock.Anything).Return(nil, nil).Once()
+				repo.On(testMethodGetInitRule, sessionID, mock.Anything).Return(nil, nil).Once()
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, entries []models.InitiativeEntry) {
@@ -402,7 +422,7 @@ func TestCombatAutomationService_BattleMapOperations(t *testing.T) {
 	t.Run("SaveBattleMap_Error", func(t *testing.T) {
 		service, mockCombatRepo, _ := createTestCombatAutomationService()
 
-		mockCombatRepo.On("CreateBattleMap", battleMap).Return(errors.New("database error"))
+		mockCombatRepo.On("CreateBattleMap", battleMap).Return(errors.New(testErrDatabase))
 
 		err := service.SaveBattleMap(context.Background(), battleMap)
 		assert.Error(t, err)
@@ -460,7 +480,7 @@ func TestCombatAutomationService_SetInitiativeRule(t *testing.T) {
 	t.Run("Error", func(t *testing.T) {
 		service, mockCombatRepo, _ := createTestCombatAutomationService()
 
-		mockCombatRepo.On("CreateOrUpdateInitiativeRule", rule).Return(errors.New("database error"))
+		mockCombatRepo.On("CreateOrUpdateInitiativeRule", rule).Return(errors.New(testErrDatabase))
 
 		err := service.SetInitiativeRule(context.Background(), rule)
 		assert.Error(t, err)
