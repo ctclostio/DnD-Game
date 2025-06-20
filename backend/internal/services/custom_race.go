@@ -11,6 +11,12 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Error message constants
+const (
+	errMsgGetCustomRace    = "failed to get custom race: %w"
+	errMsgUpdateCustomRace = "failed to update custom race: %w"
+)
+
 // CustomRaceService handles custom race operations
 type CustomRaceService struct {
 	repo        database.CustomRaceRepository
@@ -81,7 +87,7 @@ func (s *CustomRaceService) GetCustomRace(ctx context.Context, raceID uuid.UUID)
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("custom race not found")
 		}
-		return nil, fmt.Errorf("failed to get custom race: %w", err)
+		return nil, fmt.Errorf(errMsgGetCustomRace, err)
 	}
 
 	return race, nil
@@ -111,7 +117,7 @@ func (s *CustomRaceService) GetPublicCustomRaces(ctx context.Context) ([]*models
 func (s *CustomRaceService) ApproveCustomRace(ctx context.Context, raceID, approverID uuid.UUID, notes string) error {
 	race, err := s.repo.GetByID(ctx, raceID)
 	if err != nil {
-		return fmt.Errorf("failed to get custom race: %w", err)
+		return fmt.Errorf(errMsgGetCustomRace, err)
 	}
 
 	race.ApprovalStatus = models.ApprovalStatusApproved
@@ -119,7 +125,7 @@ func (s *CustomRaceService) ApproveCustomRace(ctx context.Context, raceID, appro
 	race.ApprovalNotes = &notes
 
 	if err := s.repo.Update(ctx, race); err != nil {
-		return fmt.Errorf("failed to update custom race: %w", err)
+		return fmt.Errorf(errMsgUpdateCustomRace, err)
 	}
 
 	return nil
@@ -129,7 +135,7 @@ func (s *CustomRaceService) ApproveCustomRace(ctx context.Context, raceID, appro
 func (s *CustomRaceService) RejectCustomRace(ctx context.Context, raceID, approverID uuid.UUID, notes string) error {
 	race, err := s.repo.GetByID(ctx, raceID)
 	if err != nil {
-		return fmt.Errorf("failed to get custom race: %w", err)
+		return fmt.Errorf(errMsgGetCustomRace, err)
 	}
 
 	race.ApprovalStatus = models.ApprovalStatusRejected
@@ -137,7 +143,7 @@ func (s *CustomRaceService) RejectCustomRace(ctx context.Context, raceID, approv
 	race.ApprovalNotes = &notes
 
 	if err := s.repo.Update(ctx, race); err != nil {
-		return fmt.Errorf("failed to update custom race: %w", err)
+		return fmt.Errorf(errMsgUpdateCustomRace, err)
 	}
 
 	return nil
@@ -147,7 +153,7 @@ func (s *CustomRaceService) RejectCustomRace(ctx context.Context, raceID, approv
 func (s *CustomRaceService) RequestRevision(ctx context.Context, raceID, approverID uuid.UUID, notes string) error {
 	race, err := s.repo.GetByID(ctx, raceID)
 	if err != nil {
-		return fmt.Errorf("failed to get custom race: %w", err)
+		return fmt.Errorf(errMsgGetCustomRace, err)
 	}
 
 	race.ApprovalStatus = models.ApprovalStatusRevisionNeeded
@@ -155,7 +161,7 @@ func (s *CustomRaceService) RequestRevision(ctx context.Context, raceID, approve
 	race.ApprovalNotes = &notes
 
 	if err := s.repo.Update(ctx, race); err != nil {
-		return fmt.Errorf("failed to update custom race: %w", err)
+		return fmt.Errorf(errMsgUpdateCustomRace, err)
 	}
 
 	return nil
@@ -165,7 +171,7 @@ func (s *CustomRaceService) RequestRevision(ctx context.Context, raceID, approve
 func (s *CustomRaceService) MakePublic(ctx context.Context, raceID, userID uuid.UUID) error {
 	race, err := s.repo.GetByID(ctx, raceID)
 	if err != nil {
-		return fmt.Errorf("failed to get custom race: %w", err)
+		return fmt.Errorf(errMsgGetCustomRace, err)
 	}
 
 	// Only the creator or an approver can make it public
@@ -181,7 +187,7 @@ func (s *CustomRaceService) MakePublic(ctx context.Context, raceID, userID uuid.
 	race.IsPublic = true
 
 	if err := s.repo.Update(ctx, race); err != nil {
-		return fmt.Errorf("failed to update custom race: %w", err)
+		return fmt.Errorf(errMsgUpdateCustomRace, err)
 	}
 
 	return nil
@@ -226,7 +232,7 @@ func (s *CustomRaceService) ValidateCustomRaceForCharacter(ctx context.Context, 
 func (s *CustomRaceService) GetCustomRaceStats(ctx context.Context, raceID uuid.UUID) (map[string]interface{}, error) {
 	race, err := s.repo.GetByID(ctx, raceID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get custom race: %w", err)
+		return nil, fmt.Errorf(errMsgGetCustomRace, err)
 	}
 
 	// Format the race data similar to standard races

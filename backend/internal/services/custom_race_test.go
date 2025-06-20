@@ -20,6 +20,7 @@ const (
 	testRaceShadowElf = "Shadow Elf"
 	testRaceGeneric = "Test Race"
 	testCustomRaceErrDatabase = "database error"
+	testRaceNotFound = "race not found"
 )
 
 func TestCustomRaceService_CreateCustomRace(t *testing.T) {
@@ -234,7 +235,7 @@ func TestCustomRaceService_GetCustomRace(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("race not found", func(t *testing.T) {
+	t.Run(testRaceNotFound, func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 
@@ -305,7 +306,7 @@ func TestCustomRaceService_ApproveCustomRace(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("race not found", func(t *testing.T) {
+	t.Run(testRaceNotFound, func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 
@@ -609,7 +610,7 @@ func TestCustomRaceService_ValidateCustomRaceForCharacter(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("race not found", func(t *testing.T) {
+	t.Run(testRaceNotFound, func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
 		mockAI := new(MockAIRaceGeneratorService)
 

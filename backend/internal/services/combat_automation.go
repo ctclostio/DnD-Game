@@ -16,6 +16,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/dice"
 )
 
+// Error message constants
+const (
+	errMsgRollInitiative = "failed to roll initiative: %w"
+)
+
 type CombatAutomationService struct {
 	combatRepo    database.CombatAnalyticsRepository
 	characterRepo database.CharacterRepository
@@ -118,66 +123,11 @@ func (cas *CombatAutomationService) SmartInitiative(
 	entries := make([]models.InitiativeEntry, 0, 10)
 
 	for _, combatant := range req.Combatants {
-		// Get any special initiative rules
-		rule, _ := cas.combatRepo.GetInitiativeRule(sessionID, combatant.ID)
-
-		// Calculate initiative bonus
-		bonus := combatant.DexterityModifier
-		if rule != nil {
-			bonus += rule.BaseInitiativeBonus
-			if rule.AlertFeat {
-				bonus += 5 // Alert feat gives +5 to initiative
-			}
+		entry, err := cas.calculateInitiativeForCombatant(sessionID, combatant)
+		if err != nil {
+			return nil, err
 		}
-
-		// Roll initiative
-		var roll int
-		if rule != nil && rule.AdvantageOnInitiative {
-			// Roll with advantage
-			roll1Result, err := cas.diceRoller.Roll("1d20")
-			if err != nil {
-				return nil, fmt.Errorf("failed to roll initiative: %w", err)
-			}
-			roll2Result, err := cas.diceRoller.Roll("1d20")
-			if err != nil {
-				return nil, fmt.Errorf("failed to roll initiative: %w", err)
-			}
-			if roll1Result.Total > roll2Result.Total {
-				roll = roll1Result.Total
-			} else {
-				roll = roll2Result.Total
-			}
-		} else {
-			// Normal roll
-			rollResult, err := cas.diceRoller.Roll("1d20")
-			if err != nil {
-				return nil, fmt.Errorf("failed to roll initiative: %w", err)
-			}
-			roll = rollResult.Total
-		}
-
-		total := roll + bonus
-
-		// Apply any special rules
-		if rule != nil && rule.SpecialRules != nil {
-			// Handle special cases like "always goes first" etc.
-			// First unmarshal the JSONB to a map
-			var specialRules map[string]interface{}
-			if err := json.Unmarshal([]byte(rule.SpecialRules), &specialRules); err == nil {
-				if specialPriority, ok := specialRules["priority"].(float64); ok {
-					total += int(specialPriority * 100) // Ensure they go first/last
-				}
-			}
-		}
-
-		entries = append(entries, models.InitiativeEntry{
-			ID:         combatant.ID,
-			Type:       combatant.Type,
-			Name:       combatant.Name,
-			Initiative: total,
-			Roll:       roll,
-			Bonus:      bonus,
-		})
+		entries = append(entries, entry)
 	}
 
 	// Sort by initiative (highest first)
@@ -187,6 +137,102 @@ func (cas *CombatAutomationService) SmartInitiative(
 	cas.resolveTies(entries)
 
 	return entries, nil
+}
+
+// calculateInitiativeForCombatant calculates initiative for a single combatant
+func (cas *CombatAutomationService) calculateInitiativeForCombatant(
+	sessionID uuid.UUID,
+	combatant models.InitiativeCombatant,
+) (models.InitiativeEntry, error) {
+	// Get any special initiative rules
+	rule, _ := cas.combatRepo.GetInitiativeRule(sessionID, combatant.ID)
+
+	// Calculate initiative bonus
+	bonus := cas.calculateInitiativeBonus(combatant.DexterityModifier, rule)
+
+	// Roll initiative
+	roll, err := cas.rollInitiative(rule)
+	if err != nil {
+		return models.InitiativeEntry{}, err
+	}
+
+	total := roll + bonus
+
+	// Apply any special rules
+	total = cas.applySpecialRules(total, rule)
+
+	return models.InitiativeEntry{
+		ID:         combatant.ID,
+		Type:       combatant.Type,
+		Name:       combatant.Name,
+		Initiative: total,
+		Roll:       roll,
+		Bonus:      bonus,
+	}, nil
+}
+
+// calculateInitiativeBonus calculates the total initiative bonus
+func (cas *CombatAutomationService) calculateInitiativeBonus(
+	dexModifier int,
+	rule *models.SmartInitiativeRule,
+) int {
+	bonus := dexModifier
+	if rule != nil {
+		bonus += rule.BaseInitiativeBonus
+		if rule.AlertFeat {
+			bonus += 5 // Alert feat gives +5 to initiative
+		}
+	}
+	return bonus
+}
+
+// rollInitiative rolls initiative dice with or without advantage
+func (cas *CombatAutomationService) rollInitiative(rule *models.SmartInitiativeRule) (int, error) {
+	if rule != nil && rule.AdvantageOnInitiative {
+		return cas.rollWithAdvantage()
+	}
+	return cas.rollNormal()
+}
+
+// rollWithAdvantage rolls two d20 and takes the higher
+func (cas *CombatAutomationService) rollWithAdvantage() (int, error) {
+	roll1Result, err := cas.diceRoller.Roll("1d20")
+	if err != nil {
+		return 0, fmt.Errorf(errMsgRollInitiative, err)
+	}
+	roll2Result, err := cas.diceRoller.Roll("1d20")
+	if err != nil {
+		return 0, fmt.Errorf(errMsgRollInitiative, err)
+	}
+	if roll1Result.Total > roll2Result.Total {
+		return roll1Result.Total, nil
+	}
+	return roll2Result.Total, nil
+}
+
+// rollNormal rolls a single d20
+func (cas *CombatAutomationService) rollNormal() (int, error) {
+	rollResult, err := cas.diceRoller.Roll("1d20")
+	if err != nil {
+		return 0, fmt.Errorf(errMsgRollInitiative, err)
+	}
+	return rollResult.Total, nil
+}
+
+// applySpecialRules applies any special initiative rules
+func (cas *CombatAutomationService) applySpecialRules(total int, rule *models.SmartInitiativeRule) int {
+	if rule == nil || rule.SpecialRules == nil {
+		return total
+	}
+
+	// Handle special cases like "always goes first" etc.
+	var specialRules map[string]interface{}
+	if err := json.Unmarshal([]byte(rule.SpecialRules), &specialRules); err == nil {
+		if specialPriority, ok := specialRules["priority"].(float64); ok {
+			total += int(specialPriority * 100) // Ensure they go first/last
+		}
+	}
+	return total
 }
 
 // SaveBattleMap saves a battle map to the database

@@ -598,29 +598,9 @@ func TestCampaignService_GetSessionMemories(t *testing.T) {
 
 func TestCampaignService_GenerateRecap(t *testing.T) {
 	sessionID := uuid.New()
-	mockMemories := []*models.SessionMemory{
-		{
-			ID:            uuid.New(),
-			SessionNumber: 3,
-			KeyEvents:     models.JSONB(`["Event 1", "Event 2"]`),
-		},
-		{
-			ID:            uuid.New(),
-			SessionNumber: 2,
-			KeyEvents:     models.JSONB(`["Event 3"]`),
-		},
-	}
+	mockMemories := createMockSessionMemories()
 
-	tests := []struct {
-		name         string
-		sessionCount int
-		memories     []*models.SessionMemory
-		memoryError  error
-		aiRecap      *models.GeneratedRecap
-		aiError      error
-		expectError  bool
-		validate     func(*testing.T, *models.GeneratedRecap)
-	}{
+	tests := []generateRecapTestCase{
 		{
 			name:         "Successful AI Recap Generation",
 			sessionCount: 3,
@@ -630,20 +610,14 @@ func TestCampaignService_GenerateRecap(t *testing.T) {
 				KeyEvents: []string{"Defeated goblin king", "Found artifact"},
 			},
 			expectError: false,
-			validate: func(t *testing.T, recap *models.GeneratedRecap) {
-				assert.Equal(t, "The party continues their epic quest...", recap.Summary)
-				assert.Len(t, recap.KeyEvents, 2)
-			},
+			validate: validateSuccessfulRecap,
 		},
 		{
 			name:         "No Memories - Default Recap",
 			sessionCount: 3,
 			memories:     []*models.SessionMemory{},
 			expectError:  false,
-			validate: func(t *testing.T, recap *models.GeneratedRecap) {
-				assert.Equal(t, "This is the beginning of your adventure...", recap.Summary)
-				assert.Contains(t, recap.KeyEvents, "The party gathers for the first time")
-			},
+			validate: validateDefaultRecap,
 		},
 		{
 			name:         "Default Session Count",
@@ -671,40 +645,97 @@ func TestCampaignService_GenerateRecap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(mocks.MockCampaignRepository)
-			mockGameRepo := new(mocks.MockGameSessionRepository)
-			mockAI := new(MockAICampaignManager)
-
-			expectedLimit := tt.sessionCount
-			if expectedLimit <= 0 {
-				expectedLimit = 3
-			}
-
-			mockRepo.On("GetSessionMemories", sessionID, expectedLimit).
-				Return(tt.memories, tt.memoryError)
-
-			if tt.memoryError == nil && len(tt.memories) > 0 {
-				mockAI.On("GenerateSessionRecap", mock.Anything, tt.memories).
-					Return(tt.aiRecap, tt.aiError)
-			}
-
-			service := createTestCampaignService(mockRepo, mockGameRepo, mockAI)
-			recap, err := service.GenerateRecap(context.Background(), sessionID, tt.sessionCount)
-
-			if tt.expectError {
-				assert.Error(t, err)
-				assert.Nil(t, recap)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, recap)
-				if tt.validate != nil {
-					tt.validate(t, recap)
-				}
-			}
-
-			mockRepo.AssertExpectations(t)
-			mockAI.AssertExpectations(t)
+			runGenerateRecapTest(t, sessionID, tt)
 		})
+	}
+}
+
+// Test case struct for generate recap tests
+type generateRecapTestCase struct {
+	name         string
+	sessionCount int
+	memories     []*models.SessionMemory
+	memoryError  error
+	aiRecap      *models.GeneratedRecap
+	aiError      error
+	expectError  bool
+	validate     func(*testing.T, *models.GeneratedRecap)
+}
+
+// Helper function to create mock session memories
+func createMockSessionMemories() []*models.SessionMemory {
+	return []*models.SessionMemory{
+		{
+			ID:            uuid.New(),
+			SessionNumber: 3,
+			KeyEvents:     models.JSONB(`["Event 1", "Event 2"]`),
+		},
+		{
+			ID:            uuid.New(),
+			SessionNumber: 2,
+			KeyEvents:     models.JSONB(`["Event 3"]`),
+		},
+	}
+}
+
+// Validation functions
+func validateSuccessfulRecap(t *testing.T, recap *models.GeneratedRecap) {
+	assert.Equal(t, "The party continues their epic quest...", recap.Summary)
+	assert.Len(t, recap.KeyEvents, 2)
+}
+
+func validateDefaultRecap(t *testing.T, recap *models.GeneratedRecap) {
+	assert.Equal(t, "This is the beginning of your adventure...", recap.Summary)
+	assert.Contains(t, recap.KeyEvents, "The party gathers for the first time")
+}
+
+// Run a single generate recap test
+func runGenerateRecapTest(t *testing.T, sessionID uuid.UUID, tt generateRecapTestCase) {
+	mockRepo := new(mocks.MockCampaignRepository)
+	mockGameRepo := new(mocks.MockGameSessionRepository)
+	mockAI := new(MockAICampaignManager)
+
+	// Setup mocks
+	setupGenerateRecapMocks(mockRepo, mockAI, sessionID, tt)
+
+	// Execute test
+	service := createTestCampaignService(mockRepo, mockGameRepo, mockAI)
+	recap, err := service.GenerateRecap(context.Background(), sessionID, tt.sessionCount)
+
+	// Verify results
+	verifyGenerateRecapResults(t, tt, recap, err)
+
+	mockRepo.AssertExpectations(t)
+	mockAI.AssertExpectations(t)
+}
+
+// Setup mocks for generate recap test
+func setupGenerateRecapMocks(mockRepo *mocks.MockCampaignRepository, mockAI *MockAICampaignManager, sessionID uuid.UUID, tt generateRecapTestCase) {
+	expectedLimit := tt.sessionCount
+	if expectedLimit <= 0 {
+		expectedLimit = 3
+	}
+
+	mockRepo.On("GetSessionMemories", sessionID, expectedLimit).
+		Return(tt.memories, tt.memoryError)
+
+	if tt.memoryError == nil && len(tt.memories) > 0 {
+		mockAI.On("GenerateSessionRecap", mock.Anything, tt.memories).
+			Return(tt.aiRecap, tt.aiError)
+	}
+}
+
+// Verify test results
+func verifyGenerateRecapResults(t *testing.T, tt generateRecapTestCase, recap *models.GeneratedRecap, err error) {
+	if tt.expectError {
+		assert.Error(t, err)
+		assert.Nil(t, recap)
+	} else {
+		assert.NoError(t, err)
+		assert.NotNil(t, recap)
+		if tt.validate != nil {
+			tt.validate(t, recap)
+		}
 	}
 }
 
