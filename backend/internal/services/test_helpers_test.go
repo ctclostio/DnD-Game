@@ -129,6 +129,47 @@ func updateUnconsciousCondition(target *models.Combatant) {
 	}
 }
 
+// Helper methods for ExecuteAction
+func (s *CombatService) processAttackAction(testCombat *TestCombat, action *models.CombatAction) {
+	// Simulate attack (hit/miss)
+	action.Hit = rand.Intn(20)+1+action.AttackBonus >= 10 // Simple hit calculation
+	if action.Hit && action.TargetID != "" {
+		// Apply damage if hit
+		if target, ok := testCombat.CombatantsMap[action.TargetID]; ok {
+			damage := rand.Intn(8) + 1 + action.DamageBonus
+			target.HP -= damage
+			if target.HP < 0 {
+				target.HP = 0
+			}
+		}
+	}
+}
+
+func (s *CombatService) processMoveAction(testCombat *TestCombat, action *models.CombatAction) {
+	if actor, ok := testCombat.CombatantsMap[action.ActorID]; ok {
+		actor.Position = action.NewPosition
+	}
+}
+
+func (s *CombatService) processDodgeAction(testCombat *TestCombat, action *models.CombatAction) {
+	if actor, ok := testCombat.CombatantsMap[action.ActorID]; ok {
+		if actor.Conditions == nil {
+			actor.Conditions = []models.Condition{}
+		}
+		actor.Conditions = append(actor.Conditions, models.ConditionDodging)
+	}
+}
+
+func (s *CombatService) processEndTurnAction(combat *models.Combat) {
+	combat.Turn++
+	combat.CurrentTurn = combat.Turn
+	if combat.Turn >= len(combat.TurnOrder) {
+		combat.Turn = 0
+		combat.CurrentTurn = 0
+		combat.Round++
+	}
+}
+
 // CombatService adapter for tests
 type CombatService struct {
 	combats  map[string]*TestCombat
@@ -217,6 +258,21 @@ func (s *CombatService) GetCombatState(_ context.Context, combatID string) (*mod
 
 // ExecuteAction processes a combat action
 func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, action *models.CombatAction) (*models.Combat, error) {
+	testCombat, err := s.validateAction(combatID, action)
+	if err != nil {
+		return nil, err
+	}
+
+	// Process action based on type
+	if err := s.processAction(testCombat, action); err != nil {
+		return nil, err
+	}
+
+	return s.GetCombatState(ctx, combatID)
+}
+
+// validateAction validates the combat and action parameters
+func (s *CombatService) validateAction(combatID string, action *models.CombatAction) (*TestCombat, error) {
 	if combatID == "" {
 		return nil, errors.New(testErrCombatNotFound)
 	}
@@ -231,7 +287,6 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 	}
 
 	combat := testCombat.Combat
-
 	if !combat.IsActive || combat.Status == models.CombatStatusCompleted {
 		return nil, errors.New("combat has already ended")
 	}
@@ -242,50 +297,22 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 		return nil, errors.New("not this combatant's turn")
 	}
 
-	// Process action based on type
+	return testCombat, nil
+}
+
+// processAction handles the specific action type
+func (s *CombatService) processAction(testCombat *TestCombat, action *models.CombatAction) error {
 	switch action.ActionType {
 	case models.ActionTypeAttack:
-		// Simulate attack (hit/miss)
-		action.Hit = rand.Intn(20)+1+action.AttackBonus >= 10 // Simple hit calculation
-		if action.Hit && action.TargetID != "" {
-			// Apply damage if hit
-			if target, ok := testCombat.CombatantsMap[action.TargetID]; ok {
-				damage := rand.Intn(8) + 1 + action.DamageBonus
-				target.HP -= damage
-				if target.HP < 0 {
-					target.HP = 0
-				}
-			}
-		}
-
+		s.processAttackAction(testCombat, action)
 	case models.ActionTypeCastSpell, models.ActionTypeCast:
 		// Record spell cast
-
 	case models.ActionTypeMove:
-		// Update position
-		if actor, ok := testCombat.CombatantsMap[action.ActorID]; ok {
-			actor.Position = action.NewPosition
-		}
-
+		s.processMoveAction(testCombat, action)
 	case models.ActionTypeDodge:
-		// Add dodge condition
-		if actor, ok := testCombat.CombatantsMap[action.ActorID]; ok {
-			if actor.Conditions == nil {
-				actor.Conditions = []models.Condition{}
-			}
-			actor.Conditions = append(actor.Conditions, models.ConditionDodging)
-		}
-
+		s.processDodgeAction(testCombat, action)
 	case models.ActionTypeEndTurn:
-		// Advance turn
-		combat.Turn++
-		combat.CurrentTurn = combat.Turn
-		if combat.Turn >= len(combat.TurnOrder) {
-			combat.Turn = 0
-			combat.CurrentTurn = 0
-			combat.Round++
-		}
-
+		s.processEndTurnAction(testCombat.Combat)
 	case models.ActionTypeDash:
 		// Double movement speed for this turn
 
@@ -321,9 +348,9 @@ func (s *CombatService) ExecuteAction(ctx context.Context, combatID string, acti
 	}
 
 	// Record the action with all modifications
-	combat.ActionHistory = append(combat.ActionHistory, *action)
+	testCombat.Combat.ActionHistory = append(testCombat.Combat.ActionHistory, *action)
 
-	return s.GetCombatState(ctx, combatID)
+	return nil
 }
 
 // EndCombat ends an active combat

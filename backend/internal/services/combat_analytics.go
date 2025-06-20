@@ -566,43 +566,79 @@ func (cas *CombatAnalyticsService) analyzePositioning(actions []*models.CombatAc
 
 func (cas *CombatAnalyticsService) analyzeResourceUse(actions []*models.CombatActionLog) int {
 	// Analyze spell slot and ability usage efficiency
-	score := 5
+	metrics := cas.calculateResourceMetrics(actions)
+	return cas.scoreResourceUsage(metrics)
+}
 
-	highLevelSpellsOnMinions := 0
-	wastedHealing := 0
-	efficientResourceUse := 0
+type resourceMetrics struct {
+	highLevelSpellsOnMinions int
+	wastedHealing           int
+	efficientResourceUse    int
+}
+
+func (cas *CombatAnalyticsService) calculateResourceMetrics(actions []*models.CombatActionLog) resourceMetrics {
+	metrics := resourceMetrics{}
 
 	for _, action := range actions {
-		if action.ResourcesUsed != nil {
-			var resources map[string]interface{}
-			_ = json.Unmarshal(action.ResourcesUsed, &resources)
-
-			if spellLevel, ok := resources["spell_level"].(float64); ok {
-				if spellLevel >= 3 && action.DamageDealt < 20 {
-					highLevelSpellsOnMinions++
-				} else if action.DamageDealt > int(spellLevel)*10 {
-					efficientResourceUse++
-				}
-			}
-		}
-
-		if action.ActionType == constants.ActionHeal {
-			// Check if healing was wasted (overhealing)
-			if action.DamageDealt > 20 && action.Outcome == "overheal" {
-				wastedHealing++
-			}
-		}
+		cas.analyzeSpellUsage(action, &metrics)
+		cas.analyzeHealingUsage(action, &metrics)
 	}
 
-	if highLevelSpellsOnMinions > 2 {
+	return metrics
+}
+
+func (cas *CombatAnalyticsService) analyzeSpellUsage(action *models.CombatActionLog, metrics *resourceMetrics) {
+	if action.ResourcesUsed == nil {
+		return
+	}
+
+	spellLevel := cas.extractSpellLevel(action.ResourcesUsed)
+	if spellLevel == 0 {
+		return
+	}
+
+	if spellLevel >= 3 && action.DamageDealt < 20 {
+		metrics.highLevelSpellsOnMinions++
+	} else if action.DamageDealt > int(spellLevel)*10 {
+		metrics.efficientResourceUse++
+	}
+}
+
+func (cas *CombatAnalyticsService) extractSpellLevel(resourceData []byte) int {
+	var resources map[string]interface{}
+	if err := json.Unmarshal(resourceData, &resources); err != nil {
+		return 0
+	}
+
+	if spellLevel, ok := resources["spell_level"].(float64); ok {
+		return int(spellLevel)
+	}
+	return 0
+}
+
+func (cas *CombatAnalyticsService) analyzeHealingUsage(action *models.CombatActionLog, metrics *resourceMetrics) {
+	if action.ActionType != constants.ActionHeal {
+		return
+	}
+
+	// Check if healing was wasted (overhealing)
+	if action.DamageDealt > 20 && action.Outcome == "overheal" {
+		metrics.wastedHealing++
+	}
+}
+
+func (cas *CombatAnalyticsService) scoreResourceUsage(metrics resourceMetrics) int {
+	score := 5
+
+	if metrics.highLevelSpellsOnMinions > 2 {
 		score -= 2
 	}
 
-	if wastedHealing > 3 {
+	if metrics.wastedHealing > 3 {
 		score--
 	}
 
-	if efficientResourceUse > 5 {
+	if metrics.efficientResourceUse > 5 {
 		score += 2
 	}
 

@@ -9,6 +9,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Error messages
+const (
+	errSessionIDRequired = "session ID is required"
+)
+
 type GameSessionService struct {
 	repo     database.GameSessionRepository
 	charRepo database.CharacterRepository
@@ -129,7 +134,7 @@ func (s *GameSessionService) GetSessionsByPlayer(ctx context.Context, userID str
 func (s *GameSessionService) UpdateSession(ctx context.Context, session *models.GameSession) error {
 	// Validate session ID
 	if session.ID == "" {
-		return fmt.Errorf("session ID is required")
+		return fmt.Errorf(errSessionIDRequired)
 	}
 
 	// Check if session exists
@@ -153,31 +158,64 @@ func (s *GameSessionService) DeleteSession(ctx context.Context, id string) error
 // JoinSession adds a player to a game session with comprehensive security checks
 func (s *GameSessionService) JoinSession(ctx context.Context, sessionID, userID string, characterID *string) error {
 	// Validate input
+	if err := s.validateJoinInput(sessionID, userID); err != nil {
+		return err
+	}
+
+	// Get session and check if it can be joined
+	session, err := s.getJoinableSession(ctx, sessionID)
+	if err != nil {
+		return err
+	}
+
+	// Check participant status and capacity
+	if err := s.validateParticipantStatus(ctx, sessionID, userID, session); err != nil {
+		return err
+	}
+
+	// Validate character if provided
+	if err := s.validateCharacterForSession(ctx, userID, characterID, session); err != nil {
+		return err
+	}
+
+	// Add participant
+	return s.repo.AddParticipant(ctx, sessionID, userID, characterID)
+}
+
+// validateJoinInput validates the basic input parameters
+func (s *GameSessionService) validateJoinInput(sessionID, userID string) error {
 	if sessionID == "" {
-		return fmt.Errorf("session ID is required")
+		return fmt.Errorf(errSessionIDRequired)
 	}
 	if userID == "" {
 		return fmt.Errorf("user ID is required")
 	}
+	return nil
+}
 
-	// Check if session exists and is active
+// getJoinableSession retrieves and validates session can be joined
+func (s *GameSessionService) getJoinableSession(ctx context.Context, sessionID string) (*models.GameSession, error) {
 	session, err := s.repo.GetByID(ctx, sessionID)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve session %s for joining: %w", sessionID, err)
+		return nil, fmt.Errorf("failed to retrieve session %s for joining: %w", sessionID, err)
 	}
 
 	// Security check: If a session is marked active but flagged inactive,
 	// joining should fail. Sessions in other states may allow joining.
 	if session.Status == models.GameStatusActive && !session.IsActive {
-		return fmt.Errorf("session is not active")
+		return nil, fmt.Errorf("session is not active")
 	}
 
 	// Security check: Session must not be completed
 	if session.Status == models.GameStatusCompleted {
-		return fmt.Errorf("cannot join completed session")
+		return nil, fmt.Errorf("cannot join completed session")
 	}
 
-	// Security check: User cannot join if already a participant
+	return session, nil
+}
+
+// validateParticipantStatus checks if user can join based on participant rules
+func (s *GameSessionService) validateParticipantStatus(ctx context.Context, sessionID, userID string, session *models.GameSession) error {
 	participants, err := s.repo.GetParticipants(ctx, sessionID)
 	if err != nil {
 		return fmt.Errorf("failed to check participants: %w", err)
@@ -199,34 +237,38 @@ func (s *GameSessionService) JoinSession(ctx context.Context, sessionID, userID 
 		return fmt.Errorf("session is full (max %d players)", session.MaxPlayers-1)
 	}
 
-	// Security check: Character ownership validation
-	if characterID != nil && *characterID != "" && s.charRepo != nil {
-		character, err := s.charRepo.GetByID(ctx, *characterID)
-		if err != nil {
-			return fmt.Errorf("character not found: %w", err)
-		}
-		if character.UserID != userID {
-			return fmt.Errorf("you don't own this character")
-		}
+	return nil
+}
 
-		// Check character level requirements if set
-		if session.AllowedCharacterLevel > 0 && character.Level > session.AllowedCharacterLevel {
-			return fmt.Errorf("character level %d exceeds session limit of %d",
-				character.Level, session.AllowedCharacterLevel)
-		}
+// validateCharacterForSession validates character ownership and requirements
+func (s *GameSessionService) validateCharacterForSession(ctx context.Context, userID string, characterID *string, session *models.GameSession) error {
+	if characterID == nil || *characterID == "" || s.charRepo == nil {
+		return nil
 	}
 
-	// Security check: Private session requires invite (not yet implemented)
+	character, err := s.charRepo.GetByID(ctx, *characterID)
+	if err != nil {
+		return fmt.Errorf("character not found: %w", err)
+	}
 
-	// Add participant
-	return s.repo.AddParticipant(ctx, sessionID, userID, characterID)
+	if character.UserID != userID {
+		return fmt.Errorf("you don't own this character")
+	}
+
+	// Check character level requirements if set
+	if session.AllowedCharacterLevel > 0 && character.Level > session.AllowedCharacterLevel {
+		return fmt.Errorf("character level %d exceeds session limit of %d",
+			character.Level, session.AllowedCharacterLevel)
+	}
+
+	return nil
 }
 
 // LeaveSession removes a player from a game session
 func (s *GameSessionService) LeaveSession(ctx context.Context, sessionID, userID string) error {
 	// Validate input
 	if sessionID == "" {
-		return fmt.Errorf("session ID is required")
+		return fmt.Errorf(errSessionIDRequired)
 	}
 	if userID == "" {
 		return fmt.Errorf("user ID is required")
@@ -297,7 +339,7 @@ func (s *GameSessionService) GetSession(ctx context.Context, id string) (*models
 func (s *GameSessionService) KickPlayer(ctx context.Context, sessionID, playerID string) error {
 	// Validate input
 	if sessionID == "" {
-		return fmt.Errorf("session ID is required")
+		return fmt.Errorf(errSessionIDRequired)
 	}
 	if playerID == "" {
 		return fmt.Errorf("player ID is required")

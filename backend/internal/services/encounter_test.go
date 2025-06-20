@@ -9,6 +9,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Test constants
+const (
+	testEncounterName = testEncounterName
+)
+
 // Basic compilation test to ensure the service compiles correctly
 func TestEncounterService_Compilation(t *testing.T) {
 	// This test just ensures that the EncounterService struct and its methods compile correctly
@@ -29,14 +34,14 @@ func TestEncounterService_Compilation(t *testing.T) {
 func TestEncounterModels(t *testing.T) {
 	// Test Encounter model
 	encounter := &models.Encounter{
-		Name:          "Test Encounter",
+		Name:          testEncounterName,
 		Description:   "A test encounter",
 		EncounterType: "combat",
 		Difficulty:    "medium",
 		Status:        "planned",
 		Location:      "forest",
 	}
-	assert.Equal(t, "Test Encounter", encounter.Name)
+	assert.Equal(t, testEncounterName, encounter.Name)
 	assert.Equal(t, "combat", encounter.EncounterType)
 
 	// Test EncounterEnemy model
@@ -397,7 +402,7 @@ func TestXPCalculation(t *testing.T) {
 //lint:ignore U1000 retained for future tests
 func createTestEncounterData() *models.Encounter {
 	return &models.Encounter{
-		Name:          "Test Encounter",
+		Name:          testEncounterName,
 		Description:   "A test encounter for unit testing",
 		EncounterType: "combat",
 		Difficulty:    "medium",

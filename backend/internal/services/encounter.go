@@ -267,46 +267,59 @@ func (s *EncounterService) CheckObjectives(ctx context.Context, encounterID stri
 	}
 
 	for _, objective := range objectives {
-		if objective.IsCompleted || objective.IsFailed {
-			continue
-		}
-
-		// Check success conditions based on type
-		completed := false
-		failed := false
-
-		switch objective.Type {
-		case constants.ObjectiveDefeatAll:
-			// Check if all enemies are defeated
-			allDefeated := true
-			for i := range encounter.Enemies {
-				if encounter.Enemies[i].IsAlive && !encounter.Enemies[i].Fled {
-					allDefeated = false
-					break
-				}
-			}
-			completed = allDefeated
-
-		case "survive_rounds":
-			// This would need round tracking
-			// completed = currentRound >= targetRounds
-
-		case "protect_npc":
-			// Check if protected NPC is still alive
-			// This would need NPC tracking
-
-			// Add more objective types as needed
-		}
-
-		if completed {
-			_ = s.repo.CompleteObjective(objective.ID)
-			s.awardObjectiveRewards(ctx, objective, encounter.GameSessionID)
-		} else if failed {
-			_ = s.repo.FailObjective(objective.ID)
+		if err := s.processObjective(ctx, objective, encounter); err != nil {
+			return err
 		}
 	}
 
 	return nil
+}
+
+// processObjective evaluates and updates a single objective
+func (s *EncounterService) processObjective(ctx context.Context, objective *models.EncounterObjective, encounter *models.Encounter) error {
+	if objective.IsCompleted || objective.IsFailed {
+		return nil
+	}
+
+	completed, failed := s.evaluateObjective(objective, encounter)
+
+	if completed {
+		_ = s.repo.CompleteObjective(objective.ID)
+		s.awardObjectiveRewards(ctx, objective, encounter.GameSessionID)
+	} else if failed {
+		_ = s.repo.FailObjective(objective.ID)
+	}
+
+	return nil
+}
+
+// evaluateObjective checks if an objective is completed or failed
+func (s *EncounterService) evaluateObjective(objective *models.EncounterObjective, encounter *models.Encounter) (completed, failed bool) {
+	switch objective.Type {
+	case constants.ObjectiveDefeatAll:
+		return s.checkDefeatAllObjective(encounter), false
+	case "survive_rounds":
+		// This would need round tracking
+		// return currentRound >= targetRounds, false
+		return false, false
+	case "protect_npc":
+		// Check if protected NPC is still alive
+		// This would need NPC tracking
+		return false, false
+	default:
+		// Add more objective types as needed
+		return false, false
+	}
+}
+
+// checkDefeatAllObjective checks if all enemies are defeated
+func (s *EncounterService) checkDefeatAllObjective(encounter *models.Encounter) bool {
+	for i := range encounter.Enemies {
+		if encounter.Enemies[i].IsAlive && !encounter.Enemies[i].Fled {
+			return false
+		}
+	}
+	return true
 }
 
 // Helper functions

@@ -15,6 +15,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
+// Test constants
+const (
+	testRaceShadowElf = testRaceShadowElf
+)
+
 func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 	t.Run("successful race creation with auto-approval", func(t *testing.T) {
 		mockRepo := new(mocks.MockCustomRaceRepository)
@@ -26,12 +31,12 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 		userID := uuid.New()
 
 		request := models.CustomRaceRequest{
-			Name:        "Shadow Elf",
+			Name:        testRaceShadowElf,
 			Description: "Elves touched by shadow magic, dwelling in twilight realms",
 		}
 
 		generatedRace := &models.CustomRaceGenerationResult{
-			Name:        "Shadow Elf",
+			Name:        testRaceShadowElf,
 			Description: "Elves touched by shadow magic, with pale skin and dark eyes",
 			AbilityScoreIncreases: map[string]int{
 				"dexterity":    2,
@@ -59,7 +64,7 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 		mockAI.On("GenerateCustomRace", ctx, request).Return(generatedRace, nil)
 
 		mockRepo.On("Create", ctx, mock.MatchedBy(func(race *models.CustomRace) bool {
-			return race.Name == "Shadow Elf" &&
+			return race.Name == testRaceShadowElf &&
 				race.ApprovalStatus == models.ApprovalStatusApproved && // Auto-approved due to balance score <= 7
 				race.CreatedBy == userID &&
 				race.TimesUsed == 0 &&
@@ -71,7 +76,7 @@ func TestCustomRaceService_CreateCustomRace(t *testing.T) {
 
 		require.NoError(t, err)
 		require.NotNil(t, result)
-		require.Equal(t, "Shadow Elf", result.Name)
+		require.Equal(t, testRaceShadowElf, result.Name)
 		require.Equal(t, models.ApprovalStatusApproved, result.ApprovalStatus)
 		require.NotNil(t, result.ApprovalNotes)
 		require.Contains(t, *result.ApprovalNotes, "Auto-approved")
@@ -211,7 +216,7 @@ func TestCustomRaceService_GetCustomRace(t *testing.T) {
 
 		expectedRace := &models.CustomRace{
 			ID:   raceID,
-			Name: "Shadow Elf",
+			Name: testRaceShadowElf,
 			AbilityScoreIncreases: map[string]int{
 				"dexterity": 2,
 			},
@@ -280,7 +285,7 @@ func TestCustomRaceService_ApproveCustomRace(t *testing.T) {
 
 		existingRace := &models.CustomRace{
 			ID:             raceID,
-			Name:           "Shadow Elf",
+			Name:           testRaceShadowElf,
 			ApprovalStatus: models.ApprovalStatusPending,
 		}
 
@@ -393,7 +398,7 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 
 		existingRace := &models.CustomRace{
 			ID:             raceID,
-			Name:           "Shadow Elf",
+			Name:           testRaceShadowElf,
 			CreatedBy:      userID,
 			ApprovalStatus: models.ApprovalStatusApproved,
 			IsPublic:       false,
@@ -423,7 +428,7 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 
 		existingRace := &models.CustomRace{
 			ID:             raceID,
-			Name:           "Shadow Elf",
+			Name:           testRaceShadowElf,
 			CreatedBy:      creatorID,
 			ApprovedBy:     &approverID,
 			ApprovalStatus: models.ApprovalStatusApproved,
@@ -454,7 +459,7 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 
 		existingRace := &models.CustomRace{
 			ID:             raceID,
-			Name:           "Shadow Elf",
+			Name:           testRaceShadowElf,
 			CreatedBy:      creatorID,
 			ApprovalStatus: models.ApprovalStatusApproved,
 			IsPublic:       false,
@@ -481,7 +486,7 @@ func TestCustomRaceService_MakePublic(t *testing.T) {
 
 		existingRace := &models.CustomRace{
 			ID:             raceID,
-			Name:           "Shadow Elf",
+			Name:           testRaceShadowElf,
 			CreatedBy:      userID,
 			ApprovalStatus: models.ApprovalStatusPending,
 			IsPublic:       false,
@@ -634,7 +639,7 @@ func TestCustomRaceService_GetCustomRaceStats(t *testing.T) {
 
 		race := &models.CustomRace{
 			ID:          raceID,
-			Name:        "Shadow Elf",
+			Name:        testRaceShadowElf,
 			Description: "Elves touched by shadow magic",
 			AbilityScoreIncreases: map[string]int{
 				"dexterity":    2,
@@ -659,7 +664,7 @@ func TestCustomRaceService_GetCustomRaceStats(t *testing.T) {
 
 		require.NoError(t, err)
 		require.NotNil(t, stats)
-		require.Equal(t, "Shadow Elf", stats["name"])
+		require.Equal(t, testRaceShadowElf, stats["name"])
 		require.Equal(t, "Medium", stats["size"])
 		require.Equal(t, 30, stats["speed"])
 		require.Equal(t, 120, stats["darkvision"])

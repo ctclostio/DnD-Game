@@ -27,6 +27,11 @@ const (
 	// Email addresses
 	testEmailValid    = "test@example.com"
 	testEmailExisting = "existing@example.com"
+	
+	// User IDs and error messages
+	testUserID123     = testUserID123
+	testErrDatabase   = "database error"
+	testErrUserNotFound = testErrUserNotFound
 )
 
 func TestUserService_Register(t *testing.T) {
@@ -149,9 +154,9 @@ func TestUserService_Register(t *testing.T) {
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByUsername", ctx, "testuser").Return(nil, nil)
 				m.On("GetByEmail", ctx, testEmailValid).Return(nil, nil)
-				m.On("Create", ctx, mock.Anything).Return(errors.New("database error"))
+				m.On("Create", ctx, mock.Anything).Return(errors.New(testErrDatabase))
 			},
-			expectedError: "database error",
+			expectedError: testErrDatabase,
 		},
 	}
 
@@ -203,7 +208,7 @@ func TestUserService_Login(t *testing.T) {
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
-					ID:           "user-123",
+					ID:           testUserID123,
 					Username:     "testuser",
 					Email:        testEmailValid,
 					Role:         "player",
@@ -212,7 +217,7 @@ func TestUserService_Login(t *testing.T) {
 				m.On("GetByUsername", ctx, "testuser").Return(user, nil)
 			},
 			validate: func(t *testing.T, auth *models.AuthResponse) {
-				assert.Equal(t, "user-123", auth.User.ID)
+				assert.Equal(t, testUserID123, auth.User.ID)
 				assert.Equal(t, "testuser", auth.User.Username)
 			},
 		},
@@ -224,7 +229,7 @@ func TestUserService_Login(t *testing.T) {
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
-					ID:           "user-123",
+					ID:           testUserID123,
 					Username:     "testuser",
 					PasswordHash: string(hashedPassword),
 				}
@@ -233,7 +238,7 @@ func TestUserService_Login(t *testing.T) {
 			expectedError: "invalid username or password",
 		},
 		{
-			name: "user not found",
+			name: testErrUserNotFound,
 			request: models.LoginRequest{
 				Username: "nonexistent",
 				Password: testPasswordValid,
@@ -284,22 +289,22 @@ func TestUserService_GetUserByID(t *testing.T) {
 	}{
 		{
 			name:   "successful get user",
-			userID: "user-123",
+			userID: testUserID123,
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
-					ID:       "user-123",
+					ID:       testUserID123,
 					Username: "testuser",
 					Email:    testEmailValid,
 				}
-				m.On("GetByID", ctx, "user-123").Return(user, nil)
+				m.On("GetByID", ctx, testUserID123).Return(user, nil)
 			},
 			validate: func(t *testing.T, user *models.User) {
-				assert.Equal(t, "user-123", user.ID)
+				assert.Equal(t, testUserID123, user.ID)
 				assert.Equal(t, "testuser", user.Username)
 			},
 		},
 		{
-			name:   "user not found",
+			name:   testErrUserNotFound,
 			userID: "nonexistent",
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("not found"))
@@ -352,21 +357,21 @@ func TestUserService_UpdateUser(t *testing.T) {
 		{
 			name: "successful update",
 			user: &models.User{
-				ID:       "user-123",
+				ID:       testUserID123,
 				Username: "newusername",
 				Email:    "newemail@example.com",
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				existingUser := &models.User{
-					ID:           "user-123",
+					ID:           testUserID123,
 					Username:     "oldusername",
 					Email:        "oldemail@example.com",
 					PasswordHash: "hashedpassword",
 					CreatedAt:    time.Now(),
 				}
-				m.On("GetByID", ctx, "user-123").Return(existingUser, nil)
+				m.On("GetByID", ctx, testUserID123).Return(existingUser, nil)
 				m.On("Update", ctx, mock.MatchedBy(func(u *models.User) bool {
-					return u.ID == "user-123" &&
+					return u.ID == testUserID123 &&
 						u.Username == "newusername" &&
 						u.Email == "newemail@example.com" &&
 						u.PasswordHash == "hashedpassword" // Password preserved
@@ -374,7 +379,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 			},
 		},
 		{
-			name: "user not found",
+			name: testErrUserNotFound,
 			user: &models.User{
 				ID:       "nonexistent",
 				Username: "testuser",
@@ -382,7 +387,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("not found"))
 			},
-			expectedError: "user not found",
+			expectedError: testErrUserNotFound,
 		},
 		{
 			name: "empty user ID",
@@ -395,19 +400,19 @@ func TestUserService_UpdateUser(t *testing.T) {
 		{
 			name: "repository error on update",
 			user: &models.User{
-				ID:       "user-123",
+				ID:       testUserID123,
 				Username: "newusername",
 			},
 			setupMock: func(m *mocks.MockUserRepository) {
 				existingUser := &models.User{
-					ID:           "user-123",
+					ID:           testUserID123,
 					PasswordHash: "hashedpassword",
 					CreatedAt:    time.Now(),
 				}
-				m.On("GetByID", ctx, "user-123").Return(existingUser, nil)
-				m.On("Update", ctx, mock.Anything).Return(errors.New("database error"))
+				m.On("GetByID", ctx, testUserID123).Return(existingUser, nil)
+				m.On("Update", ctx, mock.Anything).Return(errors.New(testErrDatabase))
 			},
-			expectedError: "database error",
+			expectedError: testErrDatabase,
 		},
 	}
 
@@ -448,61 +453,61 @@ func TestUserService_ChangePassword(t *testing.T) {
 	}{
 		{
 			name:        "successful password change",
-			userID:      "user-123",
+			userID:      testUserID123,
 			oldPassword: testPasswordOld,
 			newPassword: testPasswordNew,
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
-					ID:           "user-123",
+					ID:           testUserID123,
 					Username:     "testuser",
 					PasswordHash: string(oldHash),
 				}
-				m.On("GetByID", ctx, "user-123").Return(user, nil)
+				m.On("GetByID", ctx, testUserID123).Return(user, nil)
 				m.On("Update", ctx, mock.MatchedBy(func(u *models.User) bool {
 					// Verify new password hash is different
-					return u.ID == "user-123" && u.PasswordHash != string(oldHash)
+					return u.ID == testUserID123 && u.PasswordHash != string(oldHash)
 				})).Return(nil)
 			},
 		},
 		{
 			name:        "incorrect current password",
-			userID:      "user-123",
+			userID:      testUserID123,
 			oldPassword: testPasswordWeak,
 			newPassword: testPasswordNew,
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
-					ID:           "user-123",
+					ID:           testUserID123,
 					Username:     "testuser",
 					PasswordHash: string(oldHash),
 				}
-				m.On("GetByID", ctx, "user-123").Return(user, nil)
+				m.On("GetByID", ctx, testUserID123).Return(user, nil)
 			},
 			expectedError: "invalid password",
 		},
 		{
 			name:        "weak new password",
-			userID:      "user-123",
+			userID:      testUserID123,
 			oldPassword: testPasswordOld,
 			newPassword: "weak",
 			setupMock: func(m *mocks.MockUserRepository) {
 				user := &models.User{
-					ID:           "user-123",
+					ID:           testUserID123,
 					Username:     "testuser",
 					PasswordHash: string(oldHash),
 				}
-				m.On("GetByID", ctx, "user-123").Return(user, nil)
+				m.On("GetByID", ctx, testUserID123).Return(user, nil)
 			},
 			expectedError: "password must be at least 8 characters",
 		},
 		{
-			name:        "user not found",
+			name:        testErrUserNotFound,
 			userID:      "nonexistent",
 			oldPassword: testPasswordOld,
 			newPassword: testPasswordNew,
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New("not found"))
 			},
-			expectedError: "user not found",
+			expectedError: testErrUserNotFound,
 		},
 	}
 
@@ -539,13 +544,13 @@ func TestUserService_DeleteUser(t *testing.T) {
 	}{
 		{
 			name:   "successful deletion",
-			userID: "user-123",
+			userID: testUserID123,
 			setupMock: func(m *mocks.MockUserRepository) {
-				m.On("Delete", ctx, "user-123").Return(nil)
+				m.On("Delete", ctx, testUserID123).Return(nil)
 			},
 		},
 		{
-			name:   "user not found",
+			name:   testErrUserNotFound,
 			userID: "nonexistent",
 			setupMock: func(m *mocks.MockUserRepository) {
 				m.On("Delete", ctx, "nonexistent").Return(errors.New("not found"))

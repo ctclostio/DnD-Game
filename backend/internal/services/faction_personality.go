@@ -417,42 +417,10 @@ func (fps *FactionPersonalityService) getRelevantMemories(personality *models.Fa
 	if decision == nil {
 		return []models.FactionMemory{}
 	}
+
 	relevant := []models.FactionMemory{}
-
-	// Look for memories involving same entities or similar contexts
 	for _, memory := range personality.Memories {
-		// Apply memory decay
-		age := time.Since(memory.Timestamp).Hours() / 24.0 // Days
-		decayedImpact := memory.Impact * math.Pow(memory.Decay, age)
-
-		if decayedImpact < 0.1 {
-			continue // Memory too faded
-		}
-
-		// Check if memory is relevant to decision
-		isRelevant := false
-
-		// Check if faction is involved
-		for _, participant := range memory.Participants {
-			if participant == decision.FactionID {
-				isRelevant = true
-				break
-			}
-		}
-
-		// Check if event type is relevant
-		switch decision.DecisionType {
-		case constants.ApproachDiplomatic:
-			if memory.EventType == "faction_interaction" {
-				isRelevant = true
-			}
-		case constants.ApproachMilitary:
-			if memory.EventType == "military_conflict" {
-				isRelevant = true
-			}
-		}
-
-		if isRelevant {
+		if fps.isMemoryRelevant(memory, decision) {
 			relevant = append(relevant, memory)
 		}
 	}
@@ -463,6 +431,51 @@ func (fps *FactionPersonalityService) getRelevantMemories(personality *models.Fa
 	}
 
 	return relevant
+}
+
+// isMemoryRelevant checks if a memory is relevant to a decision
+func (fps *FactionPersonalityService) isMemoryRelevant(memory models.FactionMemory, decision *models.FactionDecision) bool {
+	// Check memory decay first
+	if !fps.isMemoryActive(memory) {
+		return false
+	}
+
+	// Check faction involvement
+	if fps.isFactionInvolved(memory, decision.FactionID) {
+		return true
+	}
+
+	// Check event type relevance
+	return fps.isEventTypeRelevant(memory.EventType, decision.DecisionType)
+}
+
+// isMemoryActive checks if a memory has decayed too much
+func (fps *FactionPersonalityService) isMemoryActive(memory models.FactionMemory) bool {
+	age := time.Since(memory.Timestamp).Hours() / 24.0 // Days
+	decayedImpact := memory.Impact * math.Pow(memory.Decay, age)
+	return decayedImpact >= 0.1
+}
+
+// isFactionInvolved checks if a faction is a participant in a memory
+func (fps *FactionPersonalityService) isFactionInvolved(memory models.FactionMemory, factionID string) bool {
+	for _, participant := range memory.Participants {
+		if participant == factionID {
+			return true
+		}
+	}
+	return false
+}
+
+// isEventTypeRelevant checks if an event type matches the decision type
+func (fps *FactionPersonalityService) isEventTypeRelevant(eventType, decisionType string) bool {
+	switch decisionType {
+	case constants.ApproachDiplomatic:
+		return eventType == "faction_interaction"
+	case constants.ApproachMilitary:
+		return eventType == "military_conflict"
+	default:
+		return false
+	}
 }
 
 // UpdateFactionMood adjusts faction mood based on recent events
