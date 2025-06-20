@@ -143,7 +143,7 @@ func TestCampaignService_CreateStoryArc(t *testing.T) {
 			},
 			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreateStoryArc", mock.AnythingOfType(testStoryArcType)).
-					Return(errors.New("database error"))
+					Return(errors.New(testDatabaseError))
 			},
 			expectError: true,
 		},
@@ -307,7 +307,7 @@ func TestCampaignService_GetStoryArcs(t *testing.T) {
 		{
 			name: testRepositoryError,
 			setupMocks: func(repo *mocks.MockCampaignRepository) {
-				repo.On("GetStoryArcsBySession", sessionID).Return(nil, errors.New("database error"))
+				repo.On("GetStoryArcsBySession", sessionID).Return(nil, errors.New(testDatabaseError))
 			},
 			expectError: true,
 			expectCount: 0,
@@ -493,7 +493,7 @@ func TestCampaignService_CreateSessionMemory(t *testing.T) {
 			},
 			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreateSessionMemory", mock.AnythingOfType(testSessionMemoryType)).
-					Return(errors.New("database error"))
+					Return(errors.New(testDatabaseError))
 			},
 			expectError: true,
 		},
@@ -578,7 +578,7 @@ func TestCampaignService_GetSessionMemories(t *testing.T) {
 			limit:        10,
 			expectedCall: 10,
 			setupMocks: func(repo *mocks.MockCampaignRepository) {
-				repo.On("GetSessionMemories", sessionID, 10).Return(nil, errors.New("database error"))
+				repo.On("GetSessionMemories", sessionID, 10).Return(nil, errors.New(testDatabaseError))
 			},
 			expectError: true,
 		},
@@ -761,7 +761,7 @@ func TestCampaignService_CreatePlotThread(t *testing.T) {
 			},
 			setupMocks: func(repo *mocks.MockCampaignRepository) {
 				repo.On("CreatePlotThread", mock.AnythingOfType(testPlotThreadType)).
-					Return(errors.New("database error"))
+					Return(errors.New(testDatabaseError))
 			},
 			expectError: true,
 		},
@@ -831,7 +831,7 @@ func TestCampaignService_GetPlotThreads(t *testing.T) {
 			name:       "Repository Error - Active",
 			activeOnly: true,
 			setupMocks: func(repo *mocks.MockCampaignRepository) {
-				repo.On("GetActivePlotThreads", sessionID).Return(nil, errors.New("database error"))
+				repo.On("GetActivePlotThreads", sessionID).Return(nil, errors.New(testDatabaseError))
 			},
 			expectError: true,
 		},
@@ -839,7 +839,7 @@ func TestCampaignService_GetPlotThreads(t *testing.T) {
 			name:       "Repository Error - All",
 			activeOnly: false,
 			setupMocks: func(repo *mocks.MockCampaignRepository) {
-				repo.On("GetPlotThreadsBySession", sessionID).Return(nil, errors.New("database error"))
+				repo.On("GetPlotThreadsBySession", sessionID).Return(nil, errors.New(testDatabaseError))
 			},
 			expectError: true,
 		},

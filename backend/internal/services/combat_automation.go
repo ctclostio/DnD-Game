@@ -269,7 +269,20 @@ func (cas *CombatAutomationService) simulateCombat(
 	encounterCR float64,
 	useResources bool,
 ) (outcome string, rounds int, resources map[string]interface{}) {
-	partyStrength := partyLevel * float64(len(characters)) * 10
+	// Calculate combat strengths
+	partyStrength, encounterStrength := cas.calculateCombatStrengths(partyLevel, len(characters), encounterCR)
+
+	// Determine outcome
+	outcome, rounds = cas.determineCombatOutcome(partyStrength, encounterStrength)
+
+	// Calculate resources used
+	resources = cas.calculateResourcesUsed(characters, outcome, rounds, useResources, partyLevel)
+
+	return outcome, rounds, resources
+}
+
+func (cas *CombatAutomationService) calculateCombatStrengths(partyLevel float64, partySize int, encounterCR float64) (float64, float64) {
+	partyStrength := partyLevel * float64(partySize) * 10
 	encounterStrength := encounterCR * 15
 
 	// Add randomness
@@ -281,66 +294,83 @@ func (cas *CombatAutomationService) simulateCombat(
 	partyStrength += partyRoll * 5
 	encounterStrength += enemyRoll * 5
 
-	// Determine outcome
-	if partyStrength > encounterStrength*1.5 {
-		outcome = constants.OutcomeDecisiveVictory
-		rounds = 2 + rand.Intn(3)
-	} else if partyStrength > encounterStrength {
-		outcome = constants.OutcomeVictory
-		rounds = 3 + rand.Intn(4)
-	} else if partyStrength > encounterStrength*0.7 {
-		outcome = constants.OutcomeCostlyVictory
-		rounds = 5 + rand.Intn(5)
-	} else if partyStrength > encounterStrength*0.5 {
-		outcome = constants.ActionTypeRetreat
-		rounds = 3 + rand.Intn(3)
-	} else {
-		outcome = constants.OutcomeDefeat
-		rounds = 4 + rand.Intn(4)
-	}
+	return partyStrength, encounterStrength
+}
 
-	// Calculate resources used
-	resources = make(map[string]interface{})
+func (cas *CombatAutomationService) determineCombatOutcome(partyStrength, encounterStrength float64) (string, int) {
+	strengthRatio := partyStrength / encounterStrength
+
+	if strengthRatio > 1.5 {
+		return constants.OutcomeDecisiveVictory, 2 + rand.Intn(3)
+	} else if strengthRatio > 1.0 {
+		return constants.OutcomeVictory, 3 + rand.Intn(4)
+	} else if strengthRatio > 0.7 {
+		return constants.OutcomeCostlyVictory, 5 + rand.Intn(5)
+	} else if strengthRatio > 0.5 {
+		return constants.ActionTypeRetreat, 3 + rand.Intn(3)
+	}
+	return constants.OutcomeDefeat, 4 + rand.Intn(4)
+}
+
+func (cas *CombatAutomationService) calculateResourcesUsed(
+	characters []*models.Character,
+	outcome string,
+	rounds int,
+	useResources bool,
+	partyLevel float64,
+) map[string]interface{} {
+	resources := make(map[string]interface{})
 
 	// HP loss calculation
-	hpLossPercent := 0.0
-	switch outcome {
-	case constants.OutcomeDecisiveVictory:
-		hpLossPercent = 0.1 + rand.Float64()*0.1 // 10-20%
-	case constants.OutcomeVictory:
-		hpLossPercent = 0.2 + rand.Float64()*0.2 // 20-40%
-	case constants.OutcomeCostlyVictory:
-		hpLossPercent = 0.4 + rand.Float64()*0.3 // 40-70%
-	case constants.ActionTypeRetreat:
-		hpLossPercent = 0.3 + rand.Float64()*0.3 // 30-60%
-	case constants.OutcomeDefeat:
-		hpLossPercent = 0.6 + rand.Float64()*0.3 // 60-90%
-	}
-
-	totalHP := 0
-	for _, char := range characters {
-		totalHP += char.MaxHitPoints
-	}
+	hpLossPercent := cas.calculateHPLossPercent(outcome)
+	totalHP := cas.calculateTotalHP(characters)
 	resources["hp_lost"] = int(float64(totalHP) * hpLossPercent)
 
 	// Spell slots and abilities used
 	if useResources {
-		spellSlotsUsed := make(map[int]int)
-		maxSlotLevel := int(math.Min(9, math.Ceil(partyLevel/2)))
-
-		for i := 1; i <= maxSlotLevel; i++ {
-			if rand.Float64() < 0.3+(float64(rounds)*0.05) {
-				spellSlotsUsed[i] = 1 + rand.Intn(2)
-			}
-		}
-		resources["spell_slots_used"] = spellSlotsUsed
-
-		// Other resources
+		cas.addSpellResourceUsage(resources, rounds, partyLevel)
 		resources["hit_dice_used"] = rounds / 2
 		resources["consumables_used"] = rand.Intn(rounds)
 	}
 
-	return outcome, rounds, resources
+	return resources
+}
+
+func (cas *CombatAutomationService) calculateHPLossPercent(outcome string) float64 {
+	switch outcome {
+	case constants.OutcomeDecisiveVictory:
+		return 0.1 + rand.Float64()*0.1 // 10-20%
+	case constants.OutcomeVictory:
+		return 0.2 + rand.Float64()*0.2 // 20-40%
+	case constants.OutcomeCostlyVictory:
+		return 0.4 + rand.Float64()*0.3 // 40-70%
+	case constants.ActionTypeRetreat:
+		return 0.3 + rand.Float64()*0.3 // 30-60%
+	case constants.OutcomeDefeat:
+		return 0.6 + rand.Float64()*0.3 // 60-90%
+	default:
+		return 0.5
+	}
+}
+
+func (cas *CombatAutomationService) calculateTotalHP(characters []*models.Character) int {
+	totalHP := 0
+	for _, char := range characters {
+		totalHP += char.MaxHitPoints
+	}
+	return totalHP
+}
+
+func (cas *CombatAutomationService) addSpellResourceUsage(resources map[string]interface{}, rounds int, partyLevel float64) {
+	spellSlotsUsed := make(map[int]int)
+	maxSlotLevel := int(math.Min(9, math.Ceil(partyLevel/2)))
+
+	for i := 1; i <= maxSlotLevel; i++ {
+		if rand.Float64() < 0.3+(float64(rounds)*0.05) {
+			spellSlotsUsed[i] = 1 + rand.Intn(2)
+		}
+	}
+	resources["spell_slots_used"] = spellSlotsUsed
 }
 
 func (cas *CombatAutomationService) generateLoot(difficulty string, enemies []models.EnemyInfo) []map[string]interface{} {

@@ -24,6 +24,10 @@ const (
 
 	errDatabaseError    = "database error"
 	errCharacterNotFound = "character not found"
+	
+	// Test name constants
+	testNameCharacterNotFound = "character not found"
+	testNameRepositoryError   = "repository error"
 )
 
 func TestCharacterService_CreateCharacter(t *testing.T) {
@@ -104,7 +108,7 @@ func TestCharacterService_CreateCharacter(t *testing.T) {
 			expectedError: "character class is required",
 		},
 		{
-			name: "repository error",
+			name: testNameRepositoryError,
 			character: &models.Character{
 				UserID: testUserID,
 				Name:   testCharName,
@@ -171,7 +175,7 @@ func TestCharacterService_GetCharacterByID(t *testing.T) {
 			},
 		},
 		{
-			name:        "character not found",
+			name:        testNameCharacterNotFound,
 			characterID: "nonexistent",
 			setupMock: func(m *mocks.MockCharacterRepository) {
 				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(errCharacterNotFound))
@@ -179,7 +183,7 @@ func TestCharacterService_GetCharacterByID(t *testing.T) {
 			expectedError: errCharacterNotFound,
 		},
 		{
-			name:        "repository error",
+			name:        testNameRepositoryError,
 			characterID: testCharacterID,
 			setupMock: func(m *mocks.MockCharacterRepository) {
 				m.On("GetByID", ctx, testCharacterID).Return(nil, errors.New(errDatabaseError))
@@ -268,7 +272,7 @@ func TestCharacterService_UpdateCharacter(t *testing.T) {
 			expectedError: "character ID is required",
 		},
 		{
-			name: "character not found",
+			name: testNameCharacterNotFound,
 			update: &models.Character{
 				ID:   "nonexistent",
 				Name: "Strider",
@@ -319,7 +323,7 @@ func TestCharacterService_DeleteCharacter(t *testing.T) {
 			},
 		},
 		{
-			name:        "character not found",
+			name:        testNameCharacterNotFound,
 			characterID: "nonexistent",
 			setupMock: func(m *mocks.MockCharacterRepository) {
 				m.On("Delete", ctx, "nonexistent").Return(errors.New(errCharacterNotFound))
@@ -327,7 +331,7 @@ func TestCharacterService_DeleteCharacter(t *testing.T) {
 			expectedError: errCharacterNotFound,
 		},
 		{
-			name:        "repository error",
+			name:        testNameRepositoryError,
 			characterID: testCharacterID,
 			setupMock: func(m *mocks.MockCharacterRepository) {
 				m.On("Delete", ctx, testCharacterID).Return(errors.New(errDatabaseError))
@@ -413,7 +417,7 @@ func TestCharacterService_AddExperience(t *testing.T) {
 			},
 		},
 		{
-			name:        "character not found",
+			name:        testNameCharacterNotFound,
 			characterID: "nonexistent",
 			xpToAdd:     100,
 			setupMock: func(charRepo *mocks.MockCharacterRepository, _ *mocks.MockLLMProvider) {

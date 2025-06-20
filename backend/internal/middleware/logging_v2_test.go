@@ -12,6 +12,12 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
+// Header constants
+const (
+	headerRequestID     = "X-Request-ID"
+	headerCorrelationID = "X-Correlation-ID"
+)
+
 func TestLoggingMiddleware_CorrelationID(t *testing.T) {
 	log := createTestLogger(t)
 	handler := createIDVerificationHandler()
@@ -94,10 +100,10 @@ func createIDVerificationHandler() http.HandlerFunc {
 func createTestRequest(requestID, correlationID string) *http.Request {
 	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	if requestID != "" {
-		req.Header.Set("X-Request-ID", requestID)
+		req.Header.Set(headerRequestID, requestID)
 	}
 	if correlationID != "" {
-		req.Header.Set("X-Correlation-ID", correlationID)
+		req.Header.Set(headerCorrelationID, correlationID)
 	}
 	return req
 }
@@ -110,8 +116,8 @@ func verifyResponseIDs(t *testing.T, rr *httptest.ResponseRecorder, tt struct {
 	expectedCorrID    bool
 	checkCorrIDEquals bool
 }) {
-	respReqID := rr.Header().Get("X-Request-ID")
-	respCorrID := rr.Header().Get("X-Correlation-ID")
+	respReqID := rr.Header().Get(headerRequestID)
+	respCorrID := rr.Header().Get(headerCorrelationID)
 
 	assert.NotEmpty(t, respReqID, "Response should have X-Request-ID")
 	assert.NotEmpty(t, respCorrID, "Response should have X-Correlation-ID")
@@ -128,8 +134,8 @@ func verifyResponseIDs(t *testing.T, rr *httptest.ResponseRecorder, tt struct {
 }
 
 func verifyContextPropagation(t *testing.T, rr *httptest.ResponseRecorder) {
-	respReqID := rr.Header().Get("X-Request-ID")
-	respCorrID := rr.Header().Get("X-Correlation-ID")
+	respReqID := rr.Header().Get(headerRequestID)
+	respCorrID := rr.Header().Get(headerCorrelationID)
 	ctxReqID := rr.Header().Get("X-Context-Request-ID")
 	ctxCorrID := rr.Header().Get("X-Context-Correlation-ID")
 

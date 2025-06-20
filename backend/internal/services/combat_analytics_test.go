@@ -13,6 +13,16 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
+// Test constants for combat analytics
+const (
+	testCharacterID1   = "char-1"
+	testCharacterID2   = "char-2"
+	testNPCID1        = "npc-1"
+	testActorTypeChar = "character"
+	testActionAttack  = "attack"
+	testOutcomeHit    = "hit"
+)
+
 // Helper functions to reduce code duplication in mock implementations
 
 func handleErrorResult(args mock.Arguments, index int) error {
@@ -40,18 +50,18 @@ func TestCombatAnalytics_TrackCombatAction(t *testing.T) {
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
 
 		combatID := uuid.New()
-		targetID := "npc-1"
+		targetID := testNPCID1
 
 		action := &models.CombatActionLog{
 			ID:          uuid.New(),
 			CombatID:    combatID,
-			ActorID:     "char-1",
-			ActorType:   "character",
-			ActionType:  "attack",
+			ActorID:     testCharacterID1,
+			ActorType:   testActorTypeChar,
+			ActionType:  testActionAttack,
 			TargetID:    &targetID,
 			RollResults: models.JSONB(`{"attack": 18}`),
 			DamageDealt: 12,
-			Outcome:     "hit",
+			Outcome:     testOutcomeHit,
 			RoundNumber: 1,
 			TurnNumber:  0,
 			Timestamp:   time.Now(),
@@ -61,7 +71,7 @@ func TestCombatAnalytics_TrackCombatAction(t *testing.T) {
 			return a.CombatID == action.CombatID &&
 				a.ActorID == action.ActorID &&
 				a.DamageDealt == action.DamageDealt &&
-				a.Outcome == "hit"
+				a.Outcome == testOutcomeHit
 		})).Return(nil)
 
 		ctx := testutil.TestContext()
@@ -77,13 +87,13 @@ func TestCombatAnalytics_TrackCombatAction(t *testing.T) {
 		analytics := NewCombatAnalyticsService(mockRepo, nil)
 
 		combatID := uuid.New()
-		targetID := "char-1"
+		targetID := testCharacterID1
 
 		action := &models.CombatActionLog{
 			ID:          uuid.New(),
 			CombatID:    combatID,
-			ActorID:     "char-2",
-			ActorType:   "character",
+			ActorID:     testCharacterID2,
+			ActorType:   testActorTypeChar,
 			ActionType:  "heal",
 			TargetID:    &targetID,
 			DamageDealt: 8, // Healing stored as positive damage

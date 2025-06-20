@@ -18,6 +18,9 @@ const (
 	errLLMServiceUnavailable = "LLM service unavailable"
 	errLLMServiceError = "LLM service error"
 	errInvalidJSON = "Not valid JSON"
+	
+	// Test name constants
+	testNameLLMError = "LLM error"
 )
 
 // MockLLMProviderDMTest is a mock implementation for testing
@@ -140,7 +143,7 @@ func TestAIDMAssistantService_GenerateLocationDescription(t *testing.T) {
 			mockResponse: "A dark forest with tall trees that seem to whisper secrets in the wind.",
 		},
 		{
-			name: "LLM error",
+			name: testNameLLMError,
 			request: models.LocationDescriptionRequest{
 				LocationType: "test",
 				LocationName: "Test Location",
@@ -273,7 +276,7 @@ func TestAIDMAssistantService_GeneratePlotTwist(t *testing.T) {
 			}`,
 		},
 		{
-			name:          "LLM error",
+			name:          testNameLLMError,
 			context:       map[string]interface{}{"test": "data"},
 			mockResponse:  "",
 			expectedError: true,
@@ -406,7 +409,7 @@ func TestAIDMAssistantService_GenerateNPC(t *testing.T) {
 			}`,
 		},
 		{
-			name:          "LLM error",
+			name:          testNameLLMError,
 			role:          "Guard Captain",
 			context:       map[string]interface{}{},
 			mockResponse:  "",
