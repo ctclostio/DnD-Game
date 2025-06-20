@@ -197,31 +197,7 @@ func (h *NarrativeHandlers) UpdateNarrativeProfile(w http.ResponseWriter, r *htt
 	}
 
 	// Apply updates
-	if preferences, ok := updates["preferences"].(map[string]interface{}); ok {
-		// Update preferences fields
-		if themes, ok := preferences["themes"].([]interface{}); ok {
-			profile.Preferences.Themes = interfaceSliceToStringSlice(themes)
-		}
-		if tone, ok := preferences["tone"].([]interface{}); ok {
-			profile.Preferences.Tone = interfaceSliceToStringSlice(tone)
-		}
-		if complexity, ok := preferences["complexity"].(float64); ok {
-			profile.Preferences.Complexity = int(complexity)
-		}
-		if moral, ok := preferences["moral_alignment"].(string); ok {
-			profile.Preferences.MoralAlignment = moral
-		}
-		if pacing, ok := preferences["pacing"].(string); ok {
-			profile.Preferences.PacingPreference = pacing
-		}
-		if combat, ok := preferences["combat_narrative"].(float64); ok {
-			profile.Preferences.CombatNarrative = combat
-		}
-	}
-
-	if playStyle, ok := updates["play_style"].(string); ok {
-		profile.PlayStyle = playStyle
-	}
+	h.applyProfileUpdates(profile, updates)
 
 	if err := h.narrativeRepo.UpdateNarrativeProfile(profile); err != nil {
 		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
@@ -299,22 +275,7 @@ func (h *NarrativeHandlers) RecordPlayerAction(w http.ResponseWriter, r *http.Re
 	go h.processActionConsequences(r.Context(), action)
 
 	// Update narrative profile with decision
-	profile, err := h.narrativeRepo.GetNarrativeProfile(action.CharacterID)
-	if err == nil {
-		decision := models.DecisionRecord{
-			Timestamp:       action.Timestamp,
-			Context:         action.ActionDescription,
-			Decision:        action.ActionType,
-			Consequences:    []string{action.ImmediateResult},
-			EmotionalWeight: 0.5, // Default weight
-			Tags:            []string{action.ActionType, action.TargetType},
-		}
-
-		updatedProfile, err := h.narrativeEngine.ProfileService.AnalyzePlayerDecision(r.Context(), profile, decision)
-		if err == nil {
-			_ = h.narrativeRepo.UpdateNarrativeProfile(updatedProfile)
-		}
-	}
+	h.updateNarrativeProfileWithAction(r.Context(), action)
 
 	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	w.WriteHeader(http.StatusCreated)
@@ -421,25 +382,9 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Verify DM role for the session
-	if sessionID, ok := event.Metadata["session_id"].(string); ok {
-		participants, err := h.gameRepo.GetParticipants(r.Context(), sessionID)
-		if err != nil {
-			http.Error(w, errFailedToGetParticipants, http.StatusInternalServerError)
-			return
-		}
-
-		isDM := false
-		for _, p := range participants {
-			if p.UserID == claims.UserID && p.Role == models.ParticipantRoleDM {
-				isDM = true
-				break
-			}
-		}
-
-		if !isDM {
-			http.Error(w, "Only DM can create world events", http.StatusForbidden)
-			return
-		}
+	if err := h.verifyDMRoleForEvent(r.Context(), claims, &event); err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
 	}
 
 	if err := h.narrativeRepo.CreateWorldEvent(&event); err != nil {
@@ -448,16 +393,7 @@ func (h *NarrativeHandlers) CreateWorldEvent(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Generate perspectives asynchronously
-	go func() {
-		ctx := r.Context()
-		sources := h.getRelevantPerspectiveSources(&event)
-		perspectives, err := h.narrativeEngine.PerspectiveGen.GenerateMultiplePerspectives(ctx, &event, sources)
-		if err == nil {
-			for i := range perspectives {
-				_ = h.narrativeRepo.CreatePerspectiveNarrative(&perspectives[i])
-			}
-		}
-	}()
+	go h.generateEventPerspectives(r.Context(), &event)
 
 	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
 	w.WriteHeader(http.StatusCreated)
@@ -963,4 +899,93 @@ func (h *NarrativeHandlers) createPersonalizedNarrative(ctx context.Context, dat
 	}
 
 	return narrative, nil
+}
+
+// updateNarrativeProfileWithAction updates the narrative profile based on a player action
+func (h *NarrativeHandlers) updateNarrativeProfileWithAction(ctx context.Context, action models.PlayerAction) {
+	profile, err := h.narrativeRepo.GetNarrativeProfile(action.CharacterID)
+	if err != nil {
+		return
+	}
+
+	decision := models.DecisionRecord{
+		Timestamp:       action.Timestamp,
+		Context:         action.ActionDescription,
+		Decision:        action.ActionType,
+		Consequences:    []string{action.ImmediateResult},
+		EmotionalWeight: 0.5, // Default weight
+		Tags:            []string{action.ActionType, action.TargetType},
+	}
+
+	updatedProfile, err := h.narrativeEngine.ProfileService.AnalyzePlayerDecision(ctx, profile, decision)
+	if err == nil {
+		_ = h.narrativeRepo.UpdateNarrativeProfile(updatedProfile)
+	}
+}
+
+// verifyDMRoleForEvent checks if the user has DM role for the event's session
+func (h *NarrativeHandlers) verifyDMRoleForEvent(ctx context.Context, claims *auth.Claims, event *models.NarrativeEvent) error {
+	sessionID, ok := event.Metadata["session_id"].(string)
+	if !ok {
+		return nil // No session specified, allow creation
+	}
+
+	participants, err := h.gameRepo.GetParticipants(ctx, sessionID)
+	if err != nil {
+		return fmt.Errorf(errFailedToGetParticipants)
+	}
+
+	for _, p := range participants {
+		if p.UserID == claims.UserID && p.Role == models.ParticipantRoleDM {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("only DM can create world events")
+}
+
+// generateEventPerspectives generates perspectives for an event asynchronously
+func (h *NarrativeHandlers) generateEventPerspectives(ctx context.Context, event *models.NarrativeEvent) {
+	sources := h.getRelevantPerspectiveSources(event)
+	perspectives, err := h.narrativeEngine.PerspectiveGen.GenerateMultiplePerspectives(ctx, event, sources)
+	if err != nil {
+		return
+	}
+	
+	for i := range perspectives {
+		_ = h.narrativeRepo.CreatePerspectiveNarrative(&perspectives[i])
+	}
+}
+
+// applyProfileUpdates applies updates to a narrative profile
+func (h *NarrativeHandlers) applyProfileUpdates(profile *models.NarrativeProfile, updates map[string]interface{}) {
+	if preferences, ok := updates["preferences"].(map[string]interface{}); ok {
+		h.updatePreferences(&profile.Preferences, preferences)
+	}
+
+	if playStyle, ok := updates["play_style"].(string); ok {
+		profile.PlayStyle = playStyle
+	}
+}
+
+// updatePreferences updates story preferences from a map
+func (h *NarrativeHandlers) updatePreferences(prefs *models.StoryPreferences, updates map[string]interface{}) {
+	if themes, ok := updates["themes"].([]interface{}); ok {
+		prefs.Themes = interfaceSliceToStringSlice(themes)
+	}
+	if tone, ok := updates["tone"].([]interface{}); ok {
+		prefs.Tone = interfaceSliceToStringSlice(tone)
+	}
+	if complexity, ok := updates["complexity"].(float64); ok {
+		prefs.Complexity = int(complexity)
+	}
+	if moral, ok := updates["moral_alignment"].(string); ok {
+		prefs.MoralAlignment = moral
+	}
+	if pacing, ok := updates["pacing"].(string); ok {
+		prefs.PacingPreference = pacing
+	}
+	if combat, ok := updates["combat_narrative"].(float64); ok {
+		prefs.CombatNarrative = combat
+	}
 }

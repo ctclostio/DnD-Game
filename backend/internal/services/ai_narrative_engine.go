@@ -147,18 +147,38 @@ func (ne *NarrativeEngine) GeneratePersonalizedNarrative(ctx context.Context, ba
 		return nil, fmt.Errorf("base event cannot be nil")
 	}
 	if !ne.cfg.AI.Enabled {
-		// Return basic narrative without personalization
-		return &models.PersonalizedNarrative{
-			ID:          uuid.New().String(),
-			BaseEventID: baseEvent.ID,
-			CharacterID: profile.CharacterID,
-			GeneratedAt: time.Now(),
-		}, nil
+		return ne.createBasicNarrative(baseEvent, profile)
 	}
 
 	// Select relevant backstory elements
 	relevantBackstory := ne.selectRelevantBackstory(backstory, baseEvent)
 
+	// Generate AI response
+	response, err := ne.generateNarrativePrompt(ctx, baseEvent, profile, relevantBackstory)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse response
+	narrativeData, err := ne.parseNarrativeResponse(response)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build and return narrative
+	return ne.buildPersonalizedNarrative(narrativeData, baseEvent, profile)
+}
+
+func (ne *NarrativeEngine) createBasicNarrative(baseEvent *models.NarrativeEvent, profile *models.NarrativeProfile) (*models.PersonalizedNarrative, error) {
+	return &models.PersonalizedNarrative{
+		ID:          uuid.New().String(),
+		BaseEventID: baseEvent.ID,
+		CharacterID: profile.CharacterID,
+		GeneratedAt: time.Now(),
+	}, nil
+}
+
+func (ne *NarrativeEngine) generateNarrativePrompt(ctx context.Context, baseEvent *models.NarrativeEvent, profile *models.NarrativeProfile, relevantBackstory []models.BackstoryElement) (string, error) {
 	prompt := fmt.Sprintf(`Create a personalized narrative for this player based on their profile and the current event:
 
 Base Event:
@@ -205,48 +225,55 @@ Provide the narrative in JSON format with:
 
 	response, err := ne.llm.GenerateContent(ctx, prompt, "You are a D&D narrative engine that creates dynamic storylines based on player actions.")
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate personalized narrative: %w", err)
+		return "", fmt.Errorf("failed to generate personalized narrative: %w", err)
 	}
 
-	var narrativeData struct {
-		PersonalizedDescription string `json:"personalized_description"`
-		NarrativeHooks          []struct {
-			Type        string  `json:"type"`
-			Content     string  `json:"content"`
-			Relevance   float64 `json:"relevance"`
-			BackstoryID string  `json:"backstory_id"`
-		} `json:"narrative_hooks"`
-		BackstoryCallbacks []struct {
-			BackstoryElementID string `json:"backstory_element_id"`
-			IntegrationType    string `json:"integration_type"`
-			NarrativeText      string `json:"narrative_text"`
-			Subtlety           int    `json:"subtlety"`
-		} `json:"backstory_callbacks"`
-		MoralChoices        []string `json:"moral_choices"`
-		EmotionalResonance  float64  `json:"emotional_resonance"`
-		PredictedEngagement float64  `json:"predicted_engagement"`
-	}
+	return response, nil
+}
 
+type narrativeResponseData struct {
+	PersonalizedDescription string `json:"personalized_description"`
+	NarrativeHooks          []struct {
+		Type        string  `json:"type"`
+		Content     string  `json:"content"`
+		Relevance   float64 `json:"relevance"`
+		BackstoryID string  `json:"backstory_id"`
+	} `json:"narrative_hooks"`
+	BackstoryCallbacks []struct {
+		BackstoryElementID string `json:"backstory_element_id"`
+		IntegrationType    string `json:"integration_type"`
+		NarrativeText      string `json:"narrative_text"`
+		Subtlety           int    `json:"subtlety"`
+	} `json:"backstory_callbacks"`
+	MoralChoices        []string `json:"moral_choices"`
+	EmotionalResonance  float64  `json:"emotional_resonance"`
+	PredictedEngagement float64  `json:"predicted_engagement"`
+}
+
+func (ne *NarrativeEngine) parseNarrativeResponse(response string) (*narrativeResponseData, error) {
+	var narrativeData narrativeResponseData
 	if err := json.Unmarshal([]byte(response), &narrativeData); err != nil {
 		return nil, fmt.Errorf("failed to parse narrative data: %w", err)
 	}
+	return &narrativeData, nil
+}
 
-	// Build personalized narrative
+func (ne *NarrativeEngine) buildPersonalizedNarrative(data *narrativeResponseData, baseEvent *models.NarrativeEvent, profile *models.NarrativeProfile) (*models.PersonalizedNarrative, error) {
 	narrative := &models.PersonalizedNarrative{
 		ID:                 uuid.New().String(),
 		BaseEventID:        baseEvent.ID,
 		CharacterID:        profile.CharacterID,
-		EmotionalResonance: narrativeData.EmotionalResonance,
+		EmotionalResonance: data.EmotionalResonance,
 		GeneratedAt:        time.Now(),
 		Metadata: map[string]interface{}{
-			"personalized_description": narrativeData.PersonalizedDescription,
-			"moral_choices":            narrativeData.MoralChoices,
-			"predicted_engagement":     narrativeData.PredictedEngagement,
+			"personalized_description": data.PersonalizedDescription,
+			"moral_choices":            data.MoralChoices,
+			"predicted_engagement":     data.PredictedEngagement,
 		},
 	}
 
 	// Convert hooks
-	for _, hook := range narrativeData.NarrativeHooks {
+	for _, hook := range data.NarrativeHooks {
 		narrative.PersonalizedHooks = append(narrative.PersonalizedHooks, models.NarrativeHook{
 			Type:        hook.Type,
 			Content:     hook.Content,
@@ -256,7 +283,7 @@ Provide the narrative in JSON format with:
 	}
 
 	// Convert backstory callbacks
-	for _, callback := range narrativeData.BackstoryCallbacks {
+	for _, callback := range data.BackstoryCallbacks {
 		narrative.BackstoryCallbacks = append(narrative.BackstoryCallbacks, models.BackstoryIntegration{
 			BackstoryElementID: callback.BackstoryElementID,
 			IntegrationType:    callback.IntegrationType,
@@ -266,7 +293,7 @@ Provide the narrative in JSON format with:
 	}
 
 	// Calculate predicted impacts
-	narrative.PredictedImpact = ne.calculatePredictedImpacts(profile, narrativeData.EmotionalResonance)
+	narrative.PredictedImpact = ne.calculatePredictedImpacts(profile, data.EmotionalResonance)
 
 	return narrative, nil
 }
@@ -274,10 +301,31 @@ Provide the narrative in JSON format with:
 // CalculateConsequences determines the ripple effects of a player action
 func (ce *ConsequenceEngine) CalculateConsequences(ctx context.Context, action models.PlayerAction, worldState map[string]interface{}) ([]models.ConsequenceEvent, error) {
 	if !ce.cfg.AI.Enabled {
-		// Return minimal consequences without AI
 		return []models.ConsequenceEvent{}, nil
 	}
 
+	// Generate AI response
+	response, err := ce.generateConsequencePrompt(ctx, action, worldState)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse response
+	consequenceData, err := ce.parseConsequenceResponse(response)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build consequences
+	consequences := ce.buildConsequenceEvents(consequenceData, action)
+
+	// Sort by priority
+	ce.sortConsequencesByPriority(consequences)
+
+	return consequences, nil
+}
+
+func (ce *ConsequenceEngine) generateConsequencePrompt(ctx context.Context, action models.PlayerAction, worldState map[string]interface{}) (string, error) {
 	prompt := fmt.Sprintf(`Analyze this player action and determine its consequences across the game world:
 
 Action Details:
@@ -331,89 +379,102 @@ Provide consequences in JSON format as an array of:
 
 	response, err := ce.llm.GenerateContent(ctx, prompt, "You are a D&D narrative assistant that analyzes and tracks story consequences.")
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate consequences: %w", err)
+		return "", fmt.Errorf("failed to calculate consequences: %w", err)
 	}
 
-	var consequenceData []struct {
-		Description      string `json:"description"`
-		TriggerType      string `json:"trigger_type"`
-		Severity         int    `json:"severity"`
-		Delay            string `json:"delay"`
-		AffectedEntities []struct {
-			EntityType     string `json:"entity_type"`
-			EntityID       string `json:"entity_id"`
-			EntityName     string `json:"entity_name"`
-			ImpactType     string `json:"impact_type"`
-			ImpactSeverity int    `json:"impact_severity"`
-			Description    string `json:"description"`
-		} `json:"affected_entities"`
-		CascadeEffects []struct {
-			Type        string  `json:"type"`
-			Description string  `json:"description"`
-			Probability float64 `json:"probability"`
-			Timeline    string  `json:"timeline"`
-		} `json:"cascade_effects"`
-		PreventionMethods []string `json:"prevention_methods"`
-	}
+	return response, nil
+}
 
+type consequenceResponseData struct {
+	Description      string `json:"description"`
+	TriggerType      string `json:"trigger_type"`
+	Severity         int    `json:"severity"`
+	Delay            string `json:"delay"`
+	AffectedEntities []struct {
+		EntityType     string `json:"entity_type"`
+		EntityID       string `json:"entity_id"`
+		EntityName     string `json:"entity_name"`
+		ImpactType     string `json:"impact_type"`
+		ImpactSeverity int    `json:"impact_severity"`
+		Description    string `json:"description"`
+	} `json:"affected_entities"`
+	CascadeEffects []struct {
+		Type        string  `json:"type"`
+		Description string  `json:"description"`
+		Probability float64 `json:"probability"`
+		Timeline    string  `json:"timeline"`
+	} `json:"cascade_effects"`
+	PreventionMethods []string `json:"prevention_methods"`
+}
+
+func (ce *ConsequenceEngine) parseConsequenceResponse(response string) ([]consequenceResponseData, error) {
+	var consequenceData []consequenceResponseData
 	if err := json.Unmarshal([]byte(response), &consequenceData); err != nil {
 		return nil, fmt.Errorf("failed to parse consequence data: %w", err)
 	}
+	return consequenceData, nil
+}
 
-	// Build consequence events
-	consequences := make([]models.ConsequenceEvent, 0, len(consequenceData))
-	for i := range consequenceData {
-		data := &consequenceData[i]
-		consequence := models.ConsequenceEvent{
-			ID:              uuid.New().String(),
-			TriggerActionID: action.ID,
-			TriggerType:     data.TriggerType,
-			Description:     data.Description,
-			Severity:        data.Severity,
-			Delay:           data.Delay,
-			Status:          "pending",
-			CreatedAt:       time.Now(),
-			Metadata: map[string]interface{}{
-				"prevention_methods": data.PreventionMethods,
-			},
-		}
-
-		// Convert affected entities
-		for _, entity := range data.AffectedEntities {
-			consequence.AffectedEntities = append(consequence.AffectedEntities, models.AffectedEntity{
-				EntityType:     entity.EntityType,
-				EntityID:       entity.EntityID,
-				EntityName:     entity.EntityName,
-				ImpactType:     entity.ImpactType,
-				ImpactSeverity: entity.ImpactSeverity,
-				Description:    entity.Description,
-			})
-		}
-
-		// Convert cascade effects
-		for _, cascade := range data.CascadeEffects {
-			consequence.CascadeEffects = append(consequence.CascadeEffects, models.CascadeEffect{
-				ID:          uuid.New().String(),
-				Type:        cascade.Type,
-				Description: cascade.Description,
-				Probability: cascade.Probability,
-				Timeline:    cascade.Timeline,
-				Triggered:   false,
-			})
-		}
-
+func (ce *ConsequenceEngine) buildConsequenceEvents(dataList []consequenceResponseData, action models.PlayerAction) []models.ConsequenceEvent {
+	consequences := make([]models.ConsequenceEvent, 0, len(dataList))
+	
+	for i := range dataList {
+		consequence := ce.buildSingleConsequence(&dataList[i], action)
 		consequences = append(consequences, consequence)
 	}
+	
+	return consequences
+}
 
-	// Sort by severity and delay
+func (ce *ConsequenceEngine) buildSingleConsequence(data *consequenceResponseData, action models.PlayerAction) models.ConsequenceEvent {
+	consequence := models.ConsequenceEvent{
+		ID:              uuid.New().String(),
+		TriggerActionID: action.ID,
+		TriggerType:     data.TriggerType,
+		Description:     data.Description,
+		Severity:        data.Severity,
+		Delay:           data.Delay,
+		Status:          "pending",
+		CreatedAt:       time.Now(),
+		Metadata: map[string]interface{}{
+			"prevention_methods": data.PreventionMethods,
+		},
+	}
+
+	// Convert affected entities
+	for _, entity := range data.AffectedEntities {
+		consequence.AffectedEntities = append(consequence.AffectedEntities, models.AffectedEntity{
+			EntityType:     entity.EntityType,
+			EntityID:       entity.EntityID,
+			EntityName:     entity.EntityName,
+			ImpactType:     entity.ImpactType,
+			ImpactSeverity: entity.ImpactSeverity,
+			Description:    entity.Description,
+		})
+	}
+
+	// Convert cascade effects
+	for _, cascade := range data.CascadeEffects {
+		consequence.CascadeEffects = append(consequence.CascadeEffects, models.CascadeEffect{
+			ID:          uuid.New().String(),
+			Type:        cascade.Type,
+			Description: cascade.Description,
+			Probability: cascade.Probability,
+			Timeline:    cascade.Timeline,
+			Triggered:   false,
+		})
+	}
+
+	return consequence
+}
+
+func (ce *ConsequenceEngine) sortConsequencesByPriority(consequences []models.ConsequenceEvent) {
 	sort.Slice(consequences, func(i, j int) bool {
 		if consequences[i].Delay != consequences[j].Delay {
 			return getDelayPriority(consequences[i].Delay) < getDelayPriority(consequences[j].Delay)
 		}
 		return consequences[i].Severity > consequences[j].Severity
 	})
-
-	return consequences, nil
 }
 
 // GenerateMultiplePerspectives creates different viewpoints of the same event
@@ -422,23 +483,62 @@ func (pg *PerspectiveGenerator) GenerateMultiplePerspectives(ctx context.Context
 		return nil, fmt.Errorf("event cannot be nil")
 	}
 	if !pg.cfg.AI.Enabled {
-		// Return single neutral perspective without AI
-		return []models.PerspectiveNarrative{{
-			ID:              uuid.New().String(),
-			EventID:         event.ID,
-			PerspectiveType: "neutral",
-			SourceName:      "Observer",
-			Narrative:       event.Description,
-			Bias:            "neutral",
-			TruthLevel:      1.0,
-			CreatedAt:       time.Now(),
-		}}, nil
+		return pg.createNeutralPerspective(event), nil
 	}
 
 	perspectives := make([]models.PerspectiveNarrative, 0, len(sources))
 
 	for _, source := range sources {
-		prompt := fmt.Sprintf(`Generate a perspective on this event from a specific viewpoint:
+		perspective, err := pg.generateSinglePerspective(ctx, event, source)
+		if err != nil {
+			continue // Skip this perspective on error
+		}
+		if perspective != nil {
+			perspectives = append(perspectives, *perspective)
+		}
+	}
+
+	// Find contradictions between perspectives
+	pg.findContradictions(perspectives)
+
+	return perspectives, nil
+}
+
+func (pg *PerspectiveGenerator) createNeutralPerspective(event *models.NarrativeEvent) []models.PerspectiveNarrative {
+	return []models.PerspectiveNarrative{{
+		ID:              uuid.New().String(),
+		EventID:         event.ID,
+		PerspectiveType: "neutral",
+		SourceName:      "Observer",
+		Narrative:       event.Description,
+		Bias:            "neutral",
+		TruthLevel:      1.0,
+		CreatedAt:       time.Now(),
+	}}
+}
+
+func (pg *PerspectiveGenerator) generateSinglePerspective(ctx context.Context, event *models.NarrativeEvent, source models.PerspectiveSource) (*models.PerspectiveNarrative, error) {
+	// Generate prompt
+	prompt := pg.buildPerspectivePrompt(event, source)
+
+	// Get AI response
+	response, err := pg.llm.GenerateContent(ctx, prompt, "You are a D&D perspective generator that creates authentic character viewpoints.")
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse response
+	perspectiveData, err := pg.parsePerspectiveResponse(response)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build perspective
+	return pg.buildPerspective(perspectiveData, event, source), nil
+}
+
+func (pg *PerspectiveGenerator) buildPerspectivePrompt(event *models.NarrativeEvent, source models.PerspectiveSource) string {
+	return fmt.Sprintf(`Generate a perspective on this event from a specific viewpoint:
 
 Event Details:
 - Type: %s
@@ -481,66 +581,59 @@ Provide the perspective in JSON format:
   "emotional_tone": "how they feel about it",
   "cultural_filters": ["cultural biases affecting their view"]
 }`,
-			event.Type,
-			event.Description,
-			event.Location,
-			event.Participants,
-			event.ImmediateEffects,
-			source.Type,
-			source.Name,
-			source.Background,
-			source.Motivations,
-			source.Relationships,
-			source.CulturalContext,
-		)
+		event.Type,
+		event.Description,
+		event.Location,
+		event.Participants,
+		event.ImmediateEffects,
+		source.Type,
+		source.Name,
+		source.Background,
+		source.Motivations,
+		source.Relationships,
+		source.CulturalContext,
+	)
+}
 
-		response, err := pg.llm.GenerateContent(ctx, prompt, "You are a D&D perspective generator that creates authentic character viewpoints.")
-		if err != nil {
-			continue // Skip this perspective on error
-		}
+type perspectiveResponseData struct {
+	Narrative          string   `json:"narrative"`
+	Bias               string   `json:"bias"`
+	TruthLevel         float64  `json:"truth_level"`
+	EmphasizedDetails  []string `json:"emphasized_details"`
+	OmittedDetails     []string `json:"omitted_details"`
+	Misinterpretations []string `json:"misinterpretations"`
+	HiddenAgenda       string   `json:"hidden_agenda"`
+	EmotionalTone      string   `json:"emotional_tone"`
+	CulturalFilters    []string `json:"cultural_filters"`
+}
 
-		var perspectiveData struct {
-			Narrative          string   `json:"narrative"`
-			Bias               string   `json:"bias"`
-			TruthLevel         float64  `json:"truth_level"`
-			EmphasizedDetails  []string `json:"emphasized_details"`
-			OmittedDetails     []string `json:"omitted_details"`
-			Misinterpretations []string `json:"misinterpretations"`
-			HiddenAgenda       string   `json:"hidden_agenda"`
-			EmotionalTone      string   `json:"emotional_tone"`
-			CulturalFilters    []string `json:"cultural_filters"`
-		}
-
-		if err := json.Unmarshal([]byte(response), &perspectiveData); err != nil {
-			continue
-		}
-
-		perspective := models.PerspectiveNarrative{
-			ID:              uuid.New().String(),
-			EventID:         event.ID,
-			PerspectiveType: source.Type,
-			SourceID:        source.ID,
-			SourceName:      source.Name,
-			Narrative:       perspectiveData.Narrative,
-			Bias:            perspectiveData.Bias,
-			TruthLevel:      perspectiveData.TruthLevel,
-			EmotionalTone:   perspectiveData.EmotionalTone,
-			HiddenDetails:   append(perspectiveData.OmittedDetails, perspectiveData.HiddenAgenda),
-			CreatedAt:       time.Now(),
-			CulturalContext: map[string]interface{}{
-				"filters":       perspectiveData.CulturalFilters,
-				"emphasized":    perspectiveData.EmphasizedDetails,
-				"misunderstood": perspectiveData.Misinterpretations,
-			},
-		}
-
-		perspectives = append(perspectives, perspective)
+func (pg *PerspectiveGenerator) parsePerspectiveResponse(response string) (*perspectiveResponseData, error) {
+	var data perspectiveResponseData
+	if err := json.Unmarshal([]byte(response), &data); err != nil {
+		return nil, err
 	}
+	return &data, nil
+}
 
-	// Find contradictions between perspectives
-	pg.findContradictions(perspectives)
-
-	return perspectives, nil
+func (pg *PerspectiveGenerator) buildPerspective(data *perspectiveResponseData, event *models.NarrativeEvent, source models.PerspectiveSource) *models.PerspectiveNarrative {
+	return &models.PerspectiveNarrative{
+		ID:              uuid.New().String(),
+		EventID:         event.ID,
+		PerspectiveType: source.Type,
+		SourceID:        source.ID,
+		SourceName:      source.Name,
+		Narrative:       data.Narrative,
+		Bias:            data.Bias,
+		TruthLevel:      data.TruthLevel,
+		EmotionalTone:   data.EmotionalTone,
+		HiddenDetails:   append(data.OmittedDetails, data.HiddenAgenda),
+		CreatedAt:       time.Now(),
+		CulturalContext: map[string]interface{}{
+			"filters":       data.CulturalFilters,
+			"emphasized":    data.EmphasizedDetails,
+			"misunderstood": data.Misinterpretations,
+		},
+	}
 }
 
 // Helper functions
@@ -549,43 +642,57 @@ func (ne *NarrativeEngine) selectRelevantBackstory(backstory []models.BackstoryE
 	if event == nil {
 		return []models.BackstoryElement{}
 	}
-	// Select up to 3 most relevant backstory elements based on tags and type
+
+	relevant := ne.scoreBackstoryElements(backstory, event)
+	return ne.selectTopBackstoryElements(relevant, 3)
+}
+
+func (ne *NarrativeEngine) scoreBackstoryElements(backstory []models.BackstoryElement, event *models.NarrativeEvent) []models.BackstoryElement {
 	relevant := make([]models.BackstoryElement, 0)
+	eventTags := extractEventTags(event)
 
 	for i := range backstory {
 		element := &backstory[i]
-		if element.Used && element.UsageCount > 2 {
-			continue // Don't overuse elements
+		if ne.shouldSkipBackstoryElement(element) {
+			continue
 		}
 
-		// Check relevance based on event type and tags
-		relevanceScore := 0.0
-		eventTags := extractEventTags(event)
-
-		for _, tag := range element.Tags {
-			for _, eventTag := range eventTags {
-				if strings.Contains(strings.ToLower(tag), strings.ToLower(eventTag)) {
-					relevanceScore += 1.0
-				}
-			}
-		}
-
+		relevanceScore := ne.calculateRelevanceScore(element, eventTags)
 		if relevanceScore > 0 {
 			element.Weight = relevanceScore
 			relevant = append(relevant, *element)
 		}
 	}
 
-	// Sort by relevance and take top 3
-	sort.Slice(relevant, func(i, j int) bool {
-		return relevant[i].Weight > relevant[j].Weight
+	return relevant
+}
+
+func (ne *NarrativeEngine) shouldSkipBackstoryElement(element *models.BackstoryElement) bool {
+	return element.Used && element.UsageCount > 2
+}
+
+func (ne *NarrativeEngine) calculateRelevanceScore(element *models.BackstoryElement, eventTags []string) float64 {
+	score := 0.0
+	for _, tag := range element.Tags {
+		for _, eventTag := range eventTags {
+			if strings.Contains(strings.ToLower(tag), strings.ToLower(eventTag)) {
+				score += 1.0
+			}
+		}
+	}
+	return score
+}
+
+func (ne *NarrativeEngine) selectTopBackstoryElements(elements []models.BackstoryElement, limit int) []models.BackstoryElement {
+	// Sort by relevance
+	sort.Slice(elements, func(i, j int) bool {
+		return elements[i].Weight > elements[j].Weight
 	})
 
-	if len(relevant) > 3 {
-		relevant = relevant[:3]
+	if len(elements) > limit {
+		return elements[:limit]
 	}
-
-	return relevant
+	return elements
 }
 
 func (ne *NarrativeEngine) calculatePredictedImpacts(profile *models.NarrativeProfile, resonance float64) []models.PredictedImpact {

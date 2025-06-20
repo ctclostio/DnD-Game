@@ -305,76 +305,104 @@ func (h *Handlers) NPCQuickActions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Verify user is DM
+	if !h.verifyNPCDMPermissions(w, r, claims, npcID) {
+		return // Response already sent
+	}
+
+	// Handle the action
+	switch action {
+	case "damage":
+		h.handleDamageAction(w, r, npcID)
+	case "heal":
+		h.handleHealAction(w, r, npcID)
+	case "initiative":
+		h.handleInitiativeAction(w, r, npcID)
+	default:
+		response.BadRequest(w, r, "Invalid action")
+	}
+}
+
+// verifyNPCDMPermissions verifies the user is DM of the NPC's session
+func (h *Handlers) verifyNPCDMPermissions(w http.ResponseWriter, r *http.Request, claims *auth.Claims, npcID string) bool {
 	// Get NPC to verify permissions
 	npc, err := h.npcService.GetNPC(r.Context(), npcID)
 	if err != nil {
 		response.NotFound(w, r, "NPC")
-		return
+		return false
 	}
 
 	// Verify user is DM of the game session
 	session, err := h.gameService.GetSession(r.Context(), npc.GameSessionID)
 	if err != nil {
 		response.NotFound(w, r, gameSessionResource)
-		return
+		return false
 	}
 
 	if session.DMID != claims.UserID {
 		response.Forbidden(w, r, "Only the DM can perform quick actions on NPCs")
+		return false
+	}
+
+	return true
+}
+
+// handleDamageAction handles the damage action on an NPC
+func (h *Handlers) handleDamageAction(w http.ResponseWriter, r *http.Request, npcID string) {
+	var req struct {
+		Amount     int    `json:"amount"`
+		DamageType string `json:"damageType"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
 		return
 	}
 
-	switch action {
-	case "damage":
-		var req struct {
-			Amount     int    `json:"amount"`
-			DamageType string `json:"damageType"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			response.BadRequest(w, r, constants.ErrInvalidRequestBody)
-			return
-		}
-
-		if err := h.npcService.ApplyDamage(r.Context(), npcID, req.Amount, req.DamageType); err != nil {
-			response.InternalServerError(w, r, err)
-			return
-		}
-
-	case "heal":
-		var req struct {
-			Amount int `json:"amount"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			response.BadRequest(w, r, constants.ErrInvalidRequestBody)
-			return
-		}
-
-		if err := h.npcService.HealNPC(r.Context(), npcID, req.Amount); err != nil {
-			response.InternalServerError(w, r, err)
-			return
-		}
-
-	case "initiative":
-		initiative, err := h.npcService.RollInitiative(r.Context(), npcID)
-		if err != nil {
-			response.InternalServerError(w, r, err)
-			return
-		}
-
-		response.JSON(w, r, http.StatusOK, map[string]int{"initiative": initiative})
-		return
-
-	default:
-		response.BadRequest(w, r, "Invalid action")
+	if err := h.npcService.ApplyDamage(r.Context(), npcID, req.Amount, req.DamageType); err != nil {
+		response.InternalServerError(w, r, err)
 		return
 	}
 
 	// Return updated NPC
+	h.returnUpdatedNPC(w, r, npcID)
+}
+
+// handleHealAction handles the heal action on an NPC
+func (h *Handlers) handleHealAction(w http.ResponseWriter, r *http.Request, npcID string) {
+	var req struct {
+		Amount int `json:"amount"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.BadRequest(w, r, constants.ErrInvalidRequestBody)
+		return
+	}
+
+	if err := h.npcService.HealNPC(r.Context(), npcID, req.Amount); err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	// Return updated NPC
+	h.returnUpdatedNPC(w, r, npcID)
+}
+
+// handleInitiativeAction handles the initiative roll action on an NPC
+func (h *Handlers) handleInitiativeAction(w http.ResponseWriter, r *http.Request, npcID string) {
+	initiative, err := h.npcService.RollInitiative(r.Context(), npcID)
+	if err != nil {
+		response.InternalServerError(w, r, err)
+		return
+	}
+
+	response.JSON(w, r, http.StatusOK, map[string]int{"initiative": initiative})
+}
+
+// returnUpdatedNPC retrieves and returns the updated NPC
+func (h *Handlers) returnUpdatedNPC(w http.ResponseWriter, r *http.Request, npcID string) {
 	updatedNPC, err := h.npcService.GetNPC(r.Context(), npcID)
 	if err != nil {
 		response.InternalServerError(w, r, errors.New("failed to retrieve updated NPC"))
 		return
 	}
-
 	response.JSON(w, r, http.StatusOK, updatedNPC)
 }

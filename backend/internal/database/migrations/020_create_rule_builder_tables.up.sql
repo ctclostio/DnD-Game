@@ -192,6 +192,7 @@ DECLARE
     cat_conditions CONSTANT TEXT := 'conditions';
     cat_actions CONSTANT TEXT := 'actions';
     cat_calculations CONSTANT TEXT := 'calculations';
+    action_continue_output CONSTANT TEXT := '[{"id": "out", "name": "continue", "data_type": "any"}]';
     color_triggers CONSTANT TEXT := '#ff6b6b';
     color_conditions CONSTANT TEXT := '#f7b731';
     color_actions_1 CONSTANT TEXT := '#ee5a24';
@@ -212,9 +213,9 @@ BEGIN
     ('Ability Check', 'condition_roll', 'check', '{"ability": "strength", "dc": 15}', '[{"id": "target", "name": "target", "data_type": "entity"}]', '[{"id": "success", "name": "success", "data_type": "boolean"}, {"id": "roll", "name": "roll_total", "data_type": "number"}]', 'dice-d20', color_conditions, cat_conditions, true),
 
     -- Actions
-    ('Deal Damage', 'action_damage', 'damage', '{"damage_dice": "1d6", "damage_type": "fire"}', '[{"id": "target", "name": "target", "data_type": "entity"}, {"id": "amount", "name": "damage", "data_type": "number"}]', '[{"id": "out", "name": "continue", "data_type": "any"}]', 'sword', color_actions_1, cat_actions, true),
-    ('Apply Effect', 'action_effect', 'effect', '{"effect_type": "condition", "duration": "1_turn"}', '[{"id": "target", "name": "target", "data_type": "entity"}]', '[{"id": "out", "name": "continue", "data_type": "any"}]', 'magic', color_actions_2, cat_actions, true),
-    ('Modify Resource', 'action_resource', 'resource', '{"resource": "spell_slots", "operation": "subtract"}', '[{"id": "target", "name": "target", "data_type": "entity"}, {"id": "amount", "name": "amount", "data_type": "number"}]', '[{"id": "out", "name": "continue", "data_type": "any"}]', 'database', color_actions_3, cat_actions, true),
+    ('Deal Damage', 'action_damage', 'damage', '{"damage_dice": "1d6", "damage_type": "fire"}', '[{"id": "target", "name": "target", "data_type": "entity"}, {"id": "amount", "name": "damage", "data_type": "number"}]', action_continue_output, 'sword', color_actions_1, cat_actions, true),
+    ('Apply Effect', 'action_effect', 'effect', '{"effect_type": "condition", "duration": "1_turn"}', '[{"id": "target", "name": "target", "data_type": "entity"}]', action_continue_output, 'magic', color_actions_2, cat_actions, true),
+    ('Modify Resource', 'action_resource', 'resource', '{"resource": "spell_slots", "operation": "subtract"}', '[{"id": "target", "name": "target", "data_type": "entity"}, {"id": "amount", "name": "amount", "data_type": "number"}]', action_continue_output, 'database', color_actions_3, cat_actions, true),
 
     -- Calculations
     ('Math Operation', 'calc_math', 'math', '{"operation": "+"}', '[{"id": "a", "name": "value A", "data_type": "number"}, {"id": "b", "name": "value B", "data_type": "number"}]', '[{"id": "result", "name": "result", "data_type": "number"}]', 'calculator', color_calculations, cat_calculations, true),

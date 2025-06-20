@@ -20,6 +20,26 @@ const (
 	inventoryTestPath = "/inventory"
 )
 
+// Helper function to create inventory request
+func createInventoryRequest(method, path string, body interface{}) *http.Request {
+	var bodyBytes []byte
+	if body != nil {
+		bodyBytes, _ = json.Marshal(body)
+	}
+	req := httptest.NewRequest(method, path, bytes.NewReader(bodyBytes))
+	req.Header.Set(constants.ContentType, constants.ApplicationJSON)
+	return req
+}
+
+// Helper function to validate quantity
+func validateQuantity(t *testing.T, body map[string]interface{}, expectedError string) {
+	if qty, ok := body["quantity"].(float64); ok {
+		if qty < 0 && expectedError == "quantity must be positive" {
+			assert.True(t, true, "Quantity is correctly negative")
+		}
+	}
+}
+
 func TestInventoryHandler_ManageInventory(t *testing.T) {
 	characterID := uuid.New().String()
 
@@ -72,36 +92,16 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create request
-			var body []byte
-			if tt.body != nil {
-				body, _ = json.Marshal(tt.body)
-			}
-			req := httptest.NewRequest(tt.method, tt.path, bytes.NewReader(body))
-			req.Header.Set(constants.ContentType, constants.ApplicationJSON)
-			// Route vars would be set by router in real handler
-			// req = mux.SetURLVars(req, map[string]string{"characterId": characterID})
-
-			// Add auth context
-			// Context would be added by auth middleware in real handler
-			// ctx := context.WithValue(req.Context(), auth.UserContextKey, &auth.Claims{
-			// 	UserID: userID,
-			// 	Type:   auth.AccessToken,
-			// })
-			// req = req.WithContext(ctx)
+			req := createInventoryRequest(tt.method, tt.path, tt.body)
 
 			// For this test, verify request structure
 			if tt.body != nil {
 				var decoded map[string]interface{}
+				body, _ := json.Marshal(tt.body)
 				err := json.NewDecoder(bytes.NewReader(body)).Decode(&decoded)
 				assert.NoError(t, err)
-
-				// Validate quantity if present
-				if qty, ok := decoded["quantity"].(float64); ok {
-					if qty < 0 && tt.expectedError == "quantity must be positive" {
-						assert.True(t, true, "Quantity is correctly negative")
-					}
-				}
+				
+				validateQuantity(t, decoded, tt.expectedError)
 			}
 		})
 	}

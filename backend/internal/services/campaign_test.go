@@ -14,6 +14,14 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
+// Test error constants
+const (
+	testDatabaseError = "database error"
+	testAIServiceError = "AI service error"
+	testAIUnavailable = "AI service unavailable"
+	testUpdateFailed = "update failed"
+)
+
 // MockAICampaignManager is used for testing
 type MockAICampaignManager struct {
 	mock.Mock
@@ -217,7 +225,7 @@ func TestCampaignService_GenerateStoryArc(t *testing.T) {
 			request: models.GenerateStoryArcRequest{
 				Context: "Epic",
 			},
-			generateError: errors.New("AI service unavailable"),
+			generateError: errors.New(testAIUnavailable),
 			expectError:   true,
 		},
 		{
@@ -227,7 +235,7 @@ func TestCampaignService_GenerateStoryArc(t *testing.T) {
 			generatedArc: &models.GeneratedStoryArc{
 				Title: "Generated Arc",
 			},
-			repoError:   errors.New("database error"),
+			repoError:   errors.New(testDatabaseError),
 			expectError: true,
 		},
 	}
@@ -392,7 +400,7 @@ func TestCampaignService_UpdateStoryArc(t *testing.T) {
 			name:    "Repository Error",
 			request: models.UpdateStoryArcRequest{Title: &newTitle},
 			setupMocks: func(repo *mocks.MockCampaignRepository) {
-				repo.On("UpdateStoryArc", arcID, mock.Anything).Return(errors.New("update failed"))
+				repo.On("UpdateStoryArc", arcID, mock.Anything).Return(errors.New(testUpdateFailed))
 			},
 			expectError: true,
 		},
@@ -645,14 +653,14 @@ func TestCampaignService_GenerateRecap(t *testing.T) {
 		{
 			name:         "Repository Error",
 			sessionCount: 3,
-			memoryError:  errors.New("database error"),
+			memoryError:  errors.New(testDatabaseError),
 			expectError:  true,
 		},
 		{
 			name:         "AI Error",
 			sessionCount: 3,
 			memories:     mockMemories,
-			aiError:      errors.New("AI service error"),
+			aiError:      errors.New(testAIServiceError),
 			expectError:  true,
 		},
 	}

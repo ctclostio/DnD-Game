@@ -84,7 +84,7 @@ func (w *panicCapturingResponseWriter) handlePanic(rec interface{}, r *http.Requ
 // RequestIDMiddleware ensures every request has a unique ID
 func RequestIDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestID := r.Header.Get("X-Request-ID")
+		requestID := r.Header.Get(xRequestIDHeader)
 		if requestID == "" {
 			requestID = uuid.New().String()
 		}
@@ -94,7 +94,7 @@ func RequestIDMiddleware(next http.Handler) http.Handler {
 		r = r.WithContext(ctx)
 
 		// Add to response header
-		w.Header().Set("X-Request-ID", requestID)
+		w.Header().Set(xRequestIDHeader, requestID)
 
 		next.ServeHTTP(w, r)
 	})

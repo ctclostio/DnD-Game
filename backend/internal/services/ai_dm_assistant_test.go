@@ -12,6 +12,14 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Test error constants
+const (
+	errLLMError = "LLM error"
+	errLLMServiceUnavailable = "LLM service unavailable"
+	errLLMServiceError = "LLM service error"
+	errInvalidJSON = "Not valid JSON"
+)
+
 // MockLLMProviderDMTest is a mock implementation for testing
 type MockLLMProviderDMTest struct {
 	mock.Mock
@@ -57,7 +65,7 @@ func TestAIDMAssistantService_GenerateNPCDialog(t *testing.T) {
 				NPCName:     "Test NPC",
 				PlayerInput: "Hello",
 			},
-			mockError:     errors.New("LLM service unavailable"),
+			mockError:     errors.New(errLLMServiceUnavailable),
 			expectedError: true,
 		},
 	}
@@ -137,7 +145,7 @@ func TestAIDMAssistantService_GenerateLocationDescription(t *testing.T) {
 				LocationType: "test",
 				LocationName: "Test Location",
 			},
-			mockError:     errors.New("LLM service error"),
+			mockError:     errors.New(errLLMServiceError),
 			expectedError: true,
 		},
 	}
@@ -283,7 +291,7 @@ func TestAIDMAssistantService_GeneratePlotTwist(t *testing.T) {
 			mockLLM := new(MockLLMProviderDMTest)
 
 			if tt.expectedError && tt.mockResponse == "" {
-				mockLLM.On("GenerateCompletion", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return("", errors.New("LLM error"))
+				mockLLM.On("GenerateCompletion", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return("", errors.New(errLLMError))
 			} else {
 				mockLLM.On("GenerateCompletion", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(tt.mockResponse, nil)
 			}
@@ -340,7 +348,7 @@ func TestAIDMAssistantService_GenerateEnvironmentalHazard(t *testing.T) {
 			name:          "invalid JSON response",
 			locationType:  "forest",
 			difficulty:    3,
-			mockResponse:  "Not valid JSON",
+			mockResponse:  errInvalidJSON,
 			expectedError: true,
 		},
 	}
@@ -411,7 +419,7 @@ func TestAIDMAssistantService_GenerateNPC(t *testing.T) {
 			mockLLM := new(MockLLMProviderDMTest)
 
 			if tt.expectedError {
-				mockLLM.On("GenerateCompletion", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return("", errors.New("LLM error"))
+				mockLLM.On("GenerateCompletion", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return("", errors.New(errLLMError))
 			} else {
 				mockLLM.On("GenerateCompletion", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(tt.mockResponse, nil)
 			}

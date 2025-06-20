@@ -23,6 +23,8 @@ import (
 // Test constants
 const (
 	testGameSessionsPath = "/api/v1/game/sessions/"
+	skipShortModeMsg = "skipping integration test in short mode"
+	skipIntegrationMsg = "integration environment not available"
 )
 
 // Test data structure to hold test setup
@@ -98,17 +100,17 @@ func verifyErrorResponse(t *testing.T, rr *httptest.ResponseRecorder, expectedEr
 
 func TestGameSessionSecurity(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(skipShortModeMsg)
 	}
-	t.Skip("integration environment not available")
+	t.Skip(skipIntegrationMsg)
 
 }
 
 func TestJoinSessionSecurity(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(skipShortModeMsg)
 	}
-	t.Skip("integration environment not available")
+	t.Skip(skipIntegrationMsg)
 
 	td, cleanup := setupTestData(t)
 	defer cleanup()
@@ -174,9 +176,9 @@ func TestJoinSessionSecurity(t *testing.T) {
 
 func TestGetGameSessionAuthorization(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(skipShortModeMsg)
 	}
-	t.Skip("integration environment not available")
+	t.Skip(skipIntegrationMsg)
 
 	td, cleanup := setupTestData(t)
 	defer cleanup()
@@ -240,9 +242,9 @@ func createKickPlayerRequest(sessionID, playerToKick, userID string) *http.Reque
 
 func TestKickPlayerSecurity(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(skipShortModeMsg)
 	}
-	t.Skip("integration environment not available")
+	t.Skip(skipIntegrationMsg)
 
 	td, cleanup := setupTestData(t)
 	defer cleanup()
@@ -283,9 +285,9 @@ func TestKickPlayerSecurity(t *testing.T) {
 
 func TestSessionStateSecurity(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(skipShortModeMsg)
 	}
-	t.Skip("integration environment not available")
+	t.Skip(skipIntegrationMsg)
 
 	td, cleanup := setupTestData(t)
 	defer cleanup()

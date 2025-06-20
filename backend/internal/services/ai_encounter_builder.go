@@ -270,18 +270,9 @@ Make the encounter exciting, tactical, and memorable. Include personality for en
 
 func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.Encounter, error) {
 	// Extract JSON from response
-	jsonStart := strings.Index(response, "{")
-	jsonEnd := strings.LastIndex(response, "}")
-	if jsonStart == -1 || jsonEnd == -1 {
-		return nil, fmt.Errorf("no valid JSON found in response")
-	}
-
-	jsonStr := response[jsonStart : jsonEnd+1]
-
-	// Parse into intermediate structure
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return nil, fmt.Errorf("failed to parse JSON: %w", err)
+	data, err := b.extractJSONFromResponse(response)
+	if err != nil {
+		return nil, err
 	}
 
 	// Build encounter model
@@ -290,7 +281,34 @@ func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.En
 		Description: getString(data, "description"),
 	}
 
-	// Parse enemies
+	// Parse all components
+	b.parseEnemies(data, encounter)
+	b.parseEnvironmentalComponents(data, encounter)
+	b.parseTacticalComponents(data, encounter)
+	b.parseNonCombatOptions(data, encounter)
+	b.parseEscapeAndStory(data, encounter)
+
+	return encounter, nil
+}
+
+func (b *AIEncounterBuilder) extractJSONFromResponse(response string) (map[string]interface{}, error) {
+	jsonStart := strings.Index(response, "{")
+	jsonEnd := strings.LastIndex(response, "}")
+	if jsonStart == -1 || jsonEnd == -1 {
+		return nil, fmt.Errorf("no valid JSON found in response")
+	}
+
+	jsonStr := response[jsonStart : jsonEnd+1]
+
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return nil, fmt.Errorf("failed to parse JSON: %w", err)
+	}
+
+	return data, nil
+}
+
+func (b *AIEncounterBuilder) parseEnemies(data map[string]interface{}, encounter *models.Encounter) {
 	if enemies, ok := data["enemies"].([]interface{}); ok {
 		for _, enemy := range enemies {
 			if enemyMap, ok := enemy.(map[string]interface{}); ok {
@@ -299,7 +317,9 @@ func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.En
 			}
 		}
 	}
+}
 
+func (b *AIEncounterBuilder) parseEnvironmentalComponents(data map[string]interface{}, encounter *models.Encounter) {
 	// Parse environmental features
 	if features, ok := data["environmentalFeatures"].([]interface{}); ok {
 		for _, feature := range features {
@@ -325,24 +345,29 @@ func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.En
 			}
 		}
 	}
+}
 
+func (b *AIEncounterBuilder) parseTacticalComponents(data map[string]interface{}, encounter *models.Encounter) {
 	// Parse tactical info
 	if tactical, ok := data["tacticalInfo"].(map[string]interface{}); ok {
 		encounter.EnemyTactics = b.parseTacticalInfo(tactical)
-	}
-
-	// Parse non-combat options
-	if nonCombat, ok := data["nonCombatOptions"].(map[string]interface{}); ok {
-		encounter.SocialSolutions = b.parseSolutions(nonCombat["social"])
-		encounter.StealthOptions = b.parseSolutions(nonCombat["stealth"])
-		encounter.EnvironmentalSolutions = b.parseSolutions(nonCombat["environmental"])
 	}
 
 	// Parse reinforcements
 	if reinforcements, ok := data["reinforcements"].([]interface{}); ok {
 		encounter.ReinforcementWaves = b.parseReinforcements(reinforcements)
 	}
+}
 
+func (b *AIEncounterBuilder) parseNonCombatOptions(data map[string]interface{}, encounter *models.Encounter) {
+	if nonCombat, ok := data["nonCombatOptions"].(map[string]interface{}); ok {
+		encounter.SocialSolutions = b.parseSolutions(nonCombat["social"])
+		encounter.StealthOptions = b.parseSolutions(nonCombat["stealth"])
+		encounter.EnvironmentalSolutions = b.parseSolutions(nonCombat["environmental"])
+	}
+}
+
+func (b *AIEncounterBuilder) parseEscapeAndStory(data map[string]interface{}, encounter *models.Encounter) {
 	// Parse escape routes
 	if escapes, ok := data["escapeRoutes"].([]interface{}); ok {
 		for _, escape := range escapes {
@@ -371,8 +396,6 @@ func (b *AIEncounterBuilder) parseEncounterResponse(response string) (*models.En
 	if scaling, ok := data["scalingOptions"].(map[string]interface{}); ok {
 		encounter.ScalingOptions = b.parseScalingOptions(scaling)
 	}
-
-	return encounter, nil
 }
 
 func (b *AIEncounterBuilder) parseEnemy(data map[string]interface{}) models.EncounterEnemy {
@@ -597,14 +620,14 @@ func (b *AIEncounterBuilder) calculateXPBudget(level, size int, difficulty strin
 	}
 
 	difficultyIndex := map[string]int{
-		difficultyEasy: 0,
-		"medium":       1,
-		"hard":         2,
-		"deadly":       3,
+		constants.DifficultyEasy:   0,
+		constants.DifficultyMedium: 1,
+		constants.DifficultyHard:   2,
+		constants.DifficultyDeadly: 3,
 	}
 
 	idx := difficultyIndex[difficulty]
-	if idx == 0 && difficulty != difficultyEasy {
+	if idx == 0 && difficulty != constants.DifficultyEasy {
 		idx = 1 // Default to medium
 	}
 
@@ -613,6 +636,14 @@ func (b *AIEncounterBuilder) calculateXPBudget(level, size int, difficulty strin
 }
 
 func (b *AIEncounterBuilder) calculateEncounterXP(encounter *models.Encounter) {
+	totalXP, enemyCount := b.calculateBaseXP(encounter)
+	encounter.TotalXP = totalXP
+
+	multiplier := b.getXPMultiplier(enemyCount, encounter.PartySize)
+	encounter.AdjustedXP = int(float64(totalXP) * multiplier)
+}
+
+func (b *AIEncounterBuilder) calculateBaseXP(encounter *models.Encounter) (int, int) {
 	// CR to XP mapping
 	crToXP := map[float64]int{
 		0:     10,
@@ -651,9 +682,11 @@ func (b *AIEncounterBuilder) calculateEncounterXP(encounter *models.Encounter) {
 		}
 	}
 
-	encounter.TotalXP = totalXP
+	return totalXP, enemyCount
+}
 
-	// Calculate adjusted XP based on enemy count
+func (b *AIEncounterBuilder) getXPMultiplier(enemyCount, partySize int) float64 {
+	// Calculate base multiplier based on enemy count
 	multiplier := 1.0
 	switch {
 	case enemyCount == 1:
@@ -671,13 +704,13 @@ func (b *AIEncounterBuilder) calculateEncounterXP(encounter *models.Encounter) {
 	}
 
 	// Adjust multiplier for party size
-	if encounter.PartySize < 3 {
+	if partySize < 3 {
 		multiplier *= 1.5
-	} else if encounter.PartySize > 5 {
+	} else if partySize > 5 {
 		multiplier *= 0.5
 	}
 
-	encounter.AdjustedXP = int(float64(totalXP) * multiplier)
+	return multiplier
 }
 
 func (b *AIEncounterBuilder) enhanceEncounterForParty(encounter *models.Encounter, req *EncounterRequest) {

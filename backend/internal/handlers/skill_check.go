@@ -57,73 +57,99 @@ func (h *Handlers) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if character.UserID != userID {
-		// Only the character owner can perform skill checks on their character
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 
-	// Calculate the ability modifier if not provided
-	if req.Modifier == 0 && req.Ability != "" {
-		req.Modifier = h.getAbilityModifier(character, req.Ability)
-
-		// Add proficiency bonus for saving throws if applicable
-		if req.CheckType == "save" && h.hasSavingThrowProficiency(character, req.Ability) {
-			req.Modifier += character.ProficiencyBonus
-		}
-
-		// Add proficiency bonus for skill checks if applicable
-		if req.CheckType == "skill" && h.hasSkillProficiency(character, req.Skill) {
-			req.Modifier += character.ProficiencyBonus
-		}
-	}
+	// Calculate the modifier
+	modifier := h.calculateTotalModifier(character, &req)
+	req.Modifier = modifier
 
 	// Perform the roll
-	roller := dice.NewRoller()
-	var roll, total int
-	var allRolls []int
-
-	if req.Advantage || req.Disadvantage {
-		// Roll twice
-		roll1, err := roller.Roll("1d20")
-		if err != nil {
-			http.Error(w, errFailedToRollDice, http.StatusInternalServerError)
-			return
-		}
-		roll2, err := roller.Roll("1d20")
-		if err != nil {
-			http.Error(w, errFailedToRollDice, http.StatusInternalServerError)
-			return
-		}
-		allRolls = []int{roll1.Total, roll2.Total}
-
-		if req.Advantage {
-			if roll1.Total > roll2.Total {
-				roll = roll1.Total
-			} else {
-				roll = roll2.Total
-			}
-		} else { // Disadvantage
-			if roll1.Total < roll2.Total {
-				roll = roll1.Total
-			} else {
-				roll = roll2.Total
-			}
-		}
-	} else {
-		// Normal roll
-		result, err := roller.Roll("1d20")
-		if err != nil {
-			http.Error(w, errFailedToRollDice, http.StatusInternalServerError)
-			return
-		}
-		roll = result.Total
+	roll, allRolls, err := h.performDiceRoll(&req)
+	if err != nil {
+		http.Error(w, errFailedToRollDice, http.StatusInternalServerError)
+		return
 	}
 
-	total = roll + req.Modifier
+	// Build response
+	response := h.buildSkillCheckResponse(roll, modifier, allRolls, &req)
 
+	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
+		return
+	}
+}
+
+// calculateTotalModifier calculates the total modifier for a skill check
+func (h *Handlers) calculateTotalModifier(character *models.Character, req *SkillCheckRequest) int {
+	if req.Modifier != 0 || req.Ability == "" {
+		return req.Modifier
+	}
+
+	modifier := h.getAbilityModifier(character, req.Ability)
+
+	// Add proficiency bonus if applicable
+	if h.shouldAddProficiency(character, req) {
+		modifier += character.ProficiencyBonus
+	}
+
+	return modifier
+}
+
+// shouldAddProficiency determines if proficiency bonus should be added
+func (h *Handlers) shouldAddProficiency(character *models.Character, req *SkillCheckRequest) bool {
+	if req.CheckType == "save" {
+		return h.hasSavingThrowProficiency(character, req.Ability)
+	}
+	if req.CheckType == "skill" {
+		return h.hasSkillProficiency(character, req.Skill)
+	}
+	return false
+}
+
+// performDiceRoll performs the dice roll based on advantage/disadvantage
+func (h *Handlers) performDiceRoll(req *SkillCheckRequest) (int, []int, error) {
+	roller := dice.NewRoller()
+
+	if req.Advantage || req.Disadvantage {
+		return h.rollWithAdvantageDisadvantage(roller, req.Advantage)
+	}
+
+	// Normal roll
+	result, err := roller.Roll("1d20")
+	if err != nil {
+		return 0, nil, err
+	}
+	return result.Total, nil, nil
+}
+
+// rollWithAdvantageDisadvantage handles advantage/disadvantage rolls
+func (h *Handlers) rollWithAdvantageDisadvantage(roller *dice.Roller, isAdvantage bool) (int, []int, error) {
+	roll1, err := roller.Roll("1d20")
+	if err != nil {
+		return 0, nil, err
+	}
+	roll2, err := roller.Roll("1d20")
+	if err != nil {
+		return 0, nil, err
+	}
+
+	allRolls := []int{roll1.Total, roll2.Total}
+	
+	if isAdvantage {
+		return max(roll1.Total, roll2.Total), allRolls, nil
+	}
+	return min(roll1.Total, roll2.Total), allRolls, nil
+}
+
+// buildSkillCheckResponse builds the response for a skill check
+func (h *Handlers) buildSkillCheckResponse(roll, modifier int, allRolls []int, req *SkillCheckRequest) SkillCheckResponse {
+	total := roll + modifier
 	response := SkillCheckResponse{
 		Roll:            roll,
-		Modifier:        req.Modifier,
+		Modifier:        modifier,
 		Total:           total,
 		CriticalSuccess: roll == 20,
 		CriticalFailure: roll == 1,
@@ -137,17 +163,22 @@ func (h *Handlers) PerformSkillCheck(w http.ResponseWriter, r *http.Request) {
 		response.Success = total >= req.DC
 	}
 
-	// Log the roll in the game session if applicable
-	// Note: Since characters don't have a direct GameSessionID field,
-	// we would need to query the game_participants table to find active sessions
-	// For now, we'll skip the websocket broadcast
-	// TODO: Implement session lookup if needed
+	return response
+}
 
-	w.Header().Set(constants.ContentType, constants.ApplicationJSON)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, constants.ErrFailedToEncode, http.StatusInternalServerError)
-		return
+// Helper functions for min/max
+func min(a, b int) int {
+	if a < b {
+		return a
 	}
+	return b
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 // GetCharacterChecks returns available checks for a character
@@ -202,24 +233,33 @@ func (h *Handlers) getAbilityModifier(character *models.Character, ability strin
 }
 
 func (h *Handlers) hasSavingThrowProficiency(character *models.Character, ability string) bool {
-	// This would check character's class saving throw proficiencies
-	// For now, returning based on common class proficiencies
-	switch character.Class {
-	case "fighter", "barbarian":
-		return ability == constants.AbilityStrength || ability == constants.AbilityConstitution
-	case "rogue", "ranger", "monk":
-		return ability == constants.AbilityDexterity || ability == constants.AbilityIntelligence
-	case "wizard":
-		return ability == constants.AbilityIntelligence || ability == constants.AbilityWisdom
-	case "cleric", "druid":
-		return ability == constants.AbilityWisdom || ability == constants.AbilityCharisma
-	case "sorcerer", "warlock", "bard":
-		return ability == constants.AbilityCharisma || ability == constants.AbilityWisdom
-	case "paladin":
-		return ability == constants.AbilityWisdom || ability == constants.AbilityCharisma
-	default:
+	// Map of class to their saving throw proficiencies
+	classProficiencies := map[string][]string{
+		"fighter":   {constants.AbilityStrength, constants.AbilityConstitution},
+		"barbarian": {constants.AbilityStrength, constants.AbilityConstitution},
+		"rogue":     {constants.AbilityDexterity, constants.AbilityIntelligence},
+		"ranger":    {constants.AbilityDexterity, constants.AbilityWisdom},
+		"monk":      {constants.AbilityDexterity, constants.AbilityWisdom},
+		"wizard":    {constants.AbilityIntelligence, constants.AbilityWisdom},
+		"cleric":    {constants.AbilityWisdom, constants.AbilityCharisma},
+		"druid":     {constants.AbilityIntelligence, constants.AbilityWisdom},
+		"sorcerer":  {constants.AbilityConstitution, constants.AbilityCharisma},
+		"warlock":   {constants.AbilityWisdom, constants.AbilityCharisma},
+		"bard":      {constants.AbilityDexterity, constants.AbilityCharisma},
+		"paladin":   {constants.AbilityWisdom, constants.AbilityCharisma},
+	}
+
+	proficiencies, exists := classProficiencies[character.Class]
+	if !exists {
 		return false
 	}
+
+	for _, prof := range proficiencies {
+		if prof == ability {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *Handlers) hasSkillProficiency(_ *models.Character, _ string) bool {

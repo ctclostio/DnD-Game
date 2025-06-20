@@ -13,6 +13,18 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
+// Test error messages
+const (
+	errFailedToGenerateClass = "failed to generate class"
+	errFailedToParseClassResponse = "failed to parse class response"
+	errClassValidationFailed = "class validation failed"
+	errAPIError = "API error"
+	errInvalidHitDie = "invalid hit die:"
+	errInvalidSavingThrows = "classes must have exactly 2 saving throw proficiencies"
+	errNoLevel1Features = "class must have at least one level 1 feature"
+	errInvalidPrimaryAbility = "invalid primary ability"
+)
+
 func TestNewAIClassGenerator(t *testing.T) {
 	mockLLM := &mocks.MockLLMProvider{}
 	generator := NewAIClassGenerator(mockLLM)
@@ -102,7 +114,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 	t.Run("LLM provider error", func(t *testing.T) {
 		mockLLM := &mocks.MockLLMProvider{}
 		mockLLM.On("GenerateCompletion", mock.Anything, mock.Anything, mock.Anything).
-			Return("", errors.New("API error"))
+			Return("", errors.New(errAPIError))
 
 		generator := NewAIClassGenerator(mockLLM)
 
@@ -117,7 +129,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 
 		require.Error(t, err)
 		require.Nil(t, class)
-		require.Contains(t, err.Error(), "failed to generate class")
+		require.Contains(t, err.Error(), errFailedToGenerateClass)
 
 		mockLLM.AssertExpectations(t)
 	})
@@ -140,7 +152,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 
 		require.Error(t, err)
 		require.Nil(t, class)
-		require.Contains(t, err.Error(), "failed to parse class response")
+		require.Contains(t, err.Error(), errFailedToParseClassResponse)
 
 		mockLLM.AssertExpectations(t)
 	})
@@ -183,7 +195,7 @@ func TestAIClassGenerator_GenerateCustomClass(t *testing.T) {
 
 		require.Error(t, err)
 		require.Nil(t, class)
-		require.Contains(t, err.Error(), "class validation failed")
+		require.Contains(t, err.Error(), errClassValidationFailed)
 
 		mockLLM.AssertExpectations(t)
 	})
@@ -224,7 +236,7 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 				SavingThrowProficiencies: []string{"Strength", "Constitution"},
 			},
 			wantErr: true,
-			errMsg:  "invalid hit die:",
+			errMsg:  errInvalidHitDie,
 		},
 		{
 			name: "no saving throws",
@@ -235,7 +247,7 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 				SavingThrowProficiencies: []string{},
 			},
 			wantErr: true,
-			errMsg:  "classes must have exactly 2 saving throw proficiencies",
+			errMsg:  errInvalidSavingThrows,
 		},
 		{
 			name: "no level 1 features",
@@ -249,7 +261,7 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 				},
 			},
 			wantErr: true,
-			errMsg:  "class must have at least one level 1 feature",
+			errMsg:  errNoLevel1Features,
 		},
 		{
 			name: "invalid primary ability",
@@ -260,7 +272,7 @@ func TestAIClassGenerator_validateClass(t *testing.T) {
 				SavingThrowProficiencies: []string{"Wisdom", "Charisma"},
 			},
 			wantErr: true,
-			errMsg:  "invalid primary ability",
+			errMsg:  errInvalidPrimaryAbility,
 		},
 	}
 
