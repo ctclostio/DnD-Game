@@ -8,6 +8,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Error message constants
+const (
+	errMsgItemNotFound = "item not found"
+)
+
 type InventoryService struct {
 	inventoryRepo database.InventoryRepository
 	characterRepo database.CharacterRepository
@@ -34,7 +39,7 @@ func (s *InventoryService) AddItemToCharacter(characterID, itemID string, quanti
 		return err
 	}
 	if item == nil {
-		return fmt.Errorf("item not found")
+		return fmt.Errorf(errMsgItemNotFound)
 	}
 
 	return s.inventoryRepo.AddItemToInventory(characterID, itemID, quantity)
@@ -168,7 +173,7 @@ func (s *InventoryService) PurchaseItem(characterID, itemID string, quantity int
 		return err
 	}
 	if item == nil {
-		return fmt.Errorf("item not found")
+		return fmt.Errorf(errMsgItemNotFound)
 	}
 
 	totalCost := item.Value * quantity
@@ -198,7 +203,7 @@ func (s *InventoryService) SellItem(characterID, itemID string, quantity int) er
 		return err
 	}
 	if item == nil {
-		return fmt.Errorf("item not found")
+		return fmt.Errorf(errMsgItemNotFound)
 	}
 
 	salePrice := (item.Value * quantity) / 2

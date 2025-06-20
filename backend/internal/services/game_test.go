@@ -10,12 +10,21 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Test constants
+const (
+	testDMID            = "dm-123"
+	testPlayerID        = testPlayerID
+	testCampaignName    = "Test Campaign"
+	testSessionNotFound = testSessionNotFound
+	testNonExistentID   = testNonExistentID
+)
+
 func TestGameService_CreateSession(t *testing.T) {
 	t.Run("successful session creation", func(t *testing.T) {
 		service := NewGameService()
 
 		session := &models.GameSession{
-			DMID:        "dm-123",
+			DMID:        testDMID,
 			Name:        "The Lost Mines",
 			Description: "An adventure into the lost mines of Phandelver",
 		}
@@ -106,8 +115,8 @@ func TestGameService_GetSessionByID(t *testing.T) {
 
 		// Create a session first
 		session := &models.GameSession{
-			DMID: "dm-123",
-			Name: "Test Campaign",
+			DMID: testDMID,
+			Name: testCampaignName,
 		}
 		created, _ := service.CreateSession(session)
 
@@ -119,14 +128,14 @@ func TestGameService_GetSessionByID(t *testing.T) {
 		require.Equal(t, created, retrieved)
 	})
 
-	t.Run("session not found", func(t *testing.T) {
+	t.Run(testSessionNotFound, func(t *testing.T) {
 		service := NewGameService()
 
 		retrieved, err := service.GetSessionByID("non-existent-id")
 
 		require.Error(t, err)
 		require.Nil(t, retrieved)
-		require.Contains(t, err.Error(), "session not found")
+		require.Contains(t, err.Error(), testSessionNotFound)
 	})
 
 	t.Run("empty ID", func(t *testing.T) {
@@ -136,7 +145,7 @@ func TestGameService_GetSessionByID(t *testing.T) {
 
 		require.Error(t, err)
 		require.Nil(t, retrieved)
-		require.Contains(t, err.Error(), "session not found")
+		require.Contains(t, err.Error(), testSessionNotFound)
 	})
 }
 
@@ -146,8 +155,8 @@ func TestGameService_AddPlayerToSession(t *testing.T) {
 
 		// Create a session first
 		session := &models.GameSession{
-			DMID: "dm-123",
-			Name: "Test Campaign",
+			DMID: testDMID,
+			Name: testCampaignName,
 		}
 		created, _ := service.CreateSession(session)
 
@@ -173,32 +182,32 @@ func TestGameService_AddPlayerToSession(t *testing.T) {
 		// This is marked as TODO in the code
 	})
 
-	t.Run("session not found", func(t *testing.T) {
+	t.Run(testSessionNotFound, func(t *testing.T) {
 		service := NewGameService()
 
 		player := &models.Player{
-			ID:   "player-123",
+			ID:   testPlayerID,
 			Name: "Test Player",
 		}
 
-		err := service.AddPlayerToSession("non-existent-session", player.ID, player)
+		err := service.AddPlayerToSession(testNonExistentID, player.ID, player)
 
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "session not found")
+		require.Contains(t, err.Error(), testSessionNotFound)
 	})
 
 	t.Run("empty session ID", func(t *testing.T) {
 		service := NewGameService()
 
 		player := &models.Player{
-			ID:   "player-123",
+			ID:   testPlayerID,
 			Name: "Test Player",
 		}
 
 		err := service.AddPlayerToSession("", player.ID, player)
 
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "session not found")
+		require.Contains(t, err.Error(), testSessionNotFound)
 	})
 }
 
@@ -208,8 +217,8 @@ func TestGameService_RecordGameEvent(t *testing.T) {
 
 		// Create a session first
 		session := &models.GameSession{
-			DMID: "dm-123",
-			Name: "Test Campaign",
+			DMID: testDMID,
+			Name: testCampaignName,
 		}
 		created, _ := service.CreateSession(session)
 
@@ -249,8 +258,8 @@ func TestGameService_RecordGameEvent(t *testing.T) {
 
 		// Create a session
 		session := &models.GameSession{
-			DMID: "dm-123",
-			Name: "Test Campaign",
+			DMID: testDMID,
+			Name: testCampaignName,
 		}
 		created, _ := service.CreateSession(session)
 
@@ -299,19 +308,19 @@ func TestGameService_RecordGameEvent(t *testing.T) {
 		require.NotEqual(t, events[0].ID, events[2].ID)
 	})
 
-	t.Run("session not found", func(t *testing.T) {
+	t.Run(testSessionNotFound, func(t *testing.T) {
 		service := NewGameService()
 
 		event := &models.GameEvent{
-			SessionID: "non-existent-session",
+			SessionID: testNonExistentID,
 			Type:      "roll",
-			PlayerID:  "player-123",
+			PlayerID:  testPlayerID,
 		}
 
 		err := service.RecordGameEvent(event)
 
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "session not found")
+		require.Contains(t, err.Error(), testSessionNotFound)
 
 		// Verify event ID and timestamp were not set
 		require.Empty(t, event.ID)
@@ -324,13 +333,13 @@ func TestGameService_RecordGameEvent(t *testing.T) {
 		event := &models.GameEvent{
 			SessionID: "",
 			Type:      "roll",
-			PlayerID:  "player-123",
+			PlayerID:  testPlayerID,
 		}
 
 		err := service.RecordGameEvent(event)
 
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "session not found")
+		require.Contains(t, err.Error(), testSessionNotFound)
 	})
 }
 
@@ -340,8 +349,8 @@ func TestGameService_GetSessionEvents(t *testing.T) {
 
 		// Create session and add events
 		session := &models.GameSession{
-			DMID: "dm-123",
-			Name: "Test Campaign",
+			DMID: testDMID,
+			Name: testCampaignName,
 		}
 		created, _ := service.CreateSession(session)
 
@@ -350,7 +359,7 @@ func TestGameService_GetSessionEvents(t *testing.T) {
 			event := &models.GameEvent{
 				SessionID: created.ID,
 				Type:      "test",
-				PlayerID:  "player-123",
+				PlayerID:  testPlayerID,
 				Data:      map[string]interface{}{"index": i},
 			}
 			_ = service.RecordGameEvent(event)
@@ -375,8 +384,8 @@ func TestGameService_GetSessionEvents(t *testing.T) {
 
 		// Create session without events
 		session := &models.GameSession{
-			DMID: "dm-123",
-			Name: "Test Campaign",
+			DMID: testDMID,
+			Name: testCampaignName,
 		}
 		created, _ := service.CreateSession(session)
 
@@ -388,14 +397,14 @@ func TestGameService_GetSessionEvents(t *testing.T) {
 		require.Len(t, events, 0)
 	})
 
-	t.Run("session not found", func(t *testing.T) {
+	t.Run(testSessionNotFound, func(t *testing.T) {
 		service := NewGameService()
 
-		events, err := service.GetSessionEvents("non-existent-session")
+		events, err := service.GetSessionEvents(testNonExistentID)
 
 		require.Error(t, err)
 		require.Nil(t, events)
-		require.Contains(t, err.Error(), "session not found")
+		require.Contains(t, err.Error(), testSessionNotFound)
 	})
 }
 
@@ -454,8 +463,8 @@ func TestGameService_ConcurrentAccess(t *testing.T) {
 
 		// Create a session
 		session := &models.GameSession{
-			DMID: "dm-123",
-			Name: "Test Campaign",
+			DMID: testDMID,
+			Name: testCampaignName,
 		}
 		created, _ := service.CreateSession(session)
 
