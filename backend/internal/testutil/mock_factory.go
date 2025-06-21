@@ -25,6 +25,7 @@ type MockCharacterRepository struct {
 }
 
 func (m *MockCharacterRepository) Create(char *models.Character) error {
+	// Create a new character record in the database
 	args := m.Called(char)
 	return args.Error(0)
 }
@@ -68,6 +69,7 @@ type MockUserRepository struct {
 }
 
 func (m *MockUserRepository) Create(user *models.User) error {
+	// Create a new user account in the system
 	args := m.Called(user)
 	return args.Error(0)
 }
@@ -109,6 +111,7 @@ type MockGameSessionRepository struct {
 }
 
 func (m *MockGameSessionRepository) Create(session *models.GameSession) error {
+	// Create a new game session for players to join
 	args := m.Called(session)
 	return args.Error(0)
 }
@@ -155,6 +158,7 @@ type MockCombatRepository struct {
 }
 
 func (m *MockCombatRepository) Create(combat *models.Combat) error {
+	// Create a new combat encounter in the session
 	args := m.Called(combat)
 	return args.Error(0)
 }
@@ -188,6 +192,7 @@ type MockInventoryRepository struct {
 }
 
 func (m *MockInventoryRepository) CreateItem(item *models.InventoryItem) error {
+	// Create a new inventory item entry
 	args := m.Called(item)
 	return args.Error(0)
 }
@@ -226,6 +231,7 @@ type MockDiceRollRepository struct {
 }
 
 func (m *MockDiceRollRepository) Create(roll *models.DiceRoll) error {
+	// Create a new dice roll record for history tracking
 	args := m.Called(roll)
 	return args.Error(0)
 }
@@ -254,6 +260,7 @@ type MockCharacterService struct {
 }
 
 func (m *MockCharacterService) Create(char *models.Character) error {
+	// Create character through service with business logic validation
 	args := m.Called(char)
 	return args.Error(0)
 }
@@ -325,6 +332,7 @@ func (m *MockCombatService) GetCombat(id int64) (*models.Combat, error) {
 }
 
 func (m *MockCombatService) NextTurn(combatID int64) error {
+	// Advance to the next turn in combat order
 	args := m.Called(combatID)
 	return args.Error(0)
 }

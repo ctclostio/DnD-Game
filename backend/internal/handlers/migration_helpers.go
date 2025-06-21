@@ -32,11 +32,13 @@ func deprecatedSendErrorResponse(w http.ResponseWriter, _ int, message string) {
 
 // respondWithJSON sends a JSON response (DEPRECATED - use response.JSON)
 // Deprecated: Use response.JSON instead
+// This variant was used by older handler implementations
 //
 //lint:ignore U1000 retained for backward compatibility
 func deprecatedRespondWithJSON(w http.ResponseWriter, status int, data interface{}) {
 	// Create a minimal request with empty context for backward compatibility
-	r, _ := http.NewRequest("", "", http.NoBody)
+	// This function wraps response.JSON for legacy code that used respondWithJSON naming
+	r, _ := http.NewRequest("GET", "/", http.NoBody)
 	response.JSON(w, r, status, data)
 }
 

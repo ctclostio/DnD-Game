@@ -106,21 +106,49 @@ func (vm *ValidationMiddlewareV2) formatValidationErrors(err error) *errors.Vali
 
 // getErrorMessage generates user-friendly validation error messages.
 func (vm *ValidationMiddlewareV2) getErrorMessage(field, tag, param string, value interface{}) string {
+	// Handle comparison validators
+	if msg := vm.getComparisonMessage(field, tag, param); msg != "" {
+		return msg
+	}
+
+	// Handle format validators
+	if msg := vm.getFormatMessage(field, tag); msg != "" {
+		return msg
+	}
+
+	// Handle D&D specific validators
+	if msg := vm.getDnDMessage(field, tag); msg != "" {
+		return msg
+	}
+
+	// Handle remaining validators
 	switch tag {
 	case "required":
 		return field + " is required"
+	case "len":
+		return field + " must be exactly " + param + " characters"
+	case "oneof":
+		return field + " must be one of: " + param
+	case "alpha":
+		return field + " must contain only letters"
+	case "alphanum":
+		return field + " must contain only letters and numbers"
+	case "lowercase":
+		return field + " must be lowercase"
+	case "uppercase":
+		return field + " must be uppercase"
+	default:
+		return field + " failed " + tag + " validation"
+	}
+}
+
+// getComparisonMessage handles comparison validation messages
+func (vm *ValidationMiddlewareV2) getComparisonMessage(field, tag, param string) string {
+	switch tag {
 	case "min":
 		return field + " must be at least " + param
 	case "max":
 		return field + " must be at most " + param
-	case "len":
-		return field + " must be exactly " + param + " characters"
-	case "email":
-		return field + " must be a valid email address"
-	case "url":
-		return field + " must be a valid URL"
-	case "oneof":
-		return field + " must be one of: " + param
 	case "gt":
 		return field + " must be greater than " + param
 	case "gte":
@@ -133,10 +161,17 @@ func (vm *ValidationMiddlewareV2) getErrorMessage(field, tag, param string, valu
 		return field + " must equal " + param
 	case "nefield":
 		return field + " must not equal " + param
-	case "alpha":
-		return field + " must contain only letters"
-	case "alphanum":
-		return field + " must contain only letters and numbers"
+	}
+	return ""
+}
+
+// getFormatMessage handles format validation messages
+func (vm *ValidationMiddlewareV2) getFormatMessage(field, tag string) string {
+	switch tag {
+	case "email":
+		return field + " must be a valid email address"
+	case "url":
+		return field + " must be a valid URL"
 	case "numeric":
 		return field + " must be a valid number"
 	case "hexadecimal":
@@ -155,14 +190,15 @@ func (vm *ValidationMiddlewareV2) getErrorMessage(field, tag, param string, valu
 		return field + " must be a valid HSLA color"
 	case "json":
 		return field + " must be valid JSON"
-	case "lowercase":
-		return field + " must be lowercase"
-	case "uppercase":
-		return field + " must be uppercase"
 	case "datetime":
 		return field + " must be a valid datetime"
+	}
+	return ""
+}
 
-	// D&D specific validators
+// getDnDMessage handles D&D specific validation messages
+func (vm *ValidationMiddlewareV2) getDnDMessage(field, tag string) string {
+	switch tag {
 	case "dnd_ability_score":
 		return field + " must be between 3 and 20"
 	case "dnd_level":
@@ -175,10 +211,8 @@ func (vm *ValidationMiddlewareV2) getErrorMessage(field, tag, param string, valu
 		return field + " must be a valid D&D skill"
 	case "dnd_ability":
 		return field + " must be a valid D&D ability (str, dex, con, int, wis, cha)"
-
-	default:
-		return field + " failed " + tag + " validation"
 	}
+	return ""
 }
 
 // registerCustomValidators registers D&D-specific validators.

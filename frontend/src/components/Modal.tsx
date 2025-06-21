@@ -92,6 +92,14 @@ export const Modal: React.FC<ModalProps> = ({
       className={`modal-overlay ${settings.reduceMotion ? 'no-animation' : ''}`}
       data-overlay="true"
       onClick={handleOverlayClick}
+      onKeyDown={(e) => {
+        if (closeOnOverlayClick && e.key === 'Escape') {
+          onClose();
+        }
+      }}
+      tabIndex={0}
+      role="button"
+      aria-label="Close modal"
     >
       <div
         ref={modalRef}

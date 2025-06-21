@@ -624,6 +624,7 @@ type MockNPCRepository struct {
 }
 
 func (m *MockNPCRepository) Create(ctx context.Context, npc *models.NPC) error {
+	// Create a new NPC in the repository
 	args := m.Called(ctx, npc)
 	return args.Error(0)
 }
@@ -645,6 +646,7 @@ func (m *MockNPCRepository) GetByGameSession(ctx context.Context, gameSessionID 
 }
 
 func (m *MockNPCRepository) Update(ctx context.Context, npc *models.NPC) error {
+	// Update existing NPC attributes
 	args := m.Called(ctx, npc)
 	return args.Error(0)
 }
