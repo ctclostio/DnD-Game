@@ -104,29 +104,41 @@ const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
     return icons[bias] || '❓';
   };
 
+  // Helper function to process form data and reduce complexity
+  const processEventFormData = (formData) => {
+    const splitAndTrim = (value) => {
+      return value.split(',').map(item => item.trim()).filter(item => item);
+    };
+    
+    return {
+      type: formData.get('type'),
+      name: formData.get('name'),
+      description: formData.get('description'),
+      location: formData.get('location'),
+      participants: splitAndTrim(formData.get('participants')),
+      witnesses: splitAndTrim(formData.get('witnesses')),
+      immediate_effects: splitAndTrim(formData.get('effects')),
+      generate_perspectives: true,
+      perspective_sources: [
+        { type: 'participant', name: 'Direct Participant' },
+        { type: 'witness', name: 'Bystander' },
+        { type: 'faction', name: 'Local Authority' },
+        { type: 'historical', name: 'Future Historian' }
+      ]
+    };
+  };
+
+  const handleEventFormSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const eventData = processEventFormData(formData);
+    handleCreateEvent(eventData);
+  };
+
   const EventCreator = () => (
     <div className="event-creator">
       <h4>Create World Event</h4>
-      <form onSubmit={(e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        handleCreateEvent({
-          type: formData.get('type'),
-          name: formData.get('name'),
-          description: formData.get('description'),
-          location: formData.get('location'),
-          participants: formData.get('participants').split(',').map(p => p.trim()).filter(p => p),
-          witnesses: formData.get('witnesses').split(',').map(w => w.trim()).filter(w => w),
-          immediate_effects: formData.get('effects').split(',').map(e => e.trim()).filter(e => e),
-          generate_perspectives: true,
-          perspective_sources: [
-            { type: 'participant', name: 'Direct Participant' },
-            { type: 'witness', name: 'Bystander' },
-            { type: 'faction', name: 'Local Authority' },
-            { type: 'historical', name: 'Future Historian' }
-          ]
-        });
-      }}>
+      <form onSubmit={handleEventFormSubmit}>
         <div className="form-group">
           <label>Event Type:</label>
           <select name="type" required>

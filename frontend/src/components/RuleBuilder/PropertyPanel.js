@@ -29,6 +29,21 @@ const PropertyPanel = ({
       });
     }
   };
+  
+  // Helper functions to reduce nesting
+  const updateArrayItem = (array, index, newValue) => {
+    const newArray = [...(array || [])];
+    newArray[index] = newValue;
+    return newArray;
+  };
+  
+  const removeArrayItem = (array, index) => {
+    return (array || []).filter((_, i) => i !== index);
+  };
+  
+  const addArrayItem = (array) => {
+    return [...(array || []), ''];
+  };
 
   const renderPropertyInput = (key, value, propertyDef = {}) => {
     const type = propertyDef.type || typeof value;
@@ -81,17 +96,14 @@ const PropertyPanel = ({
                 <input
                   type="text"
                   value={item}
-                  onChange={(e) => {
-                    const newArray = [...(value || [])];
-                    newArray[index] = e.target.value;
-                    handlePropertyChange(key, newArray);
-                  }}
+                  onChange={(e) => 
+                    handlePropertyChange(key, updateArrayItem(value, index, e.target.value))
+                  }
                 />
                 <button
-                  onClick={() => {
-                    const newArray = (value || []).filter((_, i) => i !== index);
-                    handlePropertyChange(key, newArray);
-                  }}
+                  onClick={() => 
+                    handlePropertyChange(key, removeArrayItem(value, index))
+                  }
                 >
                   <FaTrash />
                 </button>
@@ -99,7 +111,7 @@ const PropertyPanel = ({
             ))}
             <button
               className="add-array-item"
-              onClick={() => handlePropertyChange(key, [...(value || []), ''])}
+              onClick={() => handlePropertyChange(key, addArrayItem(value))}
             >
               <FaPlus /> Add Item
             </button>

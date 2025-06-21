@@ -4,6 +4,163 @@ const SettlementDetails = ({ settlement, sessionId, onUpdate }) => {
     const [activeSection, setActiveSection] = useState('overview');
     const [market, setMarket] = useState(null);
     const [priceCheck, setPriceCheck] = useState({ basePrice: 0, itemType: '', result: null });
+    
+    // Helper render methods to reduce complexity
+    const renderOverviewSection = () => (
+        <div className="overview-section">
+            <div className="description">
+                <h4>Description</h4>
+                <p>{settlement.description}</p>
+            </div>
+
+            <div className="history">
+                <h4>History</h4>
+                <p>{settlement.history}</p>
+            </div>
+
+            <div className="government">
+                <h4>Government</h4>
+                <p><strong>Type:</strong> {settlement.governmentType}</p>
+                <p><strong>Alignment:</strong> {settlement.alignment}</p>
+            </div>
+
+            <div className="notable-locations">
+                <h4>Notable Locations</h4>
+                {settlement.notableLocations?.map((location, index) => (
+                    <div key={index} className="location-item">
+                        <h5>{location.name}</h5>
+                        <p>{location.description}</p>
+                    </div>
+                ))}
+            </div>
+
+            <div className="problems">
+                <h4>Current Problems</h4>
+                {settlement.problems?.map((problem, index) => (
+                    <div key={index} className="problem-item">
+                        <h5>{problem.title}</h5>
+                        <p>{problem.description}</p>
+                    </div>
+                ))}
+            </div>
+
+            {settlement.secrets?.length > 0 && (
+                <div className="secrets">
+                    <h4>Secrets (DM Only)</h4>
+                    {settlement.secrets.map((secret, index) => (
+                        <div key={index} className="secret-item">
+                            <h5>{secret.title}</h5>
+                            <p>{secret.description}</p>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+    
+    const renderNPCSection = () => (
+        <div className="npcs-section">
+            {settlement.npcs?.length === 0 ? (
+                <p className="empty">No NPCs yet</p>
+            ) : (
+                settlement.npcs?.map(npc => (
+                    <div key={npc.id} className="npc-card">
+                        <div className="npc-header">
+                            <h5>{npc.name}</h5>
+                            <span className="npc-role">{npc.role}</span>
+                        </div>
+                        <div className="npc-details">
+                            <p><strong>Race:</strong> {npc.race}</p>
+                            <p><strong>Occupation:</strong> {npc.occupation}</p>
+                            {npc.ancientKnowledge && (
+                                <span className="ancient-knowledge">📜 Ancient Knowledge</span>
+                            )}
+                            {npc.corruptionTouched && (
+                                <span className="corruption-touched">🌑 Corruption Touched</span>
+                            )}
+                        </div>
+                    </div>
+                ))
+            )}
+        </div>
+    );
+    
+    const renderShopSection = () => (
+        <div className="shops-section">
+            {settlement.shops?.length === 0 ? (
+                <p className="empty">No shops yet</p>
+            ) : (
+                settlement.shops?.map(shop => (
+                    <div key={shop.id} className="shop-card">
+                        <div className="shop-header">
+                            <h5>{shop.name}</h5>
+                            <span className="shop-type">{shop.type}</span>
+                        </div>
+                        <div className="shop-details">
+                            <p><strong>Quality:</strong> {shop.qualityLevel}/10</p>
+                            <p><strong>Price Modifier:</strong> {Math.round(shop.priceModifier * 100)}%</p>
+                            {shop.blackMarket && (
+                                <span className="black-market">🕵️ Black Market</span>
+                            )}
+                            {shop.ancientArtifacts && (
+                                <span className="ancient-artifacts">🗿 Ancient Artifacts</span>
+                            )}
+                        </div>
+                        {shop.currentRumors?.length > 0 && (
+                            <div className="shop-rumors">
+                                <strong>Rumors:</strong>
+                                <ul>
+                                    {shop.currentRumors.map((rumor, index) => (
+                                        <li key={index}>{rumor}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                ))
+            )}
+        </div>
+    );
+    
+    const renderMarketSection = () => {
+        if (!market) {
+            return <p className="empty">Loading market data...</p>;
+        }
+        
+        return (
+            <>
+                <div className="market-conditions">
+                    <h4>Market Conditions</h4>
+                    <div className="price-modifiers">
+                        <div className="modifier-item">
+                            <span>Food:</span>
+                            <span className={market.foodPriceModifier > 1 ? 'high' : 'low'}>
+                                {Math.round(market.foodPriceModifier * 100)}%
+                            </span>
+                        </div>
+                        <div className="modifier-item">
+                            <span>Common Goods:</span>
+                            <span className={market.commonGoodsModifier > 1 ? 'high' : 'low'}>
+                                {Math.round(market.commonGoodsModifier * 100)}%
+                            </span>
+                        </div>
+                        <div className="modifier-item">
+                            <span>Weapons & Armor:</span>
+                            <span className={market.weaponsArmorModifier > 1 ? 'high' : 'low'}>
+                                {Math.round(market.weaponsArmorModifier * 100)}%
+                            </span>
+                        </div>
+                        <div className="modifier-item">
+                            <span>Magical Items:</span>
+                            <span className={market.magicalItemsModifier > 1 ? 'high' : 'low'}>
+                                {Math.round(market.magicalItemsModifier * 100)}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </>
+        );
+    };
 
     useEffect(() => {
         if (settlement) {
@@ -88,124 +245,12 @@ const SettlementDetails = ({ settlement, sessionId, onUpdate }) => {
             </div>
 
             <div className="details-content">
-                {activeSection === 'overview' && (
-                    <div className="overview-section">
-                        <div className="description">
-                            <h4>Description</h4>
-                            <p>{settlement.description}</p>
-                        </div>
-
-                        <div className="history">
-                            <h4>History</h4>
-                            <p>{settlement.history}</p>
-                        </div>
-
-                        <div className="government">
-                            <h4>Government</h4>
-                            <p><strong>Type:</strong> {settlement.governmentType}</p>
-                            <p><strong>Alignment:</strong> {settlement.alignment}</p>
-                        </div>
-
-                        <div className="notable-locations">
-                            <h4>Notable Locations</h4>
-                            {settlement.notableLocations?.map((location, index) => (
-                                <div key={index} className="location-item">
-                                    <h5>{location.name}</h5>
-                                    <p>{location.description}</p>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="problems">
-                            <h4>Current Problems</h4>
-                            {settlement.problems?.map((problem, index) => (
-                                <div key={index} className="problem-item">
-                                    <h5>{problem.title}</h5>
-                                    <p>{problem.description}</p>
-                                </div>
-                            ))}
-                        </div>
-
-                        {settlement.secrets?.length > 0 && (
-                            <div className="secrets">
-                                <h4>Secrets (DM Only)</h4>
-                                {settlement.secrets.map((secret, index) => (
-                                    <div key={index} className="secret-item">
-                                        <h5>{secret.title}</h5>
-                                        <p>{secret.description}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {activeSection === 'npcs' && (
-                    <div className="npcs-section">
-                        {settlement.npcs?.length === 0 ? (
-                            <p className="empty">No NPCs yet</p>
-                        ) : (
-                            settlement.npcs?.map(npc => (
-                                <div key={npc.id} className="npc-card">
-                                    <div className="npc-header">
-                                        <h5>{npc.name}</h5>
-                                        <span className="npc-role">{npc.role}</span>
-                                    </div>
-                                    <div className="npc-details">
-                                        <p><strong>Race:</strong> {npc.race}</p>
-                                        <p><strong>Occupation:</strong> {npc.occupation}</p>
-                                        {npc.ancientKnowledge && (
-                                            <span className="ancient-knowledge">📜 Ancient Knowledge</span>
-                                        )}
-                                        {npc.corruptionTouched && (
-                                            <span className="corruption-touched">🌑 Corruption Touched</span>
-                                        )}
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                )}
-
-                {activeSection === 'shops' && (
-                    <div className="shops-section">
-                        {settlement.shops?.length === 0 ? (
-                            <p className="empty">No shops yet</p>
-                        ) : (
-                            settlement.shops?.map(shop => (
-                                <div key={shop.id} className="shop-card">
-                                    <div className="shop-header">
-                                        <h5>{shop.name}</h5>
-                                        <span className="shop-type">{shop.type}</span>
-                                    </div>
-                                    <div className="shop-details">
-                                        <p><strong>Quality:</strong> {shop.qualityLevel}/10</p>
-                                        <p><strong>Price Modifier:</strong> {Math.round(shop.priceModifier * 100)}%</p>
-                                        {shop.blackMarket && (
-                                            <span className="black-market">🕵️ Black Market</span>
-                                        )}
-                                        {shop.ancientArtifacts && (
-                                            <span className="ancient-artifacts">🗿 Ancient Artifacts</span>
-                                        )}
-                                    </div>
-                                    {shop.currentRumors?.length > 0 && (
-                                        <div className="shop-rumors">
-                                            <strong>Rumors:</strong>
-                                            <ul>
-                                                {shop.currentRumors.map((rumor, index) => (
-                                                    <li key={index}>{rumor}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-                                </div>
-                            ))
-                        )}
-                    </div>
-                )}
-
+                {activeSection === 'overview' && renderOverviewSection()}
+                {activeSection === 'npcs' && renderNPCSection()}
+                {activeSection === 'shops' && renderShopSection()}
                 {activeSection === 'market' && (
                     <div className="market-section">
+                        {renderMarketSection()}
                         {market ? (
                             <>
                                 <div className="market-conditions">
