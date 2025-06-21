@@ -4,7 +4,6 @@ import {
   Character,
   GameSession,
   Equipment,
-  Spell,
   AbilityScores,
 } from '../types/game';
 import { CombatState, CombatAction } from '../types/state';

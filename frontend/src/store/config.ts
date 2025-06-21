@@ -1,4 +1,3 @@
-import { persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import { PersistConfig } from 'redux-persist';
 import { AuthState, CharacterState, UIState, GameDataState, RootState } from '../types/state';

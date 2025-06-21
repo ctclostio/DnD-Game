@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaBook, FaCog, FaGlobe, FaUsers, FaDice, FaPalette, FaHammer } from 'react-icons/fa';
+import { FaBook, FaGlobe, FaUsers, FaDice, FaPalette, FaHammer } from 'react-icons/fa';
 
 const DMTools: React.FC = () => {
   const tools = [
