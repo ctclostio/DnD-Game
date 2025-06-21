@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { getClickableProps, getSelectableProps } from '../utils/accessibility';
 import '../styles/battle-map.css';
 
 const BattleMapViewer = ({ battleMap }) => {

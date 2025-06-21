@@ -7,7 +7,7 @@ import {
   FaExclamationTriangle, FaEye, FaComments, FaCogs
 } from 'react-icons/fa';
 import api from '../services/api';
-import { getClickableProps, getSelectableProps } from '../utils/accessibility';
+import { getClickableProps } from '../utils/accessibility';
 import BackstoryManager from './NarrativeEngine/BackstoryManager';
 import ConsequenceTracker from './NarrativeEngine/ConsequenceTracker';
 import PerspectiveViewer from './NarrativeEngine/PerspectiveViewer';

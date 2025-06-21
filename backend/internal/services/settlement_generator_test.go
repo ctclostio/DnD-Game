@@ -351,7 +351,7 @@ func TestSettlementGeneratorService_GenerateSettlement(t *testing.T) {
 	})
 }
 
-func TestSettlementGeneratorService_DeterminePopulationSize(t *testing.T) {
+func TestSettlementGeneratorServiceDeterminePopulationSize(t *testing.T) {
 	service := &SettlementGeneratorService{}
 	tests := []struct {
 		settlementType models.SettlementType
@@ -370,7 +370,7 @@ func TestSettlementGeneratorService_DeterminePopulationSize(t *testing.T) {
 	}
 }
 
-func TestSettlementGeneratorService_CalculatePopulation(t *testing.T) {
+func TestSettlementGeneratorServiceCalculatePopulation(t *testing.T) {
 	service := &SettlementGeneratorService{}
 	tests := []struct {
 		name           string
@@ -397,7 +397,7 @@ func TestSettlementGeneratorService_CalculatePopulation(t *testing.T) {
 	}
 }
 
-func TestSettlementGeneratorService_CalculateNPCCount(t *testing.T) {
+func TestSettlementGeneratorServiceCalculateNPCCount(t *testing.T) {
 	service := &SettlementGeneratorService{}
 	tests := []struct {
 		settlementType models.SettlementType
@@ -419,7 +419,7 @@ func TestSettlementGeneratorService_CalculateNPCCount(t *testing.T) {
 	}
 }
 
-func TestSettlementGeneratorService_CalculateShopCount(t *testing.T) {
+func TestSettlementGeneratorServiceCalculateShopCount(t *testing.T) {
 	service := &SettlementGeneratorService{}
 	tests := []struct {
 		settlementType models.SettlementType
@@ -441,7 +441,7 @@ func TestSettlementGeneratorService_CalculateShopCount(t *testing.T) {
 	}
 }
 
-func TestSettlementGeneratorService_CalculateWealthLevel(t *testing.T) {
+func TestSettlementGeneratorServiceCalculateWealthLevel(t *testing.T) {
 	service := &SettlementGeneratorService{}
 	tests := []struct {
 		name           string
@@ -470,7 +470,7 @@ func TestSettlementGeneratorService_CalculateWealthLevel(t *testing.T) {
 	}
 }
 
-func TestSettlementGeneratorService_InferTerrainType(t *testing.T) {
+func TestSettlementGeneratorServiceInferTerrainType(t *testing.T) {
 	service := &SettlementGeneratorService{}
 	tests := []struct {
 		region   string
@@ -491,7 +491,7 @@ func TestSettlementGeneratorService_InferTerrainType(t *testing.T) {
 	}
 }
 
-func TestSettlementGeneratorService_InferClimate(t *testing.T) {
+func TestSettlementGeneratorServiceInferClimate(t *testing.T) {
 	service := &SettlementGeneratorService{}
 	tests := []struct {
 		region   string
@@ -510,7 +510,7 @@ func TestSettlementGeneratorService_InferClimate(t *testing.T) {
 	}
 }
 
-func TestSettlementGeneratorService_GetNPCRoles(t *testing.T) {
+func TestSettlementGeneratorServiceGetNPCRoles(t *testing.T) {
 	service := &SettlementGeneratorService{}
 	tests := []struct {
 		settlementType models.SettlementType
@@ -547,7 +547,7 @@ func TestSettlementGeneratorService_GetNPCRoles(t *testing.T) {
 	}
 }
 
-func TestSettlementGeneratorService_GetShopTypes(t *testing.T) {
+func TestSettlementGeneratorServiceGetShopTypes(t *testing.T) {
 	service := &SettlementGeneratorService{}
 	tests := []struct {
 		settlementType models.SettlementType

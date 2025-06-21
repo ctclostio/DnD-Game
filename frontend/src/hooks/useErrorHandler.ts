@@ -25,7 +25,7 @@ export function useErrorHandler(defaultOptions?: ErrorHandlerOptions | string) {
     } else if (typeof error === 'string') {
       errorMessage = error;
     } else {
-      errorMessage = config.fallbackMessage || 'An unexpected error occurred';
+      errorMessage = config.fallbackMessage ?? 'An unexpected error occurred';
     }
     
     // Log to console if enabled

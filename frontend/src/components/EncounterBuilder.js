@@ -13,7 +13,6 @@ export class EncounterBuilder {
         
         if (!this.isDM) {
             this.container.innerHTML = '<div class="error-message">You must be a DM to access the Encounter Builder.</div>';
-            return;
         }
         
         // Don't call async operations in constructor

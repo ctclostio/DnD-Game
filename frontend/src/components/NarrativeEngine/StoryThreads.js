@@ -4,7 +4,6 @@ import {
   FaBan, FaPlus, FaEdit, FaChartLine, FaUsers
 } from 'react-icons/fa';
 import api from '../../services/api';
-import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const StoryThreads = ({ threads, sessionId, isDM, onThreadUpdate }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);

@@ -8,7 +8,6 @@ import {
     getCombatAnalytics,
     getCombatHistory 
 } from '../services/api';
-import { getClickableProps, getSelectableProps } from '../utils/accessibility';
 import '../styles/combat-automation.css';
 
 const CombatAutomation = ({ gameSessionId, characters, npcs, isDM }) => {

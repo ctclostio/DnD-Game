@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const StoryElements = ({ gameSessionId, storyElements, onGenerate, onUseElement, isGenerating }) => {
     const [currentContext, setCurrentContext] = useState({

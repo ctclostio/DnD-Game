@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const NPCDialogue = ({ gameSessionId, savedNPCs, onGenerate, isGenerating }) => {
     const [selectedNPC, setSelectedNPC] = useState(null);

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
 
 const LocationGenerator = ({ gameSessionId, savedLocations, onGenerate, isGenerating }) => {
     const [locationForm, setLocationForm] = useState({
