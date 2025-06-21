@@ -282,41 +282,71 @@ func (s *FactionSystemService) SimulateFactionConflicts(ctx context.Context, gam
 	var events []*models.WorldEvent
 
 	// Check each faction pair for potential conflicts
+	events = s.processFactionPairs(ctx, gameSessionID, factions, events)
+
+	// Check for faction-specific events
+	events = s.processFactionSpecificEvents(ctx, gameSessionID, factions, events)
+
+	return events, nil
+}
+
+// processFactionPairs checks faction pairs for conflicts and alliances
+func (s *FactionSystemService) processFactionPairs(ctx context.Context, gameSessionID uuid.UUID, factions []*models.Faction, events []*models.WorldEvent) []*models.WorldEvent {
 	for i := 0; i < len(factions); i++ {
 		for j := i + 1; j < len(factions); j++ {
-			faction1 := factions[i]
-			faction2 := factions[j]
+			events = s.processFactionPair(ctx, gameSessionID, factions[i], factions[j], events)
+		}
+	}
+	return events
+}
 
-			// Get their relationship
-			standing := s.getFactionStanding(faction1, faction2.ID)
+// processFactionPair processes interactions between two factions
+func (s *FactionSystemService) processFactionPair(ctx context.Context, gameSessionID uuid.UUID, faction1, faction2 *models.Faction, events []*models.WorldEvent) []*models.WorldEvent {
+	standing := s.getFactionStanding(faction1, faction2.ID)
+	
+	// Check for conflict
+	if event := s.checkAndGenerateConflict(ctx, gameSessionID, faction1, faction2, standing); event != nil {
+		events = append(events, event)
+	}
+	
+	// Check for alliance
+	if event := s.checkAndGenerateAlliance(ctx, gameSessionID, faction1, faction2, standing); event != nil {
+		events = append(events, event)
+	}
+	
+	return events
+}
 
-			// Check for conflict conditions
-			if standing < -50 && rand.Float32() < 0.3 {
-				// Generate conflict event
-				event := s.generateConflictEvent(ctx, faction1, faction2)
-				if event != nil {
-					event.GameSessionID = gameSessionID
-					if err := s.worldRepo.CreateWorldEvent(event); err == nil {
-						events = append(events, event)
-					}
-				}
-			}
-
-			// Check for alliance opportunities
-			if standing > 50 && rand.Float32() < 0.2 {
-				// Generate alliance event
-				event := s.generateAllianceEvent(ctx, faction1, faction2)
-				if event != nil {
-					event.GameSessionID = gameSessionID
-					if err := s.worldRepo.CreateWorldEvent(event); err == nil {
-						events = append(events, event)
-					}
-				}
+// checkAndGenerateConflict checks conditions and generates conflict event if appropriate
+func (s *FactionSystemService) checkAndGenerateConflict(ctx context.Context, gameSessionID uuid.UUID, faction1, faction2 *models.Faction, standing int) *models.WorldEvent {
+	if standing < -50 && rand.Float32() < 0.3 {
+		event := s.generateConflictEvent(ctx, faction1, faction2)
+		if event != nil {
+			event.GameSessionID = gameSessionID
+			if err := s.worldRepo.CreateWorldEvent(event); err == nil {
+				return event
 			}
 		}
 	}
+	return nil
+}
 
-	// Check for faction-specific events (expansions, internal conflicts, etc.)
+// checkAndGenerateAlliance checks conditions and generates alliance event if appropriate
+func (s *FactionSystemService) checkAndGenerateAlliance(ctx context.Context, gameSessionID uuid.UUID, faction1, faction2 *models.Faction, standing int) *models.WorldEvent {
+	if standing > 50 && rand.Float32() < 0.2 {
+		event := s.generateAllianceEvent(ctx, faction1, faction2)
+		if event != nil {
+			event.GameSessionID = gameSessionID
+			if err := s.worldRepo.CreateWorldEvent(event); err == nil {
+				return event
+			}
+		}
+	}
+	return nil
+}
+
+// processFactionSpecificEvents generates events for individual factions
+func (s *FactionSystemService) processFactionSpecificEvents(ctx context.Context, gameSessionID uuid.UUID, factions []*models.Faction, events []*models.WorldEvent) []*models.WorldEvent {
 	for _, faction := range factions {
 		if rand.Float32() < 0.1 {
 			event := s.generateFactionEvent(ctx, faction)
@@ -328,8 +358,7 @@ func (s *FactionSystemService) SimulateFactionConflicts(ctx context.Context, gam
 			}
 		}
 	}
-
-	return events, nil
+	return events
 }
 
 // Helper methods

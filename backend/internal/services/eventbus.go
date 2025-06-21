@@ -37,32 +37,43 @@ func (eb *InMemoryEventBus) Publish(ctx context.Context, event Event) error {
 
 	// Execute handlers asynchronously
 	for _, handler := range handlers {
-		go func(h EventHandler) {
-			defer func() {
-				if r := recover(); r != nil {
-					if eb.logger != nil {
-						eb.logger.WithContext(ctx).
-							Error().
-							Interface("panic", r).
-							Str("event_type", event.Type()).
-							Msg("Event handler panic")
-					}
-				}
-			}()
-
-			if err := h(ctx, event); err != nil {
-				if eb.logger != nil {
-					eb.logger.WithContext(ctx).
-						Error().
-						Err(err).
-						Str("event_type", event.Type()).
-						Msg("Event handler error")
-				}
-			}
-		}(handler)
+		go eb.executeHandler(ctx, event, handler)
 	}
 
 	return nil
+}
+
+// executeHandler runs a single event handler with panic recovery and error logging
+func (eb *InMemoryEventBus) executeHandler(ctx context.Context, event Event, handler EventHandler) {
+	defer eb.recoverHandlerPanic(ctx, event)
+
+	if err := handler(ctx, event); err != nil {
+		eb.logHandlerError(ctx, event, err)
+	}
+}
+
+// recoverHandlerPanic recovers from panics in event handlers
+func (eb *InMemoryEventBus) recoverHandlerPanic(ctx context.Context, event Event) {
+	if r := recover(); r != nil {
+		if eb.logger != nil {
+			eb.logger.WithContext(ctx).
+				Error().
+				Interface("panic", r).
+				Str("event_type", event.Type()).
+				Msg("Event handler panic")
+		}
+	}
+}
+
+// logHandlerError logs errors from event handlers
+func (eb *InMemoryEventBus) logHandlerError(ctx context.Context, event Event, err error) {
+	if eb.logger != nil {
+		eb.logger.WithContext(ctx).
+			Error().
+			Err(err).
+			Str("event_type", event.Type()).
+			Msg("Event handler error")
+	}
 }
 
 // Subscribe registers a handler for a specific event type

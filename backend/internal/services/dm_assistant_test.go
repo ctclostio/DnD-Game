@@ -13,6 +13,13 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/services/mocks"
 )
 
+// Test constants
+const (
+	testLocationName = "The Forgotten Crypt"
+	testNPCName      = "Thoran Ironforge"
+	testTypeHistory  = "*models.DMAssistantHistory"
+)
+
 func TestDMAssistantService_ProcessRequest(t *testing.T) {
 	t.Run("successful NPC dialog generation", func(t *testing.T) {
 		mockRepo := new(mocks.MockDMAssistantRepository)
@@ -81,7 +88,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 			Context:       map[string]interface{}{"situation": "Party entering new area"},
 			Parameters: map[string]interface{}{
 				"locationType":    "dungeon",
-				"locationName":    "The Forgotten Crypt",
+				"locationName":    testLocationName,
 				"atmosphere":      "eerie",
 				"timeOfDay":       "eternal darkness",
 				"specialFeatures": []interface{}{"ancient altar", "mysterious runes"},
@@ -90,7 +97,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 
 		expectedLocation := &models.AILocation{
 			ID:          uuid.New(),
-			Name:        "The Forgotten Crypt",
+			Name:        testLocationName,
 			Type:        "dungeon",
 			Description: "The air is thick with decay...",
 			Atmosphere:  "eerie",
@@ -99,17 +106,17 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 
 		mockAI.On("GenerateLocationDescription", ctx, mock.MatchedBy(func(req *models.LocationDescriptionRequest) bool {
 			return req.LocationType == "dungeon" &&
-				req.LocationName == "The Forgotten Crypt" &&
+				req.LocationName == testLocationName &&
 				len(req.SpecialFeatures) == 2
 		})).Return(expectedLocation, nil)
 
 		mockRepo.On("SaveLocation", ctx, mock.MatchedBy(func(loc *models.AILocation) bool {
 			return loc.GameSessionID == sessionID &&
 				loc.CreatedBy == userID &&
-				loc.Name == "The Forgotten Crypt"
+				loc.Name == testLocationName
 		})).Return(nil)
 
-		mockRepo.On("SaveHistory", ctx, mock.AnythingOfType("*models.DMAssistantHistory")).Return(nil)
+		mockRepo.On("SaveHistory", ctx, mock.AnythingOfType(testTypeHistory)).Return(nil)
 
 		result, err := service.ProcessRequest(ctx, userID, req)
 
@@ -118,7 +125,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 
 		location, ok := result.(*models.AILocation)
 		require.True(t, ok)
-		require.Equal(t, "The Forgotten Crypt", location.Name)
+		require.Equal(t, testLocationName, location.Name)
 		require.Equal(t, sessionID, location.GameSessionID)
 
 		mockAI.AssertExpectations(t)
@@ -166,7 +173,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 				n.Narration == expectedNarration
 		})).Return(nil)
 
-		mockRepo.On("SaveHistory", ctx, mock.AnythingOfType("*models.DMAssistantHistory")).Return(nil)
+		mockRepo.On("SaveHistory", ctx, mock.AnythingOfType(testTypeHistory)).Return(nil)
 
 		result, err := service.ProcessRequest(ctx, userID, req)
 
@@ -217,7 +224,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 				elem.Type == models.StoryElementPlotTwist
 		})).Return(nil)
 
-		mockRepo.On("SaveHistory", ctx, mock.AnythingOfType("*models.DMAssistantHistory")).Return(nil)
+		mockRepo.On("SaveHistory", ctx, mock.AnythingOfType(testTypeHistory)).Return(nil)
 
 		result, err := service.ProcessRequest(ctx, userID, req)
 
@@ -275,7 +282,7 @@ func TestDMAssistantService_ProcessRequest(t *testing.T) {
 				*h.LocationID == locationID
 		})).Return(nil)
 
-		mockRepo.On("SaveHistory", ctx, mock.AnythingOfType("*models.DMAssistantHistory")).Return(nil)
+		mockRepo.On("SaveHistory", ctx, mock.AnythingOfType(testTypeHistory)).Return(nil)
 
 		result, err := service.ProcessRequest(ctx, userID, req)
 
@@ -381,7 +388,7 @@ func TestDMAssistantService_CreateNPC(t *testing.T) {
 
 		expectedNPC := &models.AINPC{
 			ID:                uuid.New(),
-			Name:              "Thoran Ironforge",
+			Name:              testNPCName,
 			Occupation:        role,
 			Appearance:        "A gruff dwarven weaponsmith",
 			PersonalityTraits: []string{"gruff", "honest", "skilled"},
@@ -393,14 +400,14 @@ func TestDMAssistantService_CreateNPC(t *testing.T) {
 		mockRepo.On("SaveNPC", ctx, mock.MatchedBy(func(npc *models.AINPC) bool {
 			return npc.GameSessionID == sessionID &&
 				npc.CreatedBy == userID &&
-				npc.Name == "Thoran Ironforge"
+				npc.Name == testNPCName
 		})).Return(nil)
 
 		result, err := service.CreateNPC(ctx, sessionID, userID, role, context)
 
 		require.NoError(t, err)
 		require.NotNil(t, result)
-		require.Equal(t, "Thoran Ironforge", result.Name)
+		require.Equal(t, testNPCName, result.Name)
 		require.Equal(t, sessionID, result.GameSessionID)
 		require.Equal(t, userID, result.CreatedBy)
 		require.NotZero(t, result.CreatedAt)

@@ -33,8 +33,28 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 		return nil, fmt.Errorf("invalid game session ID: %w", err)
 	}
 
-	// Record the request
-	historyEntry := &models.DMAssistantHistory{
+	// Create history entry
+	historyEntry := s.createHistoryEntry(gameSessionID, userID, req)
+
+	// Process request based on type
+	result, prompt, err := s.processRequestByType(ctx, gameSessionID, userID, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update history entry with response
+	historyEntry.Prompt = prompt
+	s.extractResponseForHistory(historyEntry, result)
+
+	// Save history
+	s.saveRequestHistory(ctx, historyEntry)
+
+	return result, nil
+}
+
+// createHistoryEntry creates a new history entry for the request
+func (s *DMAssistantService) createHistoryEntry(gameSessionID, userID uuid.UUID, req models.DMAssistantRequest) *models.DMAssistantHistory {
+	return &models.DMAssistantHistory{
 		ID:             uuid.New(),
 		GameSessionID:  gameSessionID,
 		UserID:         userID,
@@ -42,132 +62,178 @@ func (s *DMAssistantService) ProcessRequest(ctx context.Context, userID uuid.UUI
 		RequestContext: req.Context,
 		CreatedAt:      time.Now(),
 	}
+}
 
-	var result interface{}
-	var prompt string
-
+// processRequestByType handles the request based on its type
+func (s *DMAssistantService) processRequestByType(ctx context.Context, gameSessionID, userID uuid.UUID, req models.DMAssistantRequest) (interface{}, string, error) {
 	switch req.Type {
 	case models.RequestTypeNPCDialog:
-		npcReq, err := s.parseNPCDialogRequest(req.Parameters)
-		if err != nil {
-			return nil, err
-		}
-		prompt = fmt.Sprintf("NPC: %s, Player: %s", npcReq.NPCName, npcReq.PlayerInput)
-
-		dialog, err := s.aiAssistant.GenerateNPCDialog(ctx, npcReq)
-		if err != nil {
-			return nil, err
-		}
-
-		historyEntry.Response = dialog
-		result = map[string]string{"dialog": dialog}
-
+		return s.handleNPCDialog(ctx, req)
 	case models.RequestTypeLocationDesc:
-		locReq, err := s.parseLocationRequest(req.Parameters)
-		if err != nil {
-			return nil, err
-		}
-		prompt = fmt.Sprintf("Location: %s (%s)", locReq.LocationName, locReq.LocationType)
-
-		location, err := s.aiAssistant.GenerateLocationDescription(ctx, locReq)
-		if err != nil {
-			return nil, err
-		}
-
-		location.GameSessionID = gameSessionID
-		location.CreatedBy = userID
-
-		// Save to database
-		if err := s.repo.SaveLocation(ctx, location); err != nil {
-			return nil, fmt.Errorf("failed to save location: %w", err)
-		}
-
-		historyEntry.Response = location.Description
-		result = location
-
+		return s.handleLocationDescription(ctx, gameSessionID, userID, req)
 	case models.RequestTypeCombatNarration:
-		combatReq := s.parseCombatRequest(req.Parameters)
-		prompt = fmt.Sprintf("Combat: %s vs %s", combatReq.AttackerName, combatReq.TargetName)
-
-		narration, err := s.aiAssistant.GenerateCombatNarration(ctx, combatReq)
-		if err != nil {
-			return nil, err
-		}
-
-		// Save narration for reuse
-		narrationEntry := &models.AINarration{
-			ID:            uuid.New(),
-			GameSessionID: gameSessionID,
-			Type:          s.getCombatNarrationType(combatReq),
-			Context:       req.Context,
-			Narration:     narration,
-			CreatedBy:     userID,
-			CreatedAt:     time.Now(),
-		}
-
-		if err := s.repo.SaveNarration(ctx, narrationEntry); err != nil {
-			return nil, fmt.Errorf("failed to save narration: %w", err)
-		}
-
-		historyEntry.Response = narration
-		result = map[string]string{"narration": narration}
-
+		return s.handleCombatNarration(ctx, gameSessionID, userID, req)
 	case models.RequestTypePlotTwist:
-		plotTwist, err := s.aiAssistant.GeneratePlotTwist(ctx, req.Context)
-		if err != nil {
-			return nil, err
-		}
-
-		plotTwist.GameSessionID = gameSessionID
-		plotTwist.CreatedBy = userID
-		plotTwist.CreatedAt = time.Now()
-
-		if err := s.repo.SaveStoryElement(ctx, plotTwist); err != nil {
-			return nil, fmt.Errorf("failed to save plot twist: %w", err)
-		}
-
-		prompt = "Generate plot twist"
-		historyEntry.Response = plotTwist.Description
-		result = plotTwist
-
+		return s.handlePlotTwist(ctx, gameSessionID, userID, req)
 	case models.RequestTypeEnvironmentalHazard:
-		locationType, _ := req.Parameters["locationType"].(string)
-		difficulty, _ := req.Parameters["difficulty"].(float64)
-
-		hazard, err := s.aiAssistant.GenerateEnvironmentalHazard(ctx, locationType, int(difficulty))
-		if err != nil {
-			return nil, err
-		}
-
-		hazard.GameSessionID = gameSessionID
-		hazard.CreatedBy = userID
-		hazard.CreatedAt = time.Now()
-
-		if locationID, ok := req.Parameters["locationId"].(string); ok {
-			locID, _ := uuid.Parse(locationID)
-			hazard.LocationID = &locID
-		}
-
-		if err := s.repo.SaveEnvironmentalHazard(ctx, hazard); err != nil {
-			return nil, fmt.Errorf("failed to save hazard: %w", err)
-		}
-
-		prompt = fmt.Sprintf("Hazard for %s (difficulty %d)", locationType, int(difficulty))
-		historyEntry.Response = hazard.Description
-		result = hazard
-
+		return s.handleEnvironmentalHazard(ctx, gameSessionID, userID, req)
 	default:
-		return nil, fmt.Errorf("unknown request type: %s", req.Type)
+		return nil, "", fmt.Errorf("unknown request type: %s", req.Type)
+	}
+}
+
+// handleNPCDialog processes NPC dialog generation requests
+func (s *DMAssistantService) handleNPCDialog(ctx context.Context, req models.DMAssistantRequest) (interface{}, string, error) {
+	npcReq, err := s.parseNPCDialogRequest(req.Parameters)
+	if err != nil {
+		return nil, "", err
 	}
 
-	// Save history
-	historyEntry.Prompt = prompt
+	prompt := fmt.Sprintf("NPC: %s, Player: %s", npcReq.NPCName, npcReq.PlayerInput)
+	
+	dialog, err := s.aiAssistant.GenerateNPCDialog(ctx, npcReq)
+	if err != nil {
+		return nil, "", err
+	}
+
+	result := map[string]string{"dialog": dialog}
+	return result, prompt, nil
+}
+
+// handleLocationDescription processes location description generation requests
+func (s *DMAssistantService) handleLocationDescription(ctx context.Context, gameSessionID, userID uuid.UUID, req models.DMAssistantRequest) (interface{}, string, error) {
+	locReq, err := s.parseLocationRequest(req.Parameters)
+	if err != nil {
+		return nil, "", err
+	}
+
+	prompt := fmt.Sprintf("Location: %s (%s)", locReq.LocationName, locReq.LocationType)
+
+	location, err := s.aiAssistant.GenerateLocationDescription(ctx, locReq)
+	if err != nil {
+		return nil, "", err
+	}
+
+	location.GameSessionID = gameSessionID
+	location.CreatedBy = userID
+
+	// Save to database
+	if err := s.repo.SaveLocation(ctx, location); err != nil {
+		return nil, "", fmt.Errorf("failed to save location: %w", err)
+	}
+
+	return location, prompt, nil
+}
+
+// handleCombatNarration processes combat narration generation requests
+func (s *DMAssistantService) handleCombatNarration(ctx context.Context, gameSessionID, userID uuid.UUID, req models.DMAssistantRequest) (interface{}, string, error) {
+	combatReq := s.parseCombatRequest(req.Parameters)
+	prompt := fmt.Sprintf("Combat: %s vs %s", combatReq.AttackerName, combatReq.TargetName)
+
+	narration, err := s.aiAssistant.GenerateCombatNarration(ctx, combatReq)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Save narration for reuse
+	narrationEntry := s.createNarrationEntry(gameSessionID, userID, req.Context, combatReq, narration)
+
+	if err := s.repo.SaveNarration(ctx, narrationEntry); err != nil {
+		return nil, "", fmt.Errorf("failed to save narration: %w", err)
+	}
+
+	result := map[string]string{"narration": narration}
+	return result, prompt, nil
+}
+
+// createNarrationEntry creates a narration entry
+func (s *DMAssistantService) createNarrationEntry(gameSessionID, userID uuid.UUID, context map[string]interface{}, combatReq *models.CombatNarrationRequest, narration string) *models.AINarration {
+	return &models.AINarration{
+		ID:            uuid.New(),
+		GameSessionID: gameSessionID,
+		Type:          s.getCombatNarrationType(combatReq),
+		Context:       context,
+		Narration:     narration,
+		CreatedBy:     userID,
+		CreatedAt:     time.Now(),
+	}
+}
+
+// handlePlotTwist processes plot twist generation requests
+func (s *DMAssistantService) handlePlotTwist(ctx context.Context, gameSessionID, userID uuid.UUID, req models.DMAssistantRequest) (interface{}, string, error) {
+	plotTwist, err := s.aiAssistant.GeneratePlotTwist(ctx, req.Context)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plotTwist.GameSessionID = gameSessionID
+	plotTwist.CreatedBy = userID
+	plotTwist.CreatedAt = time.Now()
+
+	if err := s.repo.SaveStoryElement(ctx, plotTwist); err != nil {
+		return nil, "", fmt.Errorf("failed to save plot twist: %w", err)
+	}
+
+	prompt := "Generate plot twist"
+	return plotTwist, prompt, nil
+}
+
+// handleEnvironmentalHazard processes environmental hazard generation requests
+func (s *DMAssistantService) handleEnvironmentalHazard(ctx context.Context, gameSessionID, userID uuid.UUID, req models.DMAssistantRequest) (interface{}, string, error) {
+	locationType, _ := req.Parameters["locationType"].(string)
+	difficulty, _ := req.Parameters["difficulty"].(float64)
+
+	hazard, err := s.aiAssistant.GenerateEnvironmentalHazard(ctx, locationType, int(difficulty))
+	if err != nil {
+		return nil, "", err
+	}
+
+	s.setHazardProperties(hazard, gameSessionID, userID, req.Parameters)
+
+	if err := s.repo.SaveEnvironmentalHazard(ctx, hazard); err != nil {
+		return nil, "", fmt.Errorf("failed to save hazard: %w", err)
+	}
+
+	prompt := fmt.Sprintf("Hazard for %s (difficulty %d)", locationType, int(difficulty))
+	return hazard, prompt, nil
+}
+
+// setHazardProperties sets common properties on a hazard
+func (s *DMAssistantService) setHazardProperties(hazard *models.AIEnvironmentalHazard, gameSessionID, userID uuid.UUID, parameters map[string]interface{}) {
+	hazard.GameSessionID = gameSessionID
+	hazard.CreatedBy = userID
+	hazard.CreatedAt = time.Now()
+
+	if locationID, ok := parameters["locationId"].(string); ok {
+		locID, _ := uuid.Parse(locationID)
+		hazard.LocationID = &locID
+	}
+}
+
+// extractResponseForHistory extracts the response text from various result types
+func (s *DMAssistantService) extractResponseForHistory(historyEntry *models.DMAssistantHistory, result interface{}) {
+	switch v := result.(type) {
+	case map[string]string:
+		if narration, exists := v["narration"]; exists {
+			historyEntry.Response = narration
+		} else if dialog, exists := v["dialog"]; exists {
+			historyEntry.Response = dialog
+		}
+	case *models.AILocation:
+		historyEntry.Response = v.Description
+	case *models.AIStoryElement:
+		historyEntry.Response = v.Description
+	case *models.AIEnvironmentalHazard:
+		historyEntry.Response = v.Description
+	}
+}
+
+// saveRequestHistory saves the history entry with response information
+func (s *DMAssistantService) saveRequestHistory(ctx context.Context, historyEntry *models.DMAssistantHistory) {
 	if err := s.repo.SaveHistory(ctx, historyEntry); err != nil {
 		// Log error but don't fail the request
 		logger.WithContext(ctx).WithError(err).Error().Msg("Failed to save history")
 	}
-
-	return result, nil
 }
 
 // GetNPCByID retrieves an NPC by ID

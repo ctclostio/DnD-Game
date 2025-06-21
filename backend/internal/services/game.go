@@ -10,6 +10,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// Error message constants
+const (
+	errMsgSessionNotFound = "session not found"
+)
+
 type GameService struct {
 	mu       sync.RWMutex
 	sessions map[string]*models.GameSession
@@ -41,7 +46,7 @@ func (s *GameService) GetSessionByID(id string) (*models.GameSession, error) {
 	defer s.mu.RUnlock()
 	session, exists := s.sessions[id]
 	if !exists {
-		return nil, errors.New("session not found")
+		return nil, errors.New(errMsgSessionNotFound)
 	}
 	return session, nil
 }
@@ -52,7 +57,7 @@ func (s *GameService) AddPlayerToSession(sessionID, _ string, player *models.Pla
 	s.mu.RUnlock()
 
 	if !exists {
-		return errors.New("session not found")
+		return errors.New(errMsgSessionNotFound)
 	}
 
 	player.JoinedAt = time.Now()
@@ -67,7 +72,7 @@ func (s *GameService) RecordGameEvent(event *models.GameEvent) error {
 	defer s.mu.Unlock()
 
 	if _, exists := s.sessions[event.SessionID]; !exists {
-		return errors.New("session not found")
+		return errors.New(errMsgSessionNotFound)
 	}
 
 	event.ID = generateID()
@@ -82,7 +87,7 @@ func (s *GameService) GetSessionEvents(sessionID string) ([]*models.GameEvent, e
 	defer s.mu.RUnlock()
 	events, exists := s.events[sessionID]
 	if !exists {
-		return nil, errors.New("session not found")
+		return nil, errors.New(errMsgSessionNotFound)
 	}
 	return events, nil
 }

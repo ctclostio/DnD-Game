@@ -14,6 +14,20 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
 
+// Trade goods constants
+const (
+	goodsRawMaterials     = "raw materials"
+	goodsFood             = "food"
+	goodsManufactured     = "manufactured goods"
+	goodsGeneralGoods     = "general goods"
+	goodsServices         = "services"
+	goodsTools            = "tools"
+	goodsCraftedGoods     = "crafted goods"
+	goodsLuxuryItems      = "luxury items"
+	goodsSpecializedTools = "specialized tools"
+	goodsAncientArtifacts = "ancient artifacts"
+)
+
 // EconomicSimulatorService manages market dynamics and trade
 type EconomicSimulatorService struct {
 	worldRepo WorldBuildingRepository
@@ -319,19 +333,19 @@ func (s *EconomicSimulatorService) simulateSupplyDemand(market *models.Market, s
 	switch settlement.Type {
 	case models.SettlementCity, models.SettlementMetropolis:
 		// Cities need food imports
-		highDemand = append(highDemand, "food", "raw materials")
-		surplus = append(surplus, "manufactured goods", "services")
+		highDemand = append(highDemand, goodsFood, goodsRawMaterials)
+		surplus = append(surplus, goodsManufactured, goodsServices)
 	case models.SettlementVillage, models.SettlementHamlet:
 		// Rural areas produce food
-		surplus = append(surplus, "food", "raw materials")
-		highDemand = append(highDemand, "tools", "manufactured goods")
+		surplus = append(surplus, goodsFood, goodsRawMaterials)
+		highDemand = append(highDemand, goodsTools, goodsManufactured)
 	case models.SettlementTown:
 		// Towns are balanced between production and consumption
-		surplus = append(surplus, "crafted goods")
-		highDemand = append(highDemand, "luxury items", "specialized tools")
+		surplus = append(surplus, goodsCraftedGoods)
+		highDemand = append(highDemand, goodsLuxuryItems, goodsSpecializedTools)
 	case models.SettlementRuins:
 		// Ruins have no regular economy but may have artifacts
-		surplus = append(surplus, "ancient artifacts")
+		surplus = append(surplus, goodsAncientArtifacts)
 		highDemand = append(highDemand, "adventuring supplies")
 	}
 
@@ -562,7 +576,7 @@ func (s *EconomicSimulatorService) determineTradedGoods(start, end *models.Settl
 
 	// Default goods if no matches
 	if len(goods) == 0 {
-		goods = []string{"general goods", "raw materials"}
+		goods = []string{goodsGeneralGoods, goodsRawMaterials}
 	}
 
 	return goods

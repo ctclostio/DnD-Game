@@ -585,11 +585,33 @@ func testConcurrentReadWrite(t *testing.T, service *GameService) {
 	sessionIDs := createMultipleSessions(service, 5)
 
 	// Concurrent operations
+	errors := performConcurrentOperations(service, sessionIDs)
+
+	// Check for errors
+	require.Len(t, errors, 0, "Unexpected errors during concurrent operations")
+
+	// Verify data integrity
+	verifyDataIntegrity(t, service, sessionIDs)
+}
+
+// performConcurrentOperations runs concurrent read and write operations
+func performConcurrentOperations(service *GameService, sessionIDs []string) []error {
 	wg := sync.WaitGroup{}
 	errors := make([]error, 0)
 	var errorsMu sync.Mutex
 
-	// Writers
+	// Start writers
+	startConcurrentWriters(&wg, service, sessionIDs, &errors, &errorsMu)
+
+	// Start readers
+	startConcurrentReaders(&wg, service, sessionIDs, &errors, &errorsMu)
+
+	wg.Wait()
+	return errors
+}
+
+// startConcurrentWriters starts concurrent write operations
+func startConcurrentWriters(wg *sync.WaitGroup, service *GameService, sessionIDs []string, errors *[]error, errorsMu *sync.Mutex) {
 	for i := 0; i < 50; i++ {
 		wg.Add(1)
 		go func(index int) {
@@ -597,13 +619,15 @@ func testConcurrentReadWrite(t *testing.T, service *GameService) {
 			sessionID := sessionIDs[index%len(sessionIDs)]
 			if err := performConcurrentWrite(service, sessionID, index); err != nil {
 				errorsMu.Lock()
-				errors = append(errors, err)
+				*errors = append(*errors, err)
 				errorsMu.Unlock()
 			}
 		}(i)
 	}
+}
 
-	// Readers
+// startConcurrentReaders starts concurrent read operations
+func startConcurrentReaders(wg *sync.WaitGroup, service *GameService, sessionIDs []string, errors *[]error, errorsMu *sync.Mutex) {
 	for i := 0; i < 50; i++ {
 		wg.Add(1)
 		go func(index int) {
@@ -611,19 +635,11 @@ func testConcurrentReadWrite(t *testing.T, service *GameService) {
 			sessionID := sessionIDs[index%len(sessionIDs)]
 			if err := performConcurrentRead(service, sessionID); err != nil {
 				errorsMu.Lock()
-				errors = append(errors, err)
+				*errors = append(*errors, err)
 				errorsMu.Unlock()
 			}
 		}(i)
 	}
-
-	wg.Wait()
-
-	// Check for errors
-	require.Len(t, errors, 0, "Unexpected errors during concurrent operations")
-
-	// Verify data integrity
-	verifyDataIntegrity(t, service, sessionIDs)
 }
 
 // verifyDataIntegrity verifies the integrity of sessions and events after concurrent operations

@@ -11,6 +11,11 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 )
 
+// SQL query constants
+const (
+	sqlSetClauseFormat = "%s = ?"
+)
+
 type CombatAnalyticsRepository interface {
 	// Combat Analytics methods
 	CreateCombatAnalytics(analytics *models.CombatAnalytics) error
@@ -118,7 +123,7 @@ func (r *combatAnalyticsRepository) UpdateCombatAnalytics(id uuid.UUID, updates 
 	args := make([]interface{}, 0, len(updates)+1)
 
 	for column, value := range updates {
-		setClauses = append(setClauses, fmt.Sprintf("%s = ?", column))
+		setClauses = append(setClauses, fmt.Sprintf(sqlSetClauseFormat, column))
 		args = append(args, value)
 	}
 
@@ -198,7 +203,7 @@ func (r *combatAnalyticsRepository) UpdateCombatantAnalytics(id uuid.UUID, updat
 	args := make([]interface{}, 0, len(updates)+1)
 
 	for column, value := range updates {
-		setClauses = append(setClauses, fmt.Sprintf("%s = ?", column))
+		setClauses = append(setClauses, fmt.Sprintf(sqlSetClauseFormat, column))
 		args = append(args, value)
 	}
 
@@ -348,7 +353,7 @@ func (r *combatAnalyticsRepository) UpdateBattleMap(id uuid.UUID, updates map[st
 	args := make([]interface{}, 0, len(updates)+1)
 
 	for column, value := range updates {
-		setClauses = append(setClauses, fmt.Sprintf("%s = ?", column))
+		setClauses = append(setClauses, fmt.Sprintf(sqlSetClauseFormat, column))
 		args = append(args, value)
 	}
 
