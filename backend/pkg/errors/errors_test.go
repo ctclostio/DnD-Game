@@ -9,11 +9,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test constants
+const (
+	testInvalidInput = "Invalid input"
+	testIsRequired   = "is required"
+)
+
 func TestNewValidationError(t *testing.T) {
-	err := NewValidationError("Invalid input")
+	err := NewValidationError(testInvalidInput)
 
 	assert.Equal(t, ErrorTypeValidation, err.Type)
-	assert.Equal(t, "Invalid input", err.Message)
+	assert.Equal(t, testInvalidInput, err.Message)
 	assert.Equal(t, http.StatusBadRequest, err.StatusCode)
 	assert.Nil(t, err.Internal)
 }
@@ -106,7 +112,7 @@ func TestAppError_Error(t *testing.T) {
 }
 
 func TestAppError_ToJSON(t *testing.T) {
-	err := NewValidationError("Invalid input").
+	err := NewValidationError(testInvalidInput).
 		WithCode("VAL001").
 		WithDetails(map[string]interface{}{
 			"field": "email",
@@ -119,7 +125,7 @@ func TestAppError_ToJSON(t *testing.T) {
 	require.NoError(t, json.Unmarshal(jsonBytes, &result))
 
 	assert.Equal(t, string(ErrorTypeValidation), result["type"])
-	assert.Equal(t, "Invalid input", result["message"])
+	assert.Equal(t, testInvalidInput, result["message"])
 	assert.Equal(t, "VAL001", result["code"])
 	assert.NotNil(t, result["details"])
 }
@@ -169,7 +175,7 @@ func TestValidationErrors(t *testing.T) {
 	ve := &ValidationErrors{}
 
 	// Test adding errors
-	ve.Add("email", "is required")
+	ve.Add("email", testIsRequired)
 	ve.Add("email", "must be valid format")
 	ve.Add("password", "is too short")
 
@@ -191,7 +197,7 @@ func TestValidationErrors_ToAppError(t *testing.T) {
 	assert.Nil(t, ve.ToAppError())
 
 	// Test with errors
-	ve.Add("name", "is required")
+	ve.Add("name", testIsRequired)
 	ve.Add("age", "must be positive")
 
 	appErr := ve.ToAppError()

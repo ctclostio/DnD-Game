@@ -197,6 +197,19 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 		return err
 	}
 
+	// Process active events
+	s.processActiveEvents(ctx, activeEvents)
+
+	// Chance to generate new events
+	if rand.Float32() < 0.2 {
+		s.generateRandomWorldEvent(ctx, gameSessionID)
+	}
+
+	return nil
+}
+
+// processActiveEvents handles progression and resolution of active events
+func (s *WorldEventEngineService) processActiveEvents(ctx context.Context, activeEvents []*models.WorldEvent) {
 	for _, event := range activeEvents {
 		// Check if event should progress
 		if s.shouldEventProgress(event) {
@@ -212,30 +225,34 @@ func (s *WorldEventEngineService) SimulateEventProgression(ctx context.Context, 
 			}
 		}
 	}
+}
 
-	// Chance to generate new events
-	if rand.Float32() < 0.2 {
-		eventTypes := []models.WorldEventType{
-			models.EventPolitical,
-			models.EventEconomic,
-			models.EventNatural,
-			models.EventSupernatural,
-			models.EventAncientAwakening,
-			models.EventPlanar,
-		}
+// generateRandomWorldEvent generates a new random world event
+func (s *WorldEventEngineService) generateRandomWorldEvent(ctx context.Context, gameSessionID uuid.UUID) {
+	eventType := s.selectRandomEventType(gameSessionID)
+	_, _ = s.GenerateWorldEvent(ctx, gameSessionID, eventType)
+}
 
-		eventType := eventTypes[rand.Intn(len(eventTypes))]
-
-		// Higher chance for ancient events in corrupted worlds
-		corruptionLevel := s.calculateWorldCorruption(gameSessionID)
-		if corruptionLevel > 5 && rand.Float32() < 0.5 {
-			eventType = models.EventAncientAwakening
-		}
-
-		_, _ = s.GenerateWorldEvent(ctx, gameSessionID, eventType)
+// selectRandomEventType selects a random event type, considering world corruption
+func (s *WorldEventEngineService) selectRandomEventType(gameSessionID uuid.UUID) models.WorldEventType {
+	eventTypes := []models.WorldEventType{
+		models.EventPolitical,
+		models.EventEconomic,
+		models.EventNatural,
+		models.EventSupernatural,
+		models.EventAncientAwakening,
+		models.EventPlanar,
 	}
 
-	return nil
+	eventType := eventTypes[rand.Intn(len(eventTypes))]
+
+	// Higher chance for ancient events in corrupted worlds
+	corruptionLevel := s.calculateWorldCorruption(gameSessionID)
+	if corruptionLevel > 5 && rand.Float32() < 0.5 {
+		eventType = models.EventAncientAwakening
+	}
+
+	return eventType
 }
 
 // NotifyPartyOfEvent makes the party aware of an event
@@ -461,9 +478,37 @@ func (s *WorldEventEngineService) determineAffectedSettlements(settlements []*mo
 }
 
 func (s *WorldEventEngineService) determineAffectedFactions(factions []*models.Faction, eventType models.WorldEventType) models.JSONB {
-	affectedFactionIDs := []string{}
+	affectedFactionIDs := s.findTargetedFactions(factions, eventType)
 
-	// Certain event types affect specific faction types
+	// If no specific matches, affect random factions
+	if len(affectedFactionIDs) == 0 && len(factions) > 0 {
+		affectedFactionIDs = s.selectRandomFactions(factions)
+	}
+
+	result, _ := json.Marshal(affectedFactionIDs)
+	return models.JSONB(result)
+}
+
+// findTargetedFactions finds factions that match the event type
+func (s *WorldEventEngineService) findTargetedFactions(factions []*models.Faction, eventType models.WorldEventType) []string {
+	affectedFactionIDs := []string{}
+	targetTypes := s.getTargetFactionTypes(eventType)
+
+	if targetTypes == nil {
+		return affectedFactionIDs
+	}
+
+	for _, faction := range factions {
+		if s.factionMatchesTargetTypes(faction, targetTypes) {
+			affectedFactionIDs = append(affectedFactionIDs, faction.ID.String())
+		}
+	}
+
+	return affectedFactionIDs
+}
+
+// getTargetFactionTypes returns faction types affected by specific event types
+func (s *WorldEventEngineService) getTargetFactionTypes(eventType models.WorldEventType) []models.FactionType {
 	targetFactionTypes := map[models.WorldEventType][]models.FactionType{
 		models.EventPolitical:        {models.FactionPolitical, models.FactionMilitary},
 		models.EventEconomic:         {models.FactionMerchant, models.FactionCriminal},
@@ -471,32 +516,33 @@ func (s *WorldEventEngineService) determineAffectedFactions(factions []*models.F
 		models.EventAncientAwakening: {models.FactionAncientOrder, models.FactionCult},
 	}
 
-	if targetTypes, exists := targetFactionTypes[eventType]; exists {
-		for _, faction := range factions {
-			for _, targetType := range targetTypes {
-				if faction.Type == targetType {
-					affectedFactionIDs = append(affectedFactionIDs, faction.ID.String())
-					break
-				}
-			}
+	return targetFactionTypes[eventType]
+}
+
+// factionMatchesTargetTypes checks if a faction matches any of the target types
+func (s *WorldEventEngineService) factionMatchesTargetTypes(faction *models.Faction, targetTypes []models.FactionType) bool {
+	for _, targetType := range targetTypes {
+		if faction.Type == targetType {
+			return true
 		}
 	}
+	return false
+}
 
-	// If no specific matches, affect random factions
-	if len(affectedFactionIDs) == 0 && len(factions) > 0 {
-		numAffected := 1 + rand.Intn(2)
-		if numAffected > len(factions) {
-			numAffected = len(factions)
-		}
-
-		for i := 0; i < numAffected; i++ {
-			faction := factions[rand.Intn(len(factions))]
-			affectedFactionIDs = append(affectedFactionIDs, faction.ID.String())
-		}
+// selectRandomFactions selects 1-2 random factions
+func (s *WorldEventEngineService) selectRandomFactions(factions []*models.Faction) []string {
+	numAffected := 1 + rand.Intn(2)
+	if numAffected > len(factions) {
+		numAffected = len(factions)
 	}
 
-	result, _ := json.Marshal(affectedFactionIDs)
-	return models.JSONB(result)
+	affectedFactionIDs := []string{}
+	for i := 0; i < numAffected; i++ {
+		faction := factions[rand.Intn(len(factions))]
+		affectedFactionIDs = append(affectedFactionIDs, faction.ID.String())
+	}
+
+	return affectedFactionIDs
 }
 
 func (s *WorldEventEngineService) calculateWorldCorruption(gameSessionID uuid.UUID) int {

@@ -16,7 +16,12 @@ import (
 
 // Test constants
 const (
-	testSQLQuery = "SELECT * FROM users"
+	testSQLQuery      = "SELECT * FROM users"
+	testServiceName   = "test-service"
+	testRequestID     = "req-123"
+	testSessionID     = "sess-012"
+	testCharacterID   = "char-345"
+	testAPIUsersPath  = "/api/users"
 )
 
 func TestDefaultConfig(t *testing.T) {
@@ -34,7 +39,23 @@ func TestDefaultConfig(t *testing.T) {
 }
 
 func TestNewV2(t *testing.T) {
-	tests := []struct {
+	tests := getNewV2TestCases()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testNewV2Case(t, tt)
+		})
+	}
+}
+
+// getNewV2TestCases returns test cases for TestNewV2
+func getNewV2TestCases() []struct {
+	name      string
+	config    ConfigV2
+	wantError bool
+	verify    func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer)
+} {
+	return []struct {
 		name      string
 		config    ConfigV2
 		wantError bool
@@ -52,7 +73,7 @@ func TestNewV2(t *testing.T) {
 			name: "with custom fields",
 			config: ConfigV2{
 				Level:       "info",
-				ServiceName: "test-service",
+				ServiceName: testServiceName,
 				Environment: "test",
 				Fields: Fields{
 					"version": "1.0.0",
@@ -66,7 +87,7 @@ func TestNewV2(t *testing.T) {
 				lines := strings.Split(strings.TrimSpace(logOutput.String()), "\n")
 				require.NoError(t, json.Unmarshal([]byte(lines[0]), &logEntry))
 
-				assert.Equal(t, "test-service", logEntry["service"])
+				assert.Equal(t, testServiceName, logEntry["service"])
 				assert.Equal(t, "test", logEntry["env"])
 				assert.Equal(t, "1.0.0", logEntry["version"])
 				assert.Equal(t, "us-east-1", logEntry["region"])
@@ -103,44 +124,50 @@ func TestNewV2(t *testing.T) {
 			},
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var buf bytes.Buffer
+// testNewV2Case tests a single NewV2 test case
+func testNewV2Case(t *testing.T, tt struct {
+	name      string
+	config    ConfigV2
+	wantError bool
+	verify    func(t *testing.T, logger *LoggerV2, logOutput *bytes.Buffer)
+}) {
+	var buf bytes.Buffer
 
-			// Override output for testing
-			if tt.config.Output == "" || tt.config.Output == "stdout" {
-				tt.config.Output = "stdout"
-			}
-
-			logger, err := NewV2(&tt.config)
-			if tt.wantError {
-				assert.Error(t, err)
-				return
-			}
-
-			require.NoError(t, err)
-
-			// Replace logger output with buffer for testing
-			level, _ := zerolog.ParseLevel(tt.config.Level)
-			if level == zerolog.NoLevel {
-				level = zerolog.InfoLevel
-			}
-			zl := zerolog.New(&buf).With().Timestamp().Logger().Level(level)
-			if tt.config.ServiceName != "" {
-				zl = zl.With().Str("service", tt.config.ServiceName).Logger()
-			}
-			if tt.config.Environment != "" {
-				zl = zl.With().Str("env", tt.config.Environment).Logger()
-			}
-			for k, v := range tt.config.Fields {
-				zl = zl.With().Interface(k, v).Logger()
-			}
-			logger.Logger = &zl
-
-			tt.verify(t, logger, &buf)
-		})
+	// Override output for testing
+	if tt.config.Output == "" || tt.config.Output == "stdout" {
+		tt.config.Output = "stdout"
 	}
+
+	logger, err := NewV2(&tt.config)
+	if tt.wantError {
+		assert.Error(t, err)
+		return
+	}
+
+	require.NoError(t, err)
+	setupTestLogger(logger, &buf, tt.config)
+	tt.verify(t, logger, &buf)
+}
+
+// setupTestLogger configures the logger for testing
+func setupTestLogger(logger *LoggerV2, buf *bytes.Buffer, config ConfigV2) {
+	level, _ := zerolog.ParseLevel(config.Level)
+	if level == zerolog.NoLevel {
+		level = zerolog.InfoLevel
+	}
+	zl := zerolog.New(buf).With().Timestamp().Logger().Level(level)
+	if config.ServiceName != "" {
+		zl = zl.With().Str("service", config.ServiceName).Logger()
+	}
+	if config.Environment != "" {
+		zl = zl.With().Str("env", config.Environment).Logger()
+	}
+	for k, v := range config.Fields {
+		zl = zl.With().Interface(k, v).Logger()
+	}
+	logger.Logger = &zl
 }
 
 func TestLoggerV2_WithContext(t *testing.T) {
@@ -152,12 +179,12 @@ func TestLoggerV2_WithContext(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, RequestIDKey, "req-123")
+	ctx = context.WithValue(ctx, RequestIDKey, testRequestID)
 	ctx = context.WithValue(ctx, CorrelationIDKey, "corr-456")
 	ctx = context.WithValue(ctx, UserIDKey, "user-789")
-	ctx = context.WithValue(ctx, SessionIDKey, "sess-012")
-	ctx = context.WithValue(ctx, CharacterIDKey, "char-345")
-	ctx = context.WithValue(ctx, ServiceKey, "test-service")
+	ctx = context.WithValue(ctx, SessionIDKey, testSessionID)
+	ctx = context.WithValue(ctx, CharacterIDKey, testCharacterID)
+	ctx = context.WithValue(ctx, ServiceKey, testServiceName)
 	ctx = context.WithValue(ctx, MethodKey, "TestMethod")
 
 	contextLogger := logger.WithContext(ctx)
@@ -166,12 +193,12 @@ func TestLoggerV2_WithContext(t *testing.T) {
 	var logEntry map[string]interface{}
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
 
-	assert.Equal(t, "req-123", logEntry["request_id"])
+	assert.Equal(t, testRequestID, logEntry["request_id"])
 	assert.Equal(t, "corr-456", logEntry["correlation_id"])
 	assert.Equal(t, "user-789", logEntry["user_id"])
-	assert.Equal(t, "sess-012", logEntry["session_id"])
-	assert.Equal(t, "char-345", logEntry["character_id"])
-	assert.Equal(t, "test-service", logEntry["service"])
+	assert.Equal(t, testSessionID, logEntry["session_id"])
+	assert.Equal(t, testCharacterID, logEntry["character_id"])
+	assert.Equal(t, testServiceName, logEntry["service"])
 	assert.Equal(t, "TestMethod", logEntry["method"])
 }
 
@@ -235,7 +262,7 @@ func TestLoggerV2_LogHTTPRequest(t *testing.T) {
 		{
 			name:        "successful request",
 			method:      "GET",
-			path:        "/api/users",
+			path:        testAPIUsersPath,
 			statusCode:  200,
 			duration:    100 * time.Millisecond,
 			expectedMsg: "HTTP request completed",
@@ -251,7 +278,7 @@ func TestLoggerV2_LogHTTPRequest(t *testing.T) {
 		{
 			name:        "client error",
 			method:      "POST",
-			path:        "/api/users",
+			path:        testAPIUsersPath,
 			statusCode:  400,
 			duration:    75 * time.Millisecond,
 			expectedMsg: "HTTP request client error",
@@ -551,15 +578,15 @@ func TestContextFunctions(t *testing.T) {
 	ctx = ContextWithRequestID(ctx, "req-123")
 	ctx = ContextWithUserID(ctx, "user-456")
 	ctx = ContextWithCorrelationID(ctx, "corr-789")
-	ctx = ContextWithSessionID(ctx, "sess-012")
-	ctx = ContextWithCharacterID(ctx, "char-345")
+	ctx = ContextWithSessionID(ctx, testSessionID)
+	ctx = ContextWithCharacterID(ctx, testCharacterID)
 
 	// Test retrieving values from context
 	assert.Equal(t, "req-123", GetRequestIDFromContext(ctx))
 	assert.Equal(t, "user-456", GetUserIDFromContext(ctx))
 	assert.Equal(t, "corr-789", ctx.Value(CorrelationIDKey))
-	assert.Equal(t, "sess-012", ctx.Value(SessionIDKey))
-	assert.Equal(t, "char-345", ctx.Value(CharacterIDKey))
+	assert.Equal(t, testSessionID, ctx.Value(SessionIDKey))
+	assert.Equal(t, testCharacterID, ctx.Value(CharacterIDKey))
 
 	// Test with empty context
 	emptyCtx := context.Background()
@@ -628,7 +655,7 @@ func BenchmarkLoggerV2_LogHTTPRequest(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.LogHTTPRequest("GET", "/api/users", 200, 50*time.Millisecond)
+		logger.LogHTTPRequest("GET", testAPIUsersPath, 200, 50*time.Millisecond)
 	}
 }
 

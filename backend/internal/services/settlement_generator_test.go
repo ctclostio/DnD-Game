@@ -15,6 +15,67 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 )
 
+// Test constants
+const (
+	// Population sizes
+	testPopSmall   = "small"
+	testPopMedium  = "medium"
+	testPopLarge   = "large"
+	
+	// Common roles
+	testRoleMerchant   = "merchant"
+	testRoleGuard      = "guard"
+	testRoleInnkeeper  = "innkeeper"
+	testRoleBlacksmith = "blacksmith"
+	testRolePriest     = "priest"
+	testRoleFarmer     = "farmer"
+	testRoleHunter     = "hunter"
+	testRoleHermit     = "hermit"
+	testRoleScavenger  = "scavenger"
+	
+	// Shop types
+	testShopWeaponsmith = "weaponsmith"
+	testShopGeneral     = "general"
+	testShopTavern      = "tavern"
+	testShopInn         = "inn"
+	
+	// Mock type strings
+	testTypeModelsSettlement = "*models.Settlement"
+	testTypeModelsNPC        = "*models.SettlementNPC"
+	testTypeModelsShop       = "*models.SettlementShop"
+	testTypeModelsMarket     = "*models.Market"
+	
+	// Error messages
+	testErrAPI            = "API error"
+	testErrDB             = "db error"
+	testErrGenBase        = "failed to generate base settlement"
+	testErrSaveSettlement = "failed to save settlement"
+	
+	// Test data
+	testRegion     = "Test Region"
+	testRegionTest = "Test"
+	
+	// Terrain types
+	testTerrainMountainous = "mountainous"
+	testTerrainForest      = "forest"
+	testTerrainDesert      = "desert"
+	testTerrainCoastal     = "coastal"
+	testTerrainSwamp       = "swamp"
+	testTerrainPlains      = "plains"
+	testTerrainVaried      = "varied"
+	
+	// Climate types
+	testClimateCold      = "cold"
+	testClimateTropical  = "tropical"
+	testClimateArid      = "arid"
+	testClimateHumid     = "humid"
+	testClimateTemperate = "temperate"
+	
+	// Settlement names
+	testSettlementIronhold  = "Ironhold"
+	testSettlementPortDagon = "Port Dagon"
+)
+
 // Mock implementation of WorldBuildingRepository
 type MockWorldBuildingRepositoryImpl struct {
 	mock.Mock
@@ -214,14 +275,14 @@ func TestSettlementGeneratorService_GenerateSettlement(t *testing.T) {
 		mockLLM.Response = settlementResponse
 
 		// Mock repository calls
-		mockRepo.On("CreateSettlement", mock.AnythingOfType("*models.Settlement")).Run(func(args mock.Arguments) {
+		mockRepo.On("CreateSettlement", mock.AnythingOfType(testTypeModelsSettlement)).Run(func(args mock.Arguments) {
 			settlement := args.Get(0).(*models.Settlement)
 			settlement.ID = uuid.New()
 		}).Return(nil)
 
-		mockRepo.On("CreateSettlementNPC", mock.AnythingOfType("*models.SettlementNPC")).Return(nil)
-		mockRepo.On("CreateSettlementShop", mock.AnythingOfType("*models.SettlementShop")).Return(nil)
-		mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType("*models.Market")).Return(nil)
+		mockRepo.On("CreateSettlementNPC", mock.AnythingOfType(testTypeModelsNPC)).Return(nil)
+		mockRepo.On("CreateSettlementShop", mock.AnythingOfType(testTypeModelsShop)).Return(nil)
+		mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType(testTypeModelsMarket)).Return(nil)
 
 		service := NewSettlementGeneratorService(mockLLM, mockRepo)
 
@@ -244,7 +305,7 @@ func TestSettlementGeneratorService_GenerateSettlement(t *testing.T) {
 
 	t.Run("LLM error returns error", func(t *testing.T) {
 		mockLLM := &MockLLMProvider{
-			Error: errors.New("API error"),
+			Error: errors.New(testErrAPI),
 		}
 		mockRepo := &MockWorldBuildingRepositoryImpl{}
 
@@ -263,7 +324,7 @@ func TestSettlementGeneratorService_GenerateSettlement(t *testing.T) {
 
 		require.Error(t, err)
 		require.Nil(t, settlement)
-		require.Contains(t, err.Error(), "failed to generate base settlement")
+		require.Contains(t, err.Error(), testErrGenBase)
 	})
 
 	t.Run("repository save error", func(t *testing.T) {
@@ -277,7 +338,7 @@ func TestSettlementGeneratorService_GenerateSettlement(t *testing.T) {
 			Type: models.SettlementTown,
 		}
 
-		mockRepo.On("CreateSettlement", mock.AnythingOfType("*models.Settlement")).Return(errors.New("db error"))
+		mockRepo.On("CreateSettlement", mock.AnythingOfType(testTypeModelsSettlement)).Return(errors.New(testErrDB))
 
 		service := NewSettlementGeneratorService(mockLLM, mockRepo)
 
@@ -286,7 +347,7 @@ func TestSettlementGeneratorService_GenerateSettlement(t *testing.T) {
 
 		require.Error(t, err)
 		require.Nil(t, settlement)
-		require.Contains(t, err.Error(), "failed to save settlement")
+		require.Contains(t, err.Error(), testErrSaveSettlement)
 	})
 }
 
@@ -296,11 +357,11 @@ func TestSettlementGeneratorService_DeterminePopulationSize(t *testing.T) {
 		settlementType models.SettlementType
 		expected       string
 	}{
-		{models.SettlementHamlet, "small"},
-		{models.SettlementVillage, "small"},
-		{models.SettlementTown, "medium"},
-		{models.SettlementCity, "large"},
-		{models.SettlementMetropolis, "large"},
+		{models.SettlementHamlet, testPopSmall},
+		{models.SettlementVillage, testPopSmall},
+		{models.SettlementTown, testPopMedium},
+		{models.SettlementCity, testPopLarge},
+		{models.SettlementMetropolis, testPopLarge},
 	}
 
 	for _, tt := range tests {
@@ -318,10 +379,10 @@ func TestSettlementGeneratorService_CalculatePopulation(t *testing.T) {
 		minExpected    int
 		maxExpected    int
 	}{
-		{"small hamlet", models.SettlementHamlet, "small", 20, 30},
-		{"medium town", models.SettlementTown, "medium", 800, 1200},
-		{"large city", models.SettlementCity, "large", 8000, 12000},
-		{"ruins", models.SettlementRuins, "small", 0, 0},
+		{"small hamlet", models.SettlementHamlet, testPopSmall, 20, 30},
+		{"medium town", models.SettlementTown, testPopMedium, 800, 1200},
+		{"large city", models.SettlementCity, testPopLarge, 8000, 12000},
+		{"ruins", models.SettlementRuins, testPopSmall, 0, 0},
 	}
 
 	for _, tt := range tests {
@@ -415,13 +476,13 @@ func TestSettlementGeneratorService_InferTerrainType(t *testing.T) {
 		region   string
 		expected string
 	}{
-		{"Northern Mountains", "mountainous"},
-		{"Dark Forest", "forest"},
-		{"Scorching Desert", "desert"},
-		{"Coastal Trading Post", "coastal"},
-		{"Murky Swamplands", "swamp"},
-		{"Rolling Plains", "plains"},
-		{"Random Region", "varied"},
+		{"Northern Mountains", testTerrainMountainous},
+		{"Dark Forest", testTerrainForest},
+		{"Scorching Desert", testTerrainDesert},
+		{"Coastal Trading Post", testTerrainCoastal},
+		{"Murky Swamplands", testTerrainSwamp},
+		{"Rolling Plains", testTerrainPlains},
+		{"Random Region", testTerrainVaried},
 	}
 
 	for _, tt := range tests {
@@ -457,7 +518,7 @@ func TestSettlementGeneratorService_GetNPCRoles(t *testing.T) {
 	}{
 		{
 			models.SettlementHamlet,
-			[]string{"farmer", "hunter"},
+			[]string{testRoleFarmer, testRoleHunter},
 		},
 		{
 			models.SettlementCity,
@@ -465,7 +526,7 @@ func TestSettlementGeneratorService_GetNPCRoles(t *testing.T) {
 		},
 		{
 			models.SettlementRuins,
-			[]string{"hermit", "scavenger", "mad prophet"},
+			[]string{testRoleHermit, testRoleScavenger, "mad prophet"},
 		},
 	}
 
@@ -494,7 +555,7 @@ func TestSettlementGeneratorService_GetShopTypes(t *testing.T) {
 	}{
 		{
 			models.SettlementVillage,
-			[]string{"weaponsmith", "inn"},
+			[]string{testShopWeaponsmith, testShopInn},
 		},
 		{
 			models.SettlementCity,
@@ -706,10 +767,10 @@ func TestSettlementGeneratorService_ConcurrentGeneration(t *testing.T) {
 	mockRepo := &MockWorldBuildingRepositoryImpl{}
 
 	// Mock all repository calls to succeed
-	mockRepo.On("CreateSettlement", mock.AnythingOfType("*models.Settlement")).Return(nil)
-	mockRepo.On("CreateSettlementNPC", mock.AnythingOfType("*models.SettlementNPC")).Return(nil).Maybe()
-	mockRepo.On("CreateSettlementShop", mock.AnythingOfType("*models.SettlementShop")).Return(nil).Maybe()
-	mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType("*models.Market")).Return(nil)
+	mockRepo.On("CreateSettlement", mock.AnythingOfType(testTypeModelsSettlement)).Return(nil)
+	mockRepo.On("CreateSettlementNPC", mock.AnythingOfType(testTypeModelsNPC)).Return(nil).Maybe()
+	mockRepo.On("CreateSettlementShop", mock.AnythingOfType(testTypeModelsShop)).Return(nil).Maybe()
+	mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType(testTypeModelsMarket)).Return(nil)
 
 	service := NewSettlementGeneratorService(mockLLM, mockRepo)
 
@@ -843,17 +904,17 @@ func BenchmarkSettlementGeneratorService_GenerateSettlement(b *testing.B) {
 	}
 	mockRepo := &MockWorldBuildingRepositoryImpl{}
 
-	mockRepo.On("CreateSettlement", mock.AnythingOfType("*models.Settlement")).Return(nil)
-	mockRepo.On("CreateSettlementNPC", mock.AnythingOfType("*models.SettlementNPC")).Return(nil).Maybe()
-	mockRepo.On("CreateSettlementShop", mock.AnythingOfType("*models.SettlementShop")).Return(nil).Maybe()
-	mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType("*models.Market")).Return(nil)
+	mockRepo.On("CreateSettlement", mock.AnythingOfType(testTypeModelsSettlement)).Return(nil)
+	mockRepo.On("CreateSettlementNPC", mock.AnythingOfType(testTypeModelsNPC)).Return(nil).Maybe()
+	mockRepo.On("CreateSettlementShop", mock.AnythingOfType(testTypeModelsShop)).Return(nil).Maybe()
+	mockRepo.On("CreateOrUpdateMarket", mock.AnythingOfType(testTypeModelsMarket)).Return(nil)
 
 	service := NewSettlementGeneratorService(mockLLM, mockRepo)
 
 	gameSessionID := uuid.New()
 	req := models.SettlementGenerationRequest{
 		Type:   models.SettlementTown,
-		Region: "Test",
+		Region: testRegionTest,
 	}
 
 	ctx := context.Background()
