@@ -1,45 +1,50 @@
 import { Middleware } from '@reduxjs/toolkit';
 import { undo, redo } from '../slices/dmToolsSlice';
 
+// Helper function to execute an operation from the stack
+const executeStackOperation = (
+  store: any,
+  stack: any[],
+  operationName: string,
+  operationFn: (action: any) => any
+) => {
+  if (stack.length === 0) return;
+  
+  const lastAction = stack[stack.length - 1];
+  
+  try {
+    const resultAction = operationFn(lastAction);
+    if (resultAction) {
+      store.dispatch(resultAction);
+    }
+  } catch (error) {
+    console.error(`${operationName} operation failed:`, error);
+  }
+};
+
+// Helper to handle undo operation
+const handleUndo = (store: any) => {
+  const state = store.getState();
+  const undoStack = state.dmTools.undoStack;
+  executeStackOperation(store, undoStack, 'Undo', (action) => action.undo());
+};
+
+// Helper to handle redo operation
+const handleRedo = (store: any) => {
+  const state = store.getState();
+  const redoStack = state.dmTools.redoStack;
+  executeStackOperation(store, redoStack, 'Redo', (action) => action.redo());
+};
+
 export const undoMiddleware: Middleware = (store) => (next) => (action) => {
   // Handle undo action
   if (undo.match(action)) {
-    const state = store.getState();
-    const undoStack = state.dmTools.undoStack;
-    
-    if (undoStack.length > 0) {
-      const lastAction = undoStack[undoStack.length - 1];
-      
-      // Execute the undo function
-      try {
-        const undoAction = lastAction.undo();
-        if (undoAction) {
-          store.dispatch(undoAction);
-        }
-      } catch (error) {
-        console.error('Undo operation failed:', error);
-      }
-    }
+    handleUndo(store);
   }
   
   // Handle redo action
   if (redo.match(action)) {
-    const state = store.getState();
-    const redoStack = state.dmTools.redoStack;
-    
-    if (redoStack.length > 0) {
-      const lastAction = redoStack[redoStack.length - 1];
-      
-      // Execute the redo function
-      try {
-        const redoAction = lastAction.redo();
-        if (redoAction) {
-          store.dispatch(redoAction);
-        }
-      } catch (error) {
-        console.error('Redo operation failed:', error);
-      }
-    }
+    handleRedo(store);
   }
   
   return next(action);

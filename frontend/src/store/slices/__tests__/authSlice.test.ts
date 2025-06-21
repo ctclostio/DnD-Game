@@ -52,11 +52,12 @@ describe('authSlice', () => {
       const savedToken = 'saved-token';
       
       // Set up localStorage before requiring the module
-      localStorageMock.getItem.mockImplementation((key) => {
+      const mockGetItem = (key: string) => {
         if (key === 'user') return JSON.stringify(savedUser);
         if (key === 'token') return savedToken;
         return null;
-      });
+      };
+      localStorageMock.getItem.mockImplementation(mockGetItem);
 
       // Clear module cache and re-import
       jest.resetModules();
@@ -99,9 +100,10 @@ describe('authSlice', () => {
     });
 
     it('should handle login pending state', () => {
-      (authService.login as jest.Mock).mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve(mockResponse), 100))
-      );
+      const delayedPromise = new Promise(resolve => {
+        setTimeout(() => resolve(mockResponse), 100);
+      });
+      (authService.login as jest.Mock).mockReturnValue(delayedPromise);
 
       store.dispatch(login(loginCredentials));
 
@@ -164,9 +166,10 @@ describe('authSlice', () => {
     });
 
     it('should handle registration pending state', () => {
-      (authService.register as jest.Mock).mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve(mockResponse), 100))
-      );
+      const delayedPromise = new Promise(resolve => {
+        setTimeout(() => resolve(mockResponse), 100);
+      });
+      (authService.register as jest.Mock).mockReturnValue(delayedPromise);
 
       store.dispatch(register(registerData));
 

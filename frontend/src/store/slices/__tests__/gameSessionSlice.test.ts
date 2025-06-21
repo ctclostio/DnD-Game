@@ -36,52 +36,57 @@ jest.mock('../../../services/api', () => ({
   updateGameSession: jest.fn(),
 }));
 
+// Helper functions defined outside describe blocks to reduce nesting
+const createMockSession = (id: string, name: string): GameSession => ({
+  id,
+  name,
+  dmId: 'dm-1',
+  playerIds: ['player-1', 'player-2'],
+  campaignId: 'campaign-1',
+  combatActive: false,
+  currentRound: undefined,
+  combatHistory: [],
+  sessionNotes: 'Test session notes',
+  sharedResources: {},
+  mapData: undefined,
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-01T00:00:00Z',
+});
+
+const createMockParticipant = (id: string, name: string): CombatParticipant => ({
+  id,
+  name,
+  initiative: 10,
+  initiativeModifier: 2,
+  armorClass: 15,
+  hitPointsMax: 20,
+  hitPointsCurrent: 20,
+  temporaryHitPoints: 0,
+  conditions: [],
+  isPlayer: true,
+  isActive: true,
+  hasActed: false,
+  hasBonusActed: false,
+  hasReacted: false,
+  movementUsed: 0,
+  movementMax: 30,
+  concentrating: false,
+});
+
+const createStore = () => configureStore({
+  reducer: {
+    gameSession: gameSessionReducer,
+  },
+});
+
+const createInfinitePromise = () => new Promise(() => {}); // Never resolves
+
 describe('gameSessionSlice', () => {
   let store: ReturnType<typeof configureStore>;
 
-  const createMockSession = (id: string, name: string): GameSession => ({
-    id,
-    name,
-    dmId: 'dm-1',
-    playerIds: ['player-1', 'player-2'],
-    campaignId: 'campaign-1',
-    combatActive: false,
-    currentRound: undefined,
-    combatHistory: [],
-    sessionNotes: 'Test session notes',
-    sharedResources: {},
-    mapData: undefined,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
-  });
-
-  const createMockParticipant = (id: string, name: string): CombatParticipant => ({
-    id,
-    name,
-    initiative: 10,
-    initiativeModifier: 2,
-    armorClass: 15,
-    hitPointsMax: 20,
-    hitPointsCurrent: 20,
-    temporaryHitPoints: 0,
-    conditions: [],
-    isPlayer: true,
-    isActive: true,
-    hasActed: false,
-    hasBonusActed: false,
-    hasReacted: false,
-    movementUsed: 0,
-    movementMax: 30,
-    concentrating: false,
-  });
-
   beforeEach(() => {
     jest.clearAllMocks();
-    store = configureStore({
-      reducer: {
-        gameSession: gameSessionReducer,
-      },
-    });
+    store = createStore();
   });
 
   describe('initial state', () => {
@@ -134,9 +139,7 @@ describe('gameSessionSlice', () => {
     });
 
     it('should set loading state while fetching', () => {
-      (apiService.getGameSessions as jest.Mock).mockImplementation(
-        () => new Promise(() => {}) // Never resolves
-      );
+      (apiService.getGameSessions as jest.Mock).mockReturnValue(createInfinitePromise());
 
       store.dispatch(fetchSessions());
 
@@ -297,8 +300,7 @@ describe('gameSessionSlice', () => {
   });
 
   describe('sync actions', () => {
-    beforeEach(async () => {
-      // First, we need to populate the store with sessions
+    const setupSessions = async () => {
       const mockSessions = [
         createMockSession('session-1', 'Adventure 1'),
         createMockSession('session-2', 'Adventure 2'),
@@ -306,6 +308,10 @@ describe('gameSessionSlice', () => {
       
       (apiService.getGameSessions as jest.Mock).mockResolvedValue(mockSessions);
       await store.dispatch(fetchSessions());
+    };
+
+    beforeEach(async () => {
+      await setupSessions();
     });
 
     describe('sessionUpdated', () => {
@@ -344,7 +350,8 @@ describe('gameSessionSlice', () => {
 
         const state = store.getState().gameSession;
         const playerIds = state.sessions.entities['session-1'].playerIds;
-        expect(playerIds.filter(id => id === 'player-1')).toHaveLength(1);
+        const player1Count = playerIds.filter(id => id === 'player-1').length;
+        expect(player1Count).toBe(1);
       });
 
       it('should handle non-existent session', () => {
@@ -502,9 +509,10 @@ describe('gameSessionSlice', () => {
 
       // Update session
       // Get current session state to preserve playerIds changes
-      const currentSessionState = store.getState().gameSession.sessions.entities['session-1'];
+      const currentState = store.getState();
+      const currentSession = currentState.gameSession.sessions.entities['session-1'];
       const updatedSession = {
-        ...currentSessionState,
+        ...currentSession,
         sessionNotes: 'Combat in progress',
       };
       (apiService.updateGameSession as jest.Mock).mockResolvedValue(updatedSession);
@@ -520,8 +528,9 @@ describe('gameSessionSlice', () => {
       store.dispatch(playerLeft({ sessionId: 'session-1', playerId: 'player-2' }));
 
       // Verify final state
-      const state = store.getState().gameSession;
-      const session = state.sessions.entities['session-1'];
+      const finalState = store.getState();
+      const gameSession = finalState.gameSession;
+      const session = gameSession.sessions.entities['session-1'];
       
       expect(session).toBeDefined();
       expect(session.playerIds).toContain('player-3');

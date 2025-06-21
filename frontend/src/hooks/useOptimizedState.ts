@@ -94,27 +94,30 @@ export function useOptimizedForm<T extends Record<string, unknown>>(
     return { ...prev, [field]: value };
   };
 
+  // Helper to handle field update logic
+  const updateFieldState = useCallback((prev: T, field: keyof T, value: T[keyof T]) => {
+    const newValues = updateFieldValue(prev, field, value);
+    if (newValues === prev) return prev;
+    
+    // Mark field as touched
+    setTouched(prevTouched => ({ ...prevTouched, [field]: true }));
+    
+    // Validate on change if enabled
+    if (options?.validateOnChange) {
+      const newErrors = validate(newValues);
+      const filteredErrors = filterErrors(newErrors);
+      setErrors(filteredErrors);
+    }
+    
+    return newValues;
+  }, [validate, options?.validateOnChange]);
+
   // Update single field
   const setFieldValue = useCallback(<K extends keyof T>(field: K, value: T[K]) => {
     unstable_batchedUpdates(() => {
-      setValues(prev => {
-        const newValues = updateFieldValue(prev, field, value);
-        if (newValues === prev) return prev;
-        
-        // Mark field as touched
-        setTouched(prevTouched => ({ ...prevTouched, [field]: true }));
-        
-        // Validate on change if enabled
-        if (options?.validateOnChange) {
-          const newErrors = validate(newValues);
-          const filteredErrors = filterErrors(newErrors);
-          setErrors(filteredErrors);
-        }
-        
-        return newValues;
-      });
+      setValues(prev => updateFieldState(prev, field, value));
     });
-  }, [validate, options?.validateOnChange]);
+  }, [updateFieldState]);
   
   // Mark field as touched
   const setFieldTouched = useCallback((field: keyof T, isTouched = true) => {

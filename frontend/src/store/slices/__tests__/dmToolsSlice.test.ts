@@ -12,24 +12,34 @@ import dmToolsReducer, {
 } from '../dmToolsSlice';
 import { UndoableAction } from '../../../types/state';
 
+// Helper functions defined outside describe blocks to reduce nesting
+const createMockUndoableAction = (id: string, description: string): UndoableAction => ({
+  id,
+  type: 'test-action',
+  timestamp: Date.now(),
+  description,
+  undo: () => ({ type: 'TEST_UNDO', payload: { id } }),
+  redo: () => ({ type: 'TEST_REDO', payload: { id } }),
+});
+
+const createStore = () => configureStore({
+  reducer: {
+    dmTools: dmToolsReducer,
+  },
+});
+
+const addMultipleActions = (store: any, count: number) => {
+  for (let i = 1; i <= count; i++) {
+    const action = createMockUndoableAction(`action-${i}`, `Test action ${i}`);
+    store.dispatch(addUndoableAction(action));
+  }
+};
+
 describe('dmToolsSlice', () => {
   let store: ReturnType<typeof configureStore>;
 
-  const createMockUndoableAction = (id: string, description: string): UndoableAction => ({
-    id,
-    type: 'test-action',
-    timestamp: Date.now(),
-    description,
-    undo: () => ({ type: 'TEST_UNDO', payload: { id } }),
-    redo: () => ({ type: 'TEST_REDO', payload: { id } }),
-  });
-
   beforeEach(() => {
-    store = configureStore({
-      reducer: {
-        dmTools: dmToolsReducer,
-      },
-    });
+    store = createStore();
   });
 
   describe('initial state', () => {
@@ -88,10 +98,7 @@ describe('dmToolsSlice', () => {
 
       it('should limit undo stack size to MAX_UNDO_HISTORY (50)', () => {
         // Add 51 actions
-        for (let i = 0; i < 51; i++) {
-          const action = createMockUndoableAction(`action-${i}`, `Test action ${i}`);
-          store.dispatch(addUndoableAction(action));
-        }
+        addMultipleActions(store, 51);
 
         const state = store.getState().dmTools;
         expect(state.undoStack).toHaveLength(50);
@@ -107,11 +114,14 @@ describe('dmToolsSlice', () => {
           createMockUndoableAction('action-3', 'Test action 3'),
         ];
 
-        actions.forEach(action => store.dispatch(addUndoableAction(action)));
+        for (const action of actions) {
+          store.dispatch(addUndoableAction(action));
+        }
 
         const state = store.getState().dmTools;
         expect(state.undoStack).toHaveLength(3);
-        expect(state.undoStack.map(a => a.id)).toEqual(['action-1', 'action-2', 'action-3']);
+        const ids = state.undoStack.map(a => a.id);
+        expect(ids).toEqual(['action-1', 'action-2', 'action-3']);
         expect(state.canUndo).toBe(true);
       });
     });
@@ -119,10 +129,7 @@ describe('dmToolsSlice', () => {
     describe('undo', () => {
       beforeEach(() => {
         // Add some actions to undo
-        for (let i = 1; i <= 3; i++) {
-          const action = createMockUndoableAction(`action-${i}`, `Test action ${i}`);
-          store.dispatch(addUndoableAction(action));
-        }
+        addMultipleActions(store, 3);
       });
 
       it('should move action from undo stack to redo stack', () => {
@@ -177,10 +184,7 @@ describe('dmToolsSlice', () => {
     describe('redo', () => {
       beforeEach(() => {
         // Add actions and undo them
-        for (let i = 1; i <= 3; i++) {
-          const action = createMockUndoableAction(`action-${i}`, `Test action ${i}`);
-          store.dispatch(addUndoableAction(action));
-        }
+        addMultipleActions(store, 3);
         store.dispatch(undo());
         store.dispatch(undo());
       });
@@ -234,10 +238,7 @@ describe('dmToolsSlice', () => {
     describe('clearHistory', () => {
       it('should clear both undo and redo stacks', () => {
         // Add some actions
-        for (let i = 1; i <= 3; i++) {
-          const action = createMockUndoableAction(`action-${i}`, `Test action ${i}`);
-          store.dispatch(addUndoableAction(action));
-        }
+        addMultipleActions(store, 3);
         store.dispatch(undo());
 
         // Clear history
@@ -410,7 +411,9 @@ describe('dmToolsSlice', () => {
       ];
 
       // Perform actions
-      actions.forEach(action => store.dispatch(addUndoableAction(action)));
+      for (const action of actions) {
+        store.dispatch(addUndoableAction(action));
+      }
 
       // Undo last action
       store.dispatch(undo());

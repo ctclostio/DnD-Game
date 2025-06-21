@@ -36,17 +36,35 @@ Object.defineProperty(window, 'localStorage', {
 const mockNow = 1640995200000; // 2022-01-01T00:00:00.000Z
 const originalDateNow = Date.now;
 
+// Helper functions to reduce nesting
+const createStore = () => configureStore({
+  reducer: {
+    ui: uiReducer,
+  },
+});
+
+const addMultipleNotifications = (store: any, count: number) => {
+  for (let i = 0; i < count; i++) {
+    store.dispatch(addNotification({
+      type: 'info',
+      message: `Notification ${i}`,
+    }));
+  }
+};
+
+const setupNotifications = (store: any) => {
+  store.dispatch(addNotification({ type: 'info', message: 'Notification 1' }));
+  store.dispatch(addNotification({ type: 'success', message: 'Notification 2' }));
+  store.dispatch(addNotification({ type: 'error', message: 'Notification 3' }));
+};
+
 describe('uiSlice', () => {
   let store: ReturnType<typeof configureStore>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     Date.now = jest.fn(() => mockNow);
-    store = configureStore({
-      reducer: {
-        ui: uiReducer,
-      },
-    });
+    store = createStore();
   });
 
   afterEach(() => {
@@ -287,28 +305,23 @@ describe('uiSlice', () => {
         const notificationTypes: Array<'info' | 'success' | 'warning' | 'error'> = 
           ['info', 'success', 'warning', 'error'];
         
-        notificationTypes.forEach(type => {
+        for (const type of notificationTypes) {
           store.dispatch(addNotification({
             type,
             message: `${type} notification`,
           }));
-        });
+        }
 
         const state = store.getState().ui;
         expect(state.notifications).toHaveLength(4);
-        state.notifications.forEach((notif, index) => {
-          expect(notif.type).toBe(notificationTypes[index]);
-        });
+        for (let i = 0; i < state.notifications.length; i++) {
+          expect(state.notifications[i].type).toBe(notificationTypes[i]);
+        }
       });
 
       it('should limit notifications to 10', () => {
         // Add 12 notifications
-        for (let i = 0; i < 12; i++) {
-          store.dispatch(addNotification({
-            type: 'info',
-            message: `Notification ${i}`,
-          }));
-        }
+        addMultipleNotifications(store, 12);
 
         const state = store.getState().ui;
         expect(state.notifications).toHaveLength(10);
@@ -320,10 +333,7 @@ describe('uiSlice', () => {
 
     describe('removeNotification', () => {
       beforeEach(() => {
-        // Add some notifications
-        store.dispatch(addNotification({ type: 'info', message: 'Notification 1' }));
-        store.dispatch(addNotification({ type: 'success', message: 'Notification 2' }));
-        store.dispatch(addNotification({ type: 'error', message: 'Notification 3' }));
+        setupNotifications(store);
       });
 
       it('should remove specific notification', () => {
@@ -334,7 +344,8 @@ describe('uiSlice', () => {
 
         const newState = store.getState().ui;
         expect(newState.notifications).toHaveLength(2);
-        expect(newState.notifications.find(n => n.id === idToRemove)).toBeUndefined();
+        const found = newState.notifications.find(n => n.id === idToRemove);
+        expect(found).toBeUndefined();
       });
 
       it('should handle removing non-existent notification', () => {
@@ -553,12 +564,13 @@ describe('uiSlice', () => {
         'Enemy defeated',
       ];
 
-      messages.forEach((message, index) => {
+      for (let i = 0; i < messages.length; i++) {
+        const message = messages[i];
         store.dispatch(addNotification({
-          type: index % 2 === 0 ? 'info' : 'success',
+          type: i % 2 === 0 ? 'info' : 'success',
           message,
         }));
-      });
+      }
 
       const state = store.getState().ui;
       // Should only keep last 10
