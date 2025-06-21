@@ -532,12 +532,40 @@ Create a brief description (2-3 sentences) of this economic event and its immedi
 }
 
 // updateSettlementProsperity updates a settlement's economic status
-func (les *LivingEcosystemService) updateSettlementProsperity(_ context.Context, settlement *models.Settlement, timeDelta time.Duration) {
+func (les *LivingEcosystemService) updateSettlementProsperity(ctx context.Context, settlement *models.Settlement, timeDelta time.Duration) {
 	// Calculate prosperity change based on various factors
 	prosperityChange := les.calculateProsperityChange(settlement, timeDelta)
 	
-	// TODO: Implement prosperity update when repository method is available
-	_ = prosperityChange // placeholder until persistence implemented
+	// Apply prosperity change to wealth level
+	oldWealthLevel := settlement.WealthLevel
+	newWealthLevel := oldWealthLevel + int(prosperityChange)
+	
+	// Clamp wealth level between 0 and 10
+	if newWealthLevel < 0 {
+		newWealthLevel = 0
+	} else if newWealthLevel > 10 {
+		newWealthLevel = 10
+	}
+	
+	// Update settlement prosperity if it changed
+	if newWealthLevel != oldWealthLevel {
+		settlement.WealthLevel = newWealthLevel
+		if err := les.settlementRepo.UpdateSettlementProsperity(settlement.ID, newWealthLevel); err != nil {
+			// Log error but don't fail the entire simulation
+			if les.eventEngine != nil && les.eventEngine.worldEventsRepo != nil {
+				// Use event engine's logger if available
+				les.eventEngine.worldEventsRepo.(*database.EmergentWorldRepository).logger.Printf(
+					"Failed to update settlement prosperity for %s: %v", 
+					settlement.Name, err,
+				)
+			}
+		}
+		
+		// Generate world event if significant prosperity change
+		if math.Abs(float64(newWealthLevel-oldWealthLevel)) >= 2 {
+			les.generateProsperityChangeEvent(ctx, settlement, oldWealthLevel, newWealthLevel)
+		}
+	}
 }
 
 func (les *LivingEcosystemService) calculateProsperityChange(settlement *models.Settlement, timeDelta time.Duration) float64 {
@@ -1115,4 +1143,59 @@ func (les *LivingEcosystemService) getAffectedCulturalAspects(shiftType string) 
 		return aspects
 	}
 	return []string{"general"}
+}
+
+// generateProsperityChangeEvent creates a world event for significant prosperity changes
+func (les *LivingEcosystemService) generateProsperityChangeEvent(ctx context.Context, settlement *models.Settlement, oldLevel, newLevel int) {
+	if les.eventEngine == nil {
+		return
+	}
+	
+	var eventType, description string
+	var severity models.EventSeverity
+	
+	if newLevel > oldLevel {
+		// Prosperity increased
+		eventType = "Economic Boom"
+		severity = models.EventSeverityMinor
+		if newLevel-oldLevel >= 3 {
+			severity = models.EventSeverityMajor
+		}
+		description = fmt.Sprintf("%s has experienced an economic boom! The settlement's wealth has increased significantly due to successful trade and growing population.", settlement.Name)
+	} else {
+		// Prosperity decreased
+		eventType = "Economic Decline"
+		severity = models.EventSeverityMinor
+		if oldLevel-newLevel >= 3 {
+			severity = models.EventSeverityMajor
+		}
+		description = fmt.Sprintf("%s is facing economic hardship. The settlement's wealth has declined due to various factors affecting trade and prosperity.", settlement.Name)
+	}
+	
+	event := &models.WorldEvent{
+		Type:        eventType,
+		Severity:    severity,
+		Description: description,
+		Location:    settlement.Name,
+		NPCsInvolved: models.JSONB(`[]`),
+		PlayerVisible: true,
+		SystemGenerated: true,
+		Context: models.JSONB(fmt.Sprintf(`{
+			"settlement_id": "%s",
+			"old_wealth_level": %d,
+			"new_wealth_level": %d,
+			"change_type": "prosperity"
+		}`, settlement.ID, oldLevel, newLevel)),
+	}
+	
+	// Create the event
+	if err := les.eventEngine.CreateWorldEvent(ctx, settlement.GameSessionID, event); err != nil {
+		// Log error but don't fail
+		if les.eventEngine.worldEventsRepo != nil {
+			les.eventEngine.worldEventsRepo.(*database.EmergentWorldRepository).logger.Printf(
+				"Failed to create prosperity change event for %s: %v", 
+				settlement.Name, err,
+			)
+		}
+	}
 }

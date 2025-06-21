@@ -146,6 +146,57 @@ func (r *WorldBuildingRepository) GetSettlementsByGameSession(gameSessionID uuid
 	return settlements, nil
 }
 
+// UpdateSettlement updates a settlement's data
+func (r *WorldBuildingRepository) UpdateSettlement(settlement *models.Settlement) error {
+	settlement.UpdatedAt = time.Now()
+
+	// Marshal JSONB fields
+	coordinates, _ := json.Marshal(settlement.Coordinates)
+	primaryExports, _ := json.Marshal(settlement.PrimaryExports)
+	primaryImports, _ := json.Marshal(settlement.PrimaryImports)
+	tradeRoutes, _ := json.Marshal(settlement.TradeRoutes)
+	notableLocations, _ := json.Marshal(settlement.NotableLocations)
+	defenses, _ := json.Marshal(settlement.Defenses)
+	problems, _ := json.Marshal(settlement.Problems)
+	secrets, _ := json.Marshal(settlement.Secrets)
+
+	query := `
+		UPDATE settlements SET
+			name = ?, type = ?, population = ?, age_category = ?,
+			description = ?, history = ?, government_type = ?, alignment = ?,
+			danger_level = ?, corruption_level = ?, region = ?, coordinates = ?,
+			terrain_type = ?, climate = ?, wealth_level = ?,
+			primary_exports = ?, primary_imports = ?, trade_routes = ?,
+			ancient_ruins_nearby = ?, eldritch_influence = ?, ley_line_connection = ?,
+			notable_locations = ?, defenses = ?, problems = ?, secrets = ?,
+			updated_at = ?
+		WHERE id = ?`
+
+	_, err := r.db.ExecRebind(query,
+		settlement.Name, settlement.Type, settlement.Population, settlement.AgeCategory,
+		settlement.Description, settlement.History, settlement.GovernmentType, settlement.Alignment,
+		settlement.DangerLevel, settlement.CorruptionLevel, settlement.Region, coordinates,
+		settlement.TerrainType, settlement.Climate, settlement.WealthLevel,
+		primaryExports, primaryImports, tradeRoutes,
+		settlement.AncientRuinsNearby, settlement.EldritchInfluence, settlement.LeyLineConnection,
+		notableLocations, defenses, problems, secrets,
+		settlement.UpdatedAt, settlement.ID,
+	)
+
+	return err
+}
+
+// UpdateSettlementProsperity updates only the wealth level of a settlement
+func (r *WorldBuildingRepository) UpdateSettlementProsperity(settlementID uuid.UUID, wealthLevel int) error {
+	query := `
+		UPDATE settlements 
+		SET wealth_level = ?, updated_at = ?
+		WHERE id = ?`
+
+	_, err := r.db.ExecRebind(query, wealthLevel, time.Now(), settlementID)
+	return err
+}
+
 // NPC operations
 
 // CreateSettlementNPC creates a new NPC in a settlement

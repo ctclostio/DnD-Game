@@ -94,7 +94,7 @@ func (cm *CacheMiddleware) Handler(next http.Handler) http.Handler {
 		ctx := r.Context()
 
 		// Try to serve from cache
-		if served := cm.tryServeFromCache(w, r, ctx, cacheKey); served {
+		if served := cm.tryServeFromCache(w, r, ctx, cacheKey, next); served {
 			return
 		}
 
@@ -115,7 +115,7 @@ func (cm *CacheMiddleware) isCacheableRequest(r *http.Request) bool {
 }
 
 // tryServeFromCache attempts to serve response from cache
-func (cm *CacheMiddleware) tryServeFromCache(w http.ResponseWriter, r *http.Request, ctx context.Context, cacheKey string) bool {
+func (cm *CacheMiddleware) tryServeFromCache(w http.ResponseWriter, r *http.Request, ctx context.Context, cacheKey string, next http.Handler) bool {
 	cached, err := cm.getFromCache(ctx, cacheKey)
 	if err != nil || cached == nil {
 		return false
@@ -132,7 +132,7 @@ func (cm *CacheMiddleware) tryServeFromCache(w http.ResponseWriter, r *http.Requ
 	// Serve stale content while revalidating
 	if age <= cached.TTL+cm.config.StaleWhileRevalidate {
 		cm.serveCachedResponse(w, r, cached, true)
-		go cm.revalidateInBackground(r, cacheKey)
+		go cm.revalidateInBackground(r, cacheKey, next)
 		return true
 	}
 
@@ -407,28 +407,46 @@ func (cm *CacheMiddleware) serveCachedResponse(w http.ResponseWriter, r *http.Re
 }
 
 // revalidateInBackground refreshes cache in the background
-func (cm *CacheMiddleware) revalidateInBackground(r *http.Request, cacheKey string) {
-	// TODO: Implement background revalidation
-	// This would require:
-	// 1. Clone the request for background processing
-	// req := r.Clone(context.Background())
+func (cm *CacheMiddleware) revalidateInBackground(r *http.Request, cacheKey string, next http.Handler) {
+	// Clone the request for background processing
+	req := r.Clone(context.Background())
 	
-	// 2. Create a mock response writer to capture the response
-	// recorder := &responseRecorder{
-	// 	ResponseWriter: &mockResponseWriter{},
-	// 	statusCode:     http.StatusOK,
-	// 	headers:        make(http.Header),
-	// 	body:           &bytes.Buffer{},
-	// }
+	// Create a mock response writer to capture the response
+	mock := &mockResponseWriter{
+		headers: make(http.Header),
+		body:    bytes.Buffer{},
+		status:  http.StatusOK,
+	}
+	recorder := &responseRecorder{
+		ResponseWriter: mock,
+		statusCode:     http.StatusOK,
+		headers:        make(http.Header),
+		body:           &bytes.Buffer{},
+		written:        false,
+	}
 
-	// 3. Execute the request against the actual handler
-	// This would require access to the handler chain
+	// Execute the request against the actual handler
+	next.ServeHTTP(recorder, req)
 	
-	if cm.logger != nil {
+	// Check if we should cache the response
+	if cm.shouldCache(recorder) {
+		// Cache the response
+		cm.cacheResponse(req.Context(), cacheKey, recorder)
+		
+		if cm.logger != nil {
+			cm.logger.Debug().
+				Str("path", r.URL.Path).
+				Str("cache_key", cacheKey).
+				Int("status", recorder.statusCode).
+				Int("body_size", recorder.body.Len()).
+				Msg("Background revalidation completed")
+		}
+	} else if cm.logger != nil {
 		cm.logger.Debug().
 			Str("path", r.URL.Path).
 			Str("cache_key", cacheKey).
-			Msg("Background revalidation started")
+			Int("status", recorder.statusCode).
+			Msg("Background revalidation completed - response not cached")
 	}
 }
 
