@@ -92,6 +92,75 @@ const EventCreator = ({ onSubmit, onCancel }) => (
   </div>
 );
 
+const PerspectiveCard = ({ perspective, compareMode, isCompared, onToggleCompare, getTruthIndicator, getBiasIcon }) => {
+  const truthIndicator = getTruthIndicator(perspective.truth_level);
+  
+  return (
+    <div className={`perspective-card ${perspective.bias} ${isCompared ? 'compared' : ''}`}>
+      <div className="perspective-header">
+        <div className="perspective-source">
+          <span className="source-type">{perspective.perspective_type}</span>
+          <span className="source-name">{perspective.source_name}</span>
+        </div>
+        <div className="perspective-meta">
+          <span className="bias-indicator" title={`Bias: ${perspective.bias}`}>
+            {getBiasIcon(perspective.bias)}
+          </span>
+          <span 
+            className="truth-indicator"
+            style={{ color: truthIndicator.color }}
+            title={truthIndicator.label}
+          >
+            {Math.round(perspective.truth_level * 100)}%
+          </span>
+        </div>
+      </div>
+
+      <div className="perspective-narrative">
+        <p>{perspective.narrative}</p>
+      </div>
+
+      {perspective.hidden_details?.length > 0 && (
+        <details className="hidden-details">
+          <summary>
+            <FaQuestionCircle /> What they&apos;re not saying...
+          </summary>
+          <ul>
+            {perspective.hidden_details.map((detail, index) => (
+              <li key={index}>{detail}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      {perspective.contradictions?.length > 0 && (
+        <div className="contradictions">
+          <h6><FaExclamationTriangle /> Contradictions:</h6>
+          {perspective.contradictions.map((contradiction, index) => (
+            <div key={index} className="contradiction-item">
+              <small>{contradiction.conflicting_detail}</small>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="perspective-footer">
+        <span className="emotional-tone">
+          Tone: {perspective.emotional_tone || 'neutral'}
+        </span>
+        {compareMode && (
+          <button
+            className="btn-compare-toggle"
+            onClick={() => onToggleCompare(perspective.id)}
+          >
+            {isCompared ? 'Remove' : 'Add to Compare'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
   const [worldEvents, setWorldEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -221,6 +290,13 @@ const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
     handleCreateEvent(eventData);
   };
 
+  const handleBackToEvents = () => {
+    setSelectedEvent(null);
+    setPerspectives([]);
+    setPersonalizedNarrative(null);
+    setComparedPerspectives([]);
+  };
+
   return (
     <div className="perspective-viewer">
       <div className="viewer-header">
@@ -282,12 +358,7 @@ const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
               </div>
               <button 
                 className="btn-secondary"
-                onClick={() => {
-                  setSelectedEvent(null);
-                  setPerspectives([]);
-                  setPersonalizedNarrative(null);
-                  setComparedPerspectives([]);
-                }}
+                onClick={handleBackToEvents}
               >
                 Back to Events
               </button>
@@ -357,78 +428,17 @@ const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
               </div>
             ) : (
               <div className={`perspectives-grid ${compareMode ? 'compare-mode' : ''}`}>
-                {perspectives.map(perspective => {
-                  const truthIndicator = getTruthIndicator(perspective.truth_level);
-                  const isCompared = comparedPerspectives.includes(perspective.id);
-                  
-                  return (
-                    <div 
-                      key={perspective.id} 
-                      className={`perspective-card ${perspective.bias} ${isCompared ? 'compared' : ''}`}
-                    >
-                      <div className="perspective-header">
-                        <div className="perspective-source">
-                          <span className="source-type">{perspective.perspective_type}</span>
-                          <span className="source-name">{perspective.source_name}</span>
-                        </div>
-                        <div className="perspective-meta">
-                          <span className="bias-indicator" title={`Bias: ${perspective.bias}`}>
-                            {getBiasIcon(perspective.bias)}
-                          </span>
-                          <span 
-                            className="truth-indicator"
-                            style={{ color: truthIndicator.color }}
-                            title={truthIndicator.label}
-                          >
-                            {Math.round(perspective.truth_level * 100)}%
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="perspective-narrative">
-                        <p>{perspective.narrative}</p>
-                      </div>
-
-                      {perspective.hidden_details?.length > 0 && (
-                        <details className="hidden-details">
-                          <summary>
-                            <FaQuestionCircle /> What they&apos;re not saying...
-                          </summary>
-                          <ul>
-                            {perspective.hidden_details.map((detail, index) => (
-                              <li key={index}>{detail}</li>
-                            ))}
-                          </ul>
-                        </details>
-                      )}
-
-                      {perspective.contradictions?.length > 0 && (
-                        <div className="contradictions">
-                          <h6><FaExclamationTriangle /> Contradictions:</h6>
-                          {perspective.contradictions.map((contradiction, index) => (
-                            <div key={index} className="contradiction-item">
-                              <small>{contradiction.conflicting_detail}</small>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="perspective-footer">
-                        <span className="emotional-tone">
-                          Tone: {perspective.emotional_tone || 'neutral'}
-                        </span>
-                        {compareMode && (
-                          <button
-                            className="btn-compare-toggle"
-                            onClick={() => toggleCompare(perspective.id)}
-                          >
-                            {isCompared ? 'Remove' : 'Add to Compare'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                {perspectives.map(perspective => (
+                  <PerspectiveCard
+                    key={perspective.id}
+                    perspective={perspective}
+                    compareMode={compareMode}
+                    isCompared={comparedPerspectives.includes(perspective.id)}
+                    onToggleCompare={toggleCompare}
+                    getTruthIndicator={getTruthIndicator}
+                    getBiasIcon={getBiasIcon}
+                  />
+                ))}
               </div>
             )}
 
