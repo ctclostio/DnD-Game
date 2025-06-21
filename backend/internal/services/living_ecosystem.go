@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"time"
@@ -552,13 +553,8 @@ func (les *LivingEcosystemService) updateSettlementProsperity(ctx context.Contex
 		settlement.WealthLevel = newWealthLevel
 		if err := les.settlementRepo.UpdateSettlementProsperity(settlement.ID, newWealthLevel); err != nil {
 			// Log error but don't fail the entire simulation
-			if les.eventEngine != nil && les.eventEngine.worldEventsRepo != nil {
-				// Use event engine's logger if available
-				les.eventEngine.worldEventsRepo.(*database.EmergentWorldRepository).logger.Printf(
-					"Failed to update settlement prosperity for %s: %v", 
-					settlement.Name, err,
-				)
-			}
+			// Log error but continue
+			log.Printf("Failed to update settlement prosperity for %s: %v", settlement.Name, err)
 		}
 		
 		// Generate world event if significant prosperity change
@@ -1152,50 +1148,60 @@ func (les *LivingEcosystemService) generateProsperityChangeEvent(ctx context.Con
 	}
 	
 	var eventType, description string
-	var severity models.EventSeverity
+	var severity models.WorldEventSeverity
 	
 	if newLevel > oldLevel {
 		// Prosperity increased
 		eventType = "Economic Boom"
-		severity = models.EventSeverityMinor
+		severity = models.SeverityMinor
 		if newLevel-oldLevel >= 3 {
-			severity = models.EventSeverityMajor
+			severity = models.SeverityMajor
 		}
 		description = fmt.Sprintf("%s has experienced an economic boom! The settlement's wealth has increased significantly due to successful trade and growing population.", settlement.Name)
 	} else {
 		// Prosperity decreased
 		eventType = "Economic Decline"
-		severity = models.EventSeverityMinor
+		severity = models.SeverityMinor
 		if oldLevel-newLevel >= 3 {
-			severity = models.EventSeverityMajor
+			severity = models.SeverityMajor
 		}
 		description = fmt.Sprintf("%s is facing economic hardship. The settlement's wealth has declined due to various factors affecting trade and prosperity.", settlement.Name)
 	}
 	
-	event := &models.WorldEvent{
-		Type:        eventType,
-		Severity:    severity,
-		Description: description,
-		Location:    settlement.Name,
-		NPCsInvolved: models.JSONB(`[]`),
-		PlayerVisible: true,
-		SystemGenerated: true,
-		Context: models.JSONB(fmt.Sprintf(`{
-			"settlement_id": "%s",
-			"old_wealth_level": %d,
-			"new_wealth_level": %d,
-			"change_type": "prosperity"
-		}`, settlement.ID, oldLevel, newLevel)),
+	event := &models.EmergentWorldEvent{
+		ID:               uuid.New().String(),
+		SessionID:        settlement.GameSessionID.String(),
+		EventType:        "economic_change",
+		Title:            eventType,
+		Description:      description,
+		Impact: map[string]interface{}{
+			"settlement_id":     settlement.ID.String(),
+			"old_wealth_level":  oldLevel,
+			"new_wealth_level":  newLevel,
+			"change_type":       "prosperity",
+			"severity":          string(severity),
+		},
+		AffectedEntities: []string{settlement.ID.String()},
+		Consequences: []models.EventConsequence{
+			{
+				Type:      "economic",
+				Target:    settlement.ID.String(),
+				Effect:    "wealth_level_change",
+				Magnitude: float64(newLevel - oldLevel),
+				Duration:  "permanent",
+				Parameters: map[string]interface{}{
+					"old_level": oldLevel,
+					"new_level": newLevel,
+				},
+			},
+		},
+		IsPlayerVisible: true,
+		OccurredAt:      time.Now(),
 	}
 	
 	// Create the event
-	if err := les.eventEngine.CreateWorldEvent(ctx, settlement.GameSessionID, event); err != nil {
+	if err := les.worldRepo.CreateWorldEvent(event); err != nil {
 		// Log error but don't fail
-		if les.eventEngine.worldEventsRepo != nil {
-			les.eventEngine.worldEventsRepo.(*database.EmergentWorldRepository).logger.Printf(
-				"Failed to create prosperity change event for %s: %v", 
-				settlement.Name, err,
-			)
-		}
+		log.Printf("Failed to create prosperity change event for %s: %v", settlement.Name, err)
 	}
 }

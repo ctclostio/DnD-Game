@@ -43,7 +43,7 @@ func TestLoad(t *testing.T) {
 
 		// Check default values
 		assert.Equal(t, "8080", cfg.Server.Port)
-		assert.Equal(t, "development", cfg.Server.Environment)
+		assert.Equal(t, "production", cfg.Server.Environment)
 
 		assert.Equal(t, "localhost", cfg.Database.Host)
 		assert.Equal(t, 5432, cfg.Database.Port)

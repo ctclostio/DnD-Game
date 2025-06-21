@@ -451,19 +451,21 @@ func verifyMessageReceived(t *testing.T, conn *websocket.Conn, expectedContent, 
 
 // getUsernameFromUser extracts username from user interface
 func getUsernameFromUser(user interface{}) string {
-	// Try to access Username field using reflection or type assertion
-	if u, ok := user.(interface{ Username string }); ok {
+	// Try common user struct types
+	switch u := user.(type) {
+	case *models.User:
 		return u.Username
-	}
-	// If it has a Username field
-	type userStruct struct{ Username string }
-	if u, ok := user.(*userStruct); ok {
+	case models.User:
 		return u.Username
+	case map[string]interface{}:
+		if username, ok := u["username"].(string); ok {
+			return username
+		}
+		if username, ok := u["Username"].(string); ok {
+			return username
+		}
 	}
-	// Try models.User type
-	if u, ok := user.(*struct{ Username string }); ok {
-		return u.Username
-	}
+	// Fallback
 	return "unknown"
 }
 

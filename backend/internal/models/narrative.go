@@ -164,6 +164,7 @@ type NarrativeEvent struct {
 	Participants      []string               `json:"participants" db:"participants"`
 	Witnesses         []string               `json:"witnesses" db:"witnesses"`
 	ImmediateEffects  []string               `json:"immediate_effects" db:"immediate_effects"`
+	Tags              []string               `json:"tags" db:"tags"`
 	PotentialRipples  []ConsequenceEvent     `json:"potential_ripples"`
 	Perspectives      []PerspectiveNarrative `json:"perspectives"`
 	PlayerInvolvement map[string]string      `json:"player_involvement" db:"player_involvement"`
