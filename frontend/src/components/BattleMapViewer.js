@@ -30,55 +30,52 @@ const BattleMapViewer = ({ battleMap }) => {
         grid.push(row);
     }
 
-    const getCellContent = (x, y) => {
-        // Check terrain features
-        for (const feature of terrain_features) {
-            if (feature.position.x === x && feature.position.y === y) {
-                return { type: 'terrain', data: feature };
-            }
-        }
+    // Helper functions to reduce cognitive complexity
+    const findTerrainFeature = (x, y) => {
+        const feature = terrain_features.find(f => f.position.x === x && f.position.y === y);
+        return feature ? { type: 'terrain', data: feature } : null;
+    };
 
-        // Check obstacles
-        for (const obstacle of obstacle_positions) {
-            if (obstacle.position.x === x && obstacle.position.y === y) {
-                return { type: 'obstacle', data: obstacle };
-            }
-        }
+    const findObstacle = (x, y) => {
+        const obstacle = obstacle_positions.find(o => o.position.x === x && o.position.y === y);
+        return obstacle ? { type: 'obstacle', data: obstacle } : null;
+    };
 
-        // Check cover
-        for (const cover of cover_positions) {
-            if (cover.position.x === x && cover.position.y === y) {
-                return { type: 'cover', data: cover };
-            }
-        }
+    const findCover = (x, y) => {
+        const cover = cover_positions.find(c => c.position.x === x && c.position.y === y);
+        return cover ? { type: 'cover', data: cover } : null;
+    };
 
-        // Check hazards
+    const findHazard = (x, y) => {
         for (const hazard of hazard_zones) {
-            for (const cell of hazard.area || []) {
-                if (cell.x === x && cell.y === y) {
-                    return { type: 'hazard', data: hazard };
-                }
+            const inHazard = (hazard.area || []).some(cell => cell.x === x && cell.y === y);
+            if (inHazard) {
+                return { type: 'hazard', data: hazard };
             }
         }
-
-        // Check spawn points
-        if (spawn_points.party) {
-            for (const spawn of spawn_points.party) {
-                if (spawn.x === x && spawn.y === y) {
-                    return { type: 'spawn-party', data: spawn };
-                }
-            }
-        }
-
-        if (spawn_points.enemies) {
-            for (const spawn of spawn_points.enemies) {
-                if (spawn.x === x && spawn.y === y) {
-                    return { type: 'spawn-enemy', data: spawn };
-                }
-            }
-        }
-
         return null;
+    };
+
+    const findPartySpawn = (x, y) => {
+        if (!spawn_points.party) return null;
+        const spawn = spawn_points.party.find(s => s.x === x && s.y === y);
+        return spawn ? { type: 'spawn-party', data: spawn } : null;
+    };
+
+    const findEnemySpawn = (x, y) => {
+        if (!spawn_points.enemies) return null;
+        const spawn = spawn_points.enemies.find(s => s.x === x && s.y === y);
+        return spawn ? { type: 'spawn-enemy', data: spawn } : null;
+    };
+
+    const getCellContent = (x, y) => {
+        return findTerrainFeature(x, y) ||
+               findObstacle(x, y) ||
+               findCover(x, y) ||
+               findHazard(x, y) ||
+               findPartySpawn(x, y) ||
+               findEnemySpawn(x, y) ||
+               null;
     };
 
     const getCellClass = (content) => {

@@ -22,6 +22,7 @@ const (
 	testSessionID     = "sess-012"
 	testCharacterID   = "char-345"
 	testAPIUsersPath  = "/api/users"
+	testSelectPrefix  = "SELECT "
 )
 
 func TestDefaultConfig(t *testing.T) {
@@ -369,7 +370,7 @@ func TestLoggerV2_LogDatabaseQuery(t *testing.T) {
 		},
 		{
 			name:     "long query truncation",
-			query:    strings.Repeat("SELECT ", 50) + "* FROM users",
+			query:    strings.Repeat(testSelectPrefix, 50) + "* FROM users",
 			duration: 10 * time.Millisecond,
 			verify: func(t *testing.T, logEntry map[string]interface{}) {
 				query := logEntry["query"].(string)
@@ -547,8 +548,8 @@ func TestTruncateQuery(t *testing.T) {
 		},
 		{
 			name:     "long query",
-			input:    strings.Repeat("SELECT ", 50) + "* FROM users",
-			expected: strings.Repeat("SELECT ", 28) + "SELE...",
+			input:    strings.Repeat(testSelectPrefix, 50) + "* FROM users",
+			expected: strings.Repeat(testSelectPrefix, 28) + "SELE...",
 		},
 		{
 			name:     "query with multiple spaces",
@@ -575,14 +576,14 @@ func TestContextFunctions(t *testing.T) {
 	ctx := context.Background()
 
 	// Test adding values to context
-	ctx = ContextWithRequestID(ctx, "req-123")
+	ctx = ContextWithRequestID(ctx, testRequestID)
 	ctx = ContextWithUserID(ctx, "user-456")
 	ctx = ContextWithCorrelationID(ctx, "corr-789")
 	ctx = ContextWithSessionID(ctx, testSessionID)
 	ctx = ContextWithCharacterID(ctx, testCharacterID)
 
 	// Test retrieving values from context
-	assert.Equal(t, "req-123", GetRequestIDFromContext(ctx))
+	assert.Equal(t, testRequestID, GetRequestIDFromContext(ctx))
 	assert.Equal(t, "user-456", GetUserIDFromContext(ctx))
 	assert.Equal(t, "corr-789", ctx.Value(CorrelationIDKey))
 	assert.Equal(t, testSessionID, ctx.Value(SessionIDKey))

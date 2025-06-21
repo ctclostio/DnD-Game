@@ -16,7 +16,13 @@ export class EncounterBuilder {
             return;
         }
         
-        this.init();
+        // Don't call async operations in constructor
+        // Initialize must be called separately
+    }
+    
+    // Call this method after creating the instance
+    async initialize() {
+        await this.init();
     }
 
     async init() {

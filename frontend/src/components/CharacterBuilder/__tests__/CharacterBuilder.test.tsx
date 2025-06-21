@@ -51,6 +51,12 @@ const validateScoreDisplays = (scoreDisplays: HTMLElement[], expectedValue: stri
   });
 };
 
+// Helper function to create state wrapper for reducing nesting
+const createStateWrapper = (updateSpy: jest.Mock, setState: Function) => (newState: any) => {
+  updateSpy();
+  setState(newState);
+};
+
 const validateRolledScores = (scoreDisplays: HTMLElement[]) => {
   scoreDisplays.forEach(display => {
     const value = parseInt(display.textContent || '0');
@@ -633,10 +639,7 @@ describe.skip('CharacterBuilder', () => {
       // Mock form update handler
       jest.spyOn(React, 'useState').mockImplementation((initial) => {
         const [state, setState] = React.useState(initial);
-        return [state, (newState: any) => {
-          updateSpy();
-          setState(newState);
-        }];
+        return [state, createStateWrapper(updateSpy, setState)];
       });
 
       const nameInput = screen.getByLabelText('Character Name');

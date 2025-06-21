@@ -24,6 +24,30 @@ const CombatAutomation = ({ gameSessionId, characters, npcs, isDM }) => {
         useResources: true
     });
     const [combatResolution, setCombatResolution] = useState(null);
+
+    // Helper functions to reduce nesting
+    const updateEnemyName = (idx, value) => {
+        const newEnemies = [...quickCombatForm.enemyTypes];
+        newEnemies[idx].name = value;
+        setQuickCombatForm({ ...quickCombatForm, enemyTypes: newEnemies });
+    };
+
+    const updateEnemyCR = (idx, value) => {
+        const newEnemies = [...quickCombatForm.enemyTypes];
+        newEnemies[idx].cr = value;
+        setQuickCombatForm({ ...quickCombatForm, enemyTypes: newEnemies });
+    };
+
+    const updateEnemyCount = (idx, value) => {
+        const newEnemies = [...quickCombatForm.enemyTypes];
+        newEnemies[idx].count = parseInt(value) || 1;
+        setQuickCombatForm({ ...quickCombatForm, enemyTypes: newEnemies });
+    };
+
+    const removeEnemy = (idx) => {
+        const newEnemies = quickCombatForm.enemyTypes.filter((_, i) => i !== idx);
+        setQuickCombatForm({ ...quickCombatForm, enemyTypes: newEnemies });
+    };
     
     // Smart Initiative state
     const [initiativeList, setInitiativeList] = useState([]);
@@ -154,21 +178,13 @@ const CombatAutomation = ({ gameSessionId, characters, npcs, isDM }) => {
                                 type="text"
                                 placeholder="Enemy name"
                                 value={enemy.name}
-                                onChange={(e) => {
-                                    const newEnemies = [...quickCombatForm.enemyTypes];
-                                    newEnemies[idx].name = e.target.value;
-                                    setQuickCombatForm({ ...quickCombatForm, enemyTypes: newEnemies });
-                                }}
+                                onChange={(e) => updateEnemyName(idx, e.target.value)}
                             />
                             <input
                                 type="text"
                                 placeholder="CR"
                                 value={enemy.cr}
-                                onChange={(e) => {
-                                    const newEnemies = [...quickCombatForm.enemyTypes];
-                                    newEnemies[idx].cr = e.target.value;
-                                    setQuickCombatForm({ ...quickCombatForm, enemyTypes: newEnemies });
-                                }}
+                                onChange={(e) => updateEnemyCR(idx, e.target.value)}
                                 className="cr-input"
                             />
                             <input
@@ -176,19 +192,12 @@ const CombatAutomation = ({ gameSessionId, characters, npcs, isDM }) => {
                                 placeholder="Count"
                                 value={enemy.count}
                                 min="1"
-                                onChange={(e) => {
-                                    const newEnemies = [...quickCombatForm.enemyTypes];
-                                    newEnemies[idx].count = parseInt(e.target.value) || 1;
-                                    setQuickCombatForm({ ...quickCombatForm, enemyTypes: newEnemies });
-                                }}
+                                onChange={(e) => updateEnemyCount(idx, e.target.value)}
                                 className="count-input"
                             />
                             {quickCombatForm.enemyTypes.length > 1 && (
                                 <button
-                                    onClick={() => {
-                                        const newEnemies = quickCombatForm.enemyTypes.filter((_, i) => i !== idx);
-                                        setQuickCombatForm({ ...quickCombatForm, enemyTypes: newEnemies });
-                                    }}
+                                    onClick={() => removeEnemy(idx)}
                                     className="remove-btn"
                                 >
                                     ×

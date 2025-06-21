@@ -136,9 +136,15 @@ class App {
                 break;
             case 'combat':
                 this.currentView = new CombatView(mainContent, this.api);
+                // Initialize async operations
+                this.currentView.initialize();
                 break;
             case 'encounter-builder':
                 this.currentView = new EncounterBuilder(mainContent);
+                // Initialize async operations if user is DM
+                if (this.currentView.isDM) {
+                    this.currentView.initialize();
+                }
                 break;
             default:
                 mainContent.innerHTML = '<h2>View not found</h2>';

@@ -13,12 +13,13 @@ import (
 
 // Test constants
 const (
-	testMessage    = "test message"
-	testRequestID  = "request-123"
-	testUserID     = "user-456"
-	testTraceID    = "trace-789"
-	testHTTPMethod = "GET"
-	testHTTPPath   = "/api/test"
+	testMessage       = "test message"
+	testRequestID     = "request-123"
+	testUserID        = "user-456"
+	testTraceID       = "trace-789"
+	testHTTPMethod    = "GET"
+	testHTTPPath      = "/api/test"
+	testCorrelationID = "corr-456"
 )
 
 func TestNew(t *testing.T) {
@@ -481,9 +482,9 @@ func TestContextHelpers(t *testing.T) {
 	ctx := context.Background()
 
 	ctx = ContextWithRequestID(ctx, testRequestID)
-	ctx = ContextWithCorrelationID(ctx, "corr-456")
+	ctx = ContextWithCorrelationID(ctx, testCorrelationID)
 
 	assert.Equal(t, testRequestID, ctx.Value(RequestIDKey))
-	assert.Equal(t, "corr-456", ctx.Value(CorrelationIDKey))
-	assert.Equal(t, "corr-456", GetCorrelationIDFromContext(ctx))
+	assert.Equal(t, testCorrelationID, ctx.Value(CorrelationIDKey))
+	assert.Equal(t, testCorrelationID, GetCorrelationIDFromContext(ctx))
 }

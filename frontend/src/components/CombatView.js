@@ -14,7 +14,13 @@ export class CombatView {
         this.combatLog = [];
         this.myCharacters = [];
         
-        this.init();
+        // Don't call async operations in constructor
+        // Initialize must be called separately
+    }
+    
+    // Call this method after creating the instance
+    async initialize() {
+        await this.init();
     }
     
     async init() {
@@ -239,9 +245,94 @@ export class CombatView {
         `;
     }
     
+    // Helper methods to reduce complexity
+    renderLoadingState() {
+        this.container.innerHTML = '<div class="combat-view loading">Loading combat...</div>';
+    }
+    
+    renderActionButtons() {
+        if (this.selectedCombatant.hp > 0) {
+            return this.renderCombatActions() + this.renderOtherActions();
+        } else {
+            return this.renderDeathSaveAction();
+        }
+    }
+    
+    renderCombatActions() {
+        const targets = this.combat.combatants
+            .filter(c => c.id !== this.selectedCombatant.id && c.hp > 0)
+            .map(target => this.renderAttackButton(target))
+            .join('');
+            
+        return `
+            <div class="action-group">
+                <h4>Combat Actions</h4>
+                <div class="targets">${targets}</div>
+            </div>
+        `;
+    }
+    
+    renderAttackButton(target) {
+        const disabled = this.actionInProgress || this.selectedCombatant.actions <= 0;
+        return `
+            <button class="attack-button" data-target-id="${target.id}" ${disabled ? 'disabled' : ''}>
+                Attack ${target.name}
+            </button>
+        `;
+    }
+    
+    renderOtherActions() {
+        const disabled = this.actionInProgress || this.selectedCombatant.actions <= 0;
+        const moveDisabled = this.actionInProgress || this.selectedCombatant.movement <= 0;
+        
+        return `
+            <div class="action-group">
+                <h4>Other Actions</h4>
+                <button class="move-button" ${moveDisabled ? 'disabled' : ''}>
+                    Move (${this.selectedCombatant.movement} ft remaining)
+                </button>
+                <button class="dash-button" ${disabled ? 'disabled' : ''}>Dash</button>
+                <button class="dodge-button" ${disabled ? 'disabled' : ''}>Dodge</button>
+            </div>
+        `;
+    }
+    
+    renderDeathSaveAction() {
+        const disabled = this.actionInProgress || 
+                        this.selectedCombatant.deathSaves.isStable || 
+                        this.selectedCombatant.deathSaves.isDead;
+        
+        return `
+            <div class="action-group">
+                <h4>Death Save</h4>
+                <button class="death-save-button" ${disabled ? 'disabled' : ''}>
+                    Roll Death Save
+                </button>
+            </div>
+        `;
+    }
+    
+    renderActionsSection(isMyTurn, currentCombatant) {
+        if (isMyTurn && this.selectedCombatant && this.selectedCombatant.id === currentCombatant.id) {
+            return `
+                <div class="action-buttons">
+                    ${this.renderActionButtons()}
+                    <button class="end-turn-button" ${this.actionInProgress ? 'disabled' : ''}>
+                        End Turn
+                    </button>
+                </div>
+            `;
+        } else {
+            const message = currentCombatant ? 
+                `Waiting for ${currentCombatant.name}'s turn...` : 
+                'Waiting...';
+            return `<div class="waiting-message">${message}</div>`;
+        }
+    }
+    
     render() {
         if (!this.combat) {
-            this.container.innerHTML = '<div class="combat-view loading">Loading combat...</div>';
+            this.renderLoadingState();
             return;
         }
         
@@ -273,57 +364,7 @@ export class CombatView {
 
                     <div class="actions-section">
                         <h3>Actions</h3>
-                        ${isMyTurn && this.selectedCombatant && this.selectedCombatant.id === currentCombatant.id ? `
-                            <div class="action-buttons">
-                                ${this.selectedCombatant.hp > 0 ? `
-                                    <div class="action-group">
-                                        <h4>Combat Actions</h4>
-                                        <div class="targets">
-                                            ${this.combat.combatants
-                                                .filter(c => c.id !== this.selectedCombatant.id && c.hp > 0)
-                                                .map(target => `
-                                                    <button class="attack-button" data-target-id="${target.id}"
-                                                        ${this.actionInProgress || this.selectedCombatant.actions <= 0 ? 'disabled' : ''}>
-                                                        Attack ${target.name}
-                                                    </button>
-                                                `).join('')}
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="action-group">
-                                        <h4>Other Actions</h4>
-                                        <button class="move-button"
-                                            ${this.actionInProgress || this.selectedCombatant.movement <= 0 ? 'disabled' : ''}>
-                                            Move (${this.selectedCombatant.movement} ft remaining)
-                                        </button>
-                                        <button class="dash-button"
-                                            ${this.actionInProgress || this.selectedCombatant.actions <= 0 ? 'disabled' : ''}>
-                                            Dash
-                                        </button>
-                                        <button class="dodge-button"
-                                            ${this.actionInProgress || this.selectedCombatant.actions <= 0 ? 'disabled' : ''}>
-                                            Dodge
-                                        </button>
-                                    </div>
-                                ` : `
-                                    <div class="action-group">
-                                        <h4>Death Save</h4>
-                                        <button class="death-save-button"
-                                            ${this.actionInProgress || this.selectedCombatant.deathSaves.isStable || this.selectedCombatant.deathSaves.isDead ? 'disabled' : ''}>
-                                            Roll Death Save
-                                        </button>
-                                    </div>
-                                `}
-                                
-                                <button class="end-turn-button" ${this.actionInProgress ? 'disabled' : ''}>
-                                    End Turn
-                                </button>
-                            </div>
-                        ` : `
-                            <div class="waiting-message">
-                                ${currentCombatant ? `Waiting for ${currentCombatant.name}'s turn...` : 'Waiting...'}
-                            </div>
-                        `}
+                        ${this.renderActionsSection(isMyTurn, currentCombatant)}
                     </div>
 
                     <div class="combat-log-section">
