@@ -59,53 +59,82 @@ func (s *InventoryService) EquipItem(characterID, itemID string) error {
 		return err
 	}
 
-	var targetItem *models.InventoryItem
-	for _, inv := range inventory {
-		if inv.ItemID == itemID {
-			targetItem = inv
-			break
-		}
-	}
-
+	targetItem := s.findItemInInventory(inventory, itemID)
 	if targetItem == nil {
 		return fmt.Errorf("item not found in inventory")
 	}
 
+	// Handle armor equipping
 	if targetItem.Item.Type == models.ItemTypeArmor {
-		for _, inv := range inventory {
-			if inv.Equipped && inv.Item.Type == models.ItemTypeArmor && inv.ItemID != itemID {
-				if err := s.inventoryRepo.EquipItem(characterID, inv.ItemID, false); err != nil {
-					return err
-				}
-			}
+		if err := s.unequipExistingArmor(characterID, itemID, inventory); err != nil {
+			return err
 		}
 	}
 
+	// Handle weapon equipping
 	if targetItem.Item.Type == models.ItemTypeWeapon {
-		weaponSlots := 0
-		if targetItem.Item.Properties["two_handed"] == true {
-			weaponSlots = 2
-		} else {
-			weaponSlots = 1
-		}
-
-		currentSlots := 0
-		for _, inv := range inventory {
-			if inv.Equipped && inv.Item.Type == models.ItemTypeWeapon && inv.ItemID != itemID {
-				if inv.Item.Properties["two_handed"] == true {
-					currentSlots += 2
-				} else {
-					currentSlots++
-				}
-			}
-		}
-
-		if currentSlots+weaponSlots > 2 {
-			return fmt.Errorf("not enough hands to equip this weapon")
+		if err := s.validateWeaponSlots(targetItem, itemID, inventory); err != nil {
+			return err
 		}
 	}
 
 	return s.inventoryRepo.EquipItem(characterID, itemID, true)
+}
+
+// findItemInInventory searches for an item in the inventory
+func (s *InventoryService) findItemInInventory(inventory []*models.InventoryItem, itemID string) *models.InventoryItem {
+	for _, inv := range inventory {
+		if inv.ItemID == itemID {
+			return inv
+		}
+	}
+	return nil
+}
+
+// unequipExistingArmor unequips any currently equipped armor
+func (s *InventoryService) unequipExistingArmor(characterID, itemID string, inventory []*models.InventoryItem) error {
+	for _, inv := range inventory {
+		if inv.Equipped && inv.Item.Type == models.ItemTypeArmor && inv.ItemID != itemID {
+			if err := s.inventoryRepo.EquipItem(characterID, inv.ItemID, false); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// validateWeaponSlots checks if there are enough hand slots for the weapon
+func (s *InventoryService) validateWeaponSlots(targetItem *models.InventoryItem, itemID string, inventory []*models.InventoryItem) error {
+	weaponSlots := s.getWeaponSlots(targetItem)
+	currentSlots := s.countEquippedWeaponSlots(inventory, itemID)
+
+	if currentSlots+weaponSlots > 2 {
+		return fmt.Errorf("not enough hands to equip this weapon")
+	}
+	return nil
+}
+
+// getWeaponSlots returns the number of hand slots required for a weapon
+func (s *InventoryService) getWeaponSlots(item *models.InventoryItem) int {
+	if item.Item.Properties["two_handed"] == true {
+		return 2
+	}
+	return 1
+}
+
+// countEquippedWeaponSlots counts the number of hand slots used by equipped weapons
+func (s *InventoryService) countEquippedWeaponSlots(inventory []*models.InventoryItem, excludeItemID string) int {
+	currentSlots := 0
+	for _, inv := range inventory {
+		if inv.Equipped && inv.Item.Type == models.ItemTypeWeapon && inv.ItemID != excludeItemID {
+			if inv.Item.Properties["two_handed"] == true {
+				currentSlots += 2
+			} else {
+				currentSlots++
+			}
+		}
+	}
+	return currentSlots
 }
 
 func (s *InventoryService) UnequipItem(characterID, itemID string) error {

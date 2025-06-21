@@ -21,6 +21,9 @@ const (
 	systemPromptWorldBuilding = "You are a creative D&D world-building assistant."
 	systemPromptCultureGen = "You are a creative D&D world-building assistant specializing in unique cultural generation."
 	systemPromptLanguageGen = "You are a creative D&D world-building assistant specializing in language generation."
+	
+	// Format strings
+	festivalNameFormat = "Festival of %s"
 )
 
 // ProceduralCultureService generates unique cultures with AI
@@ -240,7 +243,26 @@ Return as JSON with keys: name, description, frequency, participants, significan
 
 // generateArtStyle creates artistic preferences
 func (pcs *ProceduralCultureService) generateArtStyle(ctx context.Context, cultureName string, foundation *CultureFoundation) models.CultureArtStyle {
-	prompt := fmt.Sprintf(`Design the art style for the %s culture:
+	prompt := pcs.buildArtStylePrompt(cultureName, foundation)
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
+
+	artStyle := models.CultureArtStyle{
+		Materials:  []string{"stone", "wood", "cloth", "metal"},
+		Techniques: make(map[string]string),
+		Influences: make(map[string]interface{}),
+	}
+
+	var artData map[string]interface{}
+	if err == nil && json.Unmarshal([]byte(response), &artData) == nil {
+		pcs.parseArtStyleData(artData, &artStyle)
+	}
+
+	return artStyle
+}
+
+// buildArtStylePrompt creates the prompt for art style generation
+func (pcs *ProceduralCultureService) buildArtStylePrompt(cultureName string, foundation *CultureFoundation) string {
+	return fmt.Sprintf(`Design the art style for the %s culture:
 Environment: %v
 Values: %v
 Worldview: %s
@@ -254,69 +276,118 @@ Create:
 
 Return as JSON with keys: mediums (array), motifs (array), colors (array of {color, meaning}), sacred_symbols (array of {name, description, meaning}), style_description`,
 		cultureName, foundation.Environment, foundation.Values, foundation.Worldview)
+}
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
+// parseArtStyleData parses the art style data from the LLM response
+func (pcs *ProceduralCultureService) parseArtStyleData(artData map[string]interface{}, artStyle *models.CultureArtStyle) {
+	pcs.parseArtMediums(artData, artStyle)
+	pcs.parseArtMotifs(artData, artStyle)
+	pcs.parseColorPalette(artData, artStyle)
+	pcs.parseSacredSymbols(artData, artStyle)
+	pcs.parseStyleDescription(artData, artStyle)
+}
 
-	var artData map[string]interface{}
-	artStyle := models.CultureArtStyle{
-		Materials:  []string{"stone", "wood", "cloth", "metal"},
-		Techniques: make(map[string]string),
-		Influences: make(map[string]interface{}),
+// parseArtMediums parses art mediums from the data
+func (pcs *ProceduralCultureService) parseArtMediums(artData map[string]interface{}, artStyle *models.CultureArtStyle) {
+	if mediums, ok := artData["mediums"].([]interface{}); ok {
+		for _, m := range mediums {
+			if medium, ok := m.(string); ok {
+				artStyle.PrimaryMediums = append(artStyle.PrimaryMediums, medium)
+			}
+		}
 	}
+}
 
-	if err == nil && json.Unmarshal([]byte(response), &artData) == nil {
-		// Parse mediums
-		if mediums, ok := artData["mediums"].([]interface{}); ok {
-			for _, m := range mediums {
-				artStyle.PrimaryMediums = append(artStyle.PrimaryMediums, m.(string))
+// parseArtMotifs parses common motifs from the data
+func (pcs *ProceduralCultureService) parseArtMotifs(artData map[string]interface{}, artStyle *models.CultureArtStyle) {
+	if motifs, ok := artData["motifs"].([]interface{}); ok {
+		for _, m := range motifs {
+			if motif, ok := m.(string); ok {
+				artStyle.CommonMotifs = append(artStyle.CommonMotifs, motif)
 			}
 		}
+	}
+}
 
-		// Parse motifs
-		if motifs, ok := artData["motifs"].([]interface{}); ok {
-			for _, m := range motifs {
-				artStyle.CommonMotifs = append(artStyle.CommonMotifs, m.(string))
-			}
-		}
-
-		// Parse colors
-		if colors, ok := artData["colors"].([]interface{}); ok {
-			for _, c := range colors {
-				if colorMap, ok := c.(map[string]interface{}); ok {
-					artStyle.ColorPalette = append(artStyle.ColorPalette, colorMap["color"].(string))
+// parseColorPalette parses color palette from the data
+func (pcs *ProceduralCultureService) parseColorPalette(artData map[string]interface{}, artStyle *models.CultureArtStyle) {
+	if colors, ok := artData["colors"].([]interface{}); ok {
+		for _, c := range colors {
+			if colorMap, ok := c.(map[string]interface{}); ok {
+				if color, ok := colorMap["color"].(string); ok {
+					artStyle.ColorPalette = append(artStyle.ColorPalette, color)
 				}
 			}
 		}
+	}
+}
 
-		// Parse sacred symbols
-		if symbols, ok := artData["sacred_symbols"].([]interface{}); ok {
-			for _, s := range symbols {
-				if symbolMap, ok := s.(map[string]interface{}); ok {
-					artStyle.SacredSymbols = append(artStyle.SacredSymbols, models.ArtSymbol{
-						Name:        symbolMap["name"].(string),
-						Description: symbolMap["description"].(string),
-						Meaning:     symbolMap["meaning"].(string),
-						Usage:       "religious and ceremonial",
-					})
-				}
+// parseSacredSymbols parses sacred symbols from the data
+func (pcs *ProceduralCultureService) parseSacredSymbols(artData map[string]interface{}, artStyle *models.CultureArtStyle) {
+	if symbols, ok := artData["sacred_symbols"].([]interface{}); ok {
+		for _, s := range symbols {
+			if symbolMap, ok := s.(map[string]interface{}); ok {
+				symbol := pcs.createArtSymbol(symbolMap)
+				artStyle.SacredSymbols = append(artStyle.SacredSymbols, symbol)
 			}
 		}
-
-		// Style description
-		if desc, ok := artData["style_description"].(string); ok {
-			artStyle.StyleDescription = desc
-		}
 	}
+}
 
-	return artStyle
+// createArtSymbol creates an art symbol from map data
+func (pcs *ProceduralCultureService) createArtSymbol(symbolMap map[string]interface{}) models.ArtSymbol {
+	symbol := models.ArtSymbol{
+		Usage: "religious and ceremonial",
+	}
+	
+	if name, ok := symbolMap["name"].(string); ok {
+		symbol.Name = name
+	}
+	if desc, ok := symbolMap["description"].(string); ok {
+		symbol.Description = desc
+	}
+	if meaning, ok := symbolMap["meaning"].(string); ok {
+		symbol.Meaning = meaning
+	}
+	
+	return symbol
+}
+
+// parseStyleDescription parses style description from the data
+func (pcs *ProceduralCultureService) parseStyleDescription(artData map[string]interface{}, artStyle *models.CultureArtStyle) {
+	if desc, ok := artData["style_description"].(string); ok {
+		artStyle.StyleDescription = desc
+	}
 }
 
 // generateBeliefSystem creates religious/philosophical beliefs
 func (pcs *ProceduralCultureService) generateBeliefSystem(ctx context.Context, cultureName string, foundation *CultureFoundation) models.CultureBeliefSystem {
-	beliefTypes := []string{"polytheistic", "monotheistic", "animistic", "philosophical"}
-	selectedType := beliefTypes[rand.Intn(len(beliefTypes))]
+	selectedType := pcs.selectBeliefType()
+	prompt := pcs.buildBeliefSystemPrompt(selectedType, cultureName, foundation)
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 
-	prompt := fmt.Sprintf(`Create a %s belief system for the %s culture:
+	beliefSystem := pcs.createBaseBeliefSystem(selectedType, cultureName)
+
+	var beliefData map[string]interface{}
+	if err == nil && json.Unmarshal([]byte(response), &beliefData) == nil {
+		pcs.parseBeliefSystemData(beliefData, &beliefSystem)
+	}
+
+	// Generate holy days
+	beliefSystem.HolyDays = pcs.generateHolyDays(cultureName, beliefSystem.Deities)
+
+	return beliefSystem
+}
+
+// selectBeliefType randomly selects a belief system type
+func (pcs *ProceduralCultureService) selectBeliefType() string {
+	beliefTypes := []string{"polytheistic", "monotheistic", "animistic", "philosophical"}
+	return beliefTypes[rand.Intn(len(beliefTypes))]
+}
+
+// buildBeliefSystemPrompt creates the prompt for belief system generation
+func (pcs *ProceduralCultureService) buildBeliefSystemPrompt(selectedType, cultureName string, foundation *CultureFoundation) string {
+	return fmt.Sprintf(`Create a %s belief system for the %s culture:
 Origin Story: %s
 Cultural Heroes: %v
 Values: %v
@@ -332,84 +403,135 @@ Generate:
 Return as JSON with keys: name, deities (array of {name, title, domains, personality}), core_beliefs (array), practices (array of {name, description, frequency}), afterlife, creation_myth`,
 		selectedType, cultureName, foundation.OriginStory,
 		foundation.CulturalHeroes, foundation.Values)
+}
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
-
-	var beliefData map[string]interface{}
-	beliefSystem := models.CultureBeliefSystem{
+// createBaseBeliefSystem creates the base belief system structure
+func (pcs *ProceduralCultureService) createBaseBeliefSystem(selectedType, cultureName string) models.CultureBeliefSystem {
+	return models.CultureBeliefSystem{
 		Type:        selectedType,
 		MoralCode:   make(map[string]string),
 		SacredTexts: []string{cultureName + " Codex"},
 		ClergyRanks: pcs.generateClergyRanks(selectedType),
 		Miracles:    make(map[string]interface{}),
 	}
+}
 
-	if err == nil && json.Unmarshal([]byte(response), &beliefData) == nil {
-		// Parse name
-		if name, ok := beliefData["name"].(string); ok {
-			beliefSystem.Name = name
-		}
+// parseBeliefSystemData parses all belief system data from LLM response
+func (pcs *ProceduralCultureService) parseBeliefSystemData(beliefData map[string]interface{}, beliefSystem *models.CultureBeliefSystem) {
+	pcs.parseBeliefName(beliefData, beliefSystem)
+	pcs.parseDeities(beliefData, beliefSystem)
+	pcs.parseCoreBeliefs(beliefData, beliefSystem)
+	pcs.parseAfterlifeAndMyth(beliefData, beliefSystem)
+	pcs.parsePractices(beliefData, beliefSystem)
+}
 
-		// Parse deities
-		if deities, ok := beliefData["deities"].([]interface{}); ok {
-			for _, d := range deities {
-				if deityMap, ok := d.(map[string]interface{}); ok {
-					domains := []string{}
-					if domainList, ok := deityMap["domains"].([]interface{}); ok {
-						for _, domain := range domainList {
-							domains = append(domains, domain.(string))
-						}
-					}
+// parseBeliefName parses the belief system name
+func (pcs *ProceduralCultureService) parseBeliefName(beliefData map[string]interface{}, beliefSystem *models.CultureBeliefSystem) {
+	if name, ok := beliefData["name"].(string); ok {
+		beliefSystem.Name = name
+	}
+}
 
-					beliefSystem.Deities = append(beliefSystem.Deities, models.CultureDeity{
-						Name:        deityMap["name"].(string),
-						Title:       deityMap["title"].(string),
-						Domain:      domains,
-						Personality: deityMap["personality"].(string),
-						Symbol:      pcs.generateDeitySymbol(),
-						Alignment:   pcs.generateAlignment(),
-					})
-				}
-			}
-		}
-
-		// Parse beliefs and other elements
-		if beliefs, ok := beliefData["core_beliefs"].([]interface{}); ok {
-			for _, b := range beliefs {
-				beliefSystem.CoreBeliefs = append(beliefSystem.CoreBeliefs, b.(string))
-			}
-		}
-
-		if afterlife, ok := beliefData["afterlife"].(string); ok {
-			beliefSystem.Afterlife = afterlife
-		}
-
-		if creation, ok := beliefData["creation_myth"].(string); ok {
-			beliefSystem.CreationMyth = creation
-		}
-
-		// Parse practices
-		if practices, ok := beliefData["practices"].([]interface{}); ok {
-			for _, p := range practices {
-				if practiceMap, ok := p.(map[string]interface{}); ok {
-					beliefSystem.Practices = append(beliefSystem.Practices, models.ReligiousPractice{
-						Name:        practiceMap["name"].(string),
-						Type:        "ritual",
-						Frequency:   practiceMap["frequency"].(string),
-						Description: practiceMap["description"].(string),
-						Materials:   []string{},
-						Duration:    "varies",
-						Effects:     make(map[string]interface{}),
-					})
-				}
+// parseDeities parses deity information
+func (pcs *ProceduralCultureService) parseDeities(beliefData map[string]interface{}, beliefSystem *models.CultureBeliefSystem) {
+	if deities, ok := beliefData["deities"].([]interface{}); ok {
+		for _, d := range deities {
+			if deityMap, ok := d.(map[string]interface{}); ok {
+				deity := pcs.createDeity(deityMap)
+				beliefSystem.Deities = append(beliefSystem.Deities, deity)
 			}
 		}
 	}
+}
 
-	// Generate holy days
-	beliefSystem.HolyDays = pcs.generateHolyDays(cultureName, beliefSystem.Deities)
+// createDeity creates a deity from map data
+func (pcs *ProceduralCultureService) createDeity(deityMap map[string]interface{}) models.CultureDeity {
+	deity := models.CultureDeity{
+		Symbol:    pcs.generateDeitySymbol(),
+		Alignment: pcs.generateAlignment(),
+	}
+	
+	if name, ok := deityMap["name"].(string); ok {
+		deity.Name = name
+	}
+	if title, ok := deityMap["title"].(string); ok {
+		deity.Title = title
+	}
+	if personality, ok := deityMap["personality"].(string); ok {
+		deity.Personality = personality
+	}
+	
+	deity.Domain = pcs.parseDeityDomains(deityMap)
+	
+	return deity
+}
 
-	return beliefSystem
+// parseDeityDomains parses domains for a deity
+func (pcs *ProceduralCultureService) parseDeityDomains(deityMap map[string]interface{}) []string {
+	domains := []string{}
+	if domainList, ok := deityMap["domains"].([]interface{}); ok {
+		for _, domain := range domainList {
+			if d, ok := domain.(string); ok {
+				domains = append(domains, d)
+			}
+		}
+	}
+	return domains
+}
+
+// parseCoreBeliefs parses core beliefs
+func (pcs *ProceduralCultureService) parseCoreBeliefs(beliefData map[string]interface{}, beliefSystem *models.CultureBeliefSystem) {
+	if beliefs, ok := beliefData["core_beliefs"].([]interface{}); ok {
+		for _, b := range beliefs {
+			if belief, ok := b.(string); ok {
+				beliefSystem.CoreBeliefs = append(beliefSystem.CoreBeliefs, belief)
+			}
+		}
+	}
+}
+
+// parseAfterlifeAndMyth parses afterlife and creation myth
+func (pcs *ProceduralCultureService) parseAfterlifeAndMyth(beliefData map[string]interface{}, beliefSystem *models.CultureBeliefSystem) {
+	if afterlife, ok := beliefData["afterlife"].(string); ok {
+		beliefSystem.Afterlife = afterlife
+	}
+	if creation, ok := beliefData["creation_myth"].(string); ok {
+		beliefSystem.CreationMyth = creation
+	}
+}
+
+// parsePractices parses religious practices
+func (pcs *ProceduralCultureService) parsePractices(beliefData map[string]interface{}, beliefSystem *models.CultureBeliefSystem) {
+	if practices, ok := beliefData["practices"].([]interface{}); ok {
+		for _, p := range practices {
+			if practiceMap, ok := p.(map[string]interface{}); ok {
+				practice := pcs.createPractice(practiceMap)
+				beliefSystem.Practices = append(beliefSystem.Practices, practice)
+			}
+		}
+	}
+}
+
+// createPractice creates a religious practice from map data
+func (pcs *ProceduralCultureService) createPractice(practiceMap map[string]interface{}) models.ReligiousPractice {
+	practice := models.ReligiousPractice{
+		Type:      "ritual",
+		Materials: []string{},
+		Duration:  "varies",
+		Effects:   make(map[string]interface{}),
+	}
+	
+	if name, ok := practiceMap["name"].(string); ok {
+		practice.Name = name
+	}
+	if freq, ok := practiceMap["frequency"].(string); ok {
+		practice.Frequency = freq
+	}
+	if desc, ok := practiceMap["description"].(string); ok {
+		practice.Description = desc
+	}
+	
+	return practice
 }
 
 // generateGreetings creates cultural greetings
@@ -445,10 +567,29 @@ Return as JSON map of context to greeting phrase.`,
 
 // generateArchitecture creates building styles
 func (pcs *ProceduralCultureService) generateArchitecture(ctx context.Context, cultureName string, foundation *CultureFoundation) models.ArchitectureStyle {
-	// Determine materials based on environment
 	materials := pcs.getMaterialsForEnvironment(foundation.Environment)
+	prompt := pcs.buildArchitecturePrompt(cultureName, foundation, materials)
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
 
-	prompt := fmt.Sprintf(`Design architecture for the %s culture:
+	architecture := models.ArchitectureStyle{
+		Materials:     materials,
+		BuildingTypes: make(map[string]models.BuildingStyle),
+	}
+
+	var archData map[string]interface{}
+	if err == nil && json.Unmarshal([]byte(response), &archData) == nil {
+		pcs.parseArchitectureData(archData, &architecture)
+	}
+
+	// Generate building types
+	architecture.BuildingTypes = pcs.generateBuildingTypes(cultureName, architecture)
+
+	return architecture
+}
+
+// buildArchitecturePrompt creates the prompt for architecture generation
+func (pcs *ProceduralCultureService) buildArchitecturePrompt(cultureName string, foundation *CultureFoundation, materials []string) string {
+	return fmt.Sprintf(`Design architecture for the %s culture:
 Environment: %s
 Available Materials: %v
 Values: %v
@@ -462,47 +603,62 @@ Create:
 
 Return as JSON with keys: style_name, features (array), defenses (array), decorations (array), layout_description`,
 		cultureName, foundation.Environment, materials, foundation.Values)
+}
 
-	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
+// parseArchitectureData parses architecture data from LLM response
+func (pcs *ProceduralCultureService) parseArchitectureData(archData map[string]interface{}, architecture *models.ArchitectureStyle) {
+	pcs.parseArchitectureName(archData, architecture)
+	pcs.parseArchitectureFeatures(archData, architecture)
+	pcs.parseArchitectureDefenses(archData, architecture)
+	pcs.parseArchitectureDecorations(archData, architecture)
+	pcs.parseArchitectureLayout(archData, architecture)
+}
 
-	architecture := models.ArchitectureStyle{
-		Materials:     materials,
-		BuildingTypes: make(map[string]models.BuildingStyle),
+// parseArchitectureName parses architecture style name
+func (pcs *ProceduralCultureService) parseArchitectureName(archData map[string]interface{}, architecture *models.ArchitectureStyle) {
+	if name, ok := archData["style_name"].(string); ok {
+		architecture.Name = name
 	}
+}
 
-	var archData map[string]interface{}
-	if err == nil && json.Unmarshal([]byte(response), &archData) == nil {
-		if name, ok := archData["style_name"].(string); ok {
-			architecture.Name = name
-		}
-
-		if features, ok := archData["features"].([]interface{}); ok {
-			for _, f := range features {
-				architecture.CommonFeatures = append(architecture.CommonFeatures, f.(string))
+// parseArchitectureFeatures parses common features
+func (pcs *ProceduralCultureService) parseArchitectureFeatures(archData map[string]interface{}, architecture *models.ArchitectureStyle) {
+	if features, ok := archData["features"].([]interface{}); ok {
+		for _, f := range features {
+			if feature, ok := f.(string); ok {
+				architecture.CommonFeatures = append(architecture.CommonFeatures, feature)
 			}
-		}
-
-		if defenses, ok := archData["defenses"].([]interface{}); ok {
-			for _, d := range defenses {
-				architecture.DefensiveElements = append(architecture.DefensiveElements, d.(string))
-			}
-		}
-
-		if decorations, ok := archData["decorations"].([]interface{}); ok {
-			for _, d := range decorations {
-				architecture.Decorations = append(architecture.Decorations, d.(string))
-			}
-		}
-
-		if layout, ok := archData["layout_description"].(string); ok {
-			architecture.TypicalLayout = layout
 		}
 	}
+}
 
-	// Generate building types
-	architecture.BuildingTypes = pcs.generateBuildingTypes(cultureName, architecture)
+// parseArchitectureDefenses parses defensive elements
+func (pcs *ProceduralCultureService) parseArchitectureDefenses(archData map[string]interface{}, architecture *models.ArchitectureStyle) {
+	if defenses, ok := archData["defenses"].([]interface{}); ok {
+		for _, d := range defenses {
+			if defense, ok := d.(string); ok {
+				architecture.DefensiveElements = append(architecture.DefensiveElements, defense)
+			}
+		}
+	}
+}
 
-	return architecture
+// parseArchitectureDecorations parses decorative elements
+func (pcs *ProceduralCultureService) parseArchitectureDecorations(archData map[string]interface{}, architecture *models.ArchitectureStyle) {
+	if decorations, ok := archData["decorations"].([]interface{}); ok {
+		for _, d := range decorations {
+			if decoration, ok := d.(string); ok {
+				architecture.Decorations = append(architecture.Decorations, decoration)
+			}
+		}
+	}
+}
+
+// parseArchitectureLayout parses layout description
+func (pcs *ProceduralCultureService) parseArchitectureLayout(archData map[string]interface{}, architecture *models.ArchitectureStyle) {
+	if layout, ok := archData["layout_description"].(string); ok {
+		architecture.TypicalLayout = layout
+	}
 }
 
 // generateCuisine creates food culture
@@ -511,9 +667,34 @@ func (pcs *ProceduralCultureService) generateCuisine(ctx context.Context, cultur
 	cuisine := []models.CuisineElement{}
 
 	for _, cuisineType := range cuisineTypes {
-		ingredients := pcs.getIngredientsForEnvironment(foundation.Environment)
+		dish := pcs.generateDish(ctx, cultureName, foundation, cuisineType)
+		if dish != nil {
+			cuisine = append(cuisine, *dish)
+		}
+	}
 
-		prompt := fmt.Sprintf(`Create a %s dish for the %s culture:
+	return cuisine
+}
+
+// generateDish generates a single dish of a specific type
+func (pcs *ProceduralCultureService) generateDish(ctx context.Context, cultureName string, foundation *CultureFoundation, cuisineType string) *models.CuisineElement {
+	ingredients := pcs.getIngredientsForEnvironment(foundation.Environment)
+	prompt := pcs.buildCuisinePrompt(cuisineType, cultureName, ingredients, foundation.Taboos)
+	response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
+
+	var dishData map[string]interface{}
+	if err == nil && json.Unmarshal([]byte(response), &dishData) == nil {
+		dish := &models.CuisineElement{Type: cuisineType}
+		pcs.parseDishData(dishData, dish)
+		return dish
+	}
+
+	return nil
+}
+
+// buildCuisinePrompt creates the prompt for cuisine generation
+func (pcs *ProceduralCultureService) buildCuisinePrompt(cuisineType, cultureName string, ingredients []string, taboos []string) string {
+	return fmt.Sprintf(`Create a %s dish for the %s culture:
 Available ingredients: %v
 Taboos: %v
 
@@ -525,43 +706,34 @@ Generate:
 5. Cultural significance
 
 Return as JSON with keys: name, ingredients (array), preparation, occasion, significance`,
-			cuisineType, cultureName, ingredients, foundation.Taboos)
+		cuisineType, cultureName, ingredients, taboos)
+}
 
-		response, err := pcs.llm.GenerateContent(ctx, prompt, systemPromptWorldBuilding)
+// parseDishData parses dish data from LLM response
+func (pcs *ProceduralCultureService) parseDishData(dishData map[string]interface{}, dish *models.CuisineElement) {
+	if name, ok := dishData["name"].(string); ok {
+		dish.Name = name
+	}
 
-		var dishData map[string]interface{}
-		if err == nil && json.Unmarshal([]byte(response), &dishData) == nil {
-			dish := models.CuisineElement{
-				Type: cuisineType,
+	if ingredients, ok := dishData["ingredients"].([]interface{}); ok {
+		for _, i := range ingredients {
+			if ingredient, ok := i.(string); ok {
+				dish.Ingredients = append(dish.Ingredients, ingredient)
 			}
-
-			if name, ok := dishData["name"].(string); ok {
-				dish.Name = name
-			}
-
-			if ingredients, ok := dishData["ingredients"].([]interface{}); ok {
-				for _, i := range ingredients {
-					dish.Ingredients = append(dish.Ingredients, i.(string))
-				}
-			}
-
-			if prep, ok := dishData["preparation"].(string); ok {
-				dish.Preparation = prep
-			}
-
-			if occasion, ok := dishData["occasion"].(string); ok {
-				dish.Occasion = occasion
-			}
-
-			if significance, ok := dishData["significance"].(string); ok {
-				dish.Significance = significance
-			}
-
-			cuisine = append(cuisine, dish)
 		}
 	}
 
-	return cuisine
+	if prep, ok := dishData["preparation"].(string); ok {
+		dish.Preparation = prep
+	}
+
+	if occasion, ok := dishData["occasion"].(string); ok {
+		dish.Occasion = occasion
+	}
+
+	if significance, ok := dishData["significance"].(string); ok {
+		dish.Significance = significance
+	}
 }
 
 // generateMusicStyle creates musical traditions
@@ -1037,7 +1209,7 @@ func (pcs *ProceduralCultureService) generateHolyDays(_ string, deities []models
 	// Seasonal celebrations
 	for i, season := range seasons {
 		holyDays = append(holyDays, models.HolyDay{
-			Name:         fmt.Sprintf("Festival of %s", season),
+			Name:         fmt.Sprintf(festivalNameFormat, season),
 			Date:         season,
 			Duration:     fmt.Sprintf("%d days", 1+rand.Intn(3)),
 			Celebration:  "Feasting, dancing, and offerings",
@@ -1046,7 +1218,7 @@ func (pcs *ProceduralCultureService) generateHolyDays(_ string, deities []models
 		})
 
 		if i < len(deities) {
-			holyDays[i].Name = fmt.Sprintf("Festival of %s", deities[i].Name)
+			holyDays[i].Name = fmt.Sprintf(festivalNameFormat, deities[i].Name)
 		}
 	}
 
@@ -1302,7 +1474,7 @@ func (pcs *ProceduralCultureService) modifyCustoms(culture *models.ProceduralCul
 	if response.Impact > 0.7 && action.Type == constants.CultureInfluence {
 		// Create new custom influenced by players
 		newCustom := models.CultureCustom{
-			Name:         fmt.Sprintf("Festival of %s", action.Target),
+			Name:         fmt.Sprintf(festivalNameFormat, action.Target),
 			Type:         "ceremonial",
 			Description:  "A new tradition inspired by outsider influence",
 			Frequency:    "annual",

@@ -41,9 +41,15 @@ const (
 	testPropTwoHanded   = "two_handed"
 	
 	// Error messages
-	testErrNotFound     = "not found"
-	testErrItemNotFound = "item not found"
-	testErrUpdateFailed = "update failed"
+	testErrNotFound         = "not found"
+	testErrItemNotFound     = "item not found"
+	testErrUpdateFailed     = "update failed"
+	testErrItemNotInInv     = testErrItemNotInInv
+	testErrInsufficientFunds = testErrInsufficientFunds
+	testErrRepository       = testErrRepository
+	
+	// Type strings
+	testTypeModelsItem = testTypeModelsItem
 )
 
 // runInventoryServiceTest is a helper to reduce duplication in table-driven tests
@@ -322,7 +328,7 @@ func TestInventoryService_EquipItem(t *testing.T) {
 			expectedError: "not enough hands to equip this weapon",
 		},
 		{
-			name:        "item not in inventory",
+			name:        testErrItemNotInInv,
 			characterID: constants.TestCharacterID,
 			itemID:      testIDNonexistent,
 			setupMock: func(m *mocks.MockInventoryRepository) {
@@ -399,7 +405,7 @@ func TestInventoryService_AttuneToItem(t *testing.T) {
 			expectedError: "already attuned to this item",
 		},
 		{
-			name:        "item not in inventory",
+			name:        testErrItemNotInInv,
 			characterID: constants.TestCharacterID,
 			itemID:      testIDNonexistent,
 			setupMock: func(m *mocks.MockInventoryRepository) {
@@ -489,7 +495,7 @@ func TestInventoryService_UpdateCharacterCurrency(t *testing.T) {
 			},
 		},
 		{
-			name:        "insufficient funds",
+			name:        testErrInsufficientFunds,
 			characterID: constants.TestCharacterID,
 			gold:        -10,
 			setupMock: func(m *mocks.MockInventoryRepository) {
@@ -499,7 +505,7 @@ func TestInventoryService_UpdateCharacterCurrency(t *testing.T) {
 				}
 				m.On(testMethodGetCharacterCurrency, constants.TestCharacterID).Return(existingCurrency, nil)
 			},
-			expectedError: "insufficient funds",
+			expectedError: testErrInsufficientFunds,
 		},
 		{
 			name:        "get currency error",
@@ -610,7 +616,7 @@ func TestInventoryService_PurchaseItem(t *testing.T) {
 			expectedError: testErrItemNotFound,
 		},
 		{
-			name:        "insufficient funds",
+			name:        testErrInsufficientFunds,
 			characterID: constants.TestCharacterID,
 			itemID:      testItemExpensive,
 			quantity:    1,
@@ -626,7 +632,7 @@ func TestInventoryService_PurchaseItem(t *testing.T) {
 				}
 				m.On(testMethodGetCharacterCurrency, constants.TestCharacterID).Return(currency, nil)
 			},
-			expectedError: "insufficient funds",
+			expectedError: testErrInsufficientFunds,
 		},
 		{
 			name:        "currency update error",
@@ -731,9 +737,9 @@ func TestInventoryService_SellItem(t *testing.T) {
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				item := mocks.CreateTestItem(constants.TestItemID, "Item", models.ItemTypeOther, 100, 1.0)
 				m.On("GetItem", constants.TestItemID).Return(item, nil)
-				m.On("RemoveItemFromInventory", constants.TestCharacterID, constants.TestItemID, 1).Return(errors.New("item not in inventory"))
+				m.On("RemoveItemFromInventory", constants.TestCharacterID, constants.TestItemID, 1).Return(errors.New(testErrItemNotInInv))
 			},
-			expectedError: "item not in inventory",
+			expectedError: testErrItemNotInInv,
 		},
 		{
 			name:        "currency retrieval error",
@@ -827,7 +833,7 @@ func TestInventoryService_GetCharacterWeight(t *testing.T) {
 			},
 		},
 		{
-			name:        "repository error",
+			name:        testErrRepository,
 			characterID: "char-789",
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				m.On("GetCharacterWeight", "char-789").Return(nil, errors.New(constants.TestDatabaseError))
@@ -879,7 +885,7 @@ func TestInventoryService_CreateItem(t *testing.T) {
 				RequiresAttunement: false,
 			},
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("CreateItem", mock.AnythingOfType("*models.Item")).Return(nil)
+				m.On("CreateItem", mock.AnythingOfType(testTypeModelsItem)).Return(nil)
 			},
 		},
 		{
@@ -894,16 +900,16 @@ func TestInventoryService_CreateItem(t *testing.T) {
 				AttunementRequirements: "by a spellcaster",
 			},
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("CreateItem", mock.AnythingOfType("*models.Item")).Return(nil)
+				m.On("CreateItem", mock.AnythingOfType(testTypeModelsItem)).Return(nil)
 			},
 		},
 		{
-			name: "repository error",
+			name: testErrRepository,
 			item: &models.Item{
 				Name: "Failed Item",
 			},
 			setupMock: func(m *mocks.MockInventoryRepository) {
-				m.On("CreateItem", mock.AnythingOfType("*models.Item")).Return(errors.New(constants.TestDatabaseError))
+				m.On("CreateItem", mock.AnythingOfType(testTypeModelsItem)).Return(errors.New(constants.TestDatabaseError))
 			},
 			expectedError: constants.TestDatabaseError,
 		},
@@ -965,7 +971,7 @@ func TestInventoryService_GetItemsByType(t *testing.T) {
 			expected: []*models.Item{},
 		},
 		{
-			name:     "repository error",
+			name:     testErrRepository,
 			itemType: models.ItemTypeMagic,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				m.On("GetItemsByType", models.ItemTypeMagic).Return(nil, errors.New(constants.TestDatabaseError))

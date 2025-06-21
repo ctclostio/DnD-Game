@@ -10,6 +10,20 @@ import (
 	"time"
 )
 
+// Error message constants
+const (
+	errMsgFailedMarshal = "failed to marshal request: %w"
+	errMsgFailedCreate  = "failed to create request: %w"
+	errMsgFailedSend    = "failed to send request: %w"
+	errMsgFailedDecode  = "failed to decode response: %w"
+)
+
+// HTTP constants
+const (
+	contentTypeJSON   = "application/json"
+	headerContentType = "Content-Type"
+)
+
 // LLMProvider defines the interface for Large Language Model providers
 type LLMProvider interface {
 	GenerateCompletion(ctx context.Context, prompt, systemPrompt string) (string, error)
@@ -71,20 +85,20 @@ func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, prompt, systemP
 
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %w", err)
+		return "", fmt.Errorf(errMsgFailedMarshal, err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
+		return "", fmt.Errorf(errMsgFailedCreate, err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(headerContentType, contentTypeJSON)
 	req.Header.Set("Authorization", "Bearer "+p.apiKey)
 
 	resp, err := p.httpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to send request: %w", err)
+		return "", fmt.Errorf(errMsgFailedSend, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -102,7 +116,7 @@ func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, prompt, systemP
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return "", fmt.Errorf("failed to decode response: %w", err)
+		return "", fmt.Errorf(errMsgFailedDecode, err)
 	}
 
 	if len(response.Choices) == 0 {
@@ -149,21 +163,21 @@ func (p *AnthropicProvider) GenerateCompletion(ctx context.Context, prompt, syst
 
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %w", err)
+		return "", fmt.Errorf(errMsgFailedMarshal, err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.anthropic.com/v1/messages", bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
+		return "", fmt.Errorf(errMsgFailedCreate, err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(headerContentType, contentTypeJSON)
 	req.Header.Set("x-api-key", p.apiKey)
 	req.Header.Set("anthropic-version", "2023-06-01")
 
 	resp, err := p.httpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to send request: %w", err)
+		return "", fmt.Errorf(errMsgFailedSend, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -179,7 +193,7 @@ func (p *AnthropicProvider) GenerateCompletion(ctx context.Context, prompt, syst
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return "", fmt.Errorf("failed to decode response: %w", err)
+		return "", fmt.Errorf(errMsgFailedDecode, err)
 	}
 
 	if len(response.Content) == 0 {
@@ -226,22 +240,22 @@ func (p *OpenRouterProvider) GenerateCompletion(ctx context.Context, prompt, sys
 
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %w", err)
+		return "", fmt.Errorf(errMsgFailedMarshal, err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://openrouter.ai/api/v1/chat/completions", bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
+		return "", fmt.Errorf(errMsgFailedCreate, err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(headerContentType, contentTypeJSON)
 	req.Header.Set("Authorization", "Bearer "+p.apiKey)
 	req.Header.Set("HTTP-Referer", "https://github.com/ctclostio/DnD-Game")
 	req.Header.Set("X-Title", "D&D Custom Race Generator")
 
 	resp, err := p.httpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to send request: %w", err)
+		return "", fmt.Errorf(errMsgFailedSend, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -259,7 +273,7 @@ func (p *OpenRouterProvider) GenerateCompletion(ctx context.Context, prompt, sys
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return "", fmt.Errorf("failed to decode response: %w", err)
+		return "", fmt.Errorf(errMsgFailedDecode, err)
 	}
 
 	if len(response.Choices) == 0 {

@@ -657,53 +657,73 @@ func verifyDataIntegrity(t *testing.T, service *GameService, sessionIDs []string
 
 func TestGenerateID(t *testing.T) {
 	t.Run("generates unique IDs", func(t *testing.T) {
-		ids := make(map[string]bool)
-
-		for i := 0; i < 1000; i++ {
-			id := generateID()
-
-			// Verify format (UUID)
-			require.Len(t, id, 36)
-			require.Contains(t, id, "-")
-
-			// Verify uniqueness
-			if ids[id] {
-				t.Fatal("Duplicate ID generated")
-			}
-			ids[id] = true
-		}
+		testSequentialIDGeneration(t)
 	})
 
 	t.Run("concurrent ID generation", func(t *testing.T) {
-		const numGoroutines = 100
-		const idsPerGoroutine = 100
+		testConcurrentIDGeneration(t)
+	})
+}
 
-		idsChan := make(chan string, numGoroutines*idsPerGoroutine)
+// testSequentialIDGeneration tests sequential ID generation
+func testSequentialIDGeneration(t *testing.T) {
+	ids := make(map[string]bool)
 
-		wg := sync.WaitGroup{}
-		for i := 0; i < numGoroutines; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+	for i := 0; i < 1000; i++ {
+		id := generateID()
 
-				for j := 0; j < idsPerGoroutine; j++ {
-					idsChan <- generateID()
-				}
-			}()
-		}
-
-		wg.Wait()
-		close(idsChan)
+		// Verify format (UUID)
+		require.Len(t, id, 36)
+		require.Contains(t, id, "-")
 
 		// Verify uniqueness
-		ids := make(map[string]bool)
-		for id := range idsChan {
-			if ids[id] {
-				t.Fatal("Duplicate ID generated in concurrent scenario")
-			}
-			ids[id] = true
+		if ids[id] {
+			t.Fatal("Duplicate ID generated")
 		}
+		ids[id] = true
+	}
+}
 
-		require.Len(t, ids, numGoroutines*idsPerGoroutine)
-	})
+// testConcurrentIDGeneration tests concurrent ID generation
+func testConcurrentIDGeneration(t *testing.T) {
+	const numGoroutines = 100
+	const idsPerGoroutine = 100
+
+	idsChan := generateConcurrentIDs(numGoroutines, idsPerGoroutine)
+	verifyUniqueIDs(t, idsChan, numGoroutines*idsPerGoroutine)
+}
+
+// generateConcurrentIDs generates IDs concurrently
+func generateConcurrentIDs(numGoroutines, idsPerGoroutine int) <-chan string {
+	idsChan := make(chan string, numGoroutines*idsPerGoroutine)
+
+	wg := sync.WaitGroup{}
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < idsPerGoroutine; j++ {
+				idsChan <- generateID()
+			}
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(idsChan)
+	}()
+
+	return idsChan
+}
+
+// verifyUniqueIDs verifies that all IDs in the channel are unique
+func verifyUniqueIDs(t *testing.T, idsChan <-chan string, expectedCount int) {
+	ids := make(map[string]bool)
+	for id := range idsChan {
+		if ids[id] {
+			t.Fatal("Duplicate ID generated in concurrent scenario")
+		}
+		ids[id] = true
+	}
+	require.Len(t, ids, expectedCount)
 }

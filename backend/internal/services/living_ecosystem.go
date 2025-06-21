@@ -329,23 +329,37 @@ func (les *LivingEcosystemService) simulateNPCSchedule(ctx context.Context, npc 
 
 	// Simulate activities based on time of day
 	hoursElapsed := int(timeDelta.Hours())
+	return les.simulateHourlyActivities(ctx, npc, schedule, hoursElapsed)
+}
+
+// simulateHourlyActivities processes NPC activities for each elapsed hour
+func (les *LivingEcosystemService) simulateHourlyActivities(ctx context.Context, npc *models.NPC, schedule []models.NPCSchedule, hoursElapsed int) []models.EmergentWorldEvent {
+	events := []models.EmergentWorldEvent{}
+	
 	for i := 0; i < hoursElapsed && i < 24; i++ {
 		hour := (time.Now().Hour() - hoursElapsed + i + 24) % 24
 		timeOfDay := getTimeOfDay(hour)
+		
+		newEvents := les.processScheduleForTimeOfDay(ctx, npc, schedule, timeOfDay)
+		events = append(events, newEvents...)
+	}
+	
+	return events
+}
 
-		for _, activity := range schedule {
-			if activity.TimeOfDay == timeOfDay {
-				// Small chance of activity generating an event
-				if rand.Float64() < 0.1 {
-					event := les.generateScheduleEvent(ctx, npc, activity)
-					if event != nil {
-						events = append(events, *event)
-					}
-				}
+// processScheduleForTimeOfDay processes activities for a specific time of day
+func (les *LivingEcosystemService) processScheduleForTimeOfDay(ctx context.Context, npc *models.NPC, schedule []models.NPCSchedule, timeOfDay string) []models.EmergentWorldEvent {
+	events := []models.EmergentWorldEvent{}
+	
+	for _, activity := range schedule {
+		if activity.TimeOfDay == timeOfDay && rand.Float64() < 0.1 {
+			event := les.generateScheduleEvent(ctx, npc, activity)
+			if event != nil {
+				events = append(events, *event)
 			}
 		}
 	}
-
+	
 	return events
 }
 
