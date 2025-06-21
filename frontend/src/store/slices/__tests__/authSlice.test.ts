@@ -18,8 +18,14 @@ jest.mock('../../../services/auth');
 
 // Test constants - these are not real passwords
 const TEST_PASSWORD = 'testPass123'; // NOSONAR - test password for unit tests
-const TEST_PASSWORD_2 = 'testP@ss'; // NOSONAR - test password for unit tests  
-const TEST_PASSWORD_3 = '123456'; // NOSONAR - test password for unit tests
+const TEST_PASSWORD_2 = 'testP@ss'; // NOSONAR - test password for unit tests
+
+// Helper function to create delayed promises
+const createDelayedPromise = <T>(value: T, delay: number): Promise<T> => {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(value), delay);
+  });
+};
 
 describe('authSlice', () => {
   let store: ReturnType<typeof configureStore>;
@@ -61,6 +67,7 @@ describe('authSlice', () => {
 
       // Clear module cache and re-import
       jest.resetModules();
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const authSlice = require('../authSlice').default;
 
       // Create new store to test initialization
@@ -100,9 +107,7 @@ describe('authSlice', () => {
     });
 
     it('should handle login pending state', () => {
-      const delayedPromise = new Promise(resolve => {
-        setTimeout(() => resolve(mockResponse), 100);
-      });
+      const delayedPromise = createDelayedPromise(mockResponse, 100);
       (authService.login as jest.Mock).mockReturnValue(delayedPromise);
 
       store.dispatch(login(loginCredentials));
@@ -166,9 +171,7 @@ describe('authSlice', () => {
     });
 
     it('should handle registration pending state', () => {
-      const delayedPromise = new Promise(resolve => {
-        setTimeout(() => resolve(mockResponse), 100);
-      });
+      const delayedPromise = createDelayedPromise(mockResponse, 100);
       (authService.register as jest.Mock).mockReturnValue(delayedPromise);
 
       store.dispatch(register(registerData));

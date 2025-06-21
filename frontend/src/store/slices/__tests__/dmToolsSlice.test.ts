@@ -28,11 +28,16 @@ const createStore = () => configureStore({
   },
 });
 
-const addMultipleActions = (store: any, count: number) => {
+const addMultipleActions = (store: ReturnType<typeof createStore>, count: number) => {
   for (let i = 1; i <= count; i++) {
     const action = createMockUndoableAction(`action-${i}`, `Test action ${i}`);
     store.dispatch(addUndoableAction(action));
   }
+};
+
+// Helper to extract action IDs to reduce nesting
+const extractActionIds = (actions: UndoableAction[]): string[] => {
+  return actions.map(a => a.id);
 };
 
 describe('dmToolsSlice', () => {
@@ -120,7 +125,7 @@ describe('dmToolsSlice', () => {
 
         const state = store.getState().dmTools;
         expect(state.undoStack).toHaveLength(3);
-        const ids = state.undoStack.map(a => a.id);
+        const ids = extractActionIds(state.undoStack);
         expect(ids).toEqual(['action-1', 'action-2', 'action-3']);
         expect(state.canUndo).toBe(true);
       });
@@ -150,7 +155,7 @@ describe('dmToolsSlice', () => {
         const state = store.getState().dmTools;
         expect(state.undoStack).toHaveLength(1);
         expect(state.redoStack).toHaveLength(2);
-        expect(state.redoStack.map(a => a.id)).toEqual(['action-3', 'action-2']);
+        expect(extractActionIds(state.redoStack)).toEqual(['action-3', 'action-2']);
         expect(state.canUndo).toBe(true);
         expect(state.canRedo).toBe(true);
       });
@@ -207,7 +212,7 @@ describe('dmToolsSlice', () => {
         const state = store.getState().dmTools;
         expect(state.undoStack).toHaveLength(3);
         expect(state.redoStack).toHaveLength(0);
-        expect(state.undoStack.map(a => a.id)).toEqual(['action-1', 'action-2', 'action-3']);
+        expect(extractActionIds(state.undoStack)).toEqual(['action-1', 'action-2', 'action-3']);
         expect(state.canRedo).toBe(false);
       });
 

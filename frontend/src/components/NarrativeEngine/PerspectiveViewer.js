@@ -1,10 +1,96 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  FaTheaterMasks, FaEye, FaUser, FaGlobe, FaScroll,
-  FaExclamationTriangle, FaPlus, FaRandom, FaQuestionCircle
+  FaTheaterMasks, FaEye, FaUser, FaGlobe,
+  FaExclamationTriangle, FaPlus, FaQuestionCircle
 } from 'react-icons/fa';
 import api from '../../services/api';
-import { getClickableProps, getSelectableProps } from '../../utils/accessibility';
+import { getClickableProps } from '../../utils/accessibility';
+
+const EventCreator = ({ onSubmit, onCancel }) => (
+  <div className="event-creator">
+    <h4>Create World Event</h4>
+    <form onSubmit={onSubmit}>
+      <div className="form-group">
+        <label>Event Type:</label>
+        <select name="type" required>
+          <option value="">Select type...</option>
+          <option value="battle">Battle</option>
+          <option value="discovery">Discovery</option>
+          <option value="betrayal">Betrayal</option>
+          <option value="celebration">Celebration</option>
+          <option value="disaster">Disaster</option>
+          <option value="political">Political Event</option>
+          <option value="supernatural">Supernatural Occurrence</option>
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>Event Name:</label>
+        <input
+          name="name"
+          placeholder="e.g., The Battle of Crimson Bridge"
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Description:</label>
+        <textarea
+          name="description"
+          placeholder="Describe what happened..."
+          rows="4"
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Location:</label>
+        <input
+          name="location"
+          placeholder="Where did this occur?"
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Key Participants (comma-separated):</label>
+        <input
+          name="participants"
+          placeholder="e.g., Lord Blackwood, The Red Company, Player Party"
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Witnesses (comma-separated):</label>
+        <input
+          name="witnesses"
+          placeholder="e.g., Town Guards, Local Merchants"
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Immediate Effects (comma-separated):</label>
+        <input
+          name="effects"
+          placeholder="e.g., Bridge destroyed, Lord injured, Trade route blocked"
+        />
+      </div>
+
+      <div className="form-actions">
+        <button type="submit" className="btn-primary">
+          Create Event & Generate Perspectives
+        </button>
+        <button 
+          type="button" 
+          className="btn-secondary"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+);
 
 const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
   const [worldEvents, setWorldEvents] = useState([]);
@@ -135,92 +221,6 @@ const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
     handleCreateEvent(eventData);
   };
 
-  const EventCreator = () => (
-    <div className="event-creator">
-      <h4>Create World Event</h4>
-      <form onSubmit={handleEventFormSubmit}>
-        <div className="form-group">
-          <label>Event Type:</label>
-          <select name="type" required>
-            <option value="">Select type...</option>
-            <option value="battle">Battle</option>
-            <option value="discovery">Discovery</option>
-            <option value="betrayal">Betrayal</option>
-            <option value="celebration">Celebration</option>
-            <option value="disaster">Disaster</option>
-            <option value="political">Political Event</option>
-            <option value="supernatural">Supernatural Occurrence</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Event Name:</label>
-          <input
-            name="name"
-            placeholder="e.g., The Battle of Crimson Bridge"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Description:</label>
-          <textarea
-            name="description"
-            placeholder="Describe what happened..."
-            rows="4"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Location:</label>
-          <input
-            name="location"
-            placeholder="Where did this occur?"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Key Participants (comma-separated):</label>
-          <input
-            name="participants"
-            placeholder="e.g., Lord Blackwood, The Red Company, Player Party"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Witnesses (comma-separated):</label>
-          <input
-            name="witnesses"
-            placeholder="e.g., Town Guards, Local Merchants"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Immediate Effects (comma-separated):</label>
-          <input
-            name="effects"
-            placeholder="e.g., Bridge destroyed, Lord injured, Trade route blocked"
-          />
-        </div>
-
-        <div className="form-actions">
-          <button type="submit" className="btn-primary">
-            Create Event & Generate Perspectives
-          </button>
-          <button 
-            type="button" 
-            className="btn-secondary"
-            onClick={() => setShowEventCreator(false)}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-
   return (
     <div className="perspective-viewer">
       <div className="viewer-header">
@@ -235,7 +235,12 @@ const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
         )}
       </div>
 
-      {showEventCreator && <EventCreator />}
+      {showEventCreator && (
+        <EventCreator 
+          onSubmit={handleEventFormSubmit}
+          onCancel={() => setShowEventCreator(false)}
+        />
+      )}
 
       <div className="viewer-content">
         {!selectedEvent ? (
@@ -290,7 +295,7 @@ const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
 
             {personalizedNarrative && (
               <div className="personalized-narrative">
-                <h4><FaUser /> Your Character's Perspective</h4>
+                <h4><FaUser /> Your Character&apos;s Perspective</h4>
                 <div className="narrative-content">
                   <p className="personalized-description">
                     {personalizedNarrative.metadata?.personalized_description || selectedEvent.description}
@@ -387,7 +392,7 @@ const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
                       {perspective.hidden_details?.length > 0 && (
                         <details className="hidden-details">
                           <summary>
-                            <FaQuestionCircle /> What they're not saying...
+                            <FaQuestionCircle /> What they&apos;re not saying...
                           </summary>
                           <ul>
                             {perspective.hidden_details.map((detail, index) => (

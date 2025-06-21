@@ -81,6 +81,11 @@ const createStore = () => configureStore({
 
 const createInfinitePromise = () => new Promise(() => {}); // Never resolves
 
+// Helper to count occurrences of a player ID to reduce nesting
+const countPlayerId = (playerIds: string[], playerId: string): number => {
+  return playerIds.filter(id => id === playerId).length;
+};
+
 describe('gameSessionSlice', () => {
   let store: ReturnType<typeof configureStore>;
 
@@ -350,7 +355,7 @@ describe('gameSessionSlice', () => {
 
         const state = store.getState().gameSession;
         const playerIds = state.sessions.entities['session-1'].playerIds;
-        const player1Count = playerIds.filter(id => id === 'player-1').length;
+        const player1Count = countPlayerId(playerIds, 'player-1');
         expect(player1Count).toBe(1);
       });
 

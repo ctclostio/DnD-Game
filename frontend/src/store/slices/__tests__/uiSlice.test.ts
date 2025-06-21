@@ -43,7 +43,7 @@ const createStore = () => configureStore({
   },
 });
 
-const addMultipleNotifications = (store: any, count: number) => {
+const addMultipleNotifications = (store: ReturnType<typeof createStore>, count: number) => {
   for (let i = 0; i < count; i++) {
     store.dispatch(addNotification({
       type: 'info',
@@ -52,10 +52,15 @@ const addMultipleNotifications = (store: any, count: number) => {
   }
 };
 
-const setupNotifications = (store: any) => {
+const setupNotifications = (store: ReturnType<typeof createStore>) => {
   store.dispatch(addNotification({ type: 'info', message: 'Notification 1' }));
   store.dispatch(addNotification({ type: 'success', message: 'Notification 2' }));
   store.dispatch(addNotification({ type: 'error', message: 'Notification 3' }));
+};
+
+// Helper to find notification by ID to reduce nesting
+const findNotificationById = (notifications: Array<{ id: string }>, id: string) => {
+  return notifications.find(n => n.id === id);
 };
 
 describe('uiSlice', () => {
@@ -344,7 +349,7 @@ describe('uiSlice', () => {
 
         const newState = store.getState().ui;
         expect(newState.notifications).toHaveLength(2);
-        const found = newState.notifications.find(n => n.id === idToRemove);
+        const found = findNotificationById(newState.notifications, idToRemove);
         expect(found).toBeUndefined();
       });
 
