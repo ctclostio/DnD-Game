@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { 
   FaTheaterMasks, FaEye, FaUser, FaGlobe,
   FaExclamationTriangle, FaPlus, FaQuestionCircle
@@ -512,6 +513,42 @@ const PerspectiveViewer = ({ sessionId, characterId, isDM, onCreateEvent }) => {
       </div>
     </div>
   );
+};
+
+// PropTypes validation
+EventCreator.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired
+};
+
+PerspectiveCard.propTypes = {
+  perspective: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    perspective_type: PropTypes.string.isRequired,
+    source_name: PropTypes.string.isRequired,
+    truth_level: PropTypes.number.isRequired,
+    bias: PropTypes.string.isRequired,
+    narrative: PropTypes.string.isRequired,
+    emotional_tone: PropTypes.string,
+    hidden_details: PropTypes.arrayOf(PropTypes.string),
+    contradictions: PropTypes.arrayOf(
+      PropTypes.shape({
+        conflicting_detail: PropTypes.string.isRequired
+      })
+    )
+  }).isRequired,
+  compareMode: PropTypes.bool.isRequired,
+  isCompared: PropTypes.bool.isRequired,
+  onToggleCompare: PropTypes.func.isRequired,
+  getTruthIndicator: PropTypes.func.isRequired,
+  getBiasIcon: PropTypes.func.isRequired
+};
+
+PerspectiveViewer.propTypes = {
+  sessionId: PropTypes.string.isRequired,
+  characterId: PropTypes.string,
+  isDM: PropTypes.bool.isRequired,
+  onCreateEvent: PropTypes.func.isRequired
 };
 
 export default PerspectiveViewer;

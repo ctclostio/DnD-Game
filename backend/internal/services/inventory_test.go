@@ -44,12 +44,12 @@ const (
 	testErrNotFound         = "not found"
 	testErrItemNotFound     = "item not found"
 	testErrUpdateFailed     = "update failed"
-	testErrItemNotInInv     = testErrItemNotInInv
-	testErrInsufficientFunds = testErrInsufficientFunds
-	testErrRepository       = testErrRepository
+	testErrItemNotInInv     = "item not in inventory"
+	testErrInsufficientFunds = "insufficient funds"
+	testErrRepository       = "repository error"
 	
 	// Type strings
-	testTypeModelsItem = testTypeModelsItem
+	testTypeModelsItem = "*models.Item"
 )
 
 // runInventoryServiceTest is a helper to reduce duplication in table-driven tests
@@ -957,7 +957,7 @@ func TestInventoryService_GetItemsByType(t *testing.T) {
 				m.On("GetItemsByType", models.ItemTypeWeapon).Return(weapons, nil)
 			},
 			expected: []*models.Item{
-				mocks.CreateTestItem("sword-1", "Longsword", models.ItemTypeWeapon, 15, 3.0),
+				mocks.CreateTestItem(testItemSword1, "Longsword", models.ItemTypeWeapon, 15, 3.0),
 				mocks.CreateTestItem("axe-1", "Battleaxe", models.ItemTypeWeapon, 10, 4.0),
 				mocks.CreateTestItem("bow-1", "Longbow", models.ItemTypeWeapon, 50, 2.0),
 			},
