@@ -408,191 +408,235 @@ func TestGameService_GetSessionEvents(t *testing.T) {
 	})
 }
 
+// createSessionConcurrently is a helper for concurrent session creation
+func createSessionConcurrently(service *GameService, id int) (string, error) {
+	session := &models.GameSession{
+		DMID: "dm-" + string(rune(id)),
+		Name: "Campaign " + string(rune(id)),
+	}
+	result, err := service.CreateSession(session)
+	if err != nil {
+		return "", err
+	}
+	return result.ID, nil
+}
+
+// testConcurrentSessionCreation tests concurrent session creation
+func testConcurrentSessionCreation(t *testing.T, service *GameService) {
+	const numGoroutines = 10
+	sessionIDs := make(chan string, numGoroutines)
+	errorsChan := make(chan error, numGoroutines)
+
+	wg := sync.WaitGroup{}
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			sessionID, err := createSessionConcurrently(service, id)
+			if err != nil {
+				errorsChan <- err
+			} else {
+				sessionIDs <- sessionID
+			}
+		}(i)
+	}
+
+	wg.Wait()
+	close(sessionIDs)
+	close(errorsChan)
+
+	// Check for errors
+	for err := range errorsChan {
+		t.Fatalf("Unexpected error during concurrent creation: %v", err)
+	}
+
+	// Verify all sessions were created
+	createdIDs := make(map[string]bool)
+	for id := range sessionIDs {
+		if createdIDs[id] {
+			t.Fatal("Duplicate session ID generated")
+		}
+		createdIDs[id] = true
+	}
+
+	require.Len(t, createdIDs, numGoroutines)
+	require.Len(t, service.sessions, numGoroutines)
+}
+
+// recordEventConcurrently is a helper for concurrent event recording
+func recordEventConcurrently(service *GameService, sessionID string, index int) error {
+	event := &models.GameEvent{
+		SessionID: sessionID,
+		Type:      "concurrent",
+		PlayerID:  "player-" + string(rune(index%10)),
+		Data:      map[string]interface{}{"index": index},
+	}
+	return service.RecordGameEvent(event)
+}
+
+// testConcurrentEventRecording tests concurrent event recording
+func testConcurrentEventRecording(t *testing.T, service *GameService) {
+	// Create a session
+	session := &models.GameSession{
+		DMID: testDMID,
+		Name: testCampaignName,
+	}
+	created, _ := service.CreateSession(session)
+
+	const numEvents = 100
+	errorsChan := make(chan error, numEvents)
+
+	wg := sync.WaitGroup{}
+	for i := 0; i < numEvents; i++ {
+		wg.Add(1)
+		go func(index int) {
+			defer wg.Done()
+			if err := recordEventConcurrently(service, created.ID, index); err != nil {
+				errorsChan <- err
+			}
+		}(i)
+	}
+
+	wg.Wait()
+	close(errorsChan)
+
+	// Check for errors
+	for err := range errorsChan {
+		t.Fatalf("Unexpected error during concurrent recording: %v", err)
+	}
+
+	// Verify all events were recorded
+	events, err := service.GetSessionEvents(created.ID)
+	require.NoError(t, err)
+	require.Len(t, events, numEvents)
+
+	// Verify each event has unique ID
+	verifyUniqueEventIDs(t, events)
+}
+
+// verifyUniqueEventIDs verifies that all events have unique IDs
+func verifyUniqueEventIDs(t *testing.T, events []*models.GameEvent) {
+	eventIDs := make(map[string]bool)
+	for _, event := range events {
+		if eventIDs[event.ID] {
+			t.Fatal("Duplicate event ID found")
+		}
+		eventIDs[event.ID] = true
+	}
+}
+
 func TestGameService_ConcurrentAccess(t *testing.T) {
 	t.Run("concurrent session creation", func(t *testing.T) {
 		service := NewGameService()
-
-		const numGoroutines = 10
-		sessionIDs := make(chan string, numGoroutines)
-		errorsChan := make(chan error, numGoroutines)
-
-		wg := sync.WaitGroup{}
-		for i := 0; i < numGoroutines; i++ {
-			wg.Add(1)
-			go func(id int) {
-				defer wg.Done()
-
-				session := &models.GameSession{
-					DMID: "dm-" + string(rune(id)),
-					Name: "Campaign " + string(rune(id)),
-				}
-
-				result, err := service.CreateSession(session)
-				if err != nil {
-					errorsChan <- err
-				} else {
-					sessionIDs <- result.ID
-				}
-			}(i)
-		}
-
-		wg.Wait()
-		close(sessionIDs)
-		close(errorsChan)
-
-		// Check for errors
-		for err := range errorsChan {
-			t.Fatalf("Unexpected error during concurrent creation: %v", err)
-		}
-
-		// Verify all sessions were created
-		createdIDs := make(map[string]bool)
-		for id := range sessionIDs {
-			if createdIDs[id] {
-				t.Fatal("Duplicate session ID generated")
-			}
-			createdIDs[id] = true
-		}
-
-		require.Len(t, createdIDs, numGoroutines)
-		require.Len(t, service.sessions, numGoroutines)
+		testConcurrentSessionCreation(t, service)
 	})
 
 	t.Run("concurrent event recording", func(t *testing.T) {
 		service := NewGameService()
-
-		// Create a session
-		session := &models.GameSession{
-			DMID: testDMID,
-			Name: testCampaignName,
-		}
-		created, _ := service.CreateSession(session)
-
-		const numEvents = 100
-		errorsChan := make(chan error, numEvents)
-
-		wg := sync.WaitGroup{}
-		for i := 0; i < numEvents; i++ {
-			wg.Add(1)
-			go func(index int) {
-				defer wg.Done()
-
-				event := &models.GameEvent{
-					SessionID: created.ID,
-					Type:      "concurrent",
-					PlayerID:  "player-" + string(rune(index%10)),
-					Data:      map[string]interface{}{"index": index},
-				}
-
-				if err := service.RecordGameEvent(event); err != nil {
-					errorsChan <- err
-				}
-			}(i)
-		}
-
-		wg.Wait()
-		close(errorsChan)
-
-		// Check for errors
-		for err := range errorsChan {
-			t.Fatalf("Unexpected error during concurrent recording: %v", err)
-		}
-
-		// Verify all events were recorded
-		events, err := service.GetSessionEvents(created.ID)
-		require.NoError(t, err)
-		require.Len(t, events, numEvents)
-
-		// Verify each event has unique ID
-		eventIDs := make(map[string]bool)
-		for _, event := range events {
-			if eventIDs[event.ID] {
-				t.Fatal("Duplicate event ID found")
-			}
-			eventIDs[event.ID] = true
-		}
+		testConcurrentEventRecording(t, service)
 	})
 
 	t.Run("concurrent read and write", func(t *testing.T) {
 		service := NewGameService()
-
-		// Create multiple sessions
-		sessionIDs := make([]string, 5)
-		for i := 0; i < 5; i++ {
-			session := &models.GameSession{
-				DMID: "dm-" + string(rune(i)),
-				Name: "Campaign " + string(rune(i)),
-			}
-			created, _ := service.CreateSession(session)
-			sessionIDs[i] = created.ID
-		}
-
-		// Concurrent operations
-		wg := sync.WaitGroup{}
-		errors := make([]error, 0)
-		var errorsMu sync.Mutex
-
-		// Writers
-		for i := 0; i < 50; i++ {
-			wg.Add(1)
-			go func(index int) {
-				defer wg.Done()
-
-				sessionID := sessionIDs[index%len(sessionIDs)]
-				event := &models.GameEvent{
-					SessionID: sessionID,
-					Type:      "write",
-					PlayerID:  "writer-" + string(rune(index)),
-				}
-
-				if err := service.RecordGameEvent(event); err != nil {
-					errorsMu.Lock()
-					errors = append(errors, err)
-					errorsMu.Unlock()
-				}
-			}(i)
-		}
-
-		// Readers
-		for i := 0; i < 50; i++ {
-			wg.Add(1)
-			go func(index int) {
-				defer wg.Done()
-
-				sessionID := sessionIDs[index%len(sessionIDs)]
-
-				// Read session
-				if _, err := service.GetSessionByID(sessionID); err != nil {
-					errorsMu.Lock()
-					errors = append(errors, err)
-					errorsMu.Unlock()
-				}
-
-				// Read events
-				if _, err := service.GetSessionEvents(sessionID); err != nil {
-					errorsMu.Lock()
-					errors = append(errors, err)
-					errorsMu.Unlock()
-				}
-			}(i)
-		}
-
-		wg.Wait()
-
-		// Check for errors
-		require.Len(t, errors, 0, "Unexpected errors during concurrent operations")
-
-		// Verify data integrity
-		for _, sessionID := range sessionIDs {
-			session, err := service.GetSessionByID(sessionID)
-			require.NoError(t, err)
-			require.NotNil(t, session)
-
-			events, err := service.GetSessionEvents(sessionID)
-			require.NoError(t, err)
-			require.NotNil(t, events)
-		}
+		testConcurrentReadWrite(t, service)
 	})
+}
+
+// createMultipleSessions creates multiple test sessions
+func createMultipleSessions(service *GameService, count int) []string {
+	sessionIDs := make([]string, count)
+	for i := 0; i < count; i++ {
+		session := &models.GameSession{
+			DMID: "dm-" + string(rune(i)),
+			Name: "Campaign " + string(rune(i)),
+		}
+		created, _ := service.CreateSession(session)
+		sessionIDs[i] = created.ID
+	}
+	return sessionIDs
+}
+
+// performConcurrentWrite performs a concurrent write operation
+func performConcurrentWrite(service *GameService, sessionID string, index int) error {
+	event := &models.GameEvent{
+		SessionID: sessionID,
+		Type:      "write",
+		PlayerID:  "writer-" + string(rune(index)),
+	}
+	return service.RecordGameEvent(event)
+}
+
+// performConcurrentRead performs concurrent read operations
+func performConcurrentRead(service *GameService, sessionID string) error {
+	// Read session
+	if _, err := service.GetSessionByID(sessionID); err != nil {
+		return err
+	}
+	// Read events
+	if _, err := service.GetSessionEvents(sessionID); err != nil {
+		return err
+	}
+	return nil
+}
+
+// testConcurrentReadWrite tests concurrent read and write operations
+func testConcurrentReadWrite(t *testing.T, service *GameService) {
+	// Create multiple sessions
+	sessionIDs := createMultipleSessions(service, 5)
+
+	// Concurrent operations
+	wg := sync.WaitGroup{}
+	errors := make([]error, 0)
+	var errorsMu sync.Mutex
+
+	// Writers
+	for i := 0; i < 50; i++ {
+		wg.Add(1)
+		go func(index int) {
+			defer wg.Done()
+			sessionID := sessionIDs[index%len(sessionIDs)]
+			if err := performConcurrentWrite(service, sessionID, index); err != nil {
+				errorsMu.Lock()
+				errors = append(errors, err)
+				errorsMu.Unlock()
+			}
+		}(i)
+	}
+
+	// Readers
+	for i := 0; i < 50; i++ {
+		wg.Add(1)
+		go func(index int) {
+			defer wg.Done()
+			sessionID := sessionIDs[index%len(sessionIDs)]
+			if err := performConcurrentRead(service, sessionID); err != nil {
+				errorsMu.Lock()
+				errors = append(errors, err)
+				errorsMu.Unlock()
+			}
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Check for errors
+	require.Len(t, errors, 0, "Unexpected errors during concurrent operations")
+
+	// Verify data integrity
+	verifyDataIntegrity(t, service, sessionIDs)
+}
+
+// verifyDataIntegrity verifies the integrity of sessions and events after concurrent operations
+func verifyDataIntegrity(t *testing.T, service *GameService, sessionIDs []string) {
+	for _, sessionID := range sessionIDs {
+		session, err := service.GetSessionByID(sessionID)
+		require.NoError(t, err)
+		require.NotNil(t, session)
+
+		events, err := service.GetSessionEvents(sessionID)
+		require.NoError(t, err)
+		require.NotNil(t, events)
+	}
 }
 
 func TestGenerateID(t *testing.T) {

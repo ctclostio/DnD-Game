@@ -29,11 +29,88 @@ func NewFactionSystemService(llmProvider LLMProvider, worldRepo WorldBuildingRep
 
 // CreateFaction generates a new faction with goals and relationships
 func (s *FactionSystemService) CreateFaction(ctx context.Context, gameSessionID uuid.UUID, req models.FactionCreationRequest) (*models.Faction, error) {
-	systemPrompt := `You are creating factions for a dark fantasy world where ancient powers still shape events.
+	// Generate faction data using LLM
+	factionData, err := s.generateFactionData(ctx, req)
+	if err != nil {
+		// Fallback to procedural generation
+		return s.generateProceduralFaction(gameSessionID, req), nil
+	}
+
+	// Build faction model from generated data
+	faction := s.buildFactionModel(gameSessionID, req, factionData)
+
+	// Convert fields to JSONB
+	s.populateFactionJSONBFields(faction, factionData)
+
+	// Initialize empty relationships and territory
+	faction.FactionRelationships = models.JSONB("{}")
+	faction.TerritoryControl = models.JSONB("[]")
+
+	// Save the faction
+	if err := s.worldRepo.CreateFaction(faction); err != nil {
+		return nil, fmt.Errorf("failed to save faction: %w", err)
+	}
+
+	// Generate initial relationships with existing factions
+	if err := s.generateInitialRelationships(ctx, faction); err != nil {
+		// Non-fatal error
+		logger.WithContext(ctx).WithError(err).Warn().Msg("Failed to generate faction relationships")
+	}
+
+	return faction, nil
+}
+
+// factionData represents the generated faction data from LLM
+type factionData struct {
+	FoundingDate          string   `json:"foundingDate"`
+	PublicGoals           []string `json:"publicGoals"`
+	SecretGoals           []string `json:"secretGoals"`
+	Motivations           []string `json:"motivations"`
+	LeadershipStructure   string   `json:"leadershipStructure"`
+	HeadquartersLocation  string   `json:"headquartersLocation"`
+	AncientKnowledgeLevel int      `json:"ancientKnowledgeLevel"`
+	SeeksAncientPower     bool     `json:"seeksAncientPower"`
+	GuardsAncientSecrets  bool     `json:"guardsAncientSecrets"`
+	Corrupted             bool     `json:"corrupted"`
+	Symbols               struct {
+		Sigil  string   `json:"sigil"`
+		Colors []string `json:"colors"`
+		Motto  string   `json:"motto"`
+	} `json:"symbols"`
+	Rituals   []string               `json:"rituals"`
+	Resources map[string]interface{} `json:"resources"`
+	Methods   []string               `json:"methods"`
+	Enemies   []string               `json:"enemies"`
+}
+
+// generateFactionData generates faction data using LLM
+func (s *FactionSystemService) generateFactionData(ctx context.Context, req models.FactionCreationRequest) (*factionData, error) {
+	systemPrompt := s.getFactionSystemPrompt()
+	userPrompt := s.getFactionUserPrompt(req)
+
+	response, err := s.llmProvider.GenerateCompletion(ctx, userPrompt, systemPrompt)
+	if err != nil {
+		return nil, err
+	}
+
+	var data factionData
+	if err := json.Unmarshal([]byte(response), &data); err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
+// getFactionSystemPrompt returns the system prompt for faction generation
+func (s *FactionSystemService) getFactionSystemPrompt() string {
+	return `You are creating factions for a dark fantasy world where ancient powers still shape events.
 Factions might seek forbidden knowledge, guard against ancient evils, or be corrupted by them.
 Create complex organizations with both public faces and hidden agendas.`
+}
 
-	userPrompt := fmt.Sprintf(`Create a %s faction with these parameters:
+// getFactionUserPrompt returns the user prompt for faction generation
+func (s *FactionSystemService) getFactionUserPrompt(req models.FactionCreationRequest) string {
+	return fmt.Sprintf(`Create a %s faction with these parameters:
 Name: %s
 Description: %s
 Goals: %v
@@ -83,99 +160,97 @@ Respond in JSON format:
   "enemies": ["natural enemies or rivals"]
 }`,
 		req.Type, req.Name, req.Description, req.Goals, req.AncientTies)
+}
 
-	response, err := s.llmProvider.GenerateCompletion(ctx, userPrompt, systemPrompt)
-	if err != nil {
-		// Fallback to procedural generation
-		return s.generateProceduralFaction(gameSessionID, req), nil
-	}
+// buildFactionModel builds a faction model from generated data
+func (s *FactionSystemService) buildFactionModel(gameSessionID uuid.UUID, req models.FactionCreationRequest, data *factionData) *models.Faction {
+	// Calculate power levels
+	influenceLevel := s.calculateInfluenceLevel(req.Type, data.Resources)
+	militaryStrength := s.calculateMilitaryStrength(req.Type, data.Resources)
+	economicPower := s.calculateEconomicPower(req.Type, data.Resources)
+	magicalResources := s.calculateMagicalResources(req.Type, data.AncientKnowledgeLevel)
 
-	var factionData struct {
-		FoundingDate          string   `json:"foundingDate"`
-		PublicGoals           []string `json:"publicGoals"`
-		SecretGoals           []string `json:"secretGoals"`
-		Motivations           []string `json:"motivations"`
-		LeadershipStructure   string   `json:"leadershipStructure"`
-		HeadquartersLocation  string   `json:"headquartersLocation"`
-		AncientKnowledgeLevel int      `json:"ancientKnowledgeLevel"`
-		SeeksAncientPower     bool     `json:"seeksAncientPower"`
-		GuardsAncientSecrets  bool     `json:"guardsAncientSecrets"`
-		Corrupted             bool     `json:"corrupted"`
-		Symbols               struct {
-			Sigil  string   `json:"sigil"`
-			Colors []string `json:"colors"`
-			Motto  string   `json:"motto"`
-		} `json:"symbols"`
-		Rituals   []string               `json:"rituals"`
-		Resources map[string]interface{} `json:"resources"`
-		Methods   []string               `json:"methods"`
-		Enemies   []string               `json:"enemies"`
-	}
-
-	if err := json.Unmarshal([]byte(response), &factionData); err != nil {
-		return s.generateProceduralFaction(gameSessionID, req), nil
-	}
-
-	// Calculate power levels based on faction type and resources
-	influenceLevel := s.calculateInfluenceLevel(req.Type, factionData.Resources)
-	militaryStrength := s.calculateMilitaryStrength(req.Type, factionData.Resources)
-	economicPower := s.calculateEconomicPower(req.Type, factionData.Resources)
-	magicalResources := s.calculateMagicalResources(req.Type, factionData.AncientKnowledgeLevel)
-
-	faction := &models.Faction{
+	return &models.Faction{
 		GameSessionID:         gameSessionID,
 		Name:                  req.Name,
 		Type:                  req.Type,
 		Description:           req.Description,
-		FoundingDate:          factionData.FoundingDate,
-		AncientKnowledgeLevel: factionData.AncientKnowledgeLevel,
-		SeeksAncientPower:     factionData.SeeksAncientPower,
-		GuardsAncientSecrets:  factionData.GuardsAncientSecrets,
-		Corrupted:             factionData.Corrupted,
+		FoundingDate:          data.FoundingDate,
+		AncientKnowledgeLevel: data.AncientKnowledgeLevel,
+		SeeksAncientPower:     data.SeeksAncientPower,
+		GuardsAncientSecrets:  data.GuardsAncientSecrets,
+		Corrupted:             data.Corrupted,
 		InfluenceLevel:        influenceLevel,
 		MilitaryStrength:      militaryStrength,
 		EconomicPower:         economicPower,
 		MagicalResources:      magicalResources,
-		LeadershipStructure:   factionData.LeadershipStructure,
-		HeadquartersLocation:  factionData.HeadquartersLocation,
+		LeadershipStructure:   data.LeadershipStructure,
+		HeadquartersLocation:  data.HeadquartersLocation,
 		MemberCount:           s.estimateMemberCount(req.Type, influenceLevel),
 	}
+}
 
-	// Convert to JSONB
-	publicGoals, _ := json.Marshal(factionData.PublicGoals)
+// populateFactionJSONBFields converts data fields to JSONB
+func (s *FactionSystemService) populateFactionJSONBFields(faction *models.Faction, data *factionData) {
+	publicGoals, _ := json.Marshal(data.PublicGoals)
 	faction.PublicGoals = models.JSONB(publicGoals)
 
-	secretGoals, _ := json.Marshal(factionData.SecretGoals)
+	secretGoals, _ := json.Marshal(data.SecretGoals)
 	faction.SecretGoals = models.JSONB(secretGoals)
 
-	motivations, _ := json.Marshal(factionData.Motivations)
+	motivations, _ := json.Marshal(data.Motivations)
 	faction.Motivations = models.JSONB(motivations)
 
-	symbols, _ := json.Marshal(factionData.Symbols)
+	symbols, _ := json.Marshal(data.Symbols)
 	faction.Symbols = models.JSONB(symbols)
 
-	rituals, _ := json.Marshal(factionData.Rituals)
+	rituals, _ := json.Marshal(data.Rituals)
 	faction.Rituals = models.JSONB(rituals)
 
-	resources, _ := json.Marshal(factionData.Resources)
+	resources, _ := json.Marshal(data.Resources)
 	faction.Resources = models.JSONB(resources)
+}
 
-	// Initialize empty relationships and territory
-	faction.FactionRelationships = models.JSONB("{}")
-	faction.TerritoryControl = models.JSONB("[]")
-
-	// Save the faction
-	if err := s.worldRepo.CreateFaction(faction); err != nil {
-		return nil, fmt.Errorf("failed to save faction: %w", err)
+// getCurrentStanding extracts the current standing from faction relationships
+func (s *FactionSystemService) getCurrentStanding(relationships map[string]interface{}, faction2ID uuid.UUID) int {
+	rel, exists := relationships[faction2ID.String()]
+	if !exists {
+		return 0
 	}
-
-	// Generate initial relationships with existing factions
-	if err := s.generateInitialRelationships(ctx, faction); err != nil {
-		// Non-fatal error
-		logger.WithContext(ctx).WithError(err).Warn().Msg("Failed to generate faction relationships")
+	
+	relMap, ok := rel.(map[string]interface{})
+	if !ok {
+		return 0
 	}
+	
+	standing, ok := relMap["standing"].(float64)
+	if !ok {
+		return 0
+	}
+	
+	return int(standing)
+}
 
-	return faction, nil
+// clampStanding ensures standing is within valid range [-100, 100]
+func (s *FactionSystemService) clampStanding(standing int) int {
+	if standing > 100 {
+		return 100
+	}
+	if standing < -100 {
+		return -100
+	}
+	return standing
+}
+
+// determineRelationType converts standing value to relationship type
+func (s *FactionSystemService) determineRelationType(standing int) string {
+	if standing >= 50 {
+		return constants.RelationAlly
+	}
+	if standing <= -50 {
+		return constants.RelationEnemy
+	}
+	return constants.RelationNeutral
 }
 
 // UpdateFactionRelationship changes the relationship between two factions
@@ -189,31 +264,9 @@ func (s *FactionSystemService) UpdateFactionRelationship(_ context.Context, fact
 	var relationships map[string]interface{}
 	_ = json.Unmarshal([]byte(faction1.FactionRelationships), &relationships)
 
-	currentStanding := 0
-	if rel, exists := relationships[faction2ID.String()]; exists {
-		if relMap, ok := rel.(map[string]interface{}); ok {
-			if standing, ok := relMap["standing"].(float64); ok {
-				currentStanding = int(standing)
-			}
-		}
-	}
-
-	// Calculate new standing
-	newStanding := currentStanding + change
-	if newStanding > 100 {
-		newStanding = 100
-	}
-	if newStanding < -100 {
-		newStanding = -100
-	}
-
-	// Determine relationship type
-	relationType := constants.RelationNeutral
-	if newStanding >= 50 {
-		relationType = constants.RelationAlly
-	} else if newStanding <= -50 {
-		relationType = constants.RelationEnemy
-	}
+	currentStanding := s.getCurrentStanding(relationships, faction2ID)
+	newStanding := s.clampStanding(currentStanding + change)
+	relationType := s.determineRelationType(newStanding)
 
 	// Update the relationship
 	return s.worldRepo.UpdateFactionRelationship(faction1ID, faction2ID, newStanding, relationType)
