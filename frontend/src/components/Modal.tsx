@@ -91,6 +91,7 @@ export const Modal: React.FC<ModalProps> = ({
     <div 
       className={`modal-overlay ${settings.reduceMotion ? 'no-animation' : ''}`}
       data-overlay="true"
+      onClick={handleOverlayClick}
     >
       <div
         ref={modalRef}

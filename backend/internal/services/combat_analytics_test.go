@@ -453,6 +453,7 @@ func (m *MockCombatAnalyticsRepository) GetCombatAnalytics(combatID uuid.UUID) (
 }
 
 func (m *MockCombatAnalyticsRepository) UpdateCombatAnalytics(id uuid.UUID, updates map[string]interface{}) error {
+	// Update combat-level analytics data
 	args := m.Called(id, updates)
 	return handleErrorResult(args, 0)
 }
@@ -479,6 +480,7 @@ type MockCombatService struct {
 
 // Add missing methods for CombatAnalyticsRepository
 func (m *MockCombatAnalyticsRepository) UpdateCombatantAnalytics(id uuid.UUID, updates map[string]interface{}) error {
+	// Update individual combatant analytics data
 	args := m.Called(id, updates)
 	return handleErrorResult(args, 0)
 }
@@ -519,6 +521,7 @@ func (m *MockCombatAnalyticsRepository) GetBattleMapsBySession(sessionID uuid.UU
 }
 
 func (m *MockCombatAnalyticsRepository) UpdateBattleMap(id uuid.UUID, updates map[string]interface{}) error {
+	// Update battle map configuration and state
 	args := m.Called(id, updates)
 	return handleErrorResult(args, 0)
 }

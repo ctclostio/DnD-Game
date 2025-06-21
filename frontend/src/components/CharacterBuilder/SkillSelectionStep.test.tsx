@@ -55,7 +55,6 @@ describe('SkillSelectionStep', () => {
   });
 
   it('disables checkboxes when max skills are selected', () => {
-    const maxSkills = 2;
     const selectedSkills = ['Athletics', 'Animal Handling'];
     render(
       <SkillSelectionStep

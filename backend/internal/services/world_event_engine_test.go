@@ -125,6 +125,7 @@ func (m *MockWorldBuildingRepository) UpdateFactionRelationship(faction1ID, fact
 
 // World Event operations
 func (m *MockWorldBuildingRepository) CreateWorldEvent(event *models.WorldEvent) error {
+	// Create a new world event in the system
 	args := m.Called(event)
 	return mockErrorReturn(args, 0)
 }
@@ -151,6 +152,7 @@ func (m *MockWorldBuildingRepository) GetWorldEventByID(eventID uuid.UUID) (*mod
 }
 
 func (m *MockWorldBuildingRepository) UpdateWorldEvent(event *models.WorldEvent) error {
+	// Update existing world event state
 	args := m.Called(event)
 	return mockErrorReturn(args, 0)
 }

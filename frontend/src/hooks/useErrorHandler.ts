@@ -18,9 +18,15 @@ export function useErrorHandler(defaultOptions?: ErrorHandlerOptions | string) {
 
   const handleError = useCallback((error: Error | unknown, options?: ErrorHandlerOptions) => {
     const config = { ...normalizedDefaultOptions, ...options };
-    const errorMessage = error instanceof Error ? error.message : 
-      typeof error === 'string' ? error : 
-      config.fallbackMessage || 'An unexpected error occurred';
+    
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else {
+      errorMessage = config.fallbackMessage || 'An unexpected error occurred';
+    }
     
     // Log to console if enabled
     if (config.logToConsole !== false) {
@@ -90,7 +96,7 @@ export function useFormErrorHandler() {
 
 // Hook for handling API errors
 export function useApiErrorHandler() {
-  const { handleError, handleAsyncError } = useErrorHandler();
+  const { handleError } = useErrorHandler();
 
   const handleApiError = useCallback((error: any) => {
     let message = 'An error occurred while communicating with the server';

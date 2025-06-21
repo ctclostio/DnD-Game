@@ -52,7 +52,9 @@ func (m *MockGameSessionService) GetSession(ctx context.Context, id string) (*mo
 }
 
 func (m *MockGameSessionService) ValidateUserInSession(ctx context.Context, sessionID, userID string) error {
+	// ValidateUserInSession checks if a user is currently in the specified session
 	args := m.Called(ctx, sessionID, userID)
+	// Return validation error if user is not in session
 	return handleMockError(args, 0)
 }
 

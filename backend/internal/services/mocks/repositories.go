@@ -38,6 +38,7 @@ type MockUserRepository struct {
 }
 
 func (m *MockUserRepository) Create(ctx context.Context, user *models.User) error {
+	// Create a new user record
 	args := m.Called(ctx, user)
 	return handleErrorReturn(args, 0)
 }
@@ -58,6 +59,7 @@ func (m *MockUserRepository) GetByEmail(ctx context.Context, email string) (*mod
 }
 
 func (m *MockUserRepository) Update(ctx context.Context, user *models.User) error {
+	// Update existing user record
 	args := m.Called(ctx, user)
 	return handleErrorReturn(args, 0)
 }
@@ -78,6 +80,7 @@ type MockCharacterRepository struct {
 }
 
 func (m *MockCharacterRepository) Create(ctx context.Context, character *models.Character) error {
+	// Create a new character record
 	args := m.Called(ctx, character)
 	return handleErrorReturn(args, 0)
 }
@@ -93,6 +96,7 @@ func (m *MockCharacterRepository) GetByUserID(ctx context.Context, userID string
 }
 
 func (m *MockCharacterRepository) Update(ctx context.Context, character *models.Character) error {
+	// Update existing character record
 	args := m.Called(ctx, character)
 	return handleErrorReturn(args, 0)
 }
@@ -160,6 +164,7 @@ type MockGameSessionRepository struct {
 }
 
 func (m *MockGameSessionRepository) Create(ctx context.Context, session *models.GameSession) error {
+	// Create a new game session record
 	args := m.Called(ctx, session)
 	return handleErrorReturn(args, 0)
 }
@@ -391,6 +396,7 @@ type MockCustomRaceRepository struct {
 }
 
 func (m *MockCustomRaceRepository) Create(ctx context.Context, race *models.CustomRace) error {
+	// Create a new custom race record
 	args := m.Called(ctx, race)
 	return args.Error(0)
 }
@@ -412,6 +418,7 @@ func (m *MockCustomRaceRepository) GetByUserID(ctx context.Context, userID uuid.
 }
 
 func (m *MockCustomRaceRepository) GetPublicRaces(ctx context.Context) ([]*models.CustomRace, error) {
+	// Get all publicly available custom races
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -420,6 +427,7 @@ func (m *MockCustomRaceRepository) GetPublicRaces(ctx context.Context) ([]*model
 }
 
 func (m *MockCustomRaceRepository) GetPendingApproval(ctx context.Context) ([]*models.CustomRace, error) {
+	// Get custom races awaiting approval
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -463,6 +471,7 @@ func (m *MockCampaignRepository) GetStoryArcsBySession(sessionID uuid.UUID) ([]*
 }
 
 func (m *MockCampaignRepository) UpdateStoryArc(id uuid.UUID, updates map[string]interface{}) error {
+	// Update story arc attributes
 	args := m.Called(id, updates)
 	return handleErrorReturn(args, 0)
 }
@@ -511,6 +520,7 @@ func (m *MockCampaignRepository) GetPlotThread(id uuid.UUID) (*models.PlotThread
 }
 
 func (m *MockCampaignRepository) GetPlotThreadsBySession(sessionID uuid.UUID) ([]*models.PlotThread, error) {
+	// Get all plot threads for a session
 	args := m.Called(sessionID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -519,6 +529,7 @@ func (m *MockCampaignRepository) GetPlotThreadsBySession(sessionID uuid.UUID) ([
 }
 
 func (m *MockCampaignRepository) GetActivePlotThreads(sessionID uuid.UUID) ([]*models.PlotThread, error) {
+	// Get only active plot threads for a session
 	args := m.Called(sessionID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -615,6 +626,7 @@ func (m *MockRuleBuilderRepository) GetRuleTemplate(templateID string) (*models.
 }
 
 func (m *MockRuleBuilderRepository) CreateRuleTemplate(template *models.RuleTemplate) error {
+	// Create a new rule template
 	args := m.Called(template)
 	return args.Error(0)
 }
@@ -625,6 +637,7 @@ func (m *MockRuleBuilderRepository) UpdateRuleTemplate(templateID string, update
 }
 
 func (m *MockRuleBuilderRepository) DeleteRuleTemplate(templateID string) error {
+	// Delete existing rule template by ID
 	args := m.Called(templateID)
 	return args.Error(0)
 }
@@ -713,6 +726,7 @@ func (m *MockDMAssistantRepository) AddNPCDialog(ctx context.Context, npcID uuid
 }
 
 func (m *MockDMAssistantRepository) SaveLocation(ctx context.Context, location *models.AILocation) error {
+	// Save AI-generated location data
 	args := m.Called(ctx, location)
 	return handleErrorReturn(args, 0)
 }
@@ -728,6 +742,7 @@ func (m *MockDMAssistantRepository) GetLocationsBySession(ctx context.Context, s
 }
 
 func (m *MockDMAssistantRepository) SaveStoryElement(ctx context.Context, element *models.AIStoryElement) error {
+	// Save AI-generated story element
 	args := m.Called(ctx, element)
 	return handleErrorReturn(args, 0)
 }

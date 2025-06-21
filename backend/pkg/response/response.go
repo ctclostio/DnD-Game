@@ -174,12 +174,10 @@ func ErrorWithCode(w http.ResponseWriter, r *http.Request, code errors.ErrorCode
 		errType = errors.ErrorTypeServiceUnavailable
 		statusCode = http.StatusServiceUnavailable
 
-	// Internal Server errors (500)
+	// Internal Server errors (500) and default case
 	case errors.ErrCodeDatabaseError, errors.ErrCodeForeignKeyViolation, errors.ErrCodeDeadlock,
 		errors.ErrCodeInternalError, errors.ErrCodeTimeout:
-		errType = errors.ErrorTypeInternal
-		statusCode = http.StatusInternalServerError
-
+		fallthrough
 	default:
 		errType = errors.ErrorTypeInternal
 		statusCode = http.StatusInternalServerError
