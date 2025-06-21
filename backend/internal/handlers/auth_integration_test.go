@@ -22,7 +22,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
-func TestAuthFlow_Integration(t *testing.T) {
+func TestAuthFlowIntegration(t *testing.T) {
 	// Setup test context
 	ctx, cleanup := testutil.SetupIntegrationTest(t)
 	defer cleanup()
@@ -345,7 +345,7 @@ func TestAuthFlow_Integration(t *testing.T) {
 	})
 }
 
-func TestPasswordValidation_Integration(t *testing.T) {
+func TestPasswordValidationIntegration(t *testing.T) {
 	ctx, cleanup := testutil.SetupIntegrationTest(t)
 	defer cleanup()
 
@@ -402,7 +402,7 @@ func TestPasswordValidation_Integration(t *testing.T) {
 	}
 }
 
-func TestRateLimiting_Integration(t *testing.T) {
+func TestRateLimitingIntegration(t *testing.T) {
 	t.Skip("Rate limiting not yet implemented")
 
 	// This test would verify that:

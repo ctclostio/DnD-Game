@@ -162,9 +162,18 @@ func (r *customRaceRepository) GetByID(ctx context.Context, id uuid.UUID) (*mode
 	}
 
 	// Unmarshal JSON fields
-	if err := unmarshalRaceJSON(&race, abilityScoresJSON, traitsJSON, languagesJSON,
-		resistancesJSON, immunitiesJSON, skillProfJSON, toolProfJSON,
-		weaponProfJSON, armorProfJSON); err != nil {
+	jsonData := &raceJSONData{
+		abilityScores: abilityScoresJSON,
+		traits:        traitsJSON,
+		languages:     languagesJSON,
+		resistances:   resistancesJSON,
+		immunities:    immunitiesJSON,
+		skillProf:     skillProfJSON,
+		toolProf:      toolProfJSON,
+		weaponProf:    weaponProfJSON,
+		armorProf:     armorProfJSON,
+	}
+	if err := unmarshalRaceJSON(&race, jsonData); err != nil {
 		return nil, err
 	}
 
@@ -382,9 +391,18 @@ func scanCustomRaces(rows *sql.Rows) ([]*models.CustomRace, error) {
 			return nil, err
 		}
 
-		if err := unmarshalRaceJSON(&race, abilityScoresJSON, traitsJSON, languagesJSON,
-			resistancesJSON, immunitiesJSON, skillProfJSON, toolProfJSON,
-			weaponProfJSON, armorProfJSON); err != nil {
+		jsonData := &raceJSONData{
+			abilityScores: abilityScoresJSON,
+			traits:        traitsJSON,
+			languages:     languagesJSON,
+			resistances:   resistancesJSON,
+			immunities:    immunitiesJSON,
+			skillProf:     skillProfJSON,
+			toolProf:      toolProfJSON,
+			weaponProf:    weaponProfJSON,
+			armorProf:     armorProfJSON,
+		}
+		if err := unmarshalRaceJSON(&race, jsonData); err != nil {
 			return nil, err
 		}
 
@@ -394,41 +412,53 @@ func scanCustomRaces(rows *sql.Rows) ([]*models.CustomRace, error) {
 	return races, rows.Err()
 }
 
-func unmarshalRaceJSON(race *models.CustomRace, abilityScores, traits, languages,
-	resistances, immunities, skillProf, toolProf, weaponProf, armorProf []byte) error {
-	if err := json.Unmarshal(abilityScores, &race.AbilityScoreIncreases); err != nil {
+// raceJSONData holds all the JSON byte slices for unmarshaling race data
+type raceJSONData struct {
+	abilityScores []byte
+	traits        []byte
+	languages     []byte
+	resistances   []byte
+	immunities    []byte
+	skillProf     []byte
+	toolProf      []byte
+	weaponProf    []byte
+	armorProf     []byte
+}
+
+func unmarshalRaceJSON(race *models.CustomRace, data *raceJSONData) error {
+	if err := json.Unmarshal(data.abilityScores, &race.AbilityScoreIncreases); err != nil {
 		return fmt.Errorf("failed to unmarshal ability scores: %w", err)
 	}
 
-	if err := json.Unmarshal(traits, &race.Traits); err != nil {
+	if err := json.Unmarshal(data.traits, &race.Traits); err != nil {
 		return fmt.Errorf("failed to unmarshal traits: %w", err)
 	}
 
-	if err := json.Unmarshal(languages, &race.Languages); err != nil {
+	if err := json.Unmarshal(data.languages, &race.Languages); err != nil {
 		return fmt.Errorf("failed to unmarshal languages: %w", err)
 	}
 
-	if err := json.Unmarshal(resistances, &race.Resistances); err != nil {
+	if err := json.Unmarshal(data.resistances, &race.Resistances); err != nil {
 		return fmt.Errorf("failed to unmarshal resistances: %w", err)
 	}
 
-	if err := json.Unmarshal(immunities, &race.Immunities); err != nil {
+	if err := json.Unmarshal(data.immunities, &race.Immunities); err != nil {
 		return fmt.Errorf("failed to unmarshal immunities: %w", err)
 	}
 
-	if err := json.Unmarshal(skillProf, &race.SkillProficiencies); err != nil {
+	if err := json.Unmarshal(data.skillProf, &race.SkillProficiencies); err != nil {
 		return fmt.Errorf("failed to unmarshal skill proficiencies: %w", err)
 	}
 
-	if err := json.Unmarshal(toolProf, &race.ToolProficiencies); err != nil {
+	if err := json.Unmarshal(data.toolProf, &race.ToolProficiencies); err != nil {
 		return fmt.Errorf("failed to unmarshal tool proficiencies: %w", err)
 	}
 
-	if err := json.Unmarshal(weaponProf, &race.WeaponProficiencies); err != nil {
+	if err := json.Unmarshal(data.weaponProf, &race.WeaponProficiencies); err != nil {
 		return fmt.Errorf("failed to unmarshal weapon proficiencies: %w", err)
 	}
 
-	if err := json.Unmarshal(armorProf, &race.ArmorProficiencies); err != nil {
+	if err := json.Unmarshal(data.armorProf, &race.ArmorProficiencies); err != nil {
 		return fmt.Errorf("failed to unmarshal armor proficiencies: %w", err)
 	}
 
