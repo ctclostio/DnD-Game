@@ -726,27 +726,159 @@ func (r *NarrativeRepository) GetActiveNarrativeThreads() ([]models.NarrativeThr
 }
 
 // UpdatePlayerAction updates an existing player action
-func (r *NarrativeRepository) UpdatePlayerAction(_ *models.PlayerAction) error {
-	// TODO: Implement update logic
-	return nil
+func (r *NarrativeRepository) UpdatePlayerAction(action *models.PlayerAction) error {
+	query := `
+		UPDATE player_actions 
+		SET 
+			session_id = ?,
+			character_id = ?,
+			action_type = ?,
+			target_type = ?,
+			target_id = ?,
+			action_description = ?,
+			moral_weight = ?,
+			immediate_result = ?,
+			potential_consequences = ?,
+			metadata = ?,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?`
+	
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(
+		query,
+		action.SessionID,
+		action.CharacterID,
+		action.ActionType,
+		action.TargetType,
+		action.TargetID,
+		action.ActionDescription,
+		action.MoralWeight,
+		action.ImmediateResult,
+		action.PotentialConsequences,
+		action.Metadata,
+		action.ID,
+	)
+	return err
 }
 
 // GetWorldEvent retrieves a narrative event by ID
-func (r *NarrativeRepository) GetWorldEvent(_ string) (*models.NarrativeEvent, error) {
-	// TODO: Implement retrieval logic
-	return &models.NarrativeEvent{}, nil
+func (r *NarrativeRepository) GetWorldEvent(id string) (*models.NarrativeEvent, error) {
+	var event models.NarrativeEvent
+	query := `
+		SELECT 
+			id, type, name, description, location,
+			timestamp, participants, witnesses, 
+			immediate_effects, tags, metadata
+		FROM narrative_events
+		WHERE id = ?`
+	
+	query = r.db.Rebind(query)
+	err := r.db.QueryRow(query, id).Scan(
+		&event.ID,
+		&event.Type,
+		&event.Name,
+		&event.Description,
+		&event.Location,
+		&event.Timestamp,
+		pq.Array(&event.Participants),
+		pq.Array(&event.Witnesses),
+		pq.Array(&event.ImmediateEffects),
+		pq.Array(&event.Tags),
+		&event.Metadata,
+	)
+	
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("narrative event not found: %s", id)
+	}
+	
+	return &event, err
 }
 
 // CreateWorldEvent creates a new narrative event
-func (r *NarrativeRepository) CreateWorldEvent(_ *models.NarrativeEvent) error {
-	// TODO: Implement creation logic
-	return nil
+func (r *NarrativeRepository) CreateWorldEvent(event *models.NarrativeEvent) error {
+	if event.ID == "" {
+		event.ID = uuid.New().String()
+	}
+	
+	if event.Timestamp.IsZero() {
+		event.Timestamp = time.Now()
+	}
+	
+	query := `
+		INSERT INTO narrative_events (
+			id, type, name, description, location,
+			timestamp, participants, witnesses,
+			immediate_effects, tags, metadata
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(
+		query,
+		event.ID,
+		event.Type,
+		event.Name,
+		event.Description,
+		event.Location,
+		event.Timestamp,
+		pq.Array(event.Participants),
+		pq.Array(event.Witnesses),
+		pq.Array(event.ImmediateEffects),
+		pq.Array(event.Tags),
+		event.Metadata,
+	)
+	
+	return err
 }
 
 // CreatePersonalizedNarrative saves a personalized narrative
-func (r *NarrativeRepository) CreatePersonalizedNarrative(_ *models.PersonalizedNarrative) error {
-	// TODO: Implement creation logic
-	return nil
+func (r *NarrativeRepository) CreatePersonalizedNarrative(narrative *models.PersonalizedNarrative) error {
+	if narrative.ID == "" {
+		narrative.ID = uuid.New().String()
+	}
+	
+	if narrative.GeneratedAt.IsZero() {
+		narrative.GeneratedAt = time.Now()
+	}
+	
+	// Convert complex types to JSON for storage
+	personalizedHooksJSON, err := json.Marshal(narrative.PersonalizedHooks)
+	if err != nil {
+		return fmt.Errorf("failed to marshal personalized hooks: %w", err)
+	}
+	
+	backstoryCallbacksJSON, err := json.Marshal(narrative.BackstoryCallbacks)
+	if err != nil {
+		return fmt.Errorf("failed to marshal backstory callbacks: %w", err)
+	}
+	
+	predictedImpactJSON, err := json.Marshal(narrative.PredictedImpact)
+	if err != nil {
+		return fmt.Errorf("failed to marshal predicted impact: %w", err)
+	}
+	
+	query := `
+		INSERT INTO personalized_narratives (
+			id, base_event_id, character_id,
+			personalized_hooks, backstory_callbacks,
+			emotional_resonance, predicted_impact,
+			metadata, generated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	
+	query = r.db.Rebind(query)
+	_, err = r.db.Exec(
+		query,
+		narrative.ID,
+		narrative.BaseEventID,
+		narrative.CharacterID,
+		personalizedHooksJSON,
+		backstoryCallbacksJSON,
+		narrative.EmotionalResonance,
+		predictedImpactJSON,
+		narrative.Metadata,
+		narrative.GeneratedAt,
+	)
+	
+	return err
 }
 
 // Add NarrativeThread model if not in models package

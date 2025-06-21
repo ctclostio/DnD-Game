@@ -186,37 +186,34 @@ func (pr *PaginatedRepository) GetGameSessionsPaginated(ctx context.Context, par
 	return pagination.NewPageResult(sessions, params, total), nil
 }
 
-// GetCampaignsPaginated returns paginated campaigns
-// TODO: This function needs to be updated to match the current schema
-// Currently commented out to fix build errors
-/*
+// GetCampaignsPaginated returns paginated game sessions (campaigns)
 func (pr *PaginatedRepository) GetCampaignsPaginated(ctx context.Context, userID string, params *pagination.PaginationParams) (*pagination.PageResult, error) {
 	baseQuery := `
-		SELECT c.*, COUNT(DISTINCT cp.user_id) as player_count
-		FROM campaigns c
-		LEFT JOIN campaign_players cp ON c.id = cp.campaign_id
-		WHERE c.owner_id = ? OR cp.user_id = ?
-		GROUP BY c.id`
+		SELECT gs.*, COUNT(DISTINCT gp.user_id) as player_count
+		FROM game_sessions gs
+		LEFT JOIN game_participants gp ON gs.id = gp.game_session_id
+		WHERE gs.dm_user_id = ? OR gp.user_id = ?
+		GROUP BY gs.id`
 
 	countQuery := `
-		SELECT COUNT(DISTINCT c.id)
-		FROM campaigns c
-		LEFT JOIN campaign_players cp ON c.id = cp.campaign_id
-		WHERE c.owner_id = ? OR cp.user_id = ?`
+		SELECT COUNT(DISTINCT gs.id)
+		FROM game_sessions gs
+		LEFT JOIN game_participants gp ON gs.id = gp.game_session_id
+		WHERE gs.dm_user_id = ? OR gp.user_id = ?`
 
 	args := []interface{}{userID, userID}
 
 	// Apply filters
 	if status, ok := params.Filters["status"].(string); ok && status != "" {
-		baseQuery = strings.Replace(baseQuery, "WHERE", "WHERE c.status = ? AND", 1)
-		countQuery = strings.Replace(countQuery, "WHERE", "WHERE c.status = ? AND", 1)
+		baseQuery = strings.Replace(baseQuery, "WHERE", "WHERE gs.status = ? AND", 1)
+		countQuery = strings.Replace(countQuery, "WHERE", "WHERE gs.status = ? AND", 1)
 		args = append([]interface{}{status}, args...)
 	}
 
 	// Add sorting
-	sortColumn := "c.created_at"
+	sortColumn := "gs.created_at"
 	if params.SortBy == "name" {
-		sortColumn = "c.name"
+		sortColumn = "gs.name"
 	} else if params.SortBy == "player_count" {
 		sortColumn = "player_count"
 	}
@@ -231,35 +228,37 @@ func (pr *PaginatedRepository) GetCampaignsPaginated(ctx context.Context, userID
 	countArgs := args[:len(args)-2]
 	err := pr.db.QueryRowContext(ctx, pr.db.Rebind(countQuery), countArgs...).Scan(&total)
 	if err != nil {
-		return nil, fmt.Errorf("failed to count campaigns: %w", err)
+		return nil, fmt.Errorf("failed to count game sessions: %w", err)
 	}
 
 	// Execute main query
 	rows, err := pr.db.QueryContext(ctx, pr.db.Rebind(baseQuery), args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query campaigns: %w", err)
+		return nil, fmt.Errorf("failed to query game sessions: %w", err)
 	}
 	defer rows.Close()
 
-	var campaigns []*models.GameSession
-	for rows.Next() {
-		var campaign models.GameSession
-		var playerCount int
-		err := rows.Scan(
-			&campaign.ID, &campaign.OwnerID, &campaign.Name, &campaign.Description,
-			&campaign.Status, &campaign.Settings, &campaign.CreatedAt, &campaign.UpdatedAt,
-			&playerCount,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan campaign: %w", err)
-		}
-		campaign.PlayerCount = playerCount
-		campaigns = append(campaigns, &campaign)
+	type GameSessionWithPlayerCount struct {
+		models.GameSession
+		PlayerCount int `json:"player_count" db:"player_count"`
 	}
 
-	return pagination.NewPageResult(campaigns, params, total), nil
+	var sessions []*GameSessionWithPlayerCount
+	for rows.Next() {
+		var session GameSessionWithPlayerCount
+		err := rows.Scan(
+			&session.ID, &session.Name, &session.DMID, 
+			&session.Status, &session.CreatedAt, &session.UpdatedAt,
+			&session.PlayerCount,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan game session: %w", err)
+		}
+		sessions = append(sessions, &session)
+	}
+
+	return pagination.NewPageResult(sessions, params, total), nil
 }
-*/
 
 // CursorPaginationHelper helps with cursor-based pagination
 type CursorPaginationHelper struct {

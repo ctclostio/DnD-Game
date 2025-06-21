@@ -108,10 +108,30 @@ func (r *combatAnalyticsRepository) GetCombatAnalyticsBySession(sessionID uuid.U
 	return analytics, err
 }
 
-func (r *combatAnalyticsRepository) UpdateCombatAnalytics(_ uuid.UUID, updates map[string]interface{}) error {
-	// TODO: Implement database-agnostic update query builder
-	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax
-	return fmt.Errorf("UpdateCombatAnalytics not implemented - pending SQL migration")
+func (r *combatAnalyticsRepository) UpdateCombatAnalytics(id uuid.UUID, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return nil
+	}
+
+	// Build the update query
+	setClauses := make([]string, 0, len(updates))
+	args := make([]interface{}, 0, len(updates)+1)
+
+	for column, value := range updates {
+		setClauses = append(setClauses, fmt.Sprintf("%s = ?", column))
+		args = append(args, value)
+	}
+
+	args = append(args, id)
+	query := fmt.Sprintf(
+		"UPDATE combat_analytics SET %s WHERE id = ?",
+		combatAnalyticsJoinStrings(setClauses, ", "),
+	)
+
+	// Use Rebind for database compatibility
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query, args...)
+	return err
 }
 
 // Combatant Analytics methods
@@ -168,10 +188,30 @@ func (r *combatAnalyticsRepository) GetCombatantAnalytics(combatAnalyticsID uuid
 	return analytics, err
 }
 
-func (r *combatAnalyticsRepository) UpdateCombatantAnalytics(_ uuid.UUID, updates map[string]interface{}) error {
-	// TODO: Implement database-agnostic update query builder
-	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax
-	return fmt.Errorf("UpdateCombatantAnalytics not implemented - pending SQL migration")
+func (r *combatAnalyticsRepository) UpdateCombatantAnalytics(id uuid.UUID, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return nil
+	}
+
+	// Build the update query
+	setClauses := make([]string, 0, len(updates))
+	args := make([]interface{}, 0, len(updates)+1)
+
+	for column, value := range updates {
+		setClauses = append(setClauses, fmt.Sprintf("%s = ?", column))
+		args = append(args, value)
+	}
+
+	args = append(args, id)
+	query := fmt.Sprintf(
+		"UPDATE combatant_analytics SET %s WHERE id = ?",
+		combatAnalyticsJoinStrings(setClauses, ", "),
+	)
+
+	// Use Rebind for database compatibility
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query, args...)
+	return err
 }
 
 // Auto Combat Resolution methods
@@ -298,10 +338,30 @@ func (r *combatAnalyticsRepository) GetBattleMapsBySession(sessionID uuid.UUID) 
 	return maps, err
 }
 
-func (r *combatAnalyticsRepository) UpdateBattleMap(_ uuid.UUID, updates map[string]interface{}) error {
-	// TODO: Implement database-agnostic update query builder
-	// For now, this method is not implemented due to buildUpdateQuery using PostgreSQL syntax
-	return fmt.Errorf("UpdateBattleMap not implemented - pending SQL migration")
+func (r *combatAnalyticsRepository) UpdateBattleMap(id uuid.UUID, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return nil
+	}
+
+	// Build the update query
+	setClauses := make([]string, 0, len(updates))
+	args := make([]interface{}, 0, len(updates)+1)
+
+	for column, value := range updates {
+		setClauses = append(setClauses, fmt.Sprintf("%s = ?", column))
+		args = append(args, value)
+	}
+
+	args = append(args, id)
+	query := fmt.Sprintf(
+		"UPDATE battle_maps SET %s WHERE id = ?",
+		combatAnalyticsJoinStrings(setClauses, ", "),
+	)
+
+	// Use Rebind for database compatibility
+	query = r.db.Rebind(query)
+	_, err := r.db.Exec(query, args...)
+	return err
 }
 
 // Smart Initiative methods
@@ -449,4 +509,16 @@ func (r *combatAnalyticsRepository) GetCombatActionsByRound(combatID uuid.UUID, 
 	query = r.db.Rebind(query)
 	err := r.db.Select(&actions, query, combatID, roundNumber)
 	return actions, err
+}
+
+// Helper function to join strings
+func combatAnalyticsJoinStrings(elements []string, separator string) string {
+	if len(elements) == 0 {
+		return ""
+	}
+	result := elements[0]
+	for i := 1; i < len(elements); i++ {
+		result += separator + elements[i]
+	}
+	return result
 }
