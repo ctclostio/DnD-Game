@@ -128,8 +128,9 @@ class App {
                 // Initialize WebSocket for game session
                 if (!this.ws) {
                     this.ws = new WebSocketService();
-                    // Connect with room ID (you might want to get this from the game session)
-                    const roomId = 'default-room'; // TODO: Get actual room ID from game session
+                    // Get room ID from URL params or use default
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const roomId = urlParams.get('sessionId') || 'default-room';
                     this.ws.connect(roomId);
                 }
                 document.getElementById('chat-panel').classList.remove('hidden');

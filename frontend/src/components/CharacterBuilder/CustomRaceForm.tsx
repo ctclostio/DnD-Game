@@ -54,10 +54,11 @@ export const CustomRaceForm = memo(({
 
     setIsGenerating(true);
     try {
-      // TODO: Call AI generation endpoint
+      // FUTURE: Implement AI generation endpoint when backend API is ready
+      // Expected endpoint: POST /api/ai/generate-race
       console.log('Generating custom race:', customRaceData);
       
-      // Mock response for now
+      // Mock response for demonstration purposes
       setTimeout(() => {
         setGeneratedPreview({
           name: customRaceData.name,

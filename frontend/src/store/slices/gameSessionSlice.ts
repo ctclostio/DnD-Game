@@ -30,9 +30,7 @@ function createEntityState<T>(items: T[], getId: (item: T) => string): EntitySta
 export const fetchSessions = createAsyncThunk(
   'gameSession/fetchSessions',
   async () => {
-    // TODO: API doesn't have getGameSessions (plural) method yet
-    // For now, return empty array
-    const response = await apiService.getGameSessions?.() || [];
+    const response = await apiService.getGameSessions();
     return response;
   }
 );

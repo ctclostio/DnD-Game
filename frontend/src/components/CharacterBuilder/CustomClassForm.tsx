@@ -71,10 +71,11 @@ export const CustomClassForm = memo(({
 
     setIsGenerating(true);
     try {
-      // TODO: Call AI generation endpoint
+      // FUTURE: Implement AI generation endpoint when backend API is ready
+      // Expected endpoint: POST /api/ai/generate-class
       console.log('Generating custom class:', customClassData);
       
-      // Mock response for now
+      // Mock response for demonstration purposes
       setTimeout(() => {
         setGeneratedPreview({
           name: customClassData.name,
