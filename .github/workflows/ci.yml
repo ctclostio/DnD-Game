@@ -90,6 +90,8 @@ jobs:
           DB_NAME: dnd_test
           DB_SSLMODE: disable
           JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
+          ENV: test  # Set environment to test
+          AI_PROVIDER: mock  # Use mock AI provider
         run: |
           cd backend
           go run cmd/server/main.go migrate up
@@ -331,6 +333,9 @@ jobs:
       - name: Run database migrations
         env:
           DATABASE_URL: postgresql://postgres:${{ secrets.TEST_DB_PASSWORD }}@localhost:5432/dnd_integration?sslmode=disable
+          ENV: test  # Set environment to test
+          AI_PROVIDER: mock  # Use mock AI provider
+          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}  # JWT secret is required
         run: |
           cd backend
           go run cmd/server/main.go migrate up
@@ -340,8 +345,9 @@ jobs:
           DATABASE_URL: postgresql://postgres:${{ secrets.TEST_DB_PASSWORD }}@localhost:5432/dnd_integration?sslmode=disable
           JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
           REDIS_URL: redis://localhost:6379
-          GO_ENV: test
+          ENV: test  # Changed from GO_ENV to ENV
           PORT: 8080
+          AI_PROVIDER: mock  # Explicitly set AI provider to mock for tests
         run: |
           cd backend
           go run cmd/server/main.go &
