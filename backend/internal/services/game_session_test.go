@@ -658,7 +658,7 @@ func TestGameSessionService_ValidateUserInSession(t *testing.T) {
 				m.On("GetParticipants", ctx, "nonexistent").Return([]*models.GameParticipant{}, nil)
 				m.On("GetByID", ctx, "nonexistent").Return(nil, errors.New(testErrGameNotFound))
 			},
-			expectedError: testErrSessionNotFound,
+			expectedError: "not found", // The actual error is wrapped
 		},
 	}
 

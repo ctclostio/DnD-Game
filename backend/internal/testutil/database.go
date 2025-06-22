@@ -17,18 +17,23 @@ var validSQLIdentifier = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 func isValidTableName(name string) bool {
 	// Whitelist of known table names in the test database
 	validTables := map[string]bool{
-		"users":           true,
-		"refresh_tokens":  true,
-		"game_sessions":   true,
-		"characters":      true,
-		"combat_sessions": true,
-		"combat_logs":     true,
-		"inventories":     true,
-		"items":           true,
-		"factions":        true,
-		"settlements":     true,
-		"cultures":        true,
-		"world_events":    true,
+		"users":              true,
+		"refresh_tokens":     true,
+		"game_sessions":      true,
+		"game_participants":  true,
+		"characters":         true,
+		"character_inventory": true,
+		"character_currency": true,
+		"combat_sessions":    true,
+		"combat_logs":        true,
+		"inventories":        true,
+		"items":              true,
+		"factions":           true,
+		"settlements":        true,
+		"cultures":           true,
+		"world_events":       true,
+		"npcs":               true,
+		"dice_rolls":         true,
 	}
 
 	return validTables[name] && validSQLIdentifier.MatchString(name)

@@ -79,10 +79,10 @@ func TestUserService_Register(t *testing.T) {
 				assert.Equal(t, testEmailValid, user.Email)
 				assert.Equal(t, "player", user.Role)
 				assert.NotEmpty(t, user.PasswordHash)
-				assert.NotEqual(t, testUserPassword, user.PasswordHash) // Should be hashed
+				assert.NotEqual(t, testPasswordValid, user.PasswordHash) // Should be hashed
 
 				// Verify password was hashed correctly
-				err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(testUserPassword))
+				err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(testPasswordValid))
 				assert.NoError(t, err)
 			},
 		},

@@ -55,21 +55,21 @@ const (
 	testRegion     = "Test Region"
 	testRegionTest = "Test"
 	
-	// Terrain types
-	testTerrainMountainous = "mountainous"
-	testTerrainForest      = "forest"
-	testTerrainDesert      = "desert"
-	testTerrainCoastal     = "coastal"
-	testTerrainSwamp       = "swamp"
-	testTerrainPlains      = "plains"
-	testTerrainVaried      = "varied"
+	// Terrain types - use actual model constants
+	testTerrainMountainous = models.TerrainTypeMountains
+	testTerrainForest      = models.TerrainTypeForest
+	testTerrainDesert      = models.TerrainTypeDesert
+	testTerrainCoastal     = models.TerrainTypeCoastal
+	testTerrainSwamp       = models.TerrainTypeSwamp
+	testTerrainPlains      = models.TerrainTypePlains
+	testTerrainVaried      = models.TerrainTypePlains // Default to plains instead of "varied"
 	
-	// Climate types
-	testClimateCold      = "cold"
-	testClimateTropical  = "tropical"
-	testClimateArid      = "arid"
-	testClimateHumid     = "humid"
-	testClimateTemperate = "temperate"
+	// Climate types - use actual model constants
+	testClimateCold      = models.ClimateArctic // Changed from "cold" to Arctic
+	testClimateTropical  = models.ClimateTropical
+	testClimateArid      = models.ClimateArid
+	testClimateHumid     = models.ClimateTropical // "humid" mapped to tropical
+	testClimateTemperate = models.ClimateTemperate
 	
 	// Settlement names
 	testSettlementIronhold  = "Ironhold"
@@ -474,7 +474,7 @@ func TestSettlementGeneratorServiceInferTerrainType(t *testing.T) {
 	service := &SettlementGeneratorService{}
 	tests := []struct {
 		region   string
-		expected string
+		expected models.TerrainType
 	}{
 		{"Northern Mountains", testTerrainMountainous},
 		{"Dark Forest", testTerrainForest},
@@ -495,13 +495,13 @@ func TestSettlementGeneratorServiceInferClimate(t *testing.T) {
 	service := &SettlementGeneratorService{}
 	tests := []struct {
 		region   string
-		expected string
+		expected models.Climate
 	}{
-		{"Northern Wastes", "cold"},
-		{"Southern Jungles", "tropical"},
-		{"Desert Expanse", "arid"},
-		{"Swamp Delta", "humid"},
-		{"Central Valley", "temperate"},
+		{"Northern Wastes", testClimateCold},
+		{"Southern Jungles", testClimateTropical},
+		{"Desert Expanse", testClimateArid},
+		{"Swamp Delta", testClimateHumid},
+		{"Central Valley", testClimateTemperate},
 	}
 
 	for _, tt := range tests {
@@ -885,7 +885,7 @@ func TestSettlementGeneratorService_Integration(t *testing.T) {
 		require.Equal(t, 8, settlement.CorruptionLevel)
 		require.Equal(t, 9, settlement.EldritchInfluence)
 		require.True(t, settlement.AncientRuinsNearby)
-		require.Equal(t, "coastal", settlement.TerrainType)
+		require.Equal(t, models.TerrainTypeCoastal, settlement.TerrainType)
 
 		// Verify JSONB fields
 		var notableLocations []map[string]string

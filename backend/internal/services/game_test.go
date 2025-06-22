@@ -15,7 +15,7 @@ const (
 	testDMID            = "dm-123"
 	testPlayerID        = "player-456"
 	testCampaignName    = "Test Campaign"
-	testSessionNotFound = "Session not found"
+	testSessionNotFound = "session not found"
 	testNonExistentID   = "non-existent-id"
 )
 
