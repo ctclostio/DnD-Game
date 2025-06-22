@@ -209,11 +209,11 @@ Respond in JSON format:
 		Name:               generatedData.Name,
 		Type:               req.Type,
 		Population:         population,
-		AgeCategory:        generatedData.AgeCategory,
+		AgeCategory:        models.SettlementAge(generatedData.AgeCategory),
 		Description:        generatedData.Description,
 		History:            generatedData.History,
-		GovernmentType:     generatedData.GovernmentType,
-		Alignment:          generatedData.Alignment,
+		GovernmentType:     models.GovernmentType(generatedData.GovernmentType),
+		Alignment:          models.Alignment(generatedData.Alignment),
 		DangerLevel:        req.DangerLevel,
 		CorruptionLevel:    generatedData.CorruptionLevel,
 		Region:             req.Region,
@@ -556,42 +556,42 @@ func (s *SettlementGeneratorService) calculateWealthLevel(settlementType models.
 	return wealth
 }
 
-func (s *SettlementGeneratorService) inferTerrainType(region string) string {
+func (s *SettlementGeneratorService) inferTerrainType(region string) models.TerrainType {
 	// Simple inference based on region name
 	region = strings.ToLower(region)
 
 	switch {
 	case strings.Contains(region, "mountain"):
-		return "mountainous"
+		return models.TerrainTypeMountains
 	case strings.Contains(region, "forest"):
-		return "forest"
+		return models.TerrainTypeForest
 	case strings.Contains(region, "desert"):
-		return "desert"
+		return models.TerrainTypeDesert
 	case strings.Contains(region, "coast"):
-		return "coastal"
+		return models.TerrainTypeCoastal
 	case strings.Contains(region, "swamp"):
-		return "swamp"
+		return models.TerrainTypeSwamp
 	case strings.Contains(region, "plain"):
-		return "plains"
+		return models.TerrainTypePlains
 	default:
-		return "varied"
+		return models.TerrainTypePlains // Default to plains instead of "varied"
 	}
 }
 
-func (s *SettlementGeneratorService) inferClimate(region string) string {
+func (s *SettlementGeneratorService) inferClimate(region string) models.Climate {
 	region = strings.ToLower(region)
 
 	switch {
 	case strings.Contains(region, "north"):
-		return "cold"
+		return models.ClimateArctic
 	case strings.Contains(region, "south"):
-		return "tropical"
+		return models.ClimateTropical
 	case strings.Contains(region, "desert"):
-		return "arid"
+		return models.ClimateArid
 	case strings.Contains(region, "swamp"):
-		return "humid"
+		return models.ClimateTropical // Humid isn't a valid climate, using tropical
 	default:
-		return "temperate"
+		return models.ClimateTemperate
 	}
 }
 

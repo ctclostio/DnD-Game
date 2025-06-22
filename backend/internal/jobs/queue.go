@@ -239,7 +239,7 @@ func (jq *JobQueue) Enqueue(ctx context.Context, jobType JobType, payload interf
 			Str("job_type", string(jobType)).
 			Str("task_id", info.ID).
 			Str("queue", info.Queue).
-			Str("state", string(info.State)).
+			Str("state", info.State.String()).
 			Msg("Job enqueued")
 	}
 

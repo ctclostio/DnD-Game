@@ -7,7 +7,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
-	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil/integration"
 	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 )
@@ -84,7 +84,7 @@ func createTestServices(_ *testing.T, db *database.DB, repos *database.Repositor
 }
 
 // SetupTestHandlers sets up handlers with all dependencies for integration testing
-func SetupTestHandlers(t *testing.T, testCtx *testutil.IntegrationTestContext) (*Handlers, *websocket.Hub) {
+func SetupTestHandlers(t *testing.T, testCtx *integration.IntegrationTestContext) (*Handlers, *websocket.Hub) {
 	// Create WebSocket hub
 	hub := websocket.NewHub()
 	go hub.Run()

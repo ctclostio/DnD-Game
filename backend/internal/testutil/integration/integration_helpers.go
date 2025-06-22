@@ -1,4 +1,4 @@
-package testutil
+package integration
 
 import (
 	"bytes"
@@ -16,6 +16,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/config"
 	"github.com/ctclostio/DnD-Game/backend/internal/database"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
@@ -60,7 +61,7 @@ func SetupIntegrationTest(t *testing.T, opts ...IntegrationTestOptions) (ctx *In
 	require.NoError(t, err)
 
 	// Setup test database
-	sqlxDB := SetupTestDB(t)
+	sqlxDB := testutil.SetupTestDB(t)
 	db := &database.DB{DB: sqlxDB}
 
 	// Create repositories
@@ -265,7 +266,7 @@ func (ctx *IntegrationTestContext) CreateTestUser(username, email, _ string) str
 // CreateTestCharacter creates a test character and returns the character ID
 func (ctx *IntegrationTestContext) CreateTestCharacter(userID, name string) string {
 	charID := "char-" + name
-	SeedTestCharacter(ctx.T, ctx.SQLXDB, charID, userID, name)
+	testutil.SeedTestCharacter(ctx.T, ctx.SQLXDB, charID, userID, name)
 	return charID
 }
 
@@ -293,5 +294,5 @@ func (ctx *IntegrationTestContext) AddUserToSession(sessionID, userID string, ch
 
 // CleanupDatabase truncates all tables for test isolation
 func (ctx *IntegrationTestContext) CleanupDatabase() {
-	TruncateTables(ctx.T, ctx.SQLXDB)
+	testutil.TruncateTables(ctx.T, ctx.SQLXDB)
 }

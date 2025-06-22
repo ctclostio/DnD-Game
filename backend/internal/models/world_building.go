@@ -18,6 +18,68 @@ const (
 	SettlementRuins      SettlementType = "ruins"
 )
 
+// SettlementAge represents the age category of a settlement
+type SettlementAge string
+
+const (
+	SettlementAgeNew        SettlementAge = "new"
+	SettlementAgeEstablished SettlementAge = "established"
+	SettlementAgeOld        SettlementAge = "old"
+	SettlementAgeAncient    SettlementAge = "ancient"
+)
+
+// TerrainType represents the terrain type of a location
+type TerrainType string
+
+const (
+	TerrainTypePlains    TerrainType = "plains"
+	TerrainTypeForest    TerrainType = "forest"
+	TerrainTypeMountains TerrainType = "mountains"
+	TerrainTypeDesert    TerrainType = "desert"
+	TerrainTypeSwamp     TerrainType = "swamp"
+	TerrainTypeCoastal   TerrainType = "coastal"
+	TerrainTypeTundra    TerrainType = "tundra"
+)
+
+// Climate represents the climate of a location
+type Climate string
+
+const (
+	ClimateTemperate Climate = "temperate"
+	ClimateTropical  Climate = "tropical"
+	ClimateArid      Climate = "arid"
+	ClimateArctic    Climate = "arctic"
+	ClimateMediterranean Climate = "mediterranean"
+)
+
+// GovernmentType represents the type of government
+type GovernmentType string
+
+const (
+	GovernmentMonarchy      GovernmentType = "monarchy"
+	GovernmentRepublic      GovernmentType = "republic"
+	GovernmentDemocracy     GovernmentType = "democracy"
+	GovernmentOligarchy     GovernmentType = "oligarchy"
+	GovernmentTheocracy     GovernmentType = "theocracy"
+	GovernmentAnarchy       GovernmentType = "anarchy"
+	GovernmentDictatorship  GovernmentType = "dictatorship"
+)
+
+// Alignment represents the moral and ethical alignment
+type Alignment string
+
+const (
+	AlignmentLawfulGood     Alignment = "lawful_good"
+	AlignmentNeutralGood    Alignment = "neutral_good"
+	AlignmentChaoticGood    Alignment = "chaotic_good"
+	AlignmentLawfulNeutral  Alignment = "lawful_neutral"
+	AlignmentTrueNeutral    Alignment = "true_neutral"
+	AlignmentChaoticNeutral Alignment = "chaotic_neutral"
+	AlignmentLawfulEvil     Alignment = "lawful_evil"
+	AlignmentNeutralEvil    Alignment = "neutral_evil"
+	AlignmentChaoticEvil    Alignment = "chaotic_evil"
+)
+
 // Settlement represents a populated location in the world
 type Settlement struct {
 	ID              uuid.UUID      `json:"id" db:"id"`
@@ -25,19 +87,19 @@ type Settlement struct {
 	Name            string         `json:"name" db:"name"`
 	Type            SettlementType `json:"type" db:"type"`
 	Population      int            `json:"population" db:"population"`
-	AgeCategory     string         `json:"ageCategory" db:"age_category"`
+	AgeCategory     SettlementAge  `json:"ageCategory" db:"age_category"`
 	Description     string         `json:"description" db:"description"`
 	History         string         `json:"history" db:"history"`
-	GovernmentType  string         `json:"governmentType" db:"government_type"`
-	Alignment       string         `json:"alignment" db:"alignment"`
+	GovernmentType  GovernmentType `json:"governmentType" db:"government_type"`
+	Alignment       Alignment      `json:"alignment" db:"alignment"`
 	DangerLevel     int            `json:"dangerLevel" db:"danger_level"`
 	CorruptionLevel int            `json:"corruptionLevel" db:"corruption_level"`
 
 	// Location
-	Region      string `json:"region" db:"region"`
-	Coordinates JSONB  `json:"coordinates" db:"coordinates"`
-	TerrainType string `json:"terrainType" db:"terrain_type"`
-	Climate     string `json:"climate" db:"climate"`
+	Region      string      `json:"region" db:"region"`
+	Coordinates JSONB       `json:"coordinates" db:"coordinates"`
+	TerrainType TerrainType `json:"terrainType" db:"terrain_type"`
+	Climate     Climate     `json:"climate" db:"climate"`
 
 	// Economic data
 	WealthLevel    int   `json:"wealthLevel" db:"wealth_level"`

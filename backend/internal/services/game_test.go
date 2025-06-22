@@ -13,10 +13,10 @@ import (
 // Test constants
 const (
 	testDMID            = "dm-123"
-	testPlayerID        = testPlayerID
+	testPlayerID        = "player-456"
 	testCampaignName    = "Test Campaign"
-	testSessionNotFound = testSessionNotFound
-	testNonExistentID   = testNonExistentID
+	testSessionNotFound = "Session not found"
+	testNonExistentID   = "non-existent-id"
 )
 
 func TestGameService_CreateSession(t *testing.T) {

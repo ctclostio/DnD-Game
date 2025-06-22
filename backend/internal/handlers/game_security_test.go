@@ -17,7 +17,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
-	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil/integration"
 )
 
 // Test constants
@@ -30,7 +30,7 @@ const (
 // Test data structure to hold test setup
 type testData struct {
 	ctx       context.Context
-	testCtx   *testutil.IntegrationTestContext
+	testCtx   *integration.IntegrationTestContext
 	h         *handlers.Handlers
 	svc       *services.Services
 	dm        *models.User
@@ -334,7 +334,7 @@ func TestSessionStateSecurity(t *testing.T) {
 }
 
 // Helper functions
-func createTestUser(t *testing.T, ctx *testutil.IntegrationTestContext, username, email, role string) *models.User {
+func createTestUser(t *testing.T, ctx *integration.IntegrationTestContext, username, email, role string) *models.User {
 	user := &models.User{
 		Username: username,
 		Email:    email,
@@ -345,7 +345,7 @@ func createTestUser(t *testing.T, ctx *testutil.IntegrationTestContext, username
 	return user
 }
 
-func createTestCharacter(t *testing.T, ctx *testutil.IntegrationTestContext, userID, name string, level int) *models.Character {
+func createTestCharacter(t *testing.T, ctx *integration.IntegrationTestContext, userID, name string, level int) *models.Character {
 	char := &models.Character{
 		UserID: userID,
 		Name:   name,
@@ -361,9 +361,9 @@ func createTestCharacter(t *testing.T, ctx *testutil.IntegrationTestContext, use
 // Helper functions to reduce cognitive complexity
 
 // setupTestEnvironment initializes the test environment
-func setupTestEnvironment(t *testing.T) (context.Context, *testutil.IntegrationTestContext, *handlers.Handlers, *services.Services, func()) {
+func setupTestEnvironment(t *testing.T) (context.Context, *integration.IntegrationTestContext, *handlers.Handlers, *services.Services, func()) {
 	ctx := context.Background()
-	testCtx, cleanup := testutil.SetupIntegrationTest(t)
+	testCtx, cleanup := integration.SetupIntegrationTest(t)
 
 	// Create services with repositories
 	gameService := services.NewGameSessionService(testCtx.Repos.GameSessions)

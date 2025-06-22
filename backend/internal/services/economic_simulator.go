@@ -504,16 +504,16 @@ func (s *EconomicSimulatorService) calculateRouteDifficulty(start, end *models.S
 	difficulty := 3 // Base difficulty
 
 	// Terrain affects difficulty
-	terrains := []string{start.TerrainType, end.TerrainType}
+	terrains := []models.TerrainType{start.TerrainType, end.TerrainType}
 	for _, terrain := range terrains {
 		switch terrain {
-		case constants.TerrainMountainous:
+		case models.TerrainTypeMountains:
 			difficulty += 2
-		case constants.TerrainSwamp:
+		case models.TerrainTypeSwamp:
 			difficulty += 2
-		case constants.TerrainDesert:
+		case models.TerrainTypeDesert:
 			difficulty++
-		case constants.TerrainForest:
+		case models.TerrainTypeForest:
 			difficulty++
 		}
 	}
@@ -668,29 +668,29 @@ func (s *EconomicSimulatorService) determineEnvironmentalHazards(start, end *mod
 	hazards := []string{}
 
 	// Terrain-based hazards
-	terrains := []string{start.TerrainType, end.TerrainType}
+	terrains := []models.TerrainType{start.TerrainType, end.TerrainType}
 	for _, terrain := range terrains {
 		switch terrain {
-		case constants.TerrainMountainous:
+		case models.TerrainTypeMountains:
 			hazards = append(hazards, "avalanches", "altitude sickness")
-		case constants.TerrainSwamp:
+		case models.TerrainTypeSwamp:
 			hazards = append(hazards, "disease", "quicksand")
-		case constants.TerrainDesert:
+		case models.TerrainTypeDesert:
 			hazards = append(hazards, "sandstorms", "dehydration")
-		case constants.TerrainForest:
+		case models.TerrainTypeForest:
 			hazards = append(hazards, "getting lost", "wild animals")
 		}
 	}
 
 	// Climate hazards
-	climates := []string{start.Climate, end.Climate}
+	climates := []models.Climate{start.Climate, end.Climate}
 	for _, climate := range climates {
 		switch climate {
-		case constants.ClimateCold:
+		case models.ClimateArctic:
 			hazards = append(hazards, "blizzards", "frostbite")
-		case constants.ClimateTropical:
+		case models.ClimateTropical:
 			hazards = append(hazards, "monsoons", "tropical diseases")
-		case constants.ClimateArid:
+		case models.ClimateArid:
 			hazards = append(hazards, "extreme heat", "water scarcity")
 		}
 	}

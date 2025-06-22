@@ -12,6 +12,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/auth"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil/integration"
 	ws "github.com/ctclostio/DnD-Game/backend/internal/websocket"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
@@ -28,9 +29,9 @@ const (
 )
 
 // Helper function to setup test environment with game session routes
-func setupGameSessionTestEnvironment(t *testing.T) (*testutil.IntegrationTestContext, func()) {
-	return testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
-		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
+func setupGameSessionTestEnvironment(t *testing.T) (*integration.IntegrationTestContext, func()) {
+	return integration.SetupIntegrationTest(t, integration.IntegrationTestOptions{
+		CustomRoutes: func(router *mux.Router, testCtx *integration.IntegrationTestContext) {
 			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix(APIv1Prefix).Subrouter()
@@ -279,8 +280,8 @@ func TestGameSessionLifecycle_Integration(t *testing.T) {
 
 func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 	// Setup with custom routes including WebSocket
-	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
-		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
+	ctx, cleanup := integration.SetupIntegrationTest(t, integration.IntegrationTestOptions{
+		CustomRoutes: func(router *mux.Router, testCtx *integration.IntegrationTestContext) {
 			// Create handlers
 			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
@@ -351,8 +352,8 @@ func TestGameSessionWithWebSocket_Integration(t *testing.T) {
 }
 
 func TestGameSessionSecurity_Integration(t *testing.T) {
-	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
-		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
+	ctx, cleanup := integration.SetupIntegrationTest(t, integration.IntegrationTestOptions{
+		CustomRoutes: func(router *mux.Router, testCtx *integration.IntegrationTestContext) {
 			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix(APIv1Prefix).Subrouter()
@@ -445,8 +446,8 @@ func TestGameSessionSecurity_Integration(t *testing.T) {
 }
 
 func TestGameSessionConcurrency_Integration(t *testing.T) {
-	ctx, cleanup := testutil.SetupIntegrationTest(t, testutil.IntegrationTestOptions{
-		CustomRoutes: func(router *mux.Router, testCtx *testutil.IntegrationTestContext) {
+	ctx, cleanup := integration.SetupIntegrationTest(t, integration.IntegrationTestOptions{
+		CustomRoutes: func(router *mux.Router, testCtx *integration.IntegrationTestContext) {
 			h, _ := SetupTestHandlers(t, testCtx)
 			authMiddleware := auth.NewMiddleware(testCtx.JWTManager)
 			api := router.PathPrefix(APIv1Prefix).Subrouter()
@@ -542,7 +543,7 @@ func TestGameSessionConcurrency_Integration(t *testing.T) {
 }
 
 // Helper test functions to reduce cognitive complexity
-func testJoinWithoutCharacter(t *testing.T, ctx *testutil.IntegrationTestContext, sessionID, playerID string) {
+func testJoinWithoutCharacter(t *testing.T, ctx *integration.IntegrationTestContext, sessionID, playerID string) {
 	joinReq := map[string]interface{}{}
 	w := ctx.MakeAuthenticatedRequest("POST", APISessionsPath+sessionID+"/join", joinReq, playerID)
 
@@ -555,7 +556,7 @@ func testJoinWithoutCharacter(t *testing.T, ctx *testutil.IntegrationTestContext
 	}
 }
 
-func testUpdateGameSession(t *testing.T, ctx *testutil.IntegrationTestContext, sessionID, dmUserID string) {
+func testUpdateGameSession(t *testing.T, ctx *integration.IntegrationTestContext, sessionID, dmUserID string) {
 	updateReq := map[string]interface{}{
 		NameField:        FellowshipCampaignUpd,
 		DescriptionField: FellowshipDescUpd,
@@ -578,7 +579,7 @@ func testUpdateGameSession(t *testing.T, ctx *testutil.IntegrationTestContext, s
 	assert.Equal(t, FellowshipCampaignUpd, sessionData[NameField])
 }
 
-func testEndGameSession(t *testing.T, ctx *testutil.IntegrationTestContext, dmUserID string) {
+func testEndGameSession(t *testing.T, ctx *integration.IntegrationTestContext, dmUserID string) {
 	// Create a new session to end
 	createReq := map[string]interface{}{
 		NameField:        SessionToEndName,

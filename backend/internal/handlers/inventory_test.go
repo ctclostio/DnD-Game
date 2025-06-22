@@ -92,7 +92,7 @@ func TestInventoryHandler_ManageInventory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := createInventoryRequest(tt.method, tt.path, tt.body)
+			_ = createInventoryRequest(tt.method, tt.path, tt.body)
 
 			// For this test, verify request structure
 			if tt.body != nil {

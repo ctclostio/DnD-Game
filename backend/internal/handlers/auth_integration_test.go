@@ -17,14 +17,14 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
-	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil/integration"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
 )
 
 func TestAuthFlowIntegration(t *testing.T) {
 	// Setup test context
-	ctx, cleanup := testutil.SetupIntegrationTest(t)
+	ctx, cleanup := integration.SetupIntegrationTest(t)
 	defer cleanup()
 
 	// Create logger
@@ -346,7 +346,7 @@ func TestAuthFlowIntegration(t *testing.T) {
 }
 
 func TestPasswordValidationIntegration(t *testing.T) {
-	ctx, cleanup := testutil.SetupIntegrationTest(t)
+	ctx, cleanup := integration.SetupIntegrationTest(t)
 	defer cleanup()
 
 	router := setupTestRouter(t, ctx)
@@ -414,7 +414,7 @@ func TestRateLimitingIntegration(t *testing.T) {
 // Helper functions to reduce cognitive complexity
 
 // setupTestRouter creates a test router with necessary middleware and handlers
-func setupTestRouter(t *testing.T, ctx *testutil.IntegrationTestContext) *mux.Router {
+func setupTestRouter(t *testing.T, ctx *integration.IntegrationTestContext) *mux.Router {
 	cfg := logger.DefaultConfig()
 	log, err := logger.NewV2(&cfg)
 	require.NoError(t, err)

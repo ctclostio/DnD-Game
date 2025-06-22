@@ -18,7 +18,7 @@ import (
 	"github.com/ctclostio/DnD-Game/backend/internal/middleware"
 	"github.com/ctclostio/DnD-Game/backend/internal/models"
 	"github.com/ctclostio/DnD-Game/backend/internal/services"
-	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil/integration"
 	"github.com/ctclostio/DnD-Game/backend/internal/websocket"
 	"github.com/ctclostio/DnD-Game/backend/pkg/logger"
 	"github.com/ctclostio/DnD-Game/backend/pkg/response"
@@ -30,7 +30,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 	}
 	t.Skip("integration environment not available")
 	// Setup test context
-	ctx, cleanup := testutil.SetupIntegrationTest(t)
+	ctx, cleanup := integration.SetupIntegrationTest(t)
 	defer cleanup()
 
 	// Create logger
@@ -369,7 +369,7 @@ func TestCombatFlow_Integration(t *testing.T) {
 }
 
 func TestCombatAuthorization_Integration(t *testing.T) {
-	ctx, cleanup := testutil.SetupIntegrationTest(t)
+	ctx, cleanup := integration.SetupIntegrationTest(t)
 	defer cleanup()
 
 	cfg := logger.DefaultConfig()
@@ -484,7 +484,7 @@ func TestCombatAuthorization_Integration(t *testing.T) {
 }
 
 func TestCombatConditions_Integration(t *testing.T) {
-	_, cleanup := testutil.SetupIntegrationTest(t)
+	_, cleanup := integration.SetupIntegrationTest(t)
 	defer cleanup()
 
 	// Setup similar to TestCombatFlow_Integration...

@@ -18,7 +18,7 @@ import (
 const (
 	testSQLQuery      = "SELECT * FROM users"
 	testServiceName   = "test-service"
-	testRequestID     = "req-123"
+	testEnhancedRequestID = "req-123"
 	testSessionID     = "sess-012"
 	testCharacterID   = "char-345"
 	testAPIUsersPath  = "/api/users"
@@ -180,7 +180,7 @@ func TestLoggerV2_WithContext(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, RequestIDKey, testRequestID)
+	ctx = context.WithValue(ctx, RequestIDKey, testEnhancedRequestID)
 	ctx = context.WithValue(ctx, CorrelationIDKey, "corr-456")
 	ctx = context.WithValue(ctx, UserIDKey, "user-789")
 	ctx = context.WithValue(ctx, SessionIDKey, testSessionID)
@@ -194,7 +194,7 @@ func TestLoggerV2_WithContext(t *testing.T) {
 	var logEntry map[string]interface{}
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &logEntry))
 
-	assert.Equal(t, testRequestID, logEntry["request_id"])
+	assert.Equal(t, testEnhancedRequestID, logEntry["request_id"])
 	assert.Equal(t, "corr-456", logEntry["correlation_id"])
 	assert.Equal(t, "user-789", logEntry["user_id"])
 	assert.Equal(t, testSessionID, logEntry["session_id"])
@@ -576,14 +576,14 @@ func TestContextFunctions(t *testing.T) {
 	ctx := context.Background()
 
 	// Test adding values to context
-	ctx = ContextWithRequestID(ctx, testRequestID)
+	ctx = ContextWithRequestID(ctx, testEnhancedRequestID)
 	ctx = ContextWithUserID(ctx, "user-456")
 	ctx = ContextWithCorrelationID(ctx, "corr-789")
 	ctx = ContextWithSessionID(ctx, testSessionID)
 	ctx = ContextWithCharacterID(ctx, testCharacterID)
 
 	// Test retrieving values from context
-	assert.Equal(t, testRequestID, GetRequestIDFromContext(ctx))
+	assert.Equal(t, testEnhancedRequestID, GetRequestIDFromContext(ctx))
 	assert.Equal(t, "user-456", GetUserIDFromContext(ctx))
 	assert.Equal(t, "corr-789", ctx.Value(CorrelationIDKey))
 	assert.Equal(t, testSessionID, ctx.Value(SessionIDKey))

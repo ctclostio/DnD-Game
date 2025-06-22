@@ -46,7 +46,7 @@ const (
 	testErrUpdateFailed     = "update failed"
 	testErrItemNotInInv     = "item not in inventory"
 	testErrInsufficientFunds = "insufficient funds"
-	testErrRepository       = "repository error"
+	testErrInventoryRepository = "repository error"
 	
 	// Type strings
 	testTypeModelsItem = "*models.Item"
@@ -833,7 +833,7 @@ func TestInventoryService_GetCharacterWeight(t *testing.T) {
 			},
 		},
 		{
-			name:        testErrRepository,
+			name:        testErrInventoryRepository,
 			characterID: "char-789",
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				m.On("GetCharacterWeight", "char-789").Return(nil, errors.New(constants.TestDatabaseError))
@@ -904,7 +904,7 @@ func TestInventoryService_CreateItem(t *testing.T) {
 			},
 		},
 		{
-			name: testErrRepository,
+			name: testErrInventoryRepository,
 			item: &models.Item{
 				Name: "Failed Item",
 			},
@@ -971,7 +971,7 @@ func TestInventoryService_GetItemsByType(t *testing.T) {
 			expected: []*models.Item{},
 		},
 		{
-			name:     testErrRepository,
+			name:     testErrInventoryRepository,
 			itemType: models.ItemTypeMagic,
 			setupMock: func(m *mocks.MockInventoryRepository) {
 				m.On("GetItemsByType", models.ItemTypeMagic).Return(nil, errors.New(constants.TestDatabaseError))

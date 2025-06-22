@@ -2,7 +2,6 @@ package database
 
 import (
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +20,7 @@ func TestUpdateSettlementProsperity(t *testing.T) {
 	settlement := &models.Settlement{
 		GameSessionID:   uuid.New(),
 		Name:           "Test Village",
-		Type:           models.SettlementTypeVillage,
+		Type:           models.SettlementVillage,
 		Population:     100,
 		WealthLevel:    5,
 		Region:         "Test Region",
@@ -61,7 +60,7 @@ func TestUpdateSettlement(t *testing.T) {
 	settlement := &models.Settlement{
 		GameSessionID:   uuid.New(),
 		Name:           "Test City",
-		Type:           models.SettlementTypeCity,
+		Type:           models.SettlementCity,
 		Population:     1000,
 		WealthLevel:    7,
 		Region:         "Test Region",

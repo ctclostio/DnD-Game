@@ -18,7 +18,8 @@ import (
 
 	"github.com/ctclostio/DnD-Game/backend/internal/constants"
 	"github.com/ctclostio/DnD-Game/backend/internal/handlers"
-	"github.com/ctclostio/DnD-Game/backend/internal/testutil"
+	"github.com/ctclostio/DnD-Game/backend/internal/models"
+	"github.com/ctclostio/DnD-Game/backend/internal/testutil/integration"
 	ws "github.com/ctclostio/DnD-Game/backend/internal/websocket"
 )
 
@@ -29,7 +30,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 	defer func() { _ = os.Setenv("GO_ENV", origEnv) }()
 
 	// Setup test context
-	testCtx, cleanup := testutil.SetupIntegrationTest(t)
+	testCtx, cleanup := integration.SetupIntegrationTest(t)
 	defer cleanup()
 
 	// Setup handlers with WebSocket hub
@@ -353,7 +354,7 @@ func TestWebSocketHandlerIntegration(t *testing.T) {
 // Helper functions to reduce cognitive complexity
 
 // testMessageBroadcasting tests message broadcasting between users
-func testMessageBroadcasting(t *testing.T, testCtx *testutil.IntegrationTestContext, sessionID string, session interface{}, user interface{}, userID string, token string) {
+func testMessageBroadcasting(t *testing.T, testCtx *integration.IntegrationTestContext, sessionID string, session interface{}, user interface{}, userID string, token string) {
 	// Create test server
 	server := httptest.NewServer(http.HandlerFunc(ws.HandleWebSocket))
 	defer server.Close()
@@ -470,7 +471,7 @@ func getUsernameFromUser(user interface{}) string {
 }
 
 // testConcurrentConnections tests handling of multiple concurrent connections
-func testConcurrentConnections(t *testing.T, testCtx *testutil.IntegrationTestContext, sessionID string, session interface{}) {
+func testConcurrentConnections(t *testing.T, testCtx *integration.IntegrationTestContext, sessionID string, session interface{}) {
 	// Create test server
 	server := httptest.NewServer(http.HandlerFunc(ws.HandleWebSocket))
 	defer server.Close()
@@ -496,7 +497,7 @@ func testConcurrentConnections(t *testing.T, testCtx *testutil.IntegrationTestCo
 }
 
 // createMultipleTestUsers creates multiple test users and returns their tokens
-func createMultipleTestUsers(t *testing.T, testCtx *testutil.IntegrationTestContext, numUsers int) []string {
+func createMultipleTestUsers(t *testing.T, testCtx *integration.IntegrationTestContext, numUsers int) []string {
 	tokens := make([]string, numUsers)
 
 	for i := 0; i < numUsers; i++ {
